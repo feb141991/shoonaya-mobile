@@ -1,0 +1,55 @@
+{
+  "cli": {
+    "version": ">= 14.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_ONESIGNAL_APP_ID": "12b3ce2c-f1d4-4a4a-ba05-25963716dbb5",
+        "EXPO_PUBLIC_API_BASE": "https://shoonaya.com"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "EXPO_PUBLIC_ONESIGNAL_APP_ID": "12b3ce2c-f1d4-4a4a-ba05-25963716dbb5",
+        "EXPO_PUBLIC_API_BASE": "https://shoonaya.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_ONESIGNAL_APP_ID": "12b3ce2c-f1d4-4a4a-ba05-25963716dbb5",
+        "EXPO_PUBLIC_API_BASE": "https://shoonaya.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "PLACEHOLDER_APPLE_ID",
+        "ascAppId": "PLACEHOLDER_ASC_APP_ID"
+      }
+    }
+  }
+}

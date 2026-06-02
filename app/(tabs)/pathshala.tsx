@@ -1,0 +1,528 @@
+import { useCallback, useMemo, useState } from 'react';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+  useColorScheme,
+} from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+
+import { PathCard } from '@/components/pathshala/PathCard';
+import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { SkeletonRow } from '@/components/ui/SkeletonLoader';
+import { COLORS, FONTS } from '@/lib/constants';
+import { SEED_PATHS, type PathshalaPath } from '@/lib/pathshala-paths';
+import { supabase } from '@/lib/supabase';
+import { useScrollToTop } from '@/lib/useScrollToTop';
+
+type TabKey = 'progress' | 'explore';
+type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
+
+type EnrollmentRow = {
+  path_id: string;
+  current_lesson: number | null;
+  completed_lessons: number[] | null;
+  status: string | null;
+};
+
+const TRADITION_EMOJI: Record<string, string> = {
+  hindu: '🕉️',
+  sikh: '☬',
+  buddhist: '☸️',
+  jain: '卐',
+};
+
+function PathshalaContent() {
+  const router = useRouter();
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
+  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
+  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const text = isDark ? COLORS.creamBg : COLORS.ink;
+  const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+
+  const [activeTab, setActiveTab] = useState<TabKey>('progress');
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>('all');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
+
+  const scrollRef = useScrollToTop();
+
+  const loadProgress = useCallback(async (refresh = false) => {
+    if (refresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setEnrollments([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('guided_path_progress')
+      .select('path_id, current_lesson, completed_lessons, status')
+      .eq('user_id', user.id)
+      .in(
+        'path_id',
+        SEED_PATHS.map((path) => path.id)
+      );
+
+    setEnrollments((data as EnrollmentRow[] | null) ?? []);
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadProgress();
+    }, [loadProgress])
+  );
+
+  const progressMap = useMemo(() => {
+    const map = new Map<string, EnrollmentRow>();
+    for (const enrollment of enrollments) {
+      map.set(enrollment.path_id, enrollment);
+    }
+    return map;
+  }, [enrollments]);
+
+  const enrolledPaths = useMemo(
+    () => SEED_PATHS.filter((path) => progressMap.has(path.id)),
+    [progressMap]
+  );
+
+  const filteredPaths = useMemo(() => {
+    if (difficulty === 'all') {
+      return SEED_PATHS;
+    }
+    return SEED_PATHS.filter((path) => path.difficulty === difficulty);
+  }, [difficulty]);
+
+  const openPath = useCallback(
+    (path: PathshalaPath) => {
+      router.push({
+        pathname: '/pathshala/[pathId]',
+        params: { pathId: path.id },
+      });
+    },
+    [router]
+  );
+
+  const enroll = useCallback(
+    async (path: PathshalaPath) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace('/(auth)/login');
+        return;
+      }
+
+      const optimistic: EnrollmentRow = {
+        path_id: path.id,
+        current_lesson: 0,
+        completed_lessons: [],
+        status: 'active',
+      };
+
+      setEnrollments((current) => {
+        if (current.some((entry) => entry.path_id === path.id)) {
+          return current;
+        }
+        return [...current, optimistic];
+      });
+
+      const { error } = await supabase.from('guided_path_progress').upsert(
+        {
+          user_id: user.id,
+          path_id: path.id,
+          status: 'active',
+          current_lesson: 0,
+          completed_lessons: [],
+        },
+        { onConflict: 'user_id,path_id' }
+      );
+
+      if (error) {
+        setEnrollments((current) => current.filter((entry) => entry.path_id !== path.id));
+        return;
+      }
+
+      openPath(path);
+    },
+    [openPath, router]
+  );
+
+  const completedLessonsByDifficulty = useMemo(() => {
+    const completedPathIds = enrollments
+      .filter((entry) => {
+        const path = SEED_PATHS.find((candidate) => candidate.id === entry.path_id);
+        return path && (entry.completed_lessons ?? []).length >= path.total_lessons;
+      })
+      .map((entry) => entry.path_id);
+
+    return {
+      beginner: completedPathIds.some((id) => SEED_PATHS.find((path) => path.id === id)?.difficulty === 'beginner'),
+      intermediate: completedPathIds.some((id) => SEED_PATHS.find((path) => path.id === id)?.difficulty === 'intermediate'),
+    };
+  }, [enrollments]);
+
+  const currentLevel: DifficultyFilter = useMemo(() => {
+    if (enrolledPaths.some((path) => path.difficulty === 'advanced')) return 'advanced';
+    if (enrolledPaths.some((path) => path.difficulty === 'intermediate')) return 'intermediate';
+    return 'beginner';
+  }, [enrolledPaths]);
+
+  return (
+    <Screen style={{ backgroundColor: bg }}>
+      <ScrollView
+        ref={scrollRef}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              void loadProgress(true);
+            }}
+            tintColor={COLORS.brandGold}
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 28, gap: 18 }}
+      >
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Pathshala</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim }}>
+            Scripture learning, daily discipline, and guided study.
+          </Text>
+        </View>
+
+        <View
+          style={{
+            borderRadius: 24,
+            backgroundColor: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
+            borderWidth: 1,
+            borderColor: border,
+            padding: 6,
+            flexDirection: 'row',
+            gap: 6,
+          }}
+        >
+          {([
+            ['progress', 'My Progress'],
+            ['explore', 'Explore'],
+          ] as const).map(([key, label]) => {
+            const active = activeTab === key;
+            return (
+              <Pressable
+                key={key}
+                onPress={() => setActiveTab(key)}
+                style={{
+                  flex: 1,
+                  borderRadius: 18,
+                  paddingVertical: 12,
+                  alignItems: 'center',
+                  backgroundColor: active ? cardBg : 'transparent',
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 13,
+                    color: active ? COLORS.brandGold : dim,
+                  }}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {loading ? (
+          <View style={{ gap: 14 }}>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </View>
+        ) : activeTab === 'progress' ? (
+          <View style={{ gap: 18 }}>
+            <View
+              style={{
+                borderRadius: 24,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: border,
+                padding: 18,
+                gap: 14,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                YOUR GURUKUL
+              </Text>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
+                Continue your learning
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim }}>
+                {enrolledPaths.length > 0
+                  ? `You are enrolled in ${enrolledPaths.length} sacred path${enrolledPaths.length === 1 ? '' : 's'}.`
+                  : 'Choose a path and begin disciplined, daily study.'}
+              </Text>
+            </View>
+
+              {enrolledPaths.length === 0 ? (
+                <EmptyState
+                  emoji="📖"
+                  title="No paths enrolled yet"
+                  subtitle="Choose a beginner path below to begin your disciplined, daily study."
+                  ctaLabel="Explore paths"
+                  onCta={() => setActiveTab('explore')}
+                />
+              ) : enrolledPaths.map((path) => {
+                const enrollment = progressMap.get(path.id);
+                const progressPct = Math.round(
+                  (((enrollment?.completed_lessons ?? []).length || 0) / path.total_lessons) * 100
+                );
+                return (
+                  <PathCard
+                    key={path.id}
+                    path={path}
+                    progressPct={progressPct}
+                    onPress={() => openPath(path)}
+                  />
+                );
+              })}
+
+            {enrolledPaths.length > 0 ? null : (
+              <View style={{ gap: 12 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim }}>
+                  BEGIN YOUR JOURNEY
+                </Text>
+                {SEED_PATHS.filter((path) => path.difficulty === 'beginner')
+                  .slice(0, 3)
+                  .map((path) => (
+                    <View
+                      key={path.id}
+                      style={{
+                        borderRadius: 22,
+                        backgroundColor: cardBg,
+                        borderWidth: 1,
+                        borderColor: border,
+                        padding: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 999,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: COLORS.brandGold,
+                        }}
+                      >
+                        <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[path.tradition] ?? '📖'}</Text>
+                      </View>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
+                          {path.title}
+                        </Text>
+                        <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }} numberOfLines={1}>
+                          {path.description}
+                        </Text>
+                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: COLORS.brandGold, textTransform: 'capitalize' }}>
+                          {path.difficulty}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() => {
+                          try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+                          void enroll(path);
+                        }}
+                        style={{
+                          borderRadius: 16,
+                          backgroundColor: COLORS.brandGold,
+                          paddingHorizontal: 14,
+                          paddingVertical: 10,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: bg }}>Enroll</Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                <Pressable onPress={() => setActiveTab('explore')} style={{ paddingVertical: 8 }}>
+                  <Text style={{ textAlign: 'center', fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                    See all paths →
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+
+            <View
+              style={{
+                borderRadius: 24,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: border,
+                padding: 18,
+                gap: 14,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                DIFFICULTY PROGRESSION
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                {(['beginner', 'intermediate', 'advanced'] as const).map((level, index) => {
+                  const complete =
+                    level === 'beginner'
+                      ? completedLessonsByDifficulty.beginner
+                      : level === 'intermediate'
+                        ? completedLessonsByDifficulty.intermediate
+                        : false;
+                  const current = currentLevel === level;
+                  const locked =
+                    (level === 'intermediate' && !completedLessonsByDifficulty.beginner) ||
+                    (level === 'advanced' && !completedLessonsByDifficulty.intermediate);
+
+                  return (
+                    <View key={level} style={{ flex: 1, alignItems: 'center', flexDirection: 'row' }}>
+                      <View style={{ alignItems: 'center', width: 72 }}>
+                        <View
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 999,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: complete ? COLORS.brandGold : 'transparent',
+                            borderWidth: complete ? 0 : 1.5,
+                            borderColor: current ? COLORS.brandGold : border,
+                          }}
+                        >
+                          {complete ? (
+                            <Feather name="check" size={12} color={bg} />
+                          ) : locked ? (
+                            <Feather name="lock" size={10} color={dim} />
+                          ) : current ? (
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 999,
+                                backgroundColor: COLORS.brandGold,
+                              }}
+                            />
+                          ) : null}
+                        </View>
+                        <Text style={{ marginTop: 8, fontFamily: FONTS.sansMedium, fontSize: 10, color: dim, textTransform: 'uppercase' }}>
+                          {level}
+                        </Text>
+                      </View>
+                      {index < 2 ? (
+                        <View
+                          style={{
+                            flex: 1,
+                            height: 1.5,
+                            backgroundColor:
+                              index === 0
+                                ? completedLessonsByDifficulty.beginner
+                                  ? COLORS.brandGold
+                                  : border
+                                : completedLessonsByDifficulty.intermediate
+                                  ? COLORS.brandGold
+                                  : border,
+                          }}
+                        />
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, fontStyle: 'italic' }}>
+                {completedLessonsByDifficulty.intermediate
+                  ? 'Advanced paths unlocked'
+                  : completedLessonsByDifficulty.beginner
+                    ? 'Complete an Intermediate path to unlock Advanced'
+                    : 'Complete a Beginner path to advance'}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={{ gap: 16 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {(['all', 'beginner', 'intermediate', 'advanced'] as const).map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => setDifficulty(option)}
+                  style={{
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: difficulty === option ? COLORS.brandGold : border,
+                    backgroundColor: difficulty === option ? cardBg : 'transparent',
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: difficulty === option ? COLORS.brandGold : dim, textTransform: 'capitalize' }}>
+                    {option}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {filteredPaths.map((path) => {
+              const enrollment = progressMap.get(path.id);
+              const progressPct = enrollment
+                ? Math.round((((enrollment.completed_lessons ?? []).length || 0) / path.total_lessons) * 100)
+                : 0;
+
+              return (
+                <PathCard
+                  key={path.id}
+                  path={path}
+                  progressPct={progressPct}
+                  onPress={() => {
+                    if (enrollment) {
+                      openPath(path);
+                    } else {
+                      try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+                      void enroll(path);
+                    }
+                  }}
+                />
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    </Screen>
+  );
+}
+
+export default function PathshalaScreen() {
+  return (
+    <ErrorBoundary>
+      <PathshalaContent />
+    </ErrorBoundary>
+  );
+}
