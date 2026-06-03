@@ -10,7 +10,9 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+const isExpoGo = Constants.appOwnership === 'expo';
+const Notifications = isExpoGo ? null : (() => { try { return require('expo-notifications'); } catch { return null; } })();
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
@@ -35,14 +37,16 @@ function vratMatchesTradition(vrat: VratData, tradition: Tradition) {
   return false;
 }
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+if (Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export default function VratScreen() {
   const router = useRouter();
@@ -81,6 +85,10 @@ export default function VratScreen() {
   );
 
   const setReminder = async (vrat: VratData) => {
+    if (!Notifications) {
+      Alert.alert('Reminders not available in Expo Go. Use the full app.');
+      return;
+    }
     const permission = await Notifications.requestPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Notifications are required for reminders');
