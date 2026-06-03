@@ -37,7 +37,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 7,
+      "versionCode": 8,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
