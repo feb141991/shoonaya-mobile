@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
-import { Link } from 'expo-router';
+import { ActivityIndicator, Image, Platform, Pressable, Text, View } from 'react-native';
+import { Link, useRouter } from 'expo-router';
 import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
@@ -54,6 +54,7 @@ function AuthButton({
 }
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [activeAction, setActiveAction] = useState<AuthAction>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -135,16 +136,17 @@ export default function LoginScreen() {
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Text
+        <Image
+          source={require('../../assets/icon.png')}
           style={{
-            fontFamily: FONTS.serifBold,
-            fontSize: 40,
-            color: COLORS.ink,
-            marginBottom: 12,
+            width: 220,
+            height: 220,
+            alignSelf: 'center',
+            marginBottom: 18,
           }}
-        >
-          Shoonaya
-        </Text>
+          resizeMode="contain"
+          accessibilityLabel="Shoonaya"
+        />
         <Text
           style={{
             fontFamily: FONTS.sans,
@@ -196,6 +198,27 @@ export default function LoginScreen() {
                 </Text>
               </Pressable>
             </Link>
+
+            <Pressable
+              disabled={activeAction !== null}
+              onPress={() => router.replace('/(tabs)')}
+              style={{
+                alignItems: 'center',
+                paddingVertical: 4,
+                opacity: activeAction !== null ? 0.6 : 1,
+              }}
+            >
+              <Text
+                style={{
+                  color: COLORS.textDimLight,
+                  fontFamily: FONTS.sans,
+                  fontSize: 13,
+                  textAlign: 'center',
+                }}
+              >
+                Continue as guest →
+              </Text>
+            </Pressable>
 
             {activeAction !== null ? (
               <View style={{ alignItems: 'center', paddingTop: 4 }}>

@@ -86,8 +86,8 @@ export default function RootLayout() {
 
       if (session && inAuthGroup) {
         router.replace('/(tabs)');
-      } else if (!session && !inAuthGroup) {
-        router.replace('/(auth)/login');
+      } else if (!session && inAuthGroup) {
+        router.replace('/(tabs)');
       }
 
       setAuthReady(true);
@@ -115,8 +115,8 @@ export default function RootLayout() {
 
       if (session && inAuthGroup) {
         router.replace('/(tabs)');
-      } else if (!session && !inAuthGroup) {
-        router.replace('/(auth)/login');
+      } else if (!session && inAuthGroup) {
+        router.replace('/(tabs)');
       }
     });
 
