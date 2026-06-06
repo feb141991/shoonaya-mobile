@@ -60,8 +60,7 @@
       [
         "onesignal-expo-plugin",
         {
-          "mode": "production",
-          "androidControlPanelImageUrl": "./assets/icon.png"
+          "mode": "production"
         }
       ],
       "expo-system-ui",
