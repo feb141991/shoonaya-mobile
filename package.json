@@ -27,6 +27,7 @@
     "expo-sharing": "~56.0.16",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
     "expo-web-browser": "~56.0.5",
     "nativewind": "^4.2.4",
     "onesignal-expo-plugin": "^2.6.0",

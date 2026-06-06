@@ -21,7 +21,9 @@
       "env": {
         "EXPO_PUBLIC_APP_ENV": "preview",
         "EXPO_PUBLIC_ONESIGNAL_APP_ID": "12b3ce2c-f1d4-4a4a-ba05-25963716dbb5",
-        "EXPO_PUBLIC_API_BASE": "https://shoonaya.com"
+        "EXPO_PUBLIC_API_BASE": "https://shoonaya.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://mjcuspbdkptbxobqwazg.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qY3VzcGJka3B0YnhvYnF3YXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MjI4NTYsImV4cCI6MjA5NTk5ODg1Nn0.LjAdG-1msWP5Bm7Yzz7h-IgqeHr2WuMZnS5cbOWYLVQ"
       }
     },
     "production": {
