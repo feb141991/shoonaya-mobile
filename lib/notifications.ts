@@ -66,5 +66,5 @@ export function handleNotificationTap(router: Router): () => void {
   };
 
   OneSignal.Notifications.addEventListener('click', listener);
-  return () => { OneSignal!.Notifications.removeEventListener('click', listener); };
+  return () => { OneSignal?.Notifications.removeEventListener('click', listener); };
 }

@@ -1,0 +1,13 @@
+# Generated to allow google-services.json for EAS build
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.idea/
+.vscode/
+.env
+.env.*
+.env*.local
+/ios
+/android

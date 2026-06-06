@@ -12,7 +12,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';

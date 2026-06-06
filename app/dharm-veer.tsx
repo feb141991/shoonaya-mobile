@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,

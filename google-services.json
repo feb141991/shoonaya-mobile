@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "393433572848",
+    "firebase_url": "https://prince-14.firebaseio.com",
+    "project_id": "prince-14",
+    "storage_bucket": "prince-14.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:393433572848:android:3c6b64705198a35f882935",
+        "android_client_info": {
+          "package_name": "com.shoonaya.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7Ykj0l__JJb44Z8851-UwpTjg5Gf3cEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
