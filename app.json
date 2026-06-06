@@ -7,6 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "shoonaya",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FDF6E3"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shoonaya.app",
@@ -27,8 +32,7 @@
         "RECORD_AUDIO",
         "INTERNET",
         "RECEIVE_BOOT_COMPLETED",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "MODIFY_AUDIO_SETTINGS"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -37,7 +41,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 10,
+      "versionCode": 11,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -56,9 +60,11 @@
       [
         "onesignal-expo-plugin",
         {
-          "mode": "production"
+          "mode": "production",
+          "androidControlPanelImageUrl": "./assets/icon.png"
         }
       ],
+      "expo-system-ui",
       "expo-av",
       "expo-secure-store",
       "expo-status-bar",

@@ -86,8 +86,9 @@ export default function RootLayout() {
 
       if (session && inAuthGroup) {
         router.replace('/(tabs)');
-      } else if (!session && inAuthGroup) {
-        router.replace('/(tabs)');
+      } else if (!session && !inAuthGroup && segments.length > 0) {
+        // Optional: redirect to login if not authenticated and not in auth group
+        // For now, we'll allow guest access to tabs as per index.tsx logic
       }
 
       setAuthReady(true);
@@ -111,11 +112,10 @@ export default function RootLayout() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      const inAuthGroup = segments[0] === '(auth)';
+      if (!mounted) return;
 
+      const inAuthGroup = segments[0] === '(auth)';
       if (session && inAuthGroup) {
-        router.replace('/(tabs)');
-      } else if (!session && inAuthGroup) {
         router.replace('/(tabs)');
       }
     });
@@ -132,7 +132,7 @@ export default function RootLayout() {
       urlSubscription.remove();
       subscription.unsubscribe();
     };
-  }, [fontsLoaded, router, segments]);
+  }, [fontsLoaded, router]); // Removed 'segments' from dependencies to prevent navigation loops
 
   if (!fontsLoaded || !authReady) {
     return null;
