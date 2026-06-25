@@ -32,6 +32,15 @@ export default function RootLayout() {
   });
   const [authReady, setAuthReady] = useState(false);
 
+  // ── Fail-safe: Force hide splash screen after 5 seconds ────────────────
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAuthReady(true);
+      SplashScreen.hideAsync().catch(() => {});
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // ── OneSignal init + tap handler ─────────────────────────────────
   useEffect(() => {
     if (!fontsLoaded) return;
