@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
@@ -23,7 +24,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     CormorantGaramond_600SemiBold,
     CormorantGaramond_700Bold,
     Inter_400Regular,
@@ -41,17 +42,25 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, []);
 
+  // ── Handle font loading or error ────────────────────────────────
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      // If fonts failed, we still want to show the app
+      if (fontError) console.error('Font loading error:', fontError);
+    }
+  }, [fontsLoaded, fontError]);
+
   // ── OneSignal init + tap handler ─────────────────────────────────
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsLoaded && !fontError) return;
 
     initOneSignal();
     const cleanup = handleNotificationTap(router);
     return cleanup;
-  }, [fontsLoaded, router]);
+  }, [fontsLoaded, fontError, router]);
 
   useEffect(() => {
-    if (!fontsLoaded) {
+    if (!fontsLoaded && !fontError) {
       return;
     }
 
@@ -141,9 +150,9 @@ export default function RootLayout() {
       urlSubscription.remove();
       subscription.unsubscribe();
     };
-  }, [fontsLoaded, router]); // Removed 'segments' from dependencies to prevent navigation loops
+  }, [fontsLoaded, fontError, router]); // Removed 'segments' from dependencies to prevent navigation loops
 
-  if (!fontsLoaded || !authReady) {
+  if ((!fontsLoaded && !fontError) || !authReady) {
     return null;
   }
 
