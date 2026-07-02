@@ -3,7 +3,7 @@ import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -19,11 +19,13 @@ import { AppProviders } from '@/components/providers/AppProviders';
 import { supabase } from '@/lib/supabase';
 import { initOneSignal, handleNotificationTap } from '@/lib/notifications';
 
+// Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
+
   const [fontsLoaded, fontError] = useFonts({
     CormorantGaramond_600SemiBold,
     CormorantGaramond_700Bold,
@@ -31,128 +33,96 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
   });
-  const [authReady, setAuthReady] = useState(false);
 
-  // ── Fail-safe: Force hide splash screen after 5 seconds ────────────────
+  const [authReady, setAuthReady] = useState(false);
+  const [appIsReady, setAppIsReady] = useState(false);
+
+  // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
   useEffect(() => {
     const timer = setTimeout(() => {
-      setAuthReady(true);
-      SplashScreen.hideAsync().catch(() => {});
-    }, 5000);
+      console.warn('Splash screen hide triggered by timeout fail-safe');
+      setAppIsReady(true);
+    }, 6000);
     return () => clearTimeout(timer);
   }, []);
 
-  // ── Handle font loading or error ────────────────────────────────
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      // If fonts failed, we still want to show the app
-      if (fontError) console.error('Font loading error:', fontError);
-    }
-  }, [fontsLoaded, fontError]);
-
-  // ── OneSignal init + tap handler ─────────────────────────────────
+  // ── Handle OneSignal and Notifications ─────────────────────────────
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
 
-    initOneSignal();
-    const cleanup = handleNotificationTap(router);
-    return cleanup;
+    try {
+      initOneSignal();
+      const cleanup = handleNotificationTap(router);
+      return cleanup;
+    } catch (e) {
+      console.error('OneSignal initialization error:', e);
+    }
   }, [fontsLoaded, fontError, router]);
 
+  // ── Handle Auth and App State ─────────────────────────────────────
   useEffect(() => {
-    if (!fontsLoaded && !fontError) {
-      return;
-    }
+    if (!fontsLoaded && !fontError) return;
 
     let mounted = true;
 
-    const handleAuthRedirect = async (url: string) => {
-      const parsed = Linking.parse(url);
-      const params = parsed.queryParams ?? {};
-      const code = typeof params.code === 'string' ? params.code : null;
-      const accessToken = typeof params.access_token === 'string' ? params.access_token : null;
-      const refreshToken = typeof params.refresh_token === 'string' ? params.refresh_token : null;
+    const prepare = async () => {
+      try {
+        // 1. Handle Initial URL (Auth Redirects)
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) {
+          const parsed = Linking.parse(initialUrl);
+          const params = parsed.queryParams ?? {};
+          const code = typeof params.code === 'string' ? params.code : null;
 
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
-        return;
-      }
-
-      if (accessToken && refreshToken) {
-        await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-      }
-    };
-
-    const syncSessionState = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        await handleAuthRedirect(initialUrl);
-      }
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!mounted) {
-        return;
-      }
-
-      const inAuthGroup = segments[0] === '(auth)';
-
-      if (session && inAuthGroup) {
-        router.replace('/(tabs)');
-      } else if (!session && !inAuthGroup && segments.length > 0) {
-        // Optional: redirect to login if not authenticated and not in auth group
-        // For now, we'll allow guest access to tabs as per index.tsx logic
-      }
-
-      setAuthReady(true);
-      SplashScreen.hideAsync().catch(() => {});
-    };
-
-    const urlSubscription = Linking.addEventListener('url', ({ url }) => {
-      handleAuthRedirect(url)
-        .then(async () => {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-
-          if (session) {
-            router.replace('/(tabs)');
+          if (code) {
+            await supabase.auth.exchangeCodeForSession(code);
           }
-        })
-        .catch(() => {});
-    });
+        }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+        // 2. Sync Session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        // 3. Navigation Guard
+        const inAuthGroup = segments[0] === '(auth)';
+        if (session && inAuthGroup) {
+          router.replace('/(tabs)');
+        }
+
+        setAuthReady(true);
+      } catch (e) {
+        console.error('Initialization error:', e);
+        setAuthReady(true); // Proceed anyway
+      } finally {
+        setAppIsReady(true);
+      }
+    };
+
+    prepare();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-
       const inAuthGroup = segments[0] === '(auth)';
       if (session && inAuthGroup) {
         router.replace('/(tabs)');
-      }
-    });
-
-    syncSessionState().catch(() => {
-      if (mounted) {
-        setAuthReady(true);
-        SplashScreen.hideAsync().catch(() => {});
       }
     });
 
     return () => {
       mounted = false;
-      urlSubscription.remove();
       subscription.unsubscribe();
     };
-  }, [fontsLoaded, fontError, router]); // Removed 'segments' from dependencies to prevent navigation loops
+  }, [fontsLoaded, fontError, router]);
 
-  if ((!fontsLoaded && !fontError) || !authReady) {
+  // ── Hide Splash Screen when Ready ────────────────────────────────
+  useEffect(() => {
+    if (appIsReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
     return null;
   }
 
