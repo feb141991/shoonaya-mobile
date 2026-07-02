@@ -28,8 +28,12 @@ type NotificationAdditionalData = {
  */
 export function initOneSignal() {
   if (!ONESIGNAL_APP_ID || !OneSignal) return;
-  OneSignal.initialize(ONESIGNAL_APP_ID);
-  OneSignal.Notifications.requestPermission(false);
+  try {
+    OneSignal.initialize(ONESIGNAL_APP_ID);
+    OneSignal.Notifications.requestPermission(false);
+  } catch (error) {
+    console.error('OneSignal initialization failed:', error);
+  }
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
