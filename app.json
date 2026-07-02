@@ -41,7 +41,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 14,
+      "versionCode": 15,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -53,7 +53,8 @@
         "expo-build-properties",
         {
           "android": {
-            "kotlinVersion": "2.1.20",
+            "kotlinVersion": "1.9.24",
+            "newArchEnabled": false,
             "extraProguardRules": "-keep class expo.modules.** { *; } -keep class com.facebook.react.turbomodule.** { *; } -keep class com.swmansion.gesturehandler.** { *; } -keep class com.swmansion.reanimated.** { *; }"
           }
         }
