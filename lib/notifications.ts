@@ -30,7 +30,6 @@ export function initOneSignal() {
   if (!ONESIGNAL_APP_ID || !OneSignal) return;
   try {
     OneSignal.initialize(ONESIGNAL_APP_ID);
-    OneSignal.Notifications.requestPermission(false);
   } catch (error) {
     console.error('OneSignal initialization failed:', error);
   }
