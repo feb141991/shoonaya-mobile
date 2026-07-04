@@ -5,8 +5,8 @@ module.exports = function (api) {
       ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
       'nativewind/babel',
     ],
-    plugins: [
-      'react-native-reanimated/plugin',
-    ],
+    // react-native-reanimated/plugin is NOT needed with New Architecture (newArchEnabled=true)
+    // and Reanimated 4 — including it causes 'Cannot find module react-native-worklets/plugin'
+    plugins: [],
   };
 };

@@ -214,14 +214,9 @@ export default function DharmVeerScreen() {
       return;
     }
 
-    const targetPath = `${FileSystem.cacheDirectory ?? FileSystem.documentDirectory ?? ''}shoonaya-dharm-veer.txt`;
-    if (!targetPath) {
-      Alert.alert(content);
-      return;
-    }
-
-    await FileSystem.writeAsStringAsync(targetPath, content);
-    await Sharing.shareAsync(targetPath);
+    const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-dharm-veer.txt');
+    targetFile.write(content);
+    await Sharing.shareAsync(targetFile.uri);
   }, []);
 
   const persistCompletion = useCallback(async () => {

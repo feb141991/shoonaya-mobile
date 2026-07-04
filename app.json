@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "shoonaya",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FDF6E3"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shoonaya.app",
@@ -78,7 +73,14 @@
       "expo-secure-store",
       "expo-status-bar",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FDF6E3"
+        }
+      ],
       "expo-web-browser",
       "expo-sharing",
       "expo-image"

@@ -9,41 +9,41 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.106.2",
     "astronomia": "^4.2.0",
-    "expo": "~56.0.13",
+    "expo": "~56.0.14",
     "expo-apple-authentication": "~56.0.4",
-    "expo-auth-session": "~56.0.14",
+    "expo-auth-session": "~56.0.15",
     "expo-av": "~16.0.8",
-    "expo-build-properties": "~56.0.20",
-    "expo-constants": "~56.0.18",
+    "expo-build-properties": "~56.0.21",
+    "expo-constants": "~56.0.20",
     "expo-crypto": "~56.0.4",
     "expo-file-system": "~56.0.8",
     "expo-font": "~56.0.7",
     "expo-haptics": "~56.0.3",
     "expo-image": "~56.0.11",
-    "expo-linking": "~56.0.14",
+    "expo-linking": "~56.0.15",
     "expo-location": "~56.0.19",
     "expo-notifications": "~56.0.19",
-    "expo-router": "~56.2.12",
+    "expo-router": "~56.2.13",
     "expo-secure-store": "~56.0.4",
-    "expo-sharing": "~56.0.19",
-    "expo-splash-screen": "~56.0.11",
+    "expo-sharing": "~56.0.20",
+    "expo-splash-screen": "~56.0.12",
     "expo-status-bar": "~56.0.4",
     "expo-system-ui": "~56.0.5",
     "expo-web-browser": "~56.0.5",
     "nativewind": "^4.2.4",
     "onesignal-expo-plugin": "^2.7.0",
     "react": "19.2.3",
-    "react-dom": "^19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.85.3",
-    "react-native-gesture-handler": "^3.0.2",
+    "react-native-gesture-handler": "~2.31.1",
     "react-native-maps": "1.27.2",
     "react-native-onesignal": "^5.5.3",
-    "react-native-reanimated": "^4.5.1",
-    "react-native-safe-area-context": "^5.8.0",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "^4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-url-polyfill": "^3.0.0",
-    "react-native-worklets-core": "^1.6.3"
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
@@ -58,5 +58,14 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "expo-av"
+        ]
+      }
+    }
+  }
 }

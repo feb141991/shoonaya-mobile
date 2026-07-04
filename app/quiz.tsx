@@ -253,14 +253,9 @@ export default function QuizScreen() {
       return;
     }
 
-    const targetPath = `${FileSystem.cacheDirectory ?? FileSystem.documentDirectory ?? ''}shoonaya-quiz-result.txt`;
-    if (!targetPath) {
-      Alert.alert(shareText);
-      return;
-    }
-
-    await FileSystem.writeAsStringAsync(targetPath, shareText);
-    await Sharing.shareAsync(targetPath);
+    const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-quiz-result.txt');
+    targetFile.write(shareText);
+    await Sharing.shareAsync(targetFile.uri);
   };
 
   if (loading) {
