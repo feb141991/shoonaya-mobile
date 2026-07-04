@@ -315,13 +315,18 @@ export default function MandaliScreen() {
     Alert.alert('Report Submitted', 'Thank you. This post has been reported and will be reviewed by our team within 24 hours. It is now hidden.');
 
     try {
-      await supabase.from('post_reports').insert({
-        post_id: postId,
-        reporter_id: profile.userId,
-        reason: reason,
+      const post = posts.find((item) => item.id === postId);
+      if (!post) return;
+      await supabase.from('content_reports').insert({
+        reported_by: profile.userId,
+        content_author_id: post.author_id,
+        content_type: 'mandali_post',
+        content_id: postId,
+        reason,
+        metadata: { source: 'native_mandali' },
       });
     } catch (dbErr) {
-      console.warn('DB write for post report failed (likely table missing, client block remains active):', dbErr);
+      console.warn('DB write for post report failed (client block remains active):', dbErr);
     }
   };
 
@@ -357,12 +362,12 @@ export default function MandaliScreen() {
     Alert.alert('User Blocked', 'This user has been blocked. All their posts and profile entries are now hidden from your view.');
 
     try {
-      await supabase.from('user_blocks').insert({
-        user_id: profile.userId,
+      await supabase.from('user_blocked_profiles').insert({
+        blocker_id: profile.userId,
         blocked_user_id: authorId,
       });
     } catch (dbErr) {
-      console.warn('DB write for user block failed (likely table missing, client block remains active):', dbErr);
+      console.warn('DB write for user block failed (client block remains active):', dbErr);
     }
   };
 
