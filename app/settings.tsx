@@ -49,6 +49,20 @@ const INITIAL_SETTINGS: SettingsState = {
   consent_religious_data: true,
 };
 
+function toSettingsState(value: Partial<SettingsState> | null | undefined): SettingsState {
+  return {
+    wants_festival_reminders: value?.wants_festival_reminders ?? INITIAL_SETTINGS.wants_festival_reminders,
+    wants_shloka_reminders: value?.wants_shloka_reminders ?? INITIAL_SETTINGS.wants_shloka_reminders,
+    wants_nitya_reminders: value?.wants_nitya_reminders ?? INITIAL_SETTINGS.wants_nitya_reminders,
+    wants_community_notifications: value?.wants_community_notifications ?? INITIAL_SETTINGS.wants_community_notifications,
+    wants_family_notifications: value?.wants_family_notifications ?? INITIAL_SETTINGS.wants_family_notifications,
+    app_language: value?.app_language ?? INITIAL_SETTINGS.app_language,
+    transliteration_language: value?.transliteration_language ?? INITIAL_SETTINGS.transliteration_language,
+    meaning_language: value?.meaning_language ?? INITIAL_SETTINGS.meaning_language,
+    consent_religious_data: value?.consent_religious_data ?? INITIAL_SETTINGS.consent_religious_data,
+  };
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -92,11 +106,9 @@ export default function SettingsScreen() {
       AsyncStorage.getItem(THEME_STORAGE_KEY),
     ]);
 
-    const remote = profileRes.data ?? INITIAL_SETTINGS;
-    const merged = {
-      ...remote,
-      ...(localSettings ? (JSON.parse(localSettings) as Partial<SettingsState>) : {}),
-    } satisfies SettingsState;
+    const remote = toSettingsState(profileRes.data ?? INITIAL_SETTINGS);
+    const local = localSettings ? toSettingsState(JSON.parse(localSettings) as Partial<SettingsState>) : {};
+    const merged = toSettingsState({ ...remote, ...local });
 
     setSettings(merged);
     if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
@@ -122,7 +134,8 @@ export default function SettingsScreen() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase.from('profiles').update(nextState).eq('id', user.id);
+      const profileUpdate = toSettingsState(nextState);
+      const { error } = await supabase.from('profiles').update(profileUpdate).eq('id', user.id);
       if (error) throw error;
     } catch {
       Alert.alert('Could not save settings');

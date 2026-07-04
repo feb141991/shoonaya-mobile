@@ -17,6 +17,7 @@ import MapView, { Marker, PROVIDER_DEFAULT, UrlTile, type Region } from 'react-n
 import { TempleCard } from '@/components/tirtha/TempleCard';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
 import { DIASPORA_TEMPLES, getCuratedNearbyTemples } from '@/lib/diaspora-temples';
 import { distanceKm, fetchNearbyTemples, geocodeCity, mergeCuratedAndOsm, type Temple } from '@/lib/overpass';
 import { supabase } from '@/lib/supabase';
@@ -56,7 +57,7 @@ function tirthaPlaceId(temple: Temple) {
   return `overpass:${temple.id}`;
 }
 
-function templeToPlaceRow(temple: Temple, userId?: string | null) {
+function templeToPlaceRow(temple: Temple) {
   return {
     id: tirthaPlaceId(temple),
     source: 'overpass',
@@ -71,9 +72,6 @@ function templeToPlaceRow(temple: Temple, userId?: string | null) {
     opening_hours: temple.opening ?? null,
     deity: temple.deity ?? null,
     sampradaya: temple.sampradaya ?? null,
-    source_confidence: 'community_import',
-    created_by: userId ?? null,
-    updated_at: new Date().toISOString(),
   };
 }
 
@@ -215,7 +213,14 @@ export default function TirthaScreen() {
       if (exists) {
         await supabase.from('tirtha_saves').delete().eq('user_id', user.id).eq('place_id', placeId);
       } else {
-        await supabase.from('tirtha_places').upsert(templeToPlaceRow(temple, user.id), { onConflict: 'id' });
+        const placeResponse = await apiFetch('/api/tirtha/place', {
+          method: 'POST',
+          body: JSON.stringify(templeToPlaceRow(temple)),
+        });
+        if (!placeResponse.ok) {
+          setNotice('Could not save this place.');
+          return;
+        }
         await supabase.from('tirtha_saves').upsert({ user_id: user.id, place_id: placeId }, { onConflict: 'user_id,place_id' });
       }
 
@@ -238,7 +243,15 @@ export default function TirthaScreen() {
 
     setSubmitting(true);
     const placeId = tirthaPlaceId(selectedTemple);
-    await supabase.from('tirtha_places').upsert(templeToPlaceRow(selectedTemple, user.id), { onConflict: 'id' });
+    const placeResponse = await apiFetch('/api/tirtha/place', {
+      method: 'POST',
+      body: JSON.stringify(templeToPlaceRow(selectedTemple)),
+    });
+    if (!placeResponse.ok) {
+      setNotice('Could not save this place.');
+      setSubmitting(false);
+      return;
+    }
     const { error } = await supabase.from('tirtha_checkins').insert({
       user_id: user.id,
       place_id: placeId,
