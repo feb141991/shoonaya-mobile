@@ -255,7 +255,7 @@ export default function TirthaScreen() {
     const { error } = await supabase.from('tirtha_checkins').insert({
       user_id: user.id,
       place_id: placeId,
-      privacy: community ? 'community' : 'private',
+      privacy: community ? 'public' : 'private',
       darshan_mood: checkinMood,
       intention: intention.trim() || null,
     });
