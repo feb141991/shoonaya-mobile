@@ -7,6 +7,7 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@sangam/panchang-engine": "file:vendor/sangam-panchang-engine-0.1.0.tgz",
     "@supabase/supabase-js": "^2.106.2",
     "astronomia": "^4.2.0",
     "expo": "~56.0.14",
