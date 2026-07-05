@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
 import { API_BASE } from '@/lib/constants';
+
+const TERMS_URL = 'https://shoonaya.com/terms';
+const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
 export default function WhatsAppScreen() {
   const router = useRouter();
@@ -93,6 +96,35 @@ export default function WhatsAppScreen() {
               Send code
             </Text>
           </Pressable>
+
+          <Text
+            style={{
+              color: COLORS.textDimLight,
+              fontFamily: FONTS.sans,
+              fontSize: 12,
+              textAlign: 'center',
+              paddingTop: 14,
+              lineHeight: 18,
+            }}
+          >
+            By continuing, you agree to our{' '}
+            <Text
+              accessibilityRole="link"
+              onPress={() => { void Linking.openURL(TERMS_URL); }}
+              style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }}
+            >
+              Terms of Service
+            </Text>
+            {' '}and{' '}
+            <Text
+              accessibilityRole="link"
+              onPress={() => { void Linking.openURL(PRIVACY_URL); }}
+              style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }}
+            >
+              Privacy Policy
+            </Text>
+            .
+          </Text>
 
           {submitting ? (
             <View style={{ alignItems: 'center', marginTop: 12 }}>

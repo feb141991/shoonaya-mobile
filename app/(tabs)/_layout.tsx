@@ -46,11 +46,11 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="hands-pray" color={color} size={size} />,
         }}
       />
+
       <Tabs.Screen
         name="tirtha"
         options={{
-          title: 'Tirtha',
-          tabBarIcon: ({ color, size }) => <Feather name="map-pin" color={color} size={size} />,
+          href: null,
         }}
       />
       <Tabs.Screen

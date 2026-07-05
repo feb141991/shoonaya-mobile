@@ -16,7 +16,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/lib/supabase';
 
 type PostRow = {
@@ -431,12 +433,13 @@ export default function MandaliScreen() {
         </View>
 
         {!profile?.mandaliId ? (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>No Mandali joined</Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, marginTop: 6 }}>
-              Join a Mandali from the web app flow first. Mobile feed will activate automatically after that.
-            </Text>
-          </Card>
+          <EmptyState
+            icon="users"
+            title="No Mandali joined"
+            subtitle="Join a Mandali from the web app flow first. Mobile feed will activate automatically after that."
+            ctaLabel="Go to web app"
+            onCta={() => void WebBrowser.openBrowserAsync('https://shoonaya.app/mandali')}
+          />
         ) : null}
 
         {visiblePosts.map((post) => {

@@ -37,6 +37,35 @@ export default function RootLayout() {
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
 
+  const routeForSession = useCallback(
+    async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
+      const inAuthGroup = segments[0] === '(auth)';
+
+      if (!session) {
+        if (!inAuthGroup) {
+          router.replace('/(auth)/login');
+        }
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tradition')
+        .eq('id', session.user.id)
+        .single();
+
+      const hasCompletedOnboarding = !!profile?.tradition;
+      const isOnboarding = inAuthGroup && segments[1] === 'onboarding';
+
+      if (!hasCompletedOnboarding && !isOnboarding) {
+        router.replace('/(auth)/onboarding');
+      } else if (hasCompletedOnboarding && inAuthGroup) {
+        router.replace('/(tabs)');
+      }
+    },
+    [router, segments]
+  );
+
   // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,10 +114,7 @@ export default function RootLayout() {
         if (!mounted) return;
 
         // 3. Navigation Guard
-        const inAuthGroup = segments[0] === '(auth)';
-        if (session && inAuthGroup) {
-          router.replace('/(tabs)');
-        }
+        await routeForSession(session);
 
         setAuthReady(true);
       } catch (e) {
@@ -101,19 +127,16 @@ export default function RootLayout() {
 
     prepare();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
-      const inAuthGroup = segments[0] === '(auth)';
-      if (session && inAuthGroup) {
-        router.replace('/(tabs)');
-      }
+      await routeForSession(session);
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fontsLoaded, fontError, router]);
+  }, [fontsLoaded, fontError, routeForSession]);
 
   // ── Hide Splash Screen when Ready ────────────────────────────────
   useEffect(() => {

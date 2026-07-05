@@ -13,9 +13,11 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import MapView, { Marker, PROVIDER_DEFAULT, UrlTile, type Region } from 'react-native-maps';
+import { Feather } from '@expo/vector-icons';
 
 import { TempleCard } from '@/components/tirtha/TempleCard';
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { DIASPORA_TEMPLES, getCuratedNearbyTemples } from '@/lib/diaspora-temples';
@@ -163,7 +165,7 @@ export default function TirthaScreen() {
       await refreshPassport(user.id);
     }
 
-    const permission = await Location.requestForegroundPermissionsAsync();
+    const permission = await Location.getForegroundPermissionsAsync();
     const granted = permission.status === 'granted';
     setPermissionGranted(granted);
 
@@ -189,6 +191,28 @@ export default function TirthaScreen() {
     setLoading(false);
     setRefreshing(false);
   }, [loadNearby, refreshPassport]);
+
+  const requestLocation = useCallback(async () => {
+    setLoading(true);
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (permission.status === 'granted') {
+      setPermissionGranted(true);
+      const current = await Location.getCurrentPositionAsync({});
+      const nextRegion = {
+        latitude: current.coords.latitude,
+        longitude: current.coords.longitude,
+        latitudeDelta: 0.18,
+        longitudeDelta: 0.18,
+      };
+      setUserCoords({ lat: current.coords.latitude, lon: current.coords.longitude });
+      setRegion(nextRegion);
+      mapRef.current?.animateToRegion(nextRegion);
+      await loadNearby(current.coords.latitude, current.coords.longitude);
+    } else {
+      setNotice('Location permission denied. Please search a city.');
+    }
+    setLoading(false);
+  }, [loadNearby]);
 
   useEffect(() => {
     void initialize();
@@ -255,7 +279,7 @@ export default function TirthaScreen() {
     const { error } = await supabase.from('tirtha_checkins').insert({
       user_id: user.id,
       place_id: placeId,
-      privacy: community ? 'public' : 'private',
+      privacy: community ? 'community' : 'private',
       darshan_mood: checkinMood,
       intention: intention.trim() || null,
     });
@@ -350,33 +374,51 @@ export default function TirthaScreen() {
         {passportTab === 'map' ? (
           <View style={{ gap: 16 }}>
             <View style={{ paddingHorizontal: 20, marginTop: 4, gap: 10 }}>
-              <View
-                style={{
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: border,
-                  backgroundColor: inputBg,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 14,
-                }}
-              >
-                <TextInput
-                  value={cityQuery}
-                  onChangeText={setCityQuery}
-                  placeholder="Search city, country"
-                  placeholderTextColor={dim}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View
                   style={{
                     flex: 1,
-                    paddingVertical: 14,
-                    color: text,
-                    fontFamily: FONTS.sans,
-                    fontSize: 14,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: border,
+                    backgroundColor: inputBg,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 14,
                   }}
-                />
-                <Pressable onPress={() => void searchCity()}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold }}>Search</Text>
-                </Pressable>
+                >
+                  <TextInput
+                    value={cityQuery}
+                    onChangeText={setCityQuery}
+                    placeholder="Search city, country"
+                    placeholderTextColor={dim}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 14,
+                      color: text,
+                      fontFamily: FONTS.sans,
+                      fontSize: 14,
+                    }}
+                  />
+                  <Pressable onPress={() => void searchCity()}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold }}>Search</Text>
+                  </Pressable>
+                </View>
+                {!permissionGranted && (
+                  <Pressable 
+                    onPress={() => void requestLocation()}
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 18,
+                      backgroundColor: COLORS.brandGold,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Feather name="navigation" size={20} color={COLORS.ink} />
+                  </Pressable>
+                )}
               </View>
 
               {!permissionGranted ? (
@@ -474,7 +516,13 @@ export default function TirthaScreen() {
               </View>
             ))}
             {visits.length === 0 ? (
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>No visits saved yet.</Text>
+              <EmptyState
+                icon="map-pin"
+                title="No visits yet"
+                subtitle="Check in at nearby temples to log your darshan."
+                ctaLabel="Find nearby temples"
+                onCta={() => setPassportTab('map')}
+              />
             ) : null}
           </View>
         )}

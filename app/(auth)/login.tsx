@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, Text, View } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { ActivityIndicator, Image, Linking, Platform, Pressable, Text, View } from 'react-native';
+import { Link } from 'expo-router';
 import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
@@ -11,6 +11,9 @@ import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const TERMS_URL = 'https://shoonaya.com/terms';
+const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
 type AuthAction = 'google' | 'apple' | 'whatsapp' | null;
 
@@ -54,7 +57,6 @@ function AuthButton({
 }
 
 export default function LoginScreen() {
-  const router = useRouter();
   const [activeAction, setActiveAction] = useState<AuthAction>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -199,26 +201,34 @@ export default function LoginScreen() {
               </Pressable>
             </Link>
 
-            <Pressable
-              disabled={activeAction !== null}
-              onPress={() => router.replace('/(tabs)')}
+            <Text
               style={{
-                alignItems: 'center',
-                paddingVertical: 4,
-                opacity: activeAction !== null ? 0.6 : 1,
+                color: COLORS.textDimLight,
+                fontFamily: FONTS.sans,
+                fontSize: 12,
+                textAlign: 'center',
+                paddingTop: 4,
+                lineHeight: 18,
               }}
             >
+              By continuing, you agree to our{' '}
               <Text
-                style={{
-                  color: COLORS.textDimLight,
-                  fontFamily: FONTS.sans,
-                  fontSize: 13,
-                  textAlign: 'center',
-                }}
+                accessibilityRole="link"
+                onPress={() => { void Linking.openURL(TERMS_URL); }}
+                style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }}
               >
-                Continue as guest →
+                Terms of Service
               </Text>
-            </Pressable>
+              {' '}and{' '}
+              <Text
+                accessibilityRole="link"
+                onPress={() => { void Linking.openURL(PRIVACY_URL); }}
+                style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
 
             {activeAction !== null ? (
               <View style={{ alignItems: 'center', paddingTop: 4 }}>
