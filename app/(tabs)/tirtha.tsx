@@ -36,7 +36,7 @@ type TirthaVisitRow = {
   id: string;
   place_id: string;
   visited_at: string;
-  privacy: 'private' | 'community' | string;
+  privacy: 'private' | 'family' | 'mandali' | 'public' | string;
   darshan_mood: string | null;
   intention: string | null;
 };
@@ -279,7 +279,7 @@ export default function TirthaScreen() {
     const { error } = await supabase.from('tirtha_checkins').insert({
       user_id: user.id,
       place_id: placeId,
-      privacy: community ? 'community' : 'private',
+      privacy: community ? 'public' : 'private',
       darshan_mood: checkinMood,
       intention: intention.trim() || null,
     });
