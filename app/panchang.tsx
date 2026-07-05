@@ -14,7 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { calculatePanchang, type PanchangData } from '@/lib/panchang';
+import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'all';

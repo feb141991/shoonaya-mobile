@@ -1,4 +1,4 @@
-import type { TithiReminder, SpiritualPulse } from './panchang';
+import type { TithiReminder, SpiritualPulse } from '@sangam/panchang-engine';
 
 export type FastingType = 'nirjala' | 'phalahar' | 'sattvic' | 'ekbhukta' | 'partial' | 'none';
 
