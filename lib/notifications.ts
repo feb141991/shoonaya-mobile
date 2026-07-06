@@ -15,7 +15,7 @@ type Router = ReturnType<typeof useRouter>;
 
 const ONESIGNAL_APP_ID = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID ?? '';
 
-type NotificationType = 'daily_shloka' | 'streak_reminder' | 'mandali_mention';
+type NotificationType = 'daily_shloka' | 'streak_reminder' | 'mandali_mention' | 'tithi' | 'festival';
 
 type NotificationAdditionalData = {
   type?: NotificationType;
@@ -64,6 +64,13 @@ export function handleNotificationTap(router: Router): () => void {
       case 'daily_shloka': router.push('/(tabs)/pathshala'); break;
       case 'streak_reminder': router.push('/(tabs)'); break;
       case 'mandali_mention': router.push('/mandali'); break;
+      // Sent by web crons `/api/cron/tithi-reminder` (data.type: 'tithi', e.g.
+      // "Ekadashi today") and `/api/cron/vrat-reminder` (data.type: 'festival',
+      // e.g. "Karva Chauth tomorrow") via the shared OneSignal app — native
+      // devices already receive these pushes today, they just fell through to
+      // the default tab on tap. Route to the closest native-equivalent screen.
+      case 'tithi': router.push('/panchang'); break;
+      case 'festival': router.push('/vrat'); break;
       default: router.push('/(tabs)');
     }
   };
