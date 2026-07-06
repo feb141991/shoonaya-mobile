@@ -2,6 +2,10 @@
 //
 // Kept in a plain (non-'use client') module so server components (e.g. the
 // insights page) can import it without pulling in React client code.
+// TEMPORARY: The SEED_PATHS data is now a temporary dependency for the native
+// lesson-detail screens (`[pathId].tsx` and `[lessonId].tsx`) until they are
+// migrated. The browse screen (`app/(tabs)/pathshala.tsx`) uses the API for
+// data and imports only the PathshalaPath type from this module.
 
 export interface PathshalaPath {
   id: string;

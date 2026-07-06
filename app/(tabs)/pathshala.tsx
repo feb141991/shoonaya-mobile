@@ -17,9 +17,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { COLORS, FONTS } from '@/lib/constants';
-import { SEED_PATHS, type PathshalaPath } from '@/lib/pathshala-paths';
+import { type PathshalaPath } from '@/lib/pathshala-paths';
 import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
+import { apiFetch } from '@/lib/api';
 
 type TabKey = 'progress' | 'explore';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
@@ -30,6 +31,35 @@ type EnrollmentRow = {
   completed_lessons: number[] | null;
   status: string | null;
 };
+
+function isPathshalaPath(value: unknown): value is PathshalaPath {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.title === 'string' &&
+    typeof candidate.description === 'string' &&
+    (candidate.difficulty === 'beginner' ||
+      candidate.difficulty === 'intermediate' ||
+      candidate.difficulty === 'advanced') &&
+    typeof candidate.proRequired === 'boolean' &&
+    typeof candidate.tradition === 'string' &&
+    typeof candidate.total_lessons === 'number' &&
+    typeof candidate.duration_days === 'number'
+  );
+}
+
+function parsePathsResponse(value: unknown): PathshalaPath[] {
+  if (!value || typeof value !== 'object') {
+    return [];
+  }
+
+  const paths = (value as Record<string, unknown>).paths;
+  return Array.isArray(paths) ? paths.filter(isPathshalaPath) : [];
+}
 
 const TRADITION_EMOJI: Record<string, string> = {
   hindu: '🕉️',
@@ -53,10 +83,11 @@ function PathshalaContent() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
+  const [paths, setPaths] = useState<PathshalaPath[]>([]);
 
   const scrollRef = useScrollToTop();
 
-  const loadProgress = useCallback(async (refresh = false) => {
+  const loadData = useCallback(async (refresh = false) => {
     if (refresh) {
       setRefreshing(true);
     } else {
@@ -74,24 +105,44 @@ function PathshalaContent() {
       return;
     }
 
-    const { data } = await supabase
-      .from('guided_path_progress')
-      .select('path_id, current_lesson, completed_lessons, status')
-      .eq('user_id', user.id)
-      .in(
-        'path_id',
-        SEED_PATHS.map((path) => path.id)
-      );
+    try {
+      const pathsRes = await apiFetch('/api/pathshala/paths');
+      if (!pathsRes.ok) {
+        setPaths([]);
+        setEnrollments([]);
+        return;
+      }
 
-    setEnrollments((data as EnrollmentRow[] | null) ?? []);
+      const fetchedPaths = parsePathsResponse(await pathsRes.json());
+      setPaths(fetchedPaths);
+
+      if (fetchedPaths.length > 0) {
+        const { data } = await supabase
+          .from('guided_path_progress')
+          .select('path_id, current_lesson, completed_lessons, status')
+          .eq('user_id', user.id)
+          .in(
+            'path_id',
+            fetchedPaths.map((path) => path.id)
+          );
+        setEnrollments((data as EnrollmentRow[] | null) ?? []);
+      } else {
+        setEnrollments([]);
+      }
+    } catch (error) {
+      console.error(error);
+      setPaths([]);
+      setEnrollments([]);
+    }
+
     setLoading(false);
     setRefreshing(false);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      void loadProgress();
-    }, [loadProgress])
+      void loadData();
+    }, [loadData])
   );
 
   const progressMap = useMemo(() => {
@@ -103,16 +154,16 @@ function PathshalaContent() {
   }, [enrollments]);
 
   const enrolledPaths = useMemo(
-    () => SEED_PATHS.filter((path) => progressMap.has(path.id)),
-    [progressMap]
+    () => paths.filter((path) => progressMap.has(path.id)),
+    [paths, progressMap]
   );
 
   const filteredPaths = useMemo(() => {
     if (difficulty === 'all') {
-      return SEED_PATHS;
+      return paths;
     }
-    return SEED_PATHS.filter((path) => path.difficulty === difficulty);
-  }, [difficulty]);
+    return paths.filter((path) => path.difficulty === difficulty);
+  }, [difficulty, paths]);
 
   const openPath = useCallback(
     (path: PathshalaPath) => {
@@ -173,16 +224,16 @@ function PathshalaContent() {
   const completedLessonsByDifficulty = useMemo(() => {
     const completedPathIds = enrollments
       .filter((entry) => {
-        const path = SEED_PATHS.find((candidate) => candidate.id === entry.path_id);
+        const path = paths.find((candidate) => candidate.id === entry.path_id);
         return path && (entry.completed_lessons ?? []).length >= path.total_lessons;
       })
       .map((entry) => entry.path_id);
 
     return {
-      beginner: completedPathIds.some((id) => SEED_PATHS.find((path) => path.id === id)?.difficulty === 'beginner'),
-      intermediate: completedPathIds.some((id) => SEED_PATHS.find((path) => path.id === id)?.difficulty === 'intermediate'),
+      beginner: completedPathIds.some((id) => paths.find((path) => path.id === id)?.difficulty === 'beginner'),
+      intermediate: completedPathIds.some((id) => paths.find((path) => path.id === id)?.difficulty === 'intermediate'),
     };
-  }, [enrollments]);
+  }, [enrollments, paths]);
 
   const currentLevel: DifficultyFilter = useMemo(() => {
     if (enrolledPaths.some((path) => path.difficulty === 'advanced')) return 'advanced';
@@ -198,7 +249,7 @@ function PathshalaContent() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              void loadProgress(true);
+              void loadData(true);
             }}
             tintColor={COLORS.brandGold}
           />
@@ -314,7 +365,7 @@ function PathshalaContent() {
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim }}>
                   BEGIN YOUR JOURNEY
                 </Text>
-                {SEED_PATHS.filter((path) => path.difficulty === 'beginner')
+                {paths.filter((path) => path.difficulty === 'beginner')
                   .slice(0, 3)
                   .map((path) => (
                     <View
