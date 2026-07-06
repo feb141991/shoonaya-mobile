@@ -282,13 +282,13 @@ export default function VratScreen() {
                     gap: 8,
                     borderRadius: 18,
                     borderWidth: 1.5,
-                    borderColor: 'rgba(134,187,110,0.45)',
-                    backgroundColor: 'rgba(134,187,110,0.15)',
+                    borderColor: COLORS.successBorder,
+                    backgroundColor: COLORS.successBg,
                     paddingVertical: 14,
                   }}
                 >
-                  <Feather name="check-circle" size={18} color="#5aaa38" />
-                  <Text style={{ color: '#5aaa38', fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  <Feather name="check-circle" size={18} color={COLORS.success} />
+                  <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
                     Observed today ✓{observeCount > 1 ? `  (${observeCount}× total)` : ''}
                   </Text>
                 </View>

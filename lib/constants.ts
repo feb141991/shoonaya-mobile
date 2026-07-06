@@ -9,6 +9,12 @@ export const COLORS = {
   borderDark: '#3B2B16',
   textDimLight: '#7A6A53',
   textDimDark: '#B49D7C',
+  // Success/observed state — matches web's exact values (VratClient.tsx
+  // "Mark as Observed" / "Observed today" treatment), so native and web
+  // render the same green rather than each screen picking its own.
+  success: '#5aaa38',
+  successBg: 'rgba(134,187,110,0.15)',
+  successBorder: 'rgba(134,187,110,0.45)',
 } as const;
 
 export const FONTS = {
