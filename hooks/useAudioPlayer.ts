@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Audio, type AVPlaybackStatusSuccess } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
 type AudioRate = 0.75 | 1.0 | 1.25;
 
@@ -16,28 +16,27 @@ let audioModeConfigured = false;
 async function configureAudioMode() {
   if (audioModeConfigured) return;
   audioModeConfigured = true;
-  await Audio.setAudioModeAsync({
-    playsInSilentModeIOS: true,
-    staysActiveInBackground: true,
-    shouldDuckAndroid: false,
-    interruptionModeIOS: 2, // DoNotMix
-    interruptionModeAndroid: 1, // DoNotMix
+  await setAudioModeAsync({
+    playsInSilentMode: true,
+    shouldPlayInBackground: true,
+    interruptionMode: 'doNotMix',
   });
 }
 
 export function useAudioPlayer(): UseAudioPlayerResult {
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
 
   const stop = useCallback(async () => {
-    const sound = soundRef.current;
-    if (!sound) return;
+    const player = playerRef.current;
+    if (!player) return;
     try {
-      await sound.stopAsync();
-      await sound.unloadAsync();
+      player.pause();
+      await player.seekTo(0);
+      player.remove();
     } catch {
-      // already unloaded
+      // already removed
     }
-    soundRef.current = null;
+    playerRef.current = null;
   }, []);
 
   // Clean up on unmount
@@ -52,18 +51,18 @@ export function useAudioPlayer(): UseAudioPlayerResult {
       await stop();
       await configureAudioMode();
 
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: url },
-        { shouldPlay: true, isLooping: loop, volume: 1.0 }
-      );
-      soundRef.current = sound;
+      const player = createAudioPlayer({ uri: url });
+      player.loop = loop;
+      player.volume = 1.0;
+      player.play();
+      playerRef.current = player;
     },
     [stop]
   );
 
   const pause = useCallback(async () => {
     try {
-      await soundRef.current?.pauseAsync();
+      playerRef.current?.pause();
     } catch {
       // not loaded
     }
@@ -71,7 +70,7 @@ export function useAudioPlayer(): UseAudioPlayerResult {
 
   const resume = useCallback(async () => {
     try {
-      await soundRef.current?.playAsync();
+      playerRef.current?.play();
     } catch {
       // not loaded
     }
@@ -79,12 +78,9 @@ export function useAudioPlayer(): UseAudioPlayerResult {
 
   const setRate = useCallback(async (rate: AudioRate) => {
     try {
-      const sound = soundRef.current;
-      if (!sound) return;
-      const status = await sound.getStatusAsync();
-      if ((status as AVPlaybackStatusSuccess).isLoaded) {
-        await sound.setRateAsync(rate, true);
-      }
+      const player = playerRef.current;
+      if (!player || !player.isLoaded) return;
+      player.setPlaybackRate(rate);
     } catch {
       // not supported on all platforms
     }

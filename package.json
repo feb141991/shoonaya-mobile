@@ -13,8 +13,9 @@
     "astronomia": "^4.2.0",
     "expo": "~56.0.14",
     "expo-apple-authentication": "~56.0.4",
+    "expo-asset": "~56.0.18",
+    "expo-audio": "~56.0.12",
     "expo-auth-session": "~56.0.15",
-    "expo-av": "~16.0.8",
     "expo-build-properties": "~56.0.21",
     "expo-constants": "~56.0.20",
     "expo-crypto": "~56.0.4",
@@ -63,11 +64,7 @@
   "private": true,
   "expo": {
     "doctor": {
-      "reactNativeDirectoryCheck": {
-        "exclude": [
-          "expo-av"
-        ]
-      }
+      "reactNativeDirectoryCheck": {}
     }
   }
 }
