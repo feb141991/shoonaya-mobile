@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,16 +14,55 @@ import Constants from 'expo-constants';
 const isExpoGo = Constants.appOwnership === 'expo';
 const Notifications = isExpoGo ? null : (() => { try { return require('expo-notifications'); } catch { return null; } })();
 
+import { calculatePanchang, getTithiReminder, type TithiReminder } from '@sangam/panchang-engine';
+
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { VRAT_DATABASE, type VratData } from '@/lib/vrat-data';
+import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
 
 type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
 const TRADITION_FILTERS: Tradition[] = ['all', 'hindu', 'sikh', 'buddhist', 'jain'];
+
+type ProfileGeoState = {
+  lat: number;
+  lon: number;
+  timezone: string;
+  tradition: string | null;
+};
+
+// Default anchor (Ujjain — same fallback native's Panchang screen already
+// uses) when a user has no saved location yet.
+const DEFAULT_GEO: ProfileGeoState = {
+  lat: 23.1765,
+  lon: 75.7885,
+  timezone: 'Asia/Kolkata',
+  tradition: null,
+};
+
+type UpcomingVrat = {
+  date: string;
+  slug: string;
+  vratData: VratData;
+};
+
+// Maps a live-calculated tithi index (from @sangam/panchang-engine) to the
+// matching recurring VRAT_DATABASE key. Kept in exact sync with the index
+// checks inside that package's own `getTithiReminder` so "today is special"
+// and "which vrat card to highlight" never disagree.
+function tithiIndexToVratId(tithiIndex: number, tradition: string | null | undefined): string | null {
+  if (tithiIndex === 11 || tithiIndex === 26) return 'ekadashi';
+  if (tithiIndex === 15) return 'purnima';
+  if (tithiIndex === 30) return 'amavasya';
+  const t = tradition ?? 'hindu';
+  if ((tithiIndex === 13 || tithiIndex === 28) && (t === 'hindu' || t === 'shaiva' || t === 'vaishnava')) return 'pradosh';
+  if (tithiIndex === 4 || tithiIndex === 19) return 'chaturthi';
+  if (tithiIndex === 29 && (t === 'hindu' || t === 'shaiva')) return 'shivaratri';
+  return null;
+}
 
 function vratMatchesTradition(vrat: VratData, tradition: Tradition) {
   if (tradition === 'all') {
@@ -56,6 +95,9 @@ export default function VratScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedTradition, setSelectedTradition] = useState<Tradition>('all');
   const [selectedVrat, setSelectedVrat] = useState<VratData | null>(null);
+  const [geo, setGeo] = useState<ProfileGeoState>(DEFAULT_GEO);
+  const [upcomingVrats, setUpcomingVrats] = useState<UpcomingVrat[]>([]);
+  const [upcomingError, setUpcomingError] = useState(false);
 
   // ── Vrat observation tracker — mirrors web's VratClient.tsx (same
   // GET/POST /api/vrat/observe contract, same karma-award behavior). ────────
@@ -75,17 +117,88 @@ export default function VratScreen() {
     [isDark]
   );
 
+  const loadProfileGeo = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('latitude, longitude, timezone, tradition')
+      .eq('id', user.id)
+      .single();
+
+    setGeo({
+      lat: profile?.latitude ?? DEFAULT_GEO.lat,
+      lon: profile?.longitude ?? DEFAULT_GEO.lon,
+      timezone: profile?.timezone ?? DEFAULT_GEO.timezone,
+      tradition: profile?.tradition ?? null,
+    });
+  }, [router]);
+
   useEffect(() => {
-    supabase.auth
-      .getUser()
-      .then(({ data }) => {
-        if (!data.user) {
-          router.replace('/(auth)/login');
-          return;
+    setLoading(true);
+    loadProfileGeo().finally(() => setLoading(false));
+  }, [loadProfileGeo]);
+
+  // Canonical upcoming observances — same endpoint app/panchang.tsx already
+  // uses. Filter to kind === 'vrat' and resolve each slug back to the rich
+  // local VratData (VRAT_DATABASE / NAMED_VRAT_DATABASE) via lookupVratData
+  // (already handles both direct-key and alias lookups), so dates are
+  // live/real but the descriptive content stays the same trusted local copy.
+  // Runs independently of the profile/auth load, so switching the tradition
+  // filter only refreshes this list, not the whole screen.
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch(
+      `/api/calendar/upcoming?days=60&tradition=${selectedTradition}&tz=${encodeURIComponent(geo.timezone)}`
+    )
+      .then(async (response) => {
+        if (!response.ok) throw new Error('upcoming fetch failed');
+        const payload = (await response.json()) as {
+          observances?: Array<{ date: string; slug: string; kind: string }>;
+        };
+        const resolved = (payload.observances ?? [])
+          .filter((observance) => observance.kind === 'vrat')
+          .map((observance) => {
+            const vratData = lookupVratData(observance.slug);
+            return vratData ? { date: observance.date, slug: observance.slug, vratData } : null;
+          })
+          .filter((entry): entry is UpcomingVrat => entry !== null);
+        if (!cancelled) {
+          setUpcomingVrats(resolved);
+          setUpcomingError(false);
         }
       })
-      .finally(() => setLoading(false));
-  }, [router]);
+      .catch(() => {
+        if (!cancelled) setUpcomingError(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTradition, geo.timezone]);
+
+  const panchangToday = useMemo(
+    () => calculatePanchang(new Date(), geo.lat, geo.lon, geo.timezone),
+    [geo.lat, geo.lon, geo.timezone]
+  );
+
+  const todayReminder: TithiReminder | null = useMemo(
+    () => getTithiReminder(panchangToday.tithiIndex, geo.tradition),
+    [panchangToday.tithiIndex, geo.tradition]
+  );
+
+  const todayVrat: VratData | null = useMemo(() => {
+    const vratId = tithiIndexToVratId(panchangToday.tithiIndex, geo.tradition);
+    return vratId ? (VRAT_DATABASE[vratId] ?? null) : null;
+  }, [panchangToday.tithiIndex, geo.tradition]);
 
   const vrats = useMemo(
     () => Object.values(VRAT_DATABASE).filter((vrat) => vratMatchesTradition(vrat, selectedTradition)),
@@ -228,6 +341,50 @@ export default function VratScreen() {
             );
           })}
         </ScrollView>
+
+        {!selectedVrat && (
+          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Today</Text>
+            {todayReminder && todayVrat ? (
+              <Pressable onPress={() => setSelectedVrat(todayVrat)} style={{ gap: 4 }}>
+                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.serifBold, fontSize: 20 }}>
+                  {todayReminder.title}
+                </Text>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
+                  {todayReminder.body}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
+                No special observance today — browse below or check what&apos;s coming up.
+              </Text>
+            )}
+          </Card>
+        )}
+
+        {!selectedVrat && upcomingVrats.length > 0 && (
+          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Upcoming</Text>
+            {upcomingVrats.slice(0, 5).map((upcoming) => (
+              <Pressable
+                key={`${upcoming.slug}-${upcoming.date}`}
+                onPress={() => setSelectedVrat(upcoming.vratData)}
+                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
+              >
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14 }}>
+                  {upcoming.vratData.emoji} {upcoming.vratData.name}
+                </Text>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>{upcoming.date}</Text>
+              </Pressable>
+            ))}
+          </Card>
+        )}
+
+        {!selectedVrat && upcomingError && (
+          <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
+            Unable to load upcoming dates right now — showing the full observance list below.
+          </Text>
+        )}
 
         {selectedVrat ? (
           <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
