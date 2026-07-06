@@ -9,6 +9,7 @@ import { API_BASE } from '@/lib/constants';
 
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
+const MIN_TOUCH_TARGET = 44;
 
 export default function WhatsAppScreen() {
   const router = useRouter();
@@ -97,34 +98,72 @@ export default function WhatsAppScreen() {
             </Text>
           </Pressable>
 
-          <Text
-            style={{
-              color: COLORS.textDimLight,
-              fontFamily: FONTS.sans,
-              fontSize: 12,
-              textAlign: 'center',
-              paddingTop: 14,
-              lineHeight: 18,
-            }}
-          >
-            By continuing, you agree to our{' '}
+          <View style={{ paddingTop: 14, gap: 6 }}>
             <Text
-              accessibilityRole="link"
-              onPress={() => { void Linking.openURL(TERMS_URL); }}
-              style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }}
+              style={{
+                color: COLORS.textDimLight,
+                fontFamily: FONTS.sans,
+                fontSize: 13,
+                textAlign: 'center',
+              }}
             >
-              Terms of Service
+              By continuing, you agree to our
             </Text>
-            {' '}and{' '}
-            <Text
-              accessibilityRole="link"
-              onPress={() => { void Linking.openURL(PRIVACY_URL); }}
-              style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+              }}
             >
-              Privacy Policy
-            </Text>
-            .
-          </Text>
+              <Pressable
+                accessibilityRole="link"
+                hitSlop={8}
+                onPress={() => { void Linking.openURL(TERMS_URL); }}
+                style={{
+                  minHeight: MIN_TOUCH_TARGET,
+                  justifyContent: 'center',
+                  paddingHorizontal: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    color: COLORS.brandGold,
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 13,
+                    textDecorationLine: 'underline',
+                  }}
+                >
+                  Terms of Service
+                </Text>
+              </Pressable>
+              <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 13 }}>
+                &
+              </Text>
+              <Pressable
+                accessibilityRole="link"
+                hitSlop={8}
+                onPress={() => { void Linking.openURL(PRIVACY_URL); }}
+                style={{
+                  minHeight: MIN_TOUCH_TARGET,
+                  justifyContent: 'center',
+                  paddingHorizontal: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    color: COLORS.brandGold,
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 13,
+                    textDecorationLine: 'underline',
+                  }}
+                >
+                  Privacy Policy
+                </Text>
+              </Pressable>
+            </View>
+          </View>
 
           {submitting ? (
             <View style={{ alignItems: 'center', marginTop: 12 }}>

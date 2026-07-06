@@ -30,7 +30,7 @@ import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { DHARM_VEERS, getDharmVeerOfTheDay, type DharmVeer } from '@/lib/dharm-veer';
+import { selectDharmVeerOfTheDayFromRoster, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
@@ -74,17 +74,27 @@ function spiritualDate(timezone: string) {
   return baseDate.toISOString().slice(0, 10);
 }
 
-function buildDailyDeck(tradition: Tradition) {
-  const byTradition = DHARM_VEERS.filter((hero) => hero.tradition === tradition) as DharmVeer[];
-  const fallbackPool = byTradition.length > 0 ? byTradition : (DHARM_VEERS.filter((hero) => hero.tradition === 'hindu') as DharmVeer[]);
-  const todayHero = getDharmVeerOfTheDay(tradition);
+// Builds the deck from the CANONICAL roster fetched from
+// `GET /api/dharm-veer/roster` (see loadState). Does not fall back to the
+// local fixture — if `roster` is empty this returns an empty deck, and the
+// screen renders an honest "Unable to load today's profile" state instead
+// of silently substituting stale local content.
+function buildDailyDeck(tradition: Tradition, roster: DharmVeer[]) {
+  if (roster.length === 0) {
+    return [];
+  }
+
+  const byTradition = roster.filter((hero) => hero.tradition === tradition);
+  const fallbackPool = byTradition.length > 0 ? byTradition : roster.filter((hero) => hero.tradition === 'hindu');
+  const effectivePool = fallbackPool.length > 0 ? fallbackPool : roster;
+  const todayHero = selectDharmVeerOfTheDayFromRoster(roster, tradition);
   const anchorIndex = Math.max(
     0,
-    fallbackPool.findIndex((hero) => hero.id === todayHero.id)
+    effectivePool.findIndex((hero) => hero.id === todayHero.id)
   );
 
-  return Array.from({ length: Math.min(MAX_DAILY_CARDS, fallbackPool.length) }, (_, index) => {
-    return fallbackPool[(anchorIndex + index) % fallbackPool.length];
+  return Array.from({ length: Math.min(MAX_DAILY_CARDS, effectivePool.length) }, (_, index) => {
+    return effectivePool[(anchorIndex + index) % effectivePool.length];
   });
 }
 
@@ -113,6 +123,8 @@ export default function DharmVeerScreen() {
   const isDark = scheme === 'dark';
   const [profile, setProfile] = useState<ProfileContext | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roster, setRoster] = useState<DharmVeer[]>([]);
+  const [rosterError, setRosterError] = useState(false);
   const [dayProgress, setDayProgress] = useState<ProgressSnapshot>({ done: false, seenIds: [] });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -133,7 +145,7 @@ export default function DharmVeerScreen() {
 
   const today = useMemo(() => spiritualDate(profile?.timezone ?? 'UTC'), [profile?.timezone]);
   const storageKey = useMemo(() => `shoonaya-dharm-veer-mobile-${today}`, [today]);
-  const deck = useMemo(() => buildDailyDeck(profile?.tradition ?? 'hindu'), [profile?.tradition]);
+  const deck = useMemo(() => buildDailyDeck(profile?.tradition ?? 'hindu', roster), [profile?.tradition, roster]);
   const visibleCards = deck.filter((hero) => !dayProgress.seenIds.includes(hero.id));
   const currentHero = visibleCards[currentIndex] ?? null;
 
@@ -167,7 +179,7 @@ export default function DharmVeerScreen() {
     const resolvedToday = spiritualDate(timezone);
     const localKey = `shoonaya-dharm-veer-mobile-${resolvedToday}`;
 
-    const [storedValue, sadhanaRow] = await Promise.all([
+    const [storedValue, sadhanaRow, rosterResponse] = await Promise.all([
       AsyncStorage.getItem(localKey),
       supabase
         .from('daily_sadhana')
@@ -175,6 +187,16 @@ export default function DharmVeerScreen() {
         .eq('user_id', user.id)
         .eq('date', resolvedToday)
         .maybeSingle(),
+      // Canonical, DB-backed roster — see src/app/api/dharm-veer/roster/route.ts
+      // (wraps web's getDharmVeerRoster). Failure here is surfaced honestly
+      // below rather than silently falling back to the local fixture.
+      apiFetch('/api/dharm-veer/roster')
+        .then(async (res) => {
+          if (!res.ok) return null;
+          const json = await res.json();
+          return Array.isArray(json?.roster) ? (json.roster as DharmVeer[]) : null;
+        })
+        .catch(() => null),
     ]);
 
     const parsed = storedValue ? (JSON.parse(storedValue) as ProgressSnapshot) : null;
@@ -184,6 +206,8 @@ export default function DharmVeerScreen() {
       done: Boolean(sadhanaRow.data?.dharmveer_done) || Boolean(parsed?.done),
       seenIds: parsed?.seenIds ?? [],
     });
+    setRoster(rosterResponse ?? []);
+    setRosterError(!rosterResponse || rosterResponse.length === 0);
     setCurrentIndex(0);
   }, [router]);
 
@@ -331,6 +355,43 @@ export default function DharmVeerScreen() {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (rosterError) {
+    return (
+      <Screen style={{ backgroundColor: surface }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
+          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Feather name="chevron-left" size={16} color={textDim} />
+            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
+          </Pressable>
+
+          <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
+            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
+              Unable to load today&apos;s profile. Check your connection and try again.
+            </Text>
+            <Pressable
+              onPress={() => {
+                setLoading(true);
+                loadState()
+                  .catch(() => Alert.alert('Could not load Dharm Veer'))
+                  .finally(() => setLoading(false));
+              }}
+              style={{
+                alignSelf: 'flex-start',
+                borderRadius: 999,
+                paddingHorizontal: 18,
+                paddingVertical: 10,
+                backgroundColor: COLORS.brandGold,
+              }}
+            >
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
+            </Pressable>
+          </Card>
+        </ScrollView>
       </Screen>
     );
   }

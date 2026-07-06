@@ -94,19 +94,22 @@ export default function RootLayout() {
 
     let mounted = true;
 
+    const exchangeUrlIfPresent = async (url: string | null) => {
+      if (!url) return;
+      const parsed = Linking.parse(url);
+      const params = parsed.queryParams ?? {};
+      const code = typeof params.code === 'string' ? params.code : null;
+
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code);
+      }
+    };
+
     const prepare = async () => {
       try {
-        // 1. Handle Initial URL (Auth Redirects)
-        const initialUrl = await Linking.getInitialURL();
-        if (initialUrl) {
-          const parsed = Linking.parse(initialUrl);
-          const params = parsed.queryParams ?? {};
-          const code = typeof params.code === 'string' ? params.code : null;
-
-          if (code) {
-            await supabase.auth.exchangeCodeForSession(code);
-          }
-        }
+        // 1. Handle Initial URL (Auth Redirects — cold start only; see the
+        // live Linking listener below for the app-already-running case)
+        await exchangeUrlIfPresent(await Linking.getInitialURL());
 
         // 2. Sync Session
         const { data: { session } } = await supabase.auth.getSession();
@@ -127,14 +130,32 @@ export default function RootLayout() {
 
     prepare();
 
+    // Auth redirects that arrive while the app is already running (the
+    // common case: user taps Google/WhatsApp sign-in, completes auth in the
+    // system browser, and returns to the still-running app). Google/WhatsApp
+    // sign-in already exchange the code directly from the WebBrowser result
+    // in app/(auth)/login.tsx and app/(auth)/otp.tsx; this listener is a
+    // defense-in-depth fallback for any redirect delivered through the
+    // platform's normal URL-scheme handling instead.
+    const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
+      exchangeUrlIfPresent(url).catch((e) => {
+        console.error('Deep link auth exchange error:', e);
+      });
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
-      await routeForSession(session);
+      try {
+        await routeForSession(session);
+      } catch (e) {
+        console.error('Auth state routing error:', e);
+      }
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      linkingSubscription.remove();
     };
   }, [fontsLoaded, fontError, routeForSession]);
 

@@ -532,10 +532,27 @@ export const TRADITION_META: Record<string, { label: string; labelLocal: string;
 // ── Rotation logic ─────────────────────────────────────────────────────────
 
 /**
- * Returns the Dharm Veer for today. Changes every calendar day.
- * Tradition-aware: shuffles same-tradition heroes higher in the rotation.
+ * Returns the Dharm Veer for today from a given roster. Changes every
+ * calendar day. Tradition-aware: shuffles same-tradition heroes higher in
+ * the rotation.
+ *
+ * This is the SAME algorithm (epoch, IST offset, day-index, weighted pool)
+ * as web's `selectDharmVeerOfTheDayFromRoster` in
+ * `src/lib/dharm-veer-db.ts` — deliberately kept byte-for-byte equivalent
+ * so native and web never disagree on "today's hero" for the same roster.
+ *
+ * Callers should pass the roster fetched from `GET /api/dharm-veer/roster`
+ * (the canonical, DB-backed source). `DHARM_VEERS` below is a 12-hero local
+ * fixture kept only as a last-resort, explicitly-opted-into fallback — it is
+ * intentionally NOT the default `roster` here, so a caller can't silently
+ * end up back on stale local content without asking for it by name.
  */
-export function getDharmVeerOfTheDay(userTradition?: string | null): DharmVeer {
+export function selectDharmVeerOfTheDayFromRoster(
+  roster: DharmVeer[],
+  userTradition?: string | null
+): DharmVeer {
+  const effectiveRoster = roster.length > 0 ? roster : DHARM_VEERS;
+
   const epoch = new Date('2024-01-01').getTime();
   const now   = new Date();
   // Use spiritual date (midnight IST offset) so it changes consistently
@@ -544,14 +561,25 @@ export function getDharmVeerOfTheDay(userTradition?: string | null): DharmVeer {
   const slot  = dayN; // one hero per day
 
   if (!userTradition) {
-    return DHARM_VEERS[slot % DHARM_VEERS.length];
+    return effectiveRoster[slot % effectiveRoster.length];
   }
 
   // Build a weighted pool: same-tradition heroes appear twice, others once.
   // This ensures variety — never stuck cycling only 8 (or 1) heroes.
-  const same  = DHARM_VEERS.filter(h => h.tradition === userTradition);
-  const other = DHARM_VEERS.filter(h => h.tradition !== userTradition);
+  const same  = effectiveRoster.filter(h => h.tradition === userTradition);
+  const other = effectiveRoster.filter(h => h.tradition !== userTradition);
   const pool  = [...same, ...same, ...other]; // tradition heroes weighted 2×
 
-  return pool[slot % pool.length];
+  return (pool.length > 0 ? pool : effectiveRoster)[slot % (pool.length > 0 ? pool.length : effectiveRoster.length)];
+}
+
+/**
+ * @deprecated Local-fixture-only rotation. Kept only for reference / true
+ * offline fallback callers that have explicitly decided to accept stale,
+ * non-canonical content. New code should fetch the roster from
+ * `GET /api/dharm-veer/roster` and call `selectDharmVeerOfTheDayFromRoster`
+ * instead — see `app/dharm-veer.tsx`.
+ */
+export function getDharmVeerOfTheDay(userTradition?: string | null): DharmVeer {
+  return selectDharmVeerOfTheDayFromRoster(DHARM_VEERS, userTradition);
 }

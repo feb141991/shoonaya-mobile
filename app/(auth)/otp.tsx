@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
 
 type VerifyPayload = {
   success?: boolean;
@@ -62,7 +63,29 @@ export default function OtpScreen() {
       });
 
       const mobileRedirect = rewriteRedirectTarget(payload.redirect, redirectUri);
-      await WebBrowser.openAuthSessionAsync(mobileRedirect, redirectUri);
+      const result = await WebBrowser.openAuthSessionAsync(mobileRedirect, redirectUri);
+
+      // Same fix as native Google sign-in (app/(auth)/login.tsx): the auth
+      // session resolves with the final redirect URL directly and does not
+      // reliably reach app/_layout.tsx's Linking handling while the app
+      // stays running in the foreground. The PKCE `code` must be exchanged
+      // from here, or a verified WhatsApp code never creates a session.
+      if (result.type === 'success' && result.url) {
+        const redirectParams = new URL(result.url).searchParams;
+        const oauthError = redirectParams.get('error_description') ?? redirectParams.get('error');
+        const code = redirectParams.get('code');
+
+        if (oauthError) {
+          throw new Error(oauthError);
+        }
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            throw exchangeError;
+          }
+        }
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not verify WhatsApp code.';
       setErrorMessage(message);
