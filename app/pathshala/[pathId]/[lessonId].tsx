@@ -269,27 +269,14 @@ export default function LessonReaderScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('missing-progress-api');
+        const errorBody = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(errorBody?.error ?? 'Could not save progress');
       }
-    } catch {
-      const { error } = await supabase.from('guided_path_progress').upsert(
-        {
-          user_id: userId,
-          path_id: pathId,
-          status: nextCompleted.length >= lessons.length ? 'completed' : 'active',
-          current_lesson: nextLessonIndex,
-          completed_lessons: nextCompleted,
-          completed_at: nextCompleted.length >= lessons.length ? new Date().toISOString() : null,
-        },
-        { onConflict: 'user_id,path_id' }
-      );
-
-      if (error) {
-        setCompletedLessons(completedLessons);
-        Alert.alert('Could not save progress');
-        setSaving(false);
-        return;
-      }
+    } catch (error) {
+      setCompletedLessons(completedLessons);
+      Alert.alert(error instanceof Error ? error.message : 'Could not save progress');
+      setSaving(false);
+      return;
     }
 
     try {
