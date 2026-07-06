@@ -16,6 +16,7 @@ const Notifications = isExpoGo ? null : (() => { try { return require('expo-noti
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { VRAT_DATABASE, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
@@ -56,6 +57,13 @@ export default function VratScreen() {
   const [selectedTradition, setSelectedTradition] = useState<Tradition>('all');
   const [selectedVrat, setSelectedVrat] = useState<VratData | null>(null);
 
+  // ── Vrat observation tracker — mirrors web's VratClient.tsx (same
+  // GET/POST /api/vrat/observe contract, same karma-award behavior). ────────
+  const [observedToday, setObservedToday] = useState(false);
+  const [observeCount, setObserveCount] = useState(0);
+  const [observeLoading, setObserveLoading] = useState(false);
+  const [observeStatusLoaded, setObserveStatusLoaded] = useState(false);
+
   const theme = useMemo(
     () => ({
       bg: isDark ? COLORS.darkBg : COLORS.creamBg,
@@ -83,6 +91,67 @@ export default function VratScreen() {
     () => Object.values(VRAT_DATABASE).filter((vrat) => vratMatchesTradition(vrat, selectedTradition)),
     [selectedTradition]
   );
+
+  useEffect(() => {
+    if (!selectedVrat) {
+      setObservedToday(false);
+      setObserveCount(0);
+      setObserveStatusLoaded(false);
+      return;
+    }
+
+    let cancelled = false;
+    setObserveStatusLoaded(false);
+
+    apiFetch(`/api/vrat/observe?vrat_id=${encodeURIComponent(selectedVrat.id)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setObservedToday(Boolean(data.observed_today));
+        setObserveCount(data.total_count ?? 0);
+      })
+      .catch(() => {
+        // Silently ignore — tracker is non-critical, mirrors web behavior.
+      })
+      .finally(() => {
+        if (!cancelled) setObserveStatusLoaded(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedVrat]);
+
+  const handleObserve = async () => {
+    if (!selectedVrat || observedToday || observeLoading) {
+      return;
+    }
+
+    setObserveLoading(true);
+    try {
+      const res = await apiFetch('/api/vrat/observe', {
+        method: 'POST',
+        body: JSON.stringify({ vrat_id: selectedVrat.id, vrat_name: selectedVrat.name }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setObservedToday(true);
+        setObserveCount((count) => count + (data.already_observed ? 0 : 1));
+        if (!data.already_observed && data.karma_earned > 0) {
+          Alert.alert(`🙏 Vrat observed! +${data.karma_earned} karma`);
+        } else {
+          Alert.alert('Vrat observed');
+        }
+      } else {
+        Alert.alert('Could not record observation');
+      }
+    } catch {
+      Alert.alert('Could not record observation');
+    } finally {
+      setObserveLoading(false);
+    }
+  };
 
   const setReminder = async (vrat: VratData) => {
     if (!Notifications) {
@@ -203,6 +272,50 @@ export default function VratScreen() {
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Set reminder</Text>
               </Pressable>
+
+              {observedToday ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 8,
+                    borderRadius: 18,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(134,187,110,0.45)',
+                    backgroundColor: 'rgba(134,187,110,0.15)',
+                    paddingVertical: 14,
+                  }}
+                >
+                  <Feather name="check-circle" size={18} color="#5aaa38" />
+                  <Text style={{ color: '#5aaa38', fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                    Observed today ✓{observeCount > 1 ? `  (${observeCount}× total)` : ''}
+                  </Text>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => {
+                    void handleObserve();
+                  }}
+                  disabled={observeLoading || !observeStatusLoaded}
+                  style={{
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    backgroundColor: theme.card,
+                    paddingVertical: 14,
+                    alignItems: 'center',
+                    opacity: observeLoading || !observeStatusLoaded ? 0.6 : 1,
+                  }}
+                >
+                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                    🙏 Mark as Observed{observeCount > 0 ? `  (${observeCount}× before)` : ''}
+                  </Text>
+                </Pressable>
+              )}
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
+                {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat'}
+              </Text>
             </View>
           </Card>
         ) : (
