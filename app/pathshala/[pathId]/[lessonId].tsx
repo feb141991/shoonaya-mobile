@@ -16,8 +16,7 @@ import * as Haptics from 'expo-haptics';
 
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { getPathLessons } from '@/lib/pathshala-lessons';
-import { SEED_PATHS } from '@/lib/pathshala-paths';
+import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -31,10 +30,33 @@ type ProfileRow = {
   meaning_language: string | null;
 };
 
-type EnrollmentRow = {
-  current_lesson: number | null;
-  completed_lessons: number[] | null;
+type EnrollmentPayload = {
+  pathId: string;
+  currentLesson: number;
+  completedLessons: number[];
+  status: string | null;
 };
+
+type LessonEntry = {
+  id: string;
+  source: string;
+  original: string;
+  transliteration?: string;
+  meaning?: string;
+};
+
+type Lesson = {
+  title: string;
+  entries: LessonEntry[];
+};
+
+type PathDetailResponse = {
+  path: PathshalaPath;
+  lessons: Lesson[];
+  locked: boolean;
+};
+
+type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
 
 const FONT_SIZE_KEY = 'shoonaya.pathshala.fontSize';
 
@@ -60,10 +82,12 @@ export default function LessonReaderScreen() {
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
   const lessonId = Array.isArray(params.lessonId) ? params.lessonId[0] : params.lessonId;
   const lessonIndex = Number(lessonId ?? '0');
-  const lessons = useMemo(() => (pathId ? getPathLessons(pathId) : []), [pathId]);
+
+  const [fetchState, setFetchState] = useState<FetchState>('loading');
+  const [path, setPath] = useState<PathshalaPath | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const lesson = lessons[lessonIndex];
   const entry = lesson?.entries[0];
-  const path = useMemo(() => SEED_PATHS.find((candidate) => candidate.id === pathId), [pathId]);
 
   const [fontSize, setFontSize] = useState<ReaderFontSize>('normal');
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
@@ -95,6 +119,41 @@ export default function LessonReaderScreen() {
       .catch(() => {});
   }, []);
 
+  // ── Fetch path + lessons from the contract-backed endpoint ─────────────────
+  useEffect(() => {
+    const loadPath = async () => {
+      if (!pathId) {
+        setFetchState('not_found');
+        return;
+      }
+
+      setFetchState('loading');
+
+      try {
+        const response = await apiFetch(`/api/pathshala/paths/${pathId}`);
+
+        if (response.status === 404) {
+          setFetchState('not_found');
+          return;
+        }
+
+        if (!response.ok) {
+          setFetchState('error');
+          return;
+        }
+
+        const data = (await response.json()) as PathDetailResponse;
+        setPath(data.path);
+        setLessons(data.lessons);
+        setFetchState(data.locked ? 'locked' : 'ready');
+      } catch {
+        setFetchState('error');
+      }
+    };
+
+    void loadPath();
+  }, [pathId]);
+
   useEffect(() => {
     const loadContext = async () => {
       if (!pathId) {
@@ -114,14 +173,11 @@ export default function LessonReaderScreen() {
 
       setUserId(user.id);
 
-      const [profileResult, enrollmentResult] = await Promise.all([
+      // Language preference stays a direct Supabase read — out of scope for
+      // this slice (Slice 4D only migrates guided_path_progress usage).
+      const [profileResult, enrollmentResponse] = await Promise.all([
         supabase.from('profiles').select('app_language, meaning_language').eq('id', user.id).maybeSingle(),
-        supabase
-          .from('guided_path_progress')
-          .select('current_lesson, completed_lessons')
-          .eq('user_id', user.id)
-          .eq('path_id', pathId)
-          .maybeSingle(),
+        apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`).catch(() => null),
       ]);
 
       if (profileResult.data) {
@@ -131,9 +187,11 @@ export default function LessonReaderScreen() {
         }
       }
 
-      if (enrollmentResult.data) {
-        const enrollment = enrollmentResult.data as EnrollmentRow;
-        setCompletedLessons(enrollment.completed_lessons ?? []);
+      if (enrollmentResponse && enrollmentResponse.ok) {
+        const body = (await enrollmentResponse.json()) as { enrollment: EnrollmentPayload | null };
+        if (body.enrollment) {
+          setCompletedLessons(body.enrollment.completedLessons ?? []);
+        }
       }
 
       setLoadingState(false);
@@ -287,7 +345,64 @@ export default function LessonReaderScreen() {
     router.back();
   }, [completedLessons, lessonIndex, lessons.length, pathId, router, saving, userId]);
 
-  if (!pathId || !lesson || !entry || !path) {
+  if (fetchState === 'loading' || loadingState) {
+    return (
+      <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={COLORS.brandGold} />
+      </View>
+    );
+  }
+
+  if (fetchState === 'locked') {
+    return (
+      <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Feather name="lock" size={40} color={COLORS.brandGold} />
+        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
+          Pro required
+        </Text>
+        <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, marginTop: 8, textAlign: 'center' }}>
+          Upgrade to Shoonaya Pro to unlock this path.
+        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          style={{
+            marginTop: 20,
+            borderRadius: 18,
+            backgroundColor: COLORS.brandGold,
+            paddingHorizontal: 24,
+            paddingVertical: 14,
+          }}
+        >
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (fetchState === 'error') {
+    return (
+      <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Feather name="alert-circle" size={40} color={COLORS.brandGold} />
+        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
+          Could not load this lesson.
+        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          style={{
+            marginTop: 20,
+            borderRadius: 18,
+            backgroundColor: COLORS.brandGold,
+            paddingHorizontal: 24,
+            paddingVertical: 14,
+          }}
+        >
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!pathId || !lesson || !entry || !path || fetchState === 'not_found') {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <Feather name="book-open" size={40} color={COLORS.brandGold} />
@@ -309,14 +424,6 @@ export default function LessonReaderScreen() {
         >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
         </Pressable>
-      </View>
-    );
-  }
-
-  if (loadingState) {
-    return (
-      <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={COLORS.brandGold} />
       </View>
     );
   }

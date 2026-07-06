@@ -1,19 +1,41 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, View, useColorScheme } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
-import { getPathLessons } from '@/lib/pathshala-lessons';
-import { SEED_PATHS } from '@/lib/pathshala-paths';
+import { apiFetch } from '@/lib/api';
+import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 
-type EnrollmentRow = {
-  path_id: string;
-  current_lesson: number | null;
-  completed_lessons: number[] | null;
+type LessonEntry = {
+  id: string;
+  source: string;
+  original: string;
+  transliteration?: string;
+  meaning?: string;
 };
+
+type Lesson = {
+  title: string;
+  entries: LessonEntry[];
+};
+
+type PathDetailResponse = {
+  path: PathshalaPath;
+  lessons: Lesson[];
+  locked: boolean;
+};
+
+type EnrollmentPayload = {
+  pathId: string;
+  currentLesson: number;
+  completedLessons: number[];
+  status: string | null;
+};
+
+type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
 
 export default function PathLessonListScreen() {
   const router = useRouter();
@@ -26,60 +48,127 @@ export default function PathLessonListScreen() {
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const params = useLocalSearchParams<{ pathId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
-  const path = useMemo(() => SEED_PATHS.find((entry) => entry.id === pathId), [pathId]);
-  const lessons = useMemo(() => (pathId ? getPathLessons(pathId) : []), [pathId]);
 
-  const [loading, setLoading] = useState(true);
+  const [fetchState, setFetchState] = useState<FetchState>('loading');
+  const [path, setPath] = useState<PathshalaPath | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [currentLesson, setCurrentLesson] = useState(0);
 
-  const loadProgress = useCallback(async () => {
+  const loadPath = useCallback(async () => {
     if (!pathId) {
-      setLoading(false);
+      setFetchState('not_found');
       return;
     }
 
-    setLoading(true);
+    setFetchState((prev) => (prev === 'ready' || prev === 'locked' ? prev : 'loading'));
+
+    try {
+      const response = await apiFetch(`/api/pathshala/paths/${pathId}`);
+
+      if (response.status === 404) {
+        setFetchState('not_found');
+        return;
+      }
+
+      if (!response.ok) {
+        setFetchState('error');
+        return;
+      }
+
+      const data = (await response.json()) as PathDetailResponse;
+      setPath(data.path);
+      setLessons(data.lessons);
+      setFetchState(data.locked ? 'locked' : 'ready');
+    } catch {
+      setFetchState('error');
+    }
+  }, [pathId]);
+
+  const loadProgress = useCallback(async () => {
+    if (!pathId) {
+      return;
+    }
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setLoading(false);
       router.replace('/(auth)/login');
       return;
     }
 
-    const { data, error } = await supabase
-      .from('guided_path_progress')
-      .select('path_id, current_lesson, completed_lessons')
-      .eq('user_id', user.id)
-      .eq('path_id', pathId)
-      .maybeSingle();
-
-    if (!error && data) {
-      const row = data as EnrollmentRow;
-      setCompletedLessons(row.completed_lessons ?? []);
-      setCurrentLesson(row.current_lesson ?? 0);
-    } else {
-      setCompletedLessons([]);
-      setCurrentLesson(0);
+    try {
+      const response = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`);
+      if (response.ok) {
+        const body = (await response.json()) as { enrollment: EnrollmentPayload | null };
+        if (body.enrollment) {
+          setCompletedLessons(body.enrollment.completedLessons ?? []);
+          setCurrentLesson(body.enrollment.currentLesson ?? 0);
+          return;
+        }
+      }
+    } catch {
+      // fall through to defaults below
     }
 
-    setLoading(false);
+    setCompletedLessons([]);
+    setCurrentLesson(0);
   }, [pathId, router]);
 
   useFocusEffect(
     useCallback(() => {
+      void loadPath();
       void loadProgress();
-    }, [loadProgress])
+    }, [loadPath, loadProgress])
   );
 
-  if (!pathId || !path) {
+  if (fetchState === 'loading') {
+    return (
+      <Screen style={{ backgroundColor: bg }}>
+        <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
+      </Screen>
+    );
+  }
+
+  if (fetchState === 'not_found' || !path || !pathId) {
     return (
       <Screen style={{ backgroundColor: bg }}>
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>Path not found.</Text>
+      </Screen>
+    );
+  }
+
+  if (fetchState === 'error') {
+    return (
+      <Screen style={{ backgroundColor: bg }}>
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>
+          Could not load this path.
+        </Text>
+        <Pressable onPress={() => { void loadPath(); }} style={{ marginTop: 16 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.brandGold }}>Try again</Text>
+        </Pressable>
+      </Screen>
+    );
+  }
+
+  if (fetchState === 'locked') {
+    return (
+      <Screen style={{ backgroundColor: bg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Feather name="arrow-left" size={22} color={text} />
+          </Pressable>
+          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>{path.title}</Text>
+        </View>
+        <View style={{ alignItems: 'center', marginTop: 40, gap: 12, paddingHorizontal: 24 }}>
+          <Feather name="lock" size={32} color={COLORS.brandGold} />
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>Pro required</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
+            Upgrade to Shoonaya Pro to unlock this path.
+          </Text>
+        </View>
       </Screen>
     );
   }
@@ -98,74 +187,70 @@ export default function PathLessonListScreen() {
         </View>
       </View>
 
-      {loading ? (
-        <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
-      ) : (
-        <FlatList
-          data={lessons}
-          keyExtractor={(_, index) => `${pathId}-${index}`}
-          contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
-          renderItem={({ item, index }) => {
-            const isComplete = completedLessons.includes(index);
-            const isLocked = index > currentLesson && !isComplete;
+      <FlatList
+        data={lessons}
+        keyExtractor={(_, index) => `${pathId}-${index}`}
+        contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
+        renderItem={({ item, index }) => {
+          const isComplete = completedLessons.includes(index);
+          const isLocked = index > currentLesson && !isComplete;
 
-            return (
-              <Pressable
-                disabled={isLocked}
-                onPress={() =>
-                  router.push({
-                    pathname: '/pathshala/[pathId]/[lessonId]',
-                    params: { pathId, lessonId: String(index) },
-                  })
-                }
+          return (
+            <Pressable
+              disabled={isLocked}
+              onPress={() =>
+                router.push({
+                  pathname: '/pathshala/[pathId]/[lessonId]',
+                  params: { pathId, lessonId: String(index) },
+                })
+              }
+              style={{
+                borderRadius: 22,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: border,
+                padding: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                opacity: isLocked ? 0.6 : 1,
+              }}
+            >
+              <View
                 style={{
-                  borderRadius: 22,
-                  backgroundColor: cardBg,
-                  borderWidth: 1,
-                  borderColor: border,
-                  padding: 16,
-                  flexDirection: 'row',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 999,
                   alignItems: 'center',
-                  gap: 14,
-                  opacity: isLocked ? 0.6 : 1,
+                  justifyContent: 'center',
+                  backgroundColor: isComplete ? COLORS.brandGold : 'transparent',
+                  borderWidth: isComplete ? 0 : 1,
+                  borderColor: isLocked ? border : COLORS.brandGold,
                 }}
               >
-                <View
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 999,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isComplete ? COLORS.brandGold : 'transparent',
-                    borderWidth: isComplete ? 0 : 1,
-                    borderColor: isLocked ? border : COLORS.brandGold,
-                  }}
-                >
-                  {isComplete ? (
-                    <Feather name="check" size={16} color={bg} />
-                  ) : isLocked ? (
-                    <Feather name="lock" size={14} color={dim} />
-                  ) : (
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
-                      {index + 1}
-                    </Text>
-                  )}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
-                    {item.title}
+                {isComplete ? (
+                  <Feather name="check" size={16} color={bg} />
+                ) : isLocked ? (
+                  <Feather name="lock" size={14} color={dim} />
+                ) : (
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                    {index + 1}
                   </Text>
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
-                    {isComplete ? 'Completed' : isLocked ? 'Locked' : 'Ready to read'}
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={18} color={dim} />
-              </Pressable>
-            );
-          }}
-        />
-      )}
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
+                  {item.title}
+                </Text>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                  {isComplete ? 'Completed' : isLocked ? 'Locked' : 'Ready to read'}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={dim} />
+            </Pressable>
+          );
+        }}
+      />
     </Screen>
   );
 }

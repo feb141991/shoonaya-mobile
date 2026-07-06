@@ -17,10 +17,40 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { COLORS, FONTS } from '@/lib/constants';
-import { type PathshalaPath } from '@/lib/pathshala-paths';
+import { type PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch } from '@/lib/api';
+
+function parseEnrollmentsResponse(value: unknown): EnrollmentRow[] {
+  if (!value || typeof value !== 'object') return [];
+  const enrollments = (value as Record<string, unknown>).enrollments;
+  if (!Array.isArray(enrollments)) return [];
+  return enrollments
+    .filter((row): row is { pathId: string; currentLesson: number; completedLessons: number[]; status: string | null } =>
+      !!row && typeof row === 'object' && typeof (row as Record<string, unknown>).pathId === 'string'
+    )
+    .map((row) => ({
+      path_id: row.pathId,
+      current_lesson: row.currentLesson,
+      completed_lessons: row.completedLessons,
+      status: row.status,
+    }));
+}
+
+function parseEnrollmentResponse(value: unknown): EnrollmentRow | null {
+  if (!value || typeof value !== 'object') return null;
+  const enrollment = (value as Record<string, unknown>).enrollment;
+  if (!enrollment || typeof enrollment !== 'object') return null;
+  const candidate = enrollment as Record<string, unknown>;
+  if (typeof candidate.pathId !== 'string') return null;
+  return {
+    path_id: candidate.pathId,
+    current_lesson: typeof candidate.currentLesson === 'number' ? candidate.currentLesson : 0,
+    completed_lessons: Array.isArray(candidate.completedLessons) ? (candidate.completedLessons as number[]) : [],
+    status: typeof candidate.status === 'string' ? candidate.status : null,
+  };
+}
 
 type TabKey = 'progress' | 'explore';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
@@ -117,15 +147,12 @@ function PathshalaContent() {
       setPaths(fetchedPaths);
 
       if (fetchedPaths.length > 0) {
-        const { data } = await supabase
-          .from('guided_path_progress')
-          .select('path_id, current_lesson, completed_lessons, status')
-          .eq('user_id', user.id)
-          .in(
-            'path_id',
-            fetchedPaths.map((path) => path.id)
-          );
-        setEnrollments((data as EnrollmentRow[] | null) ?? []);
+        const progressRes = await apiFetch('/api/pathshala/progress');
+        if (progressRes.ok) {
+          setEnrollments(parseEnrollmentsResponse(await progressRes.json()));
+        } else {
+          setEnrollments([]);
+        }
       } else {
         setEnrollments([]);
       }
@@ -200,18 +227,25 @@ function PathshalaContent() {
         return [...current, optimistic];
       });
 
-      const { error } = await supabase.from('guided_path_progress').upsert(
-        {
-          user_id: user.id,
-          path_id: path.id,
-          status: 'active',
-          current_lesson: 0,
-          completed_lessons: [],
-        },
-        { onConflict: 'user_id,path_id' }
-      );
+      try {
+        const response = await apiFetch('/api/pathshala/enroll', {
+          method: 'POST',
+          body: JSON.stringify({ pathId: path.id }),
+        });
 
-      if (error) {
+        if (!response.ok) {
+          setEnrollments((current) => current.filter((entry) => entry.path_id !== path.id));
+          return;
+        }
+
+        const enrollment = parseEnrollmentResponse(await response.json());
+        if (enrollment) {
+          setEnrollments((current) => {
+            const withoutPath = current.filter((entry) => entry.path_id !== path.id);
+            return [...withoutPath, enrollment];
+          });
+        }
+      } catch {
         setEnrollments((current) => current.filter((entry) => entry.path_id !== path.id));
         return;
       }

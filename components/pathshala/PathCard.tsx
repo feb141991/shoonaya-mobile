@@ -1,6 +1,6 @@
 import { Pressable, Text, View, useColorScheme } from 'react-native';
 
-import type { PathshalaPath } from '@/lib/pathshala-paths';
+import type { PathshalaPath } from '@/lib/pathshala-types';
 import { COLORS, FONTS } from '@/lib/constants';
 
 const TRADITION_EMOJI: Record<string, string> = {
