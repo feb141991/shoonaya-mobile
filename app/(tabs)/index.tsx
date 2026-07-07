@@ -20,9 +20,9 @@ import { calculatePanchang } from '@sangam/panchang-engine';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { SkeletonCard } from '@/components/ui/SkeletonLoader';
+import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -169,19 +169,35 @@ const INITIAL_STATE: HomeSummary = {
   },
 };
 
-function getGreeting(tradition: string | null) {
-  switch (tradition) {
-    case 'sikh':
-      return 'Waheguru Ji Ka Khalsa';
-    case 'buddhist':
-      return 'Namo Buddhaya';
-    case 'jain':
-      return 'Jai Jinendra';
-    case 'hindu':
-      return 'Jai Shri Ram';
-    default:
-      return 'Pranam';
-  }
+// Tradition-level greeting pools, ported from the PWA's GREETING_POOLS
+// (src/lib/traditions.ts) — the `:other`/default tier only, since
+// home-summary's `profile` doesn't include `sampradaya`, only `tradition`
+// (confirmed against src/app/api/native/home-summary/route.ts; adding
+// sampradaya would be an API shape change not proven necessary here).
+// Emoji suffixes present in the web pool are dropped to match native's own
+// existing plain-text greeting convention (no emoji used as this app's
+// greeting style, unlike web).
+const GREETING_POOLS: Record<string, string[]> = {
+  hindu: ['Jai Shri Ram', 'Hari Om', 'Om Namah Shivaya', 'Radhe Radhe'],
+  sikh: ['Sat Sri Akal', 'Waheguru Ji Ka Khalsa'],
+  buddhist: ['Namo Buddhaya', 'Om Mani Padme Hum'],
+  jain: ['Jai Jinendra', 'Namo Arihantanam'],
+  default: ['Jai Shri Ram', 'Om Namah Shivaya', 'Hari Om', 'Pranam'],
+};
+
+function getTraditionGreeting(tradition: string | null, seed: number) {
+  const pool = (tradition && GREETING_POOLS[tradition]) || GREETING_POOLS.default;
+  return pool[seed % pool.length];
+}
+
+// Exact port of the PWA's getTimeGreeting (HeroSection.tsx:206-211) —
+// device-local hour, not the API's date payload, since the greeting is a
+// "right now, for you" affordance rather than server-computed data.
+function getTimeGreeting(hour: number): string | null {
+  if (hour >= 5 && hour < 12) return 'Suprabhat';
+  if (hour >= 17 && hour < 20) return 'Shubh Sandhya';
+  if (hour >= 20 || hour < 5) return 'Shubh Ratri';
+  return null;
 }
 
 function getDateLabel(isoDate: string) {
@@ -223,14 +239,15 @@ function ProgressRing({
   progress,
   color,
   track,
+  size = 34,
 }: {
   done: boolean;
   progress: number;
   color: string;
   track: string;
+  size?: number;
 }) {
-  const size = 34;
-  const radius = 14;
+  const radius = size / 2 - 3.5;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(1, progress));
 
@@ -262,7 +279,7 @@ function ProgressRing({
           />
         ) : null}
       </Svg>
-      {done ? <Feather name="check" size={15} color={color} /> : null}
+      {done ? <Feather name="check" size={size <= 26 ? 12 : 15} color={color} /> : null}
     </View>
   );
 }
@@ -293,6 +310,7 @@ function HomeContent() {
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       shadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
       ringTrack: isDark ? 'rgba(255,248,225,0.14)' : 'rgba(105,75,35,0.12)',
+      iconWell: isDark ? 'rgba(255,248,225,0.08)' : 'rgba(255,255,255,0.62)',
     }),
     [isDark]
   );
@@ -313,6 +331,28 @@ function HomeContent() {
   const tithiPill = `${panchang.tithi} · ${panchang.paksha}`;
   const completedCount = state.practices.filter((row) => row.done).length;
   const actionRoute = mapHrefToRoute(state.nextPractice.actionHref);
+
+  // festivalLabel/vratLabel are mutually derived from the same nearest
+  // upcoming observance on the API side (a vrat sets both to the same
+  // string) — rendering both would show literal duplicate text, so only
+  // ever show one pill: vrat-styled when vratLabel is present, else
+  // festival-styled.
+  const isVrat = !!state.panchang.vratLabel;
+  const observanceLabel = state.panchang.vratLabel ?? state.panchang.festivalLabel;
+
+  const greeting = useMemo(
+    () => getTimeGreeting(new Date().getHours()) ?? getTraditionGreeting(state.profile.tradition, new Date(`${state.date.iso}T12:00:00`).getDate()),
+    [state.profile.tradition, state.date.iso]
+  );
+
+  const nextPracticeRow = state.practices.find((row) => row.id === state.nextPractice.id);
+  const nextPracticeIcon = nextPracticeRow?.icon ?? 'compass';
+  const nextPracticeColor = nextPracticeRow?.color ?? COLORS.brandGold;
+
+  const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
+  const dharmVeerDone = dharmVeerRow?.done ?? false;
+  const dharmVeerIcon = dharmVeerRow?.icon ?? 'shield';
+  const dharmVeerColor = dharmVeerRow?.color ?? COLORS.brandGold;
 
   const loadHome = useCallback(async () => {
     setLoadError(false);
@@ -338,6 +378,7 @@ function HomeContent() {
       panchang: { ...INITIAL_STATE.panchang, ...payload.panchang },
       nextPractice: { ...INITIAL_STATE.nextPractice, ...payload.nextPractice },
       practices: payload.practices ?? [],
+      dharmVeer: { ...INITIAL_STATE.dharmVeer, ...payload.dharmVeer },
     });
   }, [router]);
 
@@ -375,14 +416,7 @@ function HomeContent() {
   );
 
   if (loading) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <View style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 18, gap: 16 }}>
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
-      </SafeAreaView>
-    );
+    return <HomeSkeleton />;
   }
 
   if (loadError) {
@@ -448,8 +482,8 @@ function HomeContent() {
               accessibilityLabel="Notifications — coming soon"
               onPress={() => Alert.alert('Notifications', 'A dedicated notifications screen is coming soon. For now, taps and reminders arrive as push notifications.')}
               style={{
-                minWidth: 44,
-                minHeight: 44,
+                minWidth: MIN_TOUCH_TARGET,
+                minHeight: MIN_TOUCH_TARGET,
                 borderRadius: 22,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -468,7 +502,7 @@ function HomeContent() {
                   accessibilityLabel={`${state.profile.karmaPoints} karma points`}
                   onPress={() => navigate('/(tabs)/profile')}
                   style={{
-                    minHeight: 38,
+                    minHeight: MIN_TOUCH_TARGET,
                     borderRadius: 20,
                     paddingHorizontal: 12,
                     alignItems: 'center',
@@ -525,7 +559,7 @@ function HomeContent() {
             ) : null}
 
             <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, lineHeight: 40, color: theme.text }}>
-              {getGreeting(state.profile.tradition)}, {state.profile.firstName}
+              {greeting}, {state.profile.firstName}
             </Text>
             <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>
               {getDateLabel(state.date.iso)}
@@ -537,8 +571,8 @@ function HomeContent() {
                 accessibilityLabel={`Open Panchang, ${tithiPill}`}
                 onPress={() => navigate('/panchang')}
                 style={{
-                  minHeight: 36,
-                  borderRadius: 18,
+                  minHeight: MIN_TOUCH_TARGET,
+                  borderRadius: 22,
                   paddingHorizontal: 12,
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -555,24 +589,33 @@ function HomeContent() {
                 </Text>
               </Pressable>
 
-              {state.panchang.festivalLabel ? (
+              {observanceLabel ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Open Vrat calendar, ${state.panchang.festivalLabel}`}
+                  accessibilityLabel={`Open Vrat calendar, ${isVrat ? 'vrat today' : 'festival'}, ${observanceLabel}`}
                   onPress={() => navigate('/vrat')}
                   style={{
-                    minHeight: 36,
-                    borderRadius: 18,
+                    minHeight: MIN_TOUCH_TARGET,
+                    borderRadius: 22,
                     paddingHorizontal: 12,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: theme.heroOverlay,
+                    flexDirection: 'row',
+                    gap: 6,
+                    backgroundColor: isVrat ? COLORS.sageBg : theme.heroOverlay,
                     borderWidth: 1,
-                    borderColor: theme.borderSoft,
+                    borderColor: isVrat ? COLORS.sageBorder : theme.borderSoft,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
-                    {state.panchang.festivalLabel}
+                  {isVrat ? <Feather name="moon" size={12} color={COLORS.sage} /> : null}
+                  <Text
+                    style={{
+                      fontFamily: FONTS.sansSemiBold,
+                      fontSize: 12,
+                      color: isVrat ? COLORS.sage : theme.text,
+                    }}
+                  >
+                    {observanceLabel}
                   </Text>
                 </Pressable>
               ) : null}
@@ -581,10 +624,9 @@ function HomeContent() {
         </View>
 
         <View style={{ paddingHorizontal: 20, marginTop: -38, gap: 14 }}>
-          <Pressable
-            accessibilityRole="button"
+          <View
+            accessible
             accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}`}
-            onPress={() => navigate('/(tabs)/pathshala')}
             style={{
               borderRadius: 22,
               paddingHorizontal: 20,
@@ -602,7 +644,7 @@ function HomeContent() {
             <Text style={{ marginTop: 10, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim, textAlign: 'center' }} numberOfLines={2}>
               {state.sacredText.meaning}
             </Text>
-          </Pressable>
+          </View>
 
           <View
             style={{
@@ -614,7 +656,19 @@ function HomeContent() {
               boxShadow: theme.shadow,
             }}
           >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.iconWell,
+                }}
+              >
+                <Feather name={nextPracticeIcon} size={20} color={nextPracticeColor} />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: COLORS.brandGold }}>
                   {state.nextPractice.contextLabel}
@@ -725,7 +779,7 @@ function HomeContent() {
                           borderRadius: 14,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: isDark ? 'rgba(255,248,225,0.06)' : 'rgba(255,255,255,0.58)',
+                          backgroundColor: theme.iconWell,
                         }}
                       >
                         <Feather name={row.icon} size={17} color={row.color} />
@@ -780,7 +834,66 @@ function HomeContent() {
                 ) : null}
               </View>
             </View>
-            <Feather name="arrow-right" size={20} color={COLORS.brandGold} />
+            {state.sankalpa ? (
+              <ProgressRing
+                done={state.sankalpa.progress >= 1}
+                progress={state.sankalpa.progress}
+                color={COLORS.brandGold}
+                track={theme.ringTrack}
+                size={30}
+              />
+            ) : (
+              <Feather name="arrow-right" size={20} color={COLORS.brandGold} />
+            )}
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${state.dharmVeer.name}, ${dharmVeerDone ? 'seva given today' : state.dharmVeer.tagline}`}
+            onPress={() => navigate(mapHrefToRoute(state.dharmVeer.href))}
+            style={{
+              minHeight: 76,
+              borderRadius: 22,
+              paddingHorizontal: 18,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+              opacity: dharmVeerDone ? 0.72 : 1,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.iconWell,
+                }}
+              >
+                <Feather name={dharmVeerIcon} size={19} color={dharmVeerColor} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: COLORS.brandGold }}>
+                  Dharm Veer
+                </Text>
+                <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text }}>
+                  {state.dharmVeer.name}
+                </Text>
+                <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }} numberOfLines={1}>
+                  {dharmVeerDone ? 'Seva given today' : state.dharmVeer.tagline}
+                </Text>
+              </View>
+            </View>
+            {dharmVeerDone ? (
+              <Feather name="check-circle" size={20} color={dharmVeerColor} />
+            ) : (
+              <Feather name="arrow-right" size={20} color={COLORS.brandGold} />
+            )}
           </Pressable>
 
           <Pressable
