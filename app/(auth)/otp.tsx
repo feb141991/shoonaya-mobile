@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
@@ -80,10 +81,7 @@ export default function OtpScreen() {
         }
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) {
-            throw exchangeError;
-          }
+          await exchangeOAuthCodeOnce(code);
         }
       }
     } catch (error) {

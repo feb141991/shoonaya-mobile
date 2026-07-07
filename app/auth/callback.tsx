@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Screen } from '@/components/ui/Screen';
+import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
@@ -22,10 +23,7 @@ export default function AuthCallbackScreen() {
         }
 
         if (params.code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(params.code);
-          if (error) {
-            throw error;
-          }
+          await exchangeOAuthCodeOnce(params.code);
         }
 
         const {

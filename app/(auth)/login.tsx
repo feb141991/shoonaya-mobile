@@ -8,6 +8,7 @@ import { Feather } from '@expo/vector-icons';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
@@ -134,10 +135,7 @@ export default function LoginScreen() {
         }
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) {
-            throw exchangeError;
-          }
+          await exchangeOAuthCodeOnce(code);
         }
       }
     } catch (error) {

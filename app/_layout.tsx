@@ -16,6 +16,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-goog
 import { useFonts } from 'expo-font';
 
 import { AppProviders } from '@/components/providers/AppProviders';
+import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initOneSignal, handleNotificationTap } from '@/lib/notifications';
 
@@ -113,7 +114,7 @@ export default function RootLayout() {
       const code = typeof params.code === 'string' ? params.code : null;
 
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
+        await exchangeOAuthCodeOnce(code);
       }
     };
 
