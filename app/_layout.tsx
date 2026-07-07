@@ -172,14 +172,16 @@ export default function RootLayout() {
     };
   }, [fontsLoaded, fontError, routeForSession]);
 
+  const readyToRender = appIsReady && authReady;
+
   // ── Hide Splash Screen when Ready ────────────────────────────────
   useEffect(() => {
-    if (appIsReady) {
+    if (readyToRender) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [appIsReady]);
+  }, [readyToRender]);
 
-  if (!appIsReady) {
+  if (!readyToRender) {
     return null;
   }
 

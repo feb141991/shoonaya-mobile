@@ -71,7 +71,7 @@ function AuthButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
-      style={({ pressed }) => ({
+      style={{
         minHeight: 56,
         borderRadius: 18,
         borderWidth: 1,
@@ -82,10 +82,12 @@ function AuthButton({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        opacity: disabled ? 0.6 : pressed ? 0.85 : 1,
-      })}
+        alignSelf: 'stretch',
+        width: '100%',
+        opacity: disabled ? 0.6 : 1,
+      }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         {icon ? (
           <View
             style={{
@@ -100,14 +102,14 @@ function AuthButton({
             {icon}
           </View>
         ) : null}
-        <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+        <Text style={{ flex: 1, color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
           {label}
         </Text>
       </View>
       {loading ? (
         <ActivityIndicator size="small" color={COLORS.ink} />
       ) : (
-        <Feather name="chevron-right" size={18} color={COLORS.textDimLight} />
+        <TrailingArrow color={COLORS.textDimLight} />
       )}
     </Pressable>
   );
@@ -123,6 +125,25 @@ function AuthDivider({ label }: { label: string }) {
       <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
       <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.textDimLight }}>{label}</Text>
       <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
+    </View>
+  );
+}
+
+function TrailingArrow({ color }: { color: string }) {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        width: 28,
+        height: 28,
+        marginLeft: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text style={{ color, fontFamily: FONTS.sansSemiBold, fontSize: 22, lineHeight: 24 }}>
+        &gt;
+      </Text>
     </View>
   );
 }
@@ -308,7 +329,7 @@ export default function LoginScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Continue with WhatsApp"
                 accessibilityState={{ disabled: busy }}
-                style={({ pressed }) => ({
+                style={{
                   minHeight: 56,
                   borderRadius: 18,
                   borderWidth: 1.5,
@@ -319,10 +340,12 @@ export default function LoginScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  opacity: busy ? 0.6 : pressed ? 0.85 : 1,
-                })}
+                  alignSelf: 'stretch',
+                  width: '100%',
+                  opacity: busy ? 0.6 : 1,
+                }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View
                     style={{
                       width: 34,
@@ -335,11 +358,11 @@ export default function LoginScreen() {
                   >
                     <FontAwesome name="whatsapp" size={17} color={COLORS.brandGold} />
                   </View>
-                  <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  <Text style={{ flex: 1, color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
                     Continue with WhatsApp
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={COLORS.brandGold} />
+                <TrailingArrow color={COLORS.brandGold} />
               </Pressable>
             </Link>
 
