@@ -41,19 +41,22 @@ export default function AuthCallbackScreen() {
           throw new Error('Sign in did not return a session.');
         }
 
+        // Same onboarding-completion predicate as _layout.tsx's routeForSession
+        // — see the comment there. Both gates must agree, or a transient
+        // disagreement between this screen's redirect and the auth-state-change
+        // listener in _layout.tsx (which also fires once exchangeCodeForSession
+        // resolves) reproduces the loop documented in web's
+        // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md.
         const { data: profile } = await supabase
           .from('profiles')
-          .select('tradition')
+          .select('onboarding_completed')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (cancelled) return;
 
-        if (profile?.tradition) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/(auth)/onboarding');
-        }
+        const needsOnboarding = profile?.onboarding_completed === false;
+        router.replace(needsOnboarding ? '/(auth)/onboarding' : '/(tabs)');
       } catch (error) {
         if (cancelled) return;
         const nextMessage = error instanceof Error ? error.message : 'Sign in failed.';

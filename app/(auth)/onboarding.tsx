@@ -100,6 +100,10 @@ export default function OnboardingScreen() {
             tradition,
             app_language: language,
             meaning_language: language,
+            // Canonical completion field the routing gate in _layout.tsx and
+            // auth/callback.tsx checks (matches web's profiles.onboarding_completed,
+            // NOT NULL DEFAULT false — see ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md).
+            onboarding_completed: true,
           },
           { onConflict: 'id' }
         );

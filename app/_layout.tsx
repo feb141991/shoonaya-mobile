@@ -48,18 +48,28 @@ export default function RootLayout() {
         return;
       }
 
+      // Onboarding gate — mirrors the web app's src/lib/onboarding-gate.ts /
+      // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md fix. `profiles.onboarding_completed`
+      // is `NOT NULL DEFAULT false`, so a successfully read row is always
+      // `true`/`false`; only a *definitive* `false` means the user still needs
+      // onboarding. A `null` profile read (RLS/session timing — the row itself
+      // is guaranteed by the `handle_new_user` DB trigger) must NOT be treated
+      // as "needs onboarding": that exact misclassification caused web's
+      // `/home` <-> `/onboarding` redirect loop. Native fails open toward tabs
+      // instead of onboarding on an ambiguous read, since (unlike web's
+      // page-level gates) this function always has to pick a concrete route.
       const { data: profile } = await supabase
         .from('profiles')
-        .select('tradition')
+        .select('onboarding_completed')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      const hasCompletedOnboarding = !!profile?.tradition;
+      const needsOnboarding = profile?.onboarding_completed === false;
       const isOnboarding = inAuthGroup && segments[1] === 'onboarding';
 
-      if (!hasCompletedOnboarding && !isOnboarding) {
+      if (needsOnboarding && !isOnboarding) {
         router.replace('/(auth)/onboarding');
-      } else if (hasCompletedOnboarding && inAuthGroup) {
+      } else if (!needsOnboarding && inAuthGroup) {
         router.replace('/(tabs)');
       }
     },
