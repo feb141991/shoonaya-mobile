@@ -25,6 +25,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
+  const rootSegment = segments[0];
+  const childSegment = segments[1];
 
   const [fontsLoaded, fontError] = useFonts({
     CormorantGaramond_600SemiBold,
@@ -39,7 +41,7 @@ export default function RootLayout() {
 
   const routeForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
-      const inAuthGroup = segments[0] === '(auth)';
+      const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
         if (!inAuthGroup) {
@@ -65,7 +67,7 @@ export default function RootLayout() {
         .maybeSingle();
 
       const needsOnboarding = profile?.onboarding_completed === false;
-      const isOnboarding = inAuthGroup && segments[1] === 'onboarding';
+      const isOnboarding = inAuthGroup && childSegment === 'onboarding';
 
       if (needsOnboarding && !isOnboarding) {
         router.replace('/(auth)/onboarding');
@@ -73,7 +75,7 @@ export default function RootLayout() {
         router.replace('/(tabs)');
       }
     },
-    [router, segments]
+    [router, rootSegment, childSegment]
   );
 
   // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
