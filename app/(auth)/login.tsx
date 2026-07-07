@@ -330,7 +330,7 @@ export default function LoginScreen() {
                       borderRadius: 12,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(197,160,89,0.14)',
+                      backgroundColor: COLORS.authGoldWellBg,
                     }}
                   >
                     <FontAwesome name="whatsapp" size={17} color={COLORS.brandGold} />

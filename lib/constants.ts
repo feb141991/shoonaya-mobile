@@ -61,6 +61,36 @@ export const COLORS = {
   danger: '#DC2626',
   dangerBg: 'rgba(220,38,38,0.10)',
   dangerBorder: 'rgba(220,38,38,0.28)',
+
+  // Home/Auth premium surfaces — promoted from the first Home/Auth visual
+  // pass so the PWA-matched ivory, ink, and translucent gold treatments are
+  // reusable tokens instead of screen-local literals.
+  homeHeroLight: '#F6E8CF',
+  homeHeroDark: '#1B130B',
+  homeHeroOverlayLight: 'rgba(255,249,240,0.72)',
+  homeHeroOverlayDark: 'rgba(14,8,4,0.55)',
+  homeHeroFadeLight: 'rgba(253,246,227,0.78)',
+  homeHeroFadeDark: 'rgba(14,8,4,0.72)',
+  homeRaisedLight: '#FFF8EB',
+  homeRaisedDark: '#21170E',
+  homeSoftLight: 'rgba(197,160,89,0.10)',
+  homeSoftDark: 'rgba(197,160,89,0.12)',
+  homeBorderSoftLight: 'rgba(197,160,89,0.20)',
+  homeBorderSoftDark: 'rgba(197,160,89,0.18)',
+  homeRingTrackLight: 'rgba(105,75,35,0.12)',
+  homeRingTrackDark: 'rgba(255,248,225,0.14)',
+  homeIconWellLight: 'rgba(255,255,255,0.62)',
+  homeIconWellDark: 'rgba(255,248,225,0.08)',
+  homeSkeletonBlockLight: 'rgba(105,75,35,0.08)',
+  homeSkeletonBlockDark: 'rgba(255,248,225,0.08)',
+  homeShlokaSurfaceLight: 'rgba(255,249,240,0.80)',
+  homeShlokaSurfaceDark: 'rgba(23,17,11,0.76)',
+  homeGoldPillBg: 'rgba(197,160,89,0.18)',
+  homeGoldPillBorder: 'rgba(197,160,89,0.32)',
+  authGoldWellBg: 'rgba(197,160,89,0.14)',
+  selectionWellLight: 'rgba(255,255,255,0.60)',
+  selectionWellDark: 'rgba(255,248,225,0.06)',
+  selectionWellSelected: 'rgba(197,160,89,0.16)',
 } as const;
 
 export const FONTS = {

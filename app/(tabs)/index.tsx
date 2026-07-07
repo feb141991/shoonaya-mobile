@@ -141,7 +141,7 @@ const INITIAL_STATE: HomeSummary = {
     meaning: 'The whole world is one family, a reminder to act with kinship and dignity.',
     source: 'Maha Upanishad',
     accentColour: COLORS.brandGold,
-    accentLight: 'rgba(197,160,89,0.14)',
+    accentLight: COLORS.authGoldWellBg,
   },
   panchang: {
     href: '/panchang',
@@ -299,18 +299,18 @@ function HomeContent() {
   const theme = useMemo(
     () => ({
       background: isDark ? COLORS.darkBg : COLORS.creamBg,
-      hero: isDark ? '#1B130B' : '#F6E8CF',
-      heroOverlay: isDark ? 'rgba(14,8,4,0.55)' : 'rgba(255,249,240,0.72)',
+      hero: isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight,
+      heroOverlay: isDark ? COLORS.homeHeroOverlayDark : COLORS.homeHeroOverlayLight,
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      raised: isDark ? '#21170E' : '#FFF8EB',
-      soft: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.10)',
+      raised: isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight,
+      soft: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      borderSoft: isDark ? 'rgba(197,160,89,0.18)' : 'rgba(197,160,89,0.20)',
+      borderSoft: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       shadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
-      ringTrack: isDark ? 'rgba(255,248,225,0.14)' : 'rgba(105,75,35,0.12)',
-      iconWell: isDark ? 'rgba(255,248,225,0.08)' : 'rgba(255,255,255,0.62)',
+      ringTrack: isDark ? COLORS.homeRingTrackDark : COLORS.homeRingTrackLight,
+      iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
     }),
     [isDark]
   );
@@ -472,7 +472,7 @@ function HomeContent() {
               right: 0,
               bottom: 0,
               height: 138,
-              backgroundColor: isDark ? 'rgba(14,8,4,0.72)' : 'rgba(253,246,227,0.78)',
+              backgroundColor: isDark ? COLORS.homeHeroFadeDark : COLORS.homeHeroFadeLight,
             }}
           />
 
@@ -509,9 +509,9 @@ function HomeContent() {
                     justifyContent: 'center',
                     flexDirection: 'row',
                     gap: 5,
-                    backgroundColor: 'rgba(197,160,89,0.18)',
+                    backgroundColor: COLORS.homeGoldPillBg,
                     borderWidth: 1,
-                    borderColor: 'rgba(197,160,89,0.32)',
+                    borderColor: COLORS.homeGoldPillBorder,
                   }}
                 >
                   <Feather name="star" size={12} color={COLORS.brandGold} />
@@ -632,7 +632,7 @@ function HomeContent() {
               paddingHorizontal: 20,
               paddingVertical: 18,
               alignItems: 'center',
-              backgroundColor: isDark ? 'rgba(23,17,11,0.76)' : 'rgba(255,249,240,0.80)',
+              backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight,
             }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: COLORS.brandGold }}>

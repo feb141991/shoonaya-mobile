@@ -24,10 +24,10 @@ type Step = 'tradition' | 'language' | 'notifications';
 // app/(tabs)/bhakti.tsx, app/panchang.tsx; daily sadhana: app/nitya-karma.tsx),
 // so this reads as real app content, not invented marketing copy.
 const TRADITIONS = [
-  { key: 'hindu', label: 'Hindu', emoji: '🕉️', description: 'Mantras, panchang and daily sadhana' },
-  { key: 'sikh', label: 'Sikh', emoji: '☬', description: 'Gurbani, nitnem and daily practice' },
-  { key: 'buddhist', label: 'Buddhist', emoji: '☸️', description: 'Sutras, mindfulness and daily practice' },
-  { key: 'jain', label: 'Jain', emoji: '🌀', description: 'Sutras, tattva and daily practice' },
+  { key: 'hindu', label: 'Hindu', icon: 'sun' as const, description: 'Mantras, panchang and daily sadhana' },
+  { key: 'sikh', label: 'Sikh', icon: 'book-open' as const, description: 'Gurbani, nitnem and daily practice' },
+  { key: 'buddhist', label: 'Buddhist', icon: 'circle' as const, description: 'Sutras, mindfulness and daily practice' },
+  { key: 'jain', label: 'Jain', icon: 'droplet' as const, description: 'Sutras, tattva and daily practice' },
 ] as const;
 
 type TraditionKey = (typeof TRADITIONS)[number]['key'];
@@ -56,8 +56,8 @@ export default function OnboardingScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const wellBg = isDark ? 'rgba(255,248,225,0.06)' : 'rgba(255,255,255,0.6)';
-  const wellBgSelected = 'rgba(197,160,89,0.16)';
+  const wellBg = isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight;
+  const wellBgSelected = COLORS.selectionWellSelected;
   const cardShadow = isDark ? SHADOWS.sm.dark : SHADOWS.sm.light;
 
   const [step, setStep] = useState<Step>('tradition');
@@ -204,7 +204,7 @@ export default function OnboardingScreen() {
                         backgroundColor: selected ? wellBgSelected : wellBg,
                       }}
                     >
-                      <Text style={{ fontSize: 22 }}>{t.emoji}</Text>
+                      <Feather name={t.icon} size={20} color={selected ? COLORS.brandGold : dim} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text

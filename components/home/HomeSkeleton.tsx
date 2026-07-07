@@ -1,4 +1,4 @@
-import { StyleSheet, useColorScheme, View } from 'react-native';
+import { StyleSheet, useColorScheme, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS, RADII } from '@/lib/constants';
@@ -11,15 +11,15 @@ import { COLORS, RADII } from '@/lib/constants';
 // of its exports (SkeletonCard/SkeletonRow/SkeletonCircle) draw the hero's
 // specific proportions.
 
-function Block({ style, dark }: { style: object; dark: boolean }) {
-  const color = dark ? 'rgba(255,248,225,0.08)' : 'rgba(105,75,35,0.08)';
+function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) {
+  const color = dark ? COLORS.homeSkeletonBlockDark : COLORS.homeSkeletonBlockLight;
   return <View style={[{ backgroundColor: color, borderRadius: 8 }, style]} />;
 }
 
 export function HomeSkeleton() {
   const isDark = useColorScheme() === 'dark';
   const background = isDark ? COLORS.darkBg : COLORS.creamBg;
-  const hero = isDark ? '#1B130B' : '#F6E8CF';
+  const hero = isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight;
   const card = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
 
@@ -47,7 +47,7 @@ export function HomeSkeleton() {
 
         <View style={{ paddingHorizontal: 20, marginTop: -38, gap: 14 }}>
           {/* Shloka */}
-          <View style={{ borderRadius: 22, paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center', backgroundColor: isDark ? 'rgba(23,17,11,0.76)' : 'rgba(255,249,240,0.80)' }}>
+          <View style={{ borderRadius: 22, paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center', backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight }}>
             <Block dark={isDark} style={{ width: 110, height: 11, borderRadius: 6 }} />
             <Block dark={isDark} style={{ marginTop: 14, width: '80%', height: 24, borderRadius: 8 }} />
             <Block dark={isDark} style={{ marginTop: 10, width: '60%', height: 14, borderRadius: 6 }} />
