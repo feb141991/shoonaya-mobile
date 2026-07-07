@@ -22,7 +22,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, SHADOWS } from '@/lib/constants';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -291,7 +291,7 @@ function HomeContent() {
       borderSoft: isDark ? 'rgba(197,160,89,0.18)' : 'rgba(197,160,89,0.20)',
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-      shadow: isDark ? '0 18px 36px rgba(0, 0, 0, 0.28)' : '0 14px 28px rgba(105, 75, 35, 0.10)',
+      shadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
       ringTrack: isDark ? 'rgba(255,248,225,0.14)' : 'rgba(105,75,35,0.12)',
     }),
     [isDark]

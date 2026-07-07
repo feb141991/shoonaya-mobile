@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { COLORS } from '@/lib/constants';
+import { COLORS, SHADOWS } from '@/lib/constants';
 
 // Styling only — tab structure/routes below are unchanged. Previously the
 // tab bar was hardcoded to the light palette regardless of device theme
@@ -17,7 +17,7 @@ export default function TabsLayout() {
   const isDark = useColorScheme() === 'dark';
   const tabBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const tabBorder = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const tabShadow = isDark ? '0 -2px 10px rgba(0, 0, 0, 0.30)' : '0 -2px 10px rgba(59, 43, 22, 0.07)';
+  const tabShadow = isDark ? SHADOWS.tabBar.dark : SHADOWS.tabBar.light;
 
   return (
     <Tabs

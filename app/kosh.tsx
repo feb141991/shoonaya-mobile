@@ -22,7 +22,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { API_BASE, COLORS, FONTS } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, SHADOWS } from '@/lib/constants';
 import { SACRED_RELICS, getUnlockedRelics, type Relic } from '@/lib/relics';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -119,11 +119,7 @@ function RelicCard({
           backgroundColor: bg,
           padding: 14,
           justifyContent: 'space-between',
-          shadowColor: unlocked ? COLORS.ink : 'transparent',
-          shadowOpacity: unlocked ? 0.18 : 0,
-          shadowRadius: unlocked ? 10 : 0,
-          shadowOffset: unlocked ? { width: 0, height: 6 } : { width: 0, height: 0 },
-          elevation: unlocked ? 6 : 0,
+          boxShadow: unlocked ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light) : undefined,
         }}
       >
         <View style={{ alignItems: 'center', justifyContent: 'center', minHeight: 100 }}>

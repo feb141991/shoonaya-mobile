@@ -117,6 +117,14 @@ export const SHADOWS = {
     light: '0 10px 22px rgba(59, 43, 22, 0.12)',
     dark: '0 14px 28px rgba(0, 0, 0, 0.34)',
   },
+  heroCard: {
+    light: '0 14px 28px rgba(105, 75, 35, 0.10)',
+    dark: '0 18px 36px rgba(0, 0, 0, 0.28)',
+  },
+  tabBar: {
+    light: '0 -2px 10px rgba(59, 43, 22, 0.07)',
+    dark: '0 -2px 10px rgba(0, 0, 0, 0.30)',
+  },
 } as const;
 
 // ── Typography scale ─────────────────────────────────────────────────────
