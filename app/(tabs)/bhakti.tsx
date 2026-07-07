@@ -202,6 +202,12 @@ export default function BhaktiScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
 
+    // /api/japa/complete is now a real route (previously missing — this
+    // call always 404'd and silently fell through to a direct, native-only
+    // mala_sessions insert that bypassed daily_sadhana/karma/streak; see the
+    // route's own file header for the full mutation contract it now owns).
+    // No fallback insert here anymore: a failure should surface, not
+    // silently write a partial, inconsistent record straight to the table.
     try {
       const response = await apiFetch('/api/japa/complete', {
         method: 'POST',
@@ -215,39 +221,10 @@ export default function BhaktiScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('missing-japa-route');
+        throw new Error('japa-complete-failed');
       }
     } catch {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const insert = await supabase.from('mala_sessions').insert({
-          user_id: user.id,
-          mantra: mantra.label,
-          count: 108,
-          target_count: 108,
-          duration_seconds: 0,
-          share_scope: 'private',
-          completed_at: new Date().toISOString(),
-          date: new Date().toISOString().slice(0, 10),
-          rounds: 1,
-          bead_count: 108,
-          mantra_id: mantra.key,
-          duration_secs: 0,
-          mala_id: activeSymbolId,
-          tradition,
-          practice_type: 'mala',
-          completion_type: 'completed',
-          completed_rounds: 1,
-          source_route: '/bhakti',
-        });
-
-        if (insert.error) {
-          Alert.alert('Could not save japa session');
-        }
-      }
+      Alert.alert('Could not save japa session', 'Check your connection and try again.');
     }
 
     setSaving(false);
