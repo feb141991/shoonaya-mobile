@@ -753,18 +753,8 @@ function HomeContent() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={state.sankalpa ? `Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}. Check-ins coming soon.` : 'Set your Sankalpa — coming soon'}
-            onPress={() => {
-              try {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              } catch {}
-              Alert.alert(
-                'Sankalpa',
-                state.sankalpa
-                  ? 'Sankalpa check-ins are coming soon to the app. You can manage your Sankalpa on the web app for now.'
-                  : 'Setting a Sankalpa from the app is coming soon. You can set one on the web app for now.'
-              );
-            }}
+            accessibilityLabel={state.sankalpa ? `Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}` : 'Set your Sankalpa'}
+            onPress={() => navigate('/sankalpa')}
             style={{
               minHeight: 76,
               borderRadius: 22,
