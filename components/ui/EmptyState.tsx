@@ -1,6 +1,6 @@
 import { Pressable, Text, useColorScheme, View, type ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII } from '@/lib/constants';
 
 type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
 
@@ -26,7 +26,6 @@ export function EmptyState({
   const isDark = useColorScheme() === 'dark';
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
 
   return (
     <View
@@ -88,13 +87,18 @@ export function EmptyState({
 
       {ctaLabel && onCta ? (
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={ctaLabel}
           onPress={onCta}
           style={{
             marginTop: 8,
-            borderRadius: 20,
+            minHeight: MIN_TOUCH_TARGET,
+            borderRadius: RADII.lg,
             backgroundColor: COLORS.brandGold,
             paddingHorizontal: 24,
             paddingVertical: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>

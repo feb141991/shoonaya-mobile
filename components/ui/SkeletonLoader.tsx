@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, useColorScheme, View, type ViewStyle } from 'react-native';
-import { COLORS } from '@/lib/constants';
+import { Animated, useColorScheme, View, type ViewStyle } from 'react-native';
+import { COLORS, RADII } from '@/lib/constants';
 
 // ── Shared shimmer animation ──────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ export function SkeletonCard({ style }: { style?: ViewStyle }) {
     <View
       style={[
         {
-          borderRadius: 22,
+          borderRadius: RADII.lg,
           backgroundColor: cardBg,
           borderWidth: 1,
           borderColor: border,
@@ -76,7 +76,7 @@ export function SkeletonRow({ style }: { style?: ViewStyle }) {
     <View
       style={[
         {
-          borderRadius: 18,
+          borderRadius: RADII.md,
           backgroundColor: cardBg,
           borderWidth: 1,
           borderColor: border,
