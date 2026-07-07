@@ -1,13 +1,24 @@
 import type { PropsWithChildren } from 'react';
 import type { ViewProps } from 'react-native';
 
-import { Surface } from './Surface';
+import { Surface, type SurfaceTone } from './Surface';
 
 type CardProps = PropsWithChildren<ViewProps> & {
   // Raises the card with a stronger shadow (SHADOWS.md instead of the
   // default SHADOWS.sm) — opt in for a card that should visually lead a
   // screen (e.g. a hero/summary card), not the default for every card.
   elevated?: boolean;
+  // Passed straight through to Surface — undefined by default, so Surface's
+  // own 'light' default still applies and no existing bare `<Card>` caller
+  // changes behavior. Added because screens that override Card's
+  // background/border via `style` for their own dark-mode theme (e.g.
+  // app/sankalpa.tsx) still got Surface's *light*-preset boxShadow
+  // regardless of device theme, since that shadow lives on Card's base
+  // style object, before `style` is merged on top — a dark card rendered
+  // with a warm light-mode shadow tint underneath it. Callers that are
+  // already dark-mode-aware should pass `tone="auto"` (or an explicit
+  // 'light'/'dark') to get the matching shadow too.
+  tone?: SurfaceTone;
 };
 
 // Card = Surface with card-specific defaults (24px radius, 18px padding —

@@ -271,7 +271,7 @@ export default function SankalpaScreen() {
 
         {sankalpa ? (
           <>
-            <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                 <Feather name="sun" size={20} color={COLORS.brandGold} />
                 <Text style={{ flex: 1, color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16, lineHeight: 22 }}>
@@ -360,7 +360,7 @@ export default function SankalpaScreen() {
             </Pressable>
           </>
         ) : (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
             <View>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14, marginBottom: 8 }}>
                 Your intention
