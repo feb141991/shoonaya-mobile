@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -24,7 +25,7 @@ import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
-type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer' | 'panchang';
+type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
 
 type PracticeRow = {
   id: PracticeId;
@@ -444,7 +445,8 @@ function HomeContent() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Open notifications"
+              accessibilityLabel="Notifications — coming soon"
+              onPress={() => Alert.alert('Notifications', 'A dedicated notifications screen is coming soon. For now, taps and reminders arrive as push notifications.')}
               style={{
                 minWidth: 44,
                 minHeight: 44,
@@ -636,7 +638,15 @@ function HomeContent() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={state.nextPractice.actionLabel}
-              onPress={() => navigate(actionRoute)}
+              onPress={() => {
+                if (state.nextPractice.progress >= 1) {
+                  // Day complete — "View all practices" should show the
+                  // in-page practice list, not deep-link into one practice.
+                  setPracticesOpen(true);
+                  return;
+                }
+                navigate(actionRoute);
+              }}
               style={{
                 marginTop: 18,
                 minHeight: 52,
@@ -743,8 +753,18 @@ function HomeContent() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={state.sankalpa ? `Open Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}` : 'Set your Sankalpa for this month'}
-            onPress={() => navigate('/(tabs)/profile')}
+            accessibilityLabel={state.sankalpa ? `Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}. Check-ins coming soon.` : 'Set your Sankalpa — coming soon'}
+            onPress={() => {
+              try {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch {}
+              Alert.alert(
+                'Sankalpa',
+                state.sankalpa
+                  ? 'Sankalpa check-ins are coming soon to the app. You can manage your Sankalpa on the web app for now.'
+                  : 'Setting a Sankalpa from the app is coming soon. You can set one on the web app for now.'
+              );
+            }}
             style={{
               minHeight: 76,
               borderRadius: 22,
