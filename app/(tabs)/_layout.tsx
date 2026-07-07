@@ -8,11 +8,16 @@ import { COLORS } from '@/lib/constants';
 // tab bar was hardcoded to the light palette regardless of device theme
 // (unlike most screens, which each hand-roll their own isDark check); this
 // adds that awareness plus a soft upward shadow for "warm layering" depth
-// instead of a flat border line.
+// instead of a flat border line. Uses boxShadow (not shadowColor/
+// shadowOffset/shadowOpacity/elevation) to match this repo's existing
+// shadow convention — see app/(tabs)/index.tsx's `theme.shadow` and the
+// SHADOWS comment in lib/constants.ts. Negative offsetY casts the shadow
+// upward into the screen content, since this bar is pinned to the bottom.
 export default function TabsLayout() {
   const isDark = useColorScheme() === 'dark';
   const tabBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const tabBorder = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const tabShadow = isDark ? '0 -2px 10px rgba(0, 0, 0, 0.30)' : '0 -2px 10px rgba(59, 43, 22, 0.07)';
 
   return (
     <Tabs
@@ -27,11 +32,7 @@ export default function TabsLayout() {
           height: 68,
           paddingTop: 8,
           paddingBottom: 10,
-          shadowColor: COLORS.borderDark,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: isDark ? 0.28 : 0.06,
-          shadowRadius: 10,
-          elevation: 8,
+          boxShadow: tabShadow,
         },
         tabBarLabelStyle: {
           fontSize: 11,

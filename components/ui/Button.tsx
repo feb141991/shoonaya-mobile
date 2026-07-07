@@ -1,4 +1,12 @@
-import { ActivityIndicator, Pressable, Text, useColorScheme, type PressableProps } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  useColorScheme,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII } from '@/lib/constants';
 
@@ -8,6 +16,13 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII } from '@/lib/constants';
 // sankalpa), each with its own slightly different border radius/padding.
 // New adoption only (not retrofit onto those screens in this slice — see
 // design-system report).
+//
+// Accepts `style` (merged last, so it can win — full-width via
+// `{ width: '100%' }`/`{ alignSelf: 'stretch' }`, inline via
+// `{ alignSelf: 'flex-start' }`, footer spacing via margin, etc.) and uses
+// Pressable's style-callback form internally for real pressed-state
+// feedback (a momentary opacity dip), separate from the disabled/loading
+// opacity.
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'md' | 'sm';
@@ -18,6 +33,7 @@ type ButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   size?: ButtonSize;
   loading?: boolean;
   accessibilityLabel?: string;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function Button({
@@ -28,6 +44,7 @@ export function Button({
   disabled = false,
   accessibilityLabel,
   onPress,
+  style,
   ...props
 }: ButtonProps) {
   const isDark = useColorScheme() === 'dark';
@@ -50,18 +67,21 @@ export function Button({
       accessibilityState={{ disabled: isBusy, busy: loading }}
       disabled={isBusy}
       onPress={onPress}
-      style={{
-        minHeight: MIN_TOUCH_TARGET,
-        borderRadius: RADII.lg,
-        borderWidth: variant === 'ghost' ? 0 : 1,
-        borderColor: palette.borderColor,
-        backgroundColor: palette.bg,
-        paddingHorizontal: size === 'sm' ? 16 : 22,
-        paddingVertical: size === 'sm' ? 10 : 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: isBusy ? 0.6 : 1,
-      }}
+      style={({ pressed }) => [
+        {
+          minHeight: MIN_TOUCH_TARGET,
+          borderRadius: RADII.lg,
+          borderWidth: variant === 'ghost' ? 0 : 1,
+          borderColor: palette.borderColor,
+          backgroundColor: palette.bg,
+          paddingHorizontal: size === 'sm' ? 16 : 22,
+          paddingVertical: size === 'sm' ? 10 : 15,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
+        },
+        style,
+      ]}
       {...props}
     >
       {loading ? (

@@ -54,8 +54,11 @@ export function Surface({
   const borderColor = isDark ? COLORS.borderDark : COLORS.borderLight;
   // 'soft' surfaces are a recessed/nested background layer, not a raised
   // card, so they carry no shadow; 'elevated' gets more lift than the
-  // default 'flat' card shadow.
-  const shadow = variant === 'elevated' ? SHADOWS.md : variant === 'soft' ? SHADOWS.none : SHADOWS.sm;
+  // default 'flat' card shadow. boxShadow (not shadowColor/shadowOffset/…)
+  // to match this repo's existing shadow convention — see SHADOWS' comment
+  // in lib/constants.ts.
+  const shadowPreset = variant === 'elevated' ? SHADOWS.md : variant === 'soft' ? null : SHADOWS.sm;
+  const boxShadow = shadowPreset ? (isDark ? shadowPreset.dark : shadowPreset.light) : undefined;
 
   return (
     <View
@@ -65,8 +68,8 @@ export function Surface({
           backgroundColor,
           borderWidth: bordered ? 1 : 0,
           borderColor,
+          boxShadow,
         },
-        shadow,
         style,
       ]}
       {...props}

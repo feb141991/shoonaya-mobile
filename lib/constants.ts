@@ -88,32 +88,34 @@ export const SPACING = {
 } as const;
 
 // ── Shadows ──────────────────────────────────────────────────────────────
-// shadowColor uses the ink/sandalwood-brown tone (not pure black) for a
-// warm shadow rather than a cold one — small, deliberate detail behind
-// "warm layering" in the design brief. `elevation` is the Android
-// equivalent; both are included on every preset since RN needs both.
+// CSS `boxShadow` strings, not the legacy shadowColor/shadowOffset/
+// shadowOpacity/shadowRadius/elevation quintet. This repo already renders
+// shadows this way (app/(tabs)/index.tsx's `theme.shadow`,
+// `boxShadow: theme.shadow`) and supports it — react-native 0.85.3,
+// newArchEnabled: true (app.json) — so the design-system foundation should
+// match that convention, not reintroduce the older per-platform shadow
+// props alongside it.
+//
+// Each size has a light/dark pair because the existing convention already
+// varies shadow color by theme (index.tsx: a warm sandalwood-brown shadow
+// in light mode, black in dark mode — a warm-tinted shadow barely reads
+// against a near-black background, so dark mode needs its own value rather
+// than reusing the light one at higher opacity). `shadowColorLight` here is
+// COLORS.borderDark's rgb triplet (59,43,22) — the same warm ink-brown the
+// previous shadow-prop version used — kept as a value, not introduced as a
+// new raw hex.
 export const SHADOWS = {
-  none: {},
   sm: {
-    shadowColor: COLORS.borderDark,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    light: '0 1px 3px rgba(59, 43, 22, 0.07)',
+    dark: '0 1px 4px rgba(0, 0, 0, 0.24)',
   },
   md: {
-    shadowColor: COLORS.borderDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    light: '0 4px 10px rgba(59, 43, 22, 0.10)',
+    dark: '0 6px 16px rgba(0, 0, 0, 0.30)',
   },
   lg: {
-    shadowColor: COLORS.borderDark,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.10,
-    shadowRadius: 22,
-    elevation: 6,
+    light: '0 10px 22px rgba(59, 43, 22, 0.12)',
+    dark: '0 14px 28px rgba(0, 0, 0, 0.34)',
   },
 } as const;
 
