@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
-import { Feather } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -17,21 +18,49 @@ WebBrowser.maybeCompleteAuthSession();
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
-// Minimum touch target per accessibility guidance (WCAG 2.5.5 / Material 44dp).
-const MIN_TOUCH_TARGET = 44;
-
 type AuthAction = 'google' | 'apple' | 'whatsapp' | null;
 
+// A soft, fixed-size radial glow behind the brand mark — purely decorative
+// background depth, not a data-bearing element. Uses react-native-svg
+// (already a dependency, already used for ProgressRing elsewhere) rather
+// than expo-linear-gradient, which isn't installed and wasn't added. Fixed
+// pixel dimensions (not percentage-of-parent), so there's no dependency on
+// runtime layout measurement.
+function BrandGlow() {
+  const size = 320;
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: -70, left: '50%', marginLeft: -size / 2, width: size, height: size }}
+    >
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Defs>
+          <RadialGradient id="brandGlow" cx="50%" cy="42%" r="55%">
+            <Stop offset="0%" stopColor={COLORS.brandGold} stopOpacity={0.22} />
+            <Stop offset="100%" stopColor={COLORS.brandGold} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect width={size} height={size} fill="url(#brandGlow)" />
+      </Svg>
+    </View>
+  );
+}
+
+// Local to this screen (not promoted to components/ui) — the left icon-well
+// + trailing chevron/spinner layout is specific to the two SSO buttons
+// here, not a pattern repeated across other screens yet.
 function AuthButton({
   label,
   onPress,
   disabled,
   loading,
+  icon,
 }: {
   label: string;
   onPress: () => void | Promise<void>;
   disabled?: boolean;
   loading?: boolean;
+  icon?: ReactNode;
 }) {
   return (
     <Pressable
@@ -40,40 +69,51 @@ function AuthButton({
         void onPress();
       }}
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
-      style={{
-        minHeight: 52,
+      style={({ pressed }) => ({
+        minHeight: 56,
         borderRadius: 18,
         borderWidth: 1,
         borderColor: COLORS.borderLight,
         backgroundColor: COLORS.cardBgLight,
-        paddingVertical: 14,
-        paddingHorizontal: 18,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        opacity: disabled ? 0.6 : 1,
-      }}
+        opacity: disabled ? 0.6 : pressed ? 0.85 : 1,
+      })}
     >
-      <Text
-        style={{
-          color: COLORS.ink,
-          fontFamily: FONTS.sansSemiBold,
-          fontSize: 15,
-        }}
-      >
-        {label}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        {icon ? (
+          <View
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: COLORS.surfaceSoftLight,
+            }}
+          >
+            {icon}
+          </View>
+        ) : null}
+        <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+          {label}
+        </Text>
+      </View>
       {loading ? (
         <ActivityIndicator size="small" color={COLORS.ink} />
       ) : (
-        <Feather name="chevron-right" size={18} color={COLORS.ink} />
+        <Feather name="chevron-right" size={18} color={COLORS.textDimLight} />
       )}
     </Pressable>
   );
 }
 
-function AuthDivider() {
+function AuthDivider({ label }: { label: string }) {
   return (
     <View
       style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
@@ -81,7 +121,7 @@ function AuthDivider() {
       importantForAccessibility="no-hide-descendants"
     >
       <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
-      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.textDimLight }}>or</Text>
+      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.textDimLight }}>{label}</Text>
       <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
     </View>
   );
@@ -195,7 +235,8 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ alignItems: 'center', marginBottom: 26 }}>
+        <View style={{ alignItems: 'center', marginBottom: 30 }}>
+          <BrandGlow />
           <Image
             source={require('../../assets/icon.png')}
             style={{ width: 148, height: 148 }}
@@ -204,92 +245,105 @@ export default function LoginScreen() {
           />
           <Text
             style={{
-              fontFamily: FONTS.sans,
+              fontFamily: FONTS.serifBold,
               fontSize: 15,
               color: COLORS.textDimLight,
               textAlign: 'center',
               maxWidth: 280,
-              lineHeight: 21,
-              marginTop: 2,
+              lineHeight: 22,
+              marginTop: 4,
+              letterSpacing: 0.2,
             }}
           >
             Ancient wisdom. Daily practice. One dharmic home in your hand.
           </Text>
         </View>
 
-        <Card>
-          <View style={{ gap: 12 }}>
+        <Card elevated>
+          <View style={{ gap: 14 }}>
             <Text
               style={{
                 fontFamily: FONTS.sansSemiBold,
-                fontSize: 13,
+                fontSize: 12,
+                letterSpacing: 1,
                 color: COLORS.textDimLight,
                 textAlign: 'center',
-                marginBottom: 2,
               }}
             >
               Sign in or create your account
             </Text>
 
-            <AuthButton
-              label={activeAction === 'google' ? 'Connecting to Google...' : 'Continue with Google'}
-              onPress={handleGoogle}
-              disabled={busy}
-              loading={activeAction === 'google'}
-            />
+            <View style={{ gap: 10 }}>
+              <AuthButton
+                label={activeAction === 'google' ? 'Connecting to Google...' : 'Continue with Google'}
+                onPress={handleGoogle}
+                disabled={busy}
+                loading={activeAction === 'google'}
+                icon={<FontAwesome name="google" size={16} color={COLORS.ink} />}
+              />
 
-            {Platform.OS === 'ios' ? (
-              <View
-                pointerEvents={busy ? 'none' : 'auto'}
-                style={{ opacity: busy && activeAction !== 'apple' ? 0.6 : 1 }}
-              >
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                  cornerRadius={18}
-                  style={{ height: 52, width: '100%' }}
-                  onPress={() => {
-                    void handleApple();
-                  }}
-                />
-              </View>
-            ) : null}
+              {Platform.OS === 'ios' ? (
+                <View
+                  pointerEvents={busy ? 'none' : 'auto'}
+                  style={{ opacity: busy && activeAction !== 'apple' ? 0.6 : 1 }}
+                >
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    cornerRadius={18}
+                    style={{ height: 56, width: '100%' }}
+                    onPress={() => {
+                      void handleApple();
+                    }}
+                  />
+                </View>
+              ) : null}
+            </View>
 
-            <AuthDivider />
+            <AuthDivider label="or continue with phone" />
 
             <Link href="/(auth)/whatsapp" asChild>
               <Pressable
                 disabled={busy}
                 accessibilityRole="button"
+                accessibilityLabel="Continue with WhatsApp"
                 accessibilityState={{ disabled: busy }}
-                style={{
-                  minHeight: 52,
+                style={({ pressed }) => ({
+                  minHeight: 56,
                   borderRadius: 18,
-                  borderWidth: 1,
+                  borderWidth: 1.5,
                   borderColor: COLORS.brandGold,
-                  backgroundColor: COLORS.brandGold,
-                  paddingVertical: 14,
-                  paddingHorizontal: 18,
+                  backgroundColor: 'transparent',
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  opacity: busy ? 0.6 : 1,
-                }}
+                  opacity: busy ? 0.6 : pressed ? 0.85 : 1,
+                })}
               >
-                <Text
-                  style={{
-                    color: COLORS.ink,
-                    fontFamily: FONTS.sansSemiBold,
-                    fontSize: 15,
-                  }}
-                >
-                  Continue with WhatsApp
-                </Text>
-                <Feather name="chevron-right" size={18} color={COLORS.ink} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(197,160,89,0.14)',
+                    }}
+                  >
+                    <FontAwesome name="whatsapp" size={17} color={COLORS.brandGold} />
+                  </View>
+                  <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                    Continue with WhatsApp
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={COLORS.brandGold} />
               </Pressable>
             </Link>
 
-            <View style={{ marginTop: 6, gap: 6 }}>
+            <View style={{ marginTop: 4, gap: 6 }}>
               <Text
                 style={{
                   color: COLORS.textDimLight,
@@ -357,17 +411,34 @@ export default function LoginScreen() {
             </View>
 
             {errorMessage ? (
-              <Text
+              <View
+                accessible
+                accessibilityRole="alert"
                 style={{
-                  color: 'crimson',
-                  fontFamily: FONTS.sans,
-                  fontSize: 13,
-                  textAlign: 'center',
                   marginTop: 2,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: COLORS.dangerBorder,
+                  backgroundColor: COLORS.dangerBg,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
                 }}
               >
-                {errorMessage}
-              </Text>
+                <Feather name="alert-circle" size={15} color={COLORS.danger} />
+                <Text
+                  style={{
+                    flex: 1,
+                    color: COLORS.danger,
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                  }}
+                >
+                  {errorMessage}
+                </Text>
+              </View>
             ) : null}
           </View>
         </Card>

@@ -50,6 +50,17 @@ export const COLORS = {
   navy: '#3E5C76',
   navyBg: 'rgba(62,92,118,0.12)',
   navyBorder: 'rgba(62,92,118,0.35)',
+
+  // Error/danger — the web repo has no dedicated error CSS variable either
+  // (checked src/app/globals.css; the (auth) login/signup pages there
+  // render errors via toast, not inline color). The one place web does
+  // render an inline error is src/app/admin/login/page.tsx, using
+  // Tailwind's red-600/red-50/red-100. Reused verbatim here so native has
+  // one sourced error color rather than the login screen's prior ad hoc
+  // `'crimson'` literal.
+  danger: '#DC2626',
+  dangerBg: 'rgba(220,38,38,0.10)',
+  dangerBorder: 'rgba(220,38,38,0.28)',
 } as const;
 
 export const FONTS = {

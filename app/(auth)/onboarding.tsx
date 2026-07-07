@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
@@ -11,18 +10,24 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
+import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS } from '@/lib/constants';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerUserId } from '@/lib/notifications';
 
 type Step = 'tradition' | 'language' | 'notifications';
 
+// Short, factual tags — not theological claims — describing the kind of
+// content each tradition unlocks elsewhere in the app (mantras/panchang:
+// app/(tabs)/bhakti.tsx, app/panchang.tsx; daily sadhana: app/nitya-karma.tsx),
+// so this reads as real app content, not invented marketing copy.
 const TRADITIONS = [
-  { key: 'hindu', label: 'Hindu', emoji: '🕉️' },
-  { key: 'sikh', label: 'Sikh', emoji: '☬' },
-  { key: 'buddhist', label: 'Buddhist', emoji: '☸️' },
-  { key: 'jain', label: 'Jain', emoji: '🌀' },
+  { key: 'hindu', label: 'Hindu', emoji: '🕉️', description: 'Mantras, panchang and daily sadhana' },
+  { key: 'sikh', label: 'Sikh', emoji: '☬', description: 'Gurbani, nitnem and daily practice' },
+  { key: 'buddhist', label: 'Buddhist', emoji: '☸️', description: 'Sutras, mindfulness and daily practice' },
+  { key: 'jain', label: 'Jain', emoji: '🌀', description: 'Sutras, tattva and daily practice' },
 ] as const;
 
 type TraditionKey = (typeof TRADITIONS)[number]['key'];
@@ -36,6 +41,12 @@ type LanguageKey = (typeof LANGUAGES)[number]['key'];
 
 const STEPS: Step[] = ['tradition', 'language', 'notifications'];
 
+const STEP_EYEBROW: Record<Step, string> = {
+  tradition: 'Step 1 of 3',
+  language: 'Step 2 of 3',
+  notifications: 'Step 3 of 3',
+};
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -45,6 +56,9 @@ export default function OnboardingScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const wellBg = isDark ? 'rgba(255,248,225,0.06)' : 'rgba(255,255,255,0.6)';
+  const wellBgSelected = 'rgba(197,160,89,0.16)';
+  const cardShadow = isDark ? SHADOWS.sm.dark : SHADOWS.sm.light;
 
   const [step, setStep] = useState<Step>('tradition');
   const [tradition, setTradition] = useState<TraditionKey>('hindu');
@@ -122,7 +136,11 @@ export default function OnboardingScreen() {
   return (
     <Screen style={{ backgroundColor: bg }}>
       {/* Progress dots */}
-      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 32 }}>
+      <View
+        accessible
+        accessibilityLabel={STEP_EYEBROW[step]}
+        style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}
+      >
         {STEPS.map((s, i) => (
           <View
             key={s}
@@ -136,52 +154,76 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 24, paddingBottom: 32 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ gap: 24, paddingBottom: 32 }}
+      >
         {/* ── Step 1: Tradition ──────────────────────────────── */}
         {step === 'tradition' && (
           <>
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 10 }}>
+              <SectionHeader label={STEP_EYEBROW.tradition} />
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
                 Your tradition
               </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: dim }}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
                 Shoonaya adapts its guidance to your path. Choose your tradition.
               </Text>
             </View>
 
             <View style={{ gap: 12 }}>
-              {TRADITIONS.map((t) => (
-                <Pressable
-                  key={t.key}
-                  onPress={() => { void handleTradition(t.key); }}
-                  style={{
-                    borderRadius: 22,
-                    borderWidth: 1.5,
-                    borderColor: tradition === t.key ? COLORS.brandGold : border,
-                    backgroundColor: tradition === t.key ? cardBg : 'transparent',
-                    padding: 18,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 14,
-                  }}
-                >
-                  <Text style={{ fontSize: 26 }}>{t.emoji}</Text>
-                  <Text
+              {TRADITIONS.map((t) => {
+                const selected = tradition === t.key;
+                return (
+                  <Pressable
+                    key={t.key}
+                    onPress={() => { void handleTradition(t.key); }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${t.label}, ${t.description}`}
                     style={{
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 16,
-                      color: tradition === t.key ? COLORS.brandGold : text,
+                      borderRadius: RADII.lg,
+                      borderWidth: 1.5,
+                      borderColor: selected ? COLORS.brandGold : border,
+                      backgroundColor: selected ? cardBg : 'transparent',
+                      padding: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 14,
+                      boxShadow: selected ? cardShadow : undefined,
                     }}
                   >
-                    {t.label}
-                  </Text>
-                  {tradition === t.key ? (
-                    <View style={{ marginLeft: 'auto' }}>
-                      <Feather name="check-circle" size={20} color={COLORS.brandGold} />
+                    <View
+                      style={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: 16,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: selected ? wellBgSelected : wellBg,
+                      }}
+                    >
+                      <Text style={{ fontSize: 22 }}>{t.emoji}</Text>
                     </View>
-                  ) : null}
-                </Pressable>
-              ))}
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.sansSemiBold,
+                          fontSize: 16,
+                          color: selected ? COLORS.brandGold : text,
+                        }}
+                      >
+                        {t.label}
+                      </Text>
+                      <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                        {t.description}
+                      </Text>
+                    </View>
+                    {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
+                  </Pressable>
+                );
+              })}
             </View>
           </>
         )}
@@ -189,50 +231,68 @@ export default function OnboardingScreen() {
         {/* ── Step 2: Language ───────────────────────────────── */}
         {step === 'language' && (
           <>
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 10 }}>
+              <SectionHeader label={STEP_EYEBROW.language} />
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
                 Your language
               </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: dim }}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
                 Choose how you want meanings and explanations displayed.
               </Text>
             </View>
 
             <View style={{ gap: 12 }}>
-              {LANGUAGES.map((l) => (
-                <Pressable
-                  key={l.key}
-                  onPress={() => { void handleLanguage(l.key); }}
-                  style={{
-                    borderRadius: 22,
-                    borderWidth: 1.5,
-                    borderColor: language === l.key ? COLORS.brandGold : border,
-                    backgroundColor: language === l.key ? cardBg : 'transparent',
-                    padding: 18,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 14,
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text
+              {LANGUAGES.map((l) => {
+                const selected = language === l.key;
+                return (
+                  <Pressable
+                    key={l.key}
+                    onPress={() => { void handleLanguage(l.key); }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${l.label}, ${l.native}`}
+                    style={{
+                      borderRadius: RADII.lg,
+                      borderWidth: 1.5,
+                      borderColor: selected ? COLORS.brandGold : border,
+                      backgroundColor: selected ? cardBg : 'transparent',
+                      padding: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 14,
+                      boxShadow: selected ? cardShadow : undefined,
+                    }}
+                  >
+                    <View
                       style={{
-                        fontFamily: FONTS.sansSemiBold,
-                        fontSize: 16,
-                        color: language === l.key ? COLORS.brandGold : text,
+                        width: 46,
+                        height: 46,
+                        borderRadius: 16,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: selected ? wellBgSelected : wellBg,
                       }}
                     >
-                      {l.label}
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, marginTop: 2 }}>
-                      {l.native}
-                    </Text>
-                  </View>
-                  {language === l.key ? (
-                    <Feather name="check-circle" size={20} color={COLORS.brandGold} />
-                  ) : null}
-                </Pressable>
-              ))}
+                      <Feather name="globe" size={19} color={selected ? COLORS.brandGold : dim} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.sansSemiBold,
+                          fontSize: 16,
+                          color: selected ? COLORS.brandGold : text,
+                        }}
+                      >
+                        {l.label}
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, marginTop: 2 }}>
+                        {l.native}
+                      </Text>
+                    </View>
+                    {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
+                  </Pressable>
+                );
+              })}
             </View>
           </>
         )}
@@ -240,23 +300,24 @@ export default function OnboardingScreen() {
         {/* ── Step 3: Notifications ──────────────────────────── */}
         {step === 'notifications' && (
           <>
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 10 }}>
+              <SectionHeader label={STEP_EYEBROW.notifications} />
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
                 Daily reminders
               </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: dim }}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
                 Receive your daily shloka, streak nudges, and community mentions. You can always adjust this later in Settings.
               </Text>
             </View>
 
             <View
               style={{
-                borderRadius: 24,
+                borderRadius: RADII.xl,
                 borderWidth: 1,
                 borderColor: border,
                 backgroundColor: cardBg,
                 padding: 20,
-                gap: 14,
+                gap: 16,
               }}
             >
               {[
@@ -265,7 +326,18 @@ export default function OnboardingScreen() {
                 { icon: 'users' as const, label: 'Mandali mentions' },
               ].map((item) => (
                 <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Feather name={item.icon} size={18} color={COLORS.brandGold} />
+                  <View
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: wellBg,
+                    }}
+                  >
+                    <Feather name={item.icon} size={16} color={COLORS.brandGold} />
+                  </View>
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 14, color: text }}>
                     {item.label}
                   </Text>
@@ -273,55 +345,27 @@ export default function OnboardingScreen() {
               ))}
             </View>
 
-            <Pressable
-              onPress={() => { void handleAllowNotifications(); }}
-              disabled={saving}
-              style={{
-                borderRadius: 22,
-                backgroundColor: COLORS.brandGold,
-                paddingVertical: 16,
-                alignItems: 'center',
-                opacity: saving ? 0.7 : 1,
-              }}
-            >
-              {saving ? (
-                <ActivityIndicator color={COLORS.ink} />
-              ) : (
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: COLORS.ink }}>
-                  Allow notifications
-                </Text>
-              )}
-            </Pressable>
-
-            <Pressable
-              onPress={() => { void complete(false); }}
-              disabled={saving}
-              style={{ paddingVertical: 12, alignItems: 'center' }}
-            >
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim }}>
-                Not now
-              </Text>
-            </Pressable>
+            <View style={{ gap: 10 }}>
+              <Button
+                label="Allow notifications"
+                onPress={() => { void handleAllowNotifications(); }}
+                disabled={saving}
+                loading={saving}
+              />
+              <Button
+                label="Not now"
+                variant="ghost"
+                onPress={() => { void complete(false); }}
+                disabled={saving}
+              />
+            </View>
           </>
         )}
       </ScrollView>
 
       {/* Continue button (steps 1 and 2) */}
       {step !== 'notifications' ? (
-        <Pressable
-          onPress={() => { void goNext(); }}
-          style={{
-            borderRadius: 22,
-            backgroundColor: COLORS.brandGold,
-            paddingVertical: 16,
-            alignItems: 'center',
-            marginTop: 16,
-          }}
-        >
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: COLORS.ink }}>
-            Continue
-          </Text>
-        </Pressable>
+        <Button label="Continue" onPress={() => { void goNext(); }} style={{ marginTop: 16 }} />
       ) : null}
     </Screen>
   );
