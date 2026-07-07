@@ -209,7 +209,7 @@ function mapHrefToRoute(href: string): Href {
   if (href.startsWith('/vrat')) return '/vrat';
   if (href.startsWith('/quiz')) return '/quiz';
   if (href.startsWith('/dharm-veer')) return '/dharm-veer';
-  if (href.startsWith('/nitya-karma')) return '/panchang';
+  if (href.startsWith('/nitya-karma')) return '/nitya-karma';
   return '/(tabs)/pathshala';
 }
 
