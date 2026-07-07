@@ -5,6 +5,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   useColorScheme,
   View,
@@ -14,122 +15,176 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Svg, { Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { calculatePanchang } from '@sangam/panchang-engine';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
-type PersonaliseResponse = {
-  suggestion: string;
-  nudge?: string;
-  context_label?: string;
-  action?: {
-    label: string;
-    href: string;
-    type?: string;
-  };
-};
-
-type ProfileRow = {
-  full_name: string | null;
-  username: string | null;
-  tradition: string | null;
-  active_symbol_id: string | null;
-  city: string | null;
-  karma_points: number | null;
-};
-
-type HomeState = {
-  name: string;
-  tradition: string | null;
-  relicImageUrl: string | null;
-  city: string;
-  karmaPoints: number;
-  suggestion: string;
-  nudge: string;
-  contextLabel: string;
-  actionLabel: string;
-  actionHref: string;
-};
+type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer' | 'panchang';
 
 type PracticeRow = {
-  id: string;
+  id: PracticeId;
   icon: keyof typeof Feather.glyphMap;
   label: string;
   detail: string;
-  href: Href;
+  href: string;
   done: boolean;
   progress: number;
   color: string;
+  streak?: number;
 };
 
-const INITIAL_STATE: HomeState = {
-  name: 'Seeker',
-  tradition: 'hindu',
-  relicImageUrl: null,
-  city: '',
-  karmaPoints: 0,
-  suggestion: 'Continue your practice to quiet the mind.',
-  nudge: 'Consistency builds the strongest foundation.',
-  contextLabel: "Today's practice",
-  actionLabel: 'Go to Pathshala',
-  actionHref: '/pathshala',
-};
-
-const GREETINGS: Record<string, string> = {
-  hindu: 'Jai Shri Ram',
-  sikh: 'Waheguru Ji Ka Khalsa',
-  buddhist: 'Namo Buddhaya',
-  jain: 'Jai Jinendra',
-};
-
-const VERSE_BY_TRADITION: Record<string, { label: string; text: string; meaning: string }> = {
-  hindu: {
-    label: "Today's Verse",
-    text: 'वसुधैव कुटुम्बकम्',
-    meaning: 'The whole world is one family, a reminder to act with kinship and dignity.',
-  },
-  sikh: {
-    label: "Today's Shabad",
-    text: 'ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ',
-    meaning: 'There is One Reality, remembered through truthful living and service.',
-  },
-  buddhist: {
-    label: "Today's Reflection",
-    text: 'Buddham sharanam gacchami',
-    meaning: 'Return to wakefulness, compassion, and the path of practice.',
-  },
-  jain: {
-    label: "Today's Reflection",
-    text: 'अहिंसा परमो धर्मः',
-    meaning: 'Non-harm is the highest discipline, beginning with thought, word, and action.',
-  },
+type HomeSummary = {
+  profile: {
+    name: string;
+    firstName: string;
+    tradition: string;
+    city: string;
+    country: string;
+    karmaPoints: number;
+    relicImageUrl: string | null;
+    avatarUrl: string | null;
+  };
+  hero: {
+    imageUrl: string;
+    alt: string;
+    objectPosition: string;
+    label: string;
+  };
+  date: {
+    iso: string;
+    timezone: string;
+    latitude: number;
+    longitude: number;
+  };
+  sacredText: {
+    label: string;
+    icon: string;
+    original: string;
+    transliteration: string;
+    meaning: string;
+    source: string;
+    accentColour: string;
+    accentLight: string;
+  };
+  panchang: {
+    href: string;
+    tithiLabel: string;
+    festivalLabel: string | null;
+    vratLabel: string | null;
+  };
+  nextPractice: {
+    id: PracticeId;
+    contextLabel: string;
+    title: string;
+    suggestion: string;
+    nudge: string;
+    actionLabel: string;
+    actionHref: string;
+    progress: number;
+  };
+  practices: PracticeRow[];
+  sankalpa: {
+    id: string;
+    text: string;
+    startDate: string;
+    endDate: string;
+    targetDays: number;
+    day: number;
+    progress: number;
+    tradition: string;
+    relatedPractice: string | null;
+  } | null;
+  dharmVeer: {
+    id: string;
+    name: string;
+    tagline: string;
+    href: string;
+  };
 };
 
 const SANSKRIT_WEEKDAYS = ['Ravivara', 'Somavara', 'Mangalavara', 'Budhavara', 'Guruvāra', 'Shukravara', 'Shanivara'];
 
-const RELICS: Array<{ id: string; imageUrl: string }> = [
-  { id: 'diya-bronze', imageUrl: '/relics/diya-bronze.png' },
-  { id: 'clay-kalash', imageUrl: '/relics/clay-kalash.png' },
-  { id: 'incense-sandalwood', imageUrl: '/relics/incense.png' },
-  { id: 'camphor-flame', imageUrl: '/relics/camphor.png' },
-  { id: 'mindful-bell', imageUrl: '/relics/bell.png' },
-  { id: 'copper-lota', imageUrl: '/relics/copper-lota.png' },
-];
+const INITIAL_STATE: HomeSummary = {
+  profile: {
+    name: 'Seeker',
+    firstName: 'Seeker',
+    tradition: 'hindu',
+    city: '',
+    country: '',
+    karmaPoints: 0,
+    relicImageUrl: null,
+    avatarUrl: null,
+  },
+  hero: {
+    imageUrl: '/assets/images/heroes/all/default.webp',
+    alt: 'Shoonaya devotional artwork',
+    objectPosition: 'center 25%',
+    label: 'Global default',
+  },
+  date: {
+    iso: new Date().toISOString().slice(0, 10),
+    timezone: 'Asia/Kolkata',
+    latitude: 23.1765,
+    longitude: 75.7885,
+  },
+  sacredText: {
+    label: "Today's Verse",
+    icon: 'ॐ',
+    original: 'वसुधैव कुटुम्बकम्',
+    transliteration: 'Vasudhaiva Kutumbakam',
+    meaning: 'The whole world is one family, a reminder to act with kinship and dignity.',
+    source: 'Maha Upanishad',
+    accentColour: COLORS.brandGold,
+    accentLight: 'rgba(197,160,89,0.14)',
+  },
+  panchang: {
+    href: '/panchang',
+    tithiLabel: 'Today’s Panchang',
+    festivalLabel: null,
+    vratLabel: null,
+  },
+  nextPractice: {
+    id: 'pathshala',
+    contextLabel: 'Next Practice',
+    title: 'Pathshala',
+    suggestion: 'Continue your practice to quiet the mind.',
+    nudge: 'Consistency builds the strongest foundation.',
+    actionLabel: 'Go to Pathshala',
+    actionHref: '/pathshala',
+    progress: 0,
+  },
+  practices: [],
+  sankalpa: null,
+  dharmVeer: {
+    id: '',
+    name: 'Dharm Veer',
+    tagline: 'Remember a life of courage',
+    href: '/dharm-veer',
+  },
+};
 
 function getGreeting(tradition: string | null) {
-  return GREETINGS[tradition ?? 'hindu'] ?? 'Pranam';
+  switch (tradition) {
+    case 'sikh':
+      return 'Waheguru Ji Ka Khalsa';
+    case 'buddhist':
+      return 'Namo Buddhaya';
+    case 'jain':
+      return 'Jai Jinendra';
+    case 'hindu':
+      return 'Jai Shri Ram';
+    default:
+      return 'Pranam';
+  }
 }
 
-function getFirstName(name: string) {
-  return name.trim().split(/\s+/)[0] || 'Seeker';
-}
-
-function getDateLabel(date: Date) {
+function getDateLabel(isoDate: string) {
+  const date = new Date(`${isoDate}T12:00:00`);
   const english = new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -139,19 +194,21 @@ function getDateLabel(date: Date) {
   return `${sanskritWeekday} · ${english}`;
 }
 
-function getRelicImage(activeSymbolId: string | null) {
-  if (!activeSymbolId) return null;
-  const relic = RELICS.find((entry) => entry.id === activeSymbolId);
-  return relic ? `${API_BASE}${relic.imageUrl}` : null;
+function resolveAssetUrl(url: string | null | undefined) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
 }
 
 function mapHrefToRoute(href: string): Href {
   if (href.startsWith('/bhakti') || href.startsWith('/japa')) return '/(tabs)/bhakti';
+  if (href.startsWith('/pathshala/')) return href as Href;
   if (href.startsWith('/pathshala')) return '/(tabs)/pathshala';
   if (href.startsWith('/panchang')) return '/panchang';
   if (href.startsWith('/vrat')) return '/vrat';
   if (href.startsWith('/quiz')) return '/quiz';
   if (href.startsWith('/dharm-veer')) return '/dharm-veer';
+  if (href.startsWith('/nitya-karma')) return '/panchang';
   return '/(tabs)/pathshala';
 }
 
@@ -215,7 +272,7 @@ function HomeContent() {
   const isDark = colorScheme === 'dark';
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [state, setState] = useState<HomeState>(INITIAL_STATE);
+  const [state, setState] = useState<HomeSummary>(INITIAL_STATE);
   const [loadError, setLoadError] = useState(false);
   const [practicesOpen, setPracticesOpen] = useState(false);
 
@@ -225,7 +282,7 @@ function HomeContent() {
     () => ({
       background: isDark ? COLORS.darkBg : COLORS.creamBg,
       hero: isDark ? '#1B130B' : '#F6E8CF',
-      heroOverlay: isDark ? 'rgba(14,8,4,0.55)' : 'rgba(255,249,240,0.64)',
+      heroOverlay: isDark ? 'rgba(14,8,4,0.55)' : 'rgba(255,249,240,0.72)',
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
       raised: isDark ? '#21170E' : '#FFF8EB',
       soft: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.10)',
@@ -239,104 +296,49 @@ function HomeContent() {
     [isDark]
   );
 
-  const verse = VERSE_BY_TRADITION[state.tradition ?? 'hindu'] ?? VERSE_BY_TRADITION.hindu;
+  const heroImageUrl = resolveAssetUrl(state.hero.imageUrl);
+  const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
 
-  const practiceRows = useMemo<PracticeRow[]>(
-    () => [
-      {
-        id: 'japa',
-        icon: 'circle',
-        label: 'Japa Mala',
-        detail: 'Begin your mala',
-        href: '/(tabs)/bhakti',
-        done: false,
-        progress: 0,
-        color: '#F59E4A',
-      },
-      {
-        id: 'pathshala',
-        icon: 'book-open',
-        label: 'Pathshala',
-        detail: 'Study scripture',
-        href: '/(tabs)/pathshala',
-        done: false,
-        progress: 0,
-        color: COLORS.success,
-      },
-      {
-        id: 'quiz',
-        icon: 'help-circle',
-        label: 'Daily Quiz',
-        detail: 'Test your dharmic memory',
-        href: '/quiz',
-        done: false,
-        progress: 0,
-        color: '#A594E0',
-      },
-      {
-        id: 'dharmveer',
-        icon: 'shield',
-        label: 'Dharm Veer',
-        detail: 'Remember a life of courage',
-        href: '/dharm-veer',
-        done: false,
-        progress: 0,
-        color: '#FF8A65',
-      },
-      {
-        id: 'panchang',
-        icon: 'sunrise',
-        label: 'Panchang',
-        detail: 'Today’s sacred rhythm',
-        href: '/panchang',
-        done: false,
-        progress: 0,
-        color: COLORS.brandGold,
-      },
-    ],
-    []
+  const panchang = useMemo(
+    () => calculatePanchang(
+      new Date(`${state.date.iso}T12:00:00`),
+      state.date.latitude,
+      state.date.longitude,
+      state.date.timezone
+    ),
+    [state.date.iso, state.date.latitude, state.date.longitude, state.date.timezone]
   );
+
+  const tithiPill = `${panchang.tithi} · ${panchang.paksha}`;
+  const completedCount = state.practices.filter((row) => row.done).length;
+  const actionRoute = mapHrefToRoute(state.nextPractice.actionHref);
 
   const loadHome = useCallback(async () => {
     setLoadError(false);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const response = await apiFetch('/api/native/home-summary');
 
-    if (!user) {
-      setState(INITIAL_STATE);
+    if (response.status === 401) {
+      router.replace('/(auth)/login');
       return;
     }
 
-    const profileQuery = supabase
-      .from('profiles')
-      .select('full_name, username, tradition, active_symbol_id, city, karma_points')
-      .eq('id', user.id)
-      .single();
+    if (!response.ok) {
+      throw new Error('Could not load home summary');
+    }
 
-    const personaliseQuery = apiFetch('/api/home/personalise')
-      .then(async (res) => {
-        if (!res.ok) return null;
-        return (await res.json()) as PersonaliseResponse;
-      })
-      .catch(() => null);
-
-    const [profileRes, personaliseRes] = await Promise.all([profileQuery, personaliseQuery]);
-    const profile = profileRes.data as ProfileRow | null;
-
+    const payload = (await response.json()) as HomeSummary;
     setState({
-      name: profile?.full_name || profile?.username || 'Seeker',
-      tradition: profile?.tradition ?? 'hindu',
-      relicImageUrl: getRelicImage(profile?.active_symbol_id ?? null),
-      city: profile?.city ?? '',
-      karmaPoints: profile?.karma_points ?? 0,
-      suggestion: personaliseRes?.suggestion ?? INITIAL_STATE.suggestion,
-      nudge: personaliseRes?.nudge ?? INITIAL_STATE.nudge,
-      contextLabel: personaliseRes?.context_label ?? INITIAL_STATE.contextLabel,
-      actionLabel: personaliseRes?.action?.label ?? INITIAL_STATE.actionLabel,
-      actionHref: personaliseRes?.action?.href ?? INITIAL_STATE.actionHref,
+      ...INITIAL_STATE,
+      ...payload,
+      profile: { ...INITIAL_STATE.profile, ...payload.profile },
+      hero: { ...INITIAL_STATE.hero, ...payload.hero },
+      date: { ...INITIAL_STATE.date, ...payload.date },
+      sacredText: { ...INITIAL_STATE.sacredText, ...payload.sacredText },
+      panchang: { ...INITIAL_STATE.panchang, ...payload.panchang },
+      nextPractice: { ...INITIAL_STATE.nextPractice, ...payload.nextPractice },
+      practices: payload.practices ?? [],
     });
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const run = async () => {
@@ -375,8 +377,8 @@ function HomeContent() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
         <View style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 18, gap: 16 }}>
-        <SkeletonCard />
-        <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
       </SafeAreaView>
     );
@@ -386,22 +388,19 @@ function HomeContent() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
         <View style={{ flex: 1, justifyContent: 'center' }}>
-        <EmptyState
-          icon="wifi-off"
-          title="Could not load home"
-          subtitle="Check your connection and try again."
-          ctaLabel="Retry"
-          onCta={() => {
-            void onRefresh();
-          }}
-        />
+          <EmptyState
+            icon="wifi-off"
+            title="Could not load home"
+            subtitle="Check your connection and try again."
+            ctaLabel="Retry"
+            onCta={() => {
+              void onRefresh();
+            }}
+          />
         </View>
       </SafeAreaView>
     );
   }
-
-  const actionRoute = mapHrefToRoute(state.actionHref);
-  const completedCount = practiceRows.filter((row) => row.done).length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
@@ -414,7 +413,7 @@ function HomeContent() {
       >
         <View
           style={{
-            minHeight: 332,
+            minHeight: 358,
             paddingHorizontal: 20,
             paddingTop: 18,
             paddingBottom: 24,
@@ -422,26 +421,23 @@ function HomeContent() {
             overflow: 'hidden',
           }}
         >
+          {heroImageUrl ? (
+            <Image
+              source={{ uri: heroImageUrl }}
+              accessibilityIgnoresInvertColors
+              style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.55 : 0.68 }]}
+              resizeMode="cover"
+            />
+          ) : null}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.heroOverlay }]} />
           <View
             style={{
               position: 'absolute',
-              top: -70,
-              right: -70,
-              width: 220,
-              height: 220,
-              borderRadius: 110,
-              backgroundColor: isDark ? 'rgba(197,160,89,0.18)' : 'rgba(255,255,255,0.48)',
-            }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              left: -50,
-              bottom: -75,
-              width: 190,
-              height: 190,
-              borderRadius: 95,
-              backgroundColor: isDark ? 'rgba(255,248,225,0.05)' : 'rgba(197,160,89,0.13)',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 138,
+              backgroundColor: isDark ? 'rgba(14,8,4,0.72)' : 'rgba(253,246,227,0.78)',
             }}
           />
 
@@ -464,10 +460,10 @@ function HomeContent() {
             </Pressable>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {state.karmaPoints > 0 ? (
+              {state.profile.karmaPoints > 0 ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${state.karmaPoints} karma points`}
+                  accessibilityLabel={`${state.profile.karmaPoints} karma points`}
                   onPress={() => navigate('/(tabs)/profile')}
                   style={{
                     minHeight: 38,
@@ -484,7 +480,7 @@ function HomeContent() {
                 >
                   <Feather name="star" size={12} color={COLORS.brandGold} />
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
-                    {formatKarma(state.karmaPoints)}
+                    {formatKarma(state.profile.karmaPoints)}
                   </Text>
                 </Pressable>
               ) : null}
@@ -505,60 +501,104 @@ function HomeContent() {
                   overflow: 'hidden',
                 }}
               >
-                {state.relicImageUrl ? (
-                  <Image source={{ uri: state.relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                {relicImageUrl ? (
+                  <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
                 ) : (
                   <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: theme.text }}>
-                    {getFirstName(state.name).charAt(0)}
+                    {state.profile.firstName.charAt(0)}
                   </Text>
                 )}
               </Pressable>
             </View>
           </View>
 
-          <View style={{ marginTop: 46 }}>
-            {state.city ? (
+          <View style={{ marginTop: 48 }}>
+            {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Feather name="map-pin" size={12} color={theme.dim} />
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: theme.dim }}>
-                  {state.city}
+                  {state.profile.city}
                 </Text>
               </View>
             ) : null}
 
             <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, lineHeight: 40, color: theme.text }}>
-              {getGreeting(state.tradition)}, {getFirstName(state.name)}
+              {getGreeting(state.profile.tradition)}, {state.profile.firstName}
             </Text>
             <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>
-              {getDateLabel(new Date())}
+              {getDateLabel(state.date.iso)}
             </Text>
+
+            <View style={{ marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Open Panchang, ${tithiPill}`}
+                onPress={() => navigate('/panchang')}
+                style={{
+                  minHeight: 36,
+                  borderRadius: 18,
+                  paddingHorizontal: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 6,
+                  backgroundColor: theme.heroOverlay,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                }}
+              >
+                <Feather name="sunrise" size={13} color={COLORS.brandGold} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
+                  {tithiPill}
+                </Text>
+              </Pressable>
+
+              {state.panchang.festivalLabel ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open Vrat calendar, ${state.panchang.festivalLabel}`}
+                  onPress={() => navigate('/vrat')}
+                  style={{
+                    minHeight: 36,
+                    borderRadius: 18,
+                    paddingHorizontal: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.heroOverlay,
+                    borderWidth: 1,
+                    borderColor: theme.borderSoft,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
+                    {state.panchang.festivalLabel}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           </View>
         </View>
 
-        <View style={{ paddingHorizontal: 20, marginTop: -44, gap: 14 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: -38, gap: 14 }}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${verse.label}: ${verse.text}. ${verse.meaning}`}
+            accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}`}
             onPress={() => navigate('/(tabs)/pathshala')}
             style={{
-              borderRadius: 26,
+              borderRadius: 22,
               paddingHorizontal: 20,
               paddingVertical: 18,
               alignItems: 'center',
-              backgroundColor: theme.card,
-              borderWidth: 1,
-              borderColor: theme.border,
-              boxShadow: theme.shadow,
+              backgroundColor: isDark ? 'rgba(23,17,11,0.76)' : 'rgba(255,249,240,0.80)',
             }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: COLORS.brandGold }}>
-              {verse.label}
+              {state.sacredText.label}
             </Text>
             <Text style={{ marginTop: 12, fontFamily: FONTS.serifBold, fontSize: 25, lineHeight: 33, color: theme.text, textAlign: 'center' }}>
-              “{verse.text}”
+              “{state.sacredText.original}”
             </Text>
             <Text style={{ marginTop: 10, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim, textAlign: 'center' }} numberOfLines={2}>
-              {verse.meaning}
+              {state.sacredText.meaning}
             </Text>
           </Pressable>
 
@@ -575,27 +615,27 @@ function HomeContent() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: COLORS.brandGold }}>
-                  Next Practice
+                  {state.nextPractice.contextLabel}
                 </Text>
                 <Text style={{ marginTop: 9, fontFamily: FONTS.serifBold, fontSize: 27, lineHeight: 33, color: theme.text }}>
-                  {state.contextLabel}
+                  {state.nextPractice.title}
                 </Text>
                 <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, color: theme.dim }}>
-                  {state.suggestion}
+                  {state.nextPractice.suggestion}
                 </Text>
               </View>
-              <ProgressRing done={false} progress={0.2} color={COLORS.brandGold} track={theme.ringTrack} />
+              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={COLORS.brandGold} track={theme.ringTrack} />
             </View>
 
-            {state.nudge ? (
+            {state.nextPractice.nudge ? (
               <Text style={{ marginTop: 13, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim }}>
-                {state.nudge}
+                {state.nextPractice.nudge}
               </Text>
             ) : null}
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={state.actionLabel}
+              accessibilityLabel={state.nextPractice.actionLabel}
               onPress={() => navigate(actionRoute)}
               style={{
                 marginTop: 18,
@@ -610,7 +650,7 @@ function HomeContent() {
               }}
             >
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
-                {state.actionLabel}
+                {state.nextPractice.actionLabel}
               </Text>
               <Feather name="arrow-right" size={18} color={COLORS.ink} />
             </Pressable>
@@ -643,7 +683,7 @@ function HomeContent() {
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.dim }}>
-                  {completedCount} / {practiceRows.length}
+                  {completedCount} / {state.practices.length}
                 </Text>
                 <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
               </View>
@@ -651,12 +691,12 @@ function HomeContent() {
 
             {practicesOpen ? (
               <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 7 }}>
-                {practiceRows.map((row) => (
+                {state.practices.map((row) => (
                   <Pressable
                     key={row.id}
                     accessibilityRole="button"
                     accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
-                    onPress={() => navigate(row.href)}
+                    onPress={() => navigate(mapHrefToRoute(row.href))}
                     style={{
                       minHeight: 54,
                       borderRadius: 14,
@@ -685,7 +725,7 @@ function HomeContent() {
                           {row.label}
                         </Text>
                         <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
-                          {row.detail}
+                          {row.streak && row.streak > 0 ? `${row.detail} · ${row.streak} day streak` : row.detail}
                         </Text>
                       </View>
                     </View>
@@ -703,10 +743,10 @@ function HomeContent() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Set your Sankalpa for this month"
+            accessibilityLabel={state.sankalpa ? `Open Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}` : 'Set your Sankalpa for this month'}
             onPress={() => navigate('/(tabs)/profile')}
             style={{
-              minHeight: 68,
+              minHeight: 76,
               borderRadius: 22,
               paddingHorizontal: 18,
               flexDirection: 'row',
@@ -719,9 +759,16 @@ function HomeContent() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
               <Feather name="sun" size={20} color={theme.text} />
-              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 17, color: theme.text }}>
-                Set your Sankalpa for this month
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 17, color: theme.text }}>
+                  {state.sankalpa ? state.sankalpa.text : 'Set your Sankalpa for this month'}
+                </Text>
+                {state.sankalpa ? (
+                  <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
+                    Day {state.sankalpa.day} of {state.sankalpa.targetDays}
+                  </Text>
+                ) : null}
+              </View>
             </View>
             <Feather name="arrow-right" size={20} color={COLORS.brandGold} />
           </Pressable>
@@ -745,10 +792,10 @@ function HomeContent() {
                   Sacred rhythm
                 </Text>
                 <Text style={{ marginTop: 8, fontFamily: FONTS.serifBold, fontSize: 22, color: theme.text }}>
-                  Open today’s Panchang
+                  {tithiPill}
                 </Text>
                 <Text style={{ marginTop: 6, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim }}>
-                  Check tithi, vrat, and sacred timing before you plan the day.
+                  Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
                 </Text>
               </View>
               {refreshing ? (
