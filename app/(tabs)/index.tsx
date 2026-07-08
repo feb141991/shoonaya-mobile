@@ -24,6 +24,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
+import { MoodCheckin } from '@/components/home/MoodCheckin';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
@@ -82,6 +83,7 @@ type HomeSummary = {
     tithiLabel: string;
     festivalLabel: string | null;
     vratLabel: string | null;
+    viewedToday: boolean;
     observance: {
       name: string;
       emoji: string | null;
@@ -165,6 +167,7 @@ const INITIAL_STATE: HomeSummary = {
     tithiLabel: 'Today’s Panchang',
     festivalLabel: null,
     vratLabel: null,
+    viewedToday: false,
     observance: null,
   },
   nextPractice: {
@@ -486,19 +489,23 @@ function HomeContent() {
     });
   }, [router]);
 
-  useEffect(() => {
-    const run = async () => {
-      setLoading(true);
-      try {
-        await loadHome();
-      } catch {
-        setLoadError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-    void run();
-  }, [loadHome]);
+  const hasLoadedRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      const run = async () => {
+        if (!hasLoadedRef.current) setLoading(true);
+        try {
+          await loadHome();
+          hasLoadedRef.current = true;
+        } catch {
+          setLoadError(true);
+        } finally {
+          setLoading(false);
+        }
+      };
+      void run();
+    }, [loadHome])
+  );
 
   // Keeps the bell badge honest without a full app restart. Two parts:
   // 1. Refetch on every focus — covers returning to Home after marking
@@ -1062,6 +1069,8 @@ function HomeContent() {
             )}
           </Pressable>
 
+          <MoodCheckin />
+
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open Panchang"
@@ -1086,6 +1095,14 @@ function HomeContent() {
                 <Text style={{ marginTop: 6, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim }}>
                   Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
                 </Text>
+                {state.panchang.viewedToday ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                    <Feather name="check-circle" size={13} color={COLORS.brandGold} />
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                      Observed today
+                    </Text>
+                  </View>
+                ) : null}
               </View>
               {refreshing ? (
                 <ActivityIndicator color={COLORS.brandGold} />

@@ -42,6 +42,18 @@ const INITIAL_STATE: PanchangState = {
   tradition: 'hindu',
 };
 
+// "Mark as observed" is a new completion action — see
+// docs/NATIVE_DAILY_COMPLETION_MATRIX.md, which found no such action exists
+// on either platform, and POST /api/native/panchang-viewed, which stores it
+// on the pre-existing (previously unused) daily_sadhana.panchang_viewed
+// column. Idempotent per user/date via that route's upsert; the mark can
+// only be made for the real "today", not a date browsed via the date strip,
+// since the underlying row is keyed by the server's own spiritual-date
+// computation for the current moment, not whichever date is selected here.
+function isRealToday(date: Date) {
+  return date.toDateString() === new Date().toDateString();
+}
+
 function buildDateRange(selectedDate: Date) {
   return Array.from({ length: 9 }, (_, index) => {
     const date = new Date(selectedDate);
@@ -58,6 +70,9 @@ export default function PanchangScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [festivals, setFestivals] = useState<UpcomingFestival[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewedToday, setViewedToday] = useState(false);
+  const [markingViewed, setMarkingViewed] = useState(false);
+  const [markError, setMarkError] = useState<string | null>(null);
 
   const theme = useMemo(
     () => ({
@@ -94,12 +109,21 @@ export default function PanchangScreen() {
     };
     setProfileState(nextState);
 
-    const response = await apiFetch(
-      `/api/calendar/upcoming?days=14&tradition=${nextState.tradition}&tz=${encodeURIComponent(nextState.timezone)}`
-    );
-    if (response.ok) {
-      const payload = (await response.json()) as { observances?: UpcomingFestival[] };
+    const [festivalsResponse, viewedResponse] = await Promise.all([
+      apiFetch(
+        `/api/calendar/upcoming?days=14&tradition=${nextState.tradition}&tz=${encodeURIComponent(nextState.timezone)}`
+      ),
+      apiFetch('/api/native/panchang-viewed').catch(() => null),
+    ]);
+
+    if (festivalsResponse.ok) {
+      const payload = (await festivalsResponse.json()) as { observances?: UpcomingFestival[] };
       setFestivals(payload.observances ?? []);
+    }
+
+    if (viewedResponse?.ok) {
+      const payload = (await viewedResponse.json()) as { viewedToday?: boolean };
+      setViewedToday(Boolean(payload.viewedToday));
     }
   }, [router]);
 
@@ -108,6 +132,23 @@ export default function PanchangScreen() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [loadPanchangContext]);
+
+  const markObserved = useCallback(async () => {
+    if (viewedToday || markingViewed) return;
+    setMarkingViewed(true);
+    setMarkError(null);
+    try {
+      const response = await apiFetch('/api/native/panchang-viewed', { method: 'POST' });
+      if (!response.ok) {
+        throw new Error(`Request failed (${response.status})`);
+      }
+      setViewedToday(true);
+    } catch {
+      setMarkError('Could not save — check your connection and try again.');
+    } finally {
+      setMarkingViewed(false);
+    }
+  }, [viewedToday, markingViewed]);
 
   const panchang = useMemo<PanchangData>(
     () => calculatePanchang(selectedDate, profileState.lat, profileState.lon, profileState.timezone),
@@ -184,6 +225,77 @@ export default function PanchangScreen() {
               </View>
             ))}
           </View>
+
+          {isRealToday(selectedDate) ? (
+            viewedToday ? (
+              <View
+                accessible
+                accessibilityLabel="Today's Panchang marked as observed"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                  borderRadius: 14,
+                  backgroundColor: theme.bg,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <Feather name="check-circle" size={16} color={COLORS.brandGold} />
+                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                  Observed today
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: 8 }}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Mark today's Panchang as observed"
+                  onPress={markObserved}
+                  disabled={markingViewed}
+                  style={{
+                    minHeight: 48,
+                    borderRadius: 14,
+                    paddingHorizontal: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: COLORS.brandGold,
+                    opacity: markingViewed ? 0.7 : 1,
+                  }}
+                >
+                  {markingViewed ? (
+                    <ActivityIndicator color={COLORS.ink} />
+                  ) : (
+                    <>
+                      <Feather name="check" size={16} color={COLORS.ink} />
+                      <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+                        Mark today&apos;s Panchang as observed
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+                {markError ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, flex: 1 }}>
+                      {markError}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry marking Panchang as observed"
+                      onPress={markObserved}
+                    >
+                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                        Retry
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
+            )
+          ) : null}
         </Card>
 
         <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
