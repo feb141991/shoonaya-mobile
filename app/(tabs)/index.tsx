@@ -448,12 +448,13 @@ function HomeContent() {
       >
         <View
           style={{
-            minHeight: 358,
+            minHeight: 572,
             paddingHorizontal: 20,
             paddingTop: 18,
-            paddingBottom: 24,
+            paddingBottom: 34,
             backgroundColor: theme.hero,
             overflow: 'hidden',
+            justifyContent: 'space-between',
           }}
         >
           {heroImageUrl ? (
@@ -621,18 +622,26 @@ function HomeContent() {
               ) : null}
             </View>
           </View>
-        </View>
-
-        <View style={{ paddingHorizontal: 20, marginTop: -38, gap: 14 }}>
           <View
             accessible
             accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}`}
             style={{
-              borderRadius: 22,
-              paddingHorizontal: 20,
-              paddingVertical: 18,
+              marginTop: 42,
+              marginHorizontal: -20,
+              marginBottom: -34,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+              paddingHorizontal: 24,
+              paddingTop: 18,
+              paddingBottom: 34,
               alignItems: 'center',
-              backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight,
+              backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
+              borderWidth: 1,
+              borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
+              borderBottomWidth: 0,
+              boxShadow: isDark ? SHADOWS.shlokaGlass.dark : SHADOWS.shlokaGlass.light,
             }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: COLORS.brandGold }}>
@@ -645,7 +654,9 @@ function HomeContent() {
               {state.sacredText.meaning}
             </Text>
           </View>
+        </View>
 
+        <View style={{ paddingHorizontal: 20, marginTop: 14, gap: 14 }}>
           <View
             style={{
               borderRadius: 26,

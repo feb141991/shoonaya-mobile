@@ -85,6 +85,10 @@ export const COLORS = {
   homeSkeletonBlockDark: 'rgba(255,248,225,0.08)',
   homeShlokaSurfaceLight: 'rgba(255,249,240,0.80)',
   homeShlokaSurfaceDark: 'rgba(23,17,11,0.76)',
+  homeShlokaGlassLight: 'rgba(255,255,255,0.18)',
+  homeShlokaGlassDark: 'rgba(255,248,225,0.08)',
+  homeShlokaGlassBorderLight: 'rgba(255,255,255,0.30)',
+  homeShlokaGlassBorderDark: 'rgba(255,248,225,0.14)',
   homeGoldPillBg: 'rgba(197,160,89,0.18)',
   homeGoldPillBorder: 'rgba(197,160,89,0.32)',
   authGoldWellBg: 'rgba(197,160,89,0.14)',
@@ -161,6 +165,10 @@ export const SHADOWS = {
   heroCard: {
     light: '0 14px 28px rgba(105, 75, 35, 0.10)',
     dark: '0 18px 36px rgba(0, 0, 0, 0.28)',
+  },
+  shlokaGlass: {
+    light: '0 -10px 34px rgba(105, 75, 35, 0.08)',
+    dark: '0 -10px 34px rgba(0, 0, 0, 0.24)',
   },
   tabBar: {
     light: '0 -2px 10px rgba(59, 43, 22, 0.07)',

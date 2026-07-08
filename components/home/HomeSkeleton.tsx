@@ -27,7 +27,7 @@ export function HomeSkeleton() {
     <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={['top']}>
       <View style={{ flex: 1 }}>
         {/* Hero */}
-        <View style={{ minHeight: 358, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 24, backgroundColor: hero }}>
+        <View style={{ minHeight: 572, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -43,16 +43,34 @@ export function HomeSkeleton() {
               <Block dark={isDark} style={{ width: 110, height: 44, borderRadius: 22 }} />
             </View>
           </View>
-        </View>
 
-        <View style={{ paddingHorizontal: 20, marginTop: -38, gap: 14 }}>
           {/* Shloka */}
-          <View style={{ borderRadius: 22, paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center', backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight }}>
+          <View
+            style={{
+              marginTop: 42,
+              marginHorizontal: -20,
+              marginBottom: -34,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+              paddingHorizontal: 24,
+              paddingTop: 18,
+              paddingBottom: 34,
+              alignItems: 'center',
+              backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
+              borderWidth: 1,
+              borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
+              borderBottomWidth: 0,
+            }}
+          >
             <Block dark={isDark} style={{ width: 110, height: 11, borderRadius: 6 }} />
             <Block dark={isDark} style={{ marginTop: 14, width: '80%', height: 24, borderRadius: 8 }} />
             <Block dark={isDark} style={{ marginTop: 10, width: '60%', height: 14, borderRadius: 6 }} />
           </View>
+        </View>
 
+        <View style={{ paddingHorizontal: 20, marginTop: 14, gap: 14 }}>
           {/* Next Practice */}
           <View style={{ borderRadius: 26, padding: 18, backgroundColor: card, borderWidth: 1, borderColor: border, gap: 10 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
