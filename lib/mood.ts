@@ -25,6 +25,12 @@ export interface Recommendation {
   imageUrl?: string;
 }
 
+type RecommendationsResponse =
+  | Recommendation[]
+  | {
+      recommendations?: Recommendation[];
+    };
+
 export async function fetchMoodStatus(): Promise<MoodStatus | null> {
   try {
     const res = await apiFetch('/api/mood/checkin');
@@ -78,7 +84,9 @@ export async function fetchRecommendations(
 
     const res = await apiFetch(`/api/mood/recommendations?${params.toString()}`);
     if (!res.ok) return [];
-    return await res.json();
+    const data = (await res.json()) as RecommendationsResponse;
+    if (Array.isArray(data)) return data;
+    return Array.isArray(data.recommendations) ? data.recommendations : [];
   } catch (err) {
     console.error('Failed to fetch recommendations', err);
     return [];
@@ -113,7 +121,7 @@ export async function completeMoodSession(
       method: 'POST',
       body: JSON.stringify({
         checkin_id: checkinId,
-        completed_action: completedAction,
+        completed_action: completedAction ?? 'mood_checkin',
         after_mood: afterMood,
         reflection_note: reflectionNote,
       }),

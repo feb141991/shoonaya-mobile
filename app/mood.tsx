@@ -48,7 +48,9 @@ export default function MoodScreen() {
   const [checkinId, setCheckinId] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [fetchingRecs, setFetchingRecs] = useState(false);
+  const [recommendationError, setRecommendationError] = useState<string | null>(null);
   const [moodStatus, setMoodStatus] = useState<MoodStatus | null>(null);
+  const recommendationItems = Array.isArray(recommendations) ? recommendations : [];
 
   useEffect(() => {
     async function init() {
@@ -86,14 +88,18 @@ export default function MoodScreen() {
     setSelectedTime(timeKey);
     setStep(3);
     setFetchingRecs(true);
+    setRecommendationError(null);
     const recs = await fetchRecommendations(selectedMood!.key, timeKey, checkinId!);
+    if (recs.length === 0) {
+      setRecommendationError('Recommendations could not be loaded. Please try again.');
+    }
     setRecommendations(recs);
     setFetchingRecs(false);
   };
 
   const handleRecClick = async (rec: Recommendation) => {
     if (checkinId) {
-      await trackDiscoverAction(checkinId, 'click', rec.type);
+      trackDiscoverAction(checkinId, 'click', rec.type).catch(() => {});
     }
     if (rec.href.startsWith('/')) {
       router.push(resolveNativeRoute(rec.href, '/(tabs)'));
@@ -209,12 +215,25 @@ export default function MoodScreen() {
           <View style={styles.list}>
             {fetchingRecs ? (
               <ActivityIndicator size="large" color={theme.brand} style={{ marginTop: 40 }} />
-            ) : recommendations.length === 0 ? (
+            ) : recommendationError ? (
+              <Card tone="auto" style={styles.errorCard}>
+                <Text style={[styles.recTitle, { color: theme.text }]}>Could not load recommendations</Text>
+                <Text style={[styles.recDesc, { color: theme.dim }]}>
+                  {recommendationError}
+                </Text>
+                <Pressable
+                  style={[styles.retryBtn, { borderColor: theme.brand }]}
+                  onPress={() => selectedTime && handleTimeSelect(selectedTime)}
+                >
+                  <Text style={[styles.retryText, { color: theme.brand }]}>Try again</Text>
+                </Pressable>
+              </Card>
+            ) : recommendationItems.length === 0 ? (
               <Text style={[styles.subtitle, { color: theme.dim, textAlign: 'center', marginTop: 40 }]}>
                 No recommendations found for this mood right now.
               </Text>
             ) : (
-              recommendations.map(rec => (
+              recommendationItems.map(rec => (
                 <Pressable key={rec.id} onPress={() => handleRecClick(rec)}>
                   <Card tone="auto" style={[styles.recCard, { borderColor: selectedMood?.colour, borderWidth: 1 }]}>
                     <Text style={[styles.recTitle, { color: theme.text }]}>
@@ -352,6 +371,21 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.sansMedium,
     fontSize: 12,
     letterSpacing: 0.5,
+  },
+  errorCard: {
+    padding: SPACING.xl,
+  },
+  retryBtn: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.sm,
+  },
+  retryText: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 15,
   },
   finishBtn: {
     marginTop: SPACING.xxl,
