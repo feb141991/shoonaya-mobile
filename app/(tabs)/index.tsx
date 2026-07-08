@@ -356,7 +356,7 @@ function PanchangPill({
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
         <Feather name={currentSlide.icon} size={13} color={theme.brand} />
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
+        <Text style={{ ...TYPE.chip, color: theme.text }}>
           {currentSlide.label}
         </Text>
       </Animated.View>
@@ -529,6 +529,10 @@ function HomeContent() {
     void getMyUnreadNotificationCount().then(setUnreadNotifications);
   }, [loadHome]);
 
+  // Match the PWA Home hero: show only the first verse line in the
+  // transitional Home block, with the full text available on /shloka.
+  const sacredTextLine = state.sacredText.original.split('\n')[0] || state.sacredText.original;
+
   const navigate = useCallback(
     (href: Href) => {
       try {
@@ -676,7 +680,7 @@ function HomeContent() {
                   }}
                 >
                   <Feather name="star" size={12} color={theme.brand} />
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
+                  <Text style={{ ...TYPE.chip, color: theme.brand }}>
                     {formatKarma(state.profile.karmaPoints)}
                   </Text>
                 </Pressable>
@@ -701,7 +705,7 @@ function HomeContent() {
                 {relicImageUrl ? (
                   <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
                 ) : (
-                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: theme.text }}>
+                  <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
                     {state.profile.firstName.charAt(0)}
                   </Text>
                 )}
@@ -718,16 +722,16 @@ function HomeContent() {
             {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Feather name="map-pin" size={12} color={theme.dim} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: theme.dim }}>
+                <Text style={{ ...TYPE.homeHeroLocation, letterSpacing: 1.1, textTransform: 'uppercase', color: theme.dim }}>
                   {state.profile.city}
                 </Text>
               </View>
             ) : null}
 
-            <Text style={{ fontFamily: TYPE.hero.fontFamily, fontSize: TYPE.hero.fontSize, lineHeight: TYPE.hero.lineHeight, color: theme.text }}>
+            <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
               {greeting}, {state.profile.firstName}
             </Text>
-            <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>
+            <Text style={{ marginTop: 6, ...TYPE.caption, color: theme.dim }}>
               {getDateLabel(state.date.iso)}
             </Text>
 
@@ -752,11 +756,10 @@ function HomeContent() {
                     borderColor: state.panchang.observance.routeKind === 'vrat' ? COLORS.sageBorder : theme.borderSoft,
                   }}
                 >
-                  <Text style={{ fontSize: 13 }}>{state.panchang.observance.emoji}</Text>
+                  <Text style={{ fontSize: 12, lineHeight: 14 }}>{state.panchang.observance.emoji}</Text>
                   <Text
                     style={{
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 12,
+                      ...TYPE.chip,
                       color: state.panchang.observance.routeKind === 'vrat' ? COLORS.sage : theme.text,
                     }}
                   >
@@ -794,13 +797,13 @@ function HomeContent() {
               backgroundColor: theme.background,
             }}
           >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: theme.brand }}>
+            <Text style={{ ...TYPE.chip, letterSpacing: 2.1, textTransform: 'uppercase', color: theme.brand }}>
               {state.sacredText.label}
             </Text>
-            <Text style={{ marginTop: 12, fontFamily: FONTS.serifBold, fontSize: 25, lineHeight: 33, color: theme.text, textAlign: 'center' }}>
-              “{state.sacredText.original}”
+            <Text style={{ marginTop: 10, ...TYPE.shloka, color: theme.text, textAlign: 'center' }} numberOfLines={2}>
+              “{sacredTextLine}”
             </Text>
-            <Text style={{ marginTop: 10, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim, textAlign: 'center' }} numberOfLines={2}>
+            <Text style={{ marginTop: 8, ...TYPE.homeHeroMeaning, color: theme.dim, textAlign: 'center' }} numberOfLines={1}>
               {state.sacredText.meaning}
             </Text>
           </Pressable>

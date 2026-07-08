@@ -239,7 +239,7 @@ export const SHADOWS = {
 // slice, mapped onto the closest PWA equivalent's px value.
 export const TYPE = {
   display: { fontFamily: FONTS.serifBold, fontSize: 36, lineHeight: 42 },   // PWA --type-display: 36px
-  hero: { fontFamily: FONTS.serifBold, fontSize: 28, lineHeight: 34 },      // PWA --type-hero: 28px (Home greeting H1)
+  hero: { fontFamily: FONTS.serifBold, fontSize: 28, lineHeight: 34 },      // PWA --type-hero: 28px
   title: { fontFamily: FONTS.serifBold, fontSize: 23, lineHeight: 29 },     // PWA --type-screen-title: 23px
   screenTitle: { fontFamily: FONTS.serifBold, fontSize: 23, lineHeight: 29 },
   cardHeading: { fontFamily: FONTS.serifBold, fontSize: 17, lineHeight: 22 }, // PWA --type-card-heading: 17px
@@ -256,7 +256,10 @@ export const TYPE = {
   caption: { fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 },        // PWA --type-micro: 12px
   chip: { fontFamily: FONTS.sansSemiBold, fontSize: 11, lineHeight: 14 },   // PWA --type-chip / --type-tab: 11px
   micro: { fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16 },
-  shloka: { fontFamily: FONTS.serif, fontSize: 21, lineHeight: 32, letterSpacing: 0.2 }, // PWA --type-sanskrit: 18px, kept larger deliberately for native's airier single-shloka-per-screen treatment
+  shloka: { fontFamily: FONTS.serif, fontSize: 18, lineHeight: 26, letterSpacing: 0.2 }, // PWA --type-sanskrit: 18px
+  homeHeroGreeting: { fontFamily: FONTS.serifBold, fontSize: 20, lineHeight: 24 }, // PWA Home HeroSection text-xl/leading-tight
+  homeHeroLocation: { fontFamily: FONTS.sansSemiBold, fontSize: 11, lineHeight: 14 },
+  homeHeroMeaning: { fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 22 },
 } as const;
 
 // Minimum touch target per accessibility guidance (WCAG 2.5.5 / Material

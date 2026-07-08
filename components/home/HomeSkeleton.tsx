@@ -39,8 +39,8 @@ export function HomeSkeleton() {
             </View>
           </View>
           <View style={{ marginTop: 20 }}>
-            <Block dark={isDark} style={{ width: '70%', height: 34, borderRadius: 8 }} />
-            <Block dark={isDark} style={{ marginTop: 12, width: '45%', height: 14, borderRadius: 6 }} />
+            <Block dark={isDark} style={{ width: '64%', height: 24, borderRadius: 8 }} />
+            <Block dark={isDark} style={{ marginTop: 8, width: '45%', height: 12, borderRadius: 6 }} />
             <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
               <Block dark={isDark} style={{ width: 150, height: 44, borderRadius: 22 }} />
               <Block dark={isDark} style={{ width: 110, height: 44, borderRadius: 22 }} />
@@ -68,7 +68,7 @@ export function HomeSkeleton() {
             }}
           >
             <Block dark={isDark} style={{ width: 110, height: 11, borderRadius: 6 }} />
-            <Block dark={isDark} style={{ marginTop: 14, width: '80%', height: 24, borderRadius: 8 }} />
+            <Block dark={isDark} style={{ marginTop: 12, width: '76%', height: 20, borderRadius: 8 }} />
             <Block dark={isDark} style={{ marginTop: 10, width: '60%', height: 14, borderRadius: 6 }} />
           </View>
         </View>
