@@ -124,7 +124,7 @@ type HomeSummary = {
 const SANSKRIT_WEEKDAYS = ['Ravivara', 'Somavara', 'Mangalavara', 'Budhavara', 'Guruvāra', 'Shukravara', 'Shanivara'];
 const HERO_MIN_HEIGHT = 720;
 const HERO_READABILITY_HEIGHT = 400;
-const HERO_SHLOKA_TOP_SPACE = 104;
+const HERO_SHLOKA_TOP_SPACE = 340;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -582,7 +582,7 @@ function HomeContent() {
             paddingBottom: 34,
             backgroundColor: theme.hero,
             overflow: 'hidden',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
           }}
         >
           {heroImageUrl ? (
@@ -718,7 +718,7 @@ function HomeContent() {
               tight rhythm. This block previously used marginTop: 48, which
               is why the greeting/pills read as noticeably lower/detached
               from the bell+avatar row than PWA's version. */}
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 18, alignItems: 'flex-start' }}>
             {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Feather name="map-pin" size={12} color={theme.dim} />
@@ -777,23 +777,13 @@ function HomeContent() {
               marginTop: HERO_SHLOKA_TOP_SPACE,
               marginHorizontal: -20,
               marginBottom: -34,
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
               paddingHorizontal: 24,
-              paddingTop: 18,
+              paddingTop: 12,
               paddingBottom: 34,
               alignItems: 'center',
-              // Was a translucent near-white glass tint with its own border
-              // + shadow — a genuinely separate card floating over the hero,
-              // which is exactly what read as a "separated white line" seam
-              // against the warm hero background. PWA's equivalent
-              // (.divine-hero-readability) fades directly into the page's
-              // own background color, not a white card, so this now uses
-              // the exact same theme.background the gradient above
-              // terminates in — no border/shadow needed since there's no
-              // edge to delineate anymore, just a continuous blend.
+              // PWA's transitional shloka is not a card: no rounded edge,
+              // no border, no shadow. It sits on the same page background
+              // that the hero readability gradient fades into.
               backgroundColor: theme.background,
             }}
           >

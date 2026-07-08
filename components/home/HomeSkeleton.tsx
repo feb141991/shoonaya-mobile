@@ -17,7 +17,7 @@ function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) 
 }
 
 const HERO_MIN_HEIGHT = 720;
-const HERO_SHLOKA_TOP_SPACE = 104;
+const HERO_SHLOKA_TOP_SPACE = 340;
 
 export function HomeSkeleton() {
   const isDark = useColorScheme() === 'dark';
@@ -30,7 +30,7 @@ export function HomeSkeleton() {
     <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={['top']}>
       <View style={{ flex: 1 }}>
         {/* Hero */}
-        <View style={{ minHeight: HERO_MIN_HEIGHT, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'space-between' }}>
+        <View style={{ minHeight: HERO_MIN_HEIGHT, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'flex-start' }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -38,7 +38,7 @@ export function HomeSkeleton() {
               <Block dark={isDark} style={{ width: 48, height: 48, borderRadius: 24 }} />
             </View>
           </View>
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 18 }}>
             <Block dark={isDark} style={{ width: '64%', height: 24, borderRadius: 8 }} />
             <Block dark={isDark} style={{ marginTop: 8, width: '45%', height: 12, borderRadius: 6 }} />
             <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
@@ -56,12 +56,8 @@ export function HomeSkeleton() {
               marginTop: HERO_SHLOKA_TOP_SPACE,
               marginHorizontal: -20,
               marginBottom: -34,
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
               paddingHorizontal: 24,
-              paddingTop: 18,
+              paddingTop: 12,
               paddingBottom: 34,
               alignItems: 'center',
               backgroundColor: background,
