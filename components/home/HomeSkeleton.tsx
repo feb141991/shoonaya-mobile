@@ -39,7 +39,7 @@ export function HomeSkeleton() {
             <Block dark={isDark} style={{ width: '70%', height: 34, borderRadius: 8 }} />
             <Block dark={isDark} style={{ marginTop: 12, width: '45%', height: 14, borderRadius: 6 }} />
             <View style={{ marginTop: 18, flexDirection: 'row', gap: 8 }}>
-              <Block dark={isDark} style={{ width: 96, height: 44, borderRadius: 22 }} />
+              <Block dark={isDark} style={{ width: 150, height: 44, borderRadius: 22 }} />
               <Block dark={isDark} style={{ width: 110, height: 44, borderRadius: 22 }} />
             </View>
           </View>

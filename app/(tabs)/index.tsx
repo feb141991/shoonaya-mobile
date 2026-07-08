@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
+  Animated,
   Image,
   Pressable,
   RefreshControl,
@@ -78,6 +80,15 @@ type HomeSummary = {
     tithiLabel: string;
     festivalLabel: string | null;
     vratLabel: string | null;
+    observance: {
+      name: string;
+      emoji: string | null;
+      daysLeft: number;
+      routeKind: string;
+      routeSlug: string;
+      href: string;
+      label: string;
+    } | null;
   };
   nextPractice: {
     id: PracticeId;
@@ -149,6 +160,7 @@ const INITIAL_STATE: HomeSummary = {
     tithiLabel: 'Today’s Panchang',
     festivalLabel: null,
     vratLabel: null,
+    observance: null,
   },
   nextPractice: {
     id: 'pathshala',
@@ -170,14 +182,6 @@ const INITIAL_STATE: HomeSummary = {
   },
 };
 
-// Tradition-level greeting pools, ported from the PWA's GREETING_POOLS
-// (src/lib/traditions.ts) — the `:other`/default tier only, since
-// home-summary's `profile` doesn't include `sampradaya`, only `tradition`
-// (confirmed against src/app/api/native/home-summary/route.ts; adding
-// sampradaya would be an API shape change not proven necessary here).
-// Emoji suffixes present in the web pool are dropped to match native's own
-// existing plain-text greeting convention (no emoji used as this app's
-// greeting style, unlike web).
 const GREETING_POOLS: Record<string, string[]> = {
   hindu: ['Jai Shri Ram', 'Hari Om', 'Om Namah Shivaya', 'Radhe Radhe'],
   sikh: ['Sat Sri Akal', 'Waheguru Ji Ka Khalsa'],
@@ -191,9 +195,6 @@ function getTraditionGreeting(tradition: string | null, seed: number) {
   return pool[seed % pool.length];
 }
 
-// Exact port of the PWA's getTimeGreeting (HeroSection.tsx:206-211) —
-// device-local hour, not the API's date payload, since the greeting is a
-// "right now, for you" affordance rather than server-computed data.
 function getTimeGreeting(hour: number): string | null {
   if (hour >= 5 && hour < 12) return 'Suprabhat';
   if (hour >= 17 && hour < 20) return 'Shubh Sandhya';
@@ -273,6 +274,92 @@ function ProgressRing({
   );
 }
 
+function PanchangPill({
+  panchang,
+  selectedDateIso,
+  theme,
+}: {
+  panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
+  selectedDateIso: string;
+  theme: { heroOverlay: string; borderSoft: string; text: string };
+}) {
+  const [idx, setIdx] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
+    return () => sub.remove();
+  }, []);
+
+  const total = 3;
+
+  useEffect(() => {
+    // Reduced motion means calm, not just "no fade" — auto-cycling on a
+    // fixed timer is itself motion the user asked to avoid. Respect that by
+    // not auto-advancing at all when reduced motion is on; the pill stays on
+    // one slide until the user explicitly taps (handleCycle below, which
+    // already skips the animation in that case too).
+    if (reducedMotion) {
+      return;
+    }
+    const t = setInterval(() => {
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
+        setIdx((i) => (i + 1) % total);
+        Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+      });
+    }, 3500);
+    return () => clearInterval(t);
+  }, [fadeAnim, reducedMotion, total]);
+
+  const handleCycle = useCallback(() => {
+    if (reducedMotion) {
+      setIdx((i) => (i + 1) % total);
+    } else {
+      Animated.timing(fadeAnim, { toValue: 0, duration: 100, useNativeDriver: true }).start(() => {
+        setIdx((i) => (i + 1) % total);
+        Animated.timing(fadeAnim, { toValue: 1, duration: 100, useNativeDriver: true }).start();
+      });
+    }
+  }, [fadeAnim, reducedMotion]);
+
+  const slides: { key: string; icon: keyof typeof Feather.glyphMap; label: string }[] = [
+    { key: 'tithi', icon: 'moon', label: `${panchang.tithi} · VS ${panchang.samvatYear}` },
+    { key: 'nakshatra', icon: 'star', label: `${panchang.nakshatra} · ${panchang.yoga}` },
+    { key: 'date', icon: 'calendar', label: getDateLabel(selectedDateIso) },
+  ];
+  const currentSlide = slides[idx];
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Panchang info: ${currentSlide.label}. Tap to cycle`}
+      onPress={handleCycle}
+      style={{
+        minHeight: MIN_TOUCH_TARGET,
+        borderRadius: 22,
+        paddingHorizontal: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 6,
+        backgroundColor: theme.heroOverlay,
+        borderWidth: 1,
+        borderColor: theme.borderSoft,
+        minWidth: 150,
+      }}
+    >
+      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
+        <Feather name={currentSlide.icon} size={13} color={COLORS.brandGold} />
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
+          {currentSlide.label}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 function HomeContent() {
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -321,14 +408,6 @@ function HomeContent() {
   const tithiPill = `${panchang.tithi} · ${panchang.paksha}`;
   const completedCount = state.practices.filter((row) => row.done).length;
   const actionRoute = resolveNativeRoute(state.nextPractice.actionHref);
-
-  // festivalLabel/vratLabel are mutually derived from the same nearest
-  // upcoming observance on the API side (a vrat sets both to the same
-  // string) — rendering both would show literal duplicate text, so only
-  // ever show one pill: vrat-styled when vratLabel is present, else
-  // festival-styled.
-  const isVrat = !!state.panchang.vratLabel;
-  const observanceLabel = state.panchang.vratLabel ?? state.panchang.festivalLabel;
 
   const greeting = useMemo(
     () => getTimeGreeting(new Date().getHours()) ?? getTraditionGreeting(state.profile.tradition, new Date(`${state.date.iso}T12:00:00`).getDate()),
@@ -577,34 +656,13 @@ function HomeContent() {
             </Text>
 
             <View style={{ marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Open Panchang, ${tithiPill}`}
-                onPress={() => navigate('/panchang')}
-                style={{
-                  minHeight: MIN_TOUCH_TARGET,
-                  borderRadius: 22,
-                  paddingHorizontal: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 6,
-                  backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                }}
-              >
-                <Feather name="sunrise" size={13} color={COLORS.brandGold} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
-                  {tithiPill}
-                </Text>
-              </Pressable>
+              <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
 
-              {observanceLabel ? (
+              {state.panchang.observance ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Open Vrat calendar, ${isVrat ? 'vrat today' : 'festival'}, ${observanceLabel}`}
-                  onPress={() => navigate('/vrat')}
+                  accessibilityLabel={`Open calendar, ${state.panchang.observance.label}`}
+                  onPress={() => navigate(state.panchang.observance!.href as Href)}
                   style={{
                     minHeight: MIN_TOUCH_TARGET,
                     borderRadius: 22,
@@ -613,20 +671,20 @@ function HomeContent() {
                     justifyContent: 'center',
                     flexDirection: 'row',
                     gap: 6,
-                    backgroundColor: isVrat ? COLORS.sageBg : theme.heroOverlay,
+                    backgroundColor: state.panchang.observance.routeKind === 'vrat' ? COLORS.sageBg : theme.heroOverlay,
                     borderWidth: 1,
-                    borderColor: isVrat ? COLORS.sageBorder : theme.borderSoft,
+                    borderColor: state.panchang.observance.routeKind === 'vrat' ? COLORS.sageBorder : theme.borderSoft,
                   }}
                 >
-                  {isVrat ? <Feather name="moon" size={12} color={COLORS.sage} /> : null}
+                  <Text style={{ fontSize: 13 }}>{state.panchang.observance.emoji}</Text>
                   <Text
                     style={{
                       fontFamily: FONTS.sansSemiBold,
                       fontSize: 12,
-                      color: isVrat ? COLORS.sage : theme.text,
+                      color: state.panchang.observance.routeKind === 'vrat' ? COLORS.sage : theme.text,
                     }}
                   >
-                    {observanceLabel}
+                    {state.panchang.observance.label}
                   </Text>
                 </Pressable>
               ) : null}
