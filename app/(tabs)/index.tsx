@@ -328,10 +328,10 @@ function PanchangPill({
     }
   }, [fadeAnim, reducedMotion]);
 
-  const slides: { key: string; icon: keyof typeof Feather.glyphMap; label: string }[] = [
-    { key: 'tithi', icon: 'moon', label: `${panchang.tithi} · VS ${panchang.samvatYear}` },
-    { key: 'nakshatra', icon: 'star', label: `${panchang.nakshatra} · ${panchang.yoga}` },
-    { key: 'date', icon: 'calendar', label: getDateLabel(selectedDateIso) },
+  const slides: { key: string; icon: string; label: string }[] = [
+    { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` },
+    { key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` },
+    { key: 'date', icon: '📅', label: getDateLabel(selectedDateIso) },
   ];
   const currentSlide = slides[idx];
 
@@ -340,23 +340,24 @@ function PanchangPill({
       accessibilityRole="button"
       accessibilityLabel={`Panchang info: ${currentSlide.label}. Tap to cycle`}
       onPress={handleCycle}
+      hitSlop={4}
       style={{
-        minHeight: MIN_TOUCH_TARGET,
-        borderRadius: 22,
+        minHeight: 36,
+        borderRadius: 999,
         paddingHorizontal: 12,
+        paddingVertical: 4,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
         gap: 6,
-        backgroundColor: theme.heroOverlay,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
-        minWidth: 150,
+        backgroundColor: COLORS.homePwaPillBg,
+        minWidth: 120,
+        overflow: 'hidden',
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
-        <Feather name={currentSlide.icon} size={13} color={theme.brand} />
-        <Text style={{ ...TYPE.chip, color: theme.text }}>
+        <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
+        <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
           {currentSlide.label}
         </Text>
       </Animated.View>
@@ -375,7 +376,7 @@ function PanchangPill({
               width: i === idx ? 10 : 4,
               height: 4,
               borderRadius: 99,
-              backgroundColor: i === idx ? 'rgba(255,240,200,0.80)' : 'rgba(255,240,200,0.25)',
+              backgroundColor: i === idx ? COLORS.homePwaPillDotActive : COLORS.homePwaPillDotInactive,
             }}
           />
         ))}
@@ -735,7 +736,7 @@ function HomeContent() {
               {getDateLabel(state.date.iso)}
             </Text>
 
-            <View style={{ marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
 
               {state.panchang.observance ? (
@@ -743,25 +744,30 @@ function HomeContent() {
                   accessibilityRole="button"
                   accessibilityLabel={`Open calendar, ${state.panchang.observance.label}`}
                   onPress={() => navigate(state.panchang.observance!.href as Href)}
+                  hitSlop={4}
                   style={{
-                    minHeight: MIN_TOUCH_TARGET,
-                    borderRadius: 22,
+                    minHeight: 36,
+                    borderRadius: 999,
                     paddingHorizontal: 12,
+                    paddingVertical: 4,
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexDirection: 'row',
                     gap: 6,
-                    backgroundColor: state.panchang.observance.routeKind === 'vrat' ? COLORS.sageBg : theme.heroOverlay,
+                    backgroundColor: COLORS.homePwaObservanceBg,
                     borderWidth: 1,
-                    borderColor: state.panchang.observance.routeKind === 'vrat' ? COLORS.sageBorder : theme.borderSoft,
+                    borderColor: COLORS.homePwaObservanceBorder,
                   }}
                 >
                   <Text style={{ fontSize: 12, lineHeight: 14 }}>{state.panchang.observance.emoji}</Text>
                   <Text
                     style={{
                       ...TYPE.chip,
-                      color: state.panchang.observance.routeKind === 'vrat' ? COLORS.sage : theme.text,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      color: COLORS.homePwaObservanceText,
                     }}
+                    numberOfLines={1}
                   >
                     {state.panchang.observance.label}
                   </Text>
