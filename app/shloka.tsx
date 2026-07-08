@@ -324,7 +324,7 @@ export default function ShlokaScreen() {
             inset: 0,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.45)',
+            backgroundColor: COLORS.celebrationScrim,
             opacity: celebrationOpacity,
           }}
         >

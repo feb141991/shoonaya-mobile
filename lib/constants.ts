@@ -127,6 +127,15 @@ export const COLORS = {
   heroReadabilityLight: 'rgba(250,246,239,0.75)',
   heroReadabilitySoftDark: 'rgba(28,28,26,0.30)',
   heroReadabilityDark: 'rgba(28,28,26,0.75)',
+
+  // Full-screen celebration backdrop (app/shloka.tsx streak celebration).
+  // Deliberately darker than the app's existing bottom-sheet scrims
+  // (rgba(0,0,0,0.28) in kosh/tirtha/japa, rgba(0,0,0,0.35) in
+  // profile/mandali — themselves pre-existing, still-untokenized values,
+  // a separate follow-up from this token) because this is a full-takeover
+  // moment, not a partial sheet — named here per review feedback rather
+  // than left as a raw literal.
+  celebrationScrim: 'rgba(0,0,0,0.45)',
 } as const;
 
 export const FONTS = {
