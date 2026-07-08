@@ -46,6 +46,11 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';
   if (pathname.startsWith('/kosh')) return '/kosh';
   if (pathname.startsWith('/mandali')) return '/mandali';
+  // Vichaar Sabha thread ids (e.g. a shared-thread deep link, or a future
+  // "someone replied to your thread" push) — /vichaar-sabha/[id] mirrors
+  // the dharm-veer/[id] pattern above. Bare /vichaar-sabha is the list.
+  if (pathname.startsWith('/vichaar-sabha/')) return path as Href;
+  if (pathname.startsWith('/vichaar-sabha')) return '/vichaar-sabha';
   if (pathname.startsWith('/profile')) return '/(tabs)/profile';
   if (pathname.startsWith('/notifications')) return '/notifications';
 
