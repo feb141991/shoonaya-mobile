@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 
 // Reusable CTA primitive — extracted from the near-identical Pressable +
 // ActivityIndicator-swap + Text block that was hand-rolled in at least six
@@ -97,8 +97,8 @@ export function Button({
       ) : (
         <Text
           style={{
-            fontFamily: FONTS.sansSemiBold,
-            fontSize: size === 'sm' ? 13 : 15,
+            ...TYPE.label,
+            fontSize: size === 'sm' ? TYPE.label.fontSize : 14.5,
             color: palette.textColor,
           }}
         >

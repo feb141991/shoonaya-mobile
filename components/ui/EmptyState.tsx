@@ -1,6 +1,6 @@
 import { Pressable, Text, useColorScheme, View, type ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 
 type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
 
@@ -61,8 +61,7 @@ export function EmptyState({
 
       <Text
         style={{
-          fontFamily: FONTS.serifBold,
-          fontSize: 20,
+          ...TYPE.cardHeading,
           color: theme.text,
           textAlign: 'center',
           marginTop: 4,
@@ -74,11 +73,9 @@ export function EmptyState({
       {subtitle ? (
         <Text
           style={{
-            fontFamily: FONTS.sans,
-            fontSize: 14,
+            ...TYPE.body,
             color: theme.dim,
             textAlign: 'center',
-            lineHeight: 21,
           }}
         >
           {subtitle}
@@ -102,7 +99,7 @@ export function EmptyState({
             boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
           }}
         >
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+          <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
             {ctaLabel}
           </Text>
         </Pressable>

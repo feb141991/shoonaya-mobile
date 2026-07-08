@@ -410,21 +410,17 @@ function HomeContent() {
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
       raised: isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight,
       soft: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+      glass: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       borderSoft: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+      premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       shadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
       ringTrack: isDark ? COLORS.homeRingTrackDark : COLORS.homeRingTrackLight,
       iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
-      // PWA's brand-primary is theme-aware, not one static value — its real
-      // light-mode primary is a deeper terracotta (#D88A1C), reserving
-      // #C5A059 (COLORS.brandGold, used as a flat constant everywhere else
-      // in this file today) for dark mode specifically. Applied here first
-      // within the hero card being rebuilt this pass; the rest of this
-      // screen's ~15 remaining COLORS.brandGold call sites (Next
-      // Practice/Sankalpa/Dharm Veer cards below) are flagged as a tracked
-      // follow-up rather than swept blindly in the same change.
+      // PWA's brand-primary is theme-aware, not one static value: light mode
+      // uses a deeper terracotta while dark mode keeps the softer gold.
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
@@ -813,51 +809,53 @@ function HomeContent() {
           </Pressable>
         </View>
 
-        <View style={{ paddingHorizontal: 20, marginTop: 14, gap: 14 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: -48, gap: 12 }}>
           <View
             style={{
-              borderRadius: 26,
-              padding: 18,
-              backgroundColor: theme.raised,
+              borderRadius: 18,
+              padding: 12,
+              backgroundColor: theme.glass,
               borderWidth: 1,
-              borderColor: theme.borderSoft,
-              boxShadow: theme.shadow,
+              borderColor: theme.premiumBorder,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
               <View
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 16,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 13,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: theme.iconWell,
+                  backgroundColor: theme.soft,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
                 }}
               >
                 <SacredIcon
                   name={nextPracticeRow?.id ?? 'japa'}
                   fallbackGlyph={nextPracticeIcon}
-                  size={20}
+                  size={18}
                   color={nextPracticeColor}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: COLORS.brandGold }}>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                   {state.nextPractice.contextLabel}
                 </Text>
-                <Text style={{ marginTop: 9, fontFamily: FONTS.serifBold, fontSize: 27, lineHeight: 33, color: theme.text }}>
+                <Text style={{ marginTop: 4, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
                   {state.nextPractice.title}
                 </Text>
-                <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, color: theme.dim }}>
+                <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
                   {state.nextPractice.suggestion}
                 </Text>
               </View>
-              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={COLORS.brandGold} track={theme.ringTrack} />
+              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={theme.brand} track={theme.ringTrack} />
             </View>
 
             {state.nextPractice.nudge ? (
-              <Text style={{ marginTop: 13, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim }}>
+              <Text style={{ marginTop: 8, ...TYPE.micro, color: theme.dim }} numberOfLines={1}>
                 {state.nextPractice.nudge}
               </Text>
             ) : null}
@@ -875,27 +873,27 @@ function HomeContent() {
                 navigate(actionRoute);
               }}
               style={{
-                marginTop: 18,
-                minHeight: 52,
-                borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
-                paddingHorizontal: 18,
+                marginTop: 10,
+                minHeight: 44,
+                borderRadius: 13,
+                backgroundColor: theme.brand,
+                paddingHorizontal: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexDirection: 'row',
                 gap: 8,
               }}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+              <Text style={{ color: isDark ? COLORS.darkBg : COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
                 {state.nextPractice.actionLabel}
               </Text>
-              <Feather name="arrow-right" size={18} color={COLORS.ink} />
+              <Feather name="arrow-right" size={17} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
             </Pressable>
           </View>
 
           <View
             style={{
-              borderRadius: 18,
+              borderRadius: 16,
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.borderSoft,
@@ -908,8 +906,8 @@ function HomeContent() {
               accessibilityLabel={practicesOpen ? 'Hide all practices' : 'View all practices'}
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
-                minHeight: 48,
-                paddingHorizontal: 16,
+                minHeight: 44,
+                paddingHorizontal: 14,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -919,7 +917,7 @@ function HomeContent() {
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.dim }}>
+                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
                 <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
@@ -958,16 +956,16 @@ function HomeContent() {
                         <SacredIcon name={row.id} fallbackGlyph={row.icon} size={17} color={row.color} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>
+                        <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                           {row.label}
                         </Text>
-                        <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
+                        <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
                           {row.streak && row.streak > 0 ? `${row.detail} · ${row.streak} day streak` : row.detail}
                         </Text>
                       </View>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: row.done ? row.color : theme.dim }}>
+                      <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: row.done ? row.color : theme.dim }}>
                         {row.done ? 'Done' : 'Start'}
                       </Text>
                       <ProgressRing done={row.done} progress={row.progress} color={row.color} track={theme.ringTrack} />
@@ -983,25 +981,26 @@ function HomeContent() {
             accessibilityLabel={state.sankalpa ? `Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}` : 'Set your Sankalpa'}
             onPress={() => navigate('/sankalpa')}
             style={{
-              minHeight: 76,
-              borderRadius: 22,
-              paddingHorizontal: 18,
+              minHeight: 72,
+              borderRadius: 18,
+              paddingHorizontal: 16,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
               backgroundColor: theme.soft,
               borderWidth: 1,
-              borderColor: theme.borderSoft,
+              borderColor: theme.premiumBorder,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-              <Feather name="sun" size={20} color={theme.text} />
+              <Feather name="sun" size={19} color={theme.brand} />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 17, color: theme.text }}>
+                <Text style={{ ...TYPE.cardHeading, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                   {state.sankalpa ? state.sankalpa.text : 'Set your Sankalpa for this month'}
                 </Text>
                 {state.sankalpa ? (
-                  <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
+                  <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }}>
                     Day {state.sankalpa.day} of {state.sankalpa.targetDays}
                   </Text>
                 ) : null}
@@ -1011,12 +1010,12 @@ function HomeContent() {
               <ProgressRing
                 done={state.sankalpa.progress >= 1}
                 progress={state.sankalpa.progress}
-                color={COLORS.brandGold}
+                color={theme.brand}
                 track={theme.ringTrack}
                 size={30}
               />
             ) : (
-              <Feather name="arrow-right" size={20} color={COLORS.brandGold} />
+              <Feather name="arrow-right" size={20} color={theme.brand} />
             )}
           </Pressable>
 
@@ -1025,15 +1024,16 @@ function HomeContent() {
             accessibilityLabel={`${state.dharmVeer.name}, ${dharmVeerDone ? 'seva given today' : state.dharmVeer.tagline}`}
             onPress={() => navigate(resolveNativeRoute(state.dharmVeer.href))}
             style={{
-              minHeight: 76,
-              borderRadius: 22,
-              paddingHorizontal: 18,
+              minHeight: 72,
+              borderRadius: 18,
+              paddingHorizontal: 16,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
               backgroundColor: theme.card,
               borderWidth: 1,
-              borderColor: theme.borderSoft,
+              borderColor: theme.premiumBorder,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               opacity: dharmVeerDone ? 0.72 : 1,
             }}
           >
@@ -1051,13 +1051,13 @@ function HomeContent() {
                 <SacredIcon name="dharmveer" fallbackGlyph={dharmVeerIcon} size={19} color={dharmVeerColor} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: COLORS.brandGold }}>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                   Dharm Veer
                 </Text>
-                <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text }}>
+                <Text style={{ marginTop: 3, ...TYPE.label, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                   {state.dharmVeer.name}
                 </Text>
-                <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }} numberOfLines={1}>
+                <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
                   {dharmVeerDone ? 'Seva given today' : state.dharmVeer.tagline}
                 </Text>
               </View>
@@ -1065,7 +1065,7 @@ function HomeContent() {
             {dharmVeerDone ? (
               <Feather name="check-circle" size={20} color={dharmVeerColor} />
             ) : (
-              <Feather name="arrow-right" size={20} color={COLORS.brandGold} />
+              <Feather name="arrow-right" size={20} color={theme.brand} />
             )}
           </Pressable>
 
@@ -1076,38 +1076,39 @@ function HomeContent() {
             accessibilityLabel="Open Panchang"
             onPress={() => navigate('/panchang')}
             style={{
-              minHeight: 108,
-              borderRadius: 24,
-              padding: 18,
+              minHeight: 102,
+              borderRadius: 20,
+              padding: 16,
               backgroundColor: theme.card,
               borderWidth: 1,
-              borderColor: theme.border,
+              borderColor: theme.premiumBorder,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, letterSpacing: 1.3, textTransform: 'uppercase' }}>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                   Sacred rhythm
                 </Text>
-                <Text style={{ marginTop: 8, fontFamily: FONTS.serifBold, fontSize: 22, color: theme.text }}>
+                <Text style={{ marginTop: 6, ...TYPE.title, color: theme.text }}>
                   {tithiPill}
                 </Text>
-                <Text style={{ marginTop: 6, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim }}>
+                <Text style={{ marginTop: 4, ...TYPE.caption, color: theme.dim }}>
                   Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
                 </Text>
                 {state.panchang.viewedToday ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                    <Feather name="check-circle" size={13} color={COLORS.brandGold} />
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                    <Feather name="check-circle" size={13} color={theme.brand} />
+                    <Text style={{ ...TYPE.label, color: theme.brand }}>
                       Observed today
                     </Text>
                   </View>
                 ) : null}
               </View>
               {refreshing ? (
-                <ActivityIndicator color={COLORS.brandGold} />
+                <ActivityIndicator color={theme.brand} />
               ) : (
-                <Feather name="chevron-right" size={22} color={COLORS.brandGold} />
+                <Feather name="chevron-right" size={22} color={theme.brand} />
               )}
             </View>
           </Pressable>

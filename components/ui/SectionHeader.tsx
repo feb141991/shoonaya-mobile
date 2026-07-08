@@ -1,6 +1,6 @@
 import { Pressable, Text, useColorScheme, View, type ViewProps } from 'react-native';
 
-import { FONTS, themeColor } from '@/lib/constants';
+import { TYPE, themeColor } from '@/lib/constants';
 
 // Small-caps eyebrow label, e.g. bhakti.tsx's "CONTROLS" header above the
 // mantra/audio controls block. Optional trailing action (e.g. "See all")
@@ -29,10 +29,7 @@ export function SectionHeader({ label, actionLabel, onAction, style, ...props }:
     >
       <Text
         style={{
-          fontFamily: FONTS.sansSemiBold,
-          fontSize: 12,
-          letterSpacing: 1.1,
-          textTransform: 'uppercase',
+          ...TYPE.section,
           color: theme.brand,
         }}
       >
@@ -46,7 +43,7 @@ export function SectionHeader({ label, actionLabel, onAction, style, ...props }:
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           onPress={onAction}
         >
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.dim }}>
+          <Text style={{ ...TYPE.label, color: theme.dim }}>
             {actionLabel}
           </Text>
         </Pressable>
