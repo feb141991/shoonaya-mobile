@@ -206,9 +206,11 @@ export default function DharmVeerScreen() {
     }
 
     await Promise.allSettled([
-      supabase
-        .from('daily_sadhana')
-        .upsert({ user_id: profile.userId, date: today, dharmveer_done: true }, { onConflict: 'user_id,date' }),
+      // P0-3: daily_sadhana.dharmveer_done is no longer directly writable by
+      // authenticated/anon — routed through the ownership-checked RPC (no
+      // independent engagement signal exists for this practice yet;
+      // ownership is enforced, genuine engagement is not).
+      supabase.rpc('complete_dharmveer', { p_user_id: profile.userId, p_date: today }),
       apiFetch('/api/karma/award', {
         method: 'POST',
         body: JSON.stringify({ amount: 5, reason: 'dharm_veer' }),
