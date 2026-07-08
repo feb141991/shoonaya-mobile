@@ -22,6 +22,7 @@ import { calculatePanchang } from '@sangam/panchang-engine';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
@@ -827,7 +828,12 @@ function HomeContent() {
                   backgroundColor: theme.iconWell,
                 }}
               >
-                <Feather name={nextPracticeIcon} size={20} color={nextPracticeColor} />
+                <SacredIcon
+                  name={nextPracticeRow?.id ?? 'japa'}
+                  fallbackGlyph={nextPracticeIcon}
+                  size={20}
+                  color={nextPracticeColor}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: COLORS.brandGold }}>
@@ -942,7 +948,7 @@ function HomeContent() {
                           backgroundColor: theme.iconWell,
                         }}
                       >
-                        <Feather name={row.icon} size={17} color={row.color} />
+                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={17} color={row.color} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>
@@ -1035,7 +1041,7 @@ function HomeContent() {
                   backgroundColor: theme.iconWell,
                 }}
               >
-                <Feather name={dharmVeerIcon} size={19} color={dharmVeerColor} />
+                <SacredIcon name="dharmveer" fallbackGlyph={dharmVeerIcon} size={19} color={dharmVeerColor} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: COLORS.brandGold }}>

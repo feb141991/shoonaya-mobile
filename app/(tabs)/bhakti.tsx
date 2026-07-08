@@ -5,6 +5,7 @@ import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/ui/Card';
+import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 
 // Minimal Bhakti hub — the true center/elevated tab in the 5-tab bar
@@ -74,7 +75,7 @@ export default function BhaktiScreen() {
               backgroundColor: iconWell,
             }}
           >
-            <Feather name="heart" size={26} color={brand} />
+            <SacredIcon name="japa" fallbackGlyph="heart" size={26} color={brand} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: brand }}>
@@ -96,8 +97,8 @@ export default function BhaktiScreen() {
 
         <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border, gap: 12 }}>
           {[
-            { icon: 'sunrise' as const, title: 'Nitya Karma', detail: 'Your daily sacred rituals', href: '/nitya-karma' as Href },
-            { icon: 'shield' as const, title: 'Dharm Veer', detail: 'Stories of dharmic courage', href: '/dharm-veer' as Href },
+            { id: 'nitya' as SacredIconName, icon: 'sunrise' as const, title: 'Nitya Karma', detail: 'Your daily sacred rituals', href: '/nitya-karma' as Href },
+            { id: 'dharmveer' as SacredIconName, icon: 'shield' as const, title: 'Dharm Veer', detail: 'Stories of dharmic courage', href: '/dharm-veer' as Href },
           ].map((item, index, arr) => (
             <Pressable
               key={item.title}
@@ -125,7 +126,7 @@ export default function BhaktiScreen() {
                   backgroundColor: iconWell,
                 }}
               >
-                <Feather name={item.icon} size={18} color={brand} />
+                <SacredIcon name={item.id} fallbackGlyph={item.icon} size={18} color={brand} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>{item.title}</Text>
