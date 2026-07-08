@@ -1,8 +1,8 @@
 import type { PropsWithChildren } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { useColorScheme, View, type ViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { COLORS, SPACING } from '@/lib/constants';
+import { SPACING, themeColor } from '@/lib/constants';
 
 type ScreenProps = PropsWithChildren<ViewProps>;
 
@@ -17,13 +17,16 @@ type ScreenProps = PropsWithChildren<ViewProps>;
 // haven't opted into their own theming, and changing it would have altered
 // Login's appearance without being asked to touch it.
 export function Screen({ children, style, ...props }: ScreenProps) {
+  const isDark = useColorScheme() === 'dark';
+  const theme = themeColor(isDark);
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.creamBg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <View
         style={[
           {
             flex: 1,
-            backgroundColor: COLORS.creamBg,
+            backgroundColor: theme.bg,
             paddingHorizontal: SPACING.xl,
             paddingVertical: SPACING.lg,
           },

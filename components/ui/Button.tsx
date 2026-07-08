@@ -7,8 +7,9 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 
 // Reusable CTA primitive — extracted from the near-identical Pressable +
 // ActivityIndicator-swap + Text block that was hand-rolled in at least six
@@ -48,17 +49,15 @@ export function Button({
   ...props
 }: ButtonProps) {
   const isDark = useColorScheme() === 'dark';
+  const theme = themeColor(isDark);
   const isBusy = loading || !!disabled;
-
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const text = isDark ? COLORS.creamBg : COLORS.ink;
 
   const palette =
     variant === 'primary'
-      ? { bg: COLORS.brandGold, borderColor: COLORS.brandGold, textColor: COLORS.ink }
+      ? { bg: theme.brand, borderColor: theme.brand, textColor: isDark ? COLORS.darkBg : COLORS.ink }
       : variant === 'secondary'
-        ? { bg: 'transparent', borderColor: border, textColor: text }
-        : { bg: 'transparent', borderColor: 'transparent', textColor: COLORS.brandGold };
+        ? { bg: theme.glass, borderColor: theme.premiumBorder, textColor: theme.text }
+        : { bg: 'transparent', borderColor: 'transparent', textColor: theme.brand };
 
   return (
     <Pressable
@@ -66,7 +65,12 @@ export function Button({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isBusy, busy: loading }}
       disabled={isBusy}
-      onPress={onPress}
+      onPress={(event) => {
+        if (!isBusy) {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        }
+        onPress?.(event);
+      }}
       style={({ pressed }) => [
         {
           minHeight: MIN_TOUCH_TARGET,
@@ -78,7 +82,11 @@ export function Button({
           paddingVertical: size === 'sm' ? 10 : 15,
           alignItems: 'center',
           justifyContent: 'center',
+          boxShadow: variant === 'primary'
+            ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+            : undefined,
           opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
+          transform: [{ scale: pressed && !isBusy ? 0.985 : 1 }],
         },
         style,
       ]}

@@ -1,6 +1,6 @@
 import { Pressable, Text, useColorScheme, View, type ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 
 type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
 
@@ -24,8 +24,7 @@ export function EmptyState({
   style,
 }: EmptyStateProps) {
   const isDark = useColorScheme() === 'dark';
-  const text = isDark ? COLORS.creamBg : COLORS.ink;
-  const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const theme = themeColor(isDark);
 
   return (
     <View
@@ -48,14 +47,15 @@ export function EmptyState({
             width: 64,
             height: 64,
             borderRadius: 32,
-            backgroundColor: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
+            backgroundColor: theme.brandSoft,
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: isDark ? COLORS.borderDark : COLORS.borderLight,
+            borderColor: theme.premiumBorder,
+            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           }}
         >
-          <Feather name={icon} size={26} color={COLORS.brandGold} />
+          <Feather name={icon} size={26} color={theme.brand} />
         </View>
       ) : null}
 
@@ -63,7 +63,7 @@ export function EmptyState({
         style={{
           fontFamily: FONTS.serifBold,
           fontSize: 20,
-          color: text,
+          color: theme.text,
           textAlign: 'center',
           marginTop: 4,
         }}
@@ -76,7 +76,7 @@ export function EmptyState({
           style={{
             fontFamily: FONTS.sans,
             fontSize: 14,
-            color: dim,
+            color: theme.dim,
             textAlign: 'center',
             lineHeight: 21,
           }}
@@ -94,14 +94,15 @@ export function EmptyState({
             marginTop: 8,
             minHeight: MIN_TOUCH_TARGET,
             borderRadius: RADII.lg,
-            backgroundColor: COLORS.brandGold,
+            backgroundColor: theme.brand,
             paddingHorizontal: 24,
             paddingVertical: 12,
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
           }}
         >
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
             {ctaLabel}
           </Text>
         </Pressable>

@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 
 // 5-tab bar matching PWA's BottomNav.tsx member layout: Home / Japa /
 // Bhakti (center, elevated) / Pathshala / Mandali — Profile is not a tab
@@ -21,11 +21,12 @@ import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
 // it), same treatment tirtha.tsx already had.
 export default function TabsLayout() {
   const isDark = useColorScheme() === 'dark';
-  const tabBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const tabBorder = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
+  const tabBg = theme.glass;
+  const tabBorder = theme.premiumBorder;
   const tabShadow = isDark ? SHADOWS.tabBar.dark : SHADOWS.tabBar.light;
-  const inactiveColor = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const inactiveColor = theme.dim;
+  const brand = theme.brand;
 
   return (
     <Tabs
@@ -81,7 +82,7 @@ export default function TabsLayout() {
                 borderRadius: 24,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: focused ? brand : (isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight),
+                backgroundColor: focused ? brand : theme.card,
                 borderWidth: focused ? 0 : 1,
                 borderColor: tabBorder,
                 boxShadow: focused

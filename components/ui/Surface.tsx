@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { useColorScheme, View, type ViewProps } from 'react-native';
 
-import { COLORS, RADII, SHADOWS } from '@/lib/constants';
+import { COLORS, RADII, SHADOWS, themeColor } from '@/lib/constants';
 
 // Lowest-level themed container primitive. Card is now built on top of this
 // (Card = Surface + card-specific padding/radius defaults) so the two never
@@ -33,7 +33,7 @@ type SurfaceProps = PropsWithChildren<ViewProps> & {
 export function Surface({
   children,
   style,
-  tone = 'light',
+  tone = 'auto',
   variant = 'flat',
   radius = 'xl',
   bordered = true,
@@ -42,16 +42,16 @@ export function Surface({
   const systemIsDark = useColorScheme() === 'dark';
   const isDark = tone === 'auto' ? systemIsDark : tone === 'dark';
 
+  const theme = themeColor(isDark);
+
   const backgroundColor =
     variant === 'soft'
-      ? isDark
-        ? COLORS.surfaceSoftDark
-        : COLORS.surfaceSoftLight
-      : isDark
-        ? COLORS.cardBgDark
-        : COLORS.cardBgLight;
+      ? theme.cardSoft
+      : variant === 'elevated'
+        ? theme.glass
+        : theme.card;
 
-  const borderColor = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const borderColor = variant === 'elevated' ? theme.premiumBorder : theme.border;
   // 'soft' surfaces are a recessed/nested background layer, not a raised
   // card, so they carry no shadow; 'elevated' gets more lift than the
   // default 'flat' card shadow. boxShadow (not shadowColor/shadowOffset/…)

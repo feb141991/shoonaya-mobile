@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, useColorScheme, View, type ViewStyle } from 'react-native';
-import { COLORS, RADII } from '@/lib/constants';
+import { RADII, SHADOWS, themeColor } from '@/lib/constants';
 
 // ── Shared shimmer animation ──────────────────────────────────────────────────
 
@@ -27,11 +27,11 @@ function useShimmer() {
 function ShimmerBlock({ style }: { style?: ViewStyle }) {
   const isDark = useColorScheme() === 'dark';
   const opacity = useShimmer();
-  const baseColor = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
 
   return (
     <Animated.View
-      style={[{ backgroundColor: baseColor, borderRadius: 8, opacity }, style]}
+      style={[{ backgroundColor: theme.brandSoft, borderRadius: 8, opacity }, style]}
     />
   );
 }
@@ -40,19 +40,19 @@ function ShimmerBlock({ style }: { style?: ViewStyle }) {
 
 export function SkeletonCard({ style }: { style?: ViewStyle }) {
   const isDark = useColorScheme() === 'dark';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
 
   return (
     <View
       style={[
         {
           borderRadius: RADII.lg,
-          backgroundColor: cardBg,
+          backgroundColor: theme.card,
           borderWidth: 1,
-          borderColor: border,
+          borderColor: theme.border,
           padding: 18,
           gap: 12,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         },
         style,
       ]}
@@ -69,17 +69,16 @@ export function SkeletonCard({ style }: { style?: ViewStyle }) {
 
 export function SkeletonRow({ style }: { style?: ViewStyle }) {
   const isDark = useColorScheme() === 'dark';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
 
   return (
     <View
       style={[
         {
           borderRadius: RADII.md,
-          backgroundColor: cardBg,
+          backgroundColor: theme.card,
           borderWidth: 1,
-          borderColor: border,
+          borderColor: theme.border,
           padding: 14,
           flexDirection: 'row',
           alignItems: 'center',
@@ -101,13 +100,13 @@ export function SkeletonRow({ style }: { style?: ViewStyle }) {
 
 export function SkeletonCircle({ size = 48, style }: { size?: number; style?: ViewStyle }) {
   const isDark = useColorScheme() === 'dark';
-  const baseColor = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
   const opacity = useShimmer();
 
   return (
     <Animated.View
       style={[
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: baseColor, opacity },
+        { width: size, height: size, borderRadius: size / 2, backgroundColor: theme.brandSoft, opacity },
         style,
       ]}
     />

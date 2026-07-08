@@ -1,14 +1,14 @@
 export const COLORS = {
   brandGold: '#C5A059',
-  ink: '#1A0F00',
-  creamBg: '#FDF6E3',
-  darkBg: '#0E0804',
-  cardBgLight: '#FFF9F0',
-  cardBgDark: '#17110B',
-  borderLight: '#E6D8BC',
-  borderDark: '#3B2B16',
-  textDimLight: '#7A6A53',
-  textDimDark: '#B49D7C',
+  ink: '#3E2A1F',
+  creamBg: '#FAF6EF',
+  darkBg: '#0C0A07',
+  cardBgLight: '#FFFDF9',
+  cardBgDark: '#141210',
+  borderLight: '#E8DCCB',
+  borderDark: 'rgba(197,160,89,0.13)',
+  textDimLight: '#8E7868',
+  textDimDark: '#B0AA9E',
   // Success/observed state — matches web's exact values (VratClient.tsx
   // "Mark as Observed" / "Observed today" treatment), so native and web
   // render the same green rather than each screen picking its own.
@@ -26,7 +26,7 @@ export const COLORS = {
   // "deeper" ivory/sandalwood layer matches the web reference rather than
   // being invented.
   surfaceSoftLight: '#EFE4D3',
-  surfaceSoftDark: '#141210',
+  surfaceSoftDark: '#1C1A16',
 
   // A quieter border than borderLight/Dark, for dividers and nested
   // surfaces (input fields inside a Card) that shouldn't draw as much
@@ -119,6 +119,20 @@ export const COLORS = {
   brandGoldDark: '#C5A059',
   brandPrimaryStrongLight: '#9F6314',
   brandPrimaryStrongDark: '#D4784A',
+  brandSoftLight: 'rgba(216,138,28,0.12)',
+  brandSoftDark: 'rgba(197,160,89,0.16)',
+  brandAccentLight: '#FFFDF8',
+  brandAccentDark: '#333330',
+  brandEarthLight: '#7A5126',
+  brandEarthDark: '#9D7A50',
+  chipFillLight: '#EFE3CF',
+  chipFillDark: '#F5E8D4',
+  chipTextLight: '#5F3A16',
+  chipTextDark: '#7A4514',
+  premiumGlassLight: 'rgba(255,255,255,0.75)',
+  premiumGlassDark: 'rgba(22,20,16,0.72)',
+  premiumBorderLight: 'rgba(216,138,28,0.15)',
+  premiumBorderDark: 'rgba(197,160,89,0.18)',
 
   // ── PWA divine-hero gradient overlay (src/app/globals.css .divine-hero-overlay
   // / .divine-hero-readability) — ported for expo-linear-gradient. Two
@@ -152,6 +166,25 @@ export const COLORS = {
   // photo itself, not the surrounding screen.
   onMediaWhite: '#FFFFFF',
 } as const;
+
+export const themeColor = (isDark: boolean) => ({
+  bg: isDark ? COLORS.darkBg : COLORS.creamBg,
+  card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
+  cardSoft: isDark ? COLORS.surfaceSoftDark : COLORS.surfaceSoftLight,
+  border: isDark ? COLORS.borderDark : COLORS.borderLight,
+  borderSoft: isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight,
+  text: isDark ? COLORS.creamBg : COLORS.ink,
+  dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+  brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
+  brandStrong: isDark ? COLORS.brandPrimaryStrongDark : COLORS.brandPrimaryStrongLight,
+  brandSoft: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+  accent: isDark ? COLORS.brandAccentDark : COLORS.brandAccentLight,
+  earth: isDark ? COLORS.brandEarthDark : COLORS.brandEarthLight,
+  glass: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
+  premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
+  chipFill: isDark ? COLORS.chipFillDark : COLORS.chipFillLight,
+  chipText: isDark ? COLORS.chipTextDark : COLORS.chipTextLight,
+});
 
 export const FONTS = {
   serif: 'CormorantGaramond_600SemiBold',
@@ -207,15 +240,15 @@ export const SPACING = {
 // new raw hex.
 export const SHADOWS = {
   sm: {
-    light: '0 1px 3px rgba(59, 43, 22, 0.07)',
+    light: '0 8px 24px rgba(62, 42, 31, 0.08), 0 2px 8px rgba(62, 42, 31, 0.05)',
     dark: '0 1px 4px rgba(0, 0, 0, 0.24)',
   },
   md: {
-    light: '0 4px 10px rgba(59, 43, 22, 0.10)',
+    light: '0 10px 24px rgba(49, 35, 20, 0.08)',
     dark: '0 6px 16px rgba(0, 0, 0, 0.30)',
   },
   lg: {
-    light: '0 10px 22px rgba(59, 43, 22, 0.12)',
+    light: '0 16px 34px rgba(49, 35, 20, 0.10)',
     dark: '0 14px 28px rgba(0, 0, 0, 0.34)',
   },
   heroCard: {

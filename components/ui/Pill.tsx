@@ -1,6 +1,7 @@
 import { Pressable, Text, useColorScheme, type PressableProps } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, RADII } from '@/lib/constants';
+import { COLORS, FONTS, RADII, themeColor } from '@/lib/constants';
 
 // Small selectable chip — extracted from the mantra selector (bhakti.tsx)
 // and target-days selector (sankalpa.tsx) patterns, which built the same
@@ -29,9 +30,7 @@ export function Pill({
   ...props
 }: PillProps) {
   const isDark = useColorScheme() === 'dark';
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const card = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const theme = themeColor(isDark);
 
   const interactive = typeof onPress === 'function';
 
@@ -41,14 +40,19 @@ export function Pill({
       accessibilityState={interactive ? { selected, disabled: !!disabled } : undefined}
       accessibilityLabel={accessibilityLabel ?? label}
       disabled={disabled}
-      onPress={onPress}
+      onPress={(event) => {
+        if (interactive && !disabled) {
+          void Haptics.selectionAsync().catch(() => {});
+        }
+        onPress?.(event);
+      }}
       hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
       style={{
         minHeight: 40,
         borderRadius: RADII.pill,
         borderWidth: selected ? 1.5 : 1,
-        borderColor: selected ? COLORS.brandGold : border,
-        backgroundColor: selected ? card : 'transparent',
+        borderColor: selected ? theme.brand : theme.border,
+        backgroundColor: selected ? theme.chipFill : theme.glass,
         paddingHorizontal: 14,
         paddingVertical: 9,
         alignItems: 'center',
@@ -61,7 +65,7 @@ export function Pill({
         style={{
           fontFamily: FONTS.sansSemiBold,
           fontSize: 12,
-          color: selected ? COLORS.brandGold : dim,
+          color: selected ? theme.chipText : theme.dim,
         }}
       >
         {label}
