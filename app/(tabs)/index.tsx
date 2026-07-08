@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -23,6 +22,8 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
+import { getMyUnreadNotificationCount } from '@/lib/notificationsData';
+import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -217,18 +218,6 @@ function resolveAssetUrl(url: string | null | undefined) {
   return `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
 }
 
-function mapHrefToRoute(href: string): Href {
-  if (href.startsWith('/bhakti') || href.startsWith('/japa')) return '/(tabs)/bhakti';
-  if (href.startsWith('/pathshala/')) return href as Href;
-  if (href.startsWith('/pathshala')) return '/(tabs)/pathshala';
-  if (href.startsWith('/panchang')) return '/panchang';
-  if (href.startsWith('/vrat')) return '/vrat';
-  if (href.startsWith('/quiz')) return '/quiz';
-  if (href.startsWith('/dharm-veer')) return '/dharm-veer';
-  if (href.startsWith('/nitya-karma')) return '/nitya-karma';
-  return '/(tabs)/pathshala';
-}
-
 function formatKarma(points: number) {
   if (points >= 1000) return `${Math.floor(points / 1000)}k`;
   return String(points);
@@ -293,6 +282,7 @@ function HomeContent() {
   const [state, setState] = useState<HomeSummary>(INITIAL_STATE);
   const [loadError, setLoadError] = useState(false);
   const [practicesOpen, setPracticesOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const scrollRef = useScrollToTop();
 
@@ -330,7 +320,7 @@ function HomeContent() {
 
   const tithiPill = `${panchang.tithi} · ${panchang.paksha}`;
   const completedCount = state.practices.filter((row) => row.done).length;
-  const actionRoute = mapHrefToRoute(state.nextPractice.actionHref);
+  const actionRoute = resolveNativeRoute(state.nextPractice.actionHref);
 
   // festivalLabel/vratLabel are mutually derived from the same nearest
   // upcoming observance on the API side (a vrat sets both to the same
@@ -394,6 +384,10 @@ function HomeContent() {
       }
     };
     void run();
+    // Best-effort, independent of the main Home load — a failed unread
+    // count fetch should never flip Home into its error state, it just
+    // means the bell shows no badge.
+    void getMyUnreadNotificationCount().then(setUnreadNotifications);
   }, [loadHome]);
 
   const onRefresh = useCallback(async () => {
@@ -403,6 +397,7 @@ function HomeContent() {
     } finally {
       setRefreshing(false);
     }
+    void getMyUnreadNotificationCount().then(setUnreadNotifications);
   }, [loadHome]);
 
   const navigate = useCallback(
@@ -480,8 +475,8 @@ function HomeContent() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Notifications — coming soon"
-              onPress={() => Alert.alert('Notifications', 'A dedicated notifications screen is coming soon. For now, taps and reminders arrive as push notifications.')}
+              accessibilityLabel={unreadNotifications > 0 ? `Notifications, ${unreadNotifications} unread` : 'Notifications'}
+              onPress={() => navigate('/notifications')}
               style={{
                 minWidth: MIN_TOUCH_TARGET,
                 minHeight: MIN_TOUCH_TARGET,
@@ -494,6 +489,21 @@ function HomeContent() {
               }}
             >
               <Feather name="bell" size={18} color={theme.text} />
+              {unreadNotifications > 0 ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    width: 9,
+                    height: 9,
+                    borderRadius: 5,
+                    backgroundColor: COLORS.brandGold,
+                    borderWidth: 1.5,
+                    borderColor: theme.heroOverlay,
+                  }}
+                />
+              ) : null}
             </Pressable>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -771,7 +781,7 @@ function HomeContent() {
                     key={row.id}
                     accessibilityRole="button"
                     accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
-                    onPress={() => navigate(mapHrefToRoute(row.href))}
+                    onPress={() => navigate(resolveNativeRoute(row.href))}
                     style={{
                       minHeight: 54,
                       borderRadius: 14,
@@ -861,7 +871,7 @@ function HomeContent() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${state.dharmVeer.name}, ${dharmVeerDone ? 'seva given today' : state.dharmVeer.tagline}`}
-            onPress={() => navigate(mapHrefToRoute(state.dharmVeer.href))}
+            onPress={() => navigate(resolveNativeRoute(state.dharmVeer.href))}
             style={{
               minHeight: 76,
               borderRadius: 22,

@@ -1,0 +1,359 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useRouter, type Href } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonRow } from '@/components/ui/SkeletonLoader';
+import { apiFetch } from '@/lib/api';
+import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  subscribeToNotifications,
+  type NotificationRow,
+} from '@/lib/notificationsData';
+import { resolveNativeRoute } from '@/lib/routes';
+import { supabase } from '@/lib/supabase';
+
+// Native's notification inbox — previously a "coming soon" alert on Home's
+// bell (app/(tabs)/index.tsx). Matches the PWA's notification panel UX
+// (src/app/(main)/home/HomeDashboard.tsx:1559-1717 in the web repo): emoji
+// avatar, title/body/timestamp, unread gold tint + dot, header "mark all
+// read", empty state with a "Send test notification" action, tap-to-mark-
+// read-then-navigate. Presented as a full native screen rather than a
+// floating dropdown — a dropdown overlay doesn't translate to a phone-sized
+// viewport, and a full list is the standard, more premium mobile pattern
+// for a notification center (native owns the experience; the visual
+// language and interaction model are what's kept faithful to the PWA, not
+// the container shape).
+//
+// Notification *preferences* (festival/shloka/nitya/community/family
+// toggles) already exist and work end to end in app/settings.tsx — not
+// duplicated here. This screen links to Settings instead.
+
+function formatNotificationDate(iso: string) {
+  const date = new Date(iso);
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+export default function NotificationsScreen() {
+  const router = useRouter();
+  const isDark = useColorScheme() === 'dark';
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<NotificationRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
+
+  const theme = useMemo(
+    () => ({
+      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
+      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
+      border: isDark ? COLORS.borderDark : COLORS.borderLight,
+      text: isDark ? COLORS.creamBg : COLORS.ink,
+      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+      iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+      unreadBg: COLORS.selectionWellSelected,
+    }),
+    [isDark]
+  );
+
+  const load = useCallback(async () => {
+    setLoadError(false);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    setUserId(user.id);
+    const rows = await fetchNotifications(user.id);
+    setNotifications(rows);
+  }, [router]);
+
+  useEffect(() => {
+    const run = async () => {
+      setLoading(true);
+      try {
+        await load();
+      } catch {
+        setLoadError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void run();
+  }, [load]);
+
+  // Live updates while the inbox is actually open — see
+  // lib/notificationsData.ts's subscribeToNotifications comment for why
+  // this isn't mounted globally.
+  useEffect(() => {
+    if (!userId) return undefined;
+    return subscribeToNotifications(userId, () => {
+      void load();
+    });
+  }, [userId, load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  const unreadCount = notifications.filter((row) => !row.read).length;
+
+  const handleRowPress = useCallback(
+    async (row: NotificationRow) => {
+      try {
+        void Haptics.selectionAsync();
+      } catch {}
+
+      if (!row.read) {
+        setNotifications((current) => current.map((item) => (item.id === row.id ? { ...item, read: true } : item)));
+        markNotificationRead(row.id).catch(() => {
+          // Best-effort — a failed mark-read shouldn't block navigation, and
+          // the next load() will reconcile the true server state anyway.
+        });
+      }
+
+      if (row.action_url) {
+        const route = resolveNativeRoute(row.action_url, '/notifications');
+        if (route !== '/notifications') {
+          router.push(route as Href);
+        }
+      }
+    },
+    [router]
+  );
+
+  const handleMarkAllRead = useCallback(async () => {
+    const unreadIds = notifications.filter((row) => !row.read).map((row) => row.id);
+    if (unreadIds.length === 0) return;
+
+    setMarkingAll(true);
+    setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+    try {
+      await markAllNotificationsRead(unreadIds);
+      try {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
+    } catch {
+      await load();
+    } finally {
+      setMarkingAll(false);
+    }
+  }, [load, notifications]);
+
+  const handleSendTest = useCallback(async () => {
+    setSendingTest(true);
+    try {
+      const response = await apiFetch('/api/notifications/test', { method: 'POST' });
+      if (!response.ok) throw new Error('test-notification-failed');
+      await load();
+    } catch {
+      // Silent — the empty state simply stays empty; retrying is free (tap again).
+    } finally {
+      setSendingTest(false);
+    }
+  }, [load]);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      <ScrollView
+        contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={10}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MIN_TOUCH_TARGET }}
+          >
+            <Feather name="chevron-left" size={16} color={theme.dim} />
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push('/settings')}
+            accessibilityRole="button"
+            accessibilityLabel="Notification settings"
+            hitSlop={10}
+            style={{ minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Feather name="settings" size={18} color={theme.dim} />
+          </Pressable>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Notifications</Text>
+            {unreadCount > 0 ? (
+              <View
+                style={{
+                  minWidth: 24,
+                  height: 22,
+                  borderRadius: 11,
+                  paddingHorizontal: 7,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: COLORS.brandGold,
+                }}
+              >
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{unreadCount}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {unreadCount > 0 ? (
+            <Pressable
+              onPress={() => {
+                void handleMarkAllRead();
+              }}
+              disabled={markingAll}
+              accessibilityRole="button"
+              accessibilityLabel="Mark all read"
+              hitSlop={8}
+              style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', opacity: markingAll ? 0.6 : 1 }}
+            >
+              <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                Mark all read
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {loading ? (
+          <View style={{ gap: 10 }}>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </View>
+        ) : loadError ? (
+          <EmptyState
+            icon="wifi-off"
+            title="Could not load notifications"
+            subtitle="Check your connection and try again."
+            ctaLabel="Retry"
+            onCta={() => {
+              setLoading(true);
+              load()
+                .catch(() => setLoadError(true))
+                .finally(() => setLoading(false));
+            }}
+          />
+        ) : notifications.length === 0 ? (
+          <EmptyState
+            icon="bell"
+            title="All quiet"
+            subtitle="Festival alerts & practice milestones show up here."
+            ctaLabel={sendingTest ? 'Sending...' : 'Send test notification'}
+            onCta={() => {
+              if (!sendingTest) void handleSendTest();
+            }}
+          />
+        ) : (
+          <View style={{ gap: 10 }}>
+            {notifications.map((row) => (
+              <Pressable
+                key={row.id}
+                onPress={() => {
+                  void handleRowPress(row);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`${row.title}${row.read ? '' : ', unread'}`}
+                style={{
+                  borderRadius: 18,
+                  padding: 14,
+                  flexDirection: 'row',
+                  gap: 12,
+                  backgroundColor: row.read ? theme.card : theme.unreadBg,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.iconWell,
+                  }}
+                >
+                  <Text style={{ fontSize: 20 }}>{row.emoji ?? '🔔'}</Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: theme.text,
+                        fontFamily: row.read ? FONTS.sansMedium : FONTS.sansSemiBold,
+                        fontSize: 14,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {row.title}
+                    </Text>
+                    {!row.read ? (
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.brandGold }} />
+                    ) : null}
+                  </View>
+
+                  {row.body ? (
+                    <Text
+                      style={{ marginTop: 3, color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}
+                      numberOfLines={2}
+                    >
+                      {row.body}
+                    </Text>
+                  ) : null}
+
+                  <Text style={{ marginTop: 6, color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
+                    {formatNotificationDate(row.created_at)}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        <Pressable
+          onPress={() => router.push('/settings')}
+          accessibilityRole="link"
+          accessibilityLabel="Manage notification settings"
+          style={{ minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}
+        >
+          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+            Manage notification settings
+          </Text>
+        </Pressable>
+
+        {refreshing ? <ActivityIndicator color={COLORS.brandGold} /> : null}
+      </ScrollView>
+    </View>
+  );
+}
