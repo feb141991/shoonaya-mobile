@@ -312,6 +312,8 @@ export default function QuizScreen() {
                 return (
                   <Pressable
                     key={`${option}-${index}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${option}. ${showFeedback ? (isAnswerCorrect ? 'Correct answer' : (wasChosen ? 'Incorrect answer' : '')) : ''}`}
                     onPress={() => {
                       void handleAnswer(index);
                     }}
@@ -375,13 +377,21 @@ export default function QuizScreen() {
         {answeredToday ? (
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 26 }}>Today&apos;s score</Text>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
-              {saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2)} points earned
-            </Text>
+            {saveData?.karma_earned === 0 ? (
+              <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
+                Points already claimed for today
+              </Text>
+            ) : (
+              <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
+                {saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2)} points earned
+              </Text>
+            )}
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
               {saveData?.streak ?? 1}-day streak maintained
             </Text>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share your quiz result"
               onPress={() => {
                 void handleShare();
               }}

@@ -17,6 +17,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/lib/supabase';
+import { spiritualDate } from '@/lib/spiritualDate';
+
 // Native Nitya Karma — the first native destination for Home's "Nitya Karma"
 // practice row (previously silently fell back to /panchang, see
 // mapHrefToRoute in app/(tabs)/index.tsx). Minimal, contract-backed screen:
@@ -61,6 +65,7 @@ export default function NityaKarmaScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [busyStepId, setBusyStepId] = useState<string | null>(null);
+  const [localKey, setLocalKey] = useState<string | null>(null);
 
   const theme = useMemo(
     () => ({
@@ -75,6 +80,26 @@ export default function NityaKarmaScreen() {
 
   const loadNitya = useCallback(async () => {
     setLoadError(false);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const today = spiritualDate(profile?.timezone ?? 'UTC');
+    const storageKey = `nitya_done_${user.id}_${today}`;
+    setLocalKey(storageKey);
+
+    const rawLocal = await AsyncStorage.getItem(storageKey);
+    const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
+
     const response = await apiFetch('/api/native/nitya-karma');
 
     if (response.status === 401) {
@@ -87,7 +112,19 @@ export default function NityaKarmaScreen() {
     }
 
     const payload = (await response.json()) as NitySummary;
-    setState({ ...EMPTY_STATE, ...payload });
+    const mergedSteps = payload.steps.map(step => ({
+      ...step,
+      done: step.done || localDoneIds.has(step.id),
+    }));
+    const completedCount = mergedSteps.filter(s => s.done).length;
+
+    setState({
+      ...EMPTY_STATE,
+      ...payload,
+      steps: mergedSteps,
+      completedCount,
+      allDone: completedCount === mergedSteps.length
+    });
   }, [router]);
 
   useEffect(() => {
@@ -121,6 +158,15 @@ export default function NityaKarmaScreen() {
         return { ...prev, steps, completedCount, allDone: completedCount === steps.length };
       });
 
+      if (localKey) {
+        try {
+          const rawLocal = await AsyncStorage.getItem(localKey);
+          const existing = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
+          existing.add(step.id);
+          await AsyncStorage.setItem(localKey, JSON.stringify([...existing]));
+        } catch {}
+      }
+
       try {
         const response = await apiFetch('/api/native/nitya-karma', {
           method: 'POST',
@@ -145,7 +191,7 @@ export default function NityaKarmaScreen() {
         setBusyStepId(null);
       }
     },
-    [busyStepId]
+    [busyStepId, localKey]
   );
 
   if (loading) {

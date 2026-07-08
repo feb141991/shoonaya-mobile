@@ -16,8 +16,10 @@ import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
 import { getUnlockedRelics, SACRED_RELICS } from '@/lib/relics';
 import { supabase } from '@/lib/supabase';
 
@@ -35,18 +37,44 @@ type ProfileData = {
   subscription_status: 'free' | 'pro' | 'kul_pro' | 'grace' | 'expired';
 };
 
-type DailySadhana = {
-  streak_count: number | null;
-  japa_done?: boolean | null;
-  quiz_done?: boolean | null;
-  nitya_done?: boolean | null;
-  pathshala_done?: boolean | null;
-  dharmveer_done?: boolean | null;
-};
-
 type EditState = {
   fullName: string;
   appLanguage: AppLanguage;
+};
+
+type ProgressSummary = {
+  profile: {
+    id: string;
+    fullName: string;
+    tradition: Tradition;
+    appLanguage: AppLanguage;
+    activeSymbolId: string | null;
+    sevaScore: number;
+    isPro: boolean;
+    subscriptionStatus: ProfileData['subscription_status'];
+  };
+  completion: {
+    pct: number;
+    missing: string[];
+  };
+  progress: {
+    practices: {
+      completed: number;
+      total: number;
+    };
+    streaks: {
+      shloka: number;
+      bestShloka: number;
+      nitya: number;
+      bestNitya: number;
+    };
+    pathshala: {
+      completedLessons: number;
+    };
+    quiz: {
+      doneToday: boolean;
+    };
+  };
 };
 
 const INITIAL_EDIT: EditState = {
@@ -110,12 +138,12 @@ export default function ProfileScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [todaySadhana, setTodaySadhana] = useState<DailySadhana | null>(null);
-  const [bestStreak, setBestStreak] = useState(0);
+  const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
 
   const theme = useMemo(
@@ -130,52 +158,32 @@ export default function ProfileScreen() {
   );
 
   const loadProfile = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const response = await apiFetch('/api/native/progress-summary');
 
-    if (!user) {
+    if (response.status === 401) {
       router.replace('/(auth)/login');
       return;
     }
 
-    const [profileRes, todayRes, streakRows] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('id, full_name, tradition, app_language, active_symbol_id, seva_score, is_pro, subscription_status')
-        .eq('id', user.id)
-        .single(),
-      supabase
-        .from('daily_sadhana')
-        .select('streak_count, japa_done, quiz_done, nitya_done, pathshala_done, dharmveer_done')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from('daily_sadhana')
-        .select('streak_count')
-        .eq('user_id', user.id)
-        .order('streak_count', { ascending: false })
-        .limit(1),
-    ]);
+    if (!response.ok) {
+      throw new Error('Could not load progress summary');
+    }
 
-    const nextProfile = profileRes.data
-      ? ({
-          id: profileRes.data.id,
-          full_name: profileRes.data.full_name,
-          tradition: (profileRes.data.tradition ?? 'hindu') as Tradition,
-          app_language: (profileRes.data.app_language ?? 'en') as AppLanguage,
-          active_symbol_id: profileRes.data.active_symbol_id,
-          seva_score: profileRes.data.seva_score ?? 0,
-          is_pro: profileRes.data.is_pro ?? false,
-          subscription_status: profileRes.data.subscription_status ?? 'free',
-        } satisfies ProfileData)
-      : null;
+    const payload = (await response.json()) as ProgressSummary;
+    setSummary(payload);
+
+    const nextProfile: ProfileData = {
+      id: payload.profile.id,
+      full_name: payload.profile.fullName,
+      tradition: payload.profile.tradition,
+      app_language: payload.profile.appLanguage,
+      active_symbol_id: payload.profile.activeSymbolId,
+      seva_score: payload.profile.sevaScore,
+      is_pro: payload.profile.isPro,
+      subscription_status: payload.profile.subscriptionStatus,
+    };
 
     setProfile(nextProfile);
-    setTodaySadhana(todayRes.data ?? null);
-    setBestStreak(streakRows.data?.[0]?.streak_count ?? 0);
 
     if (nextProfile) {
       setEditState({
@@ -186,14 +194,15 @@ export default function ProfileScreen() {
   }, [router]);
 
   useEffect(() => {
+    setLoadError(false);
     loadProfile()
       .catch(() => {
-        Alert.alert('Could not load profile');
+        setLoadError(true);
       })
       .finally(() => setLoading(false));
   }, [loadProfile]);
 
-  const streak = todaySadhana?.streak_count ?? 0;
+  const streak = summary?.progress?.streaks?.shloka ?? 0;
   const unlockedRelics = useMemo(() => {
     if (!profile) return [];
     return getUnlockedRelics(streak, profile.seva_score, profile.tradition);
@@ -203,23 +212,8 @@ export default function ProfileScreen() {
     [profile?.active_symbol_id]
   );
 
-  const completionPcts = useMemo(() => {
-    const values = [
-      todaySadhana?.japa_done,
-      todaySadhana?.quiz_done,
-      todaySadhana?.nitya_done,
-      todaySadhana?.pathshala_done,
-      todaySadhana?.dharmveer_done,
-    ];
-    const doneCount = values.filter(Boolean).length;
-    const total = values.length;
-    return {
-      sadhana: Math.round((doneCount / total) * 100),
-      japa: todaySadhana?.japa_done ? 100 : 0,
-      study: todaySadhana?.pathshala_done ? 100 : 0,
-      quiz: todaySadhana?.quiz_done ? 100 : 0,
-    };
-  }, [todaySadhana]);
+  const progressData = summary?.progress;
+  const profileCompletion = summary?.completion;
 
   const handleSave = async () => {
     if (!profile) return;
@@ -264,7 +258,23 @@ export default function ProfileScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          {loadError ? (
+            <EmptyState
+              icon="wifi-off"
+              title="Could not load profile"
+              subtitle="Check your connection, then try again."
+              ctaLabel="Retry"
+              onCta={() => {
+                setLoading(true);
+                setLoadError(false);
+                loadProfile()
+                  .catch(() => setLoadError(true))
+                  .finally(() => setLoading(false));
+              }}
+            />
+          ) : (
+            <ActivityIndicator color={COLORS.brandGold} />
+          )}
         </View>
       </Screen>
     );
@@ -358,30 +368,86 @@ export default function ProfileScreen() {
           </Pressable>
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 }}>
-            {[
-              ['Streak', `${streak} days`],
-              ['Seva', `${profile.seva_score}`],
-              ['Best streak', `${bestStreak} days`],
-              ['Relics', `${unlockedRelics.length}`],
-            ].map(([label, value]) => (
-              <View key={label} style={{ width: '50%', gap: 4 }}>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>{label}</Text>
-                <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{value}</Text>
+        {profileCompletion && profileCompletion.pct < 100 ? (
+          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <ProgressRing label="" value={profileCompletion.pct} accent={COLORS.brandGold} textColor={theme.text} dimColor={theme.dim} />
+                <View>
+                  <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2 }}>Profile strength</Text>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, marginTop: 4 }}>
+                    Add: {profileCompletion.missing.slice(0, 2).join(', ')}{profileCompletion.missing.length > 2 ? ` +${profileCompletion.missing.length - 2} more` : ''}
+                  </Text>
+                </View>
               </View>
-            ))}
-          </View>
-        </Card>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Complete profile"
+                onPress={() => router.push('/settings')}
+                style={{
+                  borderRadius: 20,
+                  backgroundColor: COLORS.brandGold,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}
+              >
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Complete</Text>
+              </Pressable>
+            </View>
+          </Card>
+        ) : null}
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{"Today's completion"}</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <ProgressRing label="Overall" value={completionPcts.sadhana} accent={COLORS.brandGold} textColor={theme.text} dimColor={theme.dim} />
-            <ProgressRing label="Japa" value={completionPcts.japa} accent={COLORS.brandGold} textColor={theme.text} dimColor={theme.dim} />
-            <ProgressRing label="Study" value={completionPcts.study} accent={COLORS.brandGold} textColor={theme.text} dimColor={theme.dim} />
-            <ProgressRing label="Quiz" value={completionPcts.quiz} accent={COLORS.brandGold} textColor={theme.text} dimColor={theme.dim} />
-          </View>
+        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 20 }}>
+          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Progress Hub</Text>
+
+          {progressData ? (
+            <View style={{ gap: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <ProgressRing
+                  label="Practices"
+                  value={progressData.practices.total > 0 ? Math.round((progressData.practices.completed / progressData.practices.total) * 100) : 0}
+                  accent={COLORS.brandGold}
+                  textColor={theme.text}
+                  dimColor={theme.dim}
+                />
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{streak}</Text>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Streak</Text>
+                </View>
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{profile.seva_score}</Text>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Seva</Text>
+                </View>
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{progressData.streaks.bestShloka}</Text>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Best Streak</Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 16, marginTop: 8 }}>
+                <View style={{ width: '50%', gap: 4 }}>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Nitya Streak</Text>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{progressData.streaks.nitya} {progressData.streaks.nitya === 1 ? 'day' : 'days'}</Text>
+                </View>
+                <View style={{ width: '50%', gap: 4 }}>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Best Nitya</Text>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{progressData.streaks.bestNitya} {progressData.streaks.bestNitya === 1 ? 'day' : 'days'}</Text>
+                </View>
+                <View style={{ width: '50%', gap: 4 }}>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Pathshala</Text>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{progressData.pathshala.completedLessons} {progressData.pathshala.completedLessons === 1 ? 'lesson' : 'lessons'}</Text>
+                </View>
+                <View style={{ width: '50%', gap: 4 }}>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Quiz</Text>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>
+                    {progressData.quiz.doneToday ? 'Done today' : 'Not started'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <ActivityIndicator color={COLORS.brandGold} />
+          )}
         </Card>
 
         <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
