@@ -44,10 +44,10 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   return fallback;
 }
 
-// Given a full URL string (a push notification's launchURL, or a
-// notification row's action_url resolved against API_BASE), extract just
-// the pathname+search for resolveNativeRoute. Returns null if the string
-// isn't a parseable URL/path at all.
+// Given a full URL string (a push notification's launchURL, a notification
+// row's action_url resolved against API_BASE, or a shoonaya:// deep link),
+// extract just the pathname+search for resolveNativeRoute. Returns null if
+// the string isn't a parseable URL/path at all.
 export function pathFromUrlLike(value: string | null | undefined): string | null {
   if (!value) return null;
   try {
@@ -55,6 +55,21 @@ export function pathFromUrlLike(value: string | null | undefined): string | null
       const url = new URL(value);
       return `${url.pathname}${url.search}`;
     }
+
+    if (/^shoonaya:\/\//i.test(value)) {
+      // Custom-scheme deep links (universal-link fallback, share sheets,
+      // OS-level "open with Shoonaya"). The WHATWG URL parser treats
+      // whatever sits between "://" and the next "/", "?", or end as the
+      // *host*, not the path — for ANY scheme, not just http(s) — so both
+      // slash counts a link author might reasonably produce need handling:
+      //   shoonaya://notifications        -> host="notifications" pathname=""            -> /notifications
+      //   shoonaya://dharm-veer/foo       -> host="dharm-veer"    pathname="/foo"         -> /dharm-veer/foo
+      //   shoonaya:///dharm-veer/foo      -> host=""              pathname="/dharm-veer/foo" -> /dharm-veer/foo
+      const url = new URL(value);
+      const path = url.host ? `/${url.host}${url.pathname}` : url.pathname;
+      return `${path || '/'}${url.search}`;
+    }
+
     return value.startsWith('/') ? value : `/${value}`;
   } catch {
     return null;

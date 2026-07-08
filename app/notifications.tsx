@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -166,10 +166,32 @@ export default function NotificationsScreen() {
     setSendingTest(true);
     try {
       const response = await apiFetch('/api/notifications/test', { method: 'POST' });
-      if (!response.ok) throw new Error('test-notification-failed');
+      if (!response.ok) {
+        // Surface the server's own error message when it sent one (both
+        // /api/notifications/test's 401 and 500 paths return { error }) so
+        // the alert says something more useful than "it failed".
+        let detail = '';
+        try {
+          const json: unknown = await response.json();
+          if (json && typeof json === 'object' && 'error' in json && typeof json.error === 'string') {
+            detail = json.error;
+          }
+        } catch {
+          // Response wasn't JSON — fall through to the generic status message below.
+        }
+        throw new Error(detail || `Request failed (status ${response.status})`);
+      }
       await load();
-    } catch {
-      // Silent — the empty state simply stays empty; retrying is free (tap again).
+    } catch (err) {
+      // Previously silent — the empty state just stayed empty, so a 401/500
+      // looked identical to "tap didn't register" from the user's side. Now
+      // the failure is visible, with a one-tap retry (free — apiFetch has no
+      // cooldown on this route).
+      const message = err instanceof Error ? err.message : 'Something went wrong. Check your connection and try again.';
+      Alert.alert('Could not send test notification', message, [
+        { text: 'Retry', onPress: () => { void handleSendTest(); } },
+        { text: 'OK', style: 'cancel' },
+      ]);
     } finally {
       setSendingTest(false);
     }

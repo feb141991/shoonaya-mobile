@@ -105,6 +105,29 @@ export function subscribeToNotifications(userId: string, onInsert: () => void): 
   };
 }
 
+// Home's bell subscribes through this rather than importing `supabase`
+// directly — the same "no direct table/auth access from Home" boundary
+// getMyUnreadNotificationCount() already established. Resolves the current
+// user internally, then reuses subscribeToNotifications's INSERT-only
+// channel above (no second implementation of the subscribe logic). Returns
+// a safe no-op unsubscribe if there's no signed-in user yet, so callers
+// (e.g. a useFocusEffect that fires before auth resolves) don't need to
+// special-case that.
+export function subscribeToMyNotifications(onInsert: () => void): () => void {
+  let unsubscribe: (() => void) | null = null;
+  let cancelled = false;
+
+  supabase.auth.getUser().then(({ data: { user } }) => {
+    if (cancelled || !user) return;
+    unsubscribe = subscribeToNotifications(user.id, onInsert);
+  });
+
+  return () => {
+    cancelled = true;
+    unsubscribe?.();
+  };
+}
+
 // Notification *preferences* (wants_festival_reminders / wants_shloka_reminders
 // / wants_nitya_reminders / wants_community_notifications /
 // wants_family_notifications) are NOT duplicated here — app/settings.tsx

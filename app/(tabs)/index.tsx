@@ -12,7 +12,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { useRouter, type Href } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Svg, { Circle } from 'react-native-svg';
@@ -24,7 +24,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
-import { getMyUnreadNotificationCount } from '@/lib/notificationsData';
+import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
@@ -463,11 +463,28 @@ function HomeContent() {
       }
     };
     void run();
-    // Best-effort, independent of the main Home load — a failed unread
-    // count fetch should never flip Home into its error state, it just
-    // means the bell shows no badge.
-    void getMyUnreadNotificationCount().then(setUnreadNotifications);
   }, [loadHome]);
+
+  // Keeps the bell badge honest without a full app restart. Two parts:
+  // 1. Refetch on every focus — covers returning to Home after marking
+  //    everything read in the inbox (app/notifications.tsx), where Home's
+  //    own state was never told the count changed.
+  // 2. A live INSERT subscription, but only while Home is the focused
+  //    screen — covers a new notification arriving while Home is actually
+  //    on screen. Scoped to focus (not mount) so it disconnects the moment
+  //    Home is blurred (e.g. navigating into Notifications), rather than
+  //    running a second long-lived channel alongside that screen's own
+  //    subscription (lib/notificationsData.ts's subscribeToNotifications).
+  // Both paths are best-effort — a failed unread count fetch should never
+  // flip Home into its error state, it just means the bell shows no badge.
+  useFocusEffect(
+    useCallback(() => {
+      void getMyUnreadNotificationCount().then(setUnreadNotifications);
+      return subscribeToMyNotifications(() => {
+        void getMyUnreadNotificationCount().then(setUnreadNotifications);
+      });
+    }, [])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
