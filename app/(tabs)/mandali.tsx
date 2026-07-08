@@ -442,7 +442,16 @@ export default function MandaliScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', backgroundColor: theme.card, borderRadius: 12, padding: 4, marginHorizontal: 16, marginTop: 16 }}>
+          <View style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: theme.bg, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>Local Feed</Text>
+          </View>
+          <Pressable onPress={() => router.push('/vichaar-sabha')} accessibilityRole="button" accessibilityLabel="Switch to Global Sabha" style={{ flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Global Sabha</Text>
+          </Pressable>
+        </View>
+
+        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
@@ -455,20 +464,6 @@ export default function MandaliScreen() {
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {/* Vichaar Sabha — a genuinely separate community Q&A feature
-                on web (its own route), surfaced here as a persistent entry
-                point matching how PWA embeds it inside Mandali's
-                no-mandali state (MandaliClient.tsx dynamically imports
-                VichaarClient there). Kept reachable regardless of Mandali
-                membership, since browsing/asking doesn't require one. */}
-            <Pressable
-              onPress={() => router.push('/vichaar-sabha')}
-              accessibilityRole="button"
-              accessibilityLabel="Open Vichaar Sabha"
-              style={{ borderRadius: 18, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 12, paddingVertical: 10 }}
-            >
-              <Feather name="message-square" size={16} color={theme.dim} />
-            </Pressable>
             {profile?.mandaliId ? (
               <>
                 <Pressable

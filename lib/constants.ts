@@ -5,6 +5,7 @@ export const COLORS = {
   darkBg: '#0C0A07',
   cardBgLight: '#FFFDF9',
   cardBgDark: '#141210',
+  heroBgDark: '#1c1c1a',
   borderLight: '#E8DCCB',
   borderDark: 'rgba(197,160,89,0.13)',
   textDimLight: '#8E7868',

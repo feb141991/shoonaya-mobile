@@ -139,18 +139,27 @@ export default function VichaarSabhaScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 14 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', backgroundColor: theme.card, borderRadius: 12, padding: 4, marginHorizontal: 16, marginTop: 16 }}>
+          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Switch to Local Feed" style={{ flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Local Feed</Text>
+          </Pressable>
+          <View style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: theme.bg, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>Global Sabha</Text>
+          </View>
+        </View>
+
+        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>Vichaar Sabha</Text>
           <Pressable onPress={() => setSheetVisible(true)} style={{ borderRadius: 18, backgroundColor: theme.brand, paddingHorizontal: 14, paddingVertical: 10 }}>
             <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Ask</Text>
           </Pressable>
         </View>
-        <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 19 }}>
+        <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 19, paddingHorizontal: 16 }}>
           Community questions, katha, and scripture study across every tradition.
         </Text>
 

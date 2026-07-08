@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -520,6 +521,36 @@ export default function ProfileScreen() {
         >
           <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Sign out</Text>
         </Pressable>
+
+        <View style={{ marginTop: 24, alignItems: 'center', gap: 12 }}>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            <Pressable onPress={async () => {
+              const url = `${API_BASE}/terms`;
+              try {
+                const canOpen = await Linking.canOpenURL(url);
+                if (!canOpen) throw new Error('Cannot open URL');
+                await Linking.openURL(url);
+              } catch {
+                Alert.alert('Error', 'Could not open Terms of Service.');
+              }
+            }}>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Terms</Text>
+            </Pressable>
+            <Pressable onPress={async () => {
+              const url = `${API_BASE}/privacy`;
+              try {
+                const canOpen = await Linking.canOpenURL(url);
+                if (!canOpen) throw new Error('Cannot open URL');
+                await Linking.openURL(url);
+              } catch {
+                Alert.alert('Error', 'Could not open Privacy Policy.');
+              }
+            }}>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Privacy</Text>
+            </Pressable>
+          </View>
+          <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>Shoonaya · Built with 🙏</Text>
+        </View>
       </ScrollView>
 
       <Modal visible={editVisible} transparent animationType="slide" onRequestClose={() => setEditVisible(false)}>

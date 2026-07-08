@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
@@ -70,6 +72,7 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [themePref, setThemePref] = useState<ThemePref>('system');
 
@@ -148,6 +151,28 @@ export default function SettingsScreen() {
   const persistTheme = async (nextTheme: ThemePref) => {
     setThemePref(nextTheme);
     await AsyncStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  };
+
+  const handleDownloadData = async () => {
+    setDownloading(true);
+    try {
+      const response = await apiFetch('/api/user/export');
+      if (!response.ok) throw new Error('export failed');
+      const data = await response.text();
+      
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('Sharing not available', 'Your device does not support saving or sharing this file.');
+        return;
+      }
+
+      const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-data.json');
+      targetFile.write(data);
+      await Sharing.shareAsync(targetFile.uri);
+    } catch {
+      Alert.alert('Could not download data', 'Please check your connection and try again.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleDelete = () => {
@@ -321,6 +346,22 @@ export default function SettingsScreen() {
         </Card>
 
         <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
+          <Pressable
+            onPress={handleDownloadData}
+            disabled={downloading}
+            style={{
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: theme.border,
+              paddingVertical: 14,
+              alignItems: 'center',
+              opacity: downloading ? 0.7 : 1,
+            }}
+          >
+            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+              {downloading ? 'Preparing export...' : 'Download your data'}
+            </Text>
+          </Pressable>
           <Pressable
             onPress={handleDelete}
             style={{

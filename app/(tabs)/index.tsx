@@ -19,6 +19,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
+import { fetchMoodStatus, type MoodStatus } from '@/lib/mood';
+import { findMoodConfig } from '@/lib/mood-registry';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -399,6 +401,7 @@ function HomeContent() {
   const [loadError, setLoadError] = useState(false);
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [moodStatus, setMoodStatus] = useState<MoodStatus | null>(null);
 
   const scrollRef = useScrollToTop();
 
@@ -518,6 +521,7 @@ function HomeContent() {
   useFocusEffect(
     useCallback(() => {
       void getMyUnreadNotificationCount().then(setUnreadNotifications);
+      void fetchMoodStatus().then(setMoodStatus);
       return subscribeToMyNotifications(() => {
         void getMyUnreadNotificationCount().then(setUnreadNotifications);
       });
@@ -532,6 +536,7 @@ function HomeContent() {
       setRefreshing(false);
     }
     void getMyUnreadNotificationCount().then(setUnreadNotifications);
+    void fetchMoodStatus().then(setMoodStatus);
   }, [loadHome]);
 
   // Match the PWA Home hero: show only the first verse line in the
@@ -742,6 +747,58 @@ function HomeContent() {
 
             <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
+
+              {/* Mood Pill */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Check in with your mood"
+                onPress={() => navigate('/mood')}
+                hitSlop={4}
+                style={{
+                  minHeight: 36,
+                  borderRadius: 999,
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 6,
+                  backgroundColor: COLORS.homePwaObservanceBg,
+                  borderWidth: 1,
+                  borderColor: COLORS.homePwaObservanceBorder,
+                }}
+              >
+                {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
+                  <>
+                    <Text style={{ fontSize: 12, lineHeight: 14 }}>
+                      {findMoodConfig(isDark, moodStatus.lastMood)?.label.charAt(0) || '✨'}
+                    </Text>
+                    <Text
+                      style={{
+                        ...TYPE.chip,
+                        fontSize: 11,
+                        lineHeight: 14,
+                        color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
+                      }}
+                      numberOfLines={1}
+                    >
+                      Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
+                    </Text>
+                  </>
+                ) : (
+                  <Text
+                    style={{
+                      ...TYPE.chip,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      color: COLORS.homePwaObservanceText,
+                    }}
+                    numberOfLines={1}
+                  >
+                    How are you feeling?
+                  </Text>
+                )}
+              </Pressable>
 
               {state.panchang.observance ? (
                 <Pressable
@@ -1112,6 +1169,74 @@ function HomeContent() {
               )}
             </View>
           </Pressable>
+
+          {/* Quick Actions Row */}
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Sadhana</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+              {[
+                { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
+                { label: 'Quiz',     href: '/quiz',        icon: '🧠', bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
+                { label: 'AI Guide', href: '/ai-chat',     icon: '✨', bg: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' },
+                { label: 'Progress', href: '/my-progress', icon: '📈', bg: isDark ? 'rgba(107,196,126,0.15)' : 'rgba(107,196,126,0.12)' },
+              ].map(item => (
+                <Pressable
+                  key={item.label}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  onPress={() => navigate(item.href as Href)}
+                  style={{
+                    alignItems: 'center',
+                    backgroundColor: item.bg,
+                    borderRadius: 16,
+                    paddingVertical: 12,
+                    minWidth: 84,
+                    borderWidth: 1,
+                    borderColor: theme.borderSoft,
+                  }}
+                >
+                  <Text style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</Text>
+                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Community Row */}
+          <View style={{ marginTop: 12, marginBottom: 12 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Community</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+              {[
+                { label: 'Live Darshan', href: '/live-darshan', icon: '📺', bg: isDark ? 'rgba(100,181,246,0.15)' : 'rgba(100,181,246,0.12)' },
+                { label: 'Mandali',      href: '/(tabs)/mandali',      icon: '👥', bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
+                // Seva omitted pending future feature-build
+              ].map(item => (
+                <Pressable
+                  key={item.label}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  onPress={() => navigate(item.href as Href)}
+                  style={{
+                    alignItems: 'center',
+                    backgroundColor: item.bg,
+                    borderRadius: 16,
+                    paddingVertical: 12,
+                    minWidth: 110,
+                    borderWidth: 1,
+                    borderColor: theme.borderSoft,
+                  }}
+                >
+                  <Text style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</Text>
+                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+
         </View>
       </ScrollView>
     </SafeAreaView>
