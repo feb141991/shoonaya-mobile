@@ -205,18 +205,18 @@ export default function DharmVeerScreen() {
       return;
     }
 
-    await Promise.allSettled([
-      // P0-3: daily_sadhana.dharmveer_done is no longer directly writable by
-      // authenticated/anon — routed through the ownership-checked RPC (no
-      // independent engagement signal exists for this practice yet;
-      // ownership is enforced, genuine engagement is not).
-      supabase.rpc('complete_dharmveer', { p_user_id: profile.userId, p_date: today }),
-      apiFetch('/api/karma/award', {
-        method: 'POST',
-        body: JSON.stringify({ amount: 5, reason: 'dharm_veer' }),
-      }),
-    ]);
-  }, [profile, today]);
+    // daily_sadhana.dharmveer_done is now kept in sync server-side by
+    // POST /api/dharm-veer/submit (called per-swipe in submitSwipe below,
+    // via the complete_dharmveer RPC there) — each swipe already carries
+    // real evidence into dharm_veer_responses, which is what
+    // /api/sadhana/perfect-day now actually trusts. This function no longer
+    // needs its own direct RPC call; it only awards the flat completion
+    // bonus once all three cards are seen.
+    await apiFetch('/api/karma/award', {
+      method: 'POST',
+      body: JSON.stringify({ amount: 5, reason: 'dharm_veer' }),
+    }).catch(() => null);
+  }, [profile]);
 
   const submitSwipe = useCallback(
     async (hero: DharmVeer, decision: SwipeDecision) => {
