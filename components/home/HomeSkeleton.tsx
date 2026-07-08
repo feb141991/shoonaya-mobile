@@ -35,16 +35,19 @@ export function HomeSkeleton() {
               <Block dark={isDark} style={{ width: 48, height: 48, borderRadius: 24 }} />
             </View>
           </View>
-          <View style={{ marginTop: 48 }}>
+          <View style={{ marginTop: 20 }}>
             <Block dark={isDark} style={{ width: '70%', height: 34, borderRadius: 8 }} />
             <Block dark={isDark} style={{ marginTop: 12, width: '45%', height: 14, borderRadius: 6 }} />
-            <View style={{ marginTop: 18, flexDirection: 'row', gap: 8 }}>
+            <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
               <Block dark={isDark} style={{ width: 150, height: 44, borderRadius: 22 }} />
               <Block dark={isDark} style={{ width: 110, height: 44, borderRadius: 22 }} />
             </View>
           </View>
 
-          {/* Shloka */}
+          {/* Shloka — background matches `background` (theme.background),
+              same as the real Home's shloka panel now uses, so this
+              skeleton's fold blends the same way instead of showing the
+              old translucent-white glass card seam during loading. */}
           <View
             style={{
               marginTop: 42,
@@ -58,10 +61,7 @@ export function HomeSkeleton() {
               paddingTop: 18,
               paddingBottom: 34,
               alignItems: 'center',
-              backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
-              borderWidth: 1,
-              borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
-              borderBottomWidth: 0,
+              backgroundColor: background,
             }}
           >
             <Block dark={isDark} style={{ width: 110, height: 11, borderRadius: 6 }} />

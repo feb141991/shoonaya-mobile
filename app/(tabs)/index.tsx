@@ -15,6 +15,7 @@ import {
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
@@ -23,7 +24,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
@@ -281,7 +282,7 @@ function PanchangPill({
 }: {
   panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
   selectedDateIso: string;
-  theme: { heroOverlay: string; borderSoft: string; text: string };
+  theme: { heroOverlay: string; borderSoft: string; text: string; brand: string };
 }) {
   const [idx, setIdx] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -351,11 +352,31 @@ function PanchangPill({
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
-        <Feather name={currentSlide.icon} size={13} color={COLORS.brandGold} />
+        <Feather name={currentSlide.icon} size={13} color={theme.brand} />
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
           {currentSlide.label}
         </Text>
       </Animated.View>
+
+      {/* Dot indicators — PWA's PanchangPill (HeroSection.tsx) shows these
+          so the pill visibly reads as "tap to cycle through N things"
+          instead of just looking like a static label. Colors are the warm
+          cream PWA uses verbatim (rgba(255,240,200,*)) rather than
+          theme-flipped — the pill always sits over the hero's darkened
+          image area in both light and dark mode, same as in PWA. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 4 }}>
+        {slides.map((s, i) => (
+          <View
+            key={s.key}
+            style={{
+              width: i === idx ? 10 : 4,
+              height: 4,
+              borderRadius: 99,
+              backgroundColor: i === idx ? 'rgba(255,240,200,0.80)' : 'rgba(255,240,200,0.25)',
+            }}
+          />
+        ))}
+      </View>
     </Pressable>
   );
 }
@@ -388,6 +409,15 @@ function HomeContent() {
       shadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
       ringTrack: isDark ? COLORS.homeRingTrackDark : COLORS.homeRingTrackLight,
       iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+      // PWA's brand-primary is theme-aware, not one static value — its real
+      // light-mode primary is a deeper terracotta (#D88A1C), reserving
+      // #C5A059 (COLORS.brandGold, used as a flat constant everywhere else
+      // in this file today) for dark mode specifically. Applied here first
+      // within the hero card being rebuilt this pass; the rest of this
+      // screen's ~15 remaining COLORS.brandGold call sites (Next
+      // Practice/Sankalpa/Dharm Veer cards below) are flagged as a tracked
+      // follow-up rather than swept blindly in the same change.
+      brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
   );
@@ -552,20 +582,41 @@ function HomeContent() {
             <Image
               source={{ uri: heroImageUrl }}
               accessibilityIgnoresInvertColors
-              style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.55 : 0.68 }]}
+              style={StyleSheet.absoluteFill}
               resizeMode="cover"
             />
           ) : null}
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.heroOverlay }]} />
-          <View
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 138,
-              backgroundColor: isDark ? COLORS.homeHeroFadeDark : COLORS.homeHeroFadeLight,
-            }}
+
+          {/* Two-layer gradient, ported from PWA's .divine-hero-overlay +
+              .divine-hero-readability (src/app/globals.css) — replaces the
+              old flat image-opacity + solid-color wash, which crushed the
+              whole image to one uniform dullness instead of only darkening
+              where text needs to sit. Layer 1 (top scrim) keeps the bell/
+              avatar/greeting legible without touching the rest of the
+              image. Layer 2 (bottom readability) fades to the exact same
+              solid `theme.background` the shloka panel below now uses, so
+              image → gradient → panel is one continuous blend with no
+              visible seam — the fix for the "separated white line". */}
+          <LinearGradient
+            pointerEvents="none"
+            colors={[
+              isDark ? COLORS.heroScrimTopDark : COLORS.heroScrimTopLight,
+              isDark ? COLORS.heroScrimMidDark : COLORS.heroScrimMidLight,
+              'transparent',
+            ]}
+            locations={[0, 0.4, 0.8]}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={[
+              'transparent',
+              isDark ? COLORS.heroReadabilitySoftDark : COLORS.heroReadabilitySoftLight,
+              isDark ? COLORS.heroReadabilityDark : COLORS.heroReadabilityLight,
+              theme.background,
+            ]}
+            locations={[0, 0.35, 0.75, 1]}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 320 }}
           />
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -594,7 +645,7 @@ function HomeContent() {
                     width: 9,
                     height: 9,
                     borderRadius: 5,
-                    backgroundColor: COLORS.brandGold,
+                    backgroundColor: theme.brand,
                     borderWidth: 1.5,
                     borderColor: theme.heroOverlay,
                   }}
@@ -621,8 +672,8 @@ function HomeContent() {
                     borderColor: COLORS.homeGoldPillBorder,
                   }}
                 >
-                  <Feather name="star" size={12} color={COLORS.brandGold} />
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                  <Feather name="star" size={12} color={theme.brand} />
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
                     {formatKarma(state.profile.karmaPoints)}
                   </Text>
                 </Pressable>
@@ -655,7 +706,12 @@ function HomeContent() {
             </View>
           </View>
 
-          <View style={{ marginTop: 48 }}>
+          {/* PWA (HeroSection.tsx) stacks city -> greeting -> pill with only
+              mt-3/mt-1.5 between the icon row above and this block — a
+              tight rhythm. This block previously used marginTop: 48, which
+              is why the greeting/pills read as noticeably lower/detached
+              from the bell+avatar row than PWA's version. */}
+          <View style={{ marginTop: 20 }}>
             {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Feather name="map-pin" size={12} color={theme.dim} />
@@ -665,14 +721,14 @@ function HomeContent() {
               </View>
             ) : null}
 
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, lineHeight: 40, color: theme.text }}>
+            <Text style={{ fontFamily: TYPE.hero.fontFamily, fontSize: TYPE.hero.fontSize, lineHeight: TYPE.hero.lineHeight, color: theme.text }}>
               {greeting}, {state.profile.firstName}
             </Text>
             <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>
               {getDateLabel(state.date.iso)}
             </Text>
 
-            <View style={{ marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            <View style={{ marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
 
               {state.panchang.observance ? (
@@ -707,9 +763,10 @@ function HomeContent() {
               ) : null}
             </View>
           </View>
-          <View
-            accessible
-            accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}`}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}. Tap to open, mark as read, and earn seva points`}
+            onPress={() => navigate('/shloka')}
             style={{
               marginTop: 42,
               marginHorizontal: -20,
@@ -722,14 +779,19 @@ function HomeContent() {
               paddingTop: 18,
               paddingBottom: 34,
               alignItems: 'center',
-              backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
-              borderWidth: 1,
-              borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
-              borderBottomWidth: 0,
-              boxShadow: isDark ? SHADOWS.shlokaGlass.dark : SHADOWS.shlokaGlass.light,
+              // Was a translucent near-white glass tint with its own border
+              // + shadow — a genuinely separate card floating over the hero,
+              // which is exactly what read as a "separated white line" seam
+              // against the warm hero background. PWA's equivalent
+              // (.divine-hero-readability) fades directly into the page's
+              // own background color, not a white card, so this now uses
+              // the exact same theme.background the gradient above
+              // terminates in — no border/shadow needed since there's no
+              // edge to delineate anymore, just a continuous blend.
+              backgroundColor: theme.background,
             }}
           >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: COLORS.brandGold }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: theme.brand }}>
               {state.sacredText.label}
             </Text>
             <Text style={{ marginTop: 12, fontFamily: FONTS.serifBold, fontSize: 25, lineHeight: 33, color: theme.text, textAlign: 'center' }}>
@@ -738,7 +800,7 @@ function HomeContent() {
             <Text style={{ marginTop: 10, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: theme.dim, textAlign: 'center' }} numberOfLines={2}>
               {state.sacredText.meaning}
             </Text>
-          </View>
+          </Pressable>
         </View>
 
         <View style={{ paddingHorizontal: 20, marginTop: 14, gap: 14 }}>
