@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
+import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
@@ -64,30 +65,6 @@ const DEFAULT_STATE: QuizState = {
   timezone: 'UTC',
 };
 
-function spiritualDate(timezone: string) {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(now);
-  const year = parts.find((part) => part.type === 'year')?.value ?? '1970';
-  const month = parts.find((part) => part.type === 'month')?.value ?? '01';
-  const day = parts.find((part) => part.type === 'day')?.value ?? '01';
-  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
-  const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
-
-  if (hour < 4) {
-    baseDate.setUTCDate(baseDate.getUTCDate() - 1);
-  }
-
-  return baseDate.toISOString().slice(0, 10);
-}
 
 export default function QuizScreen() {
   const router = useRouter();

@@ -21,7 +21,15 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   const [pathname] = path.split('?');
 
   if (pathname === '/home' || pathname === '') return '/(tabs)';
-  if (pathname.startsWith('/bhakti') || pathname.startsWith('/japa')) return '/(tabs)/bhakti';
+  // Japa (mala counter) and Bhakti (hub) are now two distinct native
+  // screens — app/(tabs)/japa.tsx and app/(tabs)/bhakti.tsx respectively —
+  // matching PWA's own split (BottomNav.tsx: /bhakti/mala is Japa's own
+  // tab, /bhakti is the broader hub, Japa and Bhakti are not the same
+  // route there either). Previously both collapsed onto the single
+  // '/(tabs)/bhakti' screen, back when that file was actually the Japa
+  // counter under a mislabeled name.
+  if (pathname.startsWith('/bhakti/mala') || pathname.startsWith('/japa')) return '/(tabs)/japa';
+  if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala/')) return path as Href;
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/panchang')) return '/panchang';

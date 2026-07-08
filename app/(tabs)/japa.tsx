@@ -53,7 +53,7 @@ const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
 
-export default function BhaktiScreen() {
+export default function JapaScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';

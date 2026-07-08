@@ -1,30 +1,38 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-import { COLORS, SHADOWS } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
 
-// Styling only — tab structure/routes below are unchanged. Previously the
-// tab bar was hardcoded to the light palette regardless of device theme
-// (unlike most screens, which each hand-roll their own isDark check); this
-// adds that awareness plus a soft upward shadow for "warm layering" depth
-// instead of a flat border line. Uses boxShadow (not shadowColor/
-// shadowOffset/shadowOpacity/elevation) to match this repo's existing
-// shadow convention — see app/(tabs)/index.tsx's `theme.shadow` and the
-// SHADOWS comment in lib/constants.ts. Negative offsetY casts the shadow
-// upward into the screen content, since this bar is pinned to the bottom.
+// 5-tab bar matching PWA's BottomNav.tsx member layout: Home / Japa /
+// Bhakti (center, elevated) / Pathshala / Mandali — Profile is not a tab
+// there either (reached via the avatar on Home, same as native's existing
+// `navigate('/(tabs)/profile')` from the hero header). Previously native
+// had 4 tabs (Home/Pathshala/Bhakti/Profile) where "Bhakti" actually
+// rendered the Japa/mala-counter screen — that screen is now correctly
+// named app/(tabs)/japa.tsx, and a real (deliberately minimal)
+// app/(tabs)/bhakti.tsx hub takes the elevated center slot instead.
+// app/(tabs)/mandali.tsx moved in from app/mandali.tsx — Expo Router
+// strips route-group folder names from the URL, so `/mandali` still
+// resolves exactly as it did before (confirmed against this file's own
+// pathshala/bhakti/profile/tirtha entries, which already show the same
+// `{'/(tabs)'}/x` | `/x` dual-path pattern). Profile stays a real,
+// reachable route (href: null keeps it out of the tab bar without removing
+// it), same treatment tirtha.tsx already had.
 export default function TabsLayout() {
   const isDark = useColorScheme() === 'dark';
   const tabBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const tabBorder = isDark ? COLORS.borderDark : COLORS.borderLight;
   const tabShadow = isDark ? SHADOWS.tabBar.dark : SHADOWS.tabBar.light;
+  const inactiveColor = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.brandGold,
-        tabBarInactiveTintColor: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+        tabBarActiveTintColor: brand,
+        tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
           backgroundColor: tabBg,
           borderTopWidth: 1,
@@ -48,6 +56,50 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="japa"
+        options={{
+          title: 'Japa',
+          tabBarIcon: ({ color, size }) => <Feather name="heart" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="bhakti"
+        options={{
+          title: 'Bhakti',
+          // Elevated center pill, matching PWA's NavTab isCenter treatment
+          // (BottomNav.tsx: a raised gold circle sitting above the bar's own
+          // line, `marginTop: -22px` there). Expo Router's tab bar doesn't
+          // support a taller custom center button without replacing
+          // tabBarButton entirely, so this approximates the same visual —
+          // a raised gold circle — within the standard icon slot instead.
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                marginTop: -20,
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: focused ? brand : (isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight),
+                borderWidth: focused ? 0 : 1,
+                borderColor: tabBorder,
+                boxShadow: focused
+                  ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+                  : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
+              }}
+            >
+              <Feather name="sun" size={22} color={focused ? COLORS.ink : brand} />
+            </View>
+          ),
+          tabBarLabel: ({ focused }) => (
+            <Text style={{ fontSize: 11, fontWeight: '600', marginTop: -6, color: focused ? brand : inactiveColor }}>
+              Bhakti
+            </Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="pathshala"
         options={{
           title: 'Pathshala',
@@ -55,10 +107,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="bhakti"
+        name="mandali"
         options={{
-          title: 'Bhakti',
-          tabBarIcon: ({ color, size }) => <Feather name="heart" color={color} size={size} />,
+          title: 'Mandali',
+          tabBarIcon: ({ color, size }) => <Feather name="users" color={color} size={size} />,
         }}
       />
 
@@ -71,8 +123,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => <Feather name="user" color={color} size={size} />,
+          href: null,
         }}
       />
     </Tabs>
