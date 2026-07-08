@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 
 import { COLORS, SHADOWS } from '@/lib/constants';
 
@@ -51,16 +51,14 @@ export default function TabsLayout() {
         name="pathshala"
         options={{
           title: 'Pathshala',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="book-open-page-variant-outline" color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="book-open" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="bhakti"
         options={{
           title: 'Bhakti',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="hands-pray" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Feather name="heart" color={color} size={size} />,
         }}
       />
 

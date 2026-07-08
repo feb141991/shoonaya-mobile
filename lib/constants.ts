@@ -198,4 +198,4 @@ export const TYPE = {
 // future pass) share one source of truth.
 export const MIN_TOUCH_TARGET = 44;
 
-export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'https://shoonaya.com';
+export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'https://www.shoonaya.com';

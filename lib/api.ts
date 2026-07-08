@@ -18,9 +18,16 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const controller = options.signal ? null : new AbortController();
+  const timeout = controller ? setTimeout(() => controller.abort(), 15000) : null;
 
-  return fetch(`${API_BASE}${normalizedPath}`, {
-    ...options,
-    headers,
-  });
+  try {
+    return await fetch(`${API_BASE}${normalizedPath}`, {
+      ...options,
+      headers,
+      signal: options.signal ?? controller?.signal,
+    });
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 }
