@@ -16,6 +16,9 @@ function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) 
   return <View style={[{ backgroundColor: color, borderRadius: 8 }, style]} />;
 }
 
+const HERO_MIN_HEIGHT = 720;
+const HERO_SHLOKA_TOP_SPACE = 104;
+
 export function HomeSkeleton() {
   const isDark = useColorScheme() === 'dark';
   const background = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -27,7 +30,7 @@ export function HomeSkeleton() {
     <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={['top']}>
       <View style={{ flex: 1 }}>
         {/* Hero */}
-        <View style={{ minHeight: 572, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'space-between' }}>
+        <View style={{ minHeight: HERO_MIN_HEIGHT, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -50,7 +53,7 @@ export function HomeSkeleton() {
               old translucent-white glass card seam during loading. */}
           <View
             style={{
-              marginTop: 42,
+              marginTop: HERO_SHLOKA_TOP_SPACE,
               marginHorizontal: -20,
               marginBottom: -34,
               borderTopLeftRadius: 28,

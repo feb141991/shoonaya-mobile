@@ -122,6 +122,9 @@ type HomeSummary = {
 };
 
 const SANSKRIT_WEEKDAYS = ['Ravivara', 'Somavara', 'Mangalavara', 'Budhavara', 'Guruvāra', 'Shukravara', 'Shanivara'];
+const HERO_MIN_HEIGHT = 720;
+const HERO_READABILITY_HEIGHT = 400;
+const HERO_SHLOKA_TOP_SPACE = 104;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -569,7 +572,7 @@ function HomeContent() {
       >
         <View
           style={{
-            minHeight: 572,
+            minHeight: HERO_MIN_HEIGHT,
             paddingHorizontal: 20,
             paddingTop: 18,
             paddingBottom: 34,
@@ -616,7 +619,7 @@ function HomeContent() {
               theme.background,
             ]}
             locations={[0, 0.35, 0.75, 1]}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 320 }}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_READABILITY_HEIGHT }}
           />
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -768,7 +771,7 @@ function HomeContent() {
             accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}. Tap to open, mark as read, and earn seva points`}
             onPress={() => navigate('/shloka')}
             style={{
-              marginTop: 42,
+              marginTop: HERO_SHLOKA_TOP_SPACE,
               marginHorizontal: -20,
               marginBottom: -34,
               borderTopLeftRadius: 28,
