@@ -46,13 +46,11 @@ type DailySadhana = {
 
 type EditState = {
   fullName: string;
-  tradition: Tradition;
   appLanguage: AppLanguage;
 };
 
 const INITIAL_EDIT: EditState = {
   fullName: '',
-  tradition: 'hindu',
   appLanguage: 'en',
 };
 
@@ -182,7 +180,6 @@ export default function ProfileScreen() {
     if (nextProfile) {
       setEditState({
         fullName: nextProfile.full_name,
-        tradition: nextProfile.tradition,
         appLanguage: nextProfile.app_language,
       });
     }
@@ -228,11 +225,17 @@ export default function ProfileScreen() {
     if (!profile) return;
     setSaving(true);
     try {
+      // tradition is locked at signup — never include it in updates, matching
+      // web's ProfileClient.tsx saveProfile() (`const { tradition: _locked,
+      // ... } = form`). Editing it post-onboarding would silently desync
+      // tradition-dependent personalization (sacred text selection, Nitya
+      // Karma step content, hero theme, festival/observance filtering)
+      // across the app without re-running any of the onboarding logic that
+      // normally sets those up.
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: editState.fullName.trim(),
-          tradition: editState.tradition,
           app_language: editState.appLanguage,
         })
         .eq('id', profile.id);
@@ -483,28 +486,53 @@ export default function ProfileScreen() {
               }}
             />
 
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {(Object.keys(TRADITION_META) as Tradition[]).map((tradition) => {
-                const active = editState.tradition === tradition;
-                return (
-                  <Pressable
-                    key={tradition}
-                    onPress={() => setEditState((current) => ({ ...current, tradition }))}
-                    style={{
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: active ? COLORS.brandGold : theme.border,
-                      backgroundColor: active ? COLORS.brandGold : theme.bg,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                    }}
-                  >
-                    <Text style={{ color: active ? COLORS.ink : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                      {TRADITION_META[tradition].emoji} {TRADITION_META[tradition].label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+            {/* Tradition — locked. Matches web's ProfileClient.tsx: chosen once
+                at onboarding, never editable afterward (drives sacred text
+                selection, Nitya Karma content, hero theme, and festival
+                filtering app-wide, so silently changing it post-onboarding
+                would desync personalization the rest of the app assumes is
+                stable). Read-only display, not a Pressable — no tap target
+                to avoid implying it can be changed here. */}
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Spiritual tradition</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    backgroundColor: theme.bg,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Feather name="lock" size={10} color={COLORS.brandGold} />
+                  <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Secured</Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.bg,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                }}
+                accessible
+                accessibilityLabel={`Spiritual tradition: ${TRADITION_META[profile.tradition].label}. Locked after onboarding.`}
+              >
+                <Text style={{ fontSize: 22 }}>{TRADITION_META[profile.tradition].emoji}</Text>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+                  {TRADITION_META[profile.tradition].label}
+                </Text>
+              </View>
             </View>
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
