@@ -143,6 +143,14 @@ export const COLORS = {
   // moment, not a partial sheet — named here per review feedback rather
   // than left as a raw literal.
   celebrationScrim: 'rgba(0,0,0,0.45)',
+
+  // Theme-independent white — for text/icons overlaid directly on a dark
+  // scrim atop a photographic image (e.g. app/live-darshan.tsx's "Live"
+  // badge and play-affordance dot on a YouTube thumbnail). Never swap for
+  // COLORS.creamBg here: that token shifts with the app's own light/dark
+  // theme, but a badge sitting on a photo needs to stay legible against the
+  // photo itself, not the surrounding screen.
+  onMediaWhite: '#FFFFFF',
 } as const;
 
 export const FONTS = {

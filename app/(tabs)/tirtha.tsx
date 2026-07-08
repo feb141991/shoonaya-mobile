@@ -14,6 +14,7 @@ import {
 import * as Location from 'expo-location';
 import MapView, { Marker, PROVIDER_DEFAULT, UrlTile, type Region } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import { TempleCard } from '@/components/tirtha/TempleCard';
 import { Screen } from '@/components/ui/Screen';
@@ -82,6 +83,7 @@ function formatDistance(center: { lat: number; lon: number }, temple: Temple) {
 }
 
 export default function TirthaScreen() {
+  const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -333,6 +335,43 @@ export default function TirthaScreen() {
       >
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Tirtha</Text>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Live Darshan"
+            onPress={() => router.push('/live-darshan')}
+            style={{
+              borderRadius: 18,
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: border,
+              paddingVertical: 14,
+              paddingHorizontal: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+              }}
+            >
+              <Feather name="radio" size={18} color={COLORS.brandGold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Live Darshan</Text>
+              <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                Watch sacred places live, on YouTube
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={dim} />
+          </Pressable>
 
           <View
             style={{
