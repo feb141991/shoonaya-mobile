@@ -95,6 +95,38 @@ export const COLORS = {
   selectionWellLight: 'rgba(255,255,255,0.60)',
   selectionWellDark: 'rgba(255,248,225,0.06)',
   selectionWellSelected: 'rgba(197,160,89,0.16)',
+
+  // ── PWA brand-primary parity (src/app/globals.css :root / :root[data-theme='light']) ──
+  // PWA does NOT use one static brand color across both themes — its actual
+  // light-mode primary is a deeper terracotta-orange (#D88A1C), while
+  // #C5A059 (the value `brandGold` above has always held) is specifically
+  // its DARK-mode primary. `brandGold` is left unchanged here (still
+  // #C5A059) so no existing dark-mode-tuned screen shifts color by surprise;
+  // these two new tokens are the theme-aware pair for screens that adopt
+  // them going forward — see Home's header/pill/hero-gradient rebuild for
+  // the first real usage. A full-repo sweep replacing every bare
+  // `COLORS.brandGold` reference with this theme-aware pair is a real,
+  // tracked follow-up (flagged in the session report), not done blindly
+  // here without visual QA across every screen that already ships with it.
+  brandGoldLight: '#D88A1C',
+  brandGoldDark: '#C5A059',
+  brandPrimaryStrongLight: '#9F6314',
+  brandPrimaryStrongDark: '#D4784A',
+
+  // ── PWA divine-hero gradient overlay (src/app/globals.css .divine-hero-overlay
+  // / .divine-hero-readability) — ported for expo-linear-gradient. Two
+  // layers: a top-anchored darkening scrim (keeps header icons/greeting
+  // legible over a bright image) that fades out by 80% down, and a
+  // bottom-anchored warm blend that dissolves the image into the page/
+  // shloka-panel background instead of ending in a hard edge.
+  heroScrimTopLight: 'rgba(0,0,0,0.65)',
+  heroScrimMidLight: 'rgba(0,0,0,0.15)',
+  heroScrimTopDark: 'rgba(0,0,0,0.85)',
+  heroScrimMidDark: 'rgba(0,0,0,0.35)',
+  heroReadabilitySoftLight: 'rgba(250,246,239,0.30)',
+  heroReadabilityLight: 'rgba(250,246,239,0.75)',
+  heroReadabilitySoftDark: 'rgba(28,28,26,0.30)',
+  heroReadabilityDark: 'rgba(28,28,26,0.75)',
 } as const;
 
 export const FONTS = {
@@ -184,20 +216,38 @@ export const SHADOWS = {
 // @expo-google-fonts/cormorant-garamond and .../inter); pairing a real
 // Devanagari face is a follow-up risk, not solved in this slice, since it
 // would require a new dependency.
+//
+// Values below are aligned to PWA's own --type-* scale (src/app/globals.css)
+// rather than invented sizes — this constant had ZERO call sites anywhere
+// in the app before this pass (grepped repo-wide), so realigning it here is
+// a zero-regression-risk change; every existing screen still uses its own
+// ad-hoc inline fontSize, unaffected by this file. `hero`/`screenTitle`/
+// `cardHeading`/`metric`/`chip`/`micro` are new keys added to close the
+// direct 1:1 gap against PWA's scale (display/hero/screen-title/
+// card-heading/sanskrit/metric/body/section-label/card-label/chip/tab/
+// micro) — `display`/`title`/`section`/`body`/`label`/`caption`/`shloka`
+// keep their existing names for continuity with the earlier design-system
+// slice, mapped onto the closest PWA equivalent's px value.
 export const TYPE = {
-  display: { fontFamily: FONTS.serifBold, fontSize: 34, lineHeight: 40 },
-  title: { fontFamily: FONTS.serifBold, fontSize: 26, lineHeight: 32 },
+  display: { fontFamily: FONTS.serifBold, fontSize: 36, lineHeight: 42 },   // PWA --type-display: 36px
+  hero: { fontFamily: FONTS.serifBold, fontSize: 28, lineHeight: 34 },      // PWA --type-hero: 28px (Home greeting H1)
+  title: { fontFamily: FONTS.serifBold, fontSize: 23, lineHeight: 29 },     // PWA --type-screen-title: 23px
+  screenTitle: { fontFamily: FONTS.serifBold, fontSize: 23, lineHeight: 29 },
+  cardHeading: { fontFamily: FONTS.serifBold, fontSize: 17, lineHeight: 22 }, // PWA --type-card-heading: 17px
+  metric: { fontFamily: FONTS.serifBold, fontSize: 24, lineHeight: 28 },    // PWA --type-metric: 24px
   section: {
     fontFamily: FONTS.sansSemiBold,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,                                                          // PWA --type-section-label: 14px
+    lineHeight: 18,
     letterSpacing: 1.1,
     textTransform: 'uppercase' as const,
   },
-  body: { fontFamily: FONTS.sans, fontSize: 15, lineHeight: 22 },
-  label: { fontFamily: FONTS.sansSemiBold, fontSize: 13, lineHeight: 18 },
-  caption: { fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 },
-  shloka: { fontFamily: FONTS.serif, fontSize: 21, lineHeight: 32, letterSpacing: 0.2 },
+  body: { fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21 },           // PWA --type-body: 14px
+  label: { fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 17 }, // PWA --type-card-label: 12.5px
+  caption: { fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 },        // PWA --type-micro: 12px
+  chip: { fontFamily: FONTS.sansSemiBold, fontSize: 11, lineHeight: 14 },   // PWA --type-chip / --type-tab: 11px
+  micro: { fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16 },
+  shloka: { fontFamily: FONTS.serif, fontSize: 21, lineHeight: 32, letterSpacing: 0.2 }, // PWA --type-sanskrit: 18px, kept larger deliberately for native's airier single-shloka-per-screen treatment
 } as const;
 
 // Minimum touch target per accessibility guidance (WCAG 2.5.5 / Material
