@@ -27,6 +27,12 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/panchang')) return '/panchang';
   if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/quiz')) return '/quiz';
+  // A specific hero (Home's dharmVeer.href, or a shared/deep link) — routes
+  // to the dynamic detail screen at app/dharm-veer/[id].tsx, which fetches
+  // the same canonical roster the id was drawn from and renders that exact
+  // hero (never a substitute). Bare `/dharm-veer` (no id segment) still
+  // means the daily swipe deck at app/dharm-veer.tsx, unchanged.
+  if (pathname.startsWith('/dharm-veer/')) return path as Href;
   if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
   if (pathname.startsWith('/nitya-karma')) return '/nitya-karma';
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';

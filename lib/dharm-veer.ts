@@ -583,3 +583,29 @@ export function selectDharmVeerOfTheDayFromRoster(
 export function getDharmVeerOfTheDay(userTradition?: string | null): DharmVeer {
   return selectDharmVeerOfTheDayFromRoster(DHARM_VEERS, userTradition);
 }
+
+/**
+ * Generates the same illustrated poster (SVG data URI) for a hero used by
+ * both the daily swipe deck (`app/dharm-veer.tsx`) and a specific hero's
+ * detail screen (`app/dharm-veer/[id].tsx`) — extracted here so both screens
+ * render the identical "hero-card" visual for the same hero, instead of two
+ * copies of this markup drifting apart.
+ */
+export function buildHeroPoster(hero: DharmVeer) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="1200" viewBox="0 0 960 1200">
+      <rect width="960" height="1200" fill="#FDF6E3" />
+      <rect x="36" y="36" width="888" height="1128" rx="48" fill="#FFF9F0" stroke="#E6D8BC" stroke-width="3" />
+      <text x="480" y="320" text-anchor="middle" font-size="180">${hero.emoji}</text>
+      <text x="480" y="520" text-anchor="middle" font-size="56" font-family="Georgia" fill="#1A0F00">${hero.name}</text>
+      <text x="480" y="596" text-anchor="middle" font-size="30" font-family="Georgia" fill="#7A6A53">${hero.era}</text>
+      <foreignObject x="100" y="670" width="760" height="300">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Georgia; font-size: 26px; color: #1A0F00; line-height: 1.45; text-align: center;">
+          ${hero.tagline}
+        </div>
+      </foreignObject>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
