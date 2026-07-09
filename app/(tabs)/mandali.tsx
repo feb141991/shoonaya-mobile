@@ -10,8 +10,10 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
@@ -52,6 +54,13 @@ type ProfileContext = {
   latitude: number | null;
   longitude: number | null;
 };
+
+function getInitials(name: string): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 // Native Mandali screen — full parity pass against PWA's real
 // implementation (src/app/(main)/mandali/*, src/lib/api/mandali.ts,
@@ -378,41 +387,142 @@ export default function MandaliScreen() {
     const isUpvoted = upvotedIds.includes(post.id);
 
     return (
-      <Card key={post.id} style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>{post.profiles?.full_name ?? 'Seeker'}</Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>{new Date(post.created_at).toLocaleString()}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{post.type.toUpperCase()}</Text>
-            {!isOwnPost && (
-              <Pressable onPress={() => showPostOptions(post)} style={{ padding: 4 }} hitSlop={10}>
-                <Feather name="more-vertical" size={18} color={theme.dim} />
-              </Pressable>
-            )}
-          </View>
-        </View>
-
-        <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{post.content}</Text>
-
-        {post.type === 'event' ? (
-          <View style={{ gap: 2 }}>
-            {post.event_date ? (
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
-                📅 {new Date(post.event_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+      <Card
+        key={post.id}
+        style={{
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+          gap: 12,
+          padding: 16,
+          borderRadius: 16, // rounded-2xl
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 3,
+          elevation: 2, // Clay aesthetic
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+          {/* Avatar rendering */}
+          {post.profiles?.avatar_url ? (
+            <Image
+              source={{ uri: post.profiles.avatar_url }}
+              style={{ width: 36, height: 36, borderRadius: 18 }}
+              contentFit="cover"
+            />
+          ) : (
+            <LinearGradient
+              colors={[COLORS.brandGold, '#D4A646']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                {getInitials(post.profiles?.full_name ?? post.profiles?.username ?? '?')}
               </Text>
-            ) : null}
-            {post.event_location ? <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>📍 {post.event_location}</Text> : null}
-            <EventRsvpBar postId={post.id} rsvps={postRsvps} userId={profile?.userId ?? ''} brand={theme.brand} border={theme.border} surface={theme.surface} dim={theme.dim} onRsvp={handleRsvp} />
-          </View>
-        ) : null}
+            </LinearGradient>
+          )}
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
-          <Pressable onPress={() => void toggleUpvote(post.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Feather name="heart" size={16} color={isUpvoted ? theme.brand : theme.dim} />
-            <Text style={{ color: isUpvoted ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{post.upvotes}</Text>
-          </Pressable>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+                {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
+              </Text>
+              <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
+                {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+              </Text>
+              <View style={{ flex: 1 }} />
+              <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+                {post.type.toUpperCase()}
+              </Text>
+              {!isOwnPost && (
+                <Pressable onPress={() => showPostOptions(post)} style={{ paddingLeft: 4 }} hitSlop={10}>
+                  <Feather name="more-horizontal" size={16} color={theme.dim} />
+                </Pressable>
+              )}
+            </View>
+
+            <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>
+              {post.content}
+            </Text>
+
+            {post.type === 'event' && post.event_date ? (
+              <View
+                style={{
+                  marginTop: 10,
+                  backgroundColor: 'rgba(197,160,89,0.07)',
+                  borderColor: 'rgba(197,160,89,0.15)',
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  gap: 4,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>
+                  📅 {new Date(post.event_date).toLocaleDateString('en-IN', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                  {post.event_location ? ` • 📍 ${post.event_location}` : ''}
+                </Text>
+                <EventRsvpBar
+                  postId={post.id}
+                  rsvps={postRsvps}
+                  userId={profile?.userId ?? ''}
+                  brand={theme.brand}
+                  border={theme.border}
+                  surface={theme.surface}
+                  dim={theme.dim}
+                  onRsvp={handleRsvp}
+                />
+              </View>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 12 }}>
+              <Pressable
+                onPress={() => void toggleUpvote(post.id)}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              >
+                <Ionicons
+                  name={isUpvoted ? 'heart' : 'heart-outline'}
+                  size={14}
+                  color={isUpvoted ? '#f43f5e' : theme.dim}
+                />
+                {post.upvotes > 0 && (
+                  <Text
+                    style={{
+                      color: isUpvoted ? '#f43f5e' : theme.dim,
+                      fontFamily: FONTS.sansSemiBold,
+                      fontSize: 12,
+                    }}
+                  >
+                    {post.upvotes}
+                  </Text>
+                )}
+              </Pressable>
+              
+              <Pressable
+                onPress={() => setExpandedPostId((current) => (current === post.id ? null : post.id))}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              >
+                <Feather name="message-square" size={13} color={theme.dim} />
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
+                  {post.comment_count > 0 ? post.comment_count : 'Comment'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
 
         <PostComments

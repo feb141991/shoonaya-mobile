@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import Svg, { Circle, Line } from 'react-native-svg';
+import Svg, { Circle, Line, Defs, RadialGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
 import { Screen } from '@/components/ui/Screen';
@@ -40,12 +40,12 @@ type ToastState = {
 };
 
 const MANTRAS = [
-  { key: 'om_namah_shivaya', label: 'Om Namah Shivaya' },
-  { key: 'hare_krishna', label: 'Hare Krishna' },
-  { key: 'gayatri', label: 'Gayatri Mantra' },
-  { key: 'waheguru', label: 'Waheguru' },
-  { key: 'om_mani_padme_hum', label: 'Om Mani Padme Hum' },
-  { key: 'namokar', label: 'Namokar Mantra' },
+  { key: 'om_namah_shivaya', label: 'Om Namah Shivaya', devanagari: 'ॐ नमः शिवाय', meaning: 'I bow to Shiva, the supreme reality and the inner self.' },
+  { key: 'hare_krishna', label: 'Hare Krishna', devanagari: 'हरे कृष्ण महामंत्र', meaning: 'O Lord, O Energy of the Lord, please engage me in Your loving service.' },
+  { key: 'gayatri', label: 'Gayatri Mantra', devanagari: 'गायत्री मंत्र', meaning: 'We meditate on the glory of the Creator; who is worthy of Worship.' },
+  { key: 'waheguru', label: 'Waheguru', devanagari: 'ਵਾਹਿਗੁਰੂ', meaning: 'Wondrous Enlightener.' },
+  { key: 'om_mani_padme_hum', label: 'Om Mani Padme Hum', devanagari: 'ཨོཾ་མ་ཎི་པདྨེ་ཧཱུྃ', meaning: 'The jewel is in the lotus.' },
+  { key: 'namokar', label: 'Namokar Mantra', devanagari: 'णमोकार मंत्र', meaning: 'I bow to the Arihants, Siddhas, Acharyas, Upadhyayas, and all Sadhus.' },
 ] as const;
 
 const HISTORY_LIMIT = 12;
@@ -77,6 +77,11 @@ export default function JapaScreen() {
   const [completionVisible, setCompletionVisible] = useState(false);
   const [mantraAudioEnabled, setMantraAudioEnabled] = useState(false);
   const [mantraAudioLoading, setMantraAudioLoading] = useState(false);
+
+  const [targetRounds, setTargetRounds] = useState(1);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [durationSecs, setDurationSecs] = useState(0);
+
 
   const malaSkin = useMemo(() => getMalaSkin(activeSymbolId), [activeSymbolId]);
   const mantra = MANTRAS[mantraIndex] ?? MANTRAS[0];
@@ -193,6 +198,11 @@ export default function JapaScreen() {
     const nextRounds = completedRounds + 1;
     setCompletedRounds(nextRounds);
     setCount(0);
+    
+    if (sessionStartTime) {
+      setDurationSecs(Math.floor((Date.now() - sessionStartTime) / 1000));
+    }
+    
     setToast({ visible: true, message: '108 complete' });
     setCompletionVisible(true);
 
@@ -234,6 +244,10 @@ export default function JapaScreen() {
 
   const increment = useCallback(async () => {
     if (saving) return;
+    
+    if (count === 0 && completedRounds === 0 && sessionStartTime === null) {
+      setSessionStartTime(Date.now());
+    }
 
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -264,16 +278,20 @@ export default function JapaScreen() {
       const x = CENTER + Math.cos(angle) * RADIUS;
       const y = CENTER + Math.sin(angle) * RADIUS;
       const isActive = index === activeIndex;
+      const isSumeru = index === 0;
+
+      const r = isSumeru ? 10.5 : 7.5;
+      const gradientId = `grad-${isActive ? 'active' : 'inactive'}`;
 
       return (
         <Circle
           key={`bead-${index}`}
           cx={x}
           cy={y}
-          r={index === 0 ? 9 : 7}
-          fill={isActive ? COLORS.brandGold : malaSkin.beadColor}
+          r={r}
+          fill={`url(#${gradientId})`}
           stroke={isActive ? COLORS.brandGold : malaSkin.beadBorder}
-          strokeWidth={1.5}
+          strokeWidth={isSumeru ? 1.5 : 0.5}
         />
       );
     });
@@ -311,6 +329,14 @@ export default function JapaScreen() {
           <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
         ) : (
           <>
+            <View style={{ alignItems: 'center', marginBottom: 6, marginTop: 4 }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 32, color: COLORS.brandGold }}>
+                {mantra.devanagari}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 13, color: text, marginTop: 4 }}>
+                {mantra.label}
+              </Text>
+            </View>
             <Pressable
               onPress={() => { void increment(); }}
               style={{
@@ -324,6 +350,17 @@ export default function JapaScreen() {
               }}
             >
               <Svg width={SVG_SIZE} height={SVG_SIZE}>
+                <Defs>
+                  <RadialGradient id="grad-inactive" cx="30%" cy="30%" r="70%">
+                    <Stop offset="0%" stopColor={malaSkin.beadColor} stopOpacity="1" />
+                    <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+                  </RadialGradient>
+                  <RadialGradient id="grad-active" cx="30%" cy="30%" r="70%">
+                    <Stop offset="0%" stopColor="#FFF" stopOpacity="1" />
+                    <Stop offset="30%" stopColor={COLORS.brandGold} stopOpacity="1" />
+                    <Stop offset="100%" stopColor="#8A5818" stopOpacity="1" />
+                  </RadialGradient>
+                </Defs>
                 <Line
                   x1={CENTER}
                   y1={CENTER}
@@ -363,6 +400,30 @@ export default function JapaScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
                 CONTROLS
               </Text>
+
+              {/* Target Rounds */}
+              <View style={{ gap: 10, marginBottom: 4 }}>
+                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: dim }}>TARGET ROUNDS</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {[1, 3, 5, 11, 21].map(n => (
+                    <Pressable
+                      key={n}
+                      onPress={() => setTargetRounds(n)}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 10,
+                        alignItems: 'center',
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: targetRounds === n ? COLORS.brandGold : border,
+                        backgroundColor: targetRounds === n ? (isDark ? 'rgba(197, 160, 89, 0.15)' : 'rgba(197, 160, 89, 0.12)') : cardBg
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: targetRounds === n ? COLORS.brandGold : text }}>{n}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
 
               {/* Mantra audio toggle */}
               <Pressable
@@ -581,23 +642,55 @@ export default function JapaScreen() {
             left: 0,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.18)',
+            backgroundColor: 'rgba(0,0,0,0.65)',
           }}
         >
           <View
             style={{
+              width: '85%',
               borderRadius: 28,
               backgroundColor: cardBg,
               borderWidth: 1,
               borderColor: COLORS.brandGold,
               paddingHorizontal: 28,
-              paddingVertical: 24,
+              paddingVertical: 32,
               alignItems: 'center',
-              gap: 8,
+              gap: 16,
             }}
           >
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: COLORS.brandGold }}>108</Text>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Mala complete</Text>
+            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 44, color: COLORS.brandGold }}>
+              {tradition === 'sikh' ? 'ੴ' : tradition === 'buddhist' ? '☸' : tradition === 'jain' ? '☮' : 'ॐ'}
+            </Text>
+            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
+              {completedRounds >= targetRounds ? 'Practice Complete' : 'Mala Complete'}
+            </Text>
+
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
+              <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', borderRadius: 16, padding: 12, alignItems: 'center' }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: dim, textTransform: 'uppercase' }}>Rounds</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text, marginTop: 4 }}>{completedRounds}</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', borderRadius: 16, padding: 12, alignItems: 'center' }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: dim, textTransform: 'uppercase' }}>Duration</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text, marginTop: 4 }}>
+                  {Math.floor(durationSecs / 60)}m {durationSecs % 60}s
+                </Text>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={() => setCompletionVisible(false)}
+              style={{
+                marginTop: 12,
+                width: '100%',
+                borderRadius: 16,
+                backgroundColor: COLORS.brandGold,
+                paddingVertical: 14,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: bg }}>Continue</Text>
+            </Pressable>
           </View>
         </View>
       ) : null}

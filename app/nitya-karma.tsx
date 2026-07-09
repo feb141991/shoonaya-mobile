@@ -7,65 +7,94 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
+import { getAshramaMeta, getAshramaDuties, type LifeStage, type GenderContext } from '@/lib/ashrama';
 
-// Native Nitya Karma — the first native destination for Home's "Nitya Karma"
-// practice row (previously silently fell back to /panchang, see
-// mapHrefToRoute in app/(tabs)/index.tsx). Minimal, contract-backed screen:
-// morning sequence only, matching /api/native/nitya-karma's own scope note
-// (web's midday/evening/night sections are off by default too). No local
-// business logic — step content, tradition labels, and streak all come from
-// the API; this screen only renders and marks steps done.
+type Phase = 'night' | 'brahma' | 'sunrise' | 'morning' | 'afternoon' | 'evening' | 'dusk';
 
-type NityaStep = {
-  id: string;
+type PhaseConfig = {
+  grad: [string, string, string];
+  accentColor: string;
+  textColor: string;
   label: string;
-  icon: React.ComponentProps<typeof Feather>['name'];
-  description: string;
-  minutes: number;
-  done: boolean;
+  emoji: string;
 };
 
-type NitySummary = {
-  greeting: string;
-  allDoneMessage: string;
-  steps: NityaStep[];
-  completedCount: number;
-  total: number;
-  allDone: boolean;
-  streak: { current: number; longest: number };
+const PHASES: Record<Phase, PhaseConfig> = {
+  night: {
+    grad: ['#080614', '#110d28', '#0b0820'],
+    accentColor: '#a394e0',
+    textColor: '#e8e0ff',
+    label: 'Night Sadhana',
+    emoji: '🌙',
+  },
+  brahma: {
+    grad: ['#190830', '#3a1058', '#200828'],
+    accentColor: '#d4a8f0',
+    textColor: '#f5eeff',
+    label: 'Brahma Muhurta',
+    emoji: '✨',
+  },
+  sunrise: {
+    grad: ['#3b1005', '#c85010', '#f09820'],
+    accentColor: '#fcd068',
+    textColor: '#fff8e8',
+    label: 'Sacred Sunrise',
+    emoji: '🌅',
+  },
+  morning: {
+    grad: ['#7a2e08', '#d46810', '#f0b020'],
+    accentColor: '#fce070',
+    textColor: '#fff8e0',
+    label: 'Morning Sadhana',
+    emoji: '🌞',
+  },
+  afternoon: {
+    grad: ['#7a3800', '#c87408', '#e8a418'],
+    accentColor: '#fdd060',
+    textColor: '#fff5d0',
+    label: 'Afternoon Practice',
+    emoji: '☀️',
+  },
+  evening: {
+    grad: ['#5c0f0f', '#a42010', '#c84018'],
+    accentColor: '#fca060',
+    textColor: '#ffe8d8',
+    label: 'Evening Sandhya',
+    emoji: '🌇',
+  },
+  dusk: {
+    grad: ['#130620', '#28103a', '#0f0818'],
+    accentColor: '#c0a0e8',
+    textColor: '#f0e8ff',
+    label: 'Dusk Contemplation',
+    emoji: '🌆',
+  },
 };
 
-const EMPTY_STATE: NitySummary = {
-  greeting: 'Suprabhat 🌅',
-  allDoneMessage: 'Your morning sadhana is complete.',
-  steps: [],
-  completedCount: 0,
-  total: 0,
-  allDone: false,
-  streak: { current: 0, longest: 0 },
-};
+function getPhase(hour: number): Phase {
+  if (hour >= 4 && hour < 6) return 'brahma';
+  if (hour >= 6 && hour < 8) return 'sunrise';
+  if (hour >= 8 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 16) return 'afternoon';
+  if (hour >= 16 && hour < 19) return 'evening';
+  if (hour >= 19 && hour < 21) return 'dusk';
+  return 'night';
+}
 
-export default function NityaKarmaScreen() {
+export default function NityaKarmaHubScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
-  const [state, setState] = useState<NitySummary>(EMPTY_STATE);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const [busyStepId, setBusyStepId] = useState<string | null>(null);
-  const [localKey, setLocalKey] = useState<string | null>(null);
 
   const theme = useMemo(
     () => ({
@@ -78,290 +107,282 @@ export default function NityaKarmaScreen() {
     [isDark]
   );
 
-  const loadNitya = useCallback(async () => {
-    setLoadError(false);
+  // Dynamic Phase based on time
+  const [currentHour, setCurrentHour] = useState(() => new Date().getHours());
+  const phase = useMemo(() => getPhase(currentHour), [currentHour]);
+  const phaseConf = PHASES[phase];
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
-    }
+  // Dincharya stats
+  const [dincharyaStats, setDincharyaStats] = useState({
+    completed: 0,
+    total: 0,
+    greeting: 'Suprabhat 🌅',
+    streak: 0,
+  });
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('timezone')
-      .eq('id', user.id)
-      .maybeSingle();
+  // Ashrama stats
+  const [ashramaStats, setAshramaStats] = useState({
+    stage: null as string | null,
+    tradition: 'hindu',
+    genderCtx: null as GenderContext | null,
+    dutiesCount: 0,
+    completedDuties: 0,
+  });
 
-    const today = spiritualDate(profile?.timezone ?? 'UTC');
-    const storageKey = `nitya_done_${user.id}_${today}`;
-    setLocalKey(storageKey);
+  const [loading, setLoading] = useState(true);
 
-    const rawLocal = await AsyncStorage.getItem(storageKey);
-    const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
-
-    const response = await apiFetch('/api/native/nitya-karma');
-
-    if (response.status === 401) {
-      router.replace('/(auth)/login');
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Could not load Nitya Karma');
-    }
-
-    const payload = (await response.json()) as NitySummary;
-    const mergedSteps = payload.steps.map(step => ({
-      ...step,
-      done: step.done || localDoneIds.has(step.id),
-    }));
-    const completedCount = mergedSteps.filter(s => s.done).length;
-
-    setState({
-      ...EMPTY_STATE,
-      ...payload,
-      steps: mergedSteps,
-      completedCount,
-      allDone: completedCount === mergedSteps.length
-    });
-  }, [router]);
-
+  // Periodically check/update the hour to keep sky dynamic
   useEffect(() => {
-    const run = async () => {
-      setLoading(true);
-      try {
-        await loadNitya();
-      } catch {
-        setLoadError(true);
-      } finally {
-        setLoading(false);
+    const interval = setInterval(() => {
+      setCurrentHour(new Date().getHours());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadHubData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace('/(auth)/login');
+        return;
       }
-    };
-    void run();
-  }, [loadNitya]);
 
-  const markStep = useCallback(
-    async (step: NityaStep) => {
-      if (step.done || busyStepId) return;
+      // 1. Fetch Dincharya from backend API
+      const nityaResp = await apiFetch('/api/native/nitya-karma');
+      let completedCount = 0;
+      let totalSteps = 0;
+      let greetingText = 'Suprabhat 🌅';
+      let currentStreak = 0;
 
-      setBusyStepId(step.id);
-      try {
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      } catch {}
+      if (nityaResp.ok) {
+        const payload = await nityaResp.json();
+        totalSteps = payload.total ?? 0;
+        greetingText = payload.greeting ?? 'Suprabhat 🌅';
+        currentStreak = payload.streak?.current ?? 0;
 
-      // Optimistic update — mirrors NityaKarmaClient.tsx's own instant-mark
-      // behaviour rather than waiting on the round trip.
-      setState((prev) => {
-        const steps = prev.steps.map((s) => (s.id === step.id ? { ...s, done: true } : s));
-        const completedCount = steps.filter((s) => s.done).length;
-        return { ...prev, steps, completedCount, allDone: completedCount === steps.length };
+        // Merge with local storage done ticks to get correct count
+        const today = spiritualDate(payload.timezone ?? 'UTC');
+        const storageKey = `nitya_done_${user.id}_${today}`;
+        const rawLocal = await AsyncStorage.getItem(storageKey);
+        const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
+        const mergedSteps = payload.steps?.map((step: any) => ({
+          ...step,
+          done: step.done || localDoneIds.has(step.id),
+        })) ?? [];
+        completedCount = mergedSteps.filter((s: any) => s.done).length;
+      }
+
+      setDincharyaStats({
+        completed: completedCount,
+        total: totalSteps,
+        greeting: greetingText,
+        streak: currentStreak,
       });
 
-      if (localKey) {
-        try {
-          const rawLocal = await AsyncStorage.getItem(localKey);
-          const existing = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
-          existing.add(step.id);
-          await AsyncStorage.setItem(localKey, JSON.stringify([...existing]));
-        } catch {}
+      // 2. Fetch Profile to get Ashrama
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('life_stage, gender_context, tradition, timezone')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const tradition = profile?.tradition ?? 'hindu';
+      const lifeStage = profile?.life_stage as LifeStage | null;
+      const genderCtx = profile?.gender_context ?? null;
+
+      let dutiesCount = 0;
+      let completedDuties = 0;
+
+      if (lifeStage) {
+        const duties = getAshramaDuties(tradition, lifeStage, genderCtx);
+        dutiesCount = duties.length;
+
+        const today = spiritualDate(profile?.timezone ?? 'UTC');
+        const ashramaKey = `ashrama_checks_${user.id}_${today}`;
+        const rawChecks = await AsyncStorage.getItem(ashramaKey);
+        const checkedIds = new Set<string>(rawChecks ? JSON.parse(rawChecks) : []);
+        completedDuties = duties.filter(d => checkedIds.has(d.id)).length;
       }
 
-      try {
-        const response = await apiFetch('/api/native/nitya-karma', {
-          method: 'POST',
-          body: JSON.stringify({ step_id: step.id }),
-        });
+      setAshramaStats({
+        stage: lifeStage,
+        tradition,
+        genderCtx,
+        dutiesCount,
+        completedDuties,
+      });
 
-        if (!response.ok) {
-          throw new Error('mark failed');
-        }
+    } catch (err) {
+      console.warn('Failed to load Hub data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
 
-        try {
-          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {}
-      } catch {
-        // Revert the optimistic update on failure.
-        setState((prev) => {
-          const steps = prev.steps.map((s) => (s.id === step.id ? { ...s, done: false } : s));
-          const completedCount = steps.filter((s) => s.done).length;
-          return { ...prev, steps, completedCount, allDone: false };
-        });
-      } finally {
-        setBusyStepId(null);
-      }
-    },
-    [busyStepId, localKey]
+  useFocusEffect(
+    useCallback(() => {
+      loadHubData();
+    }, [loadHubData])
   );
 
-  if (loading) {
-    return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
-        </View>
-      </Screen>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
-        <View style={{ flex: 1, justifyContent: 'center' }}>
-          <EmptyState
-            icon="sunrise"
-            title="Could not load Nitya Karma"
-            subtitle="Check your connection and try again."
-            ctaLabel="Retry"
-            onCta={() => {
-              setLoading(true);
-              loadNitya()
-                .catch(() => setLoadError(true))
-                .finally(() => setLoading(false));
-            }}
-          />
-        </View>
-      </Screen>
-    );
-  }
+  const progressPct = dincharyaStats.total > 0 ? (dincharyaStats.completed / dincharyaStats.total) * 100 : 0;
+  const ashramaMeta = ashramaStats.stage
+    ? getAshramaMeta(ashramaStats.tradition, ashramaStats.stage as LifeStage, ashramaStats.genderCtx)
+    : null;
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
-
-        <View>
-          <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Nitya Karma</Text>
-          <Text style={{ marginTop: 4, color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
-            {state.greeting}
-          </Text>
-        </View>
-
-        {state.streak.current > 0 ? (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Feather name="award" size={20} color={COLORS.brandGold} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
-                {state.streak.current}-day streak
-              </Text>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
-                Longest: {state.streak.longest} days
-              </Text>
-            </View>
-          </Card>
-        ) : null}
-
-        {state.allDone && state.total > 0 ? (
-          <Card
+      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        {/* Dynamic Atmospheric Sky Header */}
+        <LinearGradient
+          colors={phaseConf.grad}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={{
+            paddingTop: 36,
+            paddingBottom: 28,
+            paddingHorizontal: 20,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            gap: 16,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Back button */}
+          <Pressable
+            onPress={() => router.back()}
             style={{
-              backgroundColor: COLORS.successBg,
-              borderColor: COLORS.successBorder,
-              flexDirection: 'row',
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: 'rgba(255,255,255,0.12)',
               alignItems: 'center',
-              gap: 12,
+              justifyContent: 'center',
+              alignSelf: 'flex-start',
             }}
           >
-            <Feather name="check-circle" size={20} color={COLORS.success} />
-            <Text style={{ flex: 1, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 19 }}>
-              {state.allDoneMessage}
-            </Text>
-          </Card>
-        ) : (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
-              {state.completedCount} of {state.total} complete
-            </Text>
-            <View
-              style={{
-                marginTop: 10,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: isDark ? 'rgba(197,160,89,0.16)' : 'rgba(197,160,89,0.14)',
-                overflow: 'hidden',
-              }}
-            >
-              <View
-                style={{
-                  width: `${state.total > 0 ? (state.completedCount / state.total) * 100 : 0}%`,
-                  height: '100%',
-                  backgroundColor: COLORS.brandGold,
-                  borderRadius: 3,
-                }}
-              />
-            </View>
-          </Card>
-        )}
+            <Feather name="chevron-left" size={20} color={phaseConf.textColor} />
+          </Pressable>
 
-        <View style={{ gap: 10 }}>
-          {state.steps.map((step) => {
-            const isBusy = busyStepId === step.id;
-            return (
-              <Pressable
-                key={step.id}
-                accessibilityRole="button"
-                accessibilityLabel={`${step.label}, ${step.done ? 'done' : 'mark as done'}`}
-                disabled={step.done || isBusy}
-                onPress={() => markStep(step)}
+          <View style={{ gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 24 }}>{phaseConf.emoji}</Text>
+              <Text
                 style={{
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: step.done ? COLORS.successBorder : theme.border,
-                  backgroundColor: step.done ? COLORS.successBg : theme.card,
-                  padding: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  minHeight: 64,
+                  color: phaseConf.accentColor,
+                  fontFamily: FONTS.sansSemiBold,
+                  fontSize: 12,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1.5,
                 }}
               >
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 14,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(255,248,225,0.06)' : 'rgba(255,255,255,0.6)',
-                  }}
+                {phaseConf.label}
+              </Text>
+            </View>
+            <Text style={{ color: phaseConf.textColor, fontFamily: FONTS.serifBold, fontSize: 32, lineHeight: 38 }}>
+              {dincharyaStats.greeting}
+            </Text>
+            {dincharyaStats.streak > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <Feather name="award" size={14} color={phaseConf.accentColor} />
+                <Text style={{ color: phaseConf.textColor, fontFamily: FONTS.sansSemiBold, fontSize: 13, opacity: 0.9 }}>
+                  {dincharyaStats.streak}-day streak
+                </Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+
+        <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 16 }}>
+          {loading ? (
+            <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
+          ) : (
+            <View style={{ gap: 14 }}>
+              {/* Card 1: Dincharya checklist */}
+              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+                <Pressable
+                  onPress={() => router.push('/nitya-dincharya')}
+                  style={{ padding: 18, gap: 12 }}
                 >
-                  <Feather name={step.icon} size={18} color={step.done ? COLORS.success : COLORS.brandGold} />
-                </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(197,160,89,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 22 }}>🌅</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Dincharya</Text>
+                        <View style={{ backgroundColor: 'rgba(34,197,94,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
+                          <Text style={{ color: 'rgb(34,197,94)', fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>FREE</Text>
+                        </View>
+                      </View>
+                      <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
+                        Daily morning sequence of 7 steps
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color={theme.dim} />
+                  </View>
 
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                    {step.label}
-                  </Text>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }} numberOfLines={2}>
-                    {step.description}
-                    {step.minutes > 0 ? ` · ${step.minutes} min` : ''}
-                  </Text>
-                </View>
+                  <View style={{ gap: 4 }}>
+                    <View style={{ height: 6, borderRadius: 3, backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.08)', overflow: 'hidden' }}>
+                      <View style={{ width: `${progressPct}%`, height: '100%', backgroundColor: COLORS.brandGold }} />
+                    </View>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textAlign: 'right' }}>
+                      {dincharyaStats.completed} of {dincharyaStats.total} completed
+                    </Text>
+                  </View>
+                </Pressable>
+              </Card>
 
-                {isBusy ? (
-                  <ActivityIndicator size="small" color={COLORS.brandGold} />
-                ) : step.done ? (
-                  <Feather name="check-circle" size={22} color={COLORS.success} />
-                ) : (
-                  <View
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 11,
-                      borderWidth: 1.5,
-                      borderColor: theme.dim,
-                    }}
-                  />
-                )}
-              </Pressable>
-            );
-          })}
+              {/* Card 2: Sadhana Patha */}
+              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+                <Pressable
+                  onPress={() => router.push('/nitya-plans')}
+                  style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                >
+                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(197,160,89,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 22 }}>📿</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Sadhana Patha</Text>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
+                      7 & 21-day guided paths and structured practices
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color={theme.dim} />
+                </Pressable>
+              </Card>
+
+              {/* Card 3: Ashrama Dharma */}
+              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+                <Pressable
+                  onPress={() => router.push('/nitya-ashrama')}
+                  style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                >
+                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: ashramaMeta ? `${ashramaMeta.accent}15` : 'rgba(197,160,89,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 22 }}>🧘</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Ashrama Dharma</Text>
+                      {!ashramaStats.stage && (
+                        <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
+                          <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Set up</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
+                      {ashramaMeta
+                        ? `${ashramaMeta.label} duties · ${ashramaStats.completedDuties}/${ashramaStats.dutiesCount} reflected today`
+                        : 'Life-stage duties personalised to your Ashrama'}
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color={theme.dim} />
+                </Pressable>
+              </Card>
+            </View>
+          )}
         </View>
       </ScrollView>
     </Screen>

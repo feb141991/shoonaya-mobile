@@ -16,6 +16,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
+import { RASHI_MAP } from '@/lib/jyotish';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'all';
 
@@ -44,20 +45,7 @@ const INITIAL_STATE: PanchangState = {
   rashi: null,
 };
 
-const RASHI_MAP: Record<string, { symbol: string; sa: string; en: string }> = {
-  aries:       { symbol: '🐏', sa: 'मेष', en: 'Aries' },
-  taurus:      { symbol: '🐂', sa: 'वृषभ', en: 'Taurus' },
-  gemini:      { symbol: '👥', sa: 'मिथुन', en: 'Gemini' },
-  cancer:      { symbol: '🦀', sa: 'कर्क', en: 'Cancer' },
-  leo:         { symbol: '🦁', sa: 'सिंह', en: 'Leo' },
-  virgo:       { symbol: '♍', sa: 'कन्या', en: 'Virgo' },
-  libra:       { symbol: '⚖️', sa: 'तुला', en: 'Libra' },
-  scorpio:     { symbol: '🦂', sa: 'वृश्चिक', en: 'Scorpio' },
-  sagittarius: { symbol: '🏹', sa: 'धनु', en: 'Sagittarius' },
-  capricorn:   { symbol: '🐊', sa: 'मकर', en: 'Capricorn' },
-  aquarius:    { symbol: '🏺', sa: 'कुंभ', en: 'Aquarius' },
-  pisces:      { symbol: '🐟', sa: 'मीन', en: 'Pisces' },
-};
+
 
 function isRealToday(date: Date) {
   return date.toDateString() === new Date().toDateString();
@@ -309,6 +297,27 @@ export default function PanchangScreen() {
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, textDecorationLine: 'underline' }}>Change Rashi</Text>
             </Pressable>
           )}
+        </Card>
+
+        {/* Kundali Entry Point */}
+        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Generate your Vedic Kundali birth chart"
+            onPress={() => router.push('/kundali')}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
+          >
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 24 }}>🛕</Text>
+            </View>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 20 }}>Vedic Kundali</Text>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+                Generate your birth chart
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.dim} />
+          </Pressable>
         </Card>
 
         <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>

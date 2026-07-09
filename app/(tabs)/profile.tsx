@@ -15,6 +15,9 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as Clipboard from 'expo-clipboard';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -36,6 +39,8 @@ type ProfileData = {
   seva_score: number;
   is_pro: boolean;
   subscription_status: 'free' | 'pro' | 'kul_pro' | 'grace' | 'expired';
+  kul_id: string | null;
+  kul_name: string | null;
 };
 
 type EditState = {
@@ -144,6 +149,7 @@ export default function ProfileScreen() {
   const [signingOut, setSigningOut] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
 
@@ -173,6 +179,14 @@ export default function ProfileScreen() {
     const payload = (await response.json()) as ProgressSummary;
     setSummary(payload);
 
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('kul_id, kuls(name)')
+      .eq('id', payload.profile.id)
+      .single();
+
+    const kulName = profileRow?.kuls ? (profileRow.kuls as any).name : null;
+
     const nextProfile: ProfileData = {
       id: payload.profile.id,
       full_name: payload.profile.fullName,
@@ -182,6 +196,8 @@ export default function ProfileScreen() {
       seva_score: payload.profile.sevaScore,
       is_pro: payload.profile.isPro,
       subscription_status: payload.profile.subscriptionStatus,
+      kul_id: profileRow?.kul_id ?? null,
+      kul_name: kulName,
     };
 
     setProfile(nextProfile);
@@ -252,6 +268,133 @@ export default function ProfileScreen() {
       await supabase.auth.signOut();
     } finally {
       setSigningOut(false);
+    }
+  };
+
+  const inviteCode = useMemo(() => profile ? profile.id.replace(/-/g, '').slice(0, 8).toUpperCase() : '', [profile]);
+
+  const copyInvite = async () => {
+    await Clipboard.setStringAsync(inviteCode);
+    Alert.alert('Copied', 'Your invite code is copied to clipboard.');
+  };
+
+  const shareWhatsApp = async () => {
+    const text = `Join me on Shoonaya. Use my invite code: ${inviteCode}`;
+    const url = `whatsapp://send?text=${encodeURIComponent(text)}`;
+    try {
+      if (await Linking.canOpenURL(url)) {
+        await Linking.openURL(url);
+      } else {
+        await Sharing.shareAsync(API_BASE, { dialogTitle: 'Share Shoonaya' });
+      }
+    } catch {
+      Alert.alert('Error', 'Could not open WhatsApp.');
+    }
+  };
+
+  const downloadReport = async () => {
+    if (reportLoading) return;
+    setReportLoading(true);
+    try {
+      const res = await apiFetch('/api/user/report');
+      if (!res.ok) throw new Error('Could not generate report');
+      const data = await res.json();
+      
+      const tradition = data.profile?.tradition ?? 'hindu';
+      const tEmoji = TRADITION_META[tradition as Tradition]?.emoji ?? '🙏';
+
+      const formatMins = (m: number) => m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+      const heatmapHtml = (data.heatmap ?? []).map((d: any) => {
+        const level = d.nitya >= 7 ? '#d4a030' : d.nitya > 0 ? '#d4a03066' : d.japa ? '#7B1A1A66' : '#e5e7eb';
+        return `<div title="${d.date}" style="width:18px;height:18px;border-radius:4px;background:${level}"></div>`;
+      }).join('');
+      const mantrasHtml = (data.japa?.top_mantras ?? []).map(([name, count]: [string, number]) =>
+        `<li>${name} — <strong>${count}</strong> session${count !== 1 ? 's' : ''}</li>`
+      ).join('');
+
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Sadhana Report – ${data.profile?.name}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f5ef; color: #2c2a25; padding: 24px; max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; color: #1c1c1a; }
+  h2 { font-size: 15px; font-weight: 700; color: #7B1A1A; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .card { background: #fff; border-radius: 16px; padding: 18px; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.07); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .meta { font-size: 13px; color: #888; margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { text-align: center; padding: 12px; background: #fef9ef; border-radius: 12px; border: 1px solid rgba(197, 160, 89,0.2); }
+  .stat .num { font-size: 28px; font-weight: 800; color: #c8920a; }
+  .stat .label { font-size: 11px; color: #888; margin-top: 3px; }
+  .heatmap { display: flex; flex-wrap: wrap; gap: 3px; }
+  ul { padding-left: 18px; font-size: 14px; line-height: 2; }
+  .badge { display: inline-block; background: rgba(197, 160, 89,0.15); color: #7B1A1A; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+  .footer { text-align: center; font-size: 11px; color: #aaa; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div style="margin-bottom:20px">
+  <h1>${tEmoji} Sadhana Report</h1>
+  <p class="meta">${data.profile?.name} · ${data.period?.from} to ${data.period?.to}</p>
+</div>
+
+<div class="card">
+  <h2>Japa</h2>
+  <div class="grid">
+    <div class="stat"><div class="num">${data.japa?.sessions ?? 0}</div><div class="label">Sessions</div></div>
+    <div class="stat"><div class="num">${data.japa?.total_malas ?? 0}</div><div class="label">Malas (108 beads)</div></div>
+    <div class="stat"><div class="num">${formatMins(data.japa?.duration_minutes ?? 0)}</div><div class="label">Time in Japa</div></div>
+  </div>
+  ${mantrasHtml ? '<ul style="margin-top:12px">' + mantrasHtml + '</ul>' : ''}
+</div>
+
+<div class="card">
+  <h2>Nitya Karma</h2>
+  <div class="grid">
+    <div class="stat"><div class="num">${data.nitya?.active_days ?? 0}</div><div class="label">Active days</div></div>
+    <div class="stat"><div class="num">${data.nitya?.full_days ?? 0}</div><div class="label">Full sequences</div></div>
+    <div class="stat"><div class="num">${data.nitya?.current_streak ?? 0}</div><div class="label">Current streak</div></div>
+  </div>
+  <p style="font-size:13px;color:#888;margin-top:10px">Longest streak in period: <strong>${data.nitya?.longest_streak ?? 0} days</strong></p>
+</div>
+
+<div class="card">
+  <h2>30-Day Heatmap</h2>
+  <div class="heatmap">${heatmapHtml}</div>
+  <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:#888">
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d4a030;margin-right:4px;vertical-align:middle"></span>Full Nitya</span>
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d4a03066;margin-right:4px;vertical-align:middle"></span>Partial Nitya</span>
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#7B1A1A66;margin-right:4px;vertical-align:middle"></span>Japa only</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Community</h2>
+  <div class="grid">
+    <div class="stat"><div class="num">${data.community?.posts ?? 0}</div><div class="label">Posts</div></div>
+    <div class="stat"><div class="num">${data.community?.threads ?? 0}</div><div class="label">Discussions started</div></div>
+  </div>
+</div>
+
+<div class="footer">Generated by Shoonaya</div>
+</body>
+</html>`;
+
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('Sharing not available', 'Your device does not support saving or sharing this file.');
+        return;
+      }
+
+      const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'sadhana-report.html');
+      targetFile.write(html);
+      await Sharing.shareAsync(targetFile.uri);
+    } catch {
+      Alert.alert('Error', 'Could not generate report.');
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -477,7 +620,106 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
+        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+                {profile.kul_id ? profile.kul_name : 'Join your Kul'}
+              </Text>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+                {profile.kul_id ? 'Lineage & community' : 'Connect with your heritage'}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => Alert.alert('Coming Soon', 'Kul features are coming soon.')}
+              style={{
+                borderRadius: 18,
+                backgroundColor: COLORS.brandGold,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+              }}
+            >
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+                {profile.kul_id ? 'Invite' : 'Join'}
+              </Text>
+            </Pressable>
+          </View>
+        </Card>
+
+        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+          <View>
+            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+              Invite Friends
+            </Text>
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, marginTop: 4 }}>
+              Share your invite code: <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>{inviteCode}</Text>
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Pressable
+              onPress={() => { void shareWhatsApp(); }}
+              style={{
+                flex: 1,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#25D366',
+                backgroundColor: 'rgba(37,211,102,0.1)',
+                paddingVertical: 12,
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Feather name="message-circle" size={18} color="#25D366" />
+              <Text style={{ color: '#25D366', fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>WhatsApp</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => { void copyInvite(); }}
+              style={{
+                flex: 1,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: theme.border,
+                backgroundColor: theme.bg,
+                paddingVertical: 12,
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Feather name="copy" size={18} color={theme.text} />
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Copy Link</Text>
+            </Pressable>
+          </View>
+        </Card>
+
         <View style={{ gap: 10 }}>
+          <Pressable
+            onPress={() => { void downloadReport(); }}
+            disabled={reportLoading}
+            style={{
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.card,
+              paddingHorizontal: 16,
+              paddingVertical: 15,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              opacity: reportLoading ? 0.7 : 1,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Feather name="pie-chart" size={18} color={theme.text} />
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                {reportLoading ? 'Generating...' : 'Sadhana Report'}
+              </Text>
+            </View>
+            {reportLoading ? <ActivityIndicator size="small" color={theme.dim} /> : <Feather name="download" size={18} color={theme.dim} />}
+          </Pressable>
           {[
             ['Settings', '/settings'],
             ['Mandali', '/mandali'],
