@@ -16,7 +16,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-goog
 import { useFonts } from 'expo-font';
 
 import { AppProviders } from '@/components/providers/AppProviders';
-import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
+import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initOneSignal, handleNotificationTap } from '@/lib/notifications';
 
@@ -112,13 +112,7 @@ export default function RootLayout() {
 
     const exchangeUrlIfPresent = async (url: string | null) => {
       if (!url) return;
-      const parsed = Linking.parse(url);
-      const params = parsed.queryParams ?? {};
-      const code = typeof params.code === 'string' ? params.code : null;
-
-      if (code) {
-        await exchangeOAuthCodeOnce(code);
-      }
+      await exchangeOAuthUrlIfPresent(url);
     };
 
     const prepare = async () => {

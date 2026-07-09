@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Screen } from '@/components/ui/Screen';
-import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
+import { exchangeOAuthCodeOnce, waitForStoredSession } from '@/lib/authRedirect';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
@@ -26,15 +26,7 @@ export default function AuthCallbackScreen() {
           await exchangeOAuthCodeOnce(params.code);
         }
 
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          throw sessionError;
-        }
-
+        const session = await waitForStoredSession(1800);
         if (!session) {
           throw new Error('Sign in did not return a session.');
         }
@@ -63,7 +55,7 @@ export default function AuthCallbackScreen() {
           if (!cancelled) {
             router.replace('/(auth)/login');
           }
-        }, 1800);
+        }, 4200);
       }
     };
 

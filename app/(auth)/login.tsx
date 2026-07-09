@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Link } from 'expo-router';
-import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { Feather, FontAwesome } from '@expo/vector-icons';
@@ -9,7 +8,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
-import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
+import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
@@ -157,10 +156,7 @@ export default function LoginScreen() {
     setErrorMessage(null);
 
     try {
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'shoonaya',
-        path: 'auth/callback',
-      });
+      const redirectUri = getOAuthRedirectUri();
 
       if (__DEV__) {
         // Diagnostic only — visible via `adb logcat` / Metro, never shown
@@ -193,24 +189,10 @@ export default function LoginScreen() {
         console.log('[auth] openAuthSessionAsync result:', result.type, 'url' in result ? result.url : undefined);
       }
 
-      // The system auth session resolves with the final redirect URL
-      // directly — it does not reliably reach app/_layout.tsx's Linking
-      // handling while the app stays running in the foreground (that
-      // path only reliably covers a cold start). The PKCE `code` must be
-      // exchanged from here, or a completed Google sign-in silently never
-      // creates a session.
       if (result.type === 'success' && result.url) {
-        const redirectParams = new URL(result.url).searchParams;
-        const oauthError = redirectParams.get('error_description') ?? redirectParams.get('error');
-        const code = redirectParams.get('code');
+        const exchanged = await exchangeOAuthUrlIfPresent(result.url);
 
-        if (oauthError) {
-          throw new Error(oauthError);
-        }
-
-        if (code) {
-          await exchangeOAuthCodeOnce(code);
-        } else {
+        if (!exchanged) {
           // Redirect matched our scheme but carried neither a code nor an
           // error — the browser landed somewhere unexpected. Surface this
           // rather than silently returning to an unchanged login screen.
@@ -221,15 +203,17 @@ export default function LoginScreen() {
       } else if (result.type === 'cancel') {
         // User closed the browser themselves — not an error, no message.
       } else {
-        // 'dismiss' / 'locked' / anything else. This is the same symptom
-        // a Supabase redirect-URL allow-list mismatch produces: Google
-        // completes sign-in, Supabase can't match `redirectTo` against
-        // its allow-list, so it redirects to the dashboard's Site URL
-        // instead of shoonaya://auth/callback — WebBrowser never sees a
-        // match and the session ends without `type: 'success'`.
-        throw new Error(
-          `Sign-in did not complete (browser result: "${result.type}"). If this keeps happening, confirm shoonaya://auth/callback is allow-listed for the Supabase project this build uses.`
-        );
+        // Android's WebBrowser auth-session polyfill can resolve as
+        // "dismiss" when the app becomes active before the deep-link
+        // listener wins its race. Give the global Linking/callback path a
+        // short window to exchange the code before surfacing a real error.
+        const session = await waitForStoredSession(2800);
+
+        if (!session) {
+          throw new Error(
+            `Sign-in did not complete (browser result: "${result.type}"). The app returned from Google before an auth session was stored.`
+          );
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Google sign-in failed.';

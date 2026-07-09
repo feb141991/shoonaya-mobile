@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
-import { exchangeOAuthCodeOnce } from '@/lib/authRedirect';
+import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
 
 type VerifyPayload = {
   success?: boolean;
@@ -58,30 +56,22 @@ export default function OtpScreen() {
         throw new Error('Verification succeeded but no mobile redirect was returned.');
       }
 
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'shoonaya',
-        path: 'auth/callback',
-      });
+      const redirectUri = getOAuthRedirectUri();
 
       const mobileRedirect = rewriteRedirectTarget(payload.redirect, redirectUri);
       const result = await WebBrowser.openAuthSessionAsync(mobileRedirect, redirectUri);
 
-      // Same fix as native Google sign-in (app/(auth)/login.tsx): the auth
-      // session resolves with the final redirect URL directly and does not
-      // reliably reach app/_layout.tsx's Linking handling while the app
-      // stays running in the foreground. The PKCE `code` must be exchanged
-      // from here, or a verified WhatsApp code never creates a session.
       if (result.type === 'success' && result.url) {
-        const redirectParams = new URL(result.url).searchParams;
-        const oauthError = redirectParams.get('error_description') ?? redirectParams.get('error');
-        const code = redirectParams.get('code');
+        const exchanged = await exchangeOAuthUrlIfPresent(result.url);
 
-        if (oauthError) {
-          throw new Error(oauthError);
+        if (!exchanged) {
+          throw new Error('Verification redirect did not include an auth code.');
         }
+      } else if (result.type !== 'cancel') {
+        const session = await waitForStoredSession(2800);
 
-        if (code) {
-          await exchangeOAuthCodeOnce(code);
+        if (!session) {
+          throw new Error(`Verification did not complete (browser result: "${result.type}").`);
         }
       }
     } catch (error) {
