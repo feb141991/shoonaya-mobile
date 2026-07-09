@@ -68,7 +68,8 @@ export function JoinMandaliPrompt({
       }
       setDetected({ city: geocoded.city, country: geocoded.country, lat, lon });
       await loadNearby(lat, lon);
-    } catch {
+    } catch (error) {
+      console.error('[JoinMandaliPrompt] detectLocation failed', error);
       setGeoError('Location lookup failed. Please try again.');
     } finally {
       setLocating(false);
@@ -91,7 +92,8 @@ export function JoinMandaliPrompt({
     try {
       await joinMandaliForLocation(userId, detected.city, detected.country, detected.lat, detected.lon);
       await onJoined();
-    } catch {
+    } catch (error) {
+      console.error('[JoinMandaliPrompt] joinMandaliForLocation failed', error);
       setGeoError('Could not join your Mandali right now. Please try again.');
     } finally {
       setJoiningMine(false);
@@ -103,7 +105,8 @@ export function JoinMandaliPrompt({
     try {
       await joinExistingMandali(mandaliId);
       await onJoined();
-    } catch {
+    } catch (error) {
+      console.error('[JoinMandaliPrompt] joinExistingMandali failed', error);
       setGeoError('Could not join that Mandali right now. Please try again.');
     } finally {
       setJoiningId(null);

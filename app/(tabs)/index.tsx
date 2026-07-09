@@ -670,6 +670,58 @@ function HomeContent() {
               ) : null}
             </Pressable>
 
+            {/* Mood Pill */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Check in with your mood"
+              onPress={() => navigate('/mood')}
+              hitSlop={4}
+              style={{
+                minHeight: 36,
+                borderRadius: 999,
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 6,
+                backgroundColor: COLORS.homePwaObservanceBg,
+                borderWidth: 1,
+                borderColor: COLORS.homePwaObservanceBorder,
+              }}
+            >
+              {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
+                <>
+                  <Text style={{ fontSize: 12, lineHeight: 14 }}>
+                    {findMoodConfig(isDark, moodStatus.lastMood)?.label.charAt(0) || '✨'}
+                  </Text>
+                  <Text
+                    style={{
+                      ...TYPE.chip,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
+                    }}
+                    numberOfLines={1}
+                  >
+                    Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
+                  </Text>
+                </>
+              ) : (
+                <Text
+                  style={{
+                    ...TYPE.chip,
+                    fontSize: 11,
+                    lineHeight: 14,
+                    color: COLORS.homePwaObservanceText,
+                  }}
+                  numberOfLines={1}
+                >
+                  How are you feeling?
+                </Text>
+              )}
+            </Pressable>
+
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               {state.profile.karmaPoints > 0 ? (
                 <Pressable
@@ -747,58 +799,6 @@ function HomeContent() {
 
             <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
-
-              {/* Mood Pill */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Check in with your mood"
-                onPress={() => navigate('/mood')}
-                hitSlop={4}
-                style={{
-                  minHeight: 36,
-                  borderRadius: 999,
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 6,
-                  backgroundColor: COLORS.homePwaObservanceBg,
-                  borderWidth: 1,
-                  borderColor: COLORS.homePwaObservanceBorder,
-                }}
-              >
-                {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
-                  <>
-                    <Text style={{ fontSize: 12, lineHeight: 14 }}>
-                      {findMoodConfig(isDark, moodStatus.lastMood)?.label.charAt(0) || '✨'}
-                    </Text>
-                    <Text
-                      style={{
-                        ...TYPE.chip,
-                        fontSize: 11,
-                        lineHeight: 14,
-                        color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
-                      }}
-                      numberOfLines={1}
-                    >
-                      Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
-                    </Text>
-                  </>
-                ) : (
-                  <Text
-                    style={{
-                      ...TYPE.chip,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      color: COLORS.homePwaObservanceText,
-                    }}
-                    numberOfLines={1}
-                  >
-                    How are you feeling?
-                  </Text>
-                )}
-              </Pressable>
 
               {state.panchang.observance ? (
                 <Pressable

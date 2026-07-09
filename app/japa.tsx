@@ -15,6 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import Svg, { Circle, Line } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
+import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
@@ -279,12 +280,17 @@ export default function JapaScreen() {
   }, [count, malaSkin.beadBorder, malaSkin.beadColor]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: bg }}>
-      <ScrollView contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 36, gap: 18 }}>
+    <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 36, gap: 18 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Japa</Text>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>{malaSkin.label} mala</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Pressable onPress={() => router.back()} hitSlop={16}>
+              <Feather name="arrow-left" size={24} color={text} />
+            </Pressable>
+            <View>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Japa</Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>{malaSkin.label} mala</Text>
+            </View>
           </View>
           <Pressable
             onPress={() => router.push('/kosh')}
@@ -595,6 +601,6 @@ export default function JapaScreen() {
           </View>
         </View>
       ) : null}
-    </View>
+    </Screen>
   );
 }

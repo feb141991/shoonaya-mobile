@@ -105,7 +105,7 @@ function routeForNotificationTap(event: ClickEvent): Href {
     case 'festival': return '/vrat';
     case 'nitya':
     case 'brahma_muhurta': return '/nitya-karma';
-    case 'japa': return '/(tabs)/japa';
+    case 'japa': return '/japa';
     case 'streak': return '/(tabs)';
     case 'mandali_mention': return '/mandali';
     // general/test/milestone/sanskar_milestone/guided-plan and anything

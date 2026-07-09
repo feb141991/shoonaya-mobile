@@ -216,7 +216,9 @@ export default function MandaliScreen() {
 
   useEffect(() => {
     loadMandali()
-      .catch(() => {})
+      .catch((error) => {
+        console.error('[MandaliScreen] loadMandali failed', error);
+      })
       .finally(() => setLoading(false));
   }, [loadMandali]);
 
@@ -442,7 +444,12 @@ export default function MandaliScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 16 }}>
-        <View style={{ flexDirection: 'row', backgroundColor: theme.card, borderRadius: 12, padding: 4, marginHorizontal: 16, marginTop: 16 }}>
+        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 16 }}>
+          <Feather name="chevron-left" size={16} color={theme.dim} />
+          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
+        </Pressable>
+
+        <View style={{ flexDirection: 'row', backgroundColor: theme.card, borderRadius: 12, padding: 4, marginHorizontal: 16 }}>
           <View style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: theme.bg, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>Local Feed</Text>
           </View>
@@ -450,11 +457,6 @@ export default function MandaliScreen() {
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Global Sabha</Text>
           </Pressable>
         </View>
-
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>

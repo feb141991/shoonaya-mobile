@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -114,11 +114,12 @@ function PathshalaContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
   const [paths, setPaths] = useState<PathshalaPath[]>([]);
+  const dataLoadedRef = useRef(false);
 
   const scrollRef = useScrollToTop();
 
   const loadData = useCallback(async (refresh = false) => {
-    if (refresh) {
+    if (refresh || dataLoadedRef.current) {
       setRefreshing(true);
     } else {
       setLoading(true);
@@ -162,6 +163,7 @@ function PathshalaContent() {
       setEnrollments([]);
     }
 
+    dataLoadedRef.current = true;
     setLoading(false);
     setRefreshing(false);
   }, []);

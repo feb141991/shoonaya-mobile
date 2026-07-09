@@ -86,23 +86,10 @@ export default function MoodInsightsScreen() {
   }
 
   return (
-    <Screen style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg }} >
-      <View style={{
-        paddingTop: 60,
-        paddingBottom: 16,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: border,
-        backgroundColor: isDark ? 'rgba(19,14,8,0.8)' : 'rgba(253,246,236,0.8)',
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}>
-        <Pressable onPress={() => router.back()} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-          <Feather name="chevron-left" size={20} color={h1} />
-        </Pressable>
-        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: h1 }}>Mood Insights</Text>
-      </View>
-
+    <Screen 
+      style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+      header={{ title: 'Mood Insights', onBack: () => router.back() }}
+    >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         {/* Toggle */}

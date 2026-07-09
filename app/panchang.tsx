@@ -33,6 +33,7 @@ type PanchangState = {
   lon: number;
   timezone: string;
   tradition: Tradition;
+  rashi: string | null;
 };
 
 const INITIAL_STATE: PanchangState = {
@@ -40,16 +41,24 @@ const INITIAL_STATE: PanchangState = {
   lon: 75.7885,
   timezone: 'Asia/Kolkata',
   tradition: 'hindu',
+  rashi: null,
 };
 
-// "Mark as observed" is a new completion action — see
-// docs/NATIVE_DAILY_COMPLETION_MATRIX.md, which found no such action exists
-// on either platform, and POST /api/native/panchang-viewed, which stores it
-// on the pre-existing (previously unused) daily_sadhana.panchang_viewed
-// column. Idempotent per user/date via that route's upsert; the mark can
-// only be made for the real "today", not a date browsed via the date strip,
-// since the underlying row is keyed by the server's own spiritual-date
-// computation for the current moment, not whichever date is selected here.
+const RASHI_MAP: Record<string, { symbol: string; sa: string; en: string }> = {
+  aries:       { symbol: '🐏', sa: 'मेष', en: 'Aries' },
+  taurus:      { symbol: '🐂', sa: 'वृषभ', en: 'Taurus' },
+  gemini:      { symbol: '👥', sa: 'मिथुन', en: 'Gemini' },
+  cancer:      { symbol: '🦀', sa: 'कर्क', en: 'Cancer' },
+  leo:         { symbol: '🦁', sa: 'सिंह', en: 'Leo' },
+  virgo:       { symbol: '♍', sa: 'कन्या', en: 'Virgo' },
+  libra:       { symbol: '⚖️', sa: 'तुला', en: 'Libra' },
+  scorpio:     { symbol: '🦂', sa: 'वृश्चिक', en: 'Scorpio' },
+  sagittarius: { symbol: '🏹', sa: 'धनु', en: 'Sagittarius' },
+  capricorn:   { symbol: '🐊', sa: 'मकर', en: 'Capricorn' },
+  aquarius:    { symbol: '🏺', sa: 'कुंभ', en: 'Aquarius' },
+  pisces:      { symbol: '🐟', sa: 'मीन', en: 'Pisces' },
+};
+
 function isRealToday(date: Date) {
   return date.toDateString() === new Date().toDateString();
 }
@@ -73,6 +82,9 @@ export default function PanchangScreen() {
   const [viewedToday, setViewedToday] = useState(false);
   const [markingViewed, setMarkingViewed] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showRashiPicker, setShowRashiPicker] = useState(false);
+  const [savingRashi, setSavingRashi] = useState(false);
 
   const theme = useMemo(
     () => ({
@@ -95,9 +107,11 @@ export default function PanchangScreen() {
       return;
     }
 
+    setUserId(user.id);
+
     const { data: profile } = await supabase
       .from('profiles')
-      .select('latitude, longitude, timezone, tradition')
+      .select('latitude, longitude, timezone, tradition, rashi')
       .eq('id', user.id)
       .single();
 
@@ -106,6 +120,7 @@ export default function PanchangScreen() {
       lon: profile?.longitude ?? INITIAL_STATE.lon,
       timezone: profile?.timezone ?? INITIAL_STATE.timezone,
       tradition: (profile?.tradition ?? 'hindu') as Tradition,
+      rashi: profile?.rashi ?? null,
     };
     setProfileState(nextState);
 
@@ -132,6 +147,18 @@ export default function PanchangScreen() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [loadPanchangContext]);
+
+  const saveRashi = async (rashi: string) => {
+    if (!userId || savingRashi) return;
+    setSavingRashi(true);
+    try {
+      await supabase.from('profiles').update({ rashi }).eq('id', userId);
+      setProfileState((prev) => ({ ...prev, rashi }));
+      setShowRashiPicker(false);
+    } finally {
+      setSavingRashi(false);
+    }
+  };
 
   const markObserved = useCallback(async () => {
     if (viewedToday || markingViewed) return;
@@ -166,6 +193,8 @@ export default function PanchangScreen() {
       </Screen>
     );
   }
+
+  const rashiObj = profileState.rashi ? RASHI_MAP[profileState.rashi.toLowerCase()] : null;
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
@@ -206,6 +235,81 @@ export default function PanchangScreen() {
             );
           })}
         </ScrollView>
+
+        {/* Your Rashiphala Card */}
+        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open your Rashiphala reading"
+            onPress={() => router.push('/rashiphala')}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
+          >
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 24 }}>{rashiObj ? rashiObj.symbol : '✨'}</Text>
+            </View>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 20 }}>Your Rashiphala</Text>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+                {rashiObj ? (
+                  <Text><Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>{rashiObj.sa}</Text> · Today&apos;s reading</Text>
+                ) : (
+                  <Text style={{ fontStyle: 'italic' }}>Set your Rashi below to personalise</Text>
+                )}
+              </Text>
+              <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
+                Daily · Weekly · Monthly
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.dim} />
+          </Pressable>
+
+          {(showRashiPicker || !profileState.rashi) && (
+            <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, borderTopWidth: 1, borderTopColor: theme.border }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {profileState.rashi ? 'Change your Rashi' : '✦ Set your Rashi for personalised readings'}
+                </Text>
+                {profileState.rashi && showRashiPicker && (
+                  <Pressable onPress={() => setShowRashiPicker(false)}>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textDecorationLine: 'underline' }}>Cancel</Text>
+                  </Pressable>
+                )}
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {Object.entries(RASHI_MAP).map(([key, r]) => {
+                  const isSelected = profileState.rashi === key;
+                  return (
+                    <Pressable
+                      key={key}
+                      disabled={savingRashi}
+                      onPress={() => saveRashi(key)}
+                      style={{
+                        width: '23%',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 12,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        backgroundColor: isSelected ? (isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)') : theme.bg,
+                        borderColor: isSelected ? COLORS.brandGold : theme.border,
+                        opacity: savingRashi ? 0.7 : 1,
+                      }}
+                    >
+                      <Text style={{ fontSize: 20 }}>{r.symbol}</Text>
+                      <Text style={{ marginTop: 6, color: isSelected ? COLORS.brandGold : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{r.en}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {profileState.rashi && !showRashiPicker && (
+            <Pressable onPress={() => setShowRashiPicker(true)} style={{ paddingBottom: 16, alignItems: 'center' }}>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, textDecorationLine: 'underline' }}>Change Rashi</Text>
+            </Pressable>
+          )}
+        </Card>
 
         <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{"Today's Panchang"}</Text>

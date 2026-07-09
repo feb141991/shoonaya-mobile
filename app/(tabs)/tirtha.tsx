@@ -331,7 +331,7 @@ export default function TirthaScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => void initialize(true)} tintColor={COLORS.brandGold} />
         }
-        contentContainerStyle={{ paddingTop: 56, paddingBottom: 36 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 36 }}
       >
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Tirtha</Text>

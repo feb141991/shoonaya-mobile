@@ -57,7 +57,7 @@ export default function LedgerScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+      <Screen style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
@@ -66,23 +66,10 @@ export default function LedgerScreen() {
   }
 
   return (
-    <Screen style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg }} >
-      <View style={{
-        paddingTop: 60,
-        paddingBottom: 16,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: border,
-        backgroundColor: isDark ? 'rgba(19,14,8,0.8)' : 'rgba(253,246,236,0.8)',
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}>
-        <Pressable onPress={() => router.back()} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-          <Feather name="chevron-left" size={20} color={h1} />
-        </Pressable>
-        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: h1 }}>Karma Ledger</Text>
-      </View>
-
+    <Screen 
+      style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+      header={{ title: 'Karma Ledger', onBack: () => router.back() }}
+    >
       <FlatList
         data={ledger}
         keyExtractor={item => item.id}

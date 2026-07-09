@@ -56,13 +56,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Feather name="home" color={color} size={size} />,
         }}
       />
-      <Tabs.Screen
-        name="japa"
-        options={{
-          title: 'Japa',
-          tabBarIcon: ({ color, size }) => <Feather name="heart" color={color} size={size} />,
-        }}
-      />
+
       <Tabs.Screen
         name="bhakti"
         options={{

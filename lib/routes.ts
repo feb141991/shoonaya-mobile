@@ -28,7 +28,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // route there either). Previously both collapsed onto the single
   // '/(tabs)/bhakti' screen, back when that file was actually the Japa
   // counter under a mislabeled name.
-  if (pathname.startsWith('/bhakti/mala') || pathname.startsWith('/japa')) return '/(tabs)/japa';
+  if (pathname.startsWith('/bhakti/mala') || pathname.startsWith('/japa')) return '/japa';
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala/')) return path as Href;
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
