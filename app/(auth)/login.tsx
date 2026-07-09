@@ -162,6 +162,15 @@ export default function LoginScreen() {
         path: 'auth/callback',
       });
 
+      if (__DEV__) {
+        // Diagnostic only — visible via `adb logcat` / Metro, never shown
+        // in the UI. This is the exact string that must appear in
+        // Supabase's Redirect URLs allow-list (Authentication → URL
+        // Configuration) for the project this build actually points at
+        // (see EXPO_PUBLIC_SUPABASE_URL in lib/supabase.ts).
+        console.log('[auth] Google redirectUri:', redirectUri);
+      }
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -180,6 +189,10 @@ export default function LoginScreen() {
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
 
+      if (__DEV__) {
+        console.log('[auth] openAuthSessionAsync result:', result.type, 'url' in result ? result.url : undefined);
+      }
+
       // The system auth session resolves with the final redirect URL
       // directly — it does not reliably reach app/_layout.tsx's Linking
       // handling while the app stays running in the foreground (that
@@ -197,7 +210,26 @@ export default function LoginScreen() {
 
         if (code) {
           await exchangeOAuthCodeOnce(code);
+        } else {
+          // Redirect matched our scheme but carried neither a code nor an
+          // error — the browser landed somewhere unexpected. Surface this
+          // rather than silently returning to an unchanged login screen.
+          throw new Error(
+            `Sign-in redirect did not include a code (${result.url}). Check that this exact URL is allow-listed in Supabase → Authentication → URL Configuration.`
+          );
         }
+      } else if (result.type === 'cancel') {
+        // User closed the browser themselves — not an error, no message.
+      } else {
+        // 'dismiss' / 'locked' / anything else. This is the same symptom
+        // a Supabase redirect-URL allow-list mismatch produces: Google
+        // completes sign-in, Supabase can't match `redirectTo` against
+        // its allow-list, so it redirects to the dashboard's Site URL
+        // instead of shoonaya://auth/callback — WebBrowser never sees a
+        // match and the session ends without `type: 'success'`.
+        throw new Error(
+          `Sign-in did not complete (browser result: "${result.type}"). If this keeps happening, confirm shoonaya://auth/callback is allow-listed for the Supabase project this build uses.`
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Google sign-in failed.';
