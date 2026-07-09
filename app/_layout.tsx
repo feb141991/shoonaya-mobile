@@ -39,6 +39,7 @@ export default function RootLayout() {
 
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
+  const readyToRender = appIsReady && authReady;
 
   const routeForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
@@ -81,12 +82,14 @@ export default function RootLayout() {
 
   // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
   useEffect(() => {
+    if (readyToRender) return;
+
     const timer = setTimeout(() => {
-      console.warn('Splash screen hide triggered by timeout fail-safe');
       setAppIsReady(true);
     }, 6000);
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [readyToRender]);
 
   // ── Handle OneSignal and Notifications ─────────────────────────────
   useEffect(() => {
@@ -171,8 +174,6 @@ export default function RootLayout() {
       linkingSubscription.remove();
     };
   }, [fontsLoaded, fontError, routeForSession]);
-
-  const readyToRender = appIsReady && authReady;
 
   // ── Hide Splash Screen when Ready ────────────────────────────────
   useEffect(() => {
