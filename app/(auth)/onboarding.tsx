@@ -3,6 +3,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
@@ -17,17 +18,13 @@ import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerUserId } from '@/lib/notifications';
 
-type Step = 'tradition' | 'language' | 'notifications';
+type Step = 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'language' | 'notifications' | 'ready';
 
-// Short, factual tags — not theological claims — describing the kind of
-// content each tradition unlocks elsewhere in the app (mantras/panchang:
-// app/(tabs)/bhakti.tsx, app/panchang.tsx; daily sadhana: app/nitya-karma.tsx),
-// so this reads as real app content, not invented marketing copy.
 const TRADITIONS = [
-  { key: 'hindu', label: 'Hindu', icon: 'sun' as const, description: 'Mantras, panchang and daily sadhana' },
-  { key: 'sikh', label: 'Sikh', icon: 'book-open' as const, description: 'Gurbani, nitnem and daily practice' },
-  { key: 'buddhist', label: 'Buddhist', icon: 'circle' as const, description: 'Sutras, mindfulness and daily practice' },
-  { key: 'jain', label: 'Jain', icon: 'droplet' as const, description: 'Sutras, tattva and daily practice' },
+  { key: 'hindu', label: 'Hindu', icon: 'sun' as const, emoji: '🪔', description: 'Mantras, panchang and daily sadhana' },
+  { key: 'sikh', label: 'Sikh', icon: 'book-open' as const, emoji: '☬', description: 'Gurbani, nitnem and daily practice' },
+  { key: 'buddhist', label: 'Buddhist', icon: 'circle' as const, emoji: '☸️', description: 'Sutras, mindfulness and daily practice' },
+  { key: 'jain', label: 'Jain', icon: 'droplet' as const, emoji: '🤲', description: 'Sutras, tattva and daily practice' },
 ] as const;
 
 type TraditionKey = (typeof TRADITIONS)[number]['key'];
@@ -39,13 +36,130 @@ const LANGUAGES = [
 
 type LanguageKey = (typeof LANGUAGES)[number]['key'];
 
-const STEPS: Step[] = ['tradition', 'language', 'notifications'];
+const LIFE_STAGES = [
+  { key: 'brahmacharya', label: 'Brahmacharya', age: '0-25', description: 'Student - learn, build, purify', emoji: '⭐' },
+  { key: 'grihastha', label: 'Grihastha', age: '25-50', description: 'Householder - work, family, dharma', emoji: '🏡' },
+  { key: 'vanaprastha', label: 'Vanaprastha', age: '50-75', description: 'Forest Dweller - mentor, withdraw', emoji: '🌳' },
+  { key: 'sannyasa', label: 'Sannyasa', age: '75+', description: 'Renunciate - release, liberation', emoji: '💨' },
+] as const;
 
-const STEP_EYEBROW: Record<Step, string> = {
-  tradition: 'Step 1 of 3',
-  language: 'Step 2 of 3',
-  notifications: 'Step 3 of 3',
+type LifeStageKey = (typeof LIFE_STAGES)[number]['key'];
+
+const GENDERS = [
+  { key: 'male', label: 'Male', emoji: '♂' },
+  { key: 'female', label: 'Female', emoji: '♀' },
+  { key: 'prefer_not', label: 'Prefer not to say', emoji: '·' },
+] as const;
+
+type GenderKey = (typeof GENDERS)[number]['key'];
+
+const RASHIS = [
+  { key: 'mesha', label: 'Mesha', sanskrit: 'मेष', symbol: '♈', dates: 'Apr 14 - May 14' },
+  { key: 'vrishabha', label: 'Vrishabha', sanskrit: 'वृषभ', symbol: '♉', dates: 'May 15 - Jun 14' },
+  { key: 'mithuna', label: 'Mithuna', sanskrit: 'मिथुन', symbol: '♊', dates: 'Jun 15 - Jul 14' },
+  { key: 'karka', label: 'Karka', sanskrit: 'कर्क', symbol: '♋', dates: 'Jul 15 - Aug 14' },
+  { key: 'simha', label: 'Simha', sanskrit: 'सिंह', symbol: '♌', dates: 'Aug 15 - Sep 15' },
+  { key: 'kanya', label: 'Kanya', sanskrit: 'कन्या', symbol: '♍', dates: 'Sep 16 - Oct 15' },
+  { key: 'tula', label: 'Tula', sanskrit: 'तुला', symbol: '♎', dates: 'Oct 16 - Nov 14' },
+  { key: 'vrishchika', label: 'Vrishchika', sanskrit: 'वृश्चिक', symbol: '♏', dates: 'Nov 15 - Dec 14' },
+  { key: 'dhanu', label: 'Dhanu', sanskrit: 'धनु', symbol: '♐', dates: 'Dec 15 - Jan 13' },
+  { key: 'makara', label: 'Makara', sanskrit: 'मकर', symbol: '♑', dates: 'Jan 14 - Feb 12' },
+  { key: 'kumbha', label: 'Kumbha', sanskrit: 'कुम्भ', symbol: '♒', dates: 'Feb 13 - Mar 13' },
+  { key: 'meena', label: 'Meena', sanskrit: 'मीन', symbol: '♓', dates: 'Mar 14 - Apr 13' },
+] as const;
+
+const NAKSHATRAS = [
+  { key: 'ashwini', label: 'Ashwini', sanskrit: 'अश्विनी', ruler: 'Ketu', deity: 'Ashwini Kumaras', symbol: '🐴' },
+  { key: 'bharani', label: 'Bharani', sanskrit: 'भरणी', ruler: 'Venus', deity: 'Yama', symbol: '⚖️' },
+  { key: 'krittika', label: 'Krittika', sanskrit: 'कृत्तिका', ruler: 'Sun', deity: 'Agni', symbol: '🔥' },
+  { key: 'rohini', label: 'Rohini', sanskrit: 'रोहिणी', ruler: 'Moon', deity: 'Brahma', symbol: '🌙' },
+  { key: 'mrigashira', label: 'Mrigashira', sanskrit: 'मृगशिरा', ruler: 'Mars', deity: 'Soma', symbol: '🦌' },
+  { key: 'ardra', label: 'Ardra', sanskrit: 'आर्द्रा', ruler: 'Rahu', deity: 'Rudra', symbol: '💧' },
+  { key: 'punarvasu', label: 'Punarvasu', sanskrit: 'पुनर्वसु', ruler: 'Jupiter', deity: 'Aditi', symbol: '⭐' },
+  { key: 'pushya', label: 'Pushya', sanskrit: 'पुष्य', ruler: 'Saturn', deity: 'Brihaspati', symbol: '🌸' },
+  { key: 'ashlesha', label: 'Ashlesha', sanskrit: 'आश्लेषा', ruler: 'Mercury', deity: 'Naga', symbol: '🐍' },
+  { key: 'magha', label: 'Magha', sanskrit: 'मघा', ruler: 'Ketu', deity: 'Pitrs', symbol: '👑' },
+  { key: 'purva_phalguni', label: 'Purva Phalguni', sanskrit: 'पूर्व फाल्गुनी', ruler: 'Venus', deity: 'Bhaga', symbol: '🌺' },
+  { key: 'uttara_phalguni', label: 'Uttara Phalguni', sanskrit: 'उत्तर फाल्गुनी', ruler: 'Sun', deity: 'Aryaman', symbol: '☀️' },
+  { key: 'hasta', label: 'Hasta', sanskrit: 'हस्त', ruler: 'Moon', deity: 'Savitar', symbol: '✋' },
+  { key: 'chitra', label: 'Chitra', sanskrit: 'चित्रा', ruler: 'Mars', deity: 'Vishwakarma', symbol: '💎' },
+  { key: 'swati', label: 'Swati', sanskrit: 'स्वाती', ruler: 'Rahu', deity: 'Vayu', symbol: '🍃' },
+  { key: 'vishakha', label: 'Vishakha', sanskrit: 'विशाखा', ruler: 'Jupiter', deity: 'Indra-Agni', symbol: '⚡' },
+  { key: 'anuradha', label: 'Anuradha', sanskrit: 'अनुराधा', ruler: 'Saturn', deity: 'Mitra', symbol: '🤝' },
+  { key: 'jyeshtha', label: 'Jyeshtha', sanskrit: 'ज्येष्ठा', ruler: 'Mercury', deity: 'Indra', symbol: '🛡️' },
+  { key: 'mula', label: 'Mula', sanskrit: 'मूल', ruler: 'Ketu', deity: 'Nirriti', symbol: '🌿' },
+  { key: 'purva_ashadha', label: 'Purva Ashadha', sanskrit: 'पूर्वाषाढ़', ruler: 'Venus', deity: 'Apas', symbol: '🌊' },
+  { key: 'uttara_ashadha', label: 'Uttara Ashadha', sanskrit: 'उत्तराषाढ़', ruler: 'Sun', deity: 'Vishwadevas', symbol: '🏆' },
+  { key: 'shravana', label: 'Shravana', sanskrit: 'श्रवण', ruler: 'Moon', deity: 'Vishnu', symbol: '👂' },
+  { key: 'dhanishta', label: 'Dhanishta', sanskrit: 'धनिष्ठा', ruler: 'Mars', deity: 'Ashta Vasus', symbol: '🥁' },
+  { key: 'shatabhisha', label: 'Shatabhisha', sanskrit: 'शतभिषा', ruler: 'Rahu', deity: 'Varuna', symbol: '💫' },
+  { key: 'purva_bhadrapada', label: 'Purva Bhadrapada', sanskrit: 'पूर्व भाद्रपद', ruler: 'Jupiter', deity: 'Aja Ekapada', symbol: '⚔️' },
+  { key: 'uttara_bhadrapada', label: 'Uttara Bhadrapada', sanskrit: 'उत्तर भाद्रपद', ruler: 'Saturn', deity: 'Ahir Budhnya', symbol: '🌊' },
+  { key: 'revati', label: 'Revati', sanskrit: 'रेवती', ruler: 'Mercury', deity: 'Pushan', symbol: '🐟' },
+] as const;
+
+const GOALS = [
+  { key: 'daily_practice', emoji: '🪔', label: 'Deepen my daily Sadhana', sub: 'Japa, meditation, nitya karma' },
+  { key: 'deeper_faith', emoji: '🔱', label: 'Find my Ishta Devata / path', sub: "Discover your tradition's heart" },
+  { key: 'community', emoji: '👥', label: 'Find my Mandali', sub: 'Sangat, community, belonging' },
+  { key: 'peace', emoji: '🌌', label: "Questions science can't answer", sub: 'Philosophy, meaning, moksha' },
+  { key: 'knowledge', emoji: '📚', label: 'Study the sacred texts', sub: 'Gita, Granth, Dhammapada, Agamas' },
+  { key: 'new_guide', emoji: '🌱', label: "I'm new - guide me gently", sub: 'Begin from the very first step' },
+] as const;
+
+const READY_COPY: Record<TraditionKey, { heading: string; body: string }> = {
+  hindu: { heading: '🪔 Hari Om', body: 'Your sadhana path is ready. Begin with Japa.' },
+  sikh: { heading: '☬ Waheguru Ji', body: 'Your nitnem awaits. Begin your practice.' },
+  buddhist: { heading: '☸️ Namo Buddhaya', body: 'Your meditation path is ready.' },
+  jain: { heading: '🤲 Jai Jinendra', body: 'Your samayika path begins now.' },
 };
+
+const READY_FEATURES = [
+  { emoji: '📿', label: 'Daily Japa', description: 'Mantra & mala' },
+  { emoji: '📅', label: 'Panchang', description: 'Tithi & muhurta' },
+  { emoji: '👥', label: 'Mandali', description: 'Your sangat' },
+] as const;
+
+const STEPS: Step[] = ['tradition', 'personal', 'nakshatra', 'goals', 'name', 'language', 'notifications', 'ready'];
+
+const STEP_TITLES: Record<Step, string> = {
+  tradition: 'Your tradition',
+  personal: 'Personal details',
+  nakshatra: 'Your Birth Nakshatra',
+  goals: 'What calls you here?',
+  name: 'Your name',
+  language: 'Your language',
+  notifications: 'Daily reminders',
+  ready: 'Ready',
+};
+
+function stepEyebrow(step: Step) {
+  return `Step ${STEPS.indexOf(step) + 1} of ${STEPS.length}`;
+}
+
+function ageFromDob(value: string) {
+  if (!value) return null;
+  const birth = new Date(value);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDelta = today.getMonth() - birth.getMonth();
+  if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birth.getDate())) age -= 1;
+  return age >= 0 ? age : null;
+}
+
+function suggestedLifeStage(value: string): LifeStageKey | null {
+  const age = ageFromDob(value);
+  if (age === null) return null;
+  if (age <= 25) return 'brahmacharya';
+  if (age <= 50) return 'grihastha';
+  if (age <= 75) return 'vanaprastha';
+  return 'sannyasa';
+}
+
+function genderContext(value: GenderKey) {
+  return value === 'female' ? 'female' : 'general';
+}
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -63,44 +177,56 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<Step>('tradition');
   const [tradition, setTradition] = useState<TraditionKey>('hindu');
   const [language, setLanguage] = useState<LanguageKey>('en');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState<GenderKey>('prefer_not');
+  const [lifeStage, setLifeStage] = useState<LifeStageKey>('brahmacharya');
+  const [rashi, setRashi] = useState('');
+  const [nakshatra, setNakshatra] = useState('');
+  const [goals, setGoals] = useState<string[]>([]);
+  const [name, setName] = useState('');
+  const [notificationsRequested, setNotificationsRequested] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const stepIndex = STEPS.indexOf(step);
+  const age = ageFromDob(dateOfBirth);
+  const suggestedStage = suggestedLifeStage(dateOfBirth);
+  const readyCopy = READY_COPY[tradition];
 
-  const handleTradition = async (key: TraditionKey) => {
-    setTradition(key);
+  const selectWithHaptic = async (callback: () => void) => {
+    callback();
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
   };
 
-  const handleLanguage = async (key: LanguageKey) => {
-    setLanguage(key);
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+  const handleDobChange = (value: string) => {
+    setDateOfBirth(value);
+    const nextStage = suggestedLifeStage(value);
+    if (nextStage) setLifeStage(nextStage);
+  };
+
+  const goToStep = async (target: Step) => {
+    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+    setStep(target);
   };
 
   const goNext = async () => {
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+    const next = STEPS[stepIndex + 1];
+    if (next) await goToStep(next);
+  };
 
-    if (step === 'tradition') {
-      setStep('language');
-      return;
-    }
-
-    if (step === 'language') {
-      setStep('notifications');
-      return;
-    }
-
-    // Final step — notifications + save profile
-    await complete(false);
+  const goBack = async () => {
+    const previous = STEPS[stepIndex - 1];
+    if (previous) await goToStep(previous);
   };
 
   const handleAllowNotifications = async () => {
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
     await requestNotificationPermission();
-    await complete(true);
+    setNotificationsRequested(true);
+    setStep('ready');
   };
 
-  const complete = async (notificationsRequested: boolean) => {
+  const complete = async () => {
+    if (saving) return;
     setSaving(true);
     try {
       const {
@@ -108,15 +234,22 @@ export default function OnboardingScreen() {
       } = await supabase.auth.getUser();
 
       if (user) {
+        const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
         await supabase.from('profiles').upsert(
           {
             id: user.id,
             tradition,
             app_language: language,
             meaning_language: language,
-            // Canonical completion field the routing gate in _layout.tsx and
-            // auth/callback.tsx checks (matches web's profiles.onboarding_completed,
-            // NOT NULL DEFAULT false — see ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md).
+            full_name: displayName,
+            date_of_birth: dateOfBirth || null,
+            gender_context: genderContext(gender),
+            life_stage: lifeStage,
+            nakshatra: nakshatra || null,
+            rashi: rashi || null,
+            onboarding_goal: goals.join(','),
+            wants_shloka_reminders: notificationsRequested,
+            wants_community_notifications: notificationsRequested,
             onboarding_completed: true,
           },
           { onConflict: 'id' }
@@ -124,8 +257,10 @@ export default function OnboardingScreen() {
 
         registerUserId(user.id);
       }
-    } catch {
-      // Non-fatal — let the user into the app anyway
+    } catch (error) {
+      console.error('[Onboarding] profile save failed', error);
+      // Non-fatal — let the user into the app anyway, matching the existing
+      // native behavior while preserving the logged failure for diagnosis.
     }
 
     setSaving(false);
@@ -133,14 +268,68 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
+  const renderSelectRow = ({
+    selected,
+    label,
+    description,
+    icon,
+    emoji,
+    onPress,
+  }: {
+    selected: boolean;
+    label: string;
+    description?: string;
+    icon?: React.ComponentProps<typeof Feather>['name'];
+    emoji?: string;
+    onPress: () => void;
+  }) => (
+    <Pressable
+      onPress={() => { void selectWithHaptic(onPress); }}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={description ? `${label}, ${description}` : label}
+      style={{
+        borderRadius: RADII.lg,
+        borderWidth: 1.5,
+        borderColor: selected ? COLORS.brandGold : border,
+        backgroundColor: selected ? cardBg : 'transparent',
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        boxShadow: selected ? cardShadow : undefined,
+      }}
+    >
+      <View
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: 16,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: selected ? wellBgSelected : wellBg,
+        }}
+      >
+        {icon ? <Feather name={icon} size={20} color={selected ? COLORS.brandGold : dim} /> : null}
+        {emoji ? <Text style={{ fontSize: 20 }}>{emoji}</Text> : null}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: selected ? COLORS.brandGold : text }}>
+          {label}
+        </Text>
+        {description ? (
+          <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+            {description}
+          </Text>
+        ) : null}
+      </View>
+      {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
+    </Pressable>
+  );
+
   return (
     <Screen style={{ backgroundColor: bg }}>
-      {/* Progress dots */}
-      <View
-        accessible
-        accessibilityLabel={STEP_EYEBROW[step]}
-        style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}
-      >
+      <View accessible accessibilityLabel={stepEyebrow(step)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
         {STEPS.map((s, i) => (
           <View
             key={s}
@@ -159,183 +348,280 @@ export default function OnboardingScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ gap: 24, paddingBottom: 32 }}
       >
-        {/* ── Step 1: Tradition ──────────────────────────────── */}
+        {step !== 'ready' ? (
+          <View style={{ gap: 10 }}>
+            <SectionHeader label={stepEyebrow(step)} />
+            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
+              {STEP_TITLES[step]}
+            </Text>
+          </View>
+        ) : null}
+
         {step === 'tradition' && (
           <>
-            <View style={{ gap: 10 }}>
-              <SectionHeader label={STEP_EYEBROW.tradition} />
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
-                Your tradition
-              </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-                Shoonaya adapts its guidance to your path. Choose your tradition.
-              </Text>
-            </View>
-
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              Shoonaya adapts its guidance to your path. Choose your tradition.
+            </Text>
             <View style={{ gap: 12 }}>
-              {TRADITIONS.map((t) => {
-                const selected = tradition === t.key;
-                return (
-                  <Pressable
-                    key={t.key}
-                    onPress={() => { void handleTradition(t.key); }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={`${t.label}, ${t.description}`}
-                    style={{
-                      borderRadius: RADII.lg,
-                      borderWidth: 1.5,
-                      borderColor: selected ? COLORS.brandGold : border,
-                      backgroundColor: selected ? cardBg : 'transparent',
-                      padding: 16,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 14,
-                      boxShadow: selected ? cardShadow : undefined,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 16,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: selected ? wellBgSelected : wellBg,
-                      }}
-                    >
-                      <Feather name={t.icon} size={20} color={selected ? COLORS.brandGold : dim} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: FONTS.sansSemiBold,
-                          fontSize: 16,
-                          color: selected ? COLORS.brandGold : text,
-                        }}
-                      >
-                        {t.label}
-                      </Text>
-                      <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
-                        {t.description}
-                      </Text>
-                    </View>
-                    {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
-                  </Pressable>
-                );
-              })}
+              {TRADITIONS.map((t) => renderSelectRow({
+                selected: tradition === t.key,
+                label: t.label,
+                description: t.description,
+                icon: t.icon,
+                onPress: () => setTradition(t.key),
+              }))}
             </View>
           </>
         )}
 
-        {/* ── Step 2: Language ───────────────────────────────── */}
+        {step === 'personal' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              Your date of birth helps personalise Panchang, life-stage guidance, and Jyotish readings.
+            </Text>
+
+            <View style={{ gap: 8 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Date of birth
+              </Text>
+              <TextInput
+                value={dateOfBirth}
+                onChangeText={handleDobChange}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={dim}
+                keyboardType="numbers-and-punctuation"
+                maxLength={10}
+                style={{
+                  minHeight: 52,
+                  borderRadius: RADII.lg,
+                  borderWidth: 1.5,
+                  borderColor: border,
+                  paddingHorizontal: 16,
+                  color: text,
+                  fontFamily: FONTS.sans,
+                  fontSize: 16,
+                  backgroundColor: cardBg,
+                }}
+              />
+              {age !== null ? (
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                  Age {age} · suggested stage {LIFE_STAGES.find((s) => s.key === suggestedStage)?.label}
+                </Text>
+              ) : null}
+            </View>
+
+            <View style={{ gap: 12 }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: text }}>
+                Your stage of life
+              </Text>
+              {LIFE_STAGES.map((stage) => renderSelectRow({
+                selected: lifeStage === stage.key,
+                label: `${stage.label} · ${stage.age}`,
+                description: stage.description,
+                emoji: stage.emoji,
+                onPress: () => setLifeStage(stage.key),
+              }))}
+            </View>
+
+            <View style={{ gap: 12 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Gender
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {GENDERS.map((g) => {
+                  const selected = gender === g.key;
+                  return (
+                    <Pressable
+                      key={g.key}
+                      onPress={() => { void selectWithHaptic(() => setGender(g.key)); }}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      style={{
+                        flex: 1,
+                        minHeight: 50,
+                        borderRadius: RADII.lg,
+                        borderWidth: 1.5,
+                        borderColor: selected ? COLORS.brandGold : border,
+                        backgroundColor: selected ? cardBg : 'transparent',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 8,
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
+                        {g.emoji} {g.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={{ gap: 12 }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: text }}>
+                Your Rashi
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {RASHIS.map((item) => {
+                  const selected = rashi === item.key;
+                  return (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => { void selectWithHaptic(() => setRashi(selected ? '' : item.key)); }}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      style={{
+                        width: '31.5%',
+                        minHeight: 104,
+                        borderRadius: RADII.lg,
+                        borderWidth: 1.5,
+                        borderColor: selected ? COLORS.brandGold : border,
+                        backgroundColor: selected ? cardBg : 'transparent',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 24 }}>{item.symbol}</Text>
+                      <Text style={{ marginTop: 4, fontFamily: FONTS.sansSemiBold, fontSize: 12, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
+                        {item.label}
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 11, color: dim, textAlign: 'center' }}>
+                        {item.sanskrit}
+                      </Text>
+                      <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
+                        {item.dates}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          </>
+        )}
+
+        {step === 'nakshatra' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              The lunar mansion at your birth - more precise than your Rashi. Not sure? Check a Janma Kundali app with your birth date, time and place - or skip for now.
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {NAKSHATRAS.map((item) => {
+                const selected = nakshatra === item.key;
+                return (
+                  <Pressable
+                    key={item.key}
+                    onPress={() => { void selectWithHaptic(() => setNakshatra(selected ? '' : item.key)); }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${item.label}, ruled by ${item.ruler}, deity ${item.deity}`}
+                    style={{
+                      width: '31.5%',
+                      minHeight: 102,
+                      borderRadius: RADII.lg,
+                      borderWidth: 1.5,
+                      borderColor: selected ? COLORS.brandGold : border,
+                      backgroundColor: selected ? cardBg : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 22 }}>{item.symbol}</Text>
+                    <Text style={{ marginTop: 4, fontFamily: FONTS.sansSemiBold, fontSize: 11, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
+                      {item.label}
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: dim, textAlign: 'center' }}>
+                      {item.sanskrit}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {nakshatra ? (
+              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 14 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold, textAlign: 'center' }}>
+                  {NAKSHATRAS.find((n) => n.key === nakshatra)?.label} · Ruled by {NAKSHATRAS.find((n) => n.key === nakshatra)?.ruler} · Deity: {NAKSHATRAS.find((n) => n.key === nakshatra)?.deity}
+                </Text>
+              </View>
+            ) : null}
+          </>
+        )}
+
+        {step === 'goals' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              This shapes your feed, guidance, and path. Choose one or more.
+            </Text>
+            <View style={{ gap: 12 }}>
+              {GOALS.map((item) => renderSelectRow({
+                selected: goals.includes(item.key),
+                label: item.label,
+                description: item.sub,
+                emoji: item.emoji,
+                onPress: () => {
+                  setGoals((current) => current.includes(item.key) ? current.filter((goal) => goal !== item.key) : [...current, item.key]);
+                },
+              }))}
+            </View>
+          </>
+        )}
+
+        {step === 'name' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              This is how you&apos;ll appear to your Mandali.
+            </Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Your name or spiritual name"
+              placeholderTextColor={dim}
+              style={{
+                minHeight: 54,
+                borderRadius: RADII.lg,
+                borderWidth: 1.5,
+                borderColor: border,
+                paddingHorizontal: 16,
+                color: text,
+                fontFamily: FONTS.sans,
+                fontSize: 16,
+                backgroundColor: cardBg,
+              }}
+            />
+          </>
+        )}
+
         {step === 'language' && (
           <>
-            <View style={{ gap: 10 }}>
-              <SectionHeader label={STEP_EYEBROW.language} />
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
-                Your language
-              </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-                Choose how you want meanings and explanations displayed.
-              </Text>
-            </View>
-
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              Choose how you want meanings and explanations displayed.
+            </Text>
             <View style={{ gap: 12 }}>
-              {LANGUAGES.map((l) => {
-                const selected = language === l.key;
-                return (
-                  <Pressable
-                    key={l.key}
-                    onPress={() => { void handleLanguage(l.key); }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={`${l.label}, ${l.native}`}
-                    style={{
-                      borderRadius: RADII.lg,
-                      borderWidth: 1.5,
-                      borderColor: selected ? COLORS.brandGold : border,
-                      backgroundColor: selected ? cardBg : 'transparent',
-                      padding: 16,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 14,
-                      boxShadow: selected ? cardShadow : undefined,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 16,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: selected ? wellBgSelected : wellBg,
-                      }}
-                    >
-                      <Feather name="globe" size={19} color={selected ? COLORS.brandGold : dim} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: FONTS.sansSemiBold,
-                          fontSize: 16,
-                          color: selected ? COLORS.brandGold : text,
-                        }}
-                      >
-                        {l.label}
-                      </Text>
-                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, marginTop: 2 }}>
-                        {l.native}
-                      </Text>
-                    </View>
-                    {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
-                  </Pressable>
-                );
-              })}
+              {LANGUAGES.map((l) => renderSelectRow({
+                selected: language === l.key,
+                label: l.label,
+                description: l.native,
+                icon: 'globe',
+                onPress: () => setLanguage(l.key),
+              }))}
             </View>
           </>
         )}
 
-        {/* ── Step 3: Notifications ──────────────────────────── */}
         {step === 'notifications' && (
           <>
-            <View style={{ gap: 10 }}>
-              <SectionHeader label={STEP_EYEBROW.notifications} />
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
-                Daily reminders
-              </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-                Receive your daily shloka, streak nudges, and community mentions. You can always adjust this later in Settings.
-              </Text>
-            </View>
-
-            <View
-              style={{
-                borderRadius: RADII.xl,
-                borderWidth: 1,
-                borderColor: border,
-                backgroundColor: cardBg,
-                padding: 20,
-                gap: 16,
-              }}
-            >
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              Receive your daily shloka, streak nudges, and community mentions. You can always adjust this later in Settings.
+            </Text>
+            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 20, gap: 16 }}>
               {[
                 { icon: 'book-open' as const, label: 'Daily shloka notification' },
                 { icon: 'zap' as const, label: 'Streak reminders' },
                 { icon: 'users' as const, label: 'Mandali mentions' },
               ].map((item) => (
                 <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 12,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: wellBg,
-                    }}
-                  >
+                  <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
                     <Feather name={item.icon} size={16} color={COLORS.brandGold} />
                   </View>
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 14, color: text }}>
@@ -344,28 +630,63 @@ export default function OnboardingScreen() {
                 </View>
               ))}
             </View>
-
             <View style={{ gap: 10 }}>
-              <Button
-                label="Allow notifications"
-                onPress={() => { void handleAllowNotifications(); }}
-                disabled={saving}
-                loading={saving}
-              />
+              <Button label="Allow notifications" onPress={() => { void handleAllowNotifications(); }} disabled={saving} loading={saving} />
               <Button
                 label="Not now"
                 variant="ghost"
-                onPress={() => { void complete(false); }}
+                onPress={() => {
+                  setNotificationsRequested(false);
+                  setStep('ready');
+                }}
                 disabled={saving}
               />
             </View>
           </>
         )}
+
+        {step === 'ready' && (
+          <View style={{ minHeight: 560, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+            <View style={{ width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBgSelected, borderWidth: 1.5, borderColor: COLORS.brandGold }}>
+              <Text style={{ fontSize: 38 }}>{TRADITIONS.find((t) => t.key === tradition)?.emoji}</Text>
+            </View>
+            <View style={{ alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text, textAlign: 'center' }}>
+                {readyCopy.heading}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 22, color: dim, textAlign: 'center' }}>
+                {readyCopy.body}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, textAlign: 'center' }}>
+                Your sanctuary awaits.
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {READY_FEATURES.map((item) => (
+                <View key={item.label} style={{ flex: 1, minHeight: 100, borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, alignItems: 'center', justifyContent: 'center', padding: 10 }}>
+                  <Text style={{ fontSize: 24 }}>{item.emoji}</Text>
+                  <Text style={{ marginTop: 5, fontFamily: FONTS.sansSemiBold, fontSize: 11, color: text, textAlign: 'center' }}>
+                    {item.label}
+                  </Text>
+                  <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
+                    {item.description}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <View style={{ width: '100%', gap: 10 }}>
+              <Button label="Begin my Sadhana" onPress={() => { void complete(); }} disabled={saving} loading={saving} />
+              <Button label="Explore Shoonaya" variant="ghost" onPress={() => { void complete(); }} disabled={saving} />
+            </View>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Continue button (steps 1 and 2) */}
-      {step !== 'notifications' ? (
-        <Button label="Continue" onPress={() => { void goNext(); }} style={{ marginTop: 16 }} />
+      {step !== 'notifications' && step !== 'ready' ? (
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+          {stepIndex > 0 ? <Button label="Back" variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
+          <Button label={step === 'nakshatra' || step === 'name' ? 'Continue / Skip' : 'Continue'} onPress={() => { void goNext(); }} style={{ flex: 1 }} />
+        </View>
       ) : null}
     </Screen>
   );
