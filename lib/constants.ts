@@ -159,6 +159,14 @@ export const COLORS = {
   // than left as a raw literal.
   celebrationScrim: 'rgba(0,0,0,0.45)',
 
+  // Branded sharing surfaces. WhatsApp green is a platform brand color,
+  // but it should still be named once instead of repeated as screen-local
+  // literals; the translucent bg/border mirror the PWA invite/share card
+  // treatment with a native-safe Pressable surface.
+  whatsApp: '#25D366',
+  whatsAppBg: 'rgba(37,211,102,0.10)',
+  whatsAppBorder: 'rgba(37,211,102,0.35)',
+
   // Theme-independent white — for text/icons overlaid directly on a dark
   // scrim atop a photographic image (e.g. app/live-darshan.tsx's "Live"
   // badge and play-affordance dot on a YouTube thumbnail). Never swap for

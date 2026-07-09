@@ -22,7 +22,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
-import { API_BASE, COLORS, FONTS } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { getUnlockedRelics, SACRED_RELICS } from '@/lib/relics';
 import { supabase } from '@/lib/supabase';
@@ -83,6 +83,16 @@ type ProgressSummary = {
   };
 };
 
+type KulRelation = { name: string | null } | { name: string | null }[] | null;
+
+type ReportHeatmapDay = {
+  date?: string;
+  nitya?: number;
+  japa?: boolean;
+};
+
+type ProfileRoute = '/settings' | '/mandali' | '/my-progress' | '/kosh';
+
 const INITIAL_EDIT: EditState = {
   fullName: '',
   appLanguage: 'en',
@@ -94,6 +104,13 @@ const TRADITION_META: Record<Tradition, { label: string; emoji: string }> = {
   buddhist: { label: 'Buddhist', emoji: '☸️' },
   jain: { label: 'Jain', emoji: '卐' },
 };
+
+function getKulName(kuls: KulRelation): string | null {
+  if (Array.isArray(kuls)) {
+    return kuls[0]?.name ?? null;
+  }
+  return kuls?.name ?? null;
+}
 
 function ProgressRing({
   label,
@@ -139,6 +156,139 @@ function ProgressRing({
   );
 }
 
+function MetricTile({
+  label,
+  value,
+  icon,
+  onPress,
+  theme,
+}: {
+  label: string;
+  value: string;
+  icon: keyof typeof Feather.glyphMap;
+  onPress?: () => void;
+  theme: ReturnType<typeof themeColor>;
+}) {
+  const content = (
+    <>
+      <View
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          backgroundColor: theme.brandSoft,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Feather name={icon} size={14} color={theme.brand} />
+      </View>
+      <Text style={{ ...TYPE.chip, color: theme.dim }}>{label}</Text>
+      <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.text }}>
+        {value}
+      </Text>
+    </>
+  );
+
+  if (!onPress) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          minWidth: 76,
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: theme.borderSoft,
+          backgroundColor: theme.glass,
+          padding: 10,
+          alignItems: 'center',
+          gap: 5,
+        }}
+      >
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flex: 1,
+        minWidth: 76,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: theme.borderSoft,
+        backgroundColor: theme.glass,
+        padding: 10,
+        alignItems: 'center',
+        gap: 5,
+        opacity: pressed ? 0.86 : 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
+      {content}
+    </Pressable>
+  );
+}
+
+function ActionRow({
+  label,
+  subtitle,
+  icon,
+  onPress,
+  loading,
+  theme,
+}: {
+  label: string;
+  subtitle?: string;
+  icon: keyof typeof Feather.glyphMap;
+  onPress: () => void;
+  loading?: boolean;
+  theme: ReturnType<typeof themeColor>;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={subtitle ? `${label}. ${subtitle}` : label}
+      onPress={onPress}
+      disabled={loading}
+      style={({ pressed }) => ({
+        minHeight: 58,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: theme.borderSoft,
+        backgroundColor: theme.glass,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        opacity: loading ? 0.65 : pressed ? 0.86 : 1,
+      })}
+    >
+      <View
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 16,
+          backgroundColor: theme.brandSoft,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Feather name={icon} size={17} color={theme.brand} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ ...TYPE.label, color: theme.text }}>{loading ? 'Generating...' : label}</Text>
+        {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim }}>{subtitle}</Text> : null}
+      </View>
+      {loading ? <ActivityIndicator size="small" color={theme.dim} /> : <Feather name="chevron-right" size={18} color={theme.dim} />}
+    </Pressable>
+  );
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -153,16 +303,7 @@ export default function ProfileScreen() {
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
 
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-    }),
-    [isDark]
-  );
+  const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   const loadProfile = useCallback(async () => {
     const response = await apiFetch('/api/native/progress-summary');
@@ -185,7 +326,7 @@ export default function ProfileScreen() {
       .eq('id', payload.profile.id)
       .single();
 
-    const kulName = profileRow?.kuls ? (profileRow.kuls as any).name : null;
+    const kulName = getKulName((profileRow?.kuls ?? null) as KulRelation);
 
     const nextProfile: ProfileData = {
       id: payload.profile.id,
@@ -304,9 +445,11 @@ export default function ProfileScreen() {
       const tEmoji = TRADITION_META[tradition as Tradition]?.emoji ?? '🙏';
 
       const formatMins = (m: number) => m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
-      const heatmapHtml = (data.heatmap ?? []).map((d: any) => {
-        const level = d.nitya >= 7 ? '#d4a030' : d.nitya > 0 ? '#d4a03066' : d.japa ? '#7B1A1A66' : '#e5e7eb';
-        return `<div title="${d.date}" style="width:18px;height:18px;border-radius:4px;background:${level}"></div>`;
+      const heatmap = Array.isArray(data.heatmap) ? (data.heatmap as ReportHeatmapDay[]) : [];
+      const heatmapHtml = heatmap.map((day) => {
+        const nityaCount = day.nitya ?? 0;
+        const level = nityaCount >= 7 ? '#d4a030' : nityaCount > 0 ? '#d4a03066' : day.japa ? '#7B1A1A66' : '#e5e7eb';
+        return `<div title="${day.date ?? ''}" style="width:18px;height:18px;border-radius:4px;background:${level}"></div>`;
       }).join('');
       const mantrasHtml = (data.japa?.top_mantras ?? []).map(([name, count]: [string, number]) =>
         `<li>${name} — <strong>${count}</strong> session${count !== 1 ? 's' : ''}</li>`
@@ -426,322 +569,433 @@ export default function ProfileScreen() {
 
   const traditionMeta = TRADITION_META[profile.tradition];
   const relicImage = activeRelic ? `${API_BASE}${activeRelic.imageUrl}` : null;
+  const unlockedCount = unlockedRelics.length;
+  const visibleRelics = SACRED_RELICS.slice(0, 8);
+  const totalVisibleRelics = SACRED_RELICS.length;
+  const practicesPct = progressData?.practices.total
+    ? Math.round((progressData.practices.completed / progressData.practices.total) * 100)
+    : 0;
+  const initials = profile.full_name.trim().slice(0, 1).toUpperCase() || 'S';
+  const subscriptionLabel = profile.is_pro ? 'Pro Member' : 'Free Plan';
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 16 }}>
-        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: theme.text }}>Profile</Text>
+      <ScrollView contentContainerStyle={{ paddingBottom: 30, gap: 16 }}>
+        <View style={{ gap: 6 }}>
+          <Text style={{ ...TYPE.section, color: theme.brand }}>Your Shoonaya</Text>
+          <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Profile</Text>
+        </View>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <Card
+          elevated
+          tone="auto"
+          style={{
+            backgroundColor: theme.glass,
+            borderColor: theme.premiumBorder,
+            gap: 18,
+            overflow: 'hidden',
+            boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
+          }}
+        >
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: -80,
+              right: -54,
+              width: 190,
+              height: 190,
+              borderRadius: 95,
+              backgroundColor: theme.brandSoft,
+            }}
+          />
+
+          <View style={{ alignItems: 'center', gap: 12 }}>
             <View
               style={{
-                width: 68,
-                height: 68,
-                borderRadius: 34,
-                backgroundColor: COLORS.brandGold,
+                width: 86,
+                height: 86,
+                borderRadius: 43,
+                backgroundColor: theme.brand,
                 alignItems: 'center',
                 justifyContent: 'center',
+                borderWidth: 3,
+                borderColor: theme.accent,
+                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
               }}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.serifBold, fontSize: 28 }}>
-                {profile.full_name.charAt(0).toUpperCase()}
-              </Text>
+              <Text style={{ color: isDark ? COLORS.darkBg : COLORS.ink, fontFamily: FONTS.serifBold, fontSize: 34 }}>{initials}</Text>
             </View>
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{profile.full_name}</Text>
+            <View style={{ alignItems: 'center', gap: 5 }}>
+              <Text style={{ ...TYPE.display, fontSize: 32, lineHeight: 36, color: theme.text, textAlign: 'center' }}>
+                {profile.full_name}
+              </Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>@{profile.id.replace(/-/g, '').slice(0, 10)}</Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
               <View
                 style={{
-                  alignSelf: 'flex-start',
                   borderRadius: 999,
                   paddingHorizontal: 12,
                   paddingVertical: 6,
-                  backgroundColor: theme.bg,
+                  backgroundColor: theme.brandSoft,
                   borderWidth: 1,
-                  borderColor: theme.border,
+                  borderColor: theme.premiumBorder,
                 }}
               >
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                <Text style={{ ...TYPE.chip, color: theme.brand }}>
                   {traditionMeta.emoji} {traditionMeta.label}
                 </Text>
               </View>
+              <View
+                style={{
+                  borderRadius: 999,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  backgroundColor: profile.is_pro ? theme.brandSoft : theme.cardSoft,
+                  borderWidth: 1,
+                  borderColor: profile.is_pro ? theme.premiumBorder : theme.borderSoft,
+                }}
+              >
+                <Text style={{ ...TYPE.chip, color: profile.is_pro ? theme.brand : theme.dim }}>{subscriptionLabel}</Text>
+              </View>
             </View>
-            <Pressable onPress={() => setEditVisible(true)}>
-              <Feather name="edit-3" size={18} color={theme.dim} />
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
+              onPress={() => setEditVisible(true)}
+              style={({ pressed }) => ({
+                minHeight: 44,
+                borderRadius: 22,
+                paddingHorizontal: 16,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.accent,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                opacity: pressed ? 0.86 : 1,
+              })}
+            >
+              <Feather name="edit-3" size={15} color={theme.brand} />
+              <Text style={{ ...TYPE.label, color: theme.brand }}>Edit profile</Text>
             </Pressable>
           </View>
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Sacred Kosh"
             onPress={() => router.push('/kosh')}
-            style={{
-              borderRadius: 20,
+            style={({ pressed }) => ({
+              borderRadius: 22,
               borderWidth: 1,
-              borderColor: theme.border,
-              backgroundColor: theme.bg,
-              padding: 14,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.accent,
+              padding: 12,
               flexDirection: 'row',
               alignItems: 'center',
               gap: 12,
-            }}
+              opacity: pressed ? 0.88 : 1,
+            })}
           >
             {relicImage ? (
-              <Image source={{ uri: relicImage }} style={{ width: 52, height: 52, borderRadius: 16 }} />
+              <Image source={{ uri: relicImage }} style={{ width: 48, height: 48, borderRadius: 16 }} />
             ) : (
               <View
                 style={{
-                  width: 52,
-                  height: 52,
+                  width: 48,
+                  height: 48,
                   borderRadius: 16,
-                  backgroundColor: COLORS.brandGold,
+                  backgroundColor: theme.brandSoft,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Feather name="star" size={20} color={COLORS.ink} />
+                <Feather name="star" size={20} color={theme.brand} />
               </View>
             )}
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                {activeRelic?.name ?? 'No active relic'}
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ ...TYPE.label, color: theme.text }}>
+                {activeRelic?.name ?? (unlockedCount > 0 ? 'Equip your relic' : 'Sacred Kosh')}
               </Text>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
-                Tap to open Kosh
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                {unlockedCount} of {totalVisibleRelics} relics unlocked
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={theme.dim} />
           </Pressable>
         </Card>
 
-        {profileCompletion && profileCompletion.pct < 100 ? (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <ProgressRing label="" value={profileCompletion.pct} accent={COLORS.brandGold} textColor={theme.text} dimColor={theme.dim} />
-                <View>
-                  <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2 }}>Profile strength</Text>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, marginTop: 4 }}>
-                    Add: {profileCompletion.missing.slice(0, 2).join(', ')}{profileCompletion.missing.length > 2 ? ` +${profileCompletion.missing.length - 2} more` : ''}
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <MetricTile label="Streak" value={`${streak} 🔥`} icon="zap" onPress={() => router.push('/my-progress')} theme={theme} />
+          <MetricTile label="Seva" value={String(profile.seva_score)} icon="heart" onPress={() => router.push('/my-progress')} theme={theme} />
+          <MetricTile label="Relics" value={`${unlockedCount}/${totalVisibleRelics}`} icon="star" onPress={() => router.push('/kosh')} theme={theme} />
+          <MetricTile label="Nitya" value={`${progressData?.streaks.nitya ?? 0}d`} icon="sun" onPress={() => router.push('/my-progress')} theme={theme} />
+        </View>
+
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ ...TYPE.section, color: theme.brand }}>Sacred Kosh</Text>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Your relics</Text>
+            </View>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/kosh')}>
+              <Text style={{ ...TYPE.label, color: theme.brand }}>View all</Text>
+            </Pressable>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            {visibleRelics.map((relic) => {
+              const isUnlocked = unlockedRelics.some((item) => item.id === relic.id);
+              const isActive = profile.active_symbol_id === relic.id;
+              return (
+                <Pressable
+                  key={relic.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${relic.name}. ${isUnlocked ? 'Unlocked' : 'Locked'}`}
+                  onPress={() => router.push('/kosh')}
+                  style={{ width: 62, alignItems: 'center', gap: 7 }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 28,
+                      borderWidth: 1,
+                      borderColor: isActive ? theme.brand : isUnlocked ? theme.premiumBorder : theme.borderSoft,
+                      backgroundColor: isActive ? theme.brandSoft : theme.glass,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {isUnlocked ? (
+                      <Image source={{ uri: `${API_BASE}${relic.imageUrl}` }} style={{ width: 38, height: 38 }} />
+                    ) : (
+                      <Feather name="lock" size={15} color={theme.dim} />
+                    )}
+                  </View>
+                  <Text numberOfLines={2} style={{ ...TYPE.chip, color: isUnlocked ? theme.dim : theme.border, textAlign: 'center' }}>
+                    {relic.name}
                   </Text>
-                </View>
-              </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </Card>
+
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <ProgressRing
+              label="Profile"
+              value={profileCompletion?.pct ?? 100}
+              accent={theme.brand}
+              textColor={theme.text}
+              dimColor={theme.dim}
+            />
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ ...TYPE.section, color: theme.brand }}>Profile Strength</Text>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
+                {(profileCompletion?.pct ?? 100) >= 100 ? 'Complete profile' : 'Finish your profile'}
+              </Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                {(profileCompletion?.missing.length ?? 0) > 0
+                  ? `Add ${profileCompletion?.missing.slice(0, 2).join(', ')}${(profileCompletion?.missing.length ?? 0) > 2 ? ` +${(profileCompletion?.missing.length ?? 0) - 2} more` : ''}`
+                  : 'Your core identity is ready.'}
+              </Text>
+            </View>
+            {(profileCompletion?.pct ?? 100) < 100 ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Complete profile"
                 onPress={() => router.push('/settings')}
-                style={{
-                  borderRadius: 20,
-                  backgroundColor: COLORS.brandGold,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
+                style={({ pressed }) => ({
+                  minHeight: 44,
+                  borderRadius: 22,
+                  backgroundColor: theme.brand,
+                  paddingHorizontal: 14,
+                  justifyContent: 'center',
+                  opacity: pressed ? 0.86 : 1,
+                })}
               >
-                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Complete</Text>
+                <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Complete</Text>
               </Pressable>
-            </View>
-          </Card>
-        ) : null}
+            ) : null}
+          </View>
+        </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 20 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Progress Hub</Text>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 18 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ ...TYPE.section, color: theme.brand }}>Progress Hub</Text>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Sadhana momentum</Text>
+            </View>
+            <Text style={{ ...TYPE.caption, color: theme.dim }}>
+              {progressData?.practices.completed ?? 0}/{progressData?.practices.total ?? 0} today
+            </Text>
+          </View>
 
           {progressData ? (
-            <View style={{ gap: 16 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <ProgressRing
-                  label="Practices"
-                  value={progressData.practices.total > 0 ? Math.round((progressData.practices.completed / progressData.practices.total) * 100) : 0}
-                  accent={COLORS.brandGold}
-                  textColor={theme.text}
-                  dimColor={theme.dim}
-                />
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{streak}</Text>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Streak</Text>
-                </View>
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{profile.seva_score}</Text>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Seva</Text>
-                </View>
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{progressData.streaks.bestShloka}</Text>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Best Streak</Text>
-                </View>
-              </View>
-
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 16, marginTop: 8 }}>
-                <View style={{ width: '50%', gap: 4 }}>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Nitya Streak</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{progressData.streaks.nitya} {progressData.streaks.nitya === 1 ? 'day' : 'days'}</Text>
-                </View>
-                <View style={{ width: '50%', gap: 4 }}>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Best Nitya</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{progressData.streaks.bestNitya} {progressData.streaks.bestNitya === 1 ? 'day' : 'days'}</Text>
-                </View>
-                <View style={{ width: '50%', gap: 4 }}>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Pathshala</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{progressData.pathshala.completedLessons} {progressData.pathshala.completedLessons === 1 ? 'lesson' : 'lessons'}</Text>
-                </View>
-                <View style={{ width: '50%', gap: 4 }}>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Quiz</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>
-                    {progressData.quiz.doneToday ? 'Done today' : 'Not started'}
-                  </Text>
+            <View style={{ gap: 14 }}>
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                <ProgressRing label="Daily" value={practicesPct} accent={theme.brand} textColor={theme.text} dimColor={theme.dim} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  {[
+                    ['Best Shloka', `${progressData.streaks.bestShloka} days`],
+                    ['Best Nitya', `${progressData.streaks.bestNitya} days`],
+                    ['Pathshala', `${progressData.pathshala.completedLessons} lessons`],
+                    ['Quiz', progressData.quiz.doneToday ? 'Done today' : 'Not started'],
+                  ].map(([label, value]) => (
+                    <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>{label}</Text>
+                      <Text style={{ ...TYPE.label, color: theme.text }}>{value}</Text>
+                    </View>
+                  ))}
                 </View>
               </View>
             </View>
           ) : (
-            <ActivityIndicator color={COLORS.brandGold} />
+            <ActivityIndicator color={theme.brand} />
           )}
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
                 {profile.is_pro ? 'Pro active' : 'Free plan'}
               </Text>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>
                 Status: {profile.subscription_status}
               </Text>
             </View>
             <Pressable
+              accessibilityRole="button"
               onPress={() => router.push('/settings')}
-              style={{
+              style={({ pressed }) => ({
                 borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: theme.brand,
                 paddingHorizontal: 16,
                 paddingVertical: 12,
-              }}
+                opacity: pressed ? 0.86 : 1,
+              })}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+              <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>
                 {profile.is_pro ? 'Manage plan' : 'Upgrade to Pro'}
               </Text>
             </Pressable>
           </View>
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ ...TYPE.section, color: theme.brand }}>Lineage</Text>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
                 {profile.kul_id ? profile.kul_name : 'Join your Kul'}
               </Text>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>
                 {profile.kul_id ? 'Lineage & community' : 'Connect with your heritage'}
               </Text>
             </View>
             <Pressable
+              accessibilityRole="button"
               onPress={() => Alert.alert('Coming Soon', 'Kul features are coming soon.')}
-              style={{
+              style={({ pressed }) => ({
                 borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: theme.brandSoft,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
                 paddingHorizontal: 16,
                 paddingVertical: 12,
-              }}
+                opacity: pressed ? 0.86 : 1,
+              })}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+              <Text style={{ ...TYPE.label, color: theme.brand }}>
                 {profile.kul_id ? 'Invite' : 'Join'}
               </Text>
             </Pressable>
           </View>
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
           <View>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+            <Text style={{ ...TYPE.section, color: theme.brand }}>Invite & Refer</Text>
+            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
               Invite Friends
             </Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, marginTop: 4 }}>
+            <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 4 }}>
               Share your invite code: <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>{inviteCode}</Text>
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share Shoonaya on WhatsApp"
               onPress={() => { void shareWhatsApp(); }}
-              style={{
+              style={({ pressed }) => ({
                 flex: 1,
                 borderRadius: 16,
                 borderWidth: 1,
-                borderColor: '#25D366',
-                backgroundColor: 'rgba(37,211,102,0.1)',
+                borderColor: COLORS.whatsAppBorder,
+                backgroundColor: COLORS.whatsAppBg,
                 paddingVertical: 12,
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-              }}
+                opacity: pressed ? 0.86 : 1,
+              })}
             >
-              <Feather name="message-circle" size={18} color="#25D366" />
-              <Text style={{ color: '#25D366', fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>WhatsApp</Text>
+              <Feather name="message-circle" size={18} color={COLORS.whatsApp} />
+              <Text style={{ ...TYPE.label, color: COLORS.whatsApp }}>WhatsApp</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Copy invite code"
               onPress={() => { void copyInvite(); }}
-              style={{
+              style={({ pressed }) => ({
                 flex: 1,
                 borderRadius: 16,
                 borderWidth: 1,
                 borderColor: theme.border,
-                backgroundColor: theme.bg,
+                backgroundColor: theme.glass,
                 paddingVertical: 12,
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-              }}
+                opacity: pressed ? 0.86 : 1,
+              })}
             >
               <Feather name="copy" size={18} color={theme.text} />
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Copy Link</Text>
+              <Text style={{ ...TYPE.label, color: theme.text }}>Copy Code</Text>
             </Pressable>
           </View>
         </Card>
 
         <View style={{ gap: 10 }}>
-          <Pressable
+          <ActionRow
+            label="Sadhana Report"
+            subtitle="Download your practice summary"
+            icon="pie-chart"
+            loading={reportLoading}
             onPress={() => { void downloadReport(); }}
-            disabled={reportLoading}
-            style={{
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: theme.border,
-              backgroundColor: theme.card,
-              paddingHorizontal: 16,
-              paddingVertical: 15,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              opacity: reportLoading ? 0.7 : 1,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Feather name="pie-chart" size={18} color={theme.text} />
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                {reportLoading ? 'Generating...' : 'Sadhana Report'}
-              </Text>
-            </View>
-            {reportLoading ? <ActivityIndicator size="small" color={theme.dim} /> : <Feather name="download" size={18} color={theme.dim} />}
-          </Pressable>
+            theme={theme}
+          />
           {[
-            ['Settings', '/settings'],
-            ['Mandali', '/mandali'],
-          ].map(([label, route]) => (
-            <Pressable
-              key={label}
-              onPress={() => router.push(route as '/settings' | '/mandali')}
-              style={{
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.card,
-                paddingHorizontal: 16,
-                paddingVertical: 15,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>{label}</Text>
-              <Feather name="chevron-right" size={18} color={theme.dim} />
-            </Pressable>
+            { label: 'Settings', subtitle: 'Preferences, reminders, privacy', route: '/settings' as ProfileRoute, icon: 'settings' as const },
+            { label: 'Mandali', subtitle: 'Your local Sangam and Sabha', route: '/mandali' as ProfileRoute, icon: 'users' as const },
+          ].map((item) => (
+            <ActionRow
+              key={item.label}
+              label={item.label}
+              subtitle={item.subtitle}
+              icon={item.icon}
+              onPress={() => router.push(item.route)}
+              theme={theme}
+            />
           ))}
         </View>
 
@@ -750,7 +1004,7 @@ export default function ProfileScreen() {
             void handleSignOut();
           }}
           disabled={signingOut}
-          style={{
+          style={({ pressed }) => ({
             marginTop: 4,
             borderRadius: 18,
             borderWidth: 1,
@@ -758,10 +1012,10 @@ export default function ProfileScreen() {
             backgroundColor: theme.card,
             paddingVertical: 14,
             alignItems: 'center',
-            opacity: signingOut ? 0.7 : 1,
-          }}
+            opacity: signingOut ? 0.7 : pressed ? 0.86 : 1,
+          })}
         >
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Sign out</Text>
+          <Text style={{ ...TYPE.label, color: theme.text }}>Sign out</Text>
         </Pressable>
 
         <View style={{ marginTop: 24, alignItems: 'center', gap: 12 }}>
@@ -776,7 +1030,7 @@ export default function ProfileScreen() {
                 Alert.alert('Error', 'Could not open Terms of Service.');
               }
             }}>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Terms</Text>
+              <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>Terms</Text>
             </Pressable>
             <Pressable onPress={async () => {
               const url = `${API_BASE}/privacy`;
@@ -788,15 +1042,15 @@ export default function ProfileScreen() {
                 Alert.alert('Error', 'Could not open Privacy Policy.');
               }
             }}>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Privacy</Text>
+              <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>Privacy</Text>
             </Pressable>
           </View>
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>Shoonaya · Built with 🙏</Text>
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>Shoonaya · Find your infinity</Text>
         </View>
       </ScrollView>
 
       <Modal visible={editVisible} transparent animationType="slide" onRequestClose={() => setEditVisible(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end' }}>
           <View
             style={{
               backgroundColor: theme.card,

@@ -11,3 +11,10 @@ expo-env.d.ts
 .env*.local
 /ios
 /android
+
+# Local agent/scratch artifacts. Keep them out of cloud build uploads.
+.codex/
+graphify-out/
+check_panchang.ts
+rewrite_japa.py
+scripts/graphify-update-source.sh
