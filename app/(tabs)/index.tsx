@@ -793,9 +793,6 @@ function HomeContent() {
             <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
               {greeting}, {state.profile.firstName}
             </Text>
-            <Text style={{ marginTop: 6, ...TYPE.caption, color: theme.dim }}>
-              {getDateLabel(state.date.iso)}
-            </Text>
 
             <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
