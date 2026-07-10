@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 
 type CheckinStatus = 'loading' | 'ready' | 'error';
@@ -107,7 +108,7 @@ export function MoodCheckin() {
             backgroundColor: loggedMoodConfig.bg,
           }}
         >
-          <Feather name="smile" size={18} color={loggedMoodConfig.colour} />
+          <SacredIcon name="mood" fallbackGlyph="smile" size={18} color={loggedMoodConfig.colour} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.3, textTransform: 'uppercase', color: dim }}>

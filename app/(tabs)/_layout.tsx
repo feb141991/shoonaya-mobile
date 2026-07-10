@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 
 // 5-tab bar matching PWA's BottomNav.tsx member layout: Home / Japa /
@@ -84,7 +85,7 @@ export default function TabsLayout() {
                   : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
               }}
             >
-              <Feather name="sun" size={22} color={focused ? COLORS.ink : brand} />
+              <SacredIcon name="bhakti" fallbackGlyph="sun" size={22} color={focused ? COLORS.ink : brand} />
             </View>
           ),
           tabBarLabel: ({ focused }) => (
@@ -98,14 +99,14 @@ export default function TabsLayout() {
         name="pathshala"
         options={{
           title: 'Pathshala',
-          tabBarIcon: ({ color, size }) => <Feather name="book-open" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <SacredIcon name="pathshala" fallbackGlyph="book-open" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="mandali"
         options={{
           title: 'Mandali',
-          tabBarIcon: ({ color, size }) => <Feather name="users" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <SacredIcon name="mandali" fallbackGlyph="users" color={color} size={size} />,
         }}
       />
 

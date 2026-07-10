@@ -24,7 +24,7 @@ import { findMoodConfig } from '@/lib/mood-registry';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { SacredIcon } from '@/components/ui/SacredIcon';
+import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { MoodCheckin } from '@/components/home/MoodCheckin';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
@@ -1165,12 +1165,12 @@ function HomeContent() {
           <View style={{ marginTop: 12 }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Sadhana</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-              {[
-                { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
-                { label: 'Quiz',     href: '/quiz',        icon: '🧠', bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
-                { label: 'AI Guide', href: '/ai-chat',     icon: '✨', bg: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' },
-                { label: 'Progress', href: '/my-progress', icon: '📈', bg: isDark ? 'rgba(107,196,126,0.15)' : 'rgba(107,196,126,0.12)' },
-              ].map(item => (
+              {([
+                { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
+                { label: 'Quiz',     href: '/quiz',        icon: '🧠', sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
+                { label: 'AI Guide', href: '/ai-chat',     icon: '✨', sacredId: null,                         fallbackGlyph: null,                   bg: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' },
+                { label: 'Progress', href: '/my-progress', icon: '📈', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'bar-chart-2' as const, bg: isDark ? 'rgba(107,196,126,0.15)' : 'rgba(107,196,126,0.12)' },
+              ]).map(item => (
                 <Pressable
                   key={item.label}
                   accessibilityRole="button"
@@ -1186,7 +1186,13 @@ function HomeContent() {
                     borderColor: theme.borderSoft,
                   }}
                 >
-                  <Text style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</Text>
+                  {item.sacredId && item.fallbackGlyph ? (
+                    <View style={{ marginBottom: 8, height: 24, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={24} color={theme.brand} />
+                    </View>
+                  ) : (
+                    <Text style={{ fontSize: 24, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                  )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                     {item.label}
                   </Text>
@@ -1199,17 +1205,19 @@ function HomeContent() {
           <View style={{ marginTop: 12, marginBottom: 12 }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Community</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-              {[
-                { label: 'Live Darshan', href: '/live-darshan', icon: '📺', bg: isDark ? 'rgba(100,181,246,0.15)' : 'rgba(100,181,246,0.12)' },
-                { label: 'Mandali',      href: '/(tabs)/mandali',      icon: '👥', bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
+              {([
+                { label: 'Live Darshan', href: '/live-darshan',    icon: '📺', sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, bg: isDark ? 'rgba(100,181,246,0.15)' : 'rgba(100,181,246,0.12)' },
+                { label: 'Mandali',      href: '/(tabs)/mandali',  icon: '👥', sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
                 // hidden tab (href: null in _layout.tsx) with no entry point
                 // anywhere in the app. This card is the fix; the tab stays
-                // hidden (tab bar hierarchy is out of scope here).
-                { label: 'Tirtha',      href: '/(tabs)/tirtha',       icon: '🛕', bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
+                // hidden (tab bar hierarchy is out of scope here). Not in
+                // this task's required SacredIconName list, so it stays on
+                // its emoji glyph rather than growing the union unasked.
+                { label: 'Tirtha',      href: '/(tabs)/tirtha',    icon: '🛕', sacredId: null,                              fallbackGlyph: null,             bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
                 // Seva omitted pending future feature-build
-              ].map(item => (
+              ]).map(item => (
                 <Pressable
                   key={item.label}
                   accessibilityRole="button"
@@ -1225,7 +1233,13 @@ function HomeContent() {
                     borderColor: theme.borderSoft,
                   }}
                 >
-                  <Text style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</Text>
+                  {item.sacredId && item.fallbackGlyph ? (
+                    <View style={{ marginBottom: 8, height: 24, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={24} color={theme.brand} />
+                    </View>
+                  ) : (
+                    <Text style={{ fontSize: 24, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                  )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                     {item.label}
                   </Text>

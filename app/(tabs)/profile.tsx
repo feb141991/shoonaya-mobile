@@ -21,6 +21,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
@@ -713,7 +714,7 @@ export default function ProfileScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Feather name="star" size={20} color={theme.brand} />
+                <SacredIcon name="kosh" fallbackGlyph="star" size={20} color={theme.brand} />
               </View>
             )}
             <View style={{ flex: 1, gap: 2 }}>

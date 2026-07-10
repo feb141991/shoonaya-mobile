@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { Image, type ImageSource } from 'expo-image';
+import type { OpaqueColorValue } from 'react-native';
 
 // Shared feature-identity icon component — the seam for the theme/3D-icon
 // migration (see docs/NATIVE_VISUAL_DEBT_MATRIX.md, "3D icon approach").
@@ -38,7 +39,9 @@ export type SacredIconName =
   | 'quiz'
   | 'mood'
   | 'profile'
-  | 'kosh';
+  | 'kosh'
+  | 'live-darshan'
+  | 'progress';
 
 // Empty by design — see file header. Populate as real static assets land,
 // e.g. `japa: require('@/assets/icons/japa.webp')`.
@@ -52,7 +55,12 @@ type SacredIconProps = {
   // unrelated default glyph.
   fallbackGlyph: keyof typeof Feather.glyphMap;
   size?: number;
-  color: string;
+  // Matches Feather's own color prop type (string | OpaqueColorValue) —
+  // widened from a plain `string` so this component is a drop-in
+  // replacement at every existing Feather call site, including
+  // react-navigation's tabBarIcon render prop, which types `color` as
+  // ColorValue (can be an OpaqueColorValue from PlatformColor()).
+  color: string | OpaqueColorValue;
 };
 
 export function SacredIcon({ name, fallbackGlyph, size = 20, color }: SacredIconProps) {
