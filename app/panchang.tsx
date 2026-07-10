@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
@@ -187,12 +187,18 @@ export default function PanchangScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+        >
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
 
-        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Panchang</Text>
+        <Text style={{ color: theme.text, ...TYPE.screenTitle }}>Panchang</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
           {dateStrip.map((date) => {
@@ -225,14 +231,14 @@ export default function PanchangScreen() {
         </ScrollView>
 
         {/* Your Rashiphala Card */}
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open your Rashiphala reading"
             onPress={() => router.push('/rashiphala')}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 24 }}>{rashiObj ? rashiObj.symbol : '✨'}</Text>
             </View>
             <View style={{ flex: 1, gap: 4 }}>
@@ -278,7 +284,7 @@ export default function PanchangScreen() {
                         paddingVertical: 12,
                         borderRadius: 12,
                         borderWidth: 1,
-                        backgroundColor: isSelected ? (isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)') : theme.bg,
+                        backgroundColor: isSelected ? (isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight) : theme.bg,
                         borderColor: isSelected ? COLORS.brandGold : theme.border,
                         opacity: savingRashi ? 0.7 : 1,
                       }}
@@ -300,14 +306,14 @@ export default function PanchangScreen() {
         </Card>
 
         {/* Kundali Entry Point */}
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Generate your Vedic Kundali birth chart"
             onPress={() => router.push('/kundali')}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 24 }}>🛕</Text>
             </View>
             <View style={{ flex: 1, gap: 4 }}>
@@ -320,7 +326,7 @@ export default function PanchangScreen() {
           </Pressable>
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{"Today's Panchang"}</Text>
           <View style={{ gap: 10 }}>
             {[
@@ -411,7 +417,7 @@ export default function PanchangScreen() {
           ) : null}
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>Timing bands</Text>
           {[
             ['Sunrise', panchang.sunrise],
@@ -427,7 +433,7 @@ export default function PanchangScreen() {
           ))}
         </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>Upcoming festivals</Text>
           {festivals.length === 0 ? (
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>No upcoming observances loaded.</Text>

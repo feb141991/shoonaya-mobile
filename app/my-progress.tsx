@@ -12,6 +12,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import Svg, { Rect } from 'react-native-svg';
 
+import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -104,7 +105,7 @@ function buildHeatmapWeeks(days: HeatmapDay[]) {
 
 function SixMonthHeatmap({ days, isDark, theme }: { days: HeatmapDay[]; isDark: boolean; theme: any }) {
   const { weeks, dayMap } = buildHeatmapWeeks(days);
-  const amber = '#C5A059';
+  const amber = COLORS.brandGold;
   const green = '#8fb46e';
   const dimBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
@@ -200,7 +201,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
   const monthLabel = new Date(calMonth.year, calMonth.month, 1)
     .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  const amber = '#C5A059';
+  const amber = COLORS.brandGold;
   const green = '#8fb46e';
 
   const rows: (string | null)[][] = [];
@@ -290,7 +291,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
 
       {/* Details Box */}
       {selectedDay && (
-        <View style={{ marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(197, 160, 89, 0.06)', alignItems: 'center' }}>
+        <View style={{ marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center' }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>
             {new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
           </Text>
@@ -339,7 +340,7 @@ function DowChart({ counts, isDark, theme }: { counts: number[]; isDark: boolean
 // ── 5-Pillar Scorecard ──
 const PILLAR_META = [
   { key: 'japa',      emoji: '📿', label: 'Japa',       colour: '#F59E4A', bg: 'rgba(245,158,74,0.12)'  },
-  { key: 'nitya',     emoji: '🌅', label: 'Nitya',      colour: '#C5A059', bg: 'rgba(197,160,89,0.10)'  },
+  { key: 'nitya',     emoji: '🌅', label: 'Nitya',      colour: COLORS.brandGold, bg: COLORS.homeSoftLight },
   { key: 'quiz',      emoji: '🧠', label: 'Quiz',       colour: '#A594E0', bg: 'rgba(165,148,224,0.12)' },
   { key: 'pathshala', emoji: '📖', label: 'Pathshala',  colour: '#6BC47E', bg: 'rgba(107,196,126,0.12)' },
   { key: 'dharmveer', emoji: '⚔️', label: 'Dharm Veer', colour: '#FF8A65', bg: 'rgba(255,138,101,0.12)' },
@@ -575,7 +576,7 @@ export default function MyProgressScreen() {
         <View style={{ alignItems: 'center', marginBottom: 24, paddingVertical: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <Text style={{ fontSize: 32 }}>🔥</Text>
-            <Text style={{ fontSize: 42, fontFamily: FONTS.serifBold, color: streak > 0 ? '#C5A059' : theme.text }}>
+            <Text style={{ fontSize: 42, fontFamily: FONTS.serifBold, color: streak > 0 ? COLORS.brandGold : theme.text }}>
               {streak}
             </Text>
           </View>
@@ -587,9 +588,9 @@ export default function MyProgressScreen() {
         </View>
 
         {/* 2. 6-Month Contribution Heatmap */}
-        <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 18, marginBottom: 20 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
           <View style={{ marginBottom: 12 }}>
-            <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: '#C5A059' }}>
+            <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.brandGold }}>
               6-Month History
             </Text>
             <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim, marginTop: 2 }}>
@@ -597,10 +598,10 @@ export default function MyProgressScreen() {
             </Text>
           </View>
           <SixMonthHeatmap days={sixMonthHeatmap} isDark={isDark} theme={theme} />
-        </View>
+        </Card>
 
         {/* 3. Sadhana Calendar */}
-        <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 18, marginBottom: 20 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <View>
               <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: theme.dim }}>
@@ -613,13 +614,13 @@ export default function MyProgressScreen() {
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 6 }}>
-              <View style={{ backgroundColor: isDark ? 'rgba(197, 160, 89, 0.12)' : 'rgba(197, 160, 89, 0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(197, 160, 89, 0.15)' }}>
+              <View style={{ backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(197, 160, 89, 0.15)' }}>
                 <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.text }}>{heatmap.filter(d => d.japa || d.nitya).length} active</Text>
               </View>
             </View>
           </View>
           <InteractiveCalendar days={heatmap} isDark={isDark} theme={theme} streak={streak} />
-        </View>
+        </Card>
 
         {/* 4. Colored Pillar Cards */}
         <View style={{ gap: 16, marginBottom: 20 }}>
@@ -754,12 +755,12 @@ export default function MyProgressScreen() {
         </View>
 
         {/* 5. 5-Pillar Scorecard */}
-        <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 18, marginBottom: 20 }}>
-          <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: '#C5A059', marginBottom: 16 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
+          <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.brandGold, marginBottom: 16 }}>
             5-Pillar Scorecard · 30 days
           </Text>
           <SadhanaScorecard pillarData={pillarData} isDark={isDark} theme={theme} />
-        </View>
+        </Card>
 
         {/* 6. Achievement Shields Teaser */}
         <Pressable
@@ -790,7 +791,7 @@ export default function MyProgressScreen() {
         </Pressable>
 
         {/* 7. Practice Rhythm Chart */}
-        <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 18, marginBottom: 20 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
           <View style={{ marginBottom: 12 }}>
             <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: theme.dim }}>
               Practice Rhythm
@@ -800,7 +801,7 @@ export default function MyProgressScreen() {
             </Text>
           </View>
           <DowChart counts={dowCounts} isDark={isDark} theme={theme} />
-        </View>
+        </Card>
 
         {/* Sub-route Links (Karma & Mood) */}
         <View style={{ gap: 12 }}>
@@ -817,8 +818,8 @@ export default function MyProgressScreen() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(197, 160, 89, 0.08)', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-              <Feather name="book" size={18} color="#C5A059" />
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+              <Feather name="book" size={18} color={COLORS.brandGold} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Karma Ledger</Text>
@@ -842,8 +843,8 @@ export default function MyProgressScreen() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(197, 160, 89, 0.08)', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-              <Feather name="smile" size={18} color="#C5A059" />
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+              <Feather name="smile" size={18} color={COLORS.brandGold} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Mood Insights</Text>

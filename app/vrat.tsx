@@ -19,7 +19,7 @@ import { calculatePanchang, getTithiReminder, type TithiReminder } from '@sangam
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
 
@@ -311,12 +311,18 @@ export default function VratScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+        >
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
 
-        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Vrat</Text>
+        <Text style={{ color: theme.text, ...TYPE.screenTitle }}>Vrat</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
           {TRADITION_FILTERS.map((tradition) => {
@@ -325,6 +331,10 @@ export default function VratScreen() {
               <Pressable
                 key={tradition}
                 onPress={() => setSelectedTradition(tradition)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`Filter by ${tradition}`}
+                hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
                 style={{
                   borderRadius: 999,
                   borderWidth: 1,
@@ -343,7 +353,7 @@ export default function VratScreen() {
         </ScrollView>
 
         {!selectedVrat && (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Today</Text>
             {todayReminder && todayVrat ? (
               <Pressable onPress={() => setSelectedVrat(todayVrat)} style={{ gap: 4 }}>
@@ -363,7 +373,7 @@ export default function VratScreen() {
         )}
 
         {!selectedVrat && upcomingVrats.length > 0 && (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Upcoming</Text>
             {upcomingVrats.slice(0, 5).map((upcoming) => (
               <Pressable
@@ -387,7 +397,7 @@ export default function VratScreen() {
         )}
 
         {selectedVrat ? (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
+          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>
@@ -478,7 +488,7 @@ export default function VratScreen() {
         ) : (
           vrats.map((vrat) => (
             <Pressable key={vrat.id} onPress={() => setSelectedVrat(vrat)}>
-              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
+              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>
                   {vrat.emoji} {vrat.name}
                 </Text>

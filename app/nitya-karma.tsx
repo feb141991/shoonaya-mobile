@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { getAshramaMeta, getAshramaDuties, type LifeStage, type GenderContext } from '@/lib/ashrama';
@@ -250,9 +250,15 @@ export default function NityaKarmaHubScreen() {
             overflow: 'hidden',
           }}
         >
-          {/* Back button */}
+          {/* Back button — visual size (36) intentionally stays below
+              MIN_TOUCH_TARGET to match the compact glass-button treatment
+              already established for header buttons over photo/gradient
+              surfaces elsewhere in this app (tirtha.tsx, live-darshan.tsx);
+              hitSlop compensates the hit area instead of resizing it,
+              same approach Pill.tsx documents for compact controls. */}
           <Pressable
             onPress={() => router.back()}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             style={{
               width: 36,
               height: 36,
@@ -301,18 +307,23 @@ export default function NityaKarmaHubScreen() {
           ) : (
             <View style={{ gap: 14 }}>
               {/* Card 1: Dincharya checklist */}
-              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
                 <Pressable
                   onPress={() => router.push('/nitya-dincharya')}
                   style={{ padding: 18, gap: 12 }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(197,160,89,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
                       <Text style={{ fontSize: 22 }}>🌅</Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Dincharya</Text>
+                        <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Dincharya</Text>
+                        {/* Bright emerald "FREE" tag — deliberately distinct
+                            from COLORS.success (a muted sage used for
+                            completion states elsewhere); left as its own
+                            literal rather than forced onto a token with a
+                            different hue. */}
                         <View style={{ backgroundColor: 'rgba(34,197,94,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
                           <Text style={{ color: 'rgb(34,197,94)', fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>FREE</Text>
                         </View>
@@ -325,7 +336,7 @@ export default function NityaKarmaHubScreen() {
                   </View>
 
                   <View style={{ gap: 4 }}>
-                    <View style={{ height: 6, borderRadius: 3, backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.08)', overflow: 'hidden' }}>
+                    <View style={{ height: 6, borderRadius: 3, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, overflow: 'hidden' }}>
                       <View style={{ width: `${progressPct}%`, height: '100%', backgroundColor: COLORS.brandGold }} />
                     </View>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textAlign: 'right' }}>
@@ -336,16 +347,16 @@ export default function NityaKarmaHubScreen() {
               </Card>
 
               {/* Card 2: Sadhana Patha */}
-              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
                 <Pressable
                   onPress={() => router.push('/nitya-plans')}
                   style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12 }}
                 >
-                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(197,160,89,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 22 }}>📿</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Sadhana Patha</Text>
+                    <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Sadhana Patha</Text>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
                       7 & 21-day guided paths and structured practices
                     </Text>
@@ -355,19 +366,19 @@ export default function NityaKarmaHubScreen() {
               </Card>
 
               {/* Card 3: Ashrama Dharma */}
-              <Card style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
+              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
                 <Pressable
                   onPress={() => router.push('/nitya-ashrama')}
                   style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12 }}
                 >
-                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: ashramaMeta ? `${ashramaMeta.accent}15` : 'rgba(197,160,89,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: ashramaMeta ? `${ashramaMeta.accent}15` : (isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight), alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 22 }}>🧘</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Ashrama Dharma</Text>
+                      <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Ashrama Dharma</Text>
                       {!ashramaStats.stage && (
-                        <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
+                        <View style={{ backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
                           <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Set up</Text>
                         </View>
                       )}

@@ -22,7 +22,7 @@ import { JoinMandaliPrompt } from '@/components/mandali/JoinMandaliPrompt';
 import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import {
   BLEND_THRESHOLD,
@@ -424,17 +424,20 @@ export default function MandaliScreen() {
     return (
       <Card
         key={post.id}
+        tone="auto"
         style={{
           backgroundColor: theme.card,
           borderColor: theme.border,
           gap: 12,
           padding: 16,
           borderRadius: 16, // rounded-2xl
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 3,
-          elevation: 2, // Clay aesthetic
+          // Legacy shadowColor/shadowOffset/shadowOpacity/shadowRadius/
+          // elevation quintet removed — this repo's own SHADOWS convention
+          // (lib/constants.ts) renders shadows via boxShadow strings, which
+          // it documents as already supported cross-platform (RN 0.85.3,
+          // newArchEnabled: true), so the manual quintet was redundant with
+          // Card's own boxShadow (applied via Surface/tone="auto" above),
+          // not a required Android-only effect.
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
@@ -596,7 +599,13 @@ export default function MandaliScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 16 }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 16 }}
+        >
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
@@ -612,7 +621,7 @@ export default function MandaliScreen() {
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>{profile?.mandaliName ?? 'Mandali'}</Text>
+            <Text style={{ color: theme.text, ...TYPE.screenTitle }}>{profile?.mandaliName ?? 'Mandali'}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
                 {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Sacred circle'}
@@ -715,7 +724,7 @@ export default function MandaliScreen() {
               </View>
             ) : null}
 
-            <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Members</Text>
               {members.length === 0 ? (
                 <EmptyState icon="users" title="No members yet" subtitle="Your local Mandali has not surfaced any members here yet." />

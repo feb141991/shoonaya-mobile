@@ -17,7 +17,7 @@ import * as FileSystem from 'expo-file-system';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 
@@ -251,18 +251,24 @@ export default function QuizScreen() {
         contentContainerStyle={{ paddingBottom: 32, gap: 16 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
       >
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+        >
           <Feather name="chevron-left" size={16} color={textDim} />
           <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
 
-        <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Daily Quiz</Text>
+        <Text style={{ color: text, ...TYPE.screenTitle }}>Daily Quiz</Text>
         <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
           One question. One clear answer. Come back tomorrow after you finish today&apos;s round.
         </Text>
 
         {activeQuiz ? (
-          <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 18 }}>
+          <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border, gap: 18 }}>
             <View style={{ gap: 8 }}>
               <View
                 style={{
@@ -285,7 +291,7 @@ export default function QuizScreen() {
               </Text>
             </View>
 
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28, lineHeight: 34 }}>
+            <Text style={{ color: text, ...TYPE.hero }}>
               {activeQuiz.question}
             </Text>
 
@@ -300,13 +306,13 @@ export default function QuizScreen() {
                 let optionText: string = text;
 
                 if (showFeedback && isAnswerCorrect) {
-                  backgroundColor = 'honeydew';
-                  borderColor = 'seagreen';
-                  optionText = 'seagreen';
+                  backgroundColor = COLORS.successBg;
+                  borderColor = COLORS.successBorder;
+                  optionText = COLORS.success;
                 } else if (showFeedback && wasChosen && !isAnswerCorrect) {
-                  backgroundColor = 'mistyrose';
-                  borderColor = 'crimson';
-                  optionText = 'crimson';
+                  backgroundColor = COLORS.dangerBg;
+                  borderColor = COLORS.dangerBorder;
+                  optionText = COLORS.danger;
                 }
 
                 return (
@@ -335,10 +341,10 @@ export default function QuizScreen() {
                       {option}
                     </Text>
                     {showFeedback && isAnswerCorrect ? (
-                      <Feather name="check" size={18} color="seagreen" />
+                      <Feather name="check" size={18} color={COLORS.success} />
                     ) : null}
                     {showFeedback && wasChosen && !isAnswerCorrect ? (
-                      <Feather name="x" size={18} color="crimson" />
+                      <Feather name="x" size={18} color={COLORS.danger} />
                     ) : null}
                   </Pressable>
                 );
@@ -350,13 +356,13 @@ export default function QuizScreen() {
                 style={{
                   borderRadius: 22,
                   borderWidth: 1,
-                  borderColor: isCorrect ? 'seagreen' : 'crimson',
-                  backgroundColor: isCorrect ? 'honeydew' : 'mistyrose',
+                  borderColor: isCorrect ? COLORS.successBorder : COLORS.dangerBorder,
+                  backgroundColor: isCorrect ? COLORS.successBg : COLORS.dangerBg,
                   padding: 16,
                   gap: 10,
                 }}
               >
-                <Text style={{ color: isCorrect ? 'seagreen' : 'crimson', fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
+                <Text style={{ color: isCorrect ? COLORS.success : COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
                   {isCorrect ? 'Correct answer' : 'Come back tomorrow'}
                 </Text>
                 <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>
@@ -369,14 +375,14 @@ export default function QuizScreen() {
             ) : null}
           </Card>
         ) : (
-          <Card style={{ backgroundColor: cardBg, borderColor: border }}>
+          <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border }}>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>No quiz is available right now.</Text>
           </Card>
         )}
 
         {answeredToday ? (
-          <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 26 }}>Today&apos;s score</Text>
+          <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
+            <Text style={{ color: text, ...TYPE.title }}>Today&apos;s score</Text>
             {saveData?.karma_earned === 0 ? (
               <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
                 Points already claimed for today
