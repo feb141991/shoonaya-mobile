@@ -1208,6 +1208,12 @@ function HomeContent() {
               {[
                 { label: 'Live Darshan', href: '/live-darshan', icon: '📺', bg: isDark ? 'rgba(100,181,246,0.15)' : 'rgba(100,181,246,0.12)' },
                 { label: 'Mandali',      href: '/(tabs)/mandali',      icon: '👥', bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
+                // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
+                // nearby-temple map, save/check-in, passport — that was a
+                // hidden tab (href: null in _layout.tsx) with no entry point
+                // anywhere in the app. This card is the fix; the tab stays
+                // hidden (tab bar hierarchy is out of scope here).
+                { label: 'Tirtha',      href: '/(tabs)/tirtha',       icon: '🛕', bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
                 // Seva omitted pending future feature-build
               ].map(item => (
                 <Pressable
