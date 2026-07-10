@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { COLORS, FONTS } from '@/lib/constants';
 
 /**
@@ -102,6 +103,7 @@ export function SankalpaCompletionCeremony({ visible, onClose, sankalpaTitle, du
         paddingHorizontal: 24,
       }}
     >
+      <ConfettiOverlay show={visible} density="soft" />
       <Pressable accessibilityRole="button" accessibilityLabel="Dismiss" onPress={dismiss} style={{ position: 'absolute', inset: 0 }} />
 
       <Pressable

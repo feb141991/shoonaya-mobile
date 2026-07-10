@@ -13,6 +13,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -22,8 +23,8 @@ export default function NityaPlansScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark
-    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: 'rgba(250,246,239,0.5)', border: 'rgba(197,160,89,0.15)', accent: COLORS.brandGold }
-    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: 'rgba(62,42,31,0.6)', border: 'rgba(197,160,89,0.2)', accent: COLORS.brandGold };
+    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: COLORS.textDimDark, border: COLORS.borderDark, accent: COLORS.brandGold }
+    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: COLORS.textDimLight, border: COLORS.homeBorderSoftLight, accent: COLORS.brandGold };
 
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -39,6 +40,7 @@ export default function NityaPlansScreen() {
   const [selectedPlan, setSelectedPlan] = useState<GuidedPlan | null>(null);
   const [viewingDayIndex, setViewingDayIndex] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const fetchProgress = useCallback(async (uId: string) => {
     try {
@@ -223,6 +225,7 @@ export default function NityaPlansScreen() {
 
       const finalDay = isLastDay ? plan.duration : newDay;
       setDayMap(prev => ({ ...prev, [plan.id]: finalDay }));
+      setShowConfetti(true);
       if (isLastDay) {
         setStatusMap(prev => ({ ...prev, [plan.id]: 'completed' }));
         Alert.alert('Congratulations! 🎉', `You have successfully completed the "${plan.title}" path!`);
@@ -249,6 +252,7 @@ export default function NityaPlansScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
+      <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
         {/* Back button */}
         <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -320,8 +324,8 @@ export default function NityaPlansScreen() {
                           </View>
                         )}
                         {status === 'completed' && (
-                          <View style={{ backgroundColor: 'rgba(34,197,94,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                            <Text style={{ color: 'rgb(34,197,94)', fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>DONE ✓</Text>
+                          <View style={{ backgroundColor: COLORS.successBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
+                            <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>DONE ✓</Text>
                           </View>
                         )}
                       </View>
@@ -467,9 +471,9 @@ export default function NityaPlansScreen() {
                               gap: 12,
                             }}
                           >
-                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDone ? 'rgba(34,197,94,0.15)' : `${plan.accentColor}15`, alignItems: 'center', justifyContent: 'center' }}>
+                            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDone ? COLORS.successBg : `${plan.accentColor}15`, alignItems: 'center', justifyContent: 'center' }}>
                               {isDone ? (
-                                <Feather name="check" size={14} color="rgb(34,197,94)" />
+                                <Feather name="check" size={14} color={COLORS.success} />
                               ) : (
                                 <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{day.day}</Text>
                               )}
@@ -526,23 +530,23 @@ export default function NityaPlansScreen() {
                           <Pressable
                             onPress={() => handleRestartPlan(plan)}
                             disabled={actionLoading}
-                            style={{ flex: 1, backgroundColor: 'rgba(197,160,89,0.1)', paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
+                            style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
                             <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>🔄 Restart</Text>
                           </Pressable>
                           <Pressable
                             onPress={() => handleAbandonPlan(plan)}
                             disabled={actionLoading}
-                            style={{ flex: 1, backgroundColor: 'rgba(197,160,89,0.1)', paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
+                            style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
                             <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>⏸ Pause</Text>
                           </Pressable>
                           <Pressable
                             onPress={() => handleLeavePlan(plan)}
                             disabled={actionLoading}
-                            style={{ flex: 1, backgroundColor: 'rgba(220,60,60,0.08)', paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
+                            style={{ flex: 1, backgroundColor: COLORS.dangerBg, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
-                            <Text style={{ color: 'rgba(220,80,80,0.8)', fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>✕ Leave</Text>
+                            <Text style={{ color: COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>✕ Leave</Text>
                           </Pressable>
                         </View>
                       </View>

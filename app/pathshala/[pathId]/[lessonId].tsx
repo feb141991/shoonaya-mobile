@@ -14,6 +14,7 @@ import { Feather } from '@expo/vector-icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { PathshalaPath } from '@/lib/pathshala-types';
@@ -92,6 +93,7 @@ export default function LessonReaderScreen() {
   const [fontSize, setFontSize] = useState<ReaderFontSize>('normal');
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
   const [saving, setSaving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState(true);
@@ -342,7 +344,8 @@ export default function LessonReaderScreen() {
     } catch {}
 
     setSaving(false);
-    router.back();
+    setShowConfetti(true);
+    setTimeout(() => router.back(), 650);
   }, [completedLessons, lessonIndex, lessons.length, pathId, router, saving, userId]);
 
   if (fetchState === 'loading' || loadingState) {
@@ -441,6 +444,7 @@ export default function LessonReaderScreen() {
   return (
     <GestureDetector gesture={swipeGesture}>
       <View style={{ flex: 1, backgroundColor: bg }}>
+        <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
         <ScrollView
           contentContainerStyle={{
             paddingTop: 64,

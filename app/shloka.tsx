@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/ui/Card';
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
@@ -328,6 +329,7 @@ export default function ShlokaScreen() {
             opacity: celebrationOpacity,
           }}
         >
+          <ConfettiOverlay show={Boolean(celebration)} density={celebration.milestone ? 'full' : 'soft'} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Dismiss celebration"

@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/ui/Card';
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { apiFetch } from '@/lib/api';
@@ -68,6 +69,7 @@ export default function NityaKarmaScreen() {
   const [loadError, setLoadError] = useState(false);
   const [busyStepId, setBusyStepId] = useState<string | null>(null);
   const [localKey, setLocalKey] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const theme = useMemo(
     () => ({
@@ -151,6 +153,7 @@ export default function NityaKarmaScreen() {
       try {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch {}
+      const willComplete = state.steps.filter((s) => s.done || s.id === step.id).length === state.steps.length;
 
       // Optimistic update — mirrors NityaKarmaClient.tsx's own instant-mark
       // behaviour rather than waiting on the round trip.
@@ -182,6 +185,9 @@ export default function NityaKarmaScreen() {
         try {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch {}
+        if (willComplete) {
+          setShowConfetti(true);
+        }
       } catch {
         // Revert the optimistic update on failure.
         setState((prev) => {
@@ -193,7 +199,7 @@ export default function NityaKarmaScreen() {
         setBusyStepId(null);
       }
     },
-    [busyStepId, localKey]
+    [busyStepId, localKey, state.steps]
   );
 
   if (loading) {
@@ -233,6 +239,7 @@ export default function NityaKarmaScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
+      <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="full" />
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
@@ -285,7 +292,7 @@ export default function NityaKarmaScreen() {
                 marginTop: 10,
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: isDark ? 'rgba(197,160,89,0.16)' : 'rgba(197,160,89,0.14)',
+                backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
                 overflow: 'hidden',
               }}
             >
@@ -330,7 +337,7 @@ export default function NityaKarmaScreen() {
                     borderRadius: 14,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(255,248,225,0.06)' : 'rgba(255,255,255,0.6)',
+                    backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                   }}
                 >
                   <Feather name={step.icon} size={18} color={step.done ? COLORS.success : COLORS.brandGold} />

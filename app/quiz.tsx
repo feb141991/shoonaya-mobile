@@ -15,6 +15,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 
 import { Card } from '@/components/ui/Card';
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
@@ -76,6 +77,7 @@ export default function QuizScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
@@ -191,6 +193,9 @@ export default function QuizScreen() {
 
       const data = (await response.json()) as QuizSaveData;
       setSaveData(data);
+      if (index === activeQuiz.answerIndex && data.karma_earned > 0) {
+        setShowConfetti(true);
+      }
       setState((current) => ({
         ...current,
         todayResponse: {
@@ -247,6 +252,7 @@ export default function QuizScreen() {
 
   return (
     <Screen style={{ backgroundColor: surface }}>
+      <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32, gap: 16 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
