@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   Switch,
@@ -11,19 +12,30 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { BackButton } from '@/components/ui/BackButton';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { API_BASE, COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
 type AppLanguage = 'en' | 'hi' | 'pa';
 type ThemePref = 'light' | 'dark' | 'system';
 
+// Every field below already exists on `profiles` and is already read/written
+// by this screen — no new backend columns introduced. Kept as the exact same
+// contract native's notifications.tsx defers to ("Notification preferences
+// ... already exist and work end to end in app/settings.tsx — not
+// duplicated here"), so that screen's link to Settings keeps working.
 type SettingsState = {
   wants_festival_reminders: boolean;
   wants_shloka_reminders: boolean;
@@ -51,6 +63,26 @@ const INITIAL_SETTINGS: SettingsState = {
   consent_religious_data: true,
 };
 
+const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string }[] = [
+  { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
+  { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
+  { key: 'wants_festival_reminders', label: 'Festival reminders', subtitle: 'Vrat, tithi & observance alerts' },
+  { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts & mentions' },
+  { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity' },
+];
+
+const LANGUAGES: { key: AppLanguage; label: string }[] = [
+  { key: 'en', label: 'English' },
+  { key: 'hi', label: 'Hindi' },
+  { key: 'pa', label: 'Punjabi' },
+];
+
+const THEME_OPTIONS: { key: ThemePref; label: string }[] = [
+  { key: 'system', label: 'System' },
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
+];
+
 function toSettingsState(value: Partial<SettingsState> | null | undefined): SettingsState {
   return {
     wants_festival_reminders: value?.wants_festival_reminders ?? INITIAL_SETTINGS.wants_festival_reminders,
@@ -65,27 +97,125 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
   };
 }
 
+function SettingsSection({
+  label,
+  children,
+  theme,
+}: {
+  label: string;
+  children: React.ReactNode;
+  theme: ReturnType<typeof themeColor>;
+}) {
+  return (
+    <View style={{ gap: 12 }}>
+      <SectionHeader label={label} />
+      <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+        {children}
+      </Card>
+    </View>
+  );
+}
+
+function ToggleRow({
+  label,
+  subtitle,
+  value,
+  onChange,
+  theme,
+}: {
+  label: string;
+  subtitle?: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+  theme: ReturnType<typeof themeColor>;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...TYPE.label, color: theme.text }}>{label}</Text>
+        {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text> : null}
+      </View>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: theme.brand }} />
+    </View>
+  );
+}
+
+// Button's variant system (primary/secondary/ghost) has no destructive
+// variant, and primary's fixed ink/darkBg text would be near-illegible over
+// a translucent danger-red wash in dark mode (near-black on near-black).
+// Rather than widen Button's variant contract for one screen, this mirrors
+// Button's own shape/press-feedback conventions (44dp min height, RADII.lg,
+// boxShadow, haptic + opacity/scale on press) with an explicit danger
+// palette so the delete action stays legible in both themes.
+function DangerButton({
+  label,
+  loading,
+  onPress,
+  isDark,
+}: {
+  label: string;
+  loading?: boolean;
+  onPress: () => void;
+  isDark: boolean;
+}) {
+  const busy = !!loading;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: busy, busy }}
+      disabled={busy}
+      onPress={() => {
+        if (!busy) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+        onPress();
+      }}
+      style={({ pressed }) => ({
+        minHeight: MIN_TOUCH_TARGET,
+        borderRadius: RADII.lg,
+        borderWidth: 1,
+        borderColor: COLORS.dangerBorder,
+        backgroundColor: COLORS.dangerBg,
+        paddingVertical: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        opacity: busy ? 0.6 : pressed ? 0.85 : 1,
+        transform: [{ scale: pressed && !busy ? 0.985 : 1 }],
+      })}
+    >
+      {busy ? (
+        <ActivityIndicator color={COLORS.danger} />
+      ) : (
+        <Text style={{ ...TYPE.label, fontSize: 14.5, color: COLORS.danger }}>{label}</Text>
+      )}
+    </Pressable>
+  );
+}
+
+async function openLegalUrl(path: '/terms' | '/privacy') {
+  const url = `${API_BASE}${path}`;
+  try {
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) throw new Error('Cannot open URL');
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert('Error', `Could not open ${path === '/terms' ? 'Terms of Service' : 'Privacy Policy'}.`);
+  }
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const isDark = useColorScheme() === 'dark';
+  const theme = useMemo(() => themeColor(isDark), [isDark]);
+
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [themePref, setThemePref] = useState<ThemePref>('system');
-
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-    }),
-    [isDark]
-  );
 
   const loadSettings = useCallback(async () => {
     const {
@@ -109,6 +239,8 @@ export default function SettingsScreen() {
       AsyncStorage.getItem(THEME_STORAGE_KEY),
     ]);
 
+    if (profileRes.error) throw profileRes.error;
+
     const remote = toSettingsState(profileRes.data ?? INITIAL_SETTINGS);
     const local = localSettings ? toSettingsState(JSON.parse(localSettings) as Partial<SettingsState>) : {};
     const merged = toSettingsState({ ...remote, ...local });
@@ -119,13 +251,18 @@ export default function SettingsScreen() {
     }
   }, [router]);
 
-  useEffect(() => {
+  const runLoad = useCallback(() => {
+    setLoading(true);
+    setLoadError(false);
     loadSettings()
-      .catch(() => {
-        Alert.alert('Could not load settings');
-      })
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [loadSettings]);
+
+  useEffect(() => {
+    runLoad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const persistSettings = async (nextState: SettingsState) => {
     setSettings(nextState);
@@ -137,12 +274,11 @@ export default function SettingsScreen() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const profileUpdate = toSettingsState(nextState);
-      const { error } = await supabase.from('profiles').update(profileUpdate).eq('id', user.id);
+      const { error } = await supabase.from('profiles').update(toSettingsState(nextState)).eq('id', user.id);
       if (error) throw error;
     } catch {
-      Alert.alert('Could not save settings');
-      await loadSettings();
+      Alert.alert('Could not save settings', 'Check your connection and try again.');
+      await loadSettings().catch(() => {});
     } finally {
       setSaving(false);
     }
@@ -157,9 +293,9 @@ export default function SettingsScreen() {
     setDownloading(true);
     try {
       const response = await apiFetch('/api/user/export');
-      if (!response.ok) throw new Error('export failed');
+      if (!response.ok) throw new Error(`Request failed (status ${response.status})`);
       const data = await response.text();
-      
+
       if (!(await Sharing.isAvailableAsync())) {
         Alert.alert('Sharing not available', 'Your device does not support saving or sharing this file.');
         return;
@@ -168,39 +304,58 @@ export default function SettingsScreen() {
       const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-data.json');
       targetFile.write(data);
       await Sharing.shareAsync(targetFile.uri);
-    } catch {
-      Alert.alert('Could not download data', 'Please check your connection and try again.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Please check your connection and try again.';
+      Alert.alert('Could not download data', message);
     } finally {
       setDownloading(false);
     }
   };
 
-  const handleDelete = () => {
-    Alert.alert('Delete account', 'This permanently deletes your account and data.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Continue',
-        style: 'destructive',
-        onPress: () => {
-          Alert.alert('Final confirmation', 'Type-level double confirmation is not available here. Continue with permanent deletion?', [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Delete permanently',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-                  const response = await apiFetch('/api/user/delete', { method: 'POST' });
-                  if (!response.ok) throw new Error('delete failed');
-                  await supabase.auth.signOut();
-                } catch {
-                  Alert.alert('Could not delete account');
-                }
-              },
-            },
-          ]);
-        },
-      },
-    ]);
+  // Preserved exactly: POST /api/user/delete — an immediate, irreversible
+  // hard delete (auth user + profile row removed server-side; see the web
+  // repo's src/app/api/user/delete/route.ts). Not the same mechanism as
+  // PWA's ProfileClient "Delete Account" button, which instead sets a
+  // 30-day-cool-off flag directly on `profiles` (is_deleting /
+  // deletion_requested_at) and is cancellable. That discrepancy is a
+  // product decision, not something to silently paper over here — flagged
+  // in the review report. Per this task's explicit instruction, native
+  // keeps calling the existing immediate-delete route as-is; the copy below
+  // is written for THAT behavior (irreversible, no cool-off), not PWA's.
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      const response = await apiFetch('/api/user/delete', { method: 'POST' });
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const json: unknown = await response.json();
+          if (json && typeof json === 'object' && 'error' in json && typeof json.error === 'string') {
+            detail = json.error;
+          }
+        } catch {
+          // Response wasn't JSON — fall through to the generic message below.
+        }
+        throw new Error(detail || `Request failed (status ${response.status})`);
+      }
+      await supabase.auth.signOut();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not delete account. Check your connection and try again.';
+      Alert.alert('Could not delete account', message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeletePress = () => {
+    Alert.alert(
+      'Delete account permanently?',
+      'This immediately and permanently deletes your Shoonaya account — practice history, streaks, relics, and Kul membership included. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete permanently', style: 'destructive', onPress: () => { void confirmDelete(); } },
+      ]
+    );
   };
 
   const handleSignOut = async () => {
@@ -216,7 +371,7 @@ export default function SettingsScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -224,174 +379,158 @@ export default function SettingsScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
+        <BackButton />
 
-        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Settings</Text>
-        {saving ? <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>Saving...</Text> : null}
+        <View style={{ gap: 2 }}>
+          <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Settings</Text>
+          {saving ? <Text style={{ ...TYPE.caption, color: theme.dim }}>Saving...</Text> : null}
+        </View>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Notifications</Text>
-          {[
-            ['Festival reminders', 'wants_festival_reminders'],
-            ['Daily wisdom reminders', 'wants_shloka_reminders'],
-            ['Nitya reminders', 'wants_nitya_reminders'],
-            ['Community notifications', 'wants_community_notifications'],
-            ['Family notifications', 'wants_family_notifications'],
-          ].map(([label, key]) => (
-            <View key={key} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14 }}>{label}</Text>
-              <Switch
-                value={settings[key as keyof SettingsState] as boolean}
-                onValueChange={(value) => {
-                  void persistSettings({ ...settings, [key]: value } as SettingsState);
-                }}
-                trackColor={{ true: COLORS.brandGold }}
+        {loadError ? (
+          <EmptyState
+            icon="wifi-off"
+            title="Could not load settings"
+            subtitle="Check your connection, then try again."
+            ctaLabel="Retry"
+            onCta={runLoad}
+          />
+        ) : (
+          <>
+            {/* ── Account ─────────────────────────────────────────────── */}
+            <SettingsSection label="Account" theme={theme}>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                Manage your name and spiritual tradition from Profile.
+              </Text>
+              <Button
+                label={signingOut ? 'Signing out...' : 'Sign out'}
+                variant="secondary"
+                loading={signingOut}
+                onPress={() => { void handleSignOut(); }}
               />
-            </View>
-          ))}
-        </Card>
+            </SettingsSection>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Language</Text>
-          {[
-            ['App language', 'app_language'],
-            ['Meaning language', 'meaning_language'],
-            ['Transliteration', 'transliteration_language'],
-          ].map(([label, key]) => (
-            <View key={key} style={{ gap: 10 }}>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>{label}</Text>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {(['en', 'hi', 'pa'] as AppLanguage[]).map((language) => {
-                  const active = settings[key as keyof SettingsState] === language;
-                  return (
-                    <Pressable
-                      key={language}
-                      onPress={() => {
-                        void persistSettings({ ...settings, [key]: language } as SettingsState);
-                      }}
-                      style={{
-                        flex: 1,
-                        borderRadius: 14,
-                        borderWidth: 1,
-                        borderColor: active ? COLORS.brandGold : theme.border,
-                        backgroundColor: active ? COLORS.brandGold : theme.bg,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text style={{ color: active ? COLORS.ink : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                        {language.toUpperCase()}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+            {/* ── Notifications ───────────────────────────────────────── */}
+            <SettingsSection label="Notifications" theme={theme}>
+              {NOTIFICATION_TOGGLES.map((item, index) => (
+                <View key={item.key}>
+                  {index > 0 ? (
+                    <View style={{ height: 1, backgroundColor: theme.borderSoft, marginBottom: 16 }} />
+                  ) : null}
+                  <ToggleRow
+                    label={item.label}
+                    subtitle={item.subtitle}
+                    value={settings[item.key] as boolean}
+                    onChange={(value) => { void persistSettings({ ...settings, [item.key]: value }); }}
+                    theme={theme}
+                  />
+                </View>
+              ))}
+            </SettingsSection>
+
+            {/* ── Language / preferences ──────────────────────────────── */}
+            <SettingsSection label="Language / Preferences" theme={theme}>
+              {[
+                { label: 'App language', key: 'app_language' as const },
+                { label: 'Meaning language', key: 'meaning_language' as const },
+                { label: 'Transliteration', key: 'transliteration_language' as const },
+              ].map((row) => (
+                <View key={row.key} style={{ gap: 10 }}>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>{row.label}</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {LANGUAGES.map((lang) => (
+                      <Pill
+                        key={lang.key}
+                        label={lang.label}
+                        selected={settings[row.key] === lang.key}
+                        onPress={() => { void persistSettings({ ...settings, [row.key]: lang.key }); }}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
+
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.caption, color: theme.dim }}>Appearance</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {THEME_OPTIONS.map((opt) => (
+                    <Pill
+                      key={opt.key}
+                      label={opt.label}
+                      selected={themePref === opt.key}
+                      onPress={() => { void persistTheme(opt.key); }}
+                    />
+                  ))}
+                </View>
               </View>
-            </View>
-          ))}
-        </Card>
+            </SettingsSection>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Appearance</Text>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            {(['light', 'dark', 'system'] as ThemePref[]).map((pref) => {
-              const active = themePref === pref;
-              return (
-                <Pressable
-                  key={pref}
-                  onPress={() => {
-                    void persistTheme(pref);
-                  }}
-                  style={{
-                    flex: 1,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: active ? COLORS.brandGold : theme.border,
-                    backgroundColor: active ? COLORS.brandGold : theme.bg,
-                    paddingVertical: 12,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ color: active ? COLORS.ink : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                    {pref.toUpperCase()}
+            {/* ── Privacy & data ──────────────────────────────────────── */}
+            <SettingsSection label="Privacy & Data" theme={theme}>
+              <ToggleRow
+                label="Tradition-aware personalization"
+                subtitle="Uses your spiritual preference data to tailor recommendations."
+                value={settings.consent_religious_data}
+                onChange={(value) => { void persistSettings({ ...settings, consent_religious_data: value }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <Button
+                label={downloading ? 'Preparing export...' : 'Download your data'}
+                variant="secondary"
+                loading={downloading}
+                onPress={() => { void handleDownloadData(); }}
+              />
+            </SettingsSection>
+
+            {/* ── Danger zone ──────────────────────────────────────────── */}
+            <View style={{ gap: 12 }}>
+              <SectionHeader label="Danger Zone" />
+              <Card
+                tone="auto"
+                style={{ backgroundColor: theme.card, borderColor: COLORS.dangerBorder, gap: 10 }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                  <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
+                  <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
+                    Deleting your account is permanent and immediate. There is no cool-off period or recovery.
                   </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Card>
-
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Privacy</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14 }}>
-                Allow tradition-aware personalization
-              </Text>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 4 }}>
-                Uses your spiritual preference data to tailor recommendations.
-              </Text>
+                </View>
+                <DangerButton
+                  label="Delete account"
+                  loading={deleting}
+                  onPress={handleDeletePress}
+                  isDark={isDark}
+                />
+              </Card>
             </View>
-            <Switch
-              value={settings.consent_religious_data}
-              onValueChange={(value) => {
-                void persistSettings({ ...settings, consent_religious_data: value });
-              }}
-              trackColor={{ true: COLORS.brandGold }}
-            />
-          </View>
-        </Card>
 
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
-          <Pressable
-            onPress={handleDownloadData}
-            disabled={downloading}
-            style={{
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: theme.border,
-              paddingVertical: 14,
-              alignItems: 'center',
-              opacity: downloading ? 0.7 : 1,
-            }}
-          >
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
-              {downloading ? 'Preparing export...' : 'Download your data'}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleDelete}
-            style={{
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: theme.border,
-              paddingVertical: 14,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Delete account</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              void handleSignOut();
-            }}
-            disabled={signingOut}
-            style={{
-              borderRadius: 16,
-              backgroundColor: COLORS.brandGold,
-              paddingVertical: 14,
-              alignItems: 'center',
-              opacity: signingOut ? 0.7 : 1,
-            }}
-          >
-            <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
-              {signingOut ? 'Signing out...' : 'Sign out'}
-            </Text>
-          </Pressable>
-        </Card>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 }}>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Terms of Service"
+                hitSlop={10}
+                onPress={() => { void openLegalUrl('/terms'); }}
+                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+              >
+                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Terms
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Privacy Policy"
+                hitSlop={10}
+                onPress={() => { void openLegalUrl('/privacy'); }}
+                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+              >
+                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Privacy
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        )}
       </ScrollView>
     </Screen>
   );
