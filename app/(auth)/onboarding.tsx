@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
@@ -15,10 +16,11 @@ import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerUserId } from '@/lib/notifications';
 
-type Step = 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'language' | 'notifications' | 'ready';
+type Step = 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'nameStory' | 'language' | 'notifications' | 'ready';
 
 const TRADITIONS = [
   { key: 'hindu', label: 'Hindu', icon: 'sun' as const, emoji: '🪔', description: 'Mantras, panchang and daily sadhana' },
@@ -120,7 +122,7 @@ const READY_FEATURES = [
   { emoji: '👥', label: 'Mandali', description: 'Your sangat' },
 ] as const;
 
-const STEPS: Step[] = ['tradition', 'personal', 'nakshatra', 'goals', 'name', 'language', 'notifications', 'ready'];
+const STEPS: Step[] = ['tradition', 'personal', 'nakshatra', 'goals', 'name', 'nameStory', 'language', 'notifications', 'ready'];
 
 const STEP_TITLES: Record<Step, string> = {
   tradition: 'Your tradition',
@@ -128,6 +130,7 @@ const STEP_TITLES: Record<Step, string> = {
   nakshatra: 'Your Birth Nakshatra',
   goals: 'What calls you here?',
   name: 'Your name',
+  nameStory: 'Your Name Story',
   language: 'Your language',
   notifications: 'Daily reminders',
   ready: 'Ready',
@@ -161,6 +164,33 @@ function genderContext(value: GenderKey) {
   return value === 'female' ? 'female' : 'general';
 }
 
+type NameStory = {
+  sacred_meaning?: string | null;
+  name_story?: string | null;
+  inner_quality?: string | null;
+  life_blessing?: string | null;
+  practice_suggestion?: string | null;
+  name_mantra?: string | null;
+  scripture_original?: string | null;
+  scripture_translation?: string | null;
+  scripture_source?: string | null;
+};
+
+function normalizeFirstName(value: string) {
+  return value.trim().split(/\s+/)[0] ?? '';
+}
+
+function nameStoryTradition(value: TraditionKey) {
+  if (value === 'hindu' || value === 'sikh' || value === 'buddhist' || value === 'jain') return value;
+  return 'all';
+}
+
+function nameStoryLanguage(value: TraditionKey) {
+  if (value === 'sikh') return 'pa';
+  if (value === 'hindu') return 'hi';
+  return 'en';
+}
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -185,6 +215,9 @@ export default function OnboardingScreen() {
   const [goals, setGoals] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [notificationsRequested, setNotificationsRequested] = useState(false);
+  const [nameStory, setNameStory] = useState<NameStory | null>(null);
+  const [nameStoryLoading, setNameStoryLoading] = useState(false);
+  const [nameStoryError, setNameStoryError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const stepIndex = STEPS.indexOf(step);
@@ -216,6 +249,39 @@ export default function OnboardingScreen() {
   const goBack = async () => {
     const previous = STEPS[stepIndex - 1];
     if (previous) await goToStep(previous);
+  };
+
+  const generateNameStory = async () => {
+    const firstName = normalizeFirstName(name);
+    if (!firstName || nameStoryLoading) return;
+
+    setNameStoryLoading(true);
+    setNameStoryError('');
+    try {
+      const response = await apiFetch('/api/name-story/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          name,
+          displayName: name,
+          confirmedFirstName: firstName,
+          tradition: nameStoryTradition(tradition),
+          translationLanguage: nameStoryLanguage(tradition),
+          intent: ['sacred_meaning', 'scripture_connection', 'inner_quality', 'name_mantra'],
+        }),
+      });
+
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body?.error ?? 'Could not generate your Name Story.');
+      }
+
+      setNameStory((body?.data ?? null) as NameStory | null);
+      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+    } catch (error) {
+      setNameStoryError(error instanceof Error ? error.message : 'Could not generate your Name Story.');
+    } finally {
+      setNameStoryLoading(false);
+    }
   };
 
   const handleAllowNotifications = async () => {
@@ -592,6 +658,87 @@ export default function OnboardingScreen() {
           </>
         )}
 
+        {step === 'nameStory' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              Shoonaya can reveal a gentle AI-guided reflection on your first name. This is optional and can be skipped.
+            </Text>
+
+            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 12 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1.4 }}>
+                Analyzing significance for
+              </Text>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>
+                {name.trim() || 'Your name'}
+              </Text>
+              {!name.trim() ? (
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
+                  Go back and enter your name first.
+                </Text>
+              ) : null}
+            </View>
+
+            {!nameStory && !nameStoryLoading ? (
+              <View style={{ gap: 10 }}>
+                <Button
+                  label="Reveal my Name Story"
+                  onPress={() => { void generateNameStory(); }}
+                  disabled={!name.trim()}
+                />
+                <Button label="Skip for now" variant="ghost" onPress={() => { void goNext(); }} />
+              </View>
+            ) : null}
+
+            {nameStoryLoading ? (
+              <View style={{ minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                <ActivityIndicator color={COLORS.brandGold} />
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
+                  Dharma Mitra is reading the sound and meaning of your name...
+                </Text>
+              </View>
+            ) : null}
+
+            {nameStoryError ? (
+              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14 }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: COLORS.danger }}>
+                  {nameStoryError}
+                </Text>
+              </View>
+            ) : null}
+
+            {nameStory ? (
+              <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 14 }}>
+                {nameStory.sacred_meaning ? (
+                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, lineHeight: 28, color: text }}>
+                    {nameStory.sacred_meaning}
+                  </Text>
+                ) : null}
+                {nameStory.name_story ? (
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22, color: text }}>
+                    {nameStory.name_story}
+                  </Text>
+                ) : null}
+                {nameStory.name_mantra ? (
+                  <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.homeBorderSoftLight, backgroundColor: wellBg, padding: 14, gap: 6 }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Name mantra
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: text }}>
+                      {nameStory.name_mantra}
+                    </Text>
+                  </View>
+                ) : null}
+                {nameStory.practice_suggestion ? (
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: dim }}>
+                    {nameStory.practice_suggestion}
+                  </Text>
+                ) : null}
+                <Button label="Continue" onPress={() => { void goNext(); }} />
+              </View>
+            ) : null}
+          </>
+        )}
+
         {step === 'language' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
@@ -682,7 +829,7 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      {step !== 'notifications' && step !== 'ready' ? (
+      {step !== 'notifications' && step !== 'ready' && step !== 'nameStory' ? (
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
           {stepIndex > 0 ? <Button label="Back" variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
           <Button label={step === 'nakshatra' || step === 'name' ? 'Continue / Skip' : 'Continue'} onPress={() => { void goNext(); }} style={{ flex: 1 }} />

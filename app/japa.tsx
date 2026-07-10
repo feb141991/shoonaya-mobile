@@ -4,7 +4,6 @@ import {
   Alert,
   Modal,
   Pressable,
-  Share,
   ScrollView,
   Text,
   TextInput,
@@ -20,9 +19,11 @@ import * as Haptics from 'expo-haptics';
 
 import { Screen } from '@/components/ui/Screen';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from '@/lib/traditions';
@@ -124,6 +125,7 @@ function formatDuration(totalSeconds: number) {
 
 export default function JapaScreen() {
   const router = useRouter();
+  const japaShareCardRef = useRef<View>(null);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -1078,6 +1080,31 @@ export default function JapaScreen() {
         </View>
       ) : null}
 
+      {completionStats ? (
+        <View
+          pointerEvents="none"
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            left: -420,
+            top: 0,
+            opacity: 0.01,
+          }}
+        >
+          <ShoonayaShareCard
+            ref={japaShareCardRef}
+            data={{
+              tradition,
+              headlineValue: completionStats.rounds,
+              title: tradition === 'sikh' ? 'Days of Simran' : tradition === 'jain' ? 'Days of Ahimsa' : 'Days of Sadhana',
+              subtitle: completionStats.mantraName,
+              caption: `${completionStats.beads.toLocaleString('en-IN')} beads completed in ${formatDuration(completionStats.durationSecs)}. ${completionInsight ?? 'A steady practice, carried back into the day.'}`,
+              date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            }}
+          />
+        </View>
+      ) : null}
+
       {completionVisible && completionStats ? (
         <View
           style={{
@@ -1201,9 +1228,11 @@ export default function JapaScreen() {
               </Pressable>
               <Pressable
                 onPress={() => {
-                  void Share.share({
-                    message: `I completed ${completionStats.rounds} mala${completionStats.rounds > 1 ? 's' : ''} (${completionStats.beads.toLocaleString('en-IN')} beads) with Shoonaya.`,
-                  }).catch(() => {});
+                  void shareCapturedShoonayaCard(japaShareCardRef, {
+                    fileName: 'shoonaya-japa-card.png',
+                    dialogTitle: 'Share Japa practice',
+                    fallbackMessage: `I completed ${completionStats.rounds} mala${completionStats.rounds > 1 ? 's' : ''} (${completionStats.beads.toLocaleString('en-IN')} beads) with Shoonaya.`,
+                  });
                 }}
                 style={{
                   flex: 1,

@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 
+import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
-import { buildHeroPoster, type DharmVeer } from '@/lib/dharm-veer';
+import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import type { DharmVeer } from '@/lib/dharm-veer';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 
 // Detail screen for a SPECIFIC Dharm Veer, reached from Home's
 // `dharmVeer.href` (`/dharm-veer/{id}`) or any other deep link that names a
@@ -30,6 +32,7 @@ import { buildHeroPoster, type DharmVeer } from '@/lib/dharm-veer';
 // about this hero" surface reachable from Home, notifications, or a share.
 export default function DharmVeerDetailScreen() {
   const router = useRouter();
+  const shareCardRef = useRef<View>(null);
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -45,6 +48,9 @@ export default function DharmVeerDetailScreen() {
   const [loadError, setLoadError] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [hero, setHero] = useState<DharmVeer | null>(null);
+  const [askMoreQuery, setAskMoreQuery] = useState('');
+  const [askMoreResponse, setAskMoreResponse] = useState('');
+  const [askMoreLoading, setAskMoreLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoadError(false);
@@ -88,6 +94,45 @@ export default function DharmVeerDetailScreen() {
     setLoading(true);
     load().finally(() => setLoading(false));
   }, [load]);
+
+  const askDharmaMitra = useCallback(async () => {
+    const question = askMoreQuery.trim();
+    if (!question || !hero || askMoreLoading) return;
+
+    setAskMoreLoading(true);
+    setAskMoreResponse('');
+    try {
+      const response = await apiFetch('/api/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({
+          message: question,
+          mode: 'dharam_veer_reflection',
+          figure_id: hero.id,
+        }),
+      });
+
+      if (!response.ok) {
+        setAskMoreResponse('Dharma Mitra could not answer right now.');
+        return;
+      }
+
+      const answer = await response.text();
+      setAskMoreResponse(answer.trim() || 'Dharma Mitra could not answer right now.');
+    } catch {
+      setAskMoreResponse('Dharma Mitra could not answer right now.');
+    } finally {
+      setAskMoreLoading(false);
+    }
+  }, [askMoreLoading, askMoreQuery, hero]);
+
+  const shareHero = useCallback(async () => {
+    if (!hero) return;
+    await shareCapturedShoonayaCard(shareCardRef, {
+      fileName: `shoonaya-dharm-veer-${hero.id}.png`,
+      dialogTitle: 'Share Dharm Veer',
+      fallbackMessage: `${hero.name} — ${hero.tagline}`,
+    });
+  }, [hero]);
 
   if (loading) {
     return (
@@ -158,6 +203,28 @@ export default function DharmVeerDetailScreen() {
 
   return (
     <Screen style={{ backgroundColor: surface }}>
+      <View
+        pointerEvents="none"
+        collapsable={false}
+        style={{
+          position: 'absolute',
+          left: -420,
+          top: 0,
+          opacity: 0.01,
+        }}
+      >
+        <ShoonayaShareCard
+          ref={shareCardRef}
+          data={{
+            tradition: hero.tradition,
+            headlineValue: hero.name,
+            title: 'Dharm Veer',
+            subtitle: `${hero.era} · ${hero.region}`,
+            caption: hero.teaching || hero.tagline,
+            footer: 'Shared from Shoonaya',
+          }}
+        />
+      </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
         <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Feather name="chevron-left" size={16} color={textDim} />
@@ -165,11 +232,7 @@ export default function DharmVeerDetailScreen() {
         </Pressable>
 
         <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 16 }}>
-          <Image
-            source={{ uri: buildHeroPoster(hero) }}
-            style={{ width: '100%', height: 260, borderRadius: 22, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg }}
-            contentFit="cover"
-          />
+          <DharmVeerPoster hero={hero} />
 
           <View style={{ gap: 4 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{hero.name}</Text>
@@ -235,6 +298,60 @@ export default function DharmVeerDetailScreen() {
           ) : null}
         </Card>
 
+        <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 12 }}>
+          <View style={{ gap: 4 }}>
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>Ask more about this Dharm Veer</Text>
+            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20 }}>
+              Dharma Mitra can help you reflect on this hero&apos;s teaching.
+            </Text>
+          </View>
+          <TextInput
+            value={askMoreQuery}
+            onChangeText={setAskMoreQuery}
+            placeholder="Ask a question..."
+            placeholderTextColor={textDim}
+            multiline
+            style={{
+              minHeight: 90,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: border,
+              backgroundColor: surface,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              color: text,
+              fontFamily: FONTS.sans,
+              fontSize: 14,
+              textAlignVertical: 'top',
+            }}
+          />
+          <Pressable
+            onPress={() => { void askDharmaMitra(); }}
+            disabled={!askMoreQuery.trim() || askMoreLoading}
+            style={{
+              alignSelf: 'flex-end',
+              minHeight: MIN_TOUCH_TARGET,
+              borderRadius: 999,
+              paddingHorizontal: 18,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: COLORS.brandGold,
+              opacity: !askMoreQuery.trim() || askMoreLoading ? 0.55 : 1,
+            }}
+          >
+            {askMoreLoading ? (
+              <ActivityIndicator color={COLORS.ink} size="small" />
+            ) : (
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Ask AI</Text>
+            )}
+          </Pressable>
+          {askMoreResponse ? (
+            <View style={{ borderRadius: 18, borderWidth: 1, borderColor: border, backgroundColor: surface, padding: 14 }}>
+              <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{askMoreResponse}</Text>
+            </View>
+          ) : null}
+        </Card>
+
         <Pressable
           onPress={() => router.push('/dharm-veer')}
           style={{
@@ -252,6 +369,21 @@ export default function DharmVeerDetailScreen() {
             Open today&apos;s Dharm Veer practice
           </Text>
           <Feather name="arrow-right" size={16} color={text} />
+        </Pressable>
+        <Pressable
+          onPress={() => { void shareHero(); }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            borderRadius: 999,
+            minHeight: MIN_TOUCH_TARGET,
+            backgroundColor: COLORS.brandGold,
+          }}
+        >
+          <Feather name="share-2" size={16} color={COLORS.ink} />
+          <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Share reflection</Text>
         </Pressable>
       </ScrollView>
     </Screen>

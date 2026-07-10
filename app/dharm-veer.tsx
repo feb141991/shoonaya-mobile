@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,9 +13,6 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image } from 'expo-image';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -28,9 +25,12 @@ import Animated, {
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { buildHeroPoster, selectDharmVeerOfTheDayFromRoster, type DharmVeer } from '@/lib/dharm-veer';
+import { selectDharmVeerOfTheDayFromRoster, type DharmVeer } from '@/lib/dharm-veer';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 
@@ -76,6 +76,7 @@ function buildDailyDeck(tradition: Tradition, roster: DharmVeer[]) {
 
 export default function DharmVeerScreen() {
   const router = useRouter();
+  const dharmVeerShareCardRef = useRef<View>(null);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const [profile, setProfile] = useState<ProfileContext | null>(null);
@@ -88,6 +89,7 @@ export default function DharmVeerScreen() {
   const [privacyCommunity, setPrivacyCommunity] = useState(false);
   const [intention, setIntention] = useState('');
   const [mood, setMood] = useState<'gratitude' | 'devotion' | 'peace' | 'courage'>('gratitude');
+  const [shareHeroData, setShareHeroData] = useState<DharmVeer | null>(null);
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -180,24 +182,13 @@ export default function DharmVeerScreen() {
   }, [loadState]);
 
   const shareHero = useCallback(async (hero: DharmVeer) => {
-    const content = [
-      `${hero.name} — Dharm Veer`,
-      '',
-      hero.tagline,
-      '',
-      hero.teaching,
-      '',
-      'Shared from Shoonaya',
-    ].join('\n');
-
-    if (!(await Sharing.isAvailableAsync())) {
-      Alert.alert(content);
-      return;
-    }
-
-    const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-dharm-veer.txt');
-    targetFile.write(content);
-    await Sharing.shareAsync(targetFile.uri);
+    setShareHeroData(hero);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await shareCapturedShoonayaCard(dharmVeerShareCardRef, {
+      fileName: `shoonaya-dharm-veer-${hero.id}.png`,
+      dialogTitle: 'Share Dharm Veer',
+      fallbackMessage: `${hero.name} — ${hero.tagline}`,
+    });
   }, []);
 
   const persistCompletion = useCallback(async () => {
@@ -377,6 +368,30 @@ export default function DharmVeerScreen() {
 
   return (
     <Screen style={{ backgroundColor: surface }}>
+      {shareHeroData ? (
+        <View
+          pointerEvents="none"
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            left: -420,
+            top: 0,
+            opacity: 0.01,
+          }}
+        >
+          <ShoonayaShareCard
+            ref={dharmVeerShareCardRef}
+            data={{
+              tradition: shareHeroData.tradition,
+              headlineValue: shareHeroData.name,
+              title: 'Dharm Veer',
+              subtitle: `${shareHeroData.era} · ${shareHeroData.region}`,
+              caption: shareHeroData.teaching || shareHeroData.tagline,
+              footer: 'Shared from Shoonaya',
+            }}
+          />
+        </View>
+      ) : null}
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
         <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Feather name="chevron-left" size={16} color={textDim} />
@@ -393,11 +408,7 @@ export default function DharmVeerScreen() {
         <GestureDetector gesture={panGesture}>
           <Animated.View style={cardStyle}>
             <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 16 }}>
-              <Image
-                source={{ uri: buildHeroPoster(currentHero) }}
-                style={{ width: '100%', height: 260, borderRadius: 22, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg }}
-                contentFit="cover"
-              />
+              <DharmVeerPoster hero={currentHero} />
 
               <View style={{ gap: 4 }}>
                 <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{currentHero.name}</Text>
