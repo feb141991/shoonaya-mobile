@@ -18,7 +18,7 @@ import { useFonts } from 'expo-font';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
-import { initOneSignal, handleNotificationTap } from '@/lib/notifications';
+import { initOneSignal, handleNotificationTap, registerUserId, unregisterUser } from '@/lib/notifications';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -46,11 +46,35 @@ export default function RootLayout() {
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
+        // Unbind this device from OneSignal's external_id whenever there is
+        // no authenticated session — covers explicit sign-out (all 3 call
+        // sites: settings.tsx x2, profile.tsx) plus any future one, since
+        // supabase.auth.signOut() always fires this listener with a null
+        // session rather than requiring each call site to remember to clean
+        // up push identity itself. Previously nothing ever called
+        // unregisterUser(), so a device stayed bound to the prior account's
+        // external_id after logout.
+        unregisterUser();
         if (!inAuthGroup) {
           router.replace('/(auth)/login');
         }
         return;
       }
+
+      // (Re-)bind this device to the signed-in user's OneSignal external_id
+      // on every authenticated session, not just once at the end of
+      // onboarding. Previously `registerUserId` was only called from
+      // app/(auth)/onboarding.tsx's completion step, so any *returning*
+      // user — sign back in after logout, reinstall, second device, token
+      // refresh bringing a fresh session object — never got (re-)registered
+      // here and was silently unreachable by push despite being fully
+      // authenticated. This listener already re-runs on every auth state
+      // change, so it's the single correct place for this, rather than
+      // duplicating the call at every sign-in entry point (Google/Apple/
+      // WhatsApp/OTP in login.tsx and otp.tsx). Cheap/idempotent to call
+      // repeatedly — OneSignal.login() is a no-op if already logged in as
+      // this external_id.
+      registerUserId(session.user.id);
 
       // Onboarding gate — mirrors the web app's src/lib/onboarding-gate.ts /
       // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md fix. `profiles.onboarding_completed`

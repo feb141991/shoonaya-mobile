@@ -26,6 +26,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
+import { requestNotificationPermission } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 
 type AppLanguage = 'en' | 'hi' | 'pa';
@@ -421,7 +422,27 @@ export default function SettingsScreen() {
                     label={item.label}
                     subtitle={item.subtitle}
                     value={settings[item.key] as boolean}
-                    onChange={(value) => { void persistSettings({ ...settings, [item.key]: value }); }}
+                    onChange={(value) => {
+                      // Turning a reminder ON is exactly the "contextual"
+                      // moment to (re-)ask for OS push permission — mirrors
+                      // the web app's own contextual push-permission
+                      // onboarding (docs/NOTIFICATION_ARCHITECTURE_AUDIT.md)
+                      // and closes the gap docs/native-adrs/002-notifications.md
+                      // flagged as still "Proposed": previously the only
+                      // permission prompt on native was a single ask at the
+                      // end of onboarding, so anyone who declined there (or
+                      // later revoked it in OS settings) had no way back in.
+                      // requestNotificationPermission() is a safe no-op if
+                      // permission is already granted, and iOS/Android both
+                      // silently no-op a re-prompt after a previous denial
+                      // rather than re-showing the OS dialog — so this never
+                      // nags, it just gives a path back in for anyone who
+                      // can still be prompted.
+                      if (value) {
+                        void requestNotificationPermission();
+                      }
+                      void persistSettings({ ...settings, [item.key]: value });
+                    }}
                     theme={theme}
                   />
                 </View>
