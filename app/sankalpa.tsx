@@ -18,6 +18,7 @@ import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
+import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
 // (Alert.alert "coming soon" on tap, see app/(tabs)/index.tsx). This screen
@@ -85,6 +86,18 @@ export default function SankalpaScreen() {
   const [creating, setCreating] = useState(false);
   const [text, setText] = useState('');
   const [targetDays, setTargetDays] = useState<(typeof TARGET_DAY_OPTIONS)[number]>(21);
+
+  // Ceremony is purely presentational — see components/home/
+  // SankalpaCompletionCeremony.tsx. karmaAwarded comes straight from the
+  // /api/sankalpa/complete response (the real, server-side award); title/
+  // durationDays are captured from `sankalpa` right before handleComplete's
+  // own loadSankalpa() call clears it back to null.
+  const [ceremony, setCeremony] = useState<{ open: boolean; title: string; durationDays: number; karmaAwarded: number | null }>({
+    open: false,
+    title: '',
+    durationDays: 0,
+    karmaAwarded: null,
+  });
 
   const theme = useMemo(
     () => ({
@@ -190,6 +203,11 @@ export default function SankalpaScreen() {
   const handleComplete = useCallback(async () => {
     if (!sankalpa || completing) return;
     setCompleting(true);
+    // Captured before loadSankalpa() below resets `sankalpa` back to null —
+    // the ceremony still needs the title/duration of the vow that was just
+    // completed.
+    const completedTitle = sankalpa.text;
+    const completedDurationDays = sankalpa.target_days ?? 0;
     try {
       const response = await apiFetch('/api/sankalpa/complete', {
         method: 'POST',
@@ -200,12 +218,17 @@ export default function SankalpaScreen() {
         throw new Error(payload?.error ?? 'Could not complete Sankalpa');
       }
 
+      // Karma is already awarded server-side by this point (the POST above
+      // has completed and its response is what we read karmaAwarded from) —
+      // the ceremony that follows is celebratory UI only, not a write.
       const payload = (await response.json()) as { karmaAwarded?: number };
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-      Alert.alert(
-        'Sankalpa complete',
-        payload.karmaAwarded ? `Well done. +${payload.karmaAwarded} karma.` : 'Well done.'
-      );
+      setCeremony({
+        open: true,
+        title: completedTitle,
+        durationDays: completedDurationDays,
+        karmaAwarded: payload.karmaAwarded ?? null,
+      });
       await loadSankalpa();
     } catch (err) {
       Alert.alert('Sankalpa', err instanceof Error ? err.message : 'Could not complete Sankalpa');
@@ -447,6 +470,14 @@ export default function SankalpaScreen() {
           </Card>
         )}
       </ScrollView>
+
+      <SankalpaCompletionCeremony
+        visible={ceremony.open}
+        onClose={() => setCeremony((prev) => ({ ...prev, open: false }))}
+        sankalpaTitle={ceremony.title}
+        durationDays={ceremony.durationDays}
+        karmaAwarded={ceremony.karmaAwarded}
+      />
     </Screen>
   );
 }

@@ -30,6 +30,7 @@ import { MoodCheckin } from '@/components/home/MoodCheckin';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { ObservanceCarousel } from '@/components/home/ObservanceCarousel';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
+import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
@@ -1059,48 +1060,12 @@ function HomeContent() {
             ) : null}
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={state.sankalpa ? `Sankalpa, day ${state.sankalpa.day} of ${state.sankalpa.targetDays}` : 'Set your Sankalpa'}
-            onPress={() => navigate('/sankalpa')}
-            style={{
-              minHeight: 72,
-              borderRadius: 18,
-              paddingHorizontal: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: theme.soft,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-              <Feather name="sun" size={19} color={theme.brand} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.cardHeading, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
-                  {state.sankalpa ? state.sankalpa.text : 'Set your Sankalpa for this month'}
-                </Text>
-                {state.sankalpa ? (
-                  <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }}>
-                    Day {state.sankalpa.day} of {state.sankalpa.targetDays}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-            {state.sankalpa ? (
-              <ProgressRing
-                done={state.sankalpa.progress >= 1}
-                progress={state.sankalpa.progress}
-                color={theme.brand}
-                track={theme.ringTrack}
-                size={30}
-              />
-            ) : (
-              <Feather name="arrow-right" size={20} color={theme.brand} />
-            )}
-          </Pressable>
+          {/* Self-contained: fetches its own active Sankalpa + today's
+              check-in status via /api/sankalpa* (not home-summary's static
+              `state.sankalpa` snapshot), and refetches on every screen focus
+              so a check-in made on the full /sankalpa screen shows up here
+              without an app restart. See components/home/SankalpaCard.tsx. */}
+          <SankalpaCard />
 
           <Pressable
             accessibilityRole="button"
