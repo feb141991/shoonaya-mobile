@@ -158,6 +158,7 @@ export const COLORS = {
   // moment, not a partial sheet — named here per review feedback rather
   // than left as a raw literal.
   celebrationScrim: 'rgba(0,0,0,0.45)',
+  bottomSheetScrim: 'rgba(0,0,0,0.28)',
 
   // Branded sharing surfaces. WhatsApp green is a platform brand color,
   // but it should still be named once instead of repeated as screen-local

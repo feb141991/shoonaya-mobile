@@ -27,6 +27,12 @@ import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/consta
 import { apiFetch } from '@/lib/api';
 import { getUnlockedRelics, SACRED_RELICS } from '@/lib/relics';
 import { supabase } from '@/lib/supabase';
+import {
+  getIshtaDevataLabel,
+  getSampradayaLabel,
+  ISHTA_DEVATAS_BY_TRADITION,
+  SAMPRADAYAS_BY_TRADITION,
+} from '@/lib/traditions';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
 type AppLanguage = 'en' | 'hi' | 'pa';
@@ -35,6 +41,8 @@ type ProfileData = {
   id: string;
   full_name: string;
   tradition: Tradition;
+  sampradaya: string;
+  ishta_devata: string;
   app_language: AppLanguage;
   active_symbol_id: string | null;
   seva_score: number;
@@ -46,6 +54,8 @@ type ProfileData = {
 
 type EditState = {
   fullName: string;
+  sampradaya: string;
+  ishtaDevata: string;
   appLanguage: AppLanguage;
 };
 
@@ -54,6 +64,8 @@ type ProgressSummary = {
     id: string;
     fullName: string;
     tradition: Tradition;
+    sampradaya: string;
+    ishtaDevata: string;
     appLanguage: AppLanguage;
     activeSymbolId: string | null;
     sevaScore: number;
@@ -96,6 +108,8 @@ type ProfileRoute = '/settings' | '/mandali' | '/my-progress' | '/kosh';
 
 const INITIAL_EDIT: EditState = {
   fullName: '',
+  sampradaya: '',
+  ishtaDevata: '',
   appLanguage: 'en',
 };
 
@@ -333,6 +347,8 @@ export default function ProfileScreen() {
       id: payload.profile.id,
       full_name: payload.profile.fullName,
       tradition: payload.profile.tradition,
+      sampradaya: payload.profile.sampradaya,
+      ishta_devata: payload.profile.ishtaDevata,
       app_language: payload.profile.appLanguage,
       active_symbol_id: payload.profile.activeSymbolId,
       seva_score: payload.profile.sevaScore,
@@ -347,6 +363,8 @@ export default function ProfileScreen() {
     if (nextProfile) {
       setEditState({
         fullName: nextProfile.full_name,
+        sampradaya: nextProfile.sampradaya,
+        ishtaDevata: nextProfile.ishta_devata,
         appLanguage: nextProfile.app_language,
       });
     }
@@ -373,6 +391,10 @@ export default function ProfileScreen() {
 
   const progressData = summary?.progress;
   const profileCompletion = summary?.completion;
+  const sampradayaLabel = profile ? getSampradayaLabel(profile.tradition) : 'Sampradaya';
+  const ishtaDevataLabel = profile ? getIshtaDevataLabel(profile.tradition) : 'Ishta Devata';
+  const sampradayaOptions = profile ? SAMPRADAYAS_BY_TRADITION[profile.tradition] : [];
+  const ishtaDevataOptions = profile ? ISHTA_DEVATAS_BY_TRADITION[profile.tradition] : [];
 
   const handleSave = async () => {
     if (!profile) return;
@@ -389,6 +411,8 @@ export default function ProfileScreen() {
         .from('profiles')
         .update({
           full_name: editState.fullName.trim(),
+          sampradaya: editState.sampradaya || null,
+          ishta_devata: editState.ishtaDevata || null,
           app_language: editState.appLanguage,
         })
         .eq('id', profile.id);
@@ -449,7 +473,7 @@ export default function ProfileScreen() {
       const heatmap = Array.isArray(data.heatmap) ? (data.heatmap as ReportHeatmapDay[]) : [];
       const heatmapHtml = heatmap.map((day) => {
         const nityaCount = day.nitya ?? 0;
-        const level = nityaCount >= 7 ? '#d4a030' : nityaCount > 0 ? '#d4a03066' : day.japa ? '#7B1A1A66' : '#e5e7eb';
+        const level = nityaCount >= 7 ? COLORS.brandGold : nityaCount > 0 ? COLORS.brandSoftLight : day.japa ? COLORS.dangerBg : COLORS.borderLight;
         return `<div title="${day.date ?? ''}" style="width:18px;height:18px;border-radius:4px;background:${level}"></div>`;
       }).join('');
       const mantrasHtml = (data.japa?.top_mantras ?? []).map(([name, count]: [string, number]) =>
@@ -464,19 +488,19 @@ export default function ProfileScreen() {
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f5ef; color: #2c2a25; padding: 24px; max-width: 720px; margin: 0 auto; }
-  h1 { font-size: 24px; font-weight: 700; color: #1c1c1a; }
-  h2 { font-size: 15px; font-weight: 700; color: #7B1A1A; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .card { background: #fff; border-radius: 16px; padding: 18px; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.07); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-  .meta { font-size: 13px; color: #888; margin-top: 4px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: ${COLORS.creamBg}; color: ${COLORS.ink}; padding: 24px; max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; color: ${COLORS.heroBgDark}; }
+  h2 { font-size: 15px; font-weight: 700; color: ${COLORS.brandPrimaryStrongLight}; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .card { background: ${COLORS.cardBgLight}; border-radius: 16px; padding: 18px; margin-bottom: 16px; border: 1px solid ${COLORS.borderSoftLight}; box-shadow: 0 1px 4px ${COLORS.borderSoftLight}; }
+  .meta { font-size: 13px; color: ${COLORS.textDimLight}; margin-top: 4px; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .stat { text-align: center; padding: 12px; background: #fef9ef; border-radius: 12px; border: 1px solid rgba(197, 160, 89,0.2); }
-  .stat .num { font-size: 28px; font-weight: 800; color: #c8920a; }
-  .stat .label { font-size: 11px; color: #888; margin-top: 3px; }
+  .stat { text-align: center; padding: 12px; background: ${COLORS.homeRaisedLight}; border-radius: 12px; border: 1px solid ${COLORS.homeBorderSoftLight}; }
+  .stat .num { font-size: 28px; font-weight: 800; color: ${COLORS.brandPrimaryStrongLight}; }
+  .stat .label { font-size: 11px; color: ${COLORS.textDimLight}; margin-top: 3px; }
   .heatmap { display: flex; flex-wrap: wrap; gap: 3px; }
   ul { padding-left: 18px; font-size: 14px; line-height: 2; }
-  .badge { display: inline-block; background: rgba(197, 160, 89,0.15); color: #7B1A1A; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; margin-left: 8px; }
-  .footer { text-align: center; font-size: 11px; color: #aaa; margin-top: 24px; }
+  .badge { display: inline-block; background: ${COLORS.brandSoftLight}; color: ${COLORS.brandPrimaryStrongLight}; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+  .footer { text-align: center; font-size: 11px; color: ${COLORS.textDimLight}; margin-top: 24px; }
 </style>
 </head>
 <body>
@@ -502,16 +526,16 @@ export default function ProfileScreen() {
     <div class="stat"><div class="num">${data.nitya?.full_days ?? 0}</div><div class="label">Full sequences</div></div>
     <div class="stat"><div class="num">${data.nitya?.current_streak ?? 0}</div><div class="label">Current streak</div></div>
   </div>
-  <p style="font-size:13px;color:#888;margin-top:10px">Longest streak in period: <strong>${data.nitya?.longest_streak ?? 0} days</strong></p>
+  <p style="font-size:13px;color:${COLORS.textDimLight};margin-top:10px">Longest streak in period: <strong>${data.nitya?.longest_streak ?? 0} days</strong></p>
 </div>
 
 <div class="card">
   <h2>30-Day Heatmap</h2>
   <div class="heatmap">${heatmapHtml}</div>
-  <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:#888">
-    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d4a030;margin-right:4px;vertical-align:middle"></span>Full Nitya</span>
-    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d4a03066;margin-right:4px;vertical-align:middle"></span>Partial Nitya</span>
-    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#7B1A1A66;margin-right:4px;vertical-align:middle"></span>Japa only</span>
+  <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:${COLORS.textDimLight}">
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.brandGold};margin-right:4px;vertical-align:middle"></span>Full Nitya</span>
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.brandSoftLight};margin-right:4px;vertical-align:middle"></span>Partial Nitya</span>
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.dangerBg};margin-right:4px;vertical-align:middle"></span>Japa only</span>
   </div>
 </div>
 
@@ -1126,6 +1150,78 @@ export default function ProfileScreen() {
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                   {TRADITION_META[profile.tradition].label}
                 </Text>
+              </View>
+            </View>
+
+            <View style={{ gap: 14 }}>
+              <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                Lineage and path
+              </Text>
+
+              <View style={{ gap: 8 }}>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>{sampradayaLabel}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {sampradayaOptions.map((option) => {
+                    const active = editState.sampradaya === option.value;
+                    return (
+                      <Pressable
+                        key={option.value}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={`${sampradayaLabel}: ${option.label}`}
+                        onPress={() => setEditState((current) => ({ ...current, sampradaya: option.value }))}
+                        hitSlop={6}
+                        style={{
+                          minHeight: 40,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderColor: active ? theme.brand : theme.border,
+                          backgroundColor: active ? theme.brandSoft : theme.bg,
+                          paddingHorizontal: 12,
+                          paddingVertical: 9,
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Text style={{ color: active ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>{ishtaDevataLabel}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {ishtaDevataOptions.map((option) => {
+                    const active = editState.ishtaDevata === option.value;
+                    return (
+                      <Pressable
+                        key={option.value}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={`${ishtaDevataLabel}: ${option.label}`}
+                        onPress={() => setEditState((current) => ({ ...current, ishtaDevata: option.value }))}
+                        hitSlop={6}
+                        style={{
+                          minHeight: 40,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderColor: active ? theme.brand : theme.border,
+                          backgroundColor: active ? theme.brandSoft : theme.bg,
+                          paddingHorizontal: 12,
+                          paddingVertical: 9,
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Text style={{ color: active ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                          {option.emoji} {option.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
             </View>
 

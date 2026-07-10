@@ -21,6 +21,7 @@ import { API_BASE, COLORS, FONTS } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { supabase } from '@/lib/supabase';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { getJapaMantrasForTradition, getJapaPracticeType } from '@/lib/traditions';
 
 type ProfileRow = {
   active_symbol_id: string | null;
@@ -38,15 +39,6 @@ type ToastState = {
   visible: boolean;
   message: string;
 };
-
-const MANTRAS = [
-  { key: 'om_namah_shivaya', label: 'Om Namah Shivaya', devanagari: 'ॐ नमः शिवाय', meaning: 'I bow to Shiva, the supreme reality and the inner self.' },
-  { key: 'hare_krishna', label: 'Hare Krishna', devanagari: 'हरे कृष्ण महामंत्र', meaning: 'O Lord, O Energy of the Lord, please engage me in Your loving service.' },
-  { key: 'gayatri', label: 'Gayatri Mantra', devanagari: 'गायत्री मंत्र', meaning: 'We meditate on the glory of the Creator; who is worthy of Worship.' },
-  { key: 'waheguru', label: 'Waheguru', devanagari: 'ਵਾਹਿਗੁਰੂ', meaning: 'Wondrous Enlightener.' },
-  { key: 'om_mani_padme_hum', label: 'Om Mani Padme Hum', devanagari: 'ཨོཾ་མ་ཎི་པདྨེ་ཧཱུྃ', meaning: 'The jewel is in the lotus.' },
-  { key: 'namokar', label: 'Namokar Mantra', devanagari: 'णमोकार मंत्र', meaning: 'I bow to the Arihants, Siddhas, Acharyas, Upadhyayas, and all Sadhus.' },
-] as const;
 
 const HISTORY_LIMIT = 12;
 const SVG_SIZE = 320;
@@ -84,7 +76,9 @@ export default function JapaScreen() {
 
 
   const malaSkin = useMemo(() => getMalaSkin(activeSymbolId), [activeSymbolId]);
-  const mantra = MANTRAS[mantraIndex] ?? MANTRAS[0];
+  const mantras = useMemo(() => getJapaMantrasForTradition(tradition), [tradition]);
+  const mantra = mantras[mantraIndex] ?? mantras[0];
+  const practiceType = getJapaPracticeType(tradition);
 
   const audioPlayer = useAudioPlayer();
   const mantraAudioActive = useRef(false);
@@ -120,6 +114,7 @@ export default function JapaScreen() {
     const profile = profileResult.data as ProfileRow | null;
     setActiveSymbolId(profile?.active_symbol_id ?? null);
     setTradition(profile?.tradition ?? 'hindu');
+    setMantraIndex(0);
     setHistory((historyResult.data as MalaSessionRow[] | null) ?? []);
     setLoading(false);
   }, []);
@@ -227,6 +222,7 @@ export default function JapaScreen() {
           count: 108,
           rounds: 1,
           tradition,
+          practiceType,
           activeSymbolId,
         }),
       });
@@ -240,7 +236,7 @@ export default function JapaScreen() {
 
     setSaving(false);
     await loadContext();
-  }, [activeSymbolId, completedRounds, loadContext, mantra.key, mantra.label, stopMantraAudio, tradition]);
+  }, [activeSymbolId, completedRounds, loadContext, mantra.key, mantra.label, practiceType, stopMantraAudio, tradition]);
 
   const increment = useCallback(async () => {
     if (saving) return;
@@ -356,9 +352,9 @@ export default function JapaScreen() {
                     <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
                   </RadialGradient>
                   <RadialGradient id="grad-active" cx="30%" cy="30%" r="70%">
-                    <Stop offset="0%" stopColor="#FFF" stopOpacity="1" />
+                    <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
                     <Stop offset="30%" stopColor={COLORS.brandGold} stopOpacity="1" />
-                    <Stop offset="100%" stopColor="#8A5818" stopOpacity="1" />
+                    <Stop offset="100%" stopColor={COLORS.brandEarthLight} stopOpacity="1" />
                   </RadialGradient>
                 </Defs>
                 <Line
@@ -416,7 +412,7 @@ export default function JapaScreen() {
                         borderRadius: 12,
                         borderWidth: 1,
                         borderColor: targetRounds === n ? COLORS.brandGold : border,
-                        backgroundColor: targetRounds === n ? (isDark ? 'rgba(197, 160, 89, 0.15)' : 'rgba(197, 160, 89, 0.12)') : cardBg
+                        backgroundColor: targetRounds === n ? (isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight) : cardBg
                       }}
                     >
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: targetRounds === n ? COLORS.brandGold : text }}>{n}</Text>
@@ -483,7 +479,7 @@ export default function JapaScreen() {
               </Pressable>
 
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                {MANTRAS.map((item, index) => (
+                {mantras.map((item, index) => (
                   <Pressable
                     key={item.key}
                     onPress={() => {
@@ -547,7 +543,7 @@ export default function JapaScreen() {
       </ScrollView>
 
       <Modal transparent visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.28)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
           <View
             style={{
               borderTopLeftRadius: 28,
@@ -642,7 +638,7 @@ export default function JapaScreen() {
             left: 0,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.65)',
+            backgroundColor: COLORS.celebrationScrim,
           }}
         >
           <View
@@ -666,11 +662,11 @@ export default function JapaScreen() {
             </Text>
 
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
-              <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', borderRadius: 16, padding: 12, alignItems: 'center' }}>
+              <View style={{ flex: 1, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 16, padding: 12, alignItems: 'center' }}>
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: dim, textTransform: 'uppercase' }}>Rounds</Text>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text, marginTop: 4 }}>{completedRounds}</Text>
               </View>
-              <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', borderRadius: 16, padding: 12, alignItems: 'center' }}>
+              <View style={{ flex: 1, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 16, padding: 12, alignItems: 'center' }}>
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: dim, textTransform: 'uppercase' }}>Duration</Text>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text, marginTop: 4 }}>
                   {Math.floor(durationSecs / 60)}m {durationSecs % 60}s
