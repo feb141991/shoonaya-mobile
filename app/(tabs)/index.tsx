@@ -27,6 +27,9 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { MoodCheckin } from '@/components/home/MoodCheckin';
+import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
+import { ObservanceCarousel } from '@/components/home/ObservanceCarousel';
+import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
@@ -124,6 +127,11 @@ type HomeSummary = {
     tagline: string;
     href: string;
   };
+  // New user signal for FirstWeekGuide — mirrors the PWA's own
+  // showFirstTimeGuidance formula (no shloka streak, no last-shloka-read
+  // date, no guided-path progress), added to /api/native/home-summary
+  // rather than re-derived from a second, native-only heuristic.
+  firstWeek: boolean;
 };
 
 const SANSKRIT_WEEKDAYS = ['Ravivara', 'Somavara', 'Mangalavara', 'Budhavara', 'Guruvāra', 'Shukravara', 'Shanivara'];
@@ -190,6 +198,7 @@ const INITIAL_STATE: HomeSummary = {
     tagline: 'Remember a life of courage',
     href: '/dharm-veer',
   },
+  firstWeek: false,
 };
 
 const GREETING_POOLS: Record<string, string[]> = {
@@ -864,6 +873,26 @@ function HomeContent() {
         </View>
 
         <View style={{ paddingHorizontal: 20, marginTop: -48, gap: 12 }}>
+          {/* ── Below-fold PWA-parity sections — additive only, hero above
+              is untouched. Order mirrors the PWA's own HomeDashboard: a
+              Brahma Muhurta prompt (skipped once japa is done today),
+              first-week guidance for brand-new users, then upcoming sacred
+              days — all ahead of the existing next-practice card so the
+              time-sensitive nudge surfaces first, same as PWA. ── */}
+          {panchang.brahmaMuhurta && panchang.sunrise ? (
+            <BrahmaMuhurtaPrompt
+              brahmaMuhurta={panchang.brahmaMuhurta}
+              sunrise={panchang.sunrise}
+              japaAlreadyDoneToday={state.practices.find((row) => row.id === 'japa')?.done ?? false}
+            />
+          ) : null}
+
+          {state.firstWeek ? (
+            <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
+          ) : null}
+
+          <ObservanceCarousel tradition={state.profile.tradition} timezone={state.date.timezone} />
+
           <View
             style={{
               borderRadius: 18,
