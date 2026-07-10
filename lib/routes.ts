@@ -47,6 +47,15 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/kosh')) return '/kosh';
   if (pathname.startsWith('/mandali')) return '/mandali';
   if (pathname.startsWith('/mood')) return '/mood' as Href;
+  // Mood's recommendation stack (lib/mood/engine.ts on web) always includes
+  // a fixed "Live Darshan" card with href '/live-darshan' — a real native
+  // screen (app/live-darshan.tsx) that had no dispatch line here, so it was
+  // silently swallowed by whatever fallback the caller passed (Home, in
+  // app/mood.tsx's case) instead of opening Live Darshan. The engine's other
+  // fixed-card hrefs, '/mandali' (handled above) and '/seva' (no native
+  // screen — confirmed via docs/NATIVE_ROUTE_SURFACING_MATRIX.md, correctly
+  // falls through to fallback), were already covered or already correct.
+  if (pathname.startsWith('/live-darshan')) return '/live-darshan' as Href;
   // Vichaar Sabha thread ids (e.g. a shared-thread deep link, or a future
   // "someone replied to your thread" push) — /vichaar-sabha/[id] mirrors
   // the dharm-veer/[id] pattern above. Bare /vichaar-sabha is the list.
