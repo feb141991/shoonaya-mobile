@@ -37,7 +37,8 @@ export type SacredIconName =
   | 'dharmveer'
   | 'quiz'
   | 'mood'
-  | 'profile';
+  | 'profile'
+  | 'kosh';
 
 // Empty by design — see file header. Populate as real static assets land,
 // e.g. `japa: require('@/assets/icons/japa.webp')`.
