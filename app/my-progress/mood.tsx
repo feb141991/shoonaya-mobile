@@ -130,8 +130,8 @@ export default function MoodInsightsScreen() {
               marginBottom: 8,
             }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
-                <Feather name="moon" size={16} color="#C5A059" />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: '#C5A059', textTransform: 'uppercase', letterSpacing: 1 }}>Divine Reflection</Text>
+                <Feather name="moon" size={16} color={COLORS.brandGold} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1 }}>Divine Reflection</Text>
               </View>
               <Text style={{ fontFamily: FONTS.serif, fontSize: 15, color: h1, lineHeight: 24 }}>
                 {aiReflection || "Your journey is unique. Keep logging your daily moods to unlock deeper spiritual reflections."}
@@ -140,12 +140,12 @@ export default function MoodInsightsScreen() {
 
             {/* Metrics Grid */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <StatBox icon="calendar" label="Check-ins" value={metrics?.totalCheckins || 0} color="#C5A059" />
-              <StatBox icon="check-circle" label="Actions Completed" value={metrics?.completedActions || 0} color="#10B981" />
+              <StatBox icon="calendar" label="Check-ins" value={metrics?.totalCheckins || 0} color={COLORS.brandGold} />
+              <StatBox icon="check-circle" label="Actions Completed" value={metrics?.completedActions || 0} color={COLORS.success} />
             </View>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <StatBox icon="trending-up" label="Day Streak" value={metrics?.streak || 0} color="#EF4444" />
-              <StatBox icon="activity" label="Frequent Mood" value={metrics?.mostFrequentMood || 'None'} color="#8B5CF6" />
+              <StatBox icon="trending-up" label="Day Streak" value={metrics?.streak || 0} color={COLORS.danger} />
+              <StatBox icon="activity" label="Frequent Mood" value={metrics?.mostFrequentMood || 'None'} color={COLORS.navy} />
             </View>
 
             {/* Preferred Actions */}

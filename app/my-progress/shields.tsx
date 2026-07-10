@@ -169,10 +169,10 @@ export default function ShieldsScreen() {
                   <Text style={{ color: muted, fontFamily: FONTS.sans }}> • {nextShield.desc}</Text>
                 </Text>
               </View>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: '#C5A059' }}>{value} / {nextShield.threshold}</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.brandGold }}>{value} / {nextShield.threshold}</Text>
             </View>
             <View style={{ height: 8, borderRadius: 4, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-              <View style={{ height: '100%', width: `${progress}%`, backgroundColor: '#C5A059', borderRadius: 4 }} />
+              <View style={{ height: '100%', width: `${progress}%`, backgroundColor: COLORS.brandGold, borderRadius: 4 }} />
             </View>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: muted, marginTop: 8 }}>
               {nextShield.threshold - value} more {activeTab === 'streak' ? 'days' : 'sessions'} to unlock
@@ -182,7 +182,7 @@ export default function ShieldsScreen() {
 
         {/* Shields List */}
         <View style={{ backgroundColor: cardBg, borderColor: border, borderWidth: 1, borderRadius: 24, padding: 20 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: '#C5A059', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
             {earnedCount}/{shields.length} Earned
           </Text>
 
@@ -213,7 +213,7 @@ export default function ShieldsScreen() {
                         {shield.detail}
                       </Text>
                       {earned && (
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: '#C5A059', marginTop: 4 }}>Unlocked ✦</Text>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, marginTop: 4 }}>Unlocked ✦</Text>
                       )}
                     </View>
                     <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: muted }}>

@@ -120,7 +120,7 @@ export default function LedgerScreen() {
             marginBottom: 12,
           }}>
             <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(197, 160, 89, 0.08)', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: '#C5A059' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: COLORS.brandGold }}>
                 {item.amount > 0 ? '+' : ''}{item.amount}
               </Text>
             </View>

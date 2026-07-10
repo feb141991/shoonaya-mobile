@@ -30,6 +30,19 @@ type PhaseConfig = {
   emoji: string;
 };
 
+type NativeNityaStepSummary = {
+  id: string;
+  done?: boolean;
+};
+
+type NativeNityaKarmaResponse = {
+  total?: number;
+  greeting?: string;
+  timezone?: string;
+  streak?: { current?: number };
+  steps?: NativeNityaStepSummary[];
+};
+
 const PHASES: Record<Phase, PhaseConfig> = {
   night: {
     grad: ['#080614', '#110d28', '#0b0820'],
@@ -156,7 +169,7 @@ export default function NityaKarmaHubScreen() {
       let currentStreak = 0;
 
       if (nityaResp.ok) {
-        const payload = await nityaResp.json();
+        const payload = (await nityaResp.json()) as NativeNityaKarmaResponse;
         totalSteps = payload.total ?? 0;
         greetingText = payload.greeting ?? 'Suprabhat 🌅';
         currentStreak = payload.streak?.current ?? 0;
@@ -166,11 +179,11 @@ export default function NityaKarmaHubScreen() {
         const storageKey = `nitya_done_${user.id}_${today}`;
         const rawLocal = await AsyncStorage.getItem(storageKey);
         const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
-        const mergedSteps = payload.steps?.map((step: any) => ({
+        const mergedSteps = payload.steps?.map((step) => ({
           ...step,
           done: step.done || localDoneIds.has(step.id),
         })) ?? [];
-        completedCount = mergedSteps.filter((s: any) => s.done).length;
+        completedCount = mergedSteps.filter((step) => step.done).length;
       }
 
       setDincharyaStats({

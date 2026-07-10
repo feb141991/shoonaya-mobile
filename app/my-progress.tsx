@@ -56,6 +56,14 @@ type ProfileRow = { full_name: string | null; username: string | null; karma_poi
 
 type HeatmapDay = { date: string; japa: boolean; nitya: boolean };
 
+type ProgressTheme = {
+  bg: string;
+  text: string;
+  dim: string;
+  card: string;
+  border: string;
+};
+
 type ProgressData = {
   profile: ProfileRow | null;
   heatmap: HeatmapDay[];
@@ -103,7 +111,7 @@ function buildHeatmapWeeks(days: HeatmapDay[]) {
   return { weeks, dayMap };
 }
 
-function SixMonthHeatmap({ days, isDark, theme }: { days: HeatmapDay[]; isDark: boolean; theme: any }) {
+function SixMonthHeatmap({ days, isDark, theme }: { days: HeatmapDay[]; isDark: boolean; theme: ProgressTheme }) {
   const { weeks, dayMap } = buildHeatmapWeeks(days);
   const amber = COLORS.brandGold;
   const green = '#8fb46e';
@@ -171,7 +179,7 @@ function SixMonthHeatmap({ days, isDark, theme }: { days: HeatmapDay[]; isDark: 
 }
 
 // ── Interactive Sadhana Calendar ──
-function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay[]; isDark: boolean; theme: any; streak: number }) {
+function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay[]; isDark: boolean; theme: ProgressTheme; streak: number }) {
   const [calMonth, setCalMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -259,7 +267,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
               : 'transparent';
 
             const color = isSelected
-              ? '#fff'
+              ? COLORS.onMediaWhite
               : (d?.japa || d?.nitya)
                 ? (isDark ? '#f5dfa0' : '#1a0a02')
                 : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)');
@@ -308,7 +316,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
 }
 
 // ── Practice Rhythm Chart ──
-function DowChart({ counts, isDark, theme }: { counts: number[]; isDark: boolean; theme: any }) {
+function DowChart({ counts, isDark, theme }: { counts: number[]; isDark: boolean; theme: ProgressTheme }) {
   const max = Math.max(...counts, 1);
   const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   return (
@@ -346,7 +354,7 @@ const PILLAR_META = [
   { key: 'dharmveer', emoji: '⚔️', label: 'Dharm Veer', colour: '#FF8A65', bg: 'rgba(255,138,101,0.12)' },
 ];
 
-function SadhanaScorecard({ pillarData, isDark, theme }: { pillarData: ProgressData['pillarData']; isDark: boolean; theme: any }) {
+function SadhanaScorecard({ pillarData, isDark, theme }: { pillarData: ProgressData['pillarData']; isDark: boolean; theme: ProgressTheme }) {
   const windowDays = 30;
   return (
     <View style={{ gap: 14 }}>
@@ -638,7 +646,7 @@ export default function MyProgressScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 24 }}>📿</Text>
                 <View>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: '#fb7185' }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.danger }}>
                     Japa · 30 days
                   </Text>
                   <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim, marginTop: 1 }}>
@@ -650,7 +658,7 @@ export default function MyProgressScreen() {
                 onPress={() => router.push('/my-progress/ledger' as Href)}
                 style={{ backgroundColor: 'rgba(244,63,94,0.08)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(244,63,94,0.15)' }}
               >
-                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: '#fb7185' }}>Insights →</Text>
+                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.danger }}>Insights →</Text>
               </Pressable>
             </View>
 
@@ -661,7 +669,7 @@ export default function MyProgressScreen() {
                   onPress={() => router.push('/japa' as Href)}
                   style={{ backgroundColor: 'rgba(244,63,94,0.85)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 11, fontFamily: FONTS.sansSemiBold }}>Begin Japa →</Text>
+                  <Text style={{ color: COLORS.onMediaWhite, fontSize: 11, fontFamily: FONTS.sansSemiBold }}>Begin Japa →</Text>
                 </Pressable>
               </View>
             ) : (
@@ -683,12 +691,12 @@ export default function MyProgressScreen() {
                 <View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                     <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>CONSISTENCY</Text>
-                    <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: '#fb7185' }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.danger }}>
                       {Math.round((pillarData.japa / 30) * 100)}%
                     </Text>
                   </View>
                   <View style={{ height: 4, borderRadius: 2, backgroundColor: isDark ? 'rgba(244,63,94,0.1)' : 'rgba(244,63,94,0.06)', overflow: 'hidden' }}>
-                    <View style={{ height: '100%', width: `${Math.round((pillarData.japa / 30) * 100)}%`, backgroundColor: '#fb7185' }} />
+                    <View style={{ height: '100%', width: `${Math.round((pillarData.japa / 30) * 100)}%`, backgroundColor: COLORS.danger }} />
                   </View>
                 </View>
               </View>
@@ -709,7 +717,7 @@ export default function MyProgressScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 24 }}>🌅</Text>
                 <View>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: '#34d399' }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.success }}>
                     Nitya Karma · 30 days
                   </Text>
                   <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim, marginTop: 1 }}>
@@ -721,7 +729,7 @@ export default function MyProgressScreen() {
                 onPress={() => router.push('/my-progress/ledger' as Href)}
                 style={{ backgroundColor: 'rgba(16,185,129,0.08)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(16,185,129,0.15)' }}
               >
-                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: '#34d399' }}>Insights →</Text>
+                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.success }}>Insights →</Text>
               </Pressable>
             </View>
 
@@ -742,12 +750,12 @@ export default function MyProgressScreen() {
               <View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                   <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>MOMENTUM</Text>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: '#34d399' }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.success }}>
                     {Math.round((pillarData.nitya / 30) * 100)}%
                   </Text>
                 </View>
                 <View style={{ height: 4, borderRadius: 2, backgroundColor: isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.06)', overflow: 'hidden' }}>
-                  <View style={{ height: '100%', width: `${Math.round((pillarData.nitya / 30) * 100)}%`, backgroundColor: '#34d399' }} />
+                  <View style={{ height: '100%', width: `${Math.round((pillarData.nitya / 30) * 100)}%`, backgroundColor: COLORS.success }} />
                 </View>
               </View>
             </View>
