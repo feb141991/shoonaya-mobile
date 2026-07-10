@@ -10,8 +10,26 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api';
+
+// Reuses GET /api/native/progress (also used by ../my-progress.tsx) rather
+// than a dedicated route — this screen only needs 2 of the fields it
+// already returns (latest streak_count, all-time session count), so a
+// third endpoint isn't justified. Note: previously this screen's own
+// direct query had no date window (`order('date',{ascending:false}).limit(1)`
+// over all history); the shared route windows daily_sadhana to the last
+// 182 days like my-progress.tsx does. A real "current streak" always has
+// a row inside a 182-day window, so this only changes behavior for an
+// account with a stale, effectively-dead streak value older than 6
+// months — an edge case, and it now matches my-progress.tsx's own
+// windowing instead of silently disagreeing with it.
+type ProgressApiResponse = {
+  sadhana182d: { date: string; streak_count: number | null }[];
+  totalJapaSessions: number;
+};
 
 const STREAK_SHIELDS = [
   { threshold: 7,   name: 'Saptāha',     emoji: '🔥', desc: '7-day streak',    detail: 'Seven days of unbroken sādhana — a full week of niyama.' },
@@ -40,27 +58,38 @@ export default function ShieldsScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState<'streak' | 'sessions'>('streak');
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
 
   const loadData = useCallback(async () => {
+    setLoadError(false);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.replace('/(auth)/login');
       return;
     }
 
-    const [
-      { data: latestSadhana },
-      { count: totalJapaSessions }
-    ] = await Promise.all([
-      supabase.from('daily_sadhana').select('streak_count').eq('user_id', user.id).order('date', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-    ]);
+    let res: Response;
+    try {
+      res = await apiFetch('/api/native/progress');
+    } catch {
+      setLoadError(true);
+      return;
+    }
+    if (!res.ok) {
+      setLoadError(true);
+      return;
+    }
 
-    setStreak(latestSadhana?.streak_count || 0);
-    setTotalSessions(totalJapaSessions || 0);
+    const payload = (await res.json()) as ProgressApiResponse;
+    const sadhanaRows = payload.sadhana182d || [];
+    const latestStreakCount = sadhanaRows.sort((a, b) => b.date.localeCompare(a.date))[0]?.streak_count ?? 0;
+
+    setStreak(latestStreakCount);
+    setTotalSessions(payload.totalJapaSessions || 0);
   }, [router]);
 
   useEffect(() => {
@@ -73,6 +102,23 @@ export default function ShieldsScreen() {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="alert-circle"
+          title="Couldn't load your shields"
+          subtitle="Check your connection and try again."
+          ctaLabel="Retry"
+          onCta={() => { setLoading(true); loadData().finally(() => setLoading(false)); }}
+        />
       </Screen>
     );
   }

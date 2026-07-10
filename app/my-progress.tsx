@@ -13,14 +13,31 @@ import { useRouter, type Href } from 'expo-router';
 import Svg, { Rect } from 'react-native-svg';
 
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api';
 import {
   malaSessionDurationSeconds,
   malaSessionRounds,
   malaSessionBeads,
   type MalaSessionRow,
 } from '@/lib/mala-sessions';
+
+// Shape returned by GET /api/native/progress (src/app/api/native/progress/route.ts
+// in the web repo) — a batched, RLS-scoped passthrough of the same raw rows
+// this screen used to fetch via 10 separate direct supabase.from() calls.
+// Kept as raw rows (not pre-aggregated) so every derivation below is
+// byte-for-byte unchanged from before.
+type ProgressApiResponse = {
+  profile: ProfileRow | null;
+  malaSessions30d: MalaSessionRow[];
+  nityaLog182d: NityaLogRow[];
+  sadhana182d: SadhanaRow[];
+  totalJapaSessions: number;
+  karmaLedger30d: KarmaLedgerRow[];
+  quizResponses30d: QuizResponseRow[];
+};
 
 // ── Types & Shapes ──
 type SadhanaRow = {
@@ -379,52 +396,40 @@ export default function MyProgressScreen() {
   };
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<ProgressData | null>(null);
 
   const loadData = useCallback(async () => {
+    setLoadError(false);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.replace('/(auth)/login');
       return;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
     const thirtyAgo = daysAgoISO(29);
-    const sixMonthsAgo = daysAgoISO(181);
 
-    const [
-      { data: profile },
-      { data: malaCur },
-      { data: nityaLog },
-      { data: sadhana180 },
-      { count: allTimeSessions },
-      { count: mandaliPosts },
-      { count: kulTasksCount },
-      { data: karmaRows },
-      { count: vratTotal },
-      { data: quizRows30d },
-    ] = await Promise.all([
-      supabase.from('profiles').select('full_name, username, karma_points').eq('id', user.id).single(),
-      supabase.from('mala_sessions').select('id, count, bead_count, target_count, rounds, duration_seconds, duration_secs, completed_at, created_at, date')
-        .eq('user_id', user.id)
-        .gte('created_at', thirtyAgo)
-        .lte('created_at', today + 'T23:59:59')
-        .order('created_at', { ascending: false }),
-      supabase.from('nitya_karma_log').select('log_date').eq('user_id', user.id).gte('log_date', sixMonthsAgo).lte('log_date', today),
-      supabase.from('daily_sadhana').select('date, japa_done, quiz_done, pathshala_done, dharmveer_done, streak_count').eq('user_id', user.id).gte('date', sixMonthsAgo).lte('date', today),
-      supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-      supabase.from('mandali_posts').select('id', { count: 'exact', head: true }).eq('author_id', user.id),
-      supabase.from('kul_tasks').select('id', { count: 'exact', head: true }).eq('assigned_to', user.id).eq('completed', true),
-      supabase.from('karma_ledger').select('reason, amount').eq('user_id', user.id).gte('created_at', thirtyAgo).lte('created_at', today + 'T23:59:59'),
-      supabase.from('recommendations').select('id', { count: 'exact', head: true }).eq('user_id', user.id).like('type', 'vrat_obs:%'),
-      supabase.from('quiz_responses').select('date, is_correct').eq('user_id', user.id).gte('date', thirtyAgo).lte('date', today),
-    ]);
+    let res: Response;
+    try {
+      res = await apiFetch('/api/native/progress');
+    } catch {
+      setLoadError(true);
+      return;
+    }
+    if (!res.ok) {
+      setLoadError(true);
+      return;
+    }
 
-    const sadhana180Typed = (sadhana180 || []) as SadhanaRow[];
-    const nityaLogTyped = (nityaLog || []) as NityaLogRow[];
-    const karmaRowsTyped = (karmaRows || []) as KarmaLedgerRow[];
-    const quizRows30dTyped = (quizRows30d || []) as QuizResponseRow[];
-    const malaCurTyped = (malaCur || []) as MalaSessionRow[];
+    const payload = (await res.json()) as ProgressApiResponse;
+    const profile = payload.profile;
+    const sadhana180Typed = payload.sadhana182d || [];
+    const nityaLogTyped = payload.nityaLog182d || [];
+    const karmaRowsTyped = payload.karmaLedger30d || [];
+    const quizRows30dTyped = payload.quizResponses30d || [];
+    const malaCurTyped = (payload.malaSessions30d || []) as MalaSessionRow[];
+    const allTimeSessions = payload.totalJapaSessions;
 
     // Extract current streak from most recent sadhana row
     const streak = sadhana180Typed.sort((a, b) => b.date.localeCompare(a.date))[0]?.streak_count ?? 0;
@@ -513,12 +518,29 @@ export default function MyProgressScreen() {
     loadData().finally(() => setLoading(false));
   }, [loadData]);
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (loadError || !data) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'My Progress', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="alert-circle"
+          title="Couldn't load your progress"
+          subtitle="Check your connection and try again."
+          ctaLabel="Retry"
+          onCta={() => { setLoading(true); loadData().finally(() => setLoading(false)); }}
+        />
       </Screen>
     );
   }

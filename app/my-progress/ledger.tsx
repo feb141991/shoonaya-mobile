@@ -10,8 +10,10 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api';
 
 type LedgerRow = {
   id: string;
@@ -33,22 +35,32 @@ export default function LedgerScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
 
   const loadData = useCallback(async () => {
+    setLoadError(false);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.replace('/(auth)/login');
       return;
     }
 
-    const { data } = await supabase
-      .from('karma_ledger')
-      .select('id, amount, reason, source_route, metadata, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    
-    setLedger(data || []);
+    let res: Response;
+    try {
+      res = await apiFetch('/api/native/karma-ledger');
+    } catch {
+      setLoadError(true);
+      return;
+    }
+    if (!res.ok) {
+      setLoadError(true);
+      return;
+    }
+
+    const payload = (await res.json()) as { ledger: LedgerRow[] };
+    setLedger(payload.ledger || []);
   }, [router]);
 
   useEffect(() => {
@@ -61,6 +73,23 @@ export default function LedgerScreen() {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'Karma Ledger', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="alert-circle"
+          title="Couldn't load your ledger"
+          subtitle="Check your connection and try again."
+          ctaLabel="Retry"
+          onCta={() => { setLoading(true); loadData().finally(() => setLoading(false)); }}
+        />
       </Screen>
     );
   }
