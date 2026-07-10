@@ -98,6 +98,7 @@ export default function MandaliScreen() {
   const [composeType, setComposeType] = useState<MandaliPostType>('update');
   const [composeEventDate, setComposeEventDate] = useState('');
   const [composeEventLoc, setComposeEventLoc] = useState('');
+  const [activeFilter, setActiveFilter] = useState<MandaliPostType | 'all'>('all');
 
   const theme = useMemo(
     () => ({
@@ -271,6 +272,15 @@ export default function MandaliScreen() {
     };
   }, [loadMandali, profile?.mandaliId]);
 
+  const filteredPosts = useMemo(
+    () => (activeFilter === 'all' ? posts : posts.filter((p) => p.type === activeFilter)),
+    [posts, activeFilter]
+  );
+  const filteredBlendedPosts = useMemo(
+    () => (activeFilter === 'all' ? blendedPosts : blendedPosts.filter((p) => p.type === activeFilter)),
+    [blendedPosts, activeFilter]
+  );
+
   const toggleUpvote = async (postId: string) => {
     if (!profile) return;
     const alreadyUpvoted = upvotedIds.includes(postId);
@@ -316,12 +326,26 @@ export default function MandaliScreen() {
     ]);
   };
 
-  const handleReportPost = async (post: PostRow) => {
+  // Each of these now actually awaits the write and only shows a success
+  // alert once it has genuinely succeeded — lib/mandali.ts's report/block
+  // functions previously swallowed errors, so these chains would show
+  // "Reported"/"Blocked" even on a failed network call or DB rejection.
+  const submitPostReport = async (post: PostRow, reason: string) => {
+    if (!profile) return;
+    try {
+      await reportMandaliPost(profile.userId, post, reason);
+      Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
+    } catch {
+      Alert.alert('Could not submit report', 'Check your connection and try again.');
+    }
+  };
+
+  const handleReportPost = (post: PostRow) => {
     if (!profile) return;
     Alert.alert('Report Post', 'Why are you reporting this post?', [
-      { text: 'Spam / Commercial', onPress: () => void reportMandaliPost(profile.userId, post, 'Spam/Commercial').then(() => Alert.alert('Reported', 'Thank you — our team will review within 24 hours.')) },
-      { text: 'Harassment / Hate Speech', onPress: () => void reportMandaliPost(profile.userId, post, 'Harassment/Hate Speech').then(() => Alert.alert('Reported', 'Thank you — our team will review within 24 hours.')) },
-      { text: 'Inappropriate / Offensive', onPress: () => void reportMandaliPost(profile.userId, post, 'Inappropriate/Offensive').then(() => Alert.alert('Reported', 'Thank you — our team will review within 24 hours.')) },
+      { text: 'Spam / Commercial', onPress: () => void submitPostReport(post, 'Spam/Commercial') },
+      { text: 'Harassment / Hate Speech', onPress: () => void submitPostReport(post, 'Harassment/Hate Speech') },
+      { text: 'Inappropriate / Offensive', onPress: () => void submitPostReport(post, 'Inappropriate/Offensive') },
       { text: 'Cancel', style: 'cancel' },
     ]);
   };
@@ -334,16 +358,27 @@ export default function MandaliScreen() {
         text: 'Block',
         style: 'destructive',
         onPress: () =>
-          void blockUser(profile.userId, authorId)
-            .then(() => loadMandali())
-            .then(() => Alert.alert('User Blocked', 'This user is now hidden from your view.')),
+          void (async () => {
+            try {
+              await blockUser(profile.userId, authorId);
+              await loadMandali();
+              Alert.alert('User Blocked', 'This user is now hidden from your view.');
+            } catch {
+              Alert.alert('Could not block user', 'Check your connection and try again.');
+            }
+          })(),
       },
     ]);
   };
 
-  const reportMember = (memberId: string) => {
+  const reportMember = async (memberId: string) => {
     if (!profile) return;
-    void reportMandaliMember(profile.userId, memberId).then(() => Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team.'));
+    try {
+      await reportMandaliMember(profile.userId, memberId);
+      Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team.');
+    } catch {
+      Alert.alert('Could not submit report', 'Check your connection and try again.');
+    }
   };
 
   const submitPost = async () => {
@@ -466,16 +501,23 @@ export default function MandaliScreen() {
                   gap: 4,
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>
-                  📅 {new Date(post.event_date).toLocaleDateString('en-IN', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                  {post.event_location ? ` • 📍 ${post.event_location}` : ''}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>
+                    📅 {new Date(post.event_date).toLocaleDateString('en-IN', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {post.event_location ? ` • 📍 ${post.event_location}` : ''}
+                  </Text>
+                  {new Date(post.event_date).getTime() < Date.now() ? (
+                    <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.border }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
+                    </View>
+                  ) : null}
+                </View>
                 <EventRsvpBar
                   postId={post.id}
                   rsvps={postRsvps}
@@ -571,9 +613,19 @@ export default function MandaliScreen() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>{profile?.mandaliName ?? 'Mandali'}</Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
-              {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Sacred circle'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+                {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Sacred circle'}
+              </Text>
+              {profile?.mandaliId && members.length > 0 ? (
+                <>
+                  <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
+                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                    {members.length} member{members.length === 1 ? '' : 's'}
+                  </Text>
+                </>
+              ) : null}
+            </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {profile?.mandaliId ? (
@@ -592,6 +644,38 @@ export default function MandaliScreen() {
           </View>
         </View>
 
+        {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
+            {([
+              { value: 'all', label: 'All' },
+              { value: 'update', label: 'Updates' },
+              { value: 'event', label: 'Events' },
+              { value: 'question', label: 'Questions' },
+              { value: 'announcement', label: 'Announcements' },
+            ] as const).map((opt) => {
+              const active = activeFilter === opt.value;
+              return (
+                <Pressable
+                  key={opt.value}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter: ${opt.label}`}
+                  onPress={() => setActiveFilter(opt.value)}
+                  style={{
+                    borderRadius: 999,
+                    paddingHorizontal: 13,
+                    paddingVertical: 8,
+                    backgroundColor: active ? theme.brand : theme.card,
+                    borderWidth: 1,
+                    borderColor: active ? theme.brand : theme.border,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? COLORS.ink : theme.dim }}>{opt.label}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
+
         {!profile?.mandaliId ? (
           profile ? (
             <JoinMandaliPrompt
@@ -607,13 +691,17 @@ export default function MandaliScreen() {
           ) : null
         ) : (
           <>
-            {posts.length === 0 ? (
-              <EmptyState icon="message-circle" title="No posts yet" subtitle="Be the first to share something with your Mandali." />
+            {filteredPosts.length === 0 ? (
+              <EmptyState
+                icon="message-circle"
+                title={posts.length === 0 ? 'No posts yet' : 'No posts in this category'}
+                subtitle={posts.length === 0 ? 'Be the first to share something with your Mandali.' : 'Try a different filter, or clear it to see everything.'}
+              />
             ) : (
-              posts.map(renderPost)
+              filteredPosts.map(renderPost)
             )}
 
-            {blendedPosts.length > 0 ? (
+            {filteredBlendedPosts.length > 0 ? (
               <View style={{ gap: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
@@ -623,7 +711,7 @@ export default function MandaliScreen() {
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: theme.dim, textAlign: 'center' }}>
                   Read from the wider Sanatani community while your local Mandali is set up
                 </Text>
-                {blendedPosts.map(renderPost)}
+                {filteredBlendedPosts.map(renderPost)}
               </View>
             ) : null}
 
@@ -647,7 +735,7 @@ export default function MandaliScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                         <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{member.seva_score} seva</Text>
                         {!isOwnMember && (
-                          <Pressable onPress={() => reportMember(member.id)} style={{ padding: 4 }} hitSlop={10}>
+                          <Pressable onPress={() => void reportMember(member.id)} style={{ padding: 4 }} hitSlop={10}>
                             <Feather name="slash" size={14} color={theme.dim} />
                           </Pressable>
                         )}

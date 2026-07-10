@@ -247,8 +247,14 @@ export async function updateMandaliRsvp(payload: { postId: string; userId: strin
   if (error) throw error;
 }
 
+// Note: none of these three throw on failure previously — the caller's
+// `.then(() => Alert.alert('Reported'/'Blocked', ...))` chains in
+// app/(tabs)/mandali.tsx always fired regardless of whether the insert
+// actually succeeded, so a network failure or RLS rejection silently
+// showed a false "success" message. Now surfaces the real error so the
+// screen can show a genuine failure alert instead.
 export async function reportMandaliPost(reportedBy: string, post: PostRow, reason: string): Promise<void> {
-  await supabase.from('content_reports').insert({
+  const { error } = await supabase.from('content_reports').insert({
     reported_by: reportedBy,
     content_author_id: post.author_id,
     content_type: 'mandali_post',
@@ -256,19 +262,31 @@ export async function reportMandaliPost(reportedBy: string, post: PostRow, reaso
     reason,
     metadata: { source: 'native_mandali' },
   });
+  if (error) throw error;
 }
 
 export async function reportMandaliMember(reportedBy: string, memberId: string): Promise<void> {
-  await supabase.from('content_reports').insert({
+  const { error } = await supabase.from('content_reports').insert({
     reported_by: reportedBy,
     content_type: 'user_profile',
     content_id: memberId,
     reason: 'inappropriate_behaviour',
   });
+  if (error) throw error;
 }
 
+// Matches PWA's ContentSafetyMenu.tsx exactly: upsert with
+// ignoreDuplicates rather than a plain insert, since
+// user_blocked_profiles has a UNIQUE(blocker_id, blocked_user_id)
+// constraint — re-blocking (double-tap, or blocking the same author from
+// two different posts) previously threw an uncaught unique-violation that
+// this function silently swallowed (no error check), which also fed into
+// the false-success-alert bug above.
 export async function blockUser(blockerId: string, blockedUserId: string): Promise<void> {
-  await supabase.from('user_blocked_profiles').insert({ blocker_id: blockerId, blocked_user_id: blockedUserId });
+  const { error } = await supabase
+    .from('user_blocked_profiles')
+    .upsert({ blocker_id: blockerId, blocked_user_id: blockedUserId }, { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true });
+  if (error) throw error;
 }
 
 // ── Safety state (matches PWA's src/lib/user-safety.ts getUserSafetyState) ──
