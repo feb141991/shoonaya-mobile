@@ -302,7 +302,7 @@ export default function DharmVeerDetailScreen() {
           <View style={{ gap: 4 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>Ask more about this Dharm Veer</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20 }}>
-              Dharma Mitra can help you reflect on this hero&apos;s teaching.
+              {"Dharma Mitra can help you reflect on this hero's teaching."}
             </Text>
           </View>
           <TextInput
@@ -366,7 +366,7 @@ export default function DharmVeerDetailScreen() {
           }}
         >
           <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-            Open today&apos;s Dharm Veer practice
+            {"Open today's Dharm Veer practice"}
           </Text>
           <Feather name="arrow-right" size={16} color={text} />
         </Pressable>

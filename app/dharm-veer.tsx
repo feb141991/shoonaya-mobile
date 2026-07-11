@@ -321,7 +321,7 @@ export default function DharmVeerScreen() {
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-              Unable to load today&apos;s profile. Check your connection and try again.
+              {"Unable to load today's profile. Check your connection and try again."}
             </Text>
             <Pressable
               onPress={() => {
@@ -358,7 +358,7 @@ export default function DharmVeerScreen() {
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-              You have completed today&apos;s three hero cards. Come back tomorrow for a new set.
+              {"You have completed today's three hero cards. Come back tomorrow for a new set."}
             </Text>
           </Card>
         </ScrollView>
