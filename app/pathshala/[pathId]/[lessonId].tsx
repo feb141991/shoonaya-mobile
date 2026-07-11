@@ -636,6 +636,38 @@ export default function LessonReaderScreen() {
             {localizedMeaning.isLoading ? <ActivityIndicator color={COLORS.brandGold} /> : null}
           </View>
 
+          {/* Dharma Mitra Ask AI Link */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ask Dharma Mitra about this verse"
+            onPress={() => {
+              router.push({
+                pathname: '/ai-chat',
+                params: {
+                  initialMessage: `I am reading Pathshala lesson on "${entry.original}". Can you explain the meaning, pronunciation, and significance of this verse?`,
+                },
+              });
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderRadius: 22,
+              borderWidth: 1,
+              borderColor: border,
+              backgroundColor: cardBg,
+              minHeight: 44,
+              padding: 16,
+              gap: 12,
+              marginTop: 4,
+            }}
+          >
+            <Feather name="zap" size={16} color={COLORS.brandGold} />
+            <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
+              Ask Dharma Mitra about this verse
+            </Text>
+            <Feather name="chevron-right" size={16} color={dim} />
+          </Pressable>
+
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Pressable
               onPress={() => goToLesson(lessonIndex - 1)}

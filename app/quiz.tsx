@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 
 import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
@@ -57,6 +57,7 @@ type QuizState = {
   todayResponse: TodayResponse | null;
   tradition: Tradition;
   timezone: string;
+  userName: string;
 };
 
 const DEFAULT_STATE: QuizState = {
@@ -64,6 +65,7 @@ const DEFAULT_STATE: QuizState = {
   todayResponse: null,
   tradition: 'hindu',
   timezone: 'UTC',
+  userName: 'Seeker',
 };
 
 
@@ -98,12 +100,13 @@ export default function QuizScreen() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tradition, timezone')
+      .select('tradition, timezone, full_name, username')
       .eq('id', user.id)
       .maybeSingle();
 
     const tradition = (profile?.tradition ?? 'hindu') as Tradition;
     const timezone = profile?.timezone ?? 'UTC';
+    const userName = profile?.full_name || profile?.username || 'Seeker';
     const today = spiritualDate(timezone);
 
     const [quizResponse, savedResponse] = await Promise.all([
@@ -133,6 +136,7 @@ export default function QuizScreen() {
       todayResponse: responseData,
       tradition,
       timezone,
+      userName,
     });
     setSelectedAnswer(responseData?.chosen_index ?? null);
     setSaveData(null);
@@ -215,29 +219,23 @@ export default function QuizScreen() {
     }
   };
 
+  const quizShareCardRef = useRef<View>(null);
+
   const handleShare = async () => {
     if (!answeredToday || !activeQuiz) {
       return;
     }
 
-    const shareText = [
-      'Shoonaya Daily Quiz',
-      '',
-      activeQuiz.question,
-      '',
-      `Result: ${isCorrect ? 'Correct' : 'Not this time'}`,
-      `Points earned: ${saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2)}`,
-      `Streak: ${saveData?.streak ?? 1} days`,
-    ].join('\n');
+    const karmaEarned = saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2);
+    const streak = saveData?.streak ?? 1;
+    const pointsText = `${karmaEarned} point${karmaEarned !== 1 ? 's' : ''}`;
+    const streakText = `${streak} day${streak !== 1 ? 's' : ''}`;
 
-    if (!(await Sharing.isAvailableAsync())) {
-      Alert.alert(shareText);
-      return;
-    }
-
-    const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-quiz-result.txt');
-    targetFile.write(shareText);
-    await Sharing.shareAsync(targetFile.uri);
+    await shareCapturedShoonayaCard(quizShareCardRef, {
+      fileName: 'shoonaya-quiz-card.png',
+      dialogTitle: 'Share Daily Quiz result',
+      fallbackMessage: `I completed today's Daily Quiz with Shoonaya! Result: ${isCorrect ? 'Correct' : 'Not this time'}. Earned ${pointsText}. Streak: ${streakText}.`,
+    });
   };
 
   if (loading) {
@@ -420,6 +418,39 @@ export default function QuizScreen() {
           </Card>
         ) : null}
       </ScrollView>
+
+      {answeredToday && activeQuiz ? (
+        <View
+          pointerEvents="none"
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            left: -420,
+            top: 0,
+            opacity: 0.01,
+          }}
+        >
+          <ShoonayaShareCard
+            ref={quizShareCardRef}
+            data={{
+              tradition: state.tradition,
+              headlineValue: isCorrect ? 'Correct' : 'Incorrect',
+              title: 'Daily Quiz',
+              subtitle: activeQuiz.question,
+              caption: (() => {
+                const karmaEarned = saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2);
+                const streak = saveData?.streak ?? 1;
+                const pointsText = `${karmaEarned} point${karmaEarned !== 1 ? 's' : ''}`;
+                const streakText = `${streak} day${streak !== 1 ? 's' : ''}`;
+                return `Earned ${pointsText} · ${streakText} streak!`;
+              })(),
+              userName: state.userName,
+              date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+              footer: 'Shared from Shoonaya',
+            }}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,9 @@ import Svg, { Circle } from 'react-native-svg';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
+
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -315,10 +318,13 @@ export default function ProfileScreen() {
   const [editVisible, setEditVisible] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
+
+  const profileShareCardRef = useRef<View>(null);
 
   const loadProfile = useCallback(async () => {
     const response = await apiFetch('/api/native/progress-summary');
@@ -455,6 +461,27 @@ export default function ProfileScreen() {
       }
     } catch {
       Alert.alert('Error', 'Could not open WhatsApp.');
+    }
+  };
+
+  const shareProfileCard = async () => {
+    if (!profile || shareLoading) return;
+    setShareLoading(true);
+    try {
+      const firstName = profile.full_name.trim().split(' ')[0] || 'Seeker';
+      const parts: string[] = [];
+      if (streak > 0) parts.push(`${streak}-day streak`);
+      if (profile.seva_score > 0) parts.push(`${profile.seva_score} Seva`);
+      const metricsStr = parts.length > 0 ? ` I have ${parts.join(' and ')}.` : '';
+      const fallbackMessage = `${firstName} is on a spiritual journey on Shoonaya.${metricsStr} Join me.`;
+
+      await shareCapturedShoonayaCard(profileShareCardRef, {
+        fileName: 'shoonaya-journey-card.png',
+        dialogTitle: 'Share your practice',
+        fallbackMessage,
+      });
+    } finally {
+      setShareLoading(false);
     }
   };
 
@@ -1002,6 +1029,14 @@ export default function ProfileScreen() {
 
         <View style={{ gap: 10 }}>
           <ActionRow
+            label="Share Journey"
+            subtitle="Create and share your Shoonaya card"
+            icon="share-2"
+            loading={shareLoading}
+            onPress={() => { void shareProfileCard(); }}
+            theme={theme}
+          />
+          <ActionRow
             label="Sadhana Report"
             subtitle="Download your practice summary"
             icon="pie-chart"
@@ -1286,6 +1321,43 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {profile ? (
+        <View
+          pointerEvents="none"
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            left: -420,
+            top: 0,
+            opacity: 0.01,
+          }}
+        >
+          <ShoonayaShareCard
+            ref={profileShareCardRef}
+            data={{
+              tradition: profile.tradition,
+              headlineValue: streak > 0 ? streak : (profile.seva_score > 0 ? profile.seva_score : undefined),
+              title: streak > 0
+                ? (profile.tradition === 'sikh' ? 'Days of Simran' : profile.tradition === 'jain' ? 'Days of Ahimsa' : 'Days of Sadhana')
+                : (profile.seva_score > 0
+                  ? 'Seva Score'
+                  : (profile.tradition === 'sikh' ? 'Days of Simran' : profile.tradition === 'jain' ? 'Days of Ahimsa' : 'Days of Sadhana')),
+              caption: (() => {
+                const firstName = profile.full_name.trim().split(' ')[0] || 'Seeker';
+                const parts: string[] = [];
+                if (streak > 0) parts.push(`${streak}-day streak`);
+                if (profile.seva_score > 0) parts.push(`${profile.seva_score} Seva`);
+                const metricsStr = parts.length > 0 ? ` (${parts.join(' · ')})` : '';
+                return `${firstName} is on a spiritual journey with Shoonaya.${metricsStr}`;
+              })(),
+              userName: profile.full_name.trim().split(' ')[0] || 'Seeker',
+              date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+              footer: 'Shared from Shoonaya',
+            }}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }

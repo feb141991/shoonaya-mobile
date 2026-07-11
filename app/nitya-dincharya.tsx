@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -17,6 +17,8 @@ import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 
@@ -49,6 +51,8 @@ type NitySummary = {
   total: number;
   allDone: boolean;
   streak: { current: number; longest: number };
+  tradition: string;
+  userName: string;
 };
 
 const EMPTY_STATE: NitySummary = {
@@ -59,6 +63,8 @@ const EMPTY_STATE: NitySummary = {
   total: 0,
   allDone: false,
   streak: { current: 0, longest: 0 },
+  tradition: 'hindu',
+  userName: 'Seeker',
 };
 
 export default function NityaKarmaScreen() {
@@ -93,9 +99,12 @@ export default function NityaKarmaScreen() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('timezone')
+      .select('timezone, tradition, full_name, username')
       .eq('id', user.id)
       .maybeSingle();
+
+    const tradition = profile?.tradition ?? 'hindu';
+    const userName = profile?.full_name || profile?.username || 'Seeker';
 
     const today = spiritualDate(profile?.timezone ?? 'UTC');
     const storageKey = `nitya_done_${user.id}_${today}`;
@@ -127,7 +136,9 @@ export default function NityaKarmaScreen() {
       ...payload,
       steps: mergedSteps,
       completedCount,
-      allDone: completedCount === mergedSteps.length
+      allDone: completedCount === mergedSteps.length,
+      tradition,
+      userName,
     });
   }, [router]);
 
@@ -202,6 +213,46 @@ export default function NityaKarmaScreen() {
     [busyStepId, localKey, state.steps]
   );
 
+  const [shareLoading, setShareLoading] = useState(false);
+  const nityaShareCardRef = useRef<View>(null);
+
+  const getTraditionTitle = (tradition: string) => {
+    switch (tradition.toLowerCase()) {
+      case 'hindu':
+      case 'sanatan':
+      case 'sanatana':
+        return 'Days of Sadhana';
+      case 'sikh':
+        return 'Days of Simran';
+      case 'jain':
+        return 'Days of Ahimsa';
+      case 'buddhist':
+      case 'buddha':
+        return 'Days of Practice';
+      default:
+        return 'Days of Practice';
+    }
+  };
+
+  const shareCompletionCard = async () => {
+    if (shareLoading) return;
+    setShareLoading(true);
+    try {
+      const firstName = state.userName.trim().split(' ')[0] || 'Seeker';
+      const pointsText = `${state.completedCount} of ${state.total} steps`;
+      const streakText = state.streak.current > 0 ? ` · ${state.streak.current}-day streak` : '';
+      const fallbackMessage = `${firstName} completed morning sadhana on Shoonaya! Completed ${pointsText}${streakText}. Join me 🙏`;
+
+      await shareCapturedShoonayaCard(nityaShareCardRef, {
+        fileName: 'shoonaya-nitya-card.png',
+        dialogTitle: 'Share Nitya completion',
+        fallbackMessage,
+      });
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
@@ -272,15 +323,35 @@ export default function NityaKarmaScreen() {
             style={{
               backgroundColor: COLORS.successBg,
               borderColor: COLORS.successBorder,
-              flexDirection: 'row',
-              alignItems: 'center',
               gap: 12,
             }}
           >
-            <Feather name="check-circle" size={20} color={COLORS.success} />
-            <Text style={{ flex: 1, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 19 }}>
-              {state.allDoneMessage}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Feather name="check-circle" size={20} color={COLORS.success} />
+              <Text style={{ flex: 1, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 19 }}>
+                {state.allDoneMessage}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share your completion card"
+              onPress={() => { void shareCompletionCard(); }}
+              disabled={shareLoading}
+              style={{
+                borderRadius: 16,
+                backgroundColor: COLORS.brandGold,
+                minHeight: 44,
+                paddingVertical: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 4,
+                opacity: shareLoading ? 0.7 : 1,
+              }}
+            >
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                {shareLoading ? 'Creating card...' : 'Share completion card'}
+              </Text>
+            </Pressable>
           </Card>
         ) : (
           <Card style={{ backgroundColor: theme.card, borderColor: theme.border }}>
@@ -423,6 +494,37 @@ export default function NityaKarmaScreen() {
           })}
         </View>
       </ScrollView>
+
+      {state.allDone && state.total > 0 ? (
+        <View
+          pointerEvents="none"
+          collapsable={false}
+          style={{
+            position: 'absolute',
+            left: -420,
+            top: 0,
+            opacity: 0.01,
+          }}
+        >
+          <ShoonayaShareCard
+            ref={nityaShareCardRef}
+            data={{
+              tradition: state.tradition,
+              headlineValue: state.streak.current > 0 ? state.streak.current : state.completedCount,
+              title: getTraditionTitle(state.tradition),
+              subtitle: 'Morning Complete',
+              caption: (() => {
+                const firstName = state.userName.trim().split(' ')[0] || 'Seeker';
+                const streakText = state.streak.current > 0 ? ` · ${state.streak.current}-day streak` : '';
+                return `${firstName} completed morning sadhana on Shoonaya! Completed ${state.completedCount} of ${state.total} steps${streakText}.`;
+              })(),
+              userName: state.userName.trim().split(' ')[0] || 'Seeker',
+              date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+              footer: 'Shared from Shoonaya',
+            }}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }

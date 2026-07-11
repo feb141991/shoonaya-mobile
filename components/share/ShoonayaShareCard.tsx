@@ -1,9 +1,41 @@
 import { forwardRef } from 'react';
 import { Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, Ellipse, Line, Path, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, Line, Path, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 
 import { COLORS, FONTS } from '@/lib/constants';
+
+const GRAIN_DOTS = Array.from({ length: 150 }).map((_, i) => {
+  const x = (((Math.sin(i * 91.7) * 6271.27) % 1) + 1) % 1 * 360;
+  const y = (((Math.cos(i * 47.3) * 8923.91) % 1) + 1) % 1 * 640;
+  return { x, y, id: i };
+});
+
+function GrainOverlay({ dark }: { dark: boolean }) {
+  const dotColor = dark ? COLORS.onMediaWhite : COLORS.brandEarthLight;
+  const opacity = dark ? 0.05 : 0.04;
+  return (
+    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      {GRAIN_DOTS.map((dot) => (
+        <Circle key={dot.id} cx={dot.x} cy={dot.y} r={0.8} fill={dotColor} opacity={opacity} />
+      ))}
+    </Svg>
+  );
+}
+
+function VignetteOverlay({ dark }: { dark: boolean }) {
+  return (
+    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      <Defs>
+        <RadialGradient id="vignette" cx="50%" cy="50%" rx="80%" ry="80%">
+          <Stop offset="40%" stopColor={dark ? COLORS.darkBg : COLORS.brandEarthLight} stopOpacity="0" />
+          <Stop offset="100%" stopColor={dark ? COLORS.darkBg : COLORS.brandEarthLight} stopOpacity={dark ? 0.45 : 0.15} />
+        </RadialGradient>
+      </Defs>
+      <Path d="M0 0 H360 V640 H0 Z" fill="url(#vignette)" />
+    </Svg>
+  );
+}
 
 export type ShoonayaShareVariant = 'sanatan' | 'sikh' | 'jain' | 'buddhist' | 'universal';
 
@@ -122,30 +154,79 @@ function Wordmark({ color, gold }: { color: string; gold: string }) {
 }
 
 function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: VariantTheme }) {
+  const W = 360;
+  const H = 640;
+
   if (variant === 'buddhist') {
+    const stars = Array.from({ length: 50 }).map((_, i) => {
+      const x = (((Math.sin(i * 12.9898) * 43758.5453) % 1) + 1) % 1 * W;
+      const y = (((Math.sin(i * 78.233) * 12543.123) % 1) + 1) % 1 * H * 0.55;
+      const s = ((Math.sin(i * 3.13) + 1) / 2) * 0.8 + 0.2;
+      return { x, y, r: s, id: i };
+    });
     return (
       <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
         <Defs>
-          <RadialGradient id="bGlow" cx="50%" cy="26%" r="48%">
-            <Stop offset="0" stopColor={theme.gold} stopOpacity="0.22" />
-            <Stop offset="1" stopColor={theme.gold} stopOpacity="0" />
+          <SvgLinearGradient id="pathGrad" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={theme.gold} stopOpacity="0" />
+            <Stop offset="50%" stopColor={theme.gold} stopOpacity="0.22" />
+            <Stop offset="100%" stopColor={theme.gold} stopOpacity="0" />
+          </SvgLinearGradient>
+          <RadialGradient id="bGlow" cx="50%" cy="32%" rx="50%" ry="50%">
+            <Stop offset="0%" stopColor={theme.gold} stopOpacity="0.16" />
+            <Stop offset="100%" stopColor={theme.gold} stopOpacity="0" />
           </RadialGradient>
         </Defs>
-        <Circle cx="180" cy="176" r="210" fill="url(#bGlow)" />
-        <Path d="M0 510 C60 450 104 460 154 516 C210 446 274 430 360 500 L360 640 L0 640 Z" fill={theme.gold} opacity="0.16" />
-        <Path d="M32 560 C96 510 132 520 184 572 C244 520 300 512 360 548" stroke={theme.gold} strokeOpacity="0.38" strokeWidth="2" fill="none" />
+        <Circle cx="180" cy="205" r="210" fill="url(#bGlow)" />
+        {stars.map((star) => (
+          <Circle key={star.id} cx={star.x} cy={star.y} r={star.r} fill={theme.gold} opacity={0.4} />
+        ))}
+        <Path d={`M ${W / 2 - 10} ${H * 0.2} H ${W / 2 + 10} V ${H} H ${W / 2 - 10} Z`} fill="url(#pathGrad)" />
+        <Path
+          d={`M 0 ${H} L 0 ${H * 0.78} L ${W * 0.22} ${H * 0.66} L ${W * 0.4} ${H * 0.74} L ${W * 0.58} ${H * 0.6} L ${W * 0.78} ${H * 0.72} L ${W} ${H * 0.64} L ${W} ${H} Z`}
+          fill={COLORS.darkBg}
+          opacity={0.6}
+        />
       </Svg>
     );
   }
 
   if (variant === 'jain') {
+    const cx = 180;
+    const cy = 524;
+    const petals = 5;
     return (
       <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
-        <Circle cx="180" cy="310" r="132" stroke={theme.gold} strokeOpacity="0.14" strokeWidth="2" fill="none" />
-        <Circle cx="180" cy="310" r="98" stroke={COLORS.sage} strokeOpacity="0.13" strokeWidth="2" fill="none" />
-        <Path d="M180 434 C150 392 134 350 180 322 C226 350 210 392 180 434 Z" fill={COLORS.sage} opacity="0.14" />
-        <Path d="M178 432 C116 402 96 356 150 324 C174 352 184 386 178 432 Z" fill={theme.gold} opacity="0.12" />
-        <Path d="M182 432 C244 402 264 356 210 324 C186 352 176 386 182 432 Z" fill={theme.gold} opacity="0.12" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Ellipse
+            key={`ripple-${i}`}
+            cx={cx}
+            cy={cy}
+            rx={60 + i * 36}
+            ry={13 + i * 7.3}
+            stroke={COLORS.sage}
+            strokeOpacity={0.16}
+            strokeWidth={1.5}
+            fill="none"
+          />
+        ))}
+        {Array.from({ length: petals }).map((_, i) => {
+          const a = Math.PI + (i / (petals - 1)) * Math.PI;
+          const ctrlX = cx + Math.cos(a) * 23;
+          const ctrlY = cy + Math.sin(a) * 43;
+          const endX = cx + Math.cos(a) * 5.3;
+          const endY = cy - 50;
+          return (
+            <Path
+              key={`petal-${i}`}
+              d={`M ${cx} ${cy} Q ${ctrlX} ${ctrlY} ${endX} ${endY}`}
+              stroke={theme.gold}
+              strokeOpacity={0.22}
+              strokeWidth={1.8}
+              fill="none"
+            />
+          );
+        })}
       </Svg>
     );
   }
@@ -153,43 +234,110 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
   if (variant === 'sikh') {
     return (
       <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
-        {[0, 1, 2, 3].map((index) => (
-          <Path
-            key={index}
-            d={`M-40 ${170 + index * 78} C70 ${126 + index * 60} 126 ${238 + index * 30} 240 ${190 + index * 72} C296 ${166 + index * 64} 326 ${166 + index * 70} 410 ${198 + index * 56}`}
-            stroke={theme.gold}
-            strokeOpacity={0.16 + index * 0.035}
-            strokeWidth="2.4"
-            fill="none"
-          />
-        ))}
+        {Array.from({ length: 5 }).map((_, row) => {
+          const baseY = H * 0.62 + row * 15;
+          let pathD = '';
+          for (let x = -20; x <= W + 20; x += 10) {
+            const y = baseY + Math.sin((x / W) * Math.PI * 3 + row) * 8;
+            if (x === -20) {
+              pathD += `M ${x} ${y}`;
+            } else {
+              pathD += ` L ${x} ${y}`;
+            }
+          }
+          return (
+            <Path
+              key={`flow-${row}`}
+              d={pathD}
+              stroke={theme.gold}
+              strokeOpacity={0.15 + row * 0.03}
+              strokeWidth={1.5}
+              fill="none"
+            />
+          );
+        })}
       </Svg>
     );
   }
 
-  return (
-    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
-      <Defs>
-        <RadialGradient id="glow" cx="50%" cy="44%" r="46%">
-          <Stop offset="0" stopColor={theme.gold} stopOpacity="0.18" />
-          <Stop offset="1" stopColor={theme.gold} stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      <Circle cx="180" cy="284" r="194" fill="url(#glow)" />
-      <Circle cx="180" cy="284" r="114" stroke={theme.gold} strokeOpacity="0.15" strokeWidth="2" fill="none" />
-      {Array.from({ length: 16 }).map((_, index) => {
-        const angle = (index / 16) * Math.PI * 2;
-        const x1 = 180 + Math.cos(angle) * 84;
-        const y1 = 284 + Math.sin(angle) * 84;
-        const x2 = 180 + Math.cos(angle) * 124;
-        const y2 = 284 + Math.sin(angle) * 124;
-        return <Line key={index} x1={x1} y1={y1} x2={x2} y2={y2} stroke={theme.gold} strokeOpacity="0.16" strokeWidth="1.4" />;
-      })}
-      {variant === 'universal' ? (
-        <Path d="M96 476 C134 430 160 430 180 476 C200 430 226 430 264 476 C226 522 200 522 180 476 C160 522 134 522 96 476 Z" stroke={theme.gold} strokeOpacity="0.22" strokeWidth="4" fill="none" />
-      ) : null}
-    </Svg>
-  );
+  if (variant === 'sanatan') {
+    const cx = 180;
+    const cy = 294;
+    const r = 120;
+    const petals = 16;
+    return (
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+        <Defs>
+          <RadialGradient id="glow" cx="50%" cy="46%" rx="46%" ry="46%">
+            <Stop offset="0" stopColor={theme.gold} stopOpacity="0.22" />
+            <Stop offset="1" stopColor={theme.gold} stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={cx} cy={cy} r={r * 1.5} fill="url(#glow)" />
+        {[0, 1, 2, 3].map((i) => (
+          <Circle
+            key={`circle-${i}`}
+            cx={cx}
+            cy={cy}
+            r={r * (0.5 + i * 0.18)}
+            stroke={theme.gold}
+            strokeOpacity={0.16}
+            strokeWidth={1.2}
+            fill="none"
+          />
+        ))}
+        {Array.from({ length: petals }).map((_, i) => {
+          const a = (i / petals) * Math.PI * 2;
+          const ex = cx + Math.cos(a) * r * 0.78;
+          const ey = cy + Math.sin(a) * r * 0.78;
+          const rotationAngle = (a * 180) / Math.PI;
+          return (
+            <Ellipse
+              key={`petal-${i}`}
+              cx={ex}
+              cy={ey}
+              rx={r * 0.16}
+              ry={r * 0.06}
+              transform={`rotate(${rotationAngle}, ${ex}, ${ey})`}
+              stroke={theme.gold}
+              strokeOpacity={0.16}
+              strokeWidth={1.2}
+              fill="none"
+            />
+          );
+        })}
+      </Svg>
+    );
+  }
+
+  if (variant === 'universal') {
+    let waveD = '';
+    for (let x = 0; x <= W; x += 10) {
+      const y = 294 + Math.sin((x / W) * Math.PI * 2) * 9;
+      if (x === 0) waveD += `M ${x} ${y}`; else waveD += ` L ${x} ${y}`;
+    }
+    return (
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+        <Defs>
+          <SvgLinearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor={theme.number} stopOpacity="0" />
+            <Stop offset="50%" stopColor={theme.number} stopOpacity="0.12" />
+            <Stop offset="100%" stopColor={theme.number} stopOpacity="0" />
+          </SvgLinearGradient>
+        </Defs>
+        <Path
+          d="M96 350 C134 304 160 304 180 350 C200 304 226 304 264 350 C226 396 200 396 180 350 C160 396 134 396 96 350 Z"
+          stroke={theme.gold}
+          strokeOpacity={0.16}
+          strokeWidth={3}
+          fill="none"
+        />
+        <Path d={waveD} stroke="url(#waveGrad)" strokeWidth={4} fill="none" />
+      </Svg>
+    );
+  }
+
+  return null;
 }
 
 export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData }>(function ShoonayaShareCard({ data }, ref) {
@@ -203,8 +351,13 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
       <LinearGradient colors={[theme.top, theme.bottom]} style={{ flex: 1, padding: 24, alignItems: 'center' }}>
         <Motif variant={variant} theme={theme} />
 
-        <View style={{ position: 'absolute', inset: 12, borderRadius: 24, borderWidth: 1.2, borderColor: theme.gold, opacity: 0.34 }} />
-        <View style={{ position: 'absolute', inset: 22, borderRadius: 20, borderWidth: 1, borderColor: theme.gold, opacity: 0.15 }} />
+        {/* Depth vignette and organic grain noise overlays */}
+        <VignetteOverlay dark={theme.dark} />
+        <GrainOverlay dark={theme.dark} />
+
+        {/* Double nested ornamental borders */}
+        <View style={{ position: 'absolute', inset: 15, borderRadius: 15, borderWidth: 1.2, borderColor: theme.gold, opacity: 0.34 }} />
+        <View style={{ position: 'absolute', inset: 21, borderRadius: 11, borderWidth: 0.8, borderColor: theme.gold, opacity: 0.18 }} />
 
         <View style={{ marginTop: 48, alignItems: 'center', gap: 14 }}>
           <Wordmark color={theme.ink} gold={theme.gold} />

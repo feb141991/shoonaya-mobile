@@ -5,6 +5,38 @@ import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg'
 import { COLORS, FONTS } from '@/lib/constants';
 import type { DharmVeer } from '@/lib/dharm-veer';
 
+const POSTER_GRAIN_DOTS = Array.from({ length: 60 }).map((_, i) => {
+  const x = (((Math.sin(i * 71.3) * 3141.59) % 1) + 1) % 1 * 360;
+  const y = (((Math.cos(i * 37.7) * 5823.11) % 1) + 1) % 1 * 260;
+  return { x, y, id: i };
+});
+
+function PosterGrainOverlay({ dark }: { dark: boolean }) {
+  const dotColor = dark ? COLORS.onMediaWhite : COLORS.brandEarthLight;
+  const opacity = dark ? 0.05 : 0.04;
+  return (
+    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 260">
+      {POSTER_GRAIN_DOTS.map((dot) => (
+        <Circle key={dot.id} cx={dot.x} cy={dot.y} r={0.8} fill={dotColor} opacity={opacity} />
+      ))}
+    </Svg>
+  );
+}
+
+function PosterVignetteOverlay({ dark }: { dark: boolean }) {
+  return (
+    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 260">
+      <Defs>
+        <RadialGradient id="posterVignette" cx="50%" cy="50%" rx="80%" ry="80%">
+          <Stop offset="40%" stopColor={dark ? COLORS.darkBg : COLORS.brandEarthLight} stopOpacity="0" />
+          <Stop offset="100%" stopColor={dark ? COLORS.darkBg : COLORS.brandEarthLight} stopOpacity={dark ? 0.38 : 0.12} />
+        </RadialGradient>
+      </Defs>
+      <Path d="M0 0 H360 V260 H0 Z" fill="url(#posterVignette)" />
+    </Svg>
+  );
+}
+
 type Props = {
   hero: DharmVeer;
   height?: number;
@@ -38,6 +70,14 @@ export function DharmVeerPoster({ hero, height = 260, compact = false }: Props) 
           <Circle cx="180" cy="122" r="86" stroke={tone.accent} strokeOpacity="0.18" strokeWidth="2" fill="none" />
           <Path d="M40 226 C94 190 130 202 180 226 C230 202 270 190 320 226" stroke={tone.accent} strokeOpacity="0.18" strokeWidth="3" fill="none" />
         </Svg>
+
+        {/* Depth vignette and organic grain overlays */}
+        <PosterVignetteOverlay dark={dark} />
+        <PosterGrainOverlay dark={dark} />
+
+        {/* Nested borders */}
+        <View style={{ position: 'absolute', inset: 10, borderRadius: 14, borderWidth: 1, borderColor: tone.accent, opacity: 0.22 }} />
+
         <Text style={{ fontSize: compact ? 56 : 74, includeFontPadding: false }}>{hero.emoji}</Text>
         <Text
           numberOfLines={1}

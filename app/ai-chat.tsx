@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -48,6 +48,12 @@ const DAILY_LIMITS = {
 
 export default function AiChatScreen() {
   const router = useRouter();
+  const { initialMessage } = useLocalSearchParams<{ initialMessage?: string }>();
+  const initialPrompt = useMemo(
+    () => (Array.isArray(initialMessage) ? initialMessage[0] : initialMessage),
+    [initialMessage]
+  );
+  const [initialSent, setInitialSent] = useState(false);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
@@ -117,7 +123,7 @@ export default function AiChatScreen() {
     );
   };
 
-  const sendMessage = async (promptText?: string) => {
+  const sendMessage = useCallback(async (promptText?: string) => {
     const content = (promptText ?? input).trim();
     if (!content || streaming || !profile) {
       return;
@@ -198,7 +204,14 @@ export default function AiChatScreen() {
     } finally {
       setStreaming(false);
     }
-  };
+  }, [input, messages, profile, streaming]);
+
+  useEffect(() => {
+    if (profile && initialPrompt && !initialSent) {
+      setInitialSent(true);
+      void sendMessage(initialPrompt);
+    }
+  }, [profile, initialPrompt, initialSent, sendMessage]);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isUser = item.role === 'user';
