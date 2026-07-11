@@ -215,6 +215,12 @@ export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [cancelingDeletion, setCancelingDeletion] = useState(false);
+  const [deletionStatus, setDeletionStatus] = useState<{
+    isDeleting: boolean;
+    deletionRequestedAt: string | null;
+    purgeAfter: string | null;
+  } | null>(null);
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [themePref, setThemePref] = useState<ThemePref>('system');
 
@@ -260,8 +266,35 @@ export default function SettingsScreen() {
       .finally(() => setLoading(false));
   }, [loadSettings]);
 
+  // Best-effort: a failure here just leaves the Danger Zone in its default
+  // "Delete account" state rather than blocking the rest of Settings from
+  // loading (loadSettings/runLoad above already has its own retry UI for
+  // the settings it's responsible for).
+  const loadDeletionStatus = useCallback(async () => {
+    try {
+      const response = await apiFetch('/api/user/delete/status');
+      if (!response.ok) return;
+      const data: unknown = await response.json();
+      if (data && typeof data === 'object' && (data as { success?: boolean }).success) {
+        const status = data as {
+          isDeleting?: boolean;
+          deletionRequestedAt?: string | null;
+          purgeAfter?: string | null;
+        };
+        setDeletionStatus({
+          isDeleting: !!status.isDeleting,
+          deletionRequestedAt: status.deletionRequestedAt ?? null,
+          purgeAfter: status.purgeAfter ?? null,
+        });
+      }
+    } catch {
+      // Best-effort -- see comment above.
+    }
+  }, []);
+
   useEffect(() => {
     runLoad();
+    void loadDeletionStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -313,48 +346,61 @@ export default function SettingsScreen() {
     }
   };
 
-  // Preserved exactly: POST /api/user/delete — an immediate, irreversible
-  // hard delete (auth user + profile row removed server-side; see the web
-  // repo's src/app/api/user/delete/route.ts). Not the same mechanism as
-  // PWA's ProfileClient "Delete Account" button, which instead sets a
-  // 30-day-cool-off flag directly on `profiles` (is_deleting /
-  // deletion_requested_at) and is cancellable. That discrepancy is a
-  // product decision, not something to silently paper over here — flagged
-  // in the review report. Per this task's explicit instruction, native
-  // keeps calling the existing immediate-delete route as-is; the copy below
-  // is written for THAT behavior (irreversible, no cool-off), not PWA's.
-  const confirmDelete = async () => {
+  // Now the same canonical deletion flow as web (ProfileClient.tsx /
+  // DeleteAccountClient.tsx): POST /api/user/delete/request starts a 30-day
+  // cancellable cool-off (profiles.is_deleting / deletion_requested_at) --
+  // it does not delete anything immediately, and does not sign the user
+  // out, since the account is still fully usable during the cool-off. The
+  // old immediate-hard-delete route (POST /api/user/delete) is no longer
+  // called from any user-facing UI; see that route's own comment in the
+  // web repo.
+  const confirmDeletionRequest = async () => {
     setDeleting(true);
     try {
-      const response = await apiFetch('/api/user/delete', { method: 'POST' });
-      if (!response.ok) {
-        let detail = '';
-        try {
-          const json: unknown = await response.json();
-          if (json && typeof json === 'object' && 'error' in json && typeof json.error === 'string') {
-            detail = json.error;
-          }
-        } catch {
-          // Response wasn't JSON — fall through to the generic message below.
-        }
+      const response = await apiFetch('/api/user/delete/request', { method: 'POST' });
+      const json: unknown = await response.json().catch(() => null);
+      const data = json && typeof json === 'object' ? (json as Record<string, unknown>) : null;
+      const success = data?.success === true;
+      if (!response.ok || !success) {
+        const detail = data && typeof data.error === 'string' ? data.error : '';
         throw new Error(detail || `Request failed (status ${response.status})`);
       }
-      await supabase.auth.signOut();
+      setDeletionStatus({
+        isDeleting: true,
+        deletionRequestedAt: typeof data?.deletionRequestedAt === 'string' ? data.deletionRequestedAt : null,
+        purgeAfter: typeof data?.purgeAfter === 'string' ? data.purgeAfter : null,
+      });
+      Alert.alert('Deletion scheduled', 'You can cancel anytime in the next 30 days from this screen.');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not delete account. Check your connection and try again.';
-      Alert.alert('Could not delete account', message);
+      const message = error instanceof Error ? error.message : 'Could not schedule deletion. Check your connection and try again.';
+      Alert.alert('Could not schedule deletion', message);
     } finally {
       setDeleting(false);
     }
   };
 
+  const handleCancelDeletion = async () => {
+    setCancelingDeletion(true);
+    try {
+      const response = await apiFetch('/api/user/delete/cancel', { method: 'POST' });
+      if (!response.ok) throw new Error(`Request failed (status ${response.status})`);
+      setDeletionStatus({ isDeleting: false, deletionRequestedAt: null, purgeAfter: null });
+      Alert.alert('Deletion cancelled', 'Welcome back — your account is safe.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not cancel deletion. Check your connection and try again.';
+      Alert.alert('Could not cancel deletion', message);
+    } finally {
+      setCancelingDeletion(false);
+    }
+  };
+
   const handleDeletePress = () => {
     Alert.alert(
-      'Delete account permanently?',
-      'This immediately and permanently deletes your Shoonaya account — practice history, streaks, relics, and Kul membership included. This cannot be undone.',
+      'Delete account?',
+      'This starts a 30-day cancellable cool-off — practice history, streaks, relics, and Kul membership included. Your account is only permanently deleted after 30 days, and you can cancel anytime before then by signing back in and tapping Cancel deletion request here.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete permanently', style: 'destructive', onPress: () => { void confirmDelete(); } },
+        { text: 'Schedule deletion', style: 'destructive', onPress: () => { void confirmDeletionRequest(); } },
       ]
     );
   };
@@ -511,18 +557,44 @@ export default function SettingsScreen() {
                 tone="auto"
                 style={{ backgroundColor: theme.card, borderColor: COLORS.dangerBorder, gap: 10 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                  <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
-                  <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
-                    Deleting your account is permanent and immediate. There is no cool-off period or recovery.
-                  </Text>
-                </View>
-                <DangerButton
-                  label="Delete account"
-                  loading={deleting}
-                  onPress={handleDeletePress}
-                  isDark={isDark}
-                />
+                {deletionStatus?.isDeleting ? (
+                  <>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                      <Feather name="clock" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
+                      <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
+                        Account scheduled for deletion
+                        {deletionStatus.purgeAfter
+                          ? ` on ${new Date(deletionStatus.purgeAfter).toLocaleDateString()}`
+                          : ''}
+                        .{deletionStatus.deletionRequestedAt
+                          ? ` Requested ${new Date(deletionStatus.deletionRequestedAt).toLocaleDateString()}.`
+                          : ''}{' '}
+                        Cancel anytime before then to keep your account.
+                      </Text>
+                    </View>
+                    <Button
+                      label={cancelingDeletion ? 'Cancelling...' : 'Cancel deletion request'}
+                      variant="secondary"
+                      loading={cancelingDeletion}
+                      onPress={() => { void handleCancelDeletion(); }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                      <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
+                      <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
+                        Deleting starts a 30-day cancellable cool-off. Your account and data are permanently removed after 30 days unless you cancel first.
+                      </Text>
+                    </View>
+                    <DangerButton
+                      label="Delete account"
+                      loading={deleting}
+                      onPress={handleDeletePress}
+                      isDark={isDark}
+                    />
+                  </>
+                )}
               </Card>
             </View>
 
