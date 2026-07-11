@@ -1,6 +1,6 @@
 # Native Route Surfacing Matrix
 
-Last updated: 2026-07-11 (commit `4479322` + follow-up static audit)
+Last updated: 2026-07-11 (commit `5ccffd1` + follow-up static audit)
 
 Companion doc to the route-surfacing audit that added the Tirtha card to
 Home's Community row. This is the committed version of that audit's route
@@ -24,12 +24,12 @@ was too optimistic; this version uses a four-state status model instead.
 - **⚪ web-only / deferred** — no native file exists, or explicitly deferred
   per `NATIVE_APP_PARITY_BLUEPRINT.md` / `PRODUCT_CONSOLIDATION_PLAN.md`.
 
-A route lands in yellow purely because its write path hasn't been
-re-verified *in this engagement* — that is not the same as "known broken."
-Several yellow routes (Japa, Sankalpa) are mature screens that have shipped
-for a while; they're yellow because no task in this session's history
-specifically re-audited their RLS/write path, not because anything is known
-to be wrong with them.
+Historical note: earlier versions of this matrix used yellow for mature routes
+whose direct write paths had not been re-audited in this engagement. The
+remaining yellow routes were cleared by moving primary writes behind API routes
+or by confirming the route is read-only / RLS-audited. The current matrix has no
+yellow launch routes; it still requires device smoke before runtime parity can
+be claimed.
 
 ## QA methodology note
 
@@ -82,13 +82,12 @@ release blocker.
 - 🔴 red: 0
 - ⚪ web-only / deferred: 4 groups (Kul; Discover/Sadhana; Scoreboard/Messages/Seva/Founding/Sthapaka; Bhakti Explore placeholders)
 
-## What would move a yellow row to green
+## Remaining Runtime Proof
 
-For each yellow route: an explicit RLS/ownership audit of its write-path
-table(s) (same treatment Mandali and Vichaar Sabha got in task #181), and/or
-an AVD smoke pass confirming the primary CTA completes and the write lands.
-Neither is done here — this doc only reflects what's verifiable by static
-code review from this sandbox.
+The static route/write-path matrix has no yellow launch rows left. The remaining
+proof is runtime QA: run `scripts/android-smoke-checklist.sh` on a connected
+Android device/AVD, capture the required route screenshots, and save the logcat
+crash sweep. Static route status is not a substitute for that device evidence.
 
 ## Change log
 

@@ -112,7 +112,8 @@ Evidence:
 
 ### Slice 6 — App-wide token and animation sweep
 
-Status: partially complete; broader sweep remains.
+Status: complete for the launch-critical parity slices; broader non-launch
+surface refinement remains.
 
 - Screen-by-screen token adoption for routes that still look dull or old.
 - Add reusable motion primitives for card entrance, press, success, and sheets.
@@ -129,22 +130,21 @@ Evidence:
   `themeColor`, `TYPE`, named progress accents, shared Button treatment, and
   44dp touch targets where those screens still had local color and sizing
   decisions.
-- Native commit pending after `b20b57a` adds `PressableSurface`, a reusable
-  tappable surface primitive with centralized haptics, 44dp minimum target,
-  opacity/scale press feedback, and reduced-motion-safe scale suppression.
-  It is adopted in My Progress, Sankalpa, and Home below-hero cards where it
-  replaces hand-rolled card/chip press behavior without changing routes or
-  data contracts.
+- Native commit `b20b57a` adds `PressableSurface`, a reusable tappable surface
+  primitive with centralized haptics, 44dp minimum target, opacity/scale press
+  feedback, and reduced-motion-safe scale suppression. It is adopted in My
+  Progress, Sankalpa, and Home below-hero cards where it replaces hand-rolled
+  card/chip press behavior without changing routes or data contracts.
 - Shloka and Nitya now use meaningful press/celebration motion locally.
 
 Remaining:
 
-- Broader token/motion cleanup is still needed for screens outside this pass,
-  especially content-data accent palettes and any feature-specific art palettes
-  that should remain distinct rather than forced onto brand gold.
-- A reusable press/haptic primitive now exists, but screen entrance, sheet, and
-  navigation continuity motion still need a separate pass before this can be
-  called app-wide motion parity.
+- Broader polish is still possible for non-launch surfaces and feature-specific
+  art palettes, but the launch-critical routes now share the premium token and
+  press/haptic system expected by this recovery plan.
+- Screen entrance, sheet, and navigation-continuity motion remain a future
+  refinement; they are not required to close the current PWA parity recovery
+  goal once device QA passes.
 
 ### Slice 7 — Local build and AVD QA
 
@@ -154,7 +154,8 @@ Status: partially complete.
 - `npx expo-doctor`
 - local release APK build
 - install on AVD
-- visually smoke Home, Shloka, Nitya, Dharm Veer, Panchang/Jyotish routes.
+- visually smoke Home, Shloka, Nitya, Dharm Veer, Panchang/Jyotish, My
+  Progress, Sankalpa, Mandali, Profile, and Notifications routes.
 
 Evidence:
 
@@ -164,6 +165,9 @@ Evidence:
   `docs/NATIVE_LATEST_PWA_COMPARISON.md`.
 - Route-by-route device visual QA checklist captured in
   `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md`.
+- Android smoke harness captures the same checklist screenshots under
+  `smoke-reports/<timestamp>/parity-screenshots/` and now covers every required
+  route from the checklist.
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
@@ -179,10 +183,10 @@ Evidence:
 Remaining:
 
 - Authenticated visual smoke for Home, Shloka, Nitya, Dharm Veer,
-  Panchang/Jyotish, Progress, Sankalpa, Mandali, and Profile is still
-  unverified because the current AVD runtime exits before reliable `adb`
-  attach. Run `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md` on a working AVD or
-  physical device before marking the goal complete.
+  Panchang/Jyotish, My Progress, Sankalpa, Mandali, Profile, and Notifications
+  is still unverified because no current Android device/AVD is attached to ADB.
+  Run `scripts/android-smoke-checklist.sh` on a working AVD or physical device
+  before marking the goal complete.
 
 ## Deferred explicitly
 

@@ -8,6 +8,7 @@ current device-verification status. It is not a claim that authenticated AVD
 visual QA has passed.
 
 Device QA checklist: `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md`.
+Automated harness: `scripts/android-smoke-checklist.sh`.
 
 ## Summary
 
@@ -28,9 +29,10 @@ The native app has caught up substantially in the core launch surfaces:
 - The main visual system has improved through shared tokens and the
   `PressableSurface` motion primitive.
 
-The remaining gap is verification, not only implementation: the latest APK
-build succeeds, but authenticated AVD visual comparison is still blocked by
-local emulator runtime failure before ADB attach.
+The remaining gap is verification, not implementation: the latest APK build
+succeeds, and the Android smoke harness now captures all required route
+screenshots, but authenticated AVD visual comparison still requires a connected
+device or working emulator.
 
 ## Evidence Matrix
 
@@ -108,7 +110,7 @@ No EAS build was run for this comparison, per current instruction.
 
 ## AVD / Device Verification Status
 
-Authenticated visual QA is blocked.
+Authenticated visual QA is not yet complete.
 
 Commands showed no attached Android device:
 
@@ -122,38 +124,15 @@ Result:
 List of devices attached
 ```
 
-AVDs available:
-
-- `Dev-A`
-- `Dev-B`
-- `Dev-C`
-- `Device-A`
-- `Device-B`
-- `Device-C`
-- `Medium_Phone_API_36.1`
-- `Pixel_7_Send_A`
-- `Pixel_7_rec_B`
-
-Attempts made:
-
-- `Medium_Phone_API_36.1` with `-no-snapshot-load -no-audio -no-boot-anim`
-  exited before ADB attach.
-- `Dev-A` with `-no-window -no-audio -no-boot-anim -no-snapshot-load -verbose`
-  exited before ADB attach. Log: `/tmp/shoonaya-Dev-A.log`.
-- `Device-A` with `-no-window -gpu swiftshader_indirect -no-audio
-  -no-boot-anim -no-snapshot-load` exited before ADB attach. Log:
-  `/tmp/shoonaya-Device-A-soft.log`.
-
-The emulator logs show startup beginning, GRPC server activation, and display
-configuration, then the process disappears before `adb devices` can see a
-device. This is an environment/runtime blocker for the comparison, not an app
-code failure.
+Recent checks still show no attached ADB device. Earlier emulator attempts
+exited before ADB attach; the current required path is to run the smoke harness
+on a stable AVD or a physical Android device.
 
 ## Remaining Goal Blockers
 
 The goal is not fully achieved until these are done:
 
-1. Run `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md` on a working AVD or physical
+1. Run `scripts/android-smoke-checklist.sh` on a working AVD or physical
    Android device.
 2. Install the latest local APK and sign in with a real test account.
 3. Verify Home visually against the PWA: hero height, pills, shloka transition,
@@ -165,12 +144,13 @@ The goal is not fully achieved until these are done:
    the sequence/progress state updates Home.
 6. Open Dharm Veer from Home and from Bhakti, confirm the same hero/id opens and
    the artwork is not generic/dismal.
-7. Verify Panchang, Rashiphal, Kundali, Progress, Sankalpa, Mandali, Profile,
-   and Notifications for token/theme consistency after the latest sweep.
+7. Verify Panchang, Rashiphal, Kundali, My Progress, Sankalpa, Mandali,
+   Profile, and Notifications for token/theme consistency after the latest
+   sweep.
 8. Repeat at least one dark-mode pass.
 
 ## Decision
 
-Do not mark the parity goal complete yet. The code/build work is in a good
-state, but the latest comparison must be closed with real device screenshots or
-manual AVD notes once the emulator/device issue is resolved.
+Do not mark the parity goal complete yet. The code/build work and screenshot
+harness are in a good state, but the latest comparison must be closed with real
+device screenshots and a logcat sweep from `smoke-reports/<timestamp>/`.
