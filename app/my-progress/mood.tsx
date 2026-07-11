@@ -10,7 +10,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 
 // Mirrors MoodInsightMetrics returned by GET /api/mood/insights/{weekly,monthly}
@@ -28,10 +28,7 @@ export default function MoodInsightsScreen() {
   const isDark = scheme === 'dark';
   const router = useRouter();
 
-  const h1 = isDark ? '#f5dfa0' : '#1a0a02';
-  const muted = isDark ? 'rgba(245,210,130,0.45)' : 'rgba(100,55,10,0.50)';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<'weekly' | 'monthly'>('weekly');
@@ -75,25 +72,25 @@ export default function MoodInsightsScreen() {
 
   function StatBox({ icon, label, value, color }: { icon: React.ComponentProps<typeof Feather>['name']; label: string; value: string | number; color: string }) {
     return (
-      <View style={{ flex: 1, backgroundColor: cardBg, borderColor: border, borderWidth: 1, borderRadius: 16, padding: 16 }}>
+      <View style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 16, padding: 16 }}>
         <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}1A`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
           <Feather name={icon} size={16} color={color} />
         </View>
-        <Text style={{ fontSize: 24, fontFamily: FONTS.serifBold, color: h1, marginBottom: 4 }}>{value}</Text>
-        <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: muted }}>{label}</Text>
+        <Text style={{ fontSize: 24, fontFamily: FONTS.serifBold, color: theme.text, marginBottom: 4 }}>{value}</Text>
+        <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim }}>{label}</Text>
       </View>
     );
   }
 
   return (
     <Screen 
-      style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+      style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
       header={{ title: 'Mood Insights', onBack: () => router.back() }}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         {/* Toggle */}
-        <View style={{ flexDirection: 'row', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: 24, padding: 4, marginBottom: 24 }}>
+        <View style={{ flexDirection: 'row', backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 24, padding: 4, marginBottom: 24 }}>
           {(['weekly', 'monthly'] as const).map(tf => (
             <Pressable
               key={tf}
@@ -102,11 +99,11 @@ export default function MoodInsightsScreen() {
                 flex: 1,
                 paddingVertical: 10,
                 borderRadius: 20,
-                backgroundColor: timeframe === tf ? (isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)') : 'transparent',
+                backgroundColor: timeframe === tf ? theme.brandSoft : 'transparent',
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: timeframe === tf ? h1 : muted, textTransform: 'capitalize' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: timeframe === tf ? theme.text : theme.dim, textTransform: 'capitalize' }}>
                 {tf}
               </Text>
             </Pressable>
@@ -116,14 +113,14 @@ export default function MoodInsightsScreen() {
         {loading ? (
           <View style={{ paddingVertical: 40, alignItems: 'center' }}>
             <ActivityIndicator color={COLORS.brandGold} />
-            <Text style={{ marginTop: 12, fontFamily: FONTS.sans, color: muted }}>Loading insights...</Text>
+            <Text style={{ marginTop: 12, fontFamily: FONTS.sans, color: theme.dim }}>Loading insights...</Text>
           </View>
         ) : (
           <View style={{ gap: 12 }}>
             {/* AI Reflection Card */}
             <View style={{
-              backgroundColor: cardBg,
-              borderColor: border,
+              backgroundColor: theme.card,
+              borderColor: theme.border,
               borderWidth: 1,
               borderRadius: 24,
               padding: 20,
@@ -133,7 +130,7 @@ export default function MoodInsightsScreen() {
                 <Feather name="moon" size={16} color={COLORS.brandGold} />
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1 }}>Divine Reflection</Text>
               </View>
-              <Text style={{ fontFamily: FONTS.serif, fontSize: 15, color: h1, lineHeight: 24 }}>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 15, color: theme.text, lineHeight: 24 }}>
                 {aiReflection || "Your journey is unique. Keep logging your daily moods to unlock deeper spiritual reflections."}
               </Text>
             </View>
@@ -150,13 +147,13 @@ export default function MoodInsightsScreen() {
 
             {/* Preferred Actions */}
             {metrics?.preferredActions && metrics.preferredActions.length > 0 && (
-              <View style={{ backgroundColor: cardBg, borderColor: border, borderWidth: 1, borderRadius: 24, padding: 20, marginTop: 12 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Top Actions</Text>
+              <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 20, marginTop: 12 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Top Actions</Text>
                 <View style={{ gap: 12 }}>
                   {metrics.preferredActions.map((item, idx: number) => (
                     <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: h1, textTransform: 'capitalize' }}>{item.action}</Text>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: muted }}>{item.count} times</Text>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text, textTransform: 'capitalize' }}>{item.action}</Text>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.dim }}>{item.count} times</Text>
                     </View>
                   ))}
                 </View>

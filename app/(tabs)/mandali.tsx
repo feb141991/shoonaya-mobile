@@ -495,8 +495,8 @@ export default function MandaliScreen() {
               <View
                 style={{
                   marginTop: 10,
-                  backgroundColor: 'rgba(197,160,89,0.07)',
-                  borderColor: 'rgba(197,160,89,0.15)',
+                  backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+                  borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
                   borderWidth: 1,
                   borderRadius: 12,
                   paddingHorizontal: 12,

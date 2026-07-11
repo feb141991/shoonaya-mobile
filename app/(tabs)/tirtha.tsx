@@ -568,7 +568,7 @@ export default function TirthaScreen() {
       </ScrollView>
 
       <Modal transparent visible={Boolean(selectedTemple)} animationType="slide" onRequestClose={() => setSelectedTemple(null)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.28)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
           <View
             style={{
               borderTopLeftRadius: 28,

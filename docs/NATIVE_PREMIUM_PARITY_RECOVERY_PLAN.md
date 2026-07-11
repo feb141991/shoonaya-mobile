@@ -122,13 +122,17 @@ Evidence:
 
 - Native commit `a5a9050` aligns Home quick rows, Rashiphala, and Kundali with
   existing premium/PWA-derived tokens.
+- This follow-up sweep expands token alignment to Ashrama Dharma, Karma Ledger,
+  Mood Insights, Shields & Milestones, Mandali event cards, Tirtha bottom-sheet
+  scrim, and the shared screen back-button well.
 - Shloka and Nitya now use meaningful press/celebration motion locally.
 
 Remaining:
 
 - Broader token/motion cleanup is still needed for screens outside this pass,
-  especially My Progress subpages, Ashrama, Mandali/Tirtha sheet scrims, and
-  some content-data accent palettes.
+  especially the main My Progress dashboard, Sankalpa, content-data accent
+  palettes, and any feature-specific art palettes that should remain distinct
+  rather than forced onto brand gold.
 - No reusable motion primitive has been adopted app-wide yet.
 
 ### Slice 7 — Local build and AVD QA
@@ -148,7 +152,7 @@ Evidence:
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
-  `9fd82f746e111a6373db0bdccb73ef1606ac7f08719f497e818d5ed8d04a63c7`.
+  `baf99bf1a2930d26224af294ba8cb17eb53c41276230f7aa99899c932a2874a4`.
 - The APK installed once on `emulator-5554`, launched successfully, and logcat
   showed no app fatal crash.
 - Captured login screenshot:

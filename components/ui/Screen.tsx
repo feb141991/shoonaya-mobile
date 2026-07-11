@@ -51,7 +51,7 @@ export function Screen({ children, style, header, ...props }: ScreenProps) {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                  backgroundColor: theme.brandSoft,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,

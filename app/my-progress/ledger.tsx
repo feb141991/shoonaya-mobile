@@ -11,7 +11,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 
@@ -29,10 +29,7 @@ export default function LedgerScreen() {
   const isDark = scheme === 'dark';
   const router = useRouter();
 
-  const h1 = isDark ? '#f5dfa0' : '#1a0a02';
-  const muted = isDark ? 'rgba(245,210,130,0.45)' : 'rgba(100,55,10,0.50)';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -69,7 +66,7 @@ export default function LedgerScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}>
+      <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
@@ -80,7 +77,7 @@ export default function LedgerScreen() {
   if (loadError) {
     return (
       <Screen
-        style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
         header={{ title: 'Karma Ledger', onBack: () => router.back() }}
       >
         <EmptyState
@@ -96,7 +93,7 @@ export default function LedgerScreen() {
 
   return (
     <Screen 
-      style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+      style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
       header={{ title: 'Karma Ledger', onBack: () => router.back() }}
     >
       <FlatList
@@ -105,28 +102,28 @@ export default function LedgerScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
         ListEmptyComponent={() => (
           <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <Text style={{ fontFamily: FONTS.sans, color: muted }}>No karma points recorded yet.</Text>
+            <Text style={{ fontFamily: FONTS.sans, color: theme.dim }}>No karma points recorded yet.</Text>
           </View>
         )}
         renderItem={({ item }) => (
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: cardBg,
-            borderColor: border,
+            backgroundColor: theme.card,
+            borderColor: theme.border,
             borderWidth: 1,
             borderRadius: 16,
             padding: 16,
             marginBottom: 12,
           }}>
-            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: isDark ? 'rgba(197, 160, 89, 0.1)' : 'rgba(197, 160, 89, 0.08)', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: COLORS.brandGold }}>
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: theme.brand }}>
                 {item.amount > 0 ? '+' : ''}{item.amount}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: h1, marginBottom: 4 }}>{item.reason || 'Sadhana'}</Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: muted }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text, marginBottom: 4 }}>{item.reason || 'Sadhana'}</Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
                 {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
               </Text>
             </View>

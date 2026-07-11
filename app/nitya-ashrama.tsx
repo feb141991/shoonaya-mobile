@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { getAshramaMeta, getAshramaDuties, type LifeStage, type GenderContext, type AshramaDuty } from '@/lib/ashrama';
@@ -41,9 +41,7 @@ const ASHRAMA_OPTIONS: { key: LifeStage; emoji: string; title: string; desc: str
 export default function NityaAshramaScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
-  const theme = isDark
-    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: 'rgba(250,246,239,0.5)', border: 'rgba(197,160,89,0.15)' }
-    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: 'rgba(62,42,31,0.6)', border: 'rgba(197,160,89,0.2)' };
+  const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -206,7 +204,7 @@ export default function NityaAshramaScreen() {
                       borderRadius: 12,
                       borderWidth: 1,
                       borderColor: active ? COLORS.brandGold : theme.border,
-                      backgroundColor: active ? 'rgba(197,160,89,0.1)' : theme.bg,
+                      backgroundColor: active ? theme.brandSoft : theme.bg,
                       alignItems: 'center',
                     }}
                   >
@@ -228,7 +226,7 @@ export default function NityaAshramaScreen() {
                   key={opt.key}
                   onPress={() => setSelectedStage(opt.key)}
                   style={{
-                    backgroundColor: active ? 'rgba(197,160,89,0.08)' : theme.card,
+                    backgroundColor: active ? theme.brandSoft : theme.card,
                     borderColor: active ? COLORS.brandGold : theme.border,
                     borderWidth: active ? 1.5 : 1,
                     borderRadius: 16,
@@ -253,7 +251,8 @@ export default function NityaAshramaScreen() {
             onPress={handleSaveSetup}
             disabled={savingSetup || !selectedStage}
             style={{
-              backgroundColor: COLORS.brandGold,
+              minHeight: MIN_TOUCH_TARGET,
+              backgroundColor: theme.brand,
               paddingVertical: 16,
               borderRadius: 24,
               alignItems: 'center',
@@ -281,8 +280,8 @@ export default function NityaAshramaScreen() {
             <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
           </Pressable>
 
-          <Pressable onPress={handleResetStage} style={{ backgroundColor: 'rgba(220,60,60,0.06)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
-            <Text style={{ color: 'rgba(220,80,80,0.8)', fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Change Stage</Text>
+          <Pressable onPress={handleResetStage} style={{ backgroundColor: COLORS.dangerBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+            <Text style={{ color: COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Change Stage</Text>
           </Pressable>
         </View>
 
@@ -305,7 +304,7 @@ export default function NityaAshramaScreen() {
           <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
             {completedCount} of {duties.length} reflected today
           </Text>
-          <View style={{ height: 6, borderRadius: 3, backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.08)', overflow: 'hidden' }}>
+          <View style={{ height: 6, borderRadius: 3, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, overflow: 'hidden' }}>
             <View style={{ width: `${duties.length > 0 ? (completedCount / duties.length) * 100 : 0}%`, height: '100%', backgroundColor: meta.accent }} />
           </View>
         </Card>
@@ -319,8 +318,8 @@ export default function NityaAshramaScreen() {
                 key={duty.id}
                 onPress={() => toggleDuty(duty.id)}
                 style={{
-                  backgroundColor: isChecked ? 'rgba(34,197,94,0.04)' : theme.card,
-                  borderColor: isChecked ? 'rgba(34,197,94,0.15)' : theme.border,
+                  backgroundColor: isChecked ? COLORS.successBg : theme.card,
+                  borderColor: isChecked ? COLORS.successBorder : theme.border,
                   borderWidth: 1,
                   borderRadius: 20,
                   padding: 14,
@@ -330,7 +329,7 @@ export default function NityaAshramaScreen() {
                 }}
               >
                 {/* Custom icon mapping if SacredIcon has it, else generic */}
-                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name={getFeatherIcon(duty.icon)} size={18} color={theme.text} />
                 </View>
 
@@ -345,7 +344,7 @@ export default function NityaAshramaScreen() {
                 </View>
 
                 {isChecked ? (
-                  <Feather name="check-circle" size={22} color="rgb(34,197,94)" />
+                  <Feather name="check-circle" size={22} color={COLORS.success} />
                 ) : (
                   <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: theme.dim }} />
                 )}

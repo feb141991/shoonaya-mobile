@@ -11,7 +11,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 
@@ -52,10 +52,7 @@ export default function ShieldsScreen() {
   const isDark = scheme === 'dark';
   const router = useRouter();
 
-  const h1 = isDark ? '#f5dfa0' : '#1a0a02';
-  const muted = isDark ? 'rgba(245,210,130,0.45)' : 'rgba(100,55,10,0.50)';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -98,7 +95,7 @@ export default function ShieldsScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}>
+      <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={COLORS.brandGold} />
         </View>
@@ -109,7 +106,7 @@ export default function ShieldsScreen() {
   if (loadError) {
     return (
       <Screen
-        style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
         header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
       >
         <EmptyState
@@ -132,13 +129,13 @@ export default function ShieldsScreen() {
 
   return (
     <Screen 
-      style={{ flex: 1, backgroundColor: isDark ? COLORS.darkBg : COLORS.creamBg, paddingHorizontal: 0, paddingBottom: 0 }}
+      style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
       header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         {/* Tabs */}
-        <View style={{ flexDirection: 'row', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: 24, padding: 4, marginBottom: 24 }}>
+        <View style={{ flexDirection: 'row', backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 24, padding: 4, marginBottom: 24 }}>
           {(['streak', 'sessions'] as const).map(tf => (
             <Pressable
               key={tf}
@@ -147,11 +144,11 @@ export default function ShieldsScreen() {
                 flex: 1,
                 paddingVertical: 10,
                 borderRadius: 20,
-                backgroundColor: activeTab === tf ? (isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)') : 'transparent',
+                backgroundColor: activeTab === tf ? theme.brandSoft : 'transparent',
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: activeTab === tf ? h1 : muted, textTransform: 'capitalize' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: activeTab === tf ? theme.text : theme.dim, textTransform: 'capitalize' }}>
                 {tf} ({tf === 'streak' ? streak : totalSessions})
               </Text>
             </Pressable>
@@ -160,28 +157,28 @@ export default function ShieldsScreen() {
 
         {/* Next Shield Progress */}
         {nextShield && (
-          <View style={{ backgroundColor: cardBg, borderColor: border, borderWidth: 1, borderRadius: 24, padding: 16, marginBottom: 20 }}>
+          <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 16, marginBottom: 20 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <View>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: muted, marginBottom: 2 }}>Next milestone</Text>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: h1 }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginBottom: 2 }}>Next milestone</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text }}>
                   {nextShield.emoji} {nextShield.name}
-                  <Text style={{ color: muted, fontFamily: FONTS.sans }}> • {nextShield.desc}</Text>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans }}> • {nextShield.desc}</Text>
                 </Text>
               </View>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.brandGold }}>{value} / {nextShield.threshold}</Text>
             </View>
-            <View style={{ height: 8, borderRadius: 4, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+            <View style={{ height: 8, borderRadius: 4, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, overflow: 'hidden' }}>
               <View style={{ height: '100%', width: `${progress}%`, backgroundColor: COLORS.brandGold, borderRadius: 4 }} />
             </View>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: muted, marginTop: 8 }}>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
               {nextShield.threshold - value} more {activeTab === 'streak' ? 'days' : 'sessions'} to unlock
             </Text>
           </View>
         )}
 
         {/* Shields List */}
-        <View style={{ backgroundColor: cardBg, borderColor: border, borderWidth: 1, borderRadius: 24, padding: 20 }}>
+        <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 20 }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
             {earnedCount}/{shields.length} Earned
           </Text>
@@ -195,8 +192,8 @@ export default function ShieldsScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{
                       width: 56, height: 56, borderRadius: 16,
-                      backgroundColor: earned ? (isDark ? 'rgba(197, 160, 89,0.20)' : 'rgba(197, 160, 89,0.14)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
-                      borderColor: earned ? 'rgba(197, 160, 89,0.45)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+                      backgroundColor: earned ? theme.brandSoft : (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight),
+                      borderColor: earned ? COLORS.homeGoldPillBorder : theme.border,
                       borderWidth: 1.5,
                       alignItems: 'center', justifyContent: 'center',
                       marginRight: 16,
@@ -206,23 +203,23 @@ export default function ShieldsScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: earned ? h1 : muted }}>{shield.name}</Text>
-                        <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: muted }}>{shield.desc}</Text>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: earned ? theme.text : theme.dim }}>{shield.name}</Text>
+                        <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{shield.desc}</Text>
                       </View>
-                      <Text style={{ fontFamily: FONTS.serif, fontSize: 12, color: muted, marginTop: 4 }}>
+                      <Text style={{ fontFamily: FONTS.serif, fontSize: 12, color: theme.dim, marginTop: 4 }}>
                         {shield.detail}
                       </Text>
                       {earned && (
                         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, marginTop: 4 }}>Unlocked ✦</Text>
                       )}
                     </View>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: muted }}>
+                    <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
                       {earned ? shield.threshold : `${value}/${shield.threshold}`}
                     </Text>
                   </View>
                   
                   {idx < shields.length - 1 && (
-                    <View style={{ height: 1, backgroundColor: border, marginTop: 16 }} />
+                    <View style={{ height: 1, backgroundColor: theme.border, marginTop: 16 }} />
                   )}
                 </View>
               );
