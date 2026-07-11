@@ -167,7 +167,7 @@ Evidence:
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
-  `f3a6591d02ac2b188bffd93f2f895fbd9b3a6b8442d0453089c979b0b9179ddd`.
+  `c729918f4ffb051e7968471654544158e4e537c75ccadd594695b9c457bd9ec8`.
 - The APK installed once on `emulator-5554`, launched successfully, and logcat
   showed no app fatal crash.
 - Captured login screenshot:

@@ -34,7 +34,7 @@ shasum -a 256 android/app/build/outputs/apk/release/app-release.apk
 Expected current hash:
 
 ```text
-f3a6591d02ac2b188bffd93f2f895fbd9b3a6b8442d0453089c979b0b9179ddd
+c729918f4ffb051e7968471654544158e4e537c75ccadd594695b9c457bd9ec8
 ```
 
 5. Sign in with a real test account. Device visual parity cannot be closed from
