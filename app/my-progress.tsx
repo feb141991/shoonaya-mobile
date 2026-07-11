@@ -15,7 +15,7 @@ import Svg, { Rect } from 'react-native-svg';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 import {
@@ -62,6 +62,9 @@ type ProgressTheme = {
   dim: string;
   card: string;
   border: string;
+  brand: string;
+  brandSoft: string;
+  premiumBorder: string;
 };
 
 type ProgressData = {
@@ -113,9 +116,9 @@ function buildHeatmapWeeks(days: HeatmapDay[]) {
 
 function SixMonthHeatmap({ days, isDark, theme }: { days: HeatmapDay[]; isDark: boolean; theme: ProgressTheme }) {
   const { weeks, dayMap } = buildHeatmapWeeks(days);
-  const amber = COLORS.brandGold;
-  const green = '#8fb46e';
-  const dimBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const amber = theme.brand;
+  const green = COLORS.success;
+  const dimBg = isDark ? COLORS.homeSkeletonBlockDark : COLORS.homeSkeletonBlockLight;
 
   function cellColor(iso: string | null): string {
     if (!iso) return 'transparent';
@@ -159,19 +162,19 @@ function SixMonthHeatmap({ days, isDark, theme }: { days: HeatmapDay[]; isDark: 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: dimBg }} />
-          <Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim }}>None</Text>
+          <Text style={{ ...TYPE.micro, color: theme.dim }}>None</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: `${amber}cc` }} />
-          <Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim }}>Japa</Text>
+          <Text style={{ ...TYPE.micro, color: theme.dim }}>Japa</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: `${green}bb` }} />
-          <Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim }}>Nitya</Text>
+          <Text style={{ ...TYPE.micro, color: theme.dim }}>Nitya</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: amber }} />
-          <Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim }}>Both</Text>
+          <Text style={{ ...TYPE.micro, color: theme.dim }}>Both</Text>
         </View>
       </View>
     </View>
@@ -209,8 +212,8 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
   const monthLabel = new Date(calMonth.year, calMonth.month, 1)
     .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  const amber = COLORS.brandGold;
-  const green = '#8fb46e';
+  const amber = theme.brand;
+  const green = COLORS.success;
 
   const rows: (string | null)[][] = [];
   for (let i = 0; i < calDays.length; i += 7) {
@@ -225,7 +228,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <Pressable
           onPress={() => setCalMonth(m => { const d = new Date(m.year, m.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
-          style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: 22, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}
         >
           <Feather name="chevron-left" size={16} color={amber} />
         </Pressable>
@@ -234,7 +237,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
         </Text>
         <Pressable
           onPress={() => setCalMonth(m => { const d = new Date(m.year, m.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
-          style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: 22, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}
         >
           <Feather name="chevron-right" size={16} color={amber} />
         </Pressable>
@@ -243,7 +246,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
       {/* Weekdays */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
         {['S','M','T','W','T','F','S'].map((d, i) => (
-          <Text key={i} style={{ flex: 1, textAlign: 'center', fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
+          <Text key={i} style={{ ...TYPE.chip, flex: 1, textAlign: 'center', color: theme.dim }}>
             {d}
           </Text>
         ))}
@@ -262,15 +265,15 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
             const bg = isSelected
               ? amber
               : both ? `${amber}a5`
-              : d?.japa ? (isDark ? 'rgba(197, 160, 89, 0.25)' : 'rgba(197, 160, 89, 0.15)')
-              : d?.nitya ? (isDark ? 'rgba(143, 180, 110, 0.25)' : 'rgba(143, 180, 110, 0.15)')
+              : d?.japa ? theme.brandSoft
+              : d?.nitya ? COLORS.successBg
               : 'transparent';
 
             const color = isSelected
               ? COLORS.onMediaWhite
               : (d?.japa || d?.nitya)
-                ? (isDark ? '#f5dfa0' : '#1a0a02')
-                : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)');
+                ? theme.text
+                : theme.dim;
 
             return (
               <Pressable
@@ -284,11 +287,12 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginHorizontal: 2,
+                  minHeight: MIN_TOUCH_TARGET,
                   borderWidth: isToday ? 1.5 : 0,
                   borderColor: amber,
                 }}
               >
-                <Text style={{ fontSize: 11, fontFamily: isToday || isSelected ? FONTS.sansSemiBold : FONTS.sans, color }}>
+                <Text style={{ ...TYPE.chip, fontFamily: isToday || isSelected ? FONTS.sansSemiBold : FONTS.sans, color }}>
                   {new Date(iso + 'T12:00:00').getDate()}
                 </Text>
               </Pressable>
@@ -330,12 +334,12 @@ function DowChart({ counts, isDark, theme }: { counts: number[]; isDark: boolean
                 style={{
                   width: '100%',
                   height: `${heightPct}%`,
-                  backgroundColor: isDark ? 'rgba(197, 160, 89, 0.45)' : 'rgba(100, 65, 20, 0.50)',
+                  backgroundColor: theme.brand,
                   borderRadius: 4,
                 }}
               />
             </View>
-            <Text style={{ fontSize: 9, fontFamily: FONTS.sansSemiBold, color: isDark ? 'rgba(197, 160, 89, 0.45)' : 'rgba(100, 65, 20, 0.50)' }}>
+            <Text style={{ ...TYPE.chip, color: theme.dim }}>
               {labels[i]}
             </Text>
           </View>
@@ -347,11 +351,11 @@ function DowChart({ counts, isDark, theme }: { counts: number[]; isDark: boolean
 
 // ── 5-Pillar Scorecard ──
 const PILLAR_META = [
-  { key: 'japa',      emoji: '📿', label: 'Japa',       colour: '#F59E4A', bg: 'rgba(245,158,74,0.12)'  },
-  { key: 'nitya',     emoji: '🌅', label: 'Nitya',      colour: COLORS.brandGold, bg: COLORS.homeSoftLight },
-  { key: 'quiz',      emoji: '🧠', label: 'Quiz',       colour: '#A594E0', bg: 'rgba(165,148,224,0.12)' },
-  { key: 'pathshala', emoji: '📖', label: 'Pathshala',  colour: '#6BC47E', bg: 'rgba(107,196,126,0.12)' },
-  { key: 'dharmveer', emoji: '⚔️', label: 'Dharm Veer', colour: '#FF8A65', bg: 'rgba(255,138,101,0.12)' },
+  { key: 'japa',      emoji: '📿', label: 'Japa',       colour: COLORS.progressJapa, bg: COLORS.progressJapaBgLight },
+  { key: 'nitya',     emoji: '🌅', label: 'Nitya',      colour: COLORS.brandGoldDark, bg: COLORS.homeSoftLight },
+  { key: 'quiz',      emoji: '🧠', label: 'Quiz',       colour: COLORS.progressQuiz, bg: COLORS.progressQuizBg },
+  { key: 'pathshala', emoji: '📖', label: 'Pathshala',  colour: COLORS.sage, bg: COLORS.sageBg },
+  { key: 'dharmveer', emoji: '⚔️', label: 'Dharm Veer', colour: COLORS.progressDharmVeer, bg: COLORS.progressDharmVeerBg },
 ];
 
 function SadhanaScorecard({ pillarData, isDark, theme }: { pillarData: ProgressData['pillarData']; isDark: boolean; theme: ProgressTheme }) {
@@ -366,16 +370,16 @@ function SadhanaScorecard({ pillarData, isDark, theme }: { pillarData: ProgressD
             <Text style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{p.emoji}</Text>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONTS.sansSemiBold, color: theme.text }}>{p.label}</Text>
-                <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, color: p.colour }}>
-                  {count}<Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim }}>/{windowDays}d</Text>
+                <Text style={{ ...TYPE.label, color: theme.text }}>{p.label}</Text>
+                <Text style={{ ...TYPE.chip, color: p.colour }}>
+                  {count}<Text style={{ ...TYPE.micro, color: theme.dim }}>/{windowDays}d</Text>
                 </Text>
               </View>
               <View style={{ height: 6, borderRadius: 3, backgroundColor: p.bg, overflow: 'hidden' }}>
                 <View style={{ height: '100%', width: `${pct}%`, backgroundColor: p.colour, borderRadius: 3 }} />
               </View>
             </View>
-            <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, color: pct >= 70 ? p.colour : theme.dim, width: 34, textAlign: 'right' }}>
+            <Text style={{ ...TYPE.chip, color: pct >= 70 ? p.colour : theme.dim, width: 34, textAlign: 'right' }}>
               {pct}%
             </Text>
           </View>
@@ -391,18 +395,7 @@ export default function MyProgressScreen() {
   const isDark = scheme === 'dark';
   const router = useRouter();
 
-  const h1 = isDark ? '#f5dfa0' : '#1a0a02';
-  const muted = isDark ? 'rgba(245,210,130,0.45)' : 'rgba(100,55,10,0.50)';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-
-  const theme = {
-    bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-    text: h1,
-    dim: muted,
-    card: cardBg,
-    border: border,
-  };
+  const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -531,7 +524,7 @@ export default function MyProgressScreen() {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -584,7 +577,7 @@ export default function MyProgressScreen() {
         <View style={{ alignItems: 'center', marginBottom: 24, paddingVertical: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <Text style={{ fontSize: 32 }}>🔥</Text>
-            <Text style={{ fontSize: 42, fontFamily: FONTS.serifBold, color: streak > 0 ? COLORS.brandGold : theme.text }}>
+            <Text style={{ fontSize: 42, fontFamily: FONTS.serifBold, color: streak > 0 ? theme.brand : theme.text }}>
               {streak}
             </Text>
           </View>
@@ -598,7 +591,7 @@ export default function MyProgressScreen() {
         {/* 2. 6-Month Contribution Heatmap */}
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
           <View style={{ marginBottom: 12 }}>
-            <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.brandGold }}>
+            <Text style={{ ...TYPE.section, color: theme.brand }}>
               6-Month History
             </Text>
             <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim, marginTop: 2 }}>
@@ -622,8 +615,8 @@ export default function MyProgressScreen() {
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 6 }}>
-              <View style={{ backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(197, 160, 89, 0.15)' }}>
-                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.text }}>{heatmap.filter(d => d.japa || d.nitya).length} active</Text>
+              <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: theme.premiumBorder }}>
+                <Text style={{ ...TYPE.chip, color: theme.text }}>{heatmap.filter(d => d.japa || d.nitya).length} active</Text>
               </View>
             </View>
           </View>
@@ -635,8 +628,8 @@ export default function MyProgressScreen() {
           {/* Japa Card (Pink/Rose Tint) */}
           <View
             style={{
-              backgroundColor: isDark ? 'rgba(244,63,94,0.05)' : 'rgba(244,63,94,0.03)',
-              borderColor: isDark ? 'rgba(244,63,94,0.15)' : 'rgba(244,63,94,0.12)',
+              backgroundColor: isDark ? COLORS.progressJapaBgDark : COLORS.progressJapaBgLight,
+              borderColor: isDark ? COLORS.progressJapaBorderDark : COLORS.progressJapaBorderLight,
               borderWidth: 1,
               borderRadius: 24,
               padding: 20,
@@ -646,7 +639,7 @@ export default function MyProgressScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 24 }}>📿</Text>
                 <View>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.danger }}>
+                  <Text style={{ ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1.2, color: COLORS.progressJapa }}>
                     Japa · 30 days
                   </Text>
                   <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim, marginTop: 1 }}>
@@ -656,9 +649,9 @@ export default function MyProgressScreen() {
               </View>
               <Pressable
                 onPress={() => router.push('/my-progress/ledger' as Href)}
-                style={{ backgroundColor: 'rgba(244,63,94,0.08)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(244,63,94,0.15)' }}
+                style={{ backgroundColor: isDark ? COLORS.progressJapaBgDark : COLORS.progressJapaBgLight, minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: isDark ? COLORS.progressJapaBorderDark : COLORS.progressJapaBorderLight, justifyContent: 'center' }}
               >
-                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.danger }}>Insights →</Text>
+                <Text style={{ ...TYPE.chip, color: COLORS.progressJapa }}>Insights →</Text>
               </Pressable>
             </View>
 
@@ -667,9 +660,9 @@ export default function MyProgressScreen() {
                 <Text style={{ fontSize: 13, fontFamily: FONTS.sansSemiBold, color: theme.dim, marginBottom: 12 }}>No sessions this cycle</Text>
                 <Pressable
                   onPress={() => router.push('/japa' as Href)}
-                  style={{ backgroundColor: 'rgba(244,63,94,0.85)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
+                  style={{ backgroundColor: COLORS.progressJapa, minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, justifyContent: 'center' }}
                 >
-                  <Text style={{ color: COLORS.onMediaWhite, fontSize: 11, fontFamily: FONTS.sansSemiBold }}>Begin Japa →</Text>
+                  <Text style={{ color: COLORS.onMediaWhite, ...TYPE.chip }}>Begin Japa →</Text>
                 </Pressable>
               </View>
             ) : (
@@ -681,22 +674,22 @@ export default function MyProgressScreen() {
                     { val: String(japa30dRounds), label: 'rounds' },
                     { val: `${japa30dMins}m`, label: 'time' },
                   ].map(({ val, label }) => (
-                    <View key={label} style={{ flex: 1, backgroundColor: isDark ? 'rgba(244,63,94,0.08)' : 'rgba(244,63,94,0.04)', paddingVertical: 8, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(244,63,94,0.08)' }}>
+                    <View key={label} style={{ flex: 1, backgroundColor: isDark ? COLORS.progressJapaBgDark : COLORS.progressJapaBgLight, paddingVertical: 8, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: isDark ? COLORS.progressJapaBorderDark : COLORS.progressJapaBorderLight }}>
                       <Text style={{ fontSize: 15, fontFamily: FONTS.serifBold, color: theme.text }}>{val}</Text>
-                      <Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim, marginTop: 2, textTransform: 'uppercase' }}>{label}</Text>
+                      <Text style={{ ...TYPE.micro, color: theme.dim, marginTop: 2, textTransform: 'uppercase' }}>{label}</Text>
                     </View>
                   ))}
                 </View>
 
                 <View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>CONSISTENCY</Text>
-                    <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.danger }}>
+                    <Text style={{ ...TYPE.chip, color: theme.dim }}>CONSISTENCY</Text>
+                    <Text style={{ ...TYPE.chip, color: COLORS.progressJapa }}>
                       {Math.round((pillarData.japa / 30) * 100)}%
                     </Text>
                   </View>
-                  <View style={{ height: 4, borderRadius: 2, backgroundColor: isDark ? 'rgba(244,63,94,0.1)' : 'rgba(244,63,94,0.06)', overflow: 'hidden' }}>
-                    <View style={{ height: '100%', width: `${Math.round((pillarData.japa / 30) * 100)}%`, backgroundColor: COLORS.danger }} />
+                  <View style={{ height: 4, borderRadius: 2, backgroundColor: isDark ? COLORS.progressJapaBgDark : COLORS.progressJapaBgLight, overflow: 'hidden' }}>
+                    <View style={{ height: '100%', width: `${Math.round((pillarData.japa / 30) * 100)}%`, backgroundColor: COLORS.progressJapa }} />
                   </View>
                 </View>
               </View>
@@ -706,8 +699,8 @@ export default function MyProgressScreen() {
           {/* Nitya Karma Card (Green Tint) */}
           <View
             style={{
-              backgroundColor: isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.03)',
-              borderColor: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.12)',
+              backgroundColor: COLORS.successBg,
+              borderColor: COLORS.successBorder,
               borderWidth: 1,
               borderRadius: 24,
               padding: 20,
@@ -717,7 +710,7 @@ export default function MyProgressScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 24 }}>🌅</Text>
                 <View>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.success }}>
+                  <Text style={{ ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1.2, color: COLORS.success }}>
                     Nitya Karma · 30 days
                   </Text>
                   <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim, marginTop: 1 }}>
@@ -727,9 +720,9 @@ export default function MyProgressScreen() {
               </View>
               <Pressable
                 onPress={() => router.push('/my-progress/ledger' as Href)}
-                style={{ backgroundColor: 'rgba(16,185,129,0.08)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(16,185,129,0.15)' }}
+                style={{ backgroundColor: COLORS.successBg, minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: COLORS.successBorder, justifyContent: 'center' }}
               >
-                <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.success }}>Insights →</Text>
+                <Text style={{ ...TYPE.chip, color: COLORS.success }}>Insights →</Text>
               </Pressable>
             </View>
 
@@ -740,21 +733,21 @@ export default function MyProgressScreen() {
                   { val: `${Math.round((pillarData.nitya / 30) * 100)}%`, label: 'rate' },
                   { val: String(Math.max(0, 30 - pillarData.nitya)), label: 'left' },
                 ].map(({ val, label }) => (
-                  <View key={label} style={{ flex: 1, backgroundColor: isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.04)', paddingVertical: 8, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(16,185,129,0.08)' }}>
+                  <View key={label} style={{ flex: 1, backgroundColor: COLORS.successBg, paddingVertical: 8, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: COLORS.successBorder }}>
                     <Text style={{ fontSize: 15, fontFamily: FONTS.serifBold, color: theme.text }}>{val}</Text>
-                    <Text style={{ fontSize: 9, fontFamily: FONTS.sans, color: theme.dim, marginTop: 2, textTransform: 'uppercase' }}>{label}</Text>
+                    <Text style={{ ...TYPE.micro, color: theme.dim, marginTop: 2, textTransform: 'uppercase' }}>{label}</Text>
                   </View>
                 ))}
               </View>
 
               <View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>MOMENTUM</Text>
-                  <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: COLORS.success }}>
+                  <Text style={{ ...TYPE.chip, color: theme.dim }}>MOMENTUM</Text>
+                  <Text style={{ ...TYPE.chip, color: COLORS.success }}>
                     {Math.round((pillarData.nitya / 30) * 100)}%
                   </Text>
                 </View>
-                <View style={{ height: 4, borderRadius: 2, backgroundColor: isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.06)', overflow: 'hidden' }}>
+                <View style={{ height: 4, borderRadius: 2, backgroundColor: COLORS.successBg, overflow: 'hidden' }}>
                   <View style={{ height: '100%', width: `${Math.round((pillarData.nitya / 30) * 100)}%`, backgroundColor: COLORS.success }} />
                 </View>
               </View>
@@ -764,7 +757,7 @@ export default function MyProgressScreen() {
 
         {/* 5. 5-Pillar Scorecard */}
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
-          <Text style={{ fontSize: 11, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1.5, color: COLORS.brandGold, marginBottom: 16 }}>
+          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 16 }}>
             5-Pillar Scorecard · 30 days
           </Text>
           <SadhanaScorecard pillarData={pillarData} isDark={isDark} theme={theme} />
@@ -774,8 +767,8 @@ export default function MyProgressScreen() {
         <Pressable
           onPress={() => router.push('/my-progress/shields' as Href)}
           style={({ pressed }) => ({
-            backgroundColor: isDark ? 'rgba(197, 160, 89, 0.08)' : 'rgba(255, 246, 220, 0.95)',
-            borderColor: 'rgba(197, 160, 89, 0.25)',
+            backgroundColor: theme.brandSoft,
+            borderColor: theme.premiumBorder,
             borderWidth: 1,
             borderRadius: 24,
             padding: 18,
@@ -827,7 +820,7 @@ export default function MyProgressScreen() {
             })}
           >
             <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-              <Feather name="book" size={18} color={COLORS.brandGold} />
+              <Feather name="book" size={18} color={theme.brand} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Karma Ledger</Text>
@@ -852,7 +845,7 @@ export default function MyProgressScreen() {
             })}
           >
             <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-              <Feather name="smile" size={18} color={COLORS.brandGold} />
+              <Feather name="smile" size={18} color={theme.brand} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Mood Insights</Text>

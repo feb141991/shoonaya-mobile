@@ -16,8 +16,9 @@ import * as Haptics from 'expo-haptics';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Button } from '@/components/ui/Button';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
@@ -99,16 +100,7 @@ export default function SankalpaScreen() {
     karmaAwarded: null,
   });
 
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-    }),
-    [isDark]
-  );
+  const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   const loadCheckins = useCallback(async (sankalpaId: string) => {
     const response = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(sankalpaId)}`);
@@ -241,7 +233,7 @@ export default function SankalpaScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -250,7 +242,7 @@ export default function SankalpaScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, minHeight: MIN_TOUCH_TARGET }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
@@ -280,30 +272,32 @@ export default function SankalpaScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MIN_TOUCH_TARGET }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </Pressable>
 
         <View>
-          <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Sankalpa</Text>
-          <Text style={{ marginTop: 4, color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
+          <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
+          <Text style={{ ...TYPE.body, marginTop: 4, color: theme.dim }}>
             {sankalpa ? 'Your active vow' : 'Set an intention to hold for a fixed number of days'}
           </Text>
         </View>
 
         {sankalpa ? (
           <>
-            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
+            <Card tone="auto" elevated style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                <Feather name="sun" size={20} color={COLORS.brandGold} />
-                <Text style={{ flex: 1, color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16, lineHeight: 22 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="sun" size={20} color={theme.brand} />
+                </View>
+                <Text style={{ ...TYPE.cardHeading, flex: 1, color: theme.text }}>
                   {sankalpa.text}
                 </Text>
               </View>
 
               <View>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
+                <Text style={{ ...TYPE.label, color: theme.dim }}>
                   Day {Math.min(day, targetDaysValue || day)} of {targetDaysValue}
                 </Text>
                 <View
@@ -311,7 +305,7 @@ export default function SankalpaScreen() {
                     marginTop: 8,
                     height: 6,
                     borderRadius: 3,
-                    backgroundColor: isDark ? 'rgba(197,160,89,0.16)' : 'rgba(197,160,89,0.14)',
+                    backgroundColor: theme.brandSoft,
                     overflow: 'hidden',
                   }}
                 >
@@ -319,7 +313,7 @@ export default function SankalpaScreen() {
                     style={{
                       width: `${progress * 100}%`,
                       height: '100%',
-                      backgroundColor: COLORS.brandGold,
+                      backgroundColor: theme.brand,
                       borderRadius: 3,
                     }}
                   />
@@ -335,6 +329,7 @@ export default function SankalpaScreen() {
                 borderWidth: 1,
                 borderColor: checkedInToday ? COLORS.successBorder : theme.border,
                 backgroundColor: checkedInToday ? COLORS.successBg : theme.card,
+                minHeight: MIN_TOUCH_TARGET,
                 paddingVertical: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -343,7 +338,7 @@ export default function SankalpaScreen() {
               }}
             >
               {checkingIn ? (
-                <ActivityIndicator color={COLORS.brandGold} />
+                <ActivityIndicator color={theme.brand} />
               ) : (
                 <Feather
                   name={checkedInToday ? 'check-circle' : 'circle'}
@@ -362,30 +357,16 @@ export default function SankalpaScreen() {
               </Text>
             </Pressable>
 
-            <Pressable
+            <Button
+              label="Mark complete"
+              loading={completing}
               onPress={() => { void handleComplete(); }}
-              disabled={completing}
-              style={{
-                borderRadius: 20,
-                backgroundColor: COLORS.brandGold,
-                paddingVertical: 16,
-                alignItems: 'center',
-                opacity: completing ? 0.7 : 1,
-              }}
-            >
-              {completing ? (
-                <ActivityIndicator color={COLORS.ink} />
-              ) : (
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
-                  Mark complete
-                </Text>
-              )}
-            </Pressable>
+            />
           </>
         ) : (
-          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+          <Card tone="auto" elevated style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 16 }}>
             <View>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14, marginBottom: 8 }}>
+              <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 8 }}>
                 Your intention
               </Text>
               <TextInput
@@ -400,7 +381,7 @@ export default function SankalpaScreen() {
                   borderRadius: 16,
                   borderWidth: 1,
                   borderColor: theme.border,
-                  backgroundColor: isDark ? 'rgba(255,248,225,0.04)' : 'rgba(255,255,255,0.6)',
+                  backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                   color: theme.text,
                   fontFamily: FONTS.sans,
                   fontSize: 15,
@@ -408,13 +389,13 @@ export default function SankalpaScreen() {
                   textAlignVertical: 'top',
                 }}
               />
-              <Text style={{ marginTop: 6, color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
+              <Text style={{ ...TYPE.micro, marginTop: 6, color: theme.dim }}>
                 {text.trim().length}/{TEXT_MAX}
               </Text>
             </View>
 
             <View>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14, marginBottom: 10 }}>
+              <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 10 }}>
                 For how many days
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
@@ -428,17 +409,19 @@ export default function SankalpaScreen() {
                     style={{
                       borderRadius: 999,
                       borderWidth: 1.5,
-                      borderColor: days === targetDays ? COLORS.brandGold : theme.border,
-                      backgroundColor: days === targetDays ? theme.card : 'transparent',
+                      borderColor: days === targetDays ? theme.brand : theme.border,
+                      backgroundColor: days === targetDays ? theme.brandSoft : theme.card,
+                      minHeight: MIN_TOUCH_TARGET,
                       paddingHorizontal: 18,
                       paddingVertical: 10,
+                      justifyContent: 'center',
                     }}
                   >
                     <Text
                       style={{
                         fontFamily: FONTS.sansSemiBold,
                         fontSize: 14,
-                        color: days === targetDays ? COLORS.brandGold : theme.text,
+                        color: days === targetDays ? theme.brand : theme.text,
                       }}
                     >
                       {days}
@@ -448,25 +431,12 @@ export default function SankalpaScreen() {
               </View>
             </View>
 
-            <Pressable
+            <Button
+              label="Begin Sankalpa"
+              loading={creating}
+              disabled={text.trim().length < TEXT_MIN}
               onPress={() => { void handleCreate(); }}
-              disabled={creating || text.trim().length < TEXT_MIN}
-              style={{
-                borderRadius: 20,
-                backgroundColor: COLORS.brandGold,
-                paddingVertical: 16,
-                alignItems: 'center',
-                opacity: creating || text.trim().length < TEXT_MIN ? 0.6 : 1,
-              }}
-            >
-              {creating ? (
-                <ActivityIndicator color={COLORS.ink} />
-              ) : (
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
-                  Begin Sankalpa
-                </Text>
-              )}
-            </Pressable>
+            />
           </Card>
         )}
       </ScrollView>

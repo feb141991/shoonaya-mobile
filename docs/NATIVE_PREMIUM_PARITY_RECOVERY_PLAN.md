@@ -125,14 +125,17 @@ Evidence:
 - This follow-up sweep expands token alignment to Ashrama Dharma, Karma Ledger,
   Mood Insights, Shields & Milestones, Mandali event cards, Tirtha bottom-sheet
   scrim, and the shared screen back-button well.
+- The next follow-up brings the main My Progress dashboard and Sankalpa onto
+  `themeColor`, `TYPE`, named progress accents, shared Button treatment, and
+  44dp touch targets where those screens still had local color and sizing
+  decisions.
 - Shloka and Nitya now use meaningful press/celebration motion locally.
 
 Remaining:
 
 - Broader token/motion cleanup is still needed for screens outside this pass,
-  especially the main My Progress dashboard, Sankalpa, content-data accent
-  palettes, and any feature-specific art palettes that should remain distinct
-  rather than forced onto brand gold.
+  especially content-data accent palettes and any feature-specific art palettes
+  that should remain distinct rather than forced onto brand gold.
 - No reusable motion primitive has been adopted app-wide yet.
 
 ### Slice 7 — Local build and AVD QA
@@ -152,7 +155,7 @@ Evidence:
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
-  `baf99bf1a2930d26224af294ba8cb17eb53c41276230f7aa99899c932a2874a4`.
+  `227f924398e1a43945250436fabe409398b42721b93eacfa8d805e5fb3e661ad`.
 - The APK installed once on `emulator-5554`, launched successfully, and logcat
   showed no app fatal crash.
 - Captured login screenshot:

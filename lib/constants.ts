@@ -168,6 +168,20 @@ export const COLORS = {
   whatsAppBg: 'rgba(37,211,102,0.10)',
   whatsAppBorder: 'rgba(37,211,102,0.35)',
 
+  // Progress pillar accents. These are content/data accents, not core
+  // chrome colors, so they are named here instead of forcing every pillar
+  // into brand gold. Used by My Progress to keep the scorecard rich while
+  // still avoiding screen-local raw color decisions.
+  progressJapa: '#DC2626',
+  progressJapaBgLight: 'rgba(220,38,38,0.06)',
+  progressJapaBgDark: 'rgba(220,38,38,0.10)',
+  progressJapaBorderLight: 'rgba(220,38,38,0.16)',
+  progressJapaBorderDark: 'rgba(220,38,38,0.24)',
+  progressQuiz: '#6F5CC8',
+  progressQuizBg: 'rgba(111,92,200,0.12)',
+  progressDharmVeer: '#D4784A',
+  progressDharmVeerBg: 'rgba(212,120,74,0.12)',
+
   // Theme-independent white — for text/icons overlaid directly on a dark
   // scrim atop a photographic image (e.g. app/live-darshan.tsx's "Live"
   // badge and play-affordance dot on a YouTube thumbnail). Never swap for
