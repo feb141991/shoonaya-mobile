@@ -413,17 +413,17 @@ export default function ProfileScreen() {
       // Karma step content, hero theme, festival/observance filtering)
       // across the app without re-running any of the onboarding logic that
       // normally sets those up.
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      const response = await apiFetch('/api/native/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
           full_name: editState.fullName.trim(),
           sampradaya: editState.sampradaya || null,
           ishta_devata: editState.ishtaDevata || null,
           app_language: editState.appLanguage,
-        })
-        .eq('id', profile.id);
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('profile update failed');
 
       await loadProfile();
       setEditVisible(false);

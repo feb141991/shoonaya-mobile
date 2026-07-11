@@ -303,13 +303,11 @@ export default function SettingsScreen() {
     setSaving(true);
     try {
       await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(nextState));
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase.from('profiles').update(toSettingsState(nextState)).eq('id', user.id);
-      if (error) throw error;
+      const response = await apiFetch('/api/native/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(toSettingsState(nextState)),
+      });
+      if (!response.ok) throw new Error('settings update failed');
     } catch {
       Alert.alert('Could not save settings', 'Check your connection and try again.');
       await loadSettings().catch(() => {});

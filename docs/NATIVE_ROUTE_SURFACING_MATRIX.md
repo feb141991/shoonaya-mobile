@@ -54,8 +54,8 @@ release blocker.
 | Pathshala lesson `pathshala/[pathId]/[lessonId].tsx` | `/pathshala/...` | Pathshala hub | API routes | 🟢 green |
 | Mandali `(tabs)/mandali.tsx` | `/mandali` | Tab bar, Home | direct Supabase, RLS-audited task #181 this session | 🟢 green — audited, not AVD-verified |
 | Vichaar Sabha `vichaar-sabha.tsx` + `[id].tsx` | `/vichaar-sabha` | Mandali (Global Sabha tab) | direct Supabase + `/api/vichaar/react`, RLS-audited task #181 | 🟢 green — audited, not AVD-verified |
-| Profile `(tabs)/profile.tsx` | `/profile` | Home avatar | `/api/native/progress-summary` (reads) + direct Supabase (profile-edit writes) | 🟡 yellow — edit-write path not RLS-audited this session |
-| Settings `settings.tsx` | `/settings` | Profile | `/api/user/delete/{status,request,cancel}` for 30-day account deletion + direct Supabase (notification prefs, consent toggle) | 🟡 yellow — preference toggles are direct Supabase |
+| Profile `(tabs)/profile.tsx` | `/profile` | Home avatar | `/api/native/progress-summary` (reads) + `/api/native/profile` (editable profile fields) | 🟢 green |
+| Settings `settings.tsx` | `/settings` | Profile | `/api/native/profile` for preferences + `/api/user/delete/{status,request,cancel}` for 30-day account deletion | 🟢 green |
 | Nitya Karma `nitya-karma.tsx` + 3 sub-screens | `/nitya-karma` | Home, Bhakti | `/api/native/nitya-karma` for sequence and step completion; direct Supabase read for ashrama profile context | 🟢 green for primary Nitya completion |
 | Shloka `shloka.tsx` | (embedded in PWA Home) | Home, Bhakti, Notifications | `/api/native/shloka/read` for mark-read / seva write; direct Supabase read for profile state | 🟢 green for primary completion |
 | Quiz `quiz.tsx` | `/quiz` | Home | `/api/quiz/daily` + `/api/quiz/save`; direct Supabase read for today's saved response | 🟢 green for primary save — read bypass remains P2 debt |
@@ -77,8 +77,8 @@ release blocker.
 
 ## Summary counts
 
-- 🟢 green: 20
-- 🟡 yellow / launch-candidate: 3 (Profile edit-writes, Settings preference toggles, Tirtha)
+- 🟢 green: 22
+- 🟡 yellow / launch-candidate: 1 (Tirtha)
 - 🔴 red: 0
 - ⚪ web-only / deferred: 4 groups (Kul; Discover/Sadhana; Scoreboard/Messages/Seva/Founding/Sthapaka; Bhakti Explore placeholders)
 
@@ -92,6 +92,9 @@ code review from this sandbox.
 
 ## Change log
 
+- 2026-07-11 — Native Profile edit fields and Settings preferences moved behind
+  `/api/native/profile`, leaving Tirtha as the only yellow direct-write route
+  in this launch matrix.
 - 2026-07-11 — Native Shloka mark-read/seva write moved behind
   `/api/native/shloka/read`, so the primary Shloka completion path is no longer
   a direct client profile/seva write.
