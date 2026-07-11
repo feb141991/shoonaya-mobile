@@ -134,6 +134,10 @@ Fresh AVD evidence:
   `smoke-reports/manual-20260711-195128/launch.png`.
 - The captured screen is the logged-out login page, so authenticated visual
   parity remains unverified.
+- Tapping "Continue with Google" opened the external auth browser, first at the
+  correct Supabase project (`mnbwodcswxoojndytngu.supabase.co`) and then at
+  Google's account chooser. Evidence:
+  `smoke-reports/manual-20260711-195128/google-tap-30s.png`.
 
 Earlier emulator attempts exited before ADB attach; the current path is now
 clearer: use the working `Pixel_7_Send_A` AVD or a physical Android device,
