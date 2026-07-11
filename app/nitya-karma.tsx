@@ -7,27 +7,27 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
-import { Card } from '@/components/ui/Card';
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
-import { getAshramaMeta, getAshramaDuties, type LifeStage, type GenderContext } from '@/lib/ashrama';
+import { getAshramaDuties, getAshramaMeta, type GenderContext, type LifeStage } from '@/lib/ashrama';
 
 type Phase = 'night' | 'brahma' | 'sunrise' | 'morning' | 'afternoon' | 'evening' | 'dusk';
 
 type PhaseConfig = {
-  grad: [string, string, string];
-  accentColor: string;
-  textColor: string;
   label: string;
-  emoji: string;
+  headline: string;
+  detail: string;
+  glyph: keyof typeof Feather.glyphMap;
 };
 
 type NativeNityaStepSummary = {
@@ -45,53 +45,46 @@ type NativeNityaKarmaResponse = {
 
 const PHASES: Record<Phase, PhaseConfig> = {
   night: {
-    grad: ['#080614', '#110d28', '#0b0820'],
-    accentColor: '#a394e0',
-    textColor: '#e8e0ff',
     label: 'Night Sadhana',
-    emoji: '🌙',
+    headline: 'Close the day with steadiness',
+    detail: 'Let the next morning begin from a calmer night.',
+    glyph: 'moon',
   },
   brahma: {
-    grad: ['#190830', '#3a1058', '#200828'],
-    accentColor: '#d4a8f0',
-    textColor: '#f5eeff',
     label: 'Brahma Muhurta',
-    emoji: '✨',
+    headline: 'The quiet hour is open',
+    detail: 'A soft start for japa, bathing, and scripture.',
+    glyph: 'star',
   },
   sunrise: {
-    grad: ['#3b1005', '#c85010', '#f09820'],
-    accentColor: '#fcd068',
-    textColor: '#fff8e8',
     label: 'Sacred Sunrise',
-    emoji: '🌅',
+    headline: 'Begin before the day scatters',
+    detail: 'Move through your sequence while the mind is fresh.',
+    glyph: 'sunrise',
   },
   morning: {
-    grad: ['#7a2e08', '#d46810', '#f0b020'],
-    accentColor: '#fce070',
-    textColor: '#fff8e0',
     label: 'Morning Sadhana',
-    emoji: '🌞',
+    headline: 'Shape the day from practice',
+    detail: 'Complete the core rhythm before the outer work begins.',
+    glyph: 'sun',
   },
   afternoon: {
-    grad: ['#7a3800', '#c87408', '#e8a418'],
-    accentColor: '#fdd060',
-    textColor: '#fff5d0',
     label: 'Afternoon Practice',
-    emoji: '☀️',
+    headline: 'Return to the thread',
+    detail: 'Even one completed step keeps the rhythm alive.',
+    glyph: 'compass',
   },
   evening: {
-    grad: ['#5c0f0f', '#a42010', '#c84018'],
-    accentColor: '#fca060',
-    textColor: '#ffe8d8',
     label: 'Evening Sandhya',
-    emoji: '🌇',
+    headline: 'Gather the day back inward',
+    detail: 'A gentle review before dusk turns into night.',
+    glyph: 'sunset',
   },
   dusk: {
-    grad: ['#130620', '#28103a', '#0f0818'],
-    accentColor: '#c0a0e8',
-    textColor: '#f0e8ff',
     label: 'Dusk Contemplation',
-    emoji: '🌆',
+    headline: 'Let the mind settle',
+    detail: 'Close what is unfinished and prepare for rest.',
+    glyph: 'moon',
   },
 };
 
@@ -105,35 +98,84 @@ function getPhase(hour: number): Phase {
   return 'night';
 }
 
+function AmbientBackdrop({ isDark, brand }: { isDark: boolean; brand: string }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+      <LinearGradient
+        colors={
+          isDark
+            ? [COLORS.heroBgDark, COLORS.darkBg, COLORS.homeHeroDark]
+            : [COLORS.brandAccentLight, COLORS.creamBg, COLORS.homeHeroLight]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', inset: 0 }}
+      />
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 760">
+        <Defs>
+          <RadialGradient id="nityaTop" cx="50%" cy="18%" r="52%">
+            <Stop offset="0%" stopColor={brand} stopOpacity={isDark ? '0.24' : '0.18'} />
+            <Stop offset="100%" stopColor={brand} stopOpacity="0" />
+          </RadialGradient>
+          <RadialGradient id="nityaLower" cx="82%" cy="82%" r="48%">
+            <Stop offset="0%" stopColor={isDark ? COLORS.creamBg : COLORS.brandEarthLight} stopOpacity={isDark ? '0.08' : '0.10'} />
+            <Stop offset="100%" stopColor={isDark ? COLORS.creamBg : COLORS.brandEarthLight} stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Circle cx="180" cy="140" r="220" fill="url(#nityaTop)" />
+        <Circle cx="302" cy="626" r="170" fill="url(#nityaLower)" />
+        <Circle cx="180" cy="244" r="112" stroke={brand} strokeOpacity="0.08" strokeWidth="1.2" fill="none" />
+        <Circle cx="180" cy="244" r="76" stroke={brand} strokeOpacity="0.06" strokeWidth="1" fill="none" />
+        <Path d="M40 352 C92 322 132 340 180 354 C232 340 272 322 320 352" stroke={brand} strokeOpacity="0.10" strokeWidth="2.2" fill="none" />
+      </Svg>
+    </View>
+  );
+}
+
+function ProgressRing({ value, total, brand, track }: { value: number; total: number; brand: string; track: string }) {
+  const pct = total > 0 ? Math.min(1, value / total) : 0;
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <View style={{ width: 72, height: 72, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={72} height={72} viewBox="0 0 72 72" style={{ position: 'absolute' }}>
+        <Circle cx="36" cy="36" r={radius} stroke={track} strokeWidth="6" fill="none" />
+        <Circle
+          cx="36"
+          cy="36"
+          r={radius}
+          stroke={brand}
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={circumference * (1 - pct)}
+          rotation="-90"
+          originX="36"
+          originY="36"
+        />
+      </Svg>
+      <Text style={{ ...TYPE.metric, color: brand }}>{total > 0 ? Math.round(pct * 100) : 0}</Text>
+    </View>
+  );
+}
+
 export default function NityaKarmaHubScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
+  const theme = themeColor(isDark);
 
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-    }),
-    [isDark]
-  );
-
-  // Dynamic Phase based on time
   const [currentHour, setCurrentHour] = useState(() => new Date().getHours());
   const phase = useMemo(() => getPhase(currentHour), [currentHour]);
   const phaseConf = PHASES[phase];
 
-  // Dincharya stats
   const [dincharyaStats, setDincharyaStats] = useState({
     completed: 0,
     total: 0,
-    greeting: 'Suprabhat 🌅',
+    greeting: 'Suprabhat',
     streak: 0,
   });
 
-  // Ashrama stats
   const [ashramaStats, setAshramaStats] = useState({
     stage: null as string | null,
     tradition: 'hindu',
@@ -144,7 +186,6 @@ export default function NityaKarmaHubScreen() {
 
   const [loading, setLoading] = useState(true);
 
-  // Periodically check/update the hour to keep sky dynamic
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentHour(new Date().getHours());
@@ -161,20 +202,18 @@ export default function NityaKarmaHubScreen() {
         return;
       }
 
-      // 1. Fetch Dincharya from backend API
       const nityaResp = await apiFetch('/api/native/nitya-karma');
       let completedCount = 0;
       let totalSteps = 0;
-      let greetingText = 'Suprabhat 🌅';
+      let greetingText = 'Suprabhat';
       let currentStreak = 0;
 
       if (nityaResp.ok) {
         const payload = (await nityaResp.json()) as NativeNityaKarmaResponse;
         totalSteps = payload.total ?? 0;
-        greetingText = payload.greeting ?? 'Suprabhat 🌅';
+        greetingText = payload.greeting ?? 'Suprabhat';
         currentStreak = payload.streak?.current ?? 0;
 
-        // Merge with local storage done ticks to get correct count
         const today = spiritualDate(payload.timezone ?? 'UTC');
         const storageKey = `nitya_done_${user.id}_${today}`;
         const rawLocal = await AsyncStorage.getItem(storageKey);
@@ -193,7 +232,6 @@ export default function NityaKarmaHubScreen() {
         streak: currentStreak,
       });
 
-      // 2. Fetch Profile to get Ashrama
       const { data: profile } = await supabase
         .from('profiles')
         .select('life_stage, gender_context, tradition, timezone')
@@ -215,7 +253,7 @@ export default function NityaKarmaHubScreen() {
         const ashramaKey = `ashrama_checks_${user.id}_${today}`;
         const rawChecks = await AsyncStorage.getItem(ashramaKey);
         const checkedIds = new Set<string>(rawChecks ? JSON.parse(rawChecks) : []);
-        completedDuties = duties.filter(d => checkedIds.has(d.id)).length;
+        completedDuties = duties.filter((duty) => checkedIds.has(duty.id)).length;
       }
 
       setAshramaStats({
@@ -225,9 +263,8 @@ export default function NityaKarmaHubScreen() {
         dutiesCount,
         completedDuties,
       });
-
     } catch (err) {
-      console.warn('Failed to load Hub data:', err);
+      console.warn('Failed to load Nitya hub data:', err);
     } finally {
       setLoading(false);
     }
@@ -243,168 +280,238 @@ export default function NityaKarmaHubScreen() {
   const ashramaMeta = ashramaStats.stage
     ? getAshramaMeta(ashramaStats.tradition, ashramaStats.stage as LifeStage, ashramaStats.genderCtx)
     : null;
+  const progressLabel = dincharyaStats.total > 0
+    ? `${dincharyaStats.completed} of ${dincharyaStats.total} completed`
+    : 'Start your morning sequence';
 
   return (
-    <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-        {/* Dynamic Atmospheric Sky Header */}
-        <LinearGradient
-          colors={phaseConf.grad}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={{
-            paddingTop: 36,
-            paddingBottom: 28,
-            paddingHorizontal: 20,
-            borderBottomLeftRadius: 32,
-            borderBottomRightRadius: 32,
-            gap: 16,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Back button — visual size (36) intentionally stays below
-              MIN_TOUCH_TARGET to match the compact glass-button treatment
-              already established for header buttons over photo/gradient
-              surfaces elsewhere in this app (tirtha.tsx, live-darshan.tsx);
-              hitSlop compensates the hit area instead of resizing it,
-              same approach Pill.tsx documents for compact controls. */}
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: 'rgba(255,255,255,0.12)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              alignSelf: 'flex-start',
-            }}
-          >
-            <Feather name="chevron-left" size={20} color={phaseConf.textColor} />
-          </Pressable>
+    <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+      <AmbientBackdrop isDark={isDark} brand={theme.brand} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 34 }} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingTop: 4, gap: 20 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => router.back()}
+              style={{
+                width: MIN_TOUCH_TARGET,
+                height: MIN_TOUCH_TARGET,
+                borderRadius: 22,
+                backgroundColor: theme.glass,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="chevron-left" size={19} color={theme.text} />
+            </Pressable>
 
-          <View style={{ gap: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 24 }}>{phaseConf.emoji}</Text>
-              <Text
+            {dincharyaStats.streak > 0 ? (
+              <View
                 style={{
-                  color: phaseConf.accentColor,
-                  fontFamily: FONTS.sansSemiBold,
-                  fontSize: 12,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1.5,
+                  minHeight: MIN_TOUCH_TARGET,
+                  borderRadius: 999,
+                  paddingHorizontal: 14,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 7,
+                  backgroundColor: theme.glass,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
                 }}
               >
-                {phaseConf.label}
-              </Text>
-            </View>
-            <Text style={{ color: phaseConf.textColor, fontFamily: FONTS.serifBold, fontSize: 32, lineHeight: 38 }}>
-              {dincharyaStats.greeting}
-            </Text>
-            {dincharyaStats.streak > 0 && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                <Feather name="award" size={14} color={phaseConf.accentColor} />
-                <Text style={{ color: phaseConf.textColor, fontFamily: FONTS.sansSemiBold, fontSize: 13, opacity: 0.9 }}>
-                  {dincharyaStats.streak}-day streak
-                </Text>
+                <Feather name="award" size={15} color={theme.brand} />
+                <Text style={{ ...TYPE.label, color: theme.text }}>{dincharyaStats.streak}-day streak</Text>
               </View>
-            )}
+            ) : null}
           </View>
-        </LinearGradient>
 
-        <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 16 }}>
+          <View style={{ gap: 14, paddingTop: 10, paddingBottom: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.brandSoft,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                }}
+              >
+                <Feather name={phaseConf.glyph} size={22} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...TYPE.section, color: theme.brand }}>{phaseConf.label}</Text>
+                <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text, marginTop: 3 }}>{dincharyaStats.greeting}</Text>
+              </View>
+            </View>
+
+            <Text style={{ ...TYPE.display, color: theme.text }}>
+              {phaseConf.headline}
+            </Text>
+            <Text style={{ ...TYPE.homeHeroMeaning, color: theme.dim, maxWidth: 310 }}>
+              {phaseConf.detail}
+            </Text>
+          </View>
+
           {loading ? (
-            <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
+            <View
+              style={{
+                minHeight: 180,
+                borderRadius: 28,
+                backgroundColor: theme.glass,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ActivityIndicator color={theme.brand} />
+            </View>
           ) : (
             <View style={{ gap: 14 }}>
-              {/* Card 1: Dincharya checklist */}
-              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
-                <Pressable
-                  onPress={() => router.push('/nitya-dincharya')}
-                  style={{ padding: 18, gap: 12 }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 22 }}>🌅</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Dincharya</Text>
-                        {/* Bright emerald "FREE" tag — deliberately distinct
-                            from COLORS.success (a muted sage used for
-                            completion states elsewhere); left as its own
-                            literal rather than forced onto a token with a
-                            different hue. */}
-                        <View style={{ backgroundColor: 'rgba(34,197,94,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                          <Text style={{ color: 'rgb(34,197,94)', fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>FREE</Text>
-                        </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Open Dincharya. ${progressLabel}`}
+                onPress={() => router.push('/nitya-dincharya')}
+                style={({ pressed }) => ({
+                  borderRadius: 28,
+                  padding: 18,
+                  gap: 16,
+                  backgroundColor: theme.glass,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
+                  opacity: pressed ? 0.92 : 1,
+                  transform: [{ scale: pressed ? 0.99 : 1 }],
+                })}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                  <View
+                    style={{
+                      width: 58,
+                      height: 58,
+                      borderRadius: 22,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: theme.brandSoft,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                    }}
+                  >
+                    <SacredIcon name="nitya" fallbackGlyph="sunrise" size={24} color={theme.brand} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Dincharya</Text>
+                    <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3 }}>
+                      Daily morning sequence of seven steps
+                    </Text>
+                  </View>
+                  <ProgressRing
+                    value={dincharyaStats.completed}
+                    total={dincharyaStats.total}
+                    brand={theme.brand}
+                    track={isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight}
+                  />
+                </View>
+
+                <View style={{ gap: 7 }}>
+                  <View
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${progressPct}%`,
+                        height: '100%',
+                        borderRadius: 999,
+                        backgroundColor: theme.brand,
+                      }}
+                    />
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ ...TYPE.label, color: theme.text }}>{progressLabel}</Text>
+                    <Feather name="arrow-right" size={16} color={theme.brand} />
+                  </View>
+                </View>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open Sadhana Patha"
+                onPress={() => router.push('/nitya-plans')}
+                style={({ pressed }) => ({
+                  minHeight: 78,
+                  borderRadius: 24,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  backgroundColor: theme.card,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                  opacity: pressed ? 0.9 : 1,
+                })}
+              >
+                <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <SacredIcon name="japa" fallbackGlyph="disc" size={21} color={theme.brand} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Sadhana Patha</Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
+                    Seven and twenty-one day guided paths
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.dim} />
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open Ashrama Dharma"
+                onPress={() => router.push('/nitya-ashrama')}
+                style={({ pressed }) => ({
+                  minHeight: 78,
+                  borderRadius: 24,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  backgroundColor: theme.card,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                  opacity: pressed ? 0.9 : 1,
+                })}
+              >
+                <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="compass" size={21} color={theme.brand} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Ashrama Dharma</Text>
+                    {!ashramaStats.stage ? (
+                      <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.brandSoft }}>
+                        <Text style={{ ...TYPE.chip, color: theme.brand }}>Set up</Text>
                       </View>
-                      <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
-                        Daily morning sequence of 7 steps
-                      </Text>
-                    </View>
-                    <Feather name="chevron-right" size={20} color={theme.dim} />
+                    ) : null}
                   </View>
-
-                  <View style={{ gap: 4 }}>
-                    <View style={{ height: 6, borderRadius: 3, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, overflow: 'hidden' }}>
-                      <View style={{ width: `${progressPct}%`, height: '100%', backgroundColor: COLORS.brandGold }} />
-                    </View>
-                    <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textAlign: 'right' }}>
-                      {dincharyaStats.completed} of {dincharyaStats.total} completed
-                    </Text>
-                  </View>
-                </Pressable>
-              </Card>
-
-              {/* Card 2: Sadhana Patha */}
-              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
-                <Pressable
-                  onPress={() => router.push('/nitya-plans')}
-                  style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-                >
-                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 22 }}>📿</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Sadhana Patha</Text>
-                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
-                      7 & 21-day guided paths and structured practices
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color={theme.dim} />
-                </Pressable>
-              </Card>
-
-              {/* Card 3: Ashrama Dharma */}
-              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
-                <Pressable
-                  onPress={() => router.push('/nitya-ashrama')}
-                  style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-                >
-                  <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: ashramaMeta ? `${ashramaMeta.accent}15` : (isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight), alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 22 }}>🧘</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Ashrama Dharma</Text>
-                      {!ashramaStats.stage && (
-                        <View style={{ backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                          <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Set up</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>
-                      {ashramaMeta
-                        ? `${ashramaMeta.label} duties · ${ashramaStats.completedDuties}/${ashramaStats.dutiesCount} reflected today`
-                        : 'Life-stage duties personalised to your Ashrama'}
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color={theme.dim} />
-                </Pressable>
-              </Card>
+                  <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
+                    {ashramaMeta
+                      ? `${ashramaMeta.label} duties - ${ashramaStats.completedDuties}/${ashramaStats.dutiesCount} reflected today`
+                      : 'Life-stage duties personalised to your Ashrama'}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.dim} />
+              </Pressable>
             </View>
           )}
         </View>
