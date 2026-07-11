@@ -57,7 +57,7 @@ release blocker.
 | Profile `(tabs)/profile.tsx` | `/profile` | Home avatar | `/api/native/progress-summary` (reads) + direct Supabase (profile-edit writes) | 🟡 yellow — edit-write path not RLS-audited this session |
 | Settings `settings.tsx` | `/settings` | Profile | `/api/user/delete/{status,request,cancel}` for 30-day account deletion + direct Supabase (notification prefs, consent toggle) | 🟡 yellow — preference toggles are direct Supabase |
 | Nitya Karma `nitya-karma.tsx` + 3 sub-screens | `/nitya-karma` | Home, Bhakti | `/api/native/nitya-karma` for sequence and step completion; direct Supabase read for ashrama profile context | 🟢 green for primary Nitya completion |
-| Shloka `shloka.tsx` | (embedded in PWA Home) | Home, Bhakti, Notifications | direct Supabase (mark-read / seva write) | 🟡 yellow |
+| Shloka `shloka.tsx` | (embedded in PWA Home) | Home, Bhakti, Notifications | `/api/native/shloka/read` for mark-read / seva write; direct Supabase read for profile state | 🟢 green for primary completion |
 | Quiz `quiz.tsx` | `/quiz` | Home | `/api/quiz/daily` + `/api/quiz/save`; direct Supabase read for today's saved response | 🟢 green for primary save — read bypass remains P2 debt |
 | Mood `mood.tsx` | `/discover` (partial) | Home mood pill | API route (task #112 migration) | 🟢 green — not re-verified this session |
 | Panchang `panchang.tsx` | `/panchang` | Home, Bhakti, Vrat | `/api/native/panchang-viewed` (primary "mark observed" action); direct Supabase for the secondary rashi-picker write | 🟢 green for primary action — rashi write not audited |
@@ -77,8 +77,8 @@ release blocker.
 
 ## Summary counts
 
-- 🟢 green: 19
-- 🟡 yellow / launch-candidate: 4 (Profile edit-writes, Settings preference toggles, Shloka, Tirtha)
+- 🟢 green: 20
+- 🟡 yellow / launch-candidate: 3 (Profile edit-writes, Settings preference toggles, Tirtha)
 - 🔴 red: 0
 - ⚪ web-only / deferred: 4 groups (Kul; Discover/Sadhana; Scoreboard/Messages/Seva/Founding/Sthapaka; Bhakti Explore placeholders)
 
@@ -92,6 +92,9 @@ code review from this sandbox.
 
 ## Change log
 
+- 2026-07-11 — Native Shloka mark-read/seva write moved behind
+  `/api/native/shloka/read`, so the primary Shloka completion path is no longer
+  a direct client profile/seva write.
 - 2026-07-11 — Static audit against current native files corrected stale rows:
   Japa, Quiz, Nitya, Kosh, and Sankalpa now use API-backed primary write paths
   and are no longer yellow for direct completion/action writes. Device visual

@@ -166,49 +166,27 @@ export default function ShlokaScreen() {
     setMarking(true);
     const previousProfile = profile;
 
-    const yesterdayObj = new Date(`${today}T12:00:00Z`);
-    yesterdayObj.setUTCDate(yesterdayObj.getUTCDate() - 1);
-    const yesterday = yesterdayObj.toISOString().slice(0, 10);
-    const newStreak = profile.lastShlokaDate === yesterday ? profile.shlokaStreak + 1 : 1;
-
-    setProfile({ ...profile, shlokaStreak: newStreak, lastShlokaDate: today });
-
     try {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ shloka_streak: newStreak, last_shloka_date: today })
-        .eq('id', profile.userId);
-      if (profileError) throw profileError;
-
-      try {
-        const { error: rpcError } = await supabase.rpc('increment_period_seva', {
-          p_user_id: profile.userId,
-          p_points: 5,
-        });
-        if (rpcError) throw rpcError;
-      } catch {
-        const { data } = await supabase
-          .from('profiles')
-          .select('seva_score, weekly_seva, monthly_seva')
-          .eq('id', profile.userId)
-          .single();
-        if (data) {
-          await supabase
-            .from('profiles')
-            .update({
-              seva_score: (data.seva_score ?? 0) + 5,
-              weekly_seva: (data.weekly_seva ?? 0) + 5,
-              monthly_seva: (data.monthly_seva ?? 0) + 5,
-            })
-            .eq('id', profile.userId);
-        }
+      const response = await apiFetch('/api/native/shloka/read', { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('save failed');
       }
+      const result = (await response.json()) as {
+        date?: string;
+        streak?: number;
+        alreadyRead?: boolean;
+        milestone?: boolean;
+      };
+      const newStreak = result.streak ?? profile.shlokaStreak;
+      const completedDate = result.date ?? today;
+
+      setProfile({ ...profile, shlokaStreak: newStreak, lastShlokaDate: completedDate });
 
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
 
-      setCelebration({ streak: newStreak, milestone: newStreak % 7 === 0, first: newStreak === 1 });
+      setCelebration({ streak: newStreak, milestone: Boolean(result.milestone) || newStreak % 7 === 0, first: newStreak === 1 });
       celebrationScale.setValue(0.86);
       celebrationOpacity.setValue(0);
       Animated.parallel([
