@@ -1,6 +1,6 @@
 # Native Route Surfacing Matrix
 
-Last updated: 2026-07-10 (commit `4e05619`)
+Last updated: 2026-07-11 (commit `4479322` + follow-up static audit)
 
 Companion doc to the route-surfacing audit that added the Tirtha card to
 Home's Community row. This is the committed version of that audit's route
@@ -49,26 +49,26 @@ release blocker.
 |---|---|---|---|---|
 | Home `(tabs)/index.tsx` | `/home` | entry point | `/api/native/home-summary` | 🟢 green |
 | Bhakti `(tabs)/bhakti.tsx` | `/bhakti` | Tab bar | direct Supabase, **reads only** (streak/session stats) | 🟢 green — no write on this screen |
-| Japa `japa.tsx` | `/japa` | Home, Bhakti | direct Supabase (`mala_sessions` insert) | 🟡 yellow — core write path, not RLS-audited this session |
+| Japa `japa.tsx` | `/japa` | Home, Bhakti | `/api/japa/complete` for completion, `/api/japa/completion-insight`, `/api/tts/generate`; direct Supabase read for active symbol | 🟢 green for primary completion — no direct completion write remains |
 | Pathshala `(tabs)/pathshala.tsx` | `/pathshala` | Tab bar, Home | API routes (Slice 4C/4D migration) | 🟢 green |
 | Pathshala lesson `pathshala/[pathId]/[lessonId].tsx` | `/pathshala/...` | Pathshala hub | API routes | 🟢 green |
 | Mandali `(tabs)/mandali.tsx` | `/mandali` | Tab bar, Home | direct Supabase, RLS-audited task #181 this session | 🟢 green — audited, not AVD-verified |
 | Vichaar Sabha `vichaar-sabha.tsx` + `[id].tsx` | `/vichaar-sabha` | Mandali (Global Sabha tab) | direct Supabase + `/api/vichaar/react`, RLS-audited task #181 | 🟢 green — audited, not AVD-verified |
 | Profile `(tabs)/profile.tsx` | `/profile` | Home avatar | `/api/native/progress-summary` (reads) + direct Supabase (profile-edit writes) | 🟡 yellow — edit-write path not RLS-audited this session |
-| Settings `settings.tsx` | `/settings` | Profile | `/api/user/delete` (deletion) + direct Supabase (notification prefs, consent toggle) | 🟡 yellow — primary toggle writes are direct Supabase |
-| Nitya Karma `nitya-karma.tsx` + 3 sub-screens | `/nitya-karma` | Home, Bhakti | direct Supabase (`nitya_karma_log` writes) | 🟡 yellow |
+| Settings `settings.tsx` | `/settings` | Profile | `/api/user/delete/{status,request,cancel}` for 30-day account deletion + direct Supabase (notification prefs, consent toggle) | 🟡 yellow — preference toggles are direct Supabase |
+| Nitya Karma `nitya-karma.tsx` + 3 sub-screens | `/nitya-karma` | Home, Bhakti | `/api/native/nitya-karma` for sequence and step completion; direct Supabase read for ashrama profile context | 🟢 green for primary Nitya completion |
 | Shloka `shloka.tsx` | (embedded in PWA Home) | Home, Bhakti, Notifications | direct Supabase (mark-read / seva write) | 🟡 yellow |
-| Quiz `quiz.tsx` | `/quiz` | Home | direct Supabase (`quiz_responses` insert) | 🟡 yellow |
+| Quiz `quiz.tsx` | `/quiz` | Home | `/api/quiz/daily` + `/api/quiz/save`; direct Supabase read for today's saved response | 🟢 green for primary save — read bypass remains P2 debt |
 | Mood `mood.tsx` | `/discover` (partial) | Home mood pill | API route (task #112 migration) | 🟢 green — not re-verified this session |
 | Panchang `panchang.tsx` | `/panchang` | Home, Bhakti, Vrat | `/api/native/panchang-viewed` (primary "mark observed" action); direct Supabase for the secondary rashi-picker write | 🟢 green for primary action — rashi write not audited |
 | Vrat `vrat.tsx` | `/vrat` | Bhakti, Panchang | `/api/vrat/observe` | 🟢 green |
 | Dharm Veer `dharm-veer.tsx` + `[id].tsx` | `/dharm-veer` | Home, Bhakti | `/api/dharm-veer/submit` | 🟢 green |
-| Kosh `kosh.tsx` | `/kosh` | Bhakti, Profile (4x) | direct Supabase (relic claim writes) | 🟡 yellow |
+| Kosh `kosh.tsx` | `/kosh` | Bhakti, Profile (4x) | `/api/user/active-symbol` with `/api/profile` fallback | 🟢 green — no direct symbol write remains |
 | My Progress `my-progress.tsx` + 3 sub-screens | `/my-progress`, `/progress` | Home, Profile | `/api/native/progress` + `/api/native/karma-ledger` (task #180 migration, this session) | 🟢 green |
 | Notifications `notifications.tsx` | (inbox) | Home bell | direct Supabase + OneSignal, heavily audited tasks #44–66, #156–157 | 🟢 green — audited, not this session |
 | Live Darshan `live-darshan.tsx` | `/live-darshan` | Home, Tirtha | direct Supabase, **read-only** | 🟢 green |
 | Tirtha `(tabs)/tirtha.tsx` | `/tirtha-map` | **Home (newly added, commit `4e05619`)** | direct Supabase (`tirtha_saves`, `tirtha_checkins` writes) + Overpass API | 🟡 yellow — was unreachable until this pass; write path not RLS-audited; needs AVD smoke before calling it fully launch-ready |
-| Sankalpa `sankalpa.tsx` | `/sadhana` (partial) | Home | direct Supabase (create/check-in/complete writes) | 🟡 yellow |
+| Sankalpa `sankalpa.tsx` | `/sadhana` (partial) | Home | `/api/sankalpa`, `/api/sankalpa/checkin`, `/api/sankalpa/complete` | 🟢 green for primary create/check-in/complete |
 | AI Chat `ai-chat.tsx` | `/ai-chat` | Home | Pramana API | 🟢 green — not re-verified this session |
 | Kul | `/kul` | — | — | ⚪ web-only / deferred — no native file; product plan wants it as a primary tab but it isn't built yet |
 | Discover / Sadhana journal | `/discover`, `/sadhana` | — | — | ⚪ web-only / deferred — no native file |
@@ -77,8 +77,8 @@ release blocker.
 
 ## Summary counts
 
-- 🟢 green: 14
-- 🟡 yellow / launch-candidate: 9 (Japa, Profile edit-writes, Settings, Nitya Karma, Shloka, Quiz, Kosh, Tirtha, Sankalpa)
+- 🟢 green: 19
+- 🟡 yellow / launch-candidate: 4 (Profile edit-writes, Settings preference toggles, Shloka, Tirtha)
 - 🔴 red: 0
 - ⚪ web-only / deferred: 4 groups (Kul; Discover/Sadhana; Scoreboard/Messages/Seva/Founding/Sthapaka; Bhakti Explore placeholders)
 
@@ -92,6 +92,10 @@ code review from this sandbox.
 
 ## Change log
 
+- 2026-07-11 — Static audit against current native files corrected stale rows:
+  Japa, Quiz, Nitya, Kosh, and Sankalpa now use API-backed primary write paths
+  and are no longer yellow for direct completion/action writes. Device visual
+  verification is still pending.
 - 2026-07-10 — Initial version. Corrects the chat-only report from the
   route-surfacing task (commit `4e05619`), which used an overly broad
   `launch-ready` label. Downgraded 9 routes to yellow per review feedback.
