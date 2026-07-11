@@ -39,6 +39,16 @@ type RashiHoroscope = {
   accuracyNote: string;
 };
 
+function normalizeRashiKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const normalized = value.trim().toLowerCase();
+  const match = RASHI_LIST.find((rashi) =>
+    rashi.key === normalized ||
+    rashi.en.toLowerCase() === normalized ||
+    rashi.sa.toLowerCase() === normalized
+  );
+  return match?.key ?? null;
+}
 
 
 export default function RashiphalaScreen() {
@@ -53,6 +63,8 @@ export default function RashiphalaScreen() {
   const [data, setData] = useState<RashiHoroscope | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   // Load initial context (rashi, timezone)
   useEffect(() => {
@@ -67,7 +79,8 @@ export default function RashiphalaScreen() {
             .eq('id', user.id)
             .single();
           if (active) {
-            if (profile?.rashi) setSelectedRashi(profile.rashi.toLowerCase());
+            const profileRashi = normalizeRashiKey(profile?.rashi);
+            if (profileRashi) setSelectedRashi(profileRashi);
             if (profile?.timezone) setTimezone(profile.timezone);
           }
         }
@@ -86,16 +99,23 @@ export default function RashiphalaScreen() {
     if (initialLoad) return;
     let active = true;
     setLoading(true);
+    setErrorMessage(null);
 
     async function loadHoroscope() {
       try {
         const res = await apiFetch(`/api/jyotish/rashiphal?rashi=${selectedRashi}&tz=${encodeURIComponent(timezone)}`);
-        if (res.ok && active) {
-          const payload = await res.json();
-          setData(payload);
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(payload?.error ?? 'Unable to load Rashiphala.');
+        }
+        if (active) {
+          setData(payload as RashiHoroscope);
         }
       } catch (e) {
-        // handle error silently
+        if (active) {
+          setData(null);
+          setErrorMessage(e instanceof Error ? e.message : 'Unable to load Rashiphala.');
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -103,7 +123,7 @@ export default function RashiphalaScreen() {
 
     void loadHoroscope();
     return () => { active = false; };
-  }, [selectedRashi, timezone, initialLoad]);
+  }, [selectedRashi, timezone, initialLoad, reloadToken]);
 
   return (
     <Screen header={{ title: 'Your Rashiphala', onBack: () => router.back() }} style={{ backgroundColor: theme.bg, paddingHorizontal: 0 }}>
@@ -136,9 +156,38 @@ export default function RashiphalaScreen() {
         </ScrollView>
       </View>
 
-      {loading || !data ? (
+      {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
+        </View>
+      ) : !data ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 80 }}>
+          <Card tone="auto" style={{ alignItems: 'center', gap: 14 }}>
+            <Text style={{ fontSize: 30 }}>✨</Text>
+            <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24, textAlign: 'center' }}>
+              Rashiphala could not load
+            </Text>
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, textAlign: 'center' }}>
+              {errorMessage ?? 'Please try again in a moment.'}
+            </Text>
+            <Pressable
+              onPress={() => {
+                setInitialLoad(false);
+                setSelectedRashi((current) => normalizeRashiKey(current) ?? 'aries');
+                setReloadToken((current) => current + 1);
+              }}
+              style={{
+                minHeight: 44,
+                paddingHorizontal: 22,
+                borderRadius: 22,
+                backgroundColor: theme.brand,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Try again</Text>
+            </Pressable>
+          </Card>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48, gap: 16 }}>

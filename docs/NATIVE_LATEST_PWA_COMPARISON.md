@@ -29,10 +29,10 @@ The native app has caught up substantially in the core launch surfaces:
 - The main visual system has improved through shared tokens and the
   `PressableSurface` motion primitive.
 
-The remaining gap is verification, not implementation: the latest APK build
-succeeds, and the Android smoke harness now captures all required route
-screenshots, but authenticated AVD visual comparison still requires a connected
-device or working emulator.
+The remaining gap is narrower now: the latest release APK has been installed on
+the working AVD, authenticated route screenshots have been captured, and the
+only route-level defect found in that pass, Rashiphala's infinite spinner, has
+been fixed and re-verified on the same AVD.
 
 ## Evidence Matrix
 
@@ -47,7 +47,7 @@ device or working emulator.
 | Nitya | `src/app/(main)/nitya-karma/NityaKarmaClient.tsx`, `src/components/nitya/NityaHeroBanner.tsx` | `app/nitya-karma.tsx`, `app/nitya-dincharya.tsx`, `app/nitya-ashrama.tsx`, `app/nitya-plans.tsx` | Hub rebuilt; detailed screens exist. Full PWA complexity is not all native yet. |
 | Dharm Veer | `src/app/(main)/dharm-veer/[id]/DharmVeerClient.tsx`, DB-backed roster | `app/dharm-veer.tsx`, `app/dharm-veer/[id].tsx`, `components/dharm-veer/DharmVeerPoster.tsx` | Canonical roster and richer poster implemented. Device visual QA pending. |
 | Calendar correctness | Shared calendar engine and Supabase rows | Native consumes web/API calendar data | Nag Panchami 2026 corrected and live-DB verified as `2026-08-17`. |
-| Jyotish / Panchang access | PWA routes for Panchang, Rashiphal, Kundali | Home `Jyotish & Panchang` row to `/panchang`, `/rashiphala`, `/kundali` | Surfaced without adding a sixth tab. |
+| Jyotish / Panchang access | PWA routes for Panchang, Rashiphal, Kundali | Home `Jyotish & Panchang` row to `/panchang`, `/rashiphala`, `/kundali` | Surfaced without adding a sixth tab. Rashiphala spinner bug fixed and AVD-verified. |
 | Tokens / motion | PWA tokenized premium theme and motion expectations | `lib/constants.ts`, `components/ui/PressableSurface.tsx`, updated screen surfaces | Core launch surfaces improved. App-wide sweep remains ongoing. |
 
 ## What Is Now Close Enough At Code Level
@@ -99,70 +99,64 @@ Latest local native build evidence:
 - `npm run typecheck`: clean.
 - `npx expo-doctor`: clean, `21/21`.
 - `git diff --check`: clean.
-- Local release APK build: successful after the Shloka/Profile/Settings/Tirtha
-  API-route migrations.
+- Local release APK build: successful after the Rashiphala normalization fix.
 - APK path:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
-  `c729918f4ffb051e7968471654544158e4e537c75ccadd594695b9c457bd9ec8`.
+  `5a5cc46edae1b6f5a28c4db955d60eddb008c56264d7ba5c61b550318a0450f6`.
 
 No EAS build was run for this comparison, per current instruction.
 
 ## AVD / Device Verification Status
 
-Authenticated visual QA is not yet complete.
-
-Commands showed no attached Android device:
-
-```bash
-adb devices -l
-```
-
-Result:
-
-```text
-List of devices attached
-```
+Authenticated visual QA is now partially complete on the working AVD.
 
 Fresh AVD evidence:
 
-- `Pixel_7_Send_A` booted as `emulator-5554`.
+- `Pixel_7_Send_A` is attached as `emulator-5554`.
 - Android version: 13, display: 1080x2400.
 - The latest local release APK installed with `adb install -r`.
-- The app launched via `adb shell monkey -p com.shoonaya.app 1`.
-- Captured launch screenshot:
-  `smoke-reports/manual-20260711-195128/launch.png`.
-- The captured screen is the logged-out login page, so authenticated visual
-  parity remains unverified.
-- Tapping "Continue with Google" opened the external auth browser, first at the
-  correct Supabase project (`mnbwodcswxoojndytngu.supabase.co`) and then at
-  Google's account chooser. Evidence:
-  `smoke-reports/manual-20260711-195128/google-tap-30s.png`.
-
-Earlier emulator attempts exited before ADB attach; the current path is now
-clearer: use the working `Pixel_7_Send_A` AVD or a physical Android device,
-sign in with a real test account, and run the smoke harness.
+- Installed release APK hash was verified against the local artifact before the
+  Rashiphala follow-up rebuild:
+  `c729918f4ffb051e7968471654544158e4e537c75ccadd594695b9c457bd9ec8`.
+- After the Rashiphala fix, the rebuilt APK was installed and has local SHA256:
+  `5a5cc46edae1b6f5a28c4db955d60eddb008c56264d7ba5c61b550318a0450f6`.
+- The app launched signed-in and no app fatal crash signatures were found in the
+  release logcat sweep.
+- Captured clean signed-in launch screenshot:
+  `smoke-reports/resume-20260711-230433/clean-release-launch.png`.
+- Captured parity screenshots:
+  `smoke-reports/resume-20260711-230433/parity-screenshots/`.
+- The initial authenticated pass found Rashiphala stuck on a spinner. Root
+  cause: native sent the profile's display/Sanskrit rashi value to the API
+  instead of the canonical rashi key expected by `/api/jyotish/rashiphal`.
+- Fix: `app/rashiphala.tsx` now normalizes profile values against
+  `RASHI_LIST` key/English/Sanskrit labels and renders a retryable error state
+  instead of swallowing failed API responses into an infinite spinner.
+- Re-test screenshot:
+  `smoke-reports/resume-20260711-230433/parity-screenshots/06-rashiphala-fixed.png`.
+- Re-test logcat:
+  `smoke-reports/resume-20260711-230433/logcat-rashiphala-fixed.txt`.
 
 ## Remaining Goal Blockers
 
 The goal is not fully achieved until these are done:
 
-1. Install the latest local APK and sign in with a real test account on the
-   working `Pixel_7_Send_A` AVD or a physical Android device.
-2. Run `scripts/android-smoke-checklist.sh`.
-3. Verify Home visually against the PWA: hero height, pills, shloka transition,
+1. Re-run `scripts/android-smoke-checklist.sh` once more after the Rashiphala
+   fix if a single timestamped full harness report is required.
+2. Verify Home visually against the PWA: hero height, pills, shloka transition,
    next-practice scale, Brahma Muhurta, observance carousel, Jyotish/Panchang
    row, and bottom navigation.
-4. Open Shloka, mark complete, confirm confetti/haptics, and confirm PNG share
+3. Open Shloka, mark complete, confirm confetti/haptics, and confirm PNG share
    card capture is nonblank.
-5. Open Nitya hub and detailed Nitya flow, confirm the hero feels seamless and
+4. Open Nitya hub and detailed Nitya flow, confirm the hero feels seamless and
    the sequence/progress state updates Home.
-6. Open Dharm Veer from Home and from Bhakti, confirm the same hero/id opens and
+5. Open Dharm Veer from Home and from Bhakti, confirm the same hero/id opens and
    the artwork is not generic/dismal.
-7. Verify Panchang, Rashiphal, Kundali, My Progress, Sankalpa, Mandali,
+6. Verify Panchang, Rashiphal, Kundali, My Progress, Sankalpa, Mandali,
    Profile, and Notifications for token/theme consistency after the latest
    sweep.
-8. Repeat at least one dark-mode pass.
+7. Repeat at least one dark-mode pass.
 
 ## Decision
 

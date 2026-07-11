@@ -148,7 +148,7 @@ Remaining:
 
 ### Slice 7 — Local build and AVD QA
 
-Status: partially complete.
+Status: partially complete, with authenticated AVD route screenshots captured.
 
 - `npm run typecheck`
 - `npx expo-doctor`
@@ -170,28 +170,33 @@ Evidence:
   route from the checklist.
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
-- APK SHA256:
-  `c729918f4ffb051e7968471654544158e4e537c75ccadd594695b9c457bd9ec8`.
-- The APK installed once on `emulator-5554`, launched successfully, and logcat
-  showed no app fatal crash.
-- Captured login screenshot:
-  `/tmp/shoonaya-qa/native-start.png`.
-- Follow-up AVD run booted `Pixel_7_Send_A` as `emulator-5554`, installed the
-  latest local APK, launched successfully, and captured the logged-out login
-  screen at
-  `smoke-reports/manual-20260711-195128/launch.png`.
+- APK SHA256 after the Rashiphala follow-up rebuild:
+  `5a5cc46edae1b6f5a28c4db955d60eddb008c56264d7ba5c61b550318a0450f6`.
+- The APK installed on `emulator-5554`, launched successfully, and logcat
+  showed no app fatal crash signatures.
+- Captured signed-in release launch screenshot:
+  `smoke-reports/resume-20260711-230433/clean-release-launch.png`.
+- Captured authenticated route screenshots under:
+  `smoke-reports/resume-20260711-230433/parity-screenshots/`.
+- The authenticated route pass found one real defect: Rashiphala stayed on a
+  spinner because the native screen sent a profile display rashi value such as
+  `Mesha`/`Kanya` instead of the canonical API key such as `aries`/`virgo`.
+- `app/rashiphala.tsx` now normalizes the profile value against `RASHI_LIST`,
+  throws visible retryable errors on failed API responses, and was re-tested on
+  AVD with content rendered:
+  `smoke-reports/resume-20260711-230433/parity-screenshots/06-rashiphala-fixed.png`.
 - Later AVD attempts for `Medium_Phone_API_36.1`, `Dev-A`, and `Device-A`
   exited before `adb devices` could attach. Logs:
   `/tmp/shoonaya-Dev-A.log` and `/tmp/shoonaya-Device-A-soft.log`.
 
 Remaining:
 
-- Authenticated visual smoke for Home, Shloka, Nitya, Dharm Veer,
-  Panchang/Jyotish, My Progress, Sankalpa, Mandali, Profile, and Notifications
-  is still unverified because the available AVD is currently at the logged-out
-  screen. Sign in with a real test account, then run
-  `scripts/android-smoke-checklist.sh` on the working AVD or a physical device
-  before marking the goal complete.
+- Run one more complete `scripts/android-smoke-checklist.sh` pass if a single
+  timestamped post-fix harness directory is required.
+- Manually verify completion interactions that screenshots cannot prove:
+  Shloka completion/share-card capture, Nitya step completion returning to
+  Home, Dharm Veer Home-card-to-detail identity, and at least one dark-mode
+  route pass.
 
 ## Deferred explicitly
 
