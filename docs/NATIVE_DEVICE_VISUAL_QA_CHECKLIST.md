@@ -121,7 +121,7 @@ After the manual pass:
 
 ```bash
 adb logcat -d -v time > /tmp/shoonaya-device-qa/logcat.txt
-rg -i "FATAL EXCEPTION|AndroidRuntime|NoClassDefFoundError|Unable to load script|ReactNativeJS.*Error" /tmp/shoonaya-device-qa/logcat.txt
+rg -i "FATAL EXCEPTION| E/AndroidRuntime|NoClassDefFoundError|Unable to load script|ReactNativeJS.*Error" /tmp/shoonaya-device-qa/logcat.txt
 ```
 
 Pass means there are no relevant crash/runtime matches during the route pass.

@@ -176,6 +176,10 @@ Evidence:
   showed no app fatal crash.
 - Captured login screenshot:
   `/tmp/shoonaya-qa/native-start.png`.
+- Follow-up AVD run booted `Pixel_7_Send_A` as `emulator-5554`, installed the
+  latest local APK, launched successfully, and captured the logged-out login
+  screen at
+  `smoke-reports/manual-20260711-195128/launch.png`.
 - Later AVD attempts for `Medium_Phone_API_36.1`, `Dev-A`, and `Device-A`
   exited before `adb devices` could attach. Logs:
   `/tmp/shoonaya-Dev-A.log` and `/tmp/shoonaya-Device-A-soft.log`.
@@ -184,8 +188,9 @@ Remaining:
 
 - Authenticated visual smoke for Home, Shloka, Nitya, Dharm Veer,
   Panchang/Jyotish, My Progress, Sankalpa, Mandali, Profile, and Notifications
-  is still unverified because no current Android device/AVD is attached to ADB.
-  Run `scripts/android-smoke-checklist.sh` on a working AVD or physical device
+  is still unverified because the available AVD is currently at the logged-out
+  screen. Sign in with a real test account, then run
+  `scripts/android-smoke-checklist.sh` on the working AVD or a physical device
   before marking the goal complete.
 
 ## Deferred explicitly

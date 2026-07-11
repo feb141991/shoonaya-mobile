@@ -124,17 +124,28 @@ Result:
 List of devices attached
 ```
 
-Recent checks still show no attached ADB device. Earlier emulator attempts
-exited before ADB attach; the current required path is to run the smoke harness
-on a stable AVD or a physical Android device.
+Fresh AVD evidence:
+
+- `Pixel_7_Send_A` booted as `emulator-5554`.
+- Android version: 13, display: 1080x2400.
+- The latest local release APK installed with `adb install -r`.
+- The app launched via `adb shell monkey -p com.shoonaya.app 1`.
+- Captured launch screenshot:
+  `smoke-reports/manual-20260711-195128/launch.png`.
+- The captured screen is the logged-out login page, so authenticated visual
+  parity remains unverified.
+
+Earlier emulator attempts exited before ADB attach; the current path is now
+clearer: use the working `Pixel_7_Send_A` AVD or a physical Android device,
+sign in with a real test account, and run the smoke harness.
 
 ## Remaining Goal Blockers
 
 The goal is not fully achieved until these are done:
 
-1. Run `scripts/android-smoke-checklist.sh` on a working AVD or physical
-   Android device.
-2. Install the latest local APK and sign in with a real test account.
+1. Install the latest local APK and sign in with a real test account on the
+   working `Pixel_7_Send_A` AVD or a physical Android device.
+2. Run `scripts/android-smoke-checklist.sh`.
 3. Verify Home visually against the PWA: hero height, pills, shloka transition,
    next-practice scale, Brahma Muhurta, observance carousel, Jyotish/Panchang
    row, and bottom navigation.

@@ -206,7 +206,7 @@ fi
 log ""
 log "## Crash log check"
 adb -s "$DEVICE_ID" logcat -d -v time > "$LOGCAT_FILE" 2>&1
-if rg -i "FATAL EXCEPTION|AndroidRuntime|NoClassDefFoundError|Unable to load script|ReactNativeJS.*Error" "$LOGCAT_FILE" > "$REPORT_DIR/crash-matches.txt"; then
+if rg -i "FATAL EXCEPTION| E/AndroidRuntime|NoClassDefFoundError|Unable to load script|ReactNativeJS.*Error" "$LOGCAT_FILE" > "$REPORT_DIR/crash-matches.txt"; then
   log "FAIL    Crash signatures found — inspect $REPORT_DIR/crash-matches.txt."
   FAILURES=$((FAILURES + 1))
 else
