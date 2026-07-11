@@ -17,7 +17,22 @@ Reference documents:
 1. `adb devices -l` shows a connected device or booted emulator.
 2. If using an emulator, prefer a Google Play image so Google auth and push
    services behave like a real device.
-3. Install the latest local APK:
+3. Preferred: run the smoke harness. It builds or reuses the local APK,
+   installs it, launches it, asks for manual auth checks, captures parity
+   screenshots, and saves logcat evidence into `smoke-reports/<timestamp>/`.
+
+```bash
+cd "/Users/Business(C)/shoonaya-mobile"
+./scripts/android-smoke-checklist.sh
+```
+
+If the APK has already been built and only the device QA needs repeating:
+
+```bash
+SHOONAYA_SKIP_BUILD=1 ./scripts/android-smoke-checklist.sh
+```
+
+4. Manual fallback: install the latest local APK:
 
 ```bash
 cd "/Users/Business(C)/shoonaya-mobile"
@@ -25,7 +40,7 @@ adb install -r android/app/build/outputs/apk/release/app-release.apk
 adb shell monkey -p com.shoonaya.app 1
 ```
 
-4. Confirm the installed APK hash matches the current build record:
+5. Confirm the installed APK hash matches the current build record:
 
 ```bash
 shasum -a 256 android/app/build/outputs/apk/release/app-release.apk
@@ -37,7 +52,7 @@ Expected current hash:
 c729918f4ffb051e7968471654544158e4e537c75ccadd594695b9c457bd9ec8
 ```
 
-5. Sign in with a real test account. Device visual parity cannot be closed from
+6. Sign in with a real test account. Device visual parity cannot be closed from
    the logged-out screen.
 
 ## Required Screenshots
@@ -56,10 +71,13 @@ adb exec-out screencap -p > /tmp/shoonaya-device-qa/02-shloka.png
 adb exec-out screencap -p > /tmp/shoonaya-device-qa/03-nitya.png
 adb exec-out screencap -p > /tmp/shoonaya-device-qa/04-dharm-veer.png
 adb exec-out screencap -p > /tmp/shoonaya-device-qa/05-panchang.png
-adb exec-out screencap -p > /tmp/shoonaya-device-qa/06-profile.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/06-jyotish.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/07-profile.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/08-notifications.png
 ```
 
-Use the filenames exactly so future reviews can compare runs.
+Use the filenames exactly so future reviews can compare runs. The smoke script
+uses the same names under `smoke-reports/<timestamp>/parity-screenshots/`.
 
 ## Route Checklist
 
