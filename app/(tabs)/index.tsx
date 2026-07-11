@@ -1161,6 +1161,83 @@ function HomeContent() {
             </View>
           </Pressable>
 
+          {/* Jyotish & Panchang — these are real native routes already, but
+              were hard to discover. Keep them as contextual Home access
+              rather than adding a sixth bottom tab. */}
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+              Jyotish & Panchang
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {([
+                {
+                  label: 'Panchang',
+                  detail: tithiPill,
+                  href: '/panchang',
+                  icon: 'panchang' as SacredIconName,
+                  fallbackGlyph: 'calendar' as const,
+                },
+                {
+                  label: 'Rashiphal',
+                  detail: 'Daily rashi guidance',
+                  href: '/rashiphala',
+                  icon: null,
+                  fallbackGlyph: 'star' as const,
+                },
+                {
+                  label: 'Kundali',
+                  detail: 'Birth chart',
+                  href: '/kundali',
+                  icon: null,
+                  fallbackGlyph: 'circle' as const,
+                },
+              ]).map((item) => (
+                <Pressable
+                  key={item.label}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.label}, ${item.detail}`}
+                  onPress={() => navigate(item.href as Href)}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    minHeight: 104,
+                    borderRadius: 18,
+                    padding: 12,
+                    backgroundColor: theme.glass,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                    opacity: pressed ? 0.86 : 1,
+                    transform: [{ scale: pressed ? 0.985 : 1 }],
+                  })}
+                >
+                  <View
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 14,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: theme.iconWell,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {item.icon ? (
+                      <SacredIcon name={item.icon} fallbackGlyph={item.fallbackGlyph} size={18} color={theme.brand} />
+                    ) : (
+                      <Feather name={item.fallbackGlyph} size={18} color={theme.brand} />
+                    )}
+                  </View>
+                  <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
+                    {item.label}
+                  </Text>
+                  <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                    {item.detail}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
           {/* Quick Actions Row */}
           <View style={{ marginTop: 12 }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Sadhana</Text>
