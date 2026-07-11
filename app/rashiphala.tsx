@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { RASHI_LIST } from '@/lib/jyotish';
 
@@ -46,17 +46,7 @@ export default function RashiphalaScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-      gold: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
-    }),
-    [isDark]
-  );
+  const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   const [selectedRashi, setSelectedRashi] = useState<string>('aries');
   const [timezone, setTimezone] = useState<string>('Asia/Kolkata');
@@ -133,12 +123,12 @@ export default function RashiphalaScreen() {
                   paddingVertical: 12,
                   borderRadius: 16,
                   borderWidth: 1,
-                  backgroundColor: isSelected ? (isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)') : theme.card,
-                  borderColor: isSelected ? theme.gold : theme.border,
+                  backgroundColor: isSelected ? theme.brandSoft : theme.card,
+                  borderColor: isSelected ? theme.brand : theme.border,
                 }}
               >
                 <Text style={{ fontSize: 28 }}>{rashi.symbol}</Text>
-                <Text style={{ marginTop: 8, color: isSelected ? theme.gold : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{rashi.sa}</Text>
+                <Text style={{ marginTop: 8, color: isSelected ? theme.brand : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{rashi.sa}</Text>
                 <Text style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5 }}>{rashi.en}</Text>
               </Pressable>
             );
@@ -148,14 +138,14 @@ export default function RashiphalaScreen() {
 
       {loading || !data ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.gold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48, gap: 16 }}>
           {/* Main Card */}
           <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ fontSize: 32 }}>{data.symbol}</Text>
               </View>
               <View style={{ flex: 1, gap: 2 }}>
@@ -167,10 +157,10 @@ export default function RashiphalaScreen() {
                 </Text>
               </View>
             </View>
-            <View style={{ backgroundColor: isDark ? 'rgba(255,215,0,0.05)' : 'rgba(200,160,60,0.05)', padding: 14, borderRadius: 12, borderColor: isDark ? 'rgba(255,215,0,0.15)' : 'rgba(200,160,60,0.2)', borderWidth: 1, gap: 6 }}>
-              <Text style={{ color: theme.gold, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Summary</Text>
+            <View style={{ backgroundColor: theme.brandSoft, padding: 14, borderRadius: 12, borderColor: theme.premiumBorder, borderWidth: 1, gap: 6 }}>
+              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Summary</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{data.panditAiOracle}</Text>
-              <View style={{ height: 1, backgroundColor: isDark ? 'rgba(255,215,0,0.15)' : 'rgba(200,160,60,0.2)', marginVertical: 6 }} />
+              <View style={{ height: 1, backgroundColor: theme.premiumBorder, marginVertical: 6 }} />
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>{data.accuracyNote}</Text>
             </View>
           </Card>
@@ -180,7 +170,7 @@ export default function RashiphalaScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
               <Text style={{ fontSize: 24 }}>🪐</Text>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ color: theme.gold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Facts</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Facts</Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{data.gocharSummary}</Text>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{data.moonTransit}</Text>
               </View>
@@ -189,9 +179,9 @@ export default function RashiphalaScreen() {
               {data.transitHighlights.slice(0, 4).map((item, idx) => {
                 const isSupport = item.tone === 'support';
                 const isDiscipline = item.tone === 'discipline';
-                const highlightBg = isSupport ? (isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.06)') : isDiscipline ? (isDark ? 'rgba(249,115,22,0.1)' : 'rgba(249,115,22,0.06)') : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)');
-                const highlightBorder = isSupport ? 'rgba(16,185,129,0.2)' : isDiscipline ? 'rgba(249,115,22,0.2)' : theme.border;
-                const textCol = isSupport ? (isDark ? '#34d399' : 'rgb(6,95,70)') : isDiscipline ? (isDark ? '#fb923c' : 'rgb(154,52,18)') : theme.text;
+                const highlightBg = isSupport ? COLORS.successBg : isDiscipline ? COLORS.dangerBg : theme.brandSoft;
+                const highlightBorder = isSupport ? COLORS.successBorder : isDiscipline ? COLORS.dangerBorder : theme.border;
+                const textCol = isSupport ? COLORS.success : isDiscipline ? COLORS.danger : theme.text;
                 return (
                   <View key={`${item.title}-${idx}`} style={{ backgroundColor: highlightBg, borderColor: highlightBorder, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
                     <Text style={{ color: textCol, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
@@ -212,7 +202,7 @@ export default function RashiphalaScreen() {
               <Card key={index} style={{ backgroundColor: theme.card, borderColor: theme.border, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
                 <Text style={{ fontSize: 24 }}>{item.icon}</Text>
                 <View style={{ flex: 1, gap: 4 }}>
-                  <Text style={{ color: theme.gold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.title}</Text>
+                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.title}</Text>
                   <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{item.text}</Text>
                 </View>
               </Card>
@@ -220,11 +210,11 @@ export default function RashiphalaScreen() {
           </View>
 
           {/* Practice Guidance */}
-          <Card style={{ backgroundColor: isDark ? '#221c10' : '#fcf9f2', borderColor: theme.gold, gap: 16 }}>
+          <Card tone="auto" style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 24 }}>📿</Text>
-                <Text style={{ color: theme.gold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Practice Guidance</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Practice Guidance</Text>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 2 }}>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Suggested Window</Text>
@@ -235,7 +225,7 @@ export default function RashiphalaScreen() {
             <View style={{ gap: 10 }}>
               {data.sadhanaPlan.map((step) => (
                 <View key={step.label} style={{ backgroundColor: theme.bg, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
-                  <Text style={{ color: theme.gold, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{step.label}</Text>
+                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{step.label}</Text>
                   <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{step.action}</Text>
                 </View>
               ))}
@@ -245,7 +235,7 @@ export default function RashiphalaScreen() {
             <View style={{ backgroundColor: theme.bg, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 14, gap: 8 }}>
               <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Dhyana Support</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>{data.shloka}</Text>
-              <Text style={{ color: theme.gold, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 18 }}>{data.shlokaTranslation}</Text>
+              <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 18 }}>{data.shlokaTranslation}</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
                 Mantra Anchor: <Text style={{ fontFamily: FONTS.sansSemiBold, textDecorationLine: 'underline' }}>{data.beejaMantra}</Text>
               </Text>

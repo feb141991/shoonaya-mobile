@@ -1243,10 +1243,10 @@ function HomeContent() {
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Sadhana</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {([
-                { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
-                { label: 'Quiz',     href: '/quiz',        icon: '🧠', sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
-                { label: 'AI Guide', href: '/ai-chat',     icon: '✨', sacredId: null,                         fallbackGlyph: null,                   bg: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' },
-                { label: 'Progress', href: '/my-progress', icon: '📈', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'bar-chart-2' as const, bg: isDark ? 'rgba(107,196,126,0.15)' : 'rgba(107,196,126,0.12)' },
+                { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     bg: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight },
+                { label: 'Quiz',     href: '/quiz',        icon: '🧠', sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, bg: isDark ? COLORS.navyBg : COLORS.navyBg },
+                { label: 'AI Guide', href: '/ai-chat',     icon: '✨', sacredId: null,                         fallbackGlyph: null,                   bg: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight },
+                { label: 'Progress', href: '/my-progress', icon: '📈', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'bar-chart-2' as const, bg: COLORS.successBg },
               ]).map(item => (
                 <Pressable
                   key={item.label}
@@ -1283,8 +1283,8 @@ function HomeContent() {
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Community</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {([
-                { label: 'Live Darshan', href: '/live-darshan',    icon: '📺', sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, bg: isDark ? 'rgba(100,181,246,0.15)' : 'rgba(100,181,246,0.12)' },
-                { label: 'Mandali',      href: '/(tabs)/mandali',  icon: '👥', sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, bg: isDark ? 'rgba(165,148,224,0.15)' : 'rgba(165,148,224,0.12)' },
+                { label: 'Live Darshan', href: '/live-darshan',    icon: '📺', sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, bg: isDark ? COLORS.navyBg : COLORS.navyBg },
+                { label: 'Mandali',      href: '/(tabs)/mandali',  icon: '👥', sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, bg: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
                 // hidden tab (href: null in _layout.tsx) with no entry point
@@ -1292,7 +1292,7 @@ function HomeContent() {
                 // hidden (tab bar hierarchy is out of scope here). Not in
                 // this task's required SacredIconName list, so it stays on
                 // its emoji glyph rather than growing the union unasked.
-                { label: 'Tirtha',      href: '/(tabs)/tirtha',    icon: '🛕', sacredId: null,                              fallbackGlyph: null,             bg: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.12)' },
+                { label: 'Tirtha',      href: '/(tabs)/tirtha',    icon: '🛕', sacredId: null,                              fallbackGlyph: null,             bg: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight },
                 // Seva omitted pending future feature-build
               ]).map(item => (
                 <Pressable

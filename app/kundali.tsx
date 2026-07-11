@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
 
 type BirthProfile = {
@@ -44,9 +44,7 @@ export default function KundaliScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const theme = isDark
-    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: 'rgba(250,246,239,0.5)', border: 'rgba(197,160,89,0.15)' }
-    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: 'rgba(62,42,31,0.6)', border: 'rgba(197,160,89,0.2)' };
+  const theme = themeColor(isDark);
 
   const [profiles, setProfiles] = useState<BirthProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,8 +169,8 @@ export default function KundaliScreen() {
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 20 }}>Saved Profiles</Text>
-          <Pressable onPress={() => setShowForm(true)} style={{ backgroundColor: 'rgba(197,160,89,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
-            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>+ New Chart</Text>
+          <Pressable onPress={() => setShowForm(true)} style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
+            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>+ New Chart</Text>
           </Pressable>
         </View>
 
@@ -198,7 +196,7 @@ export default function KundaliScreen() {
                   </Text>
                 </View>
                 {p.rashi && RASHI_MAP[p.rashi.toLowerCase()] && (
-                  <View style={{ backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(200,160,60,0.1)', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ backgroundColor: theme.brandSoft, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 18 }}>{RASHI_MAP[p.rashi.toLowerCase()].symbol}</Text>
                   </View>
                 )}
@@ -209,8 +207,8 @@ export default function KundaliScreen() {
                 </Text>
               )}
               <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 12 }} />
-              <Pressable style={{ alignSelf: 'flex-start' }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>View Chart →</Text>
+              <Pressable style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>View Chart →</Text>
               </Pressable>
             </Card>
           ))
