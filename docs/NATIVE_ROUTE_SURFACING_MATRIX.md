@@ -67,7 +67,7 @@ release blocker.
 | My Progress `my-progress.tsx` + 3 sub-screens | `/my-progress`, `/progress` | Home, Profile | `/api/native/progress` + `/api/native/karma-ledger` (task #180 migration, this session) | 🟢 green |
 | Notifications `notifications.tsx` | (inbox) | Home bell | direct Supabase + OneSignal, heavily audited tasks #44–66, #156–157 | 🟢 green — audited, not this session |
 | Live Darshan `live-darshan.tsx` | `/live-darshan` | Home, Tirtha | direct Supabase, **read-only** | 🟢 green |
-| Tirtha `(tabs)/tirtha.tsx` | `/tirtha-map` | **Home (newly added, commit `4e05619`)** | direct Supabase (`tirtha_saves`, `tirtha_checkins` writes) + Overpass API | 🟡 yellow — was unreachable until this pass; write path not RLS-audited; needs AVD smoke before calling it fully launch-ready |
+| Tirtha `(tabs)/tirtha.tsx` | `/tirtha-map` | **Home (newly added, commit `4e05619`)** | `/api/tirtha/place`, `/api/tirtha/save`, `/api/tirtha/checkin` + direct Supabase reads + Overpass API | 🟢 green for primary save/check-in writes — still needs AVD map smoke |
 | Sankalpa `sankalpa.tsx` | `/sadhana` (partial) | Home | `/api/sankalpa`, `/api/sankalpa/checkin`, `/api/sankalpa/complete` | 🟢 green for primary create/check-in/complete |
 | AI Chat `ai-chat.tsx` | `/ai-chat` | Home | Pramana API | 🟢 green — not re-verified this session |
 | Kul | `/kul` | — | — | ⚪ web-only / deferred — no native file; product plan wants it as a primary tab but it isn't built yet |
@@ -77,8 +77,8 @@ release blocker.
 
 ## Summary counts
 
-- 🟢 green: 22
-- 🟡 yellow / launch-candidate: 1 (Tirtha)
+- 🟢 green: 23
+- 🟡 yellow / launch-candidate: 0
 - 🔴 red: 0
 - ⚪ web-only / deferred: 4 groups (Kul; Discover/Sadhana; Scoreboard/Messages/Seva/Founding/Sthapaka; Bhakti Explore placeholders)
 
@@ -92,9 +92,14 @@ code review from this sandbox.
 
 ## Change log
 
+- 2026-07-11 — Native Tirtha save/check-in writes moved to
+  `/api/tirtha/save` and `/api/tirtha/checkin`; those routes now use
+  Bearer-capable `getApiUser` plus RLS-scoped writes rather than cookie-only
+  service-role writes. Static write-path matrix has no yellow launch routes
+  left; device/AVD smoke is still required for runtime parity.
 - 2026-07-11 — Native Profile edit fields and Settings preferences moved behind
-  `/api/native/profile`, leaving Tirtha as the only yellow direct-write route
-  in this launch matrix.
+  `/api/native/profile`; at the time, Tirtha remained the only yellow
+  direct-write route.
 - 2026-07-11 — Native Shloka mark-read/seva write moved behind
   `/api/native/shloka/read`, so the primary Shloka completion path is no longer
   a direct client profile/seva write.

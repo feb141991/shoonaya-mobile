@@ -237,7 +237,14 @@ export default function TirthaScreen() {
       const placeId = tirthaPlaceId(temple);
       const exists = savedIds.has(placeId);
       if (exists) {
-        await supabase.from('tirtha_saves').delete().eq('user_id', user.id).eq('place_id', placeId);
+        const saveResponse = await apiFetch('/api/tirtha/save', {
+          method: 'POST',
+          body: JSON.stringify({ place_id: placeId, action: 'unsave' }),
+        });
+        if (!saveResponse.ok) {
+          setNotice('Could not remove this place.');
+          return;
+        }
       } else {
         const placeResponse = await apiFetch('/api/tirtha/place', {
           method: 'POST',
@@ -247,7 +254,14 @@ export default function TirthaScreen() {
           setNotice('Could not save this place.');
           return;
         }
-        await supabase.from('tirtha_saves').upsert({ user_id: user.id, place_id: placeId }, { onConflict: 'user_id,place_id' });
+        const saveResponse = await apiFetch('/api/tirtha/save', {
+          method: 'POST',
+          body: JSON.stringify({ place_id: placeId, action: 'save' }),
+        });
+        if (!saveResponse.ok) {
+          setNotice('Could not save this place.');
+          return;
+        }
       }
 
       await refreshPassport(user.id);
@@ -278,16 +292,17 @@ export default function TirthaScreen() {
       setSubmitting(false);
       return;
     }
-    const { error } = await supabase.from('tirtha_checkins').insert({
-      user_id: user.id,
-      place_id: placeId,
-      privacy: community ? 'public' : 'private',
-      darshan_mood: checkinMood,
-      intention: intention.trim() || null,
+    const checkinResponse = await apiFetch('/api/tirtha/checkin', {
+      method: 'POST',
+      body: JSON.stringify({
+        place_id: placeId,
+        privacy: community ? 'public' : 'private',
+        darshan_mood: checkinMood,
+        intention: intention.trim() || null,
+      }),
     });
 
-    if (!error) {
-      await supabase.from('tirtha_saves').upsert({ user_id: user.id, place_id: placeId }, { onConflict: 'user_id,place_id' });
+    if (checkinResponse.ok) {
       await refreshPassport(user.id);
       setSelectedTemple(null);
       setIntention('');
