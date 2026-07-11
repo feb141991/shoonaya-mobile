@@ -160,6 +160,8 @@ Evidence:
 
 - `npm run typecheck` passes.
 - `npx expo-doctor` passes `21/21`.
+- Latest PWA-vs-native comparison captured in
+  `docs/NATIVE_LATEST_PWA_COMPARISON.md`.
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
@@ -168,12 +170,17 @@ Evidence:
   showed no app fatal crash.
 - Captured login screenshot:
   `/tmp/shoonaya-qa/native-start.png`.
+- Later AVD attempts for `Medium_Phone_API_36.1`, `Dev-A`, and `Device-A`
+  exited before `adb devices` could attach. Logs:
+  `/tmp/shoonaya-Dev-A.log` and `/tmp/shoonaya-Device-A-soft.log`.
 
 Remaining:
 
-- Authenticated visual smoke for Home, Shloka, Nitya, Dharm Veer, and
-  Panchang/Jyotish routes is still unverified because the AVD has no signed-in
-  session and subsequent AVD restarts did not attach reliably to `adb`.
+- Authenticated visual smoke for Home, Shloka, Nitya, Dharm Veer,
+  Panchang/Jyotish, Progress, Sankalpa, Mandali, and Profile is still
+  unverified because the current AVD runtime exits before reliable `adb`
+  attach. The goal should stay open until this is verified on a working AVD or
+  physical device.
 
 ## Deferred explicitly
 
