@@ -7,6 +7,8 @@ premium parity recovery work. This is a code/build/contract comparison plus the
 current device-verification status. It is not a claim that authenticated AVD
 visual QA has passed.
 
+Device QA checklist: `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md`.
+
 ## Summary
 
 The native app has caught up substantially in the core launch surfaces:
@@ -150,19 +152,21 @@ code failure.
 
 The goal is not fully achieved until these are done:
 
-1. Install the latest local APK on a working AVD or physical Android device.
-2. Sign in and verify Home visually against the PWA: hero height, pills,
-   shloka transition, next-practice scale, Brahma Muhurta, observance carousel,
-   Jyotish/Panchang row, and bottom navigation.
-3. Open Shloka, mark complete, confirm confetti/haptics, and confirm PNG share
+1. Run `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md` on a working AVD or physical
+   Android device.
+2. Install the latest local APK and sign in with a real test account.
+3. Verify Home visually against the PWA: hero height, pills, shloka transition,
+   next-practice scale, Brahma Muhurta, observance carousel, Jyotish/Panchang
+   row, and bottom navigation.
+4. Open Shloka, mark complete, confirm confetti/haptics, and confirm PNG share
    card capture is nonblank.
-4. Open Nitya hub and detailed Nitya flow, confirm the hero feels seamless and
+5. Open Nitya hub and detailed Nitya flow, confirm the hero feels seamless and
    the sequence/progress state updates Home.
-5. Open Dharm Veer from Home and from Bhakti, confirm the same hero/id opens and
+6. Open Dharm Veer from Home and from Bhakti, confirm the same hero/id opens and
    the artwork is not generic/dismal.
-6. Verify Panchang, Rashiphal, Kundali, Progress, Sankalpa, Mandali, and Profile
-   for token/theme consistency after the latest sweep.
-7. Repeat at least one dark-mode pass.
+7. Verify Panchang, Rashiphal, Kundali, Progress, Sankalpa, Mandali, Profile,
+   and Notifications for token/theme consistency after the latest sweep.
+8. Repeat at least one dark-mode pass.
 
 ## Decision
 

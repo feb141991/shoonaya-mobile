@@ -162,6 +162,8 @@ Evidence:
 - `npx expo-doctor` passes `21/21`.
 - Latest PWA-vs-native comparison captured in
   `docs/NATIVE_LATEST_PWA_COMPARISON.md`.
+- Route-by-route device visual QA checklist captured in
+  `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md`.
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
@@ -179,8 +181,8 @@ Remaining:
 - Authenticated visual smoke for Home, Shloka, Nitya, Dharm Veer,
   Panchang/Jyotish, Progress, Sankalpa, Mandali, and Profile is still
   unverified because the current AVD runtime exits before reliable `adb`
-  attach. The goal should stay open until this is verified on a working AVD or
-  physical device.
+  attach. Run `docs/NATIVE_DEVICE_VISUAL_QA_CHECKLIST.md` on a working AVD or
+  physical device before marking the goal complete.
 
 ## Deferred explicitly
 
