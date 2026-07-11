@@ -72,8 +72,11 @@ adb exec-out screencap -p > /tmp/shoonaya-device-qa/03-nitya.png
 adb exec-out screencap -p > /tmp/shoonaya-device-qa/04-dharm-veer.png
 adb exec-out screencap -p > /tmp/shoonaya-device-qa/05-panchang.png
 adb exec-out screencap -p > /tmp/shoonaya-device-qa/06-jyotish.png
-adb exec-out screencap -p > /tmp/shoonaya-device-qa/07-profile.png
-adb exec-out screencap -p > /tmp/shoonaya-device-qa/08-notifications.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/07-my-progress.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/08-sankalpa.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/09-mandali.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/10-profile.png
+adb exec-out screencap -p > /tmp/shoonaya-device-qa/11-notifications.png
 ```
 
 Use the filenames exactly so future reviews can compare runs. The smoke script

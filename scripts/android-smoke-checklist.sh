@@ -192,8 +192,11 @@ if [ "$SIGNED_IN" = "y" ]; then
   capture_checkpoint "04-dharm-veer.png" "Dharm Veer detail" "Home card opens the same hero id, poster feels like artwork, detail text renders, share card is nonblank."
   capture_checkpoint "05-panchang.png" "Panchang" "Tithi/date/vrat pills are correct, Nag Panchami 2026 is 2026-08-17 where relevant, visual tokens match Home."
   capture_checkpoint "06-jyotish.png" "Rashiphala and Kundali" "Both routes open from the Jyotish/menu access without placeholder crashes and use the same premium token system."
-  capture_checkpoint "07-profile.png" "Profile" "Profile completion, progress, share, and settings affordances render without oversized or dull surfaces."
-  capture_checkpoint "08-notifications.png" "Notifications" "Inbox opens, unread state is coherent, and send-test failure is visible if the backend rejects it."
+  capture_checkpoint "07-my-progress.png" "My Progress" "Dashboard cards use premium tokens, no flat/dull cards, and the primary progress taps work."
+  capture_checkpoint "08-sankalpa.png" "Sankalpa" "Card/ring spacing and press motion feel coherent with Home."
+  capture_checkpoint "09-mandali.png" "Mandali" "Header, feed, filters, comments, joins, and empty states are usable and visually coherent."
+  capture_checkpoint "10-profile.png" "Profile" "Profile completion, progress, share, and settings affordances render without oversized or dull surfaces."
+  capture_checkpoint "11-notifications.png" "Notifications" "Inbox opens, unread state is coherent, and send-test failure is visible if the backend rejects it."
 else
   log "FAIL  Authenticated visual parity screenshots skipped — sign-in is required to complete this goal."
   FAILURES=$((FAILURES + 1))
