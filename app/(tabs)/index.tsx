@@ -24,6 +24,7 @@ import { findMoodConfig } from '@/lib/mood-registry';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { MoodCheckin } from '@/components/home/MoodCheckin';
@@ -944,8 +945,7 @@ function HomeContent() {
               </Text>
             ) : null}
 
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
               accessibilityLabel={state.nextPractice.actionLabel}
               onPress={() => {
                 if (state.nextPractice.progress >= 1) {
@@ -972,7 +972,7 @@ function HomeContent() {
                 {state.nextPractice.actionLabel}
               </Text>
               <Feather name="arrow-right" size={17} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
-            </Pressable>
+            </PressableSurface>
           </View>
 
           <View
@@ -984,10 +984,10 @@ function HomeContent() {
               overflow: 'hidden',
             }}
           >
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
               accessibilityState={{ expanded: practicesOpen }}
               accessibilityLabel={practicesOpen ? 'Hide all practices' : 'View all practices'}
+              haptic="selection"
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
                 minHeight: 44,
@@ -1006,14 +1006,13 @@ function HomeContent() {
                 </Text>
                 <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
               </View>
-            </Pressable>
+            </PressableSurface>
 
             {practicesOpen ? (
               <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 7 }}>
                 {state.practices.map((row) => (
-                  <Pressable
+                  <PressableSurface
                     key={row.id}
-                    accessibilityRole="button"
                     accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                     onPress={() => navigate(resolveNativeRoute(row.href))}
                     style={{
@@ -1054,7 +1053,7 @@ function HomeContent() {
                       </Text>
                       <ProgressRing done={row.done} progress={row.progress} color={row.color} track={theme.ringTrack} />
                     </View>
-                  </Pressable>
+                  </PressableSurface>
                 ))}
               </View>
             ) : null}
@@ -1067,8 +1066,7 @@ function HomeContent() {
               without an app restart. See components/home/SankalpaCard.tsx. */}
           <SankalpaCard />
 
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
             accessibilityLabel={`${state.dharmVeer.name}, ${dharmVeerDone ? 'seva given today' : state.dharmVeer.tagline}`}
             onPress={() => navigate(resolveNativeRoute(state.dharmVeer.href))}
             style={{
@@ -1115,12 +1113,11 @@ function HomeContent() {
             ) : (
               <Feather name="arrow-right" size={20} color={theme.brand} />
             )}
-          </Pressable>
+          </PressableSurface>
 
           <MoodCheckin />
 
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
             accessibilityLabel="Open Panchang"
             onPress={() => navigate('/panchang')}
             style={{
@@ -1159,7 +1156,7 @@ function HomeContent() {
                 <Feather name="chevron-right" size={22} color={theme.brand} />
               )}
             </View>
-          </Pressable>
+          </PressableSurface>
 
           {/* Jyotish & Panchang — these are real native routes already, but
               were hard to discover. Keep them as contextual Home access
@@ -1192,12 +1189,11 @@ function HomeContent() {
                   fallbackGlyph: 'circle' as const,
                 },
               ]).map((item) => (
-                <Pressable
+                <PressableSurface
                   key={item.label}
-                  accessibilityRole="button"
                   accessibilityLabel={`${item.label}, ${item.detail}`}
                   onPress={() => navigate(item.href as Href)}
-                  style={({ pressed }) => ({
+                  style={{
                     flex: 1,
                     minHeight: 104,
                     borderRadius: 18,
@@ -1206,9 +1202,7 @@ function HomeContent() {
                     borderWidth: 1,
                     borderColor: theme.premiumBorder,
                     boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                    opacity: pressed ? 0.86 : 1,
-                    transform: [{ scale: pressed ? 0.985 : 1 }],
-                  })}
+                  }}
                 >
                   <View
                     style={{
@@ -1233,7 +1227,7 @@ function HomeContent() {
                   <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
                     {item.detail}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               ))}
             </View>
           </View>
@@ -1248,9 +1242,8 @@ function HomeContent() {
                 { label: 'AI Guide', href: '/ai-chat',     icon: '✨', sacredId: null,                         fallbackGlyph: null,                   bg: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight },
                 { label: 'Progress', href: '/my-progress', icon: '📈', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'bar-chart-2' as const, bg: COLORS.successBg },
               ]).map(item => (
-                <Pressable
+                <PressableSurface
                   key={item.label}
-                  accessibilityRole="button"
                   accessibilityLabel={item.label}
                   onPress={() => navigate(item.href as Href)}
                   style={{
@@ -1273,7 +1266,7 @@ function HomeContent() {
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                     {item.label}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               ))}
             </ScrollView>
           </View>
@@ -1295,9 +1288,8 @@ function HomeContent() {
                 { label: 'Tirtha',      href: '/(tabs)/tirtha',    icon: '🛕', sacredId: null,                              fallbackGlyph: null,             bg: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight },
                 // Seva omitted pending future feature-build
               ]).map(item => (
-                <Pressable
+                <PressableSurface
                   key={item.label}
-                  accessibilityRole="button"
                   accessibilityLabel={item.label}
                   onPress={() => navigate(item.href as Href)}
                   style={{
@@ -1320,7 +1312,7 @@ function HomeContent() {
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                     {item.label}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               ))}
             </ScrollView>
           </View>

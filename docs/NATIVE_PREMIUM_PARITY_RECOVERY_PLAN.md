@@ -132,8 +132,9 @@ Evidence:
 - Native commit pending after `b20b57a` adds `PressableSurface`, a reusable
   tappable surface primitive with centralized haptics, 44dp minimum target,
   opacity/scale press feedback, and reduced-motion-safe scale suppression.
-  It is adopted in My Progress and Sankalpa where it replaces hand-rolled
-  card/chip press behavior.
+  It is adopted in My Progress, Sankalpa, and Home below-hero cards where it
+  replaces hand-rolled card/chip press behavior without changing routes or
+  data contracts.
 - Shloka and Nitya now use meaningful press/celebration motion locally.
 
 Remaining:
@@ -162,7 +163,7 @@ Evidence:
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
-  `9f97e14cb76f01132798ee386e572498023d917cbe4cc2c306e61c3cede9023a`.
+  `f3a6591d02ac2b188bffd93f2f895fbd9b3a6b8442d0453089c979b0b9179ddd`.
 - The APK installed once on `emulator-5554`, launched successfully, and logcat
   showed no app fatal crash.
 - Captured login screenshot:
