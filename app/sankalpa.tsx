@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
@@ -321,7 +322,10 @@ export default function SankalpaScreen() {
               </View>
             </Card>
 
-            <Pressable
+            <PressableSurface
+              accessibilityLabel={checkedInToday ? 'Checked in today' : 'Check in for today'}
+              accessibilityState={{ disabled: checkedInToday || checkingIn, busy: checkingIn }}
+              haptic="impact"
               onPress={() => { void handleCheckIn(); }}
               disabled={checkedInToday || checkingIn}
               style={{
@@ -355,7 +359,7 @@ export default function SankalpaScreen() {
               >
                 {checkedInToday ? 'Checked in today' : 'Check in for today'}
               </Text>
-            </Pressable>
+            </PressableSurface>
 
             <Button
               label="Mark complete"
@@ -400,10 +404,12 @@ export default function SankalpaScreen() {
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
                 {TARGET_DAY_OPTIONS.map((days) => (
-                  <Pressable
+                  <PressableSurface
                     key={days}
+                    accessibilityLabel={`${days} day Sankalpa`}
+                    accessibilityState={{ selected: days === targetDays }}
+                    haptic="selection"
                     onPress={() => {
-                      try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
                       setTargetDays(days);
                     }}
                     style={{
@@ -426,7 +432,7 @@ export default function SankalpaScreen() {
                     >
                       {days}
                     </Text>
-                  </Pressable>
+                  </PressableSurface>
                 ))}
               </View>
             </View>

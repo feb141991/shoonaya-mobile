@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -15,6 +14,7 @@ import Svg, { Rect } from 'react-native-svg';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
@@ -226,21 +226,25 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
     <View style={{ marginTop: 8 }}>
       {/* Month Navigation */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <Pressable
+        <PressableSurface
+          accessibilityLabel="Previous month"
+          haptic="selection"
           onPress={() => setCalMonth(m => { const d = new Date(m.year, m.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
           style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: 22, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}
         >
           <Feather name="chevron-left" size={16} color={amber} />
-        </Pressable>
+        </PressableSurface>
         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 14, color: theme.text }}>
           {monthLabel}
         </Text>
-        <Pressable
+        <PressableSurface
+          accessibilityLabel="Next month"
+          haptic="selection"
           onPress={() => setCalMonth(m => { const d = new Date(m.year, m.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
           style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: 22, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}
         >
           <Feather name="chevron-right" size={16} color={amber} />
-        </Pressable>
+        </PressableSurface>
       </View>
 
       {/* Weekdays */}
@@ -276,8 +280,11 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
                 : theme.dim;
 
             return (
-              <Pressable
+              <PressableSurface
                 key={iso}
+                accessibilityLabel={`Select ${new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`}
+                accessibilityState={{ selected: isSelected }}
+                haptic="selection"
                 onPress={() => setSelectedDay(isSelected ? null : iso)}
                 style={{
                   flex: 1,
@@ -295,7 +302,7 @@ function InteractiveCalendar({ days, isDark, theme, streak }: { days: HeatmapDay
                 <Text style={{ ...TYPE.chip, fontFamily: isToday || isSelected ? FONTS.sansSemiBold : FONTS.sans, color }}>
                   {new Date(iso + 'T12:00:00').getDate()}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </View>
@@ -647,23 +654,25 @@ export default function MyProgressScreen() {
                   </Text>
                 </View>
               </View>
-              <Pressable
+              <PressableSurface
+                accessibilityLabel="Open japa insights"
                 onPress={() => router.push('/my-progress/ledger' as Href)}
                 style={{ backgroundColor: isDark ? COLORS.progressJapaBgDark : COLORS.progressJapaBgLight, minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: isDark ? COLORS.progressJapaBorderDark : COLORS.progressJapaBorderLight, justifyContent: 'center' }}
               >
                 <Text style={{ ...TYPE.chip, color: COLORS.progressJapa }}>Insights →</Text>
-              </Pressable>
+              </PressableSurface>
             </View>
 
             {japa30dSessions === 0 ? (
               <View style={{ alignItems: 'center', marginVertical: 8 }}>
                 <Text style={{ fontSize: 13, fontFamily: FONTS.sansSemiBold, color: theme.dim, marginBottom: 12 }}>No sessions this cycle</Text>
-                <Pressable
+                <PressableSurface
+                  accessibilityLabel="Begin Japa"
                   onPress={() => router.push('/japa' as Href)}
                   style={{ backgroundColor: COLORS.progressJapa, minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, justifyContent: 'center' }}
                 >
                   <Text style={{ color: COLORS.onMediaWhite, ...TYPE.chip }}>Begin Japa →</Text>
-                </Pressable>
+                </PressableSurface>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -718,12 +727,13 @@ export default function MyProgressScreen() {
                   </Text>
                 </View>
               </View>
-              <Pressable
+              <PressableSurface
+                accessibilityLabel="Open nitya karma insights"
                 onPress={() => router.push('/my-progress/ledger' as Href)}
                 style={{ backgroundColor: COLORS.successBg, minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: COLORS.successBorder, justifyContent: 'center' }}
               >
                 <Text style={{ ...TYPE.chip, color: COLORS.success }}>Insights →</Text>
-              </Pressable>
+              </PressableSurface>
             </View>
 
             <View style={{ gap: 12 }}>
@@ -764,9 +774,10 @@ export default function MyProgressScreen() {
         </Card>
 
         {/* 6. Achievement Shields Teaser */}
-        <Pressable
+        <PressableSurface
+          accessibilityLabel="Open shields and milestones"
           onPress={() => router.push('/my-progress/shields' as Href)}
-          style={({ pressed }) => ({
+          style={{
             backgroundColor: theme.brandSoft,
             borderColor: theme.premiumBorder,
             borderWidth: 1,
@@ -776,8 +787,7 @@ export default function MyProgressScreen() {
             alignItems: 'center',
             gap: 12,
             marginBottom: 20,
-            opacity: pressed ? 0.8 : 1,
-          })}
+          }}
         >
           <Text style={{ fontSize: 24 }}>🛡️</Text>
           <View style={{ flex: 1 }}>
@@ -789,7 +799,7 @@ export default function MyProgressScreen() {
             </Text>
           </View>
           <Feather name="chevron-right" size={16} color={theme.dim} />
-        </Pressable>
+        </PressableSurface>
 
         {/* 7. Practice Rhythm Chart */}
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }}>
@@ -806,9 +816,10 @@ export default function MyProgressScreen() {
 
         {/* Sub-route Links (Karma & Mood) */}
         <View style={{ gap: 12 }}>
-          <Pressable
+          <PressableSurface
+            accessibilityLabel="Open karma ledger"
             onPress={() => router.push('/my-progress/ledger' as Href)}
-            style={({ pressed }) => ({
+            style={{
               flexDirection: 'row',
               alignItems: 'center',
               backgroundColor: theme.card,
@@ -816,8 +827,7 @@ export default function MyProgressScreen() {
               borderWidth: 1,
               borderRadius: 18,
               padding: 16,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
           >
             <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
               <Feather name="book" size={18} color={theme.brand} />
@@ -829,11 +839,12 @@ export default function MyProgressScreen() {
               {karma30dTotal ? `+${karma30dTotal} pt` : '0 pt'}
             </Text>
             <Feather name="chevron-right" size={14} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
 
-          <Pressable
+          <PressableSurface
+            accessibilityLabel="Open mood insights"
             onPress={() => router.push('/my-progress/mood' as Href)}
-            style={({ pressed }) => ({
+            style={{
               flexDirection: 'row',
               alignItems: 'center',
               backgroundColor: theme.card,
@@ -841,8 +852,7 @@ export default function MyProgressScreen() {
               borderWidth: 1,
               borderRadius: 18,
               padding: 16,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
           >
             <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
               <Feather name="smile" size={18} color={theme.brand} />
@@ -851,7 +861,7 @@ export default function MyProgressScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Mood Insights</Text>
             </View>
             <Feather name="chevron-right" size={14} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
 
       </ScrollView>

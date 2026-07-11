@@ -129,6 +129,11 @@ Evidence:
   `themeColor`, `TYPE`, named progress accents, shared Button treatment, and
   44dp touch targets where those screens still had local color and sizing
   decisions.
+- Native commit pending after `b20b57a` adds `PressableSurface`, a reusable
+  tappable surface primitive with centralized haptics, 44dp minimum target,
+  opacity/scale press feedback, and reduced-motion-safe scale suppression.
+  It is adopted in My Progress and Sankalpa where it replaces hand-rolled
+  card/chip press behavior.
 - Shloka and Nitya now use meaningful press/celebration motion locally.
 
 Remaining:
@@ -136,7 +141,9 @@ Remaining:
 - Broader token/motion cleanup is still needed for screens outside this pass,
   especially content-data accent palettes and any feature-specific art palettes
   that should remain distinct rather than forced onto brand gold.
-- No reusable motion primitive has been adopted app-wide yet.
+- A reusable press/haptic primitive now exists, but screen entrance, sheet, and
+  navigation continuity motion still need a separate pass before this can be
+  called app-wide motion parity.
 
 ### Slice 7 — Local build and AVD QA
 
@@ -155,7 +162,7 @@ Evidence:
 - Local release build succeeds:
   `android/app/build/outputs/apk/release/app-release.apk`.
 - APK SHA256:
-  `227f924398e1a43945250436fabe409398b42721b93eacfa8d805e5fb3e661ad`.
+  `9f97e14cb76f01132798ee386e572498023d917cbe4cc2c306e61c3cede9023a`.
 - The APK installed once on `emulator-5554`, launched successfully, and logcat
   showed no app fatal crash.
 - Captured login screenshot:
