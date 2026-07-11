@@ -1,71 +1,103 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Pressable,
+  ScrollView,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
-import { Card } from '@/components/ui/Card';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 
-// Native's shloka detail screen — reached from Home's shloka panel tap.
-// Ports PWA's markShlokaRead() (src/app/(main)/home/sections/HeroSection.tsx)
-// as directly as the native/web split allows:
-//   - Shloka content comes from the same canonical source Home's panel
-//     already uses (GET /api/native/home-summary's `sacredText`), refetched
-//     here rather than duplicated, so this screen can never show a
-//     different verse than the one Home just displayed.
-//   - The streak/seva write is DIRECT Supabase (profiles.shloka_streak /
-//     last_shloka_date, then the same `increment_period_seva` RPC PWA
-//     calls, with PWA's identical direct-column fallback if the RPC isn't
-//     reachable) — there is no REST route for this on web either, so this
-//     mirrors web's own approach rather than inventing a new API contract
-//     (same precedent as native's notification inbox and dharm-veer
-//     screens this session).
-//   - "Celebration" is a haptic + an animated success card (streak count,
-//     milestone/first-day badge) built from primitives already in this
-//     app (Animated, expo-haptics) — no confetti library was added; that's
-//     flagged as optional future polish, not faked here.
+type SacredText = {
+  label: string;
+  icon: string;
+  original: string;
+  transliteration: string;
+  meaning: string;
+  source: string;
+};
+
+type ProfileState = {
+  userId: string;
+  timezone: string;
+  shlokaStreak: number;
+  lastShlokaDate: string | null;
+  tradition: string | null;
+  userName: string;
+};
+
+function AmbientBackdrop({ isDark, brand }: { isDark: boolean; brand: string }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+      <LinearGradient
+        colors={
+          isDark
+            ? [COLORS.heroBgDark, COLORS.darkBg, COLORS.homeHeroDark]
+            : [COLORS.brandAccentLight, COLORS.creamBg, COLORS.homeHeroLight]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', inset: 0 }}
+      />
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 720">
+        <Defs>
+          <RadialGradient id="topGlow" cx="50%" cy="18%" r="48%">
+            <Stop offset="0%" stopColor={brand} stopOpacity={isDark ? '0.22' : '0.18'} />
+            <Stop offset="100%" stopColor={brand} stopOpacity="0" />
+          </RadialGradient>
+          <RadialGradient id="lowerGlow" cx="18%" cy="80%" r="46%">
+            <Stop offset="0%" stopColor={isDark ? COLORS.creamBg : COLORS.brandEarthLight} stopOpacity={isDark ? '0.08' : '0.10'} />
+            <Stop offset="100%" stopColor={isDark ? COLORS.creamBg : COLORS.brandEarthLight} stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Circle cx="180" cy="132" r="210" fill="url(#topGlow)" />
+        <Circle cx="64" cy="574" r="175" fill="url(#lowerGlow)" />
+        <Circle cx="180" cy="310" r="116" stroke={brand} strokeOpacity="0.08" strokeWidth="1.2" fill="none" />
+        <Circle cx="180" cy="310" r="80" stroke={brand} strokeOpacity="0.06" strokeWidth="1" fill="none" />
+        <Path d="M42 628 C92 590 130 608 180 628 C232 608 272 590 320 628" stroke={brand} strokeOpacity="0.10" strokeWidth="2.2" fill="none" />
+      </Svg>
+    </View>
+  );
+}
+
 export default function ShlokaScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
+  const shareCardRef = useRef<View | null>(null);
 
-  const background = isDark ? COLORS.darkBg : COLORS.creamBg;
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const text = isDark ? COLORS.creamBg : COLORS.ink;
-  const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const iconWell = isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight;
-  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-
-  type SacredText = {
-    label: string;
-    icon: string;
-    original: string;
-    transliteration: string;
-    meaning: string;
-    source: string;
-  };
-
-  type ProfileState = {
-    userId: string;
-    timezone: string;
-    shlokaStreak: number;
-    lastShlokaDate: string | null;
-  };
+  const theme = themeColor(isDark);
+  const background = theme.bg;
+  const text = theme.text;
+  const dim = theme.dim;
+  const brand = theme.brand;
+  const glass = theme.glass;
+  const border = theme.premiumBorder;
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [sacredText, setSacredText] = useState<SacredText | null>(null);
   const [profile, setProfile] = useState<ProfileState | null>(null);
   const [marking, setMarking] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [celebration, setCelebration] = useState<{ streak: number; milestone: boolean; first: boolean } | null>(null);
 
-  const celebrationScale = useRef(new Animated.Value(0.85)).current;
+  const celebrationScale = useRef(new Animated.Value(0.86)).current;
   const celebrationOpacity = useRef(new Animated.Value(0)).current;
 
   const load = useCallback(async () => {
@@ -81,7 +113,11 @@ export default function ShlokaScreen() {
 
     const [summaryResponse, profileResult] = await Promise.all([
       apiFetch('/api/native/home-summary'),
-      supabase.from('profiles').select('timezone, shloka_streak, last_shloka_date').eq('id', user.id).single(),
+      supabase
+        .from('profiles')
+        .select('timezone, shloka_streak, last_shloka_date, tradition, full_name, username')
+        .eq('id', user.id)
+        .single(),
     ]);
 
     if (!summaryResponse.ok) {
@@ -89,18 +125,28 @@ export default function ShlokaScreen() {
       return;
     }
 
-    const json = await summaryResponse.json();
-    if (!json?.sacredText?.original) {
+    const json = (await summaryResponse.json()) as { sacredText?: Partial<SacredText> };
+    if (!json.sacredText?.original) {
       setLoadError(true);
       return;
     }
 
-    setSacredText(json.sacredText as SacredText);
+    const row = profileResult.data;
+    setSacredText({
+      label: json.sacredText.label ?? "Today's Verse",
+      icon: json.sacredText.icon ?? '📖',
+      original: json.sacredText.original,
+      transliteration: json.sacredText.transliteration ?? '',
+      meaning: json.sacredText.meaning ?? '',
+      source: json.sacredText.source ?? '',
+    });
     setProfile({
       userId: user.id,
-      timezone: profileResult.data?.timezone ?? 'UTC',
-      shlokaStreak: profileResult.data?.shloka_streak ?? 0,
-      lastShlokaDate: profileResult.data?.last_shloka_date ?? null,
+      timezone: row?.timezone ?? 'UTC',
+      shlokaStreak: row?.shloka_streak ?? 0,
+      lastShlokaDate: row?.last_shloka_date ?? null,
+      tradition: row?.tradition ?? null,
+      userName: row?.full_name || row?.username || 'Seeker',
     });
   }, [router]);
 
@@ -141,8 +187,6 @@ export default function ShlokaScreen() {
         });
         if (rpcError) throw rpcError;
       } catch {
-        // Same fallback PWA's markShlokaRead uses if the RPC isn't reachable
-        // — a direct read-then-write on the three seva columns.
         const { data } = await supabase
           .from('profiles')
           .select('seva_score, weekly_seva, monthly_seva')
@@ -165,15 +209,13 @@ export default function ShlokaScreen() {
       } catch {}
 
       setCelebration({ streak: newStreak, milestone: newStreak % 7 === 0, first: newStreak === 1 });
-      celebrationScale.setValue(0.85);
+      celebrationScale.setValue(0.86);
       celebrationOpacity.setValue(0);
       Animated.parallel([
-        Animated.spring(celebrationScale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 60 }),
-        Animated.timing(celebrationOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.spring(celebrationScale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 70 }),
+        Animated.timing(celebrationOpacity, { toValue: 1, duration: 240, useNativeDriver: true }),
       ]).start();
     } catch {
-      // Revert the optimistic update — an honest "didn't save, try again"
-      // beats a streak badge that looks marked but silently isn't.
       setProfile(previousProfile);
       Alert.alert("Could not save today's reading", 'Check your connection and try again.');
     } finally {
@@ -187,9 +229,25 @@ export default function ShlokaScreen() {
     });
   }, [celebrationOpacity]);
 
+  const shareVerse = useCallback(async () => {
+    if (!sacredText || !profile || sharing) return;
+    setSharing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      await shareCapturedShoonayaCard(shareCardRef, {
+        fileName: `shoonaya-shloka-${today ?? 'today'}.png`,
+        dialogTitle: "Share today's verse",
+        fallbackMessage: `${sacredText.original}\n\n${sacredText.meaning}`,
+      });
+    } finally {
+      setSharing(false);
+    }
+  }, [profile, sacredText, sharing, today]);
+
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: background }}>
+      <Screen style={{ backgroundColor: background, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <AmbientBackdrop isDark={isDark} brand={brand} />
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={brand} />
         </View>
@@ -200,14 +258,17 @@ export default function ShlokaScreen() {
   if (loadError || !sacredText) {
     return (
       <Screen style={{ backgroundColor: background }}>
+        <AmbientBackdrop isDark={isDark} brand={brand} />
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
           <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Feather name="chevron-left" size={16} color={dim} />
             <Text style={{ color: dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
           </Pressable>
-          <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 26 }}>Could not load today&apos;s verse</Text>
-            <Text style={{ color: dim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
+          <View style={{ borderRadius: 26, padding: 22, backgroundColor: glass, borderWidth: 1, borderColor: border }}>
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>
+              {"Could not load today's verse"}
+            </Text>
+            <Text style={{ marginTop: 8, color: dim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
               Check your connection and try again.
             </Text>
             <Pressable
@@ -217,35 +278,91 @@ export default function ShlokaScreen() {
                   .catch(() => setLoadError(true))
                   .finally(() => setLoading(false));
               }}
-              style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, backgroundColor: brand }}
+              style={{ marginTop: 18, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, backgroundColor: brand }}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
+              <Text style={{ color: isDark ? COLORS.darkBg : COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
             </Pressable>
-          </Card>
+          </View>
         </ScrollView>
       </Screen>
     );
   }
 
   return (
-    <Screen style={{ backgroundColor: background }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Feather name="chevron-left" size={16} color={dim} />
-          <Text style={{ color: dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+    <Screen style={{ backgroundColor: background, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+      <AmbientBackdrop isDark={isDark} brand={brand} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 34, gap: 16 }} showsVerticalScrollIndicator={false}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: glass,
+              borderWidth: 1,
+              borderColor: border,
+            }}
+          >
+            <Feather name="chevron-left" size={19} color={text} />
+          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share today's verse"
+              disabled={sharing}
+              onPress={() => { void shareVerse(); }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: glass,
+                borderWidth: 1,
+                borderColor: border,
+                opacity: sharing ? 0.65 : 1,
+              }}
+            >
+              {sharing ? <ActivityIndicator color={brand} /> : <Feather name="share-2" size={17} color={text} />}
+            </Pressable>
+          </View>
+        </View>
 
-        <Card style={{ backgroundColor: cardBg, borderColor: border, alignItems: 'center', gap: 6 }}>
-          <Text style={{ fontSize: 34 }}>{sacredText.icon}</Text>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 2.4, textTransform: 'uppercase', color: brand }}>
+        <View style={{ alignItems: 'center', paddingTop: 8, gap: 8 }}>
+          <View style={{ width: 62, height: 62, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: border }}>
+            <Text style={{ fontSize: 28 }}>{sacredText.icon}</Text>
+          </View>
+          <Text style={{ ...TYPE.chip, color: brand, textTransform: 'uppercase', letterSpacing: 2.4 }}>
             {sacredText.label}
           </Text>
+          {sacredText.source ? (
+            <Text style={{ ...TYPE.caption, color: dim }}>
+              {sacredText.source}
+            </Text>
+          ) : null}
+        </View>
+
+        <View
+          style={{
+            borderRadius: 28,
+            paddingVertical: 24,
+            paddingHorizontal: 18,
+            backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
+            borderWidth: 1,
+            borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
+            boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+          }}
+        >
           <Text
             style={{
-              marginTop: 8,
               fontFamily: TYPE.shloka.fontFamily,
-              fontSize: TYPE.shloka.fontSize,
-              lineHeight: TYPE.shloka.lineHeight,
+              fontSize: Math.max(TYPE.shloka.fontSize, 24),
+              lineHeight: Math.max(TYPE.shloka.lineHeight, 38),
               letterSpacing: TYPE.shloka.letterSpacing,
               color: text,
               textAlign: 'center',
@@ -253,56 +370,59 @@ export default function ShlokaScreen() {
           >
             {sacredText.original}
           </Text>
-          {sacredText.transliteration ? (
-            <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 14, fontStyle: 'italic', color: dim, textAlign: 'center' }}>
-              {sacredText.transliteration}
-            </Text>
-          ) : null}
-          <Text style={{ marginTop: 14, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 23, color: text, textAlign: 'center' }}>
+        </View>
+
+        {sacredText.transliteration && sacredText.transliteration !== sacredText.original ? (
+          <Text style={{ fontFamily: FONTS.serif, fontSize: 17, lineHeight: 25, fontStyle: 'italic', color: dim, textAlign: 'center' }}>
+            {sacredText.transliteration}
+          </Text>
+        ) : null}
+
+        <View style={{ borderRadius: 24, padding: 16, backgroundColor: glass, borderWidth: 1, borderColor: border }}>
+          <Text style={{ ...TYPE.chip, color: brand, textTransform: 'uppercase', letterSpacing: 1.8 }}>
+            Meaning
+          </Text>
+          <Text style={{ marginTop: 8, fontFamily: FONTS.sans, fontSize: 15.5, lineHeight: 25, color: text }}>
             {sacredText.meaning}
           </Text>
-          {sacredText.source ? (
-            <Text style={{ marginTop: 10, fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim }}>
-              — {sacredText.source}
-            </Text>
-          ) : null}
-        </Card>
+        </View>
 
         {profile ? (
-          <Card style={{ backgroundColor: cardBg, borderColor: border, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: iconWell }}>
-              <Text style={{ fontSize: 20 }}>🔥</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 22, padding: 14, backgroundColor: glass, borderWidth: 1, borderColor: border }}>
+            <View style={{ width: 44, height: 44, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.brandSoft }}>
+              <Feather name="zap" size={18} color={brand} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
-                {profile.shlokaStreak} day{profile.shlokaStreak === 1 ? '' : 's'} streak
+              <Text style={{ ...TYPE.label, color: text }}>
+                {profile.shlokaStreak} day{profile.shlokaStreak === 1 ? '' : 's'} sacred text streak
               </Text>
-              <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
-                {readToday ? 'Read today — come back tomorrow' : 'Mark today’s verse as read to keep it going'}
+              <Text style={{ marginTop: 2, ...TYPE.caption, color: dim }}>
+                {readToday ? 'Marked today. Come back tomorrow.' : 'Read and mark today to keep the rhythm.'}
               </Text>
             </View>
-          </Card>
+            {readToday ? <Feather name="check-circle" size={20} color={brand} /> : null}
+          </View>
         ) : null}
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={readToday ? 'Verse already read today' : 'Mark verse as read, earn 5 seva points'}
           disabled={readToday || marking}
-          onPress={() => {
-            void markRead();
-          }}
-          style={{
-            minHeight: MIN_TOUCH_TARGET + 6,
-            borderRadius: 22,
+          onPress={() => { void markRead(); }}
+          style={({ pressed }) => ({
+            minHeight: MIN_TOUCH_TARGET + 8,
+            borderRadius: 24,
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'row',
             gap: 8,
-            backgroundColor: readToday ? cardBg : brand,
+            backgroundColor: readToday ? glass : brand,
             borderWidth: readToday ? 1 : 0,
             borderColor: border,
-            opacity: marking ? 0.7 : 1,
-          }}
+            opacity: marking ? 0.7 : pressed && !readToday ? 0.88 : 1,
+            transform: [{ scale: pressed && !readToday ? 0.985 : 1 }],
+            boxShadow: readToday ? undefined : (isDark ? SHADOWS.md.dark : SHADOWS.md.light),
+          })}
         >
           {marking ? (
             <ActivityIndicator color={readToday ? brand : COLORS.ink} />
@@ -310,12 +430,39 @@ export default function ShlokaScreen() {
             <>
               <Feather name={readToday ? 'check-circle' : 'book-open'} size={18} color={readToday ? brand : COLORS.ink} />
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: readToday ? brand : COLORS.ink }}>
-                {readToday ? 'Read today' : 'Mark as read — earn 5 seva points'}
+                {readToday ? 'Read today' : 'Mark as read - earn 5 seva points'}
               </Text>
             </>
           )}
         </Pressable>
       </ScrollView>
+
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: -10000,
+          top: 0,
+          width: 360,
+          height: 640,
+        }}
+      >
+        <View collapsable={false}>
+          <ShoonayaShareCard
+            ref={shareCardRef}
+            data={{
+              tradition: profile?.tradition ?? 'universal',
+              headlineValue: profile?.shlokaStreak ?? 1,
+              title: 'Sacred Text Streak',
+              subtitle: sacredText.source || sacredText.label,
+              caption: sacredText.meaning || sacredText.original,
+              userName: profile?.userName,
+              date: today ?? undefined,
+              footer: 'Shared from Shoonaya',
+            }}
+          />
+        </View>
+      </View>
 
       {celebration ? (
         <Animated.View
@@ -339,29 +486,32 @@ export default function ShlokaScreen() {
           <Animated.View
             style={{
               transform: [{ scale: celebrationScale }],
-              borderRadius: 28,
+              borderRadius: 30,
               paddingVertical: 32,
               paddingHorizontal: 28,
               alignItems: 'center',
               gap: 8,
-              backgroundColor: cardBg,
+              backgroundColor: glass,
               borderWidth: 1,
               borderColor: border,
-              maxWidth: 320,
+              maxWidth: 330,
+              boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
             }}
           >
-            <Text style={{ fontSize: 44 }}>🔥</Text>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text, textAlign: 'center' }}>
-              {celebration.streak}-day streak!
+            <View style={{ width: 64, height: 64, borderRadius: 24, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="zap" size={26} color={brand} />
+            </View>
+            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text, textAlign: 'center' }}>
+              {celebration.streak}-day streak
             </Text>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>+5 seva points</Text>
             {celebration.milestone ? (
               <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
-                🏅 {celebration.streak}-day milestone!
+                Milestone reached. Keep the rhythm steady.
               </Text>
             ) : celebration.first ? (
               <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
-                First reading of your streak! 🌱
+                First reading of your streak.
               </Text>
             ) : null}
             <Pressable
