@@ -25,6 +25,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
+import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { MoodCheckin } from '@/components/home/MoodCheckin';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
@@ -137,9 +138,8 @@ type HomeSummary = {
 };
 
 const SANSKRIT_WEEKDAYS = ['Ravivara', 'Somavara', 'Mangalavara', 'Budhavara', 'Guruvāra', 'Shukravara', 'Shanivara'];
-const HERO_MIN_HEIGHT = 720;
-const HERO_READABILITY_HEIGHT = 400;
-const HERO_SHLOKA_TOP_SPACE = 340;
+const HERO_MIN_HEIGHT = 650;
+const HERO_READABILITY_HEIGHT = 330;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -700,9 +700,26 @@ function HomeContent() {
             >
               {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
                 <>
-                  <Text style={{ fontSize: 12, lineHeight: 14 }}>
-                    {findMoodConfig(isDark, moodStatus.lastMood)?.label.charAt(0) || '✨'}
-                  </Text>
+                  {findMoodConfig(isDark, moodStatus.lastMood) ? (
+                    <View
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: findMoodConfig(isDark, moodStatus.lastMood)?.bg,
+                      }}
+                    >
+                      <MoodGlyph
+                        mood={moodStatus.lastMood}
+                        color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaObservanceText}
+                        size={13}
+                      />
+                    </View>
+                  ) : (
+                    <Text style={{ fontSize: 12, lineHeight: 14 }}>✨</Text>
+                  )}
                   <Text
                     style={{
                       ...TYPE.chip,
@@ -837,37 +854,50 @@ function HomeContent() {
               ) : null}
             </View>
           </View>
+        </View>
+
+        <View style={{ marginTop: -46, marginBottom: 8, paddingHorizontal: 16 }}>
           <PressableSurface
             haptic="selection"
             accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}. Tap to open, mark as read, and earn seva points`}
             onPress={() => navigate('/shloka')}
             style={{
-              marginTop: HERO_SHLOKA_TOP_SPACE,
-              marginHorizontal: -20,
-              marginBottom: -34,
-              paddingHorizontal: 24,
-              paddingTop: 12,
-              paddingBottom: 34,
+              paddingHorizontal: 18,
+              paddingTop: 14,
+              paddingBottom: 18,
               alignItems: 'center',
-              // PWA's transitional shloka is not a card: no rounded edge,
-              // no border, no shadow. It sits on the same page background
-              // that the hero readability gradient fades into.
-              backgroundColor: theme.background,
+              backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              borderBottomLeftRadius: 10,
+              borderBottomRightRadius: 10,
+              borderWidth: 1,
+              borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
             }}
           >
             <Text style={{ ...TYPE.chip, letterSpacing: 2.1, textTransform: 'uppercase', color: theme.brand }}>
               {state.sacredText.label}
             </Text>
-            <Text style={{ marginTop: 10, ...TYPE.shloka, color: theme.text, textAlign: 'center' }} numberOfLines={2}>
+            <Text
+              style={{
+                marginTop: 8,
+                ...TYPE.shloka,
+                fontSize: 17,
+                lineHeight: 27,
+                color: theme.text,
+                textAlign: 'center',
+              }}
+              numberOfLines={2}
+            >
               “{sacredTextLine}”
             </Text>
-            <Text style={{ marginTop: 8, ...TYPE.homeHeroMeaning, color: theme.dim, textAlign: 'center' }} numberOfLines={1}>
+            <Text style={{ marginTop: 6, ...TYPE.homeHeroMeaning, color: theme.dim, opacity: 0.72, textAlign: 'center' }} numberOfLines={1}>
               {state.sacredText.meaning}
             </Text>
           </PressableSurface>
         </View>
 
-        <View style={{ paddingHorizontal: 20, marginTop: -48, gap: 12 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: 0, gap: 12 }}>
           {/* ── Below-fold PWA-parity sections — additive only, hero above
               is untouched. Order mirrors the PWA's own HomeDashboard: a
               Brahma Muhurta prompt (skipped once japa is done today),
@@ -901,9 +931,9 @@ function HomeContent() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
               <View
                 style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 13,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 13,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: theme.soft,
@@ -914,7 +944,7 @@ function HomeContent() {
                 <SacredIcon
                   name={nextPracticeRow?.id ?? 'japa'}
                   fallbackGlyph={nextPracticeIcon}
-                  size={18}
+                  size={17}
                   color={nextPracticeColor}
                 />
               </View>
@@ -1243,19 +1273,19 @@ function HomeContent() {
                   style={{
                     alignItems: 'center',
                     backgroundColor: item.bg,
-                    borderRadius: 20,
-                    paddingVertical: 14,
-                    minWidth: 84,
+                    borderRadius: 18,
+                    paddingVertical: 12,
+                    minWidth: 78,
                     borderWidth: 1,
                     borderColor: item.border,
                   }}
                 >
                   {item.sacredId && item.fallbackGlyph ? (
-                    <View style={{ marginBottom: 8, height: 28, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={28} color={item.accent} />
+                    <View style={{ marginBottom: 7, height: 26, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={24} color={item.accent} />
                     </View>
                   ) : (
-                    <Text style={{ fontSize: 28, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                    <Text style={{ fontSize: 24, marginBottom: 7 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
                   )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                     {item.label}
@@ -1290,19 +1320,19 @@ function HomeContent() {
                   style={{
                     alignItems: 'center',
                     backgroundColor: item.bg,
-                    borderRadius: 20,
-                    paddingVertical: 14,
-                    minWidth: 110,
+                    borderRadius: 18,
+                    paddingVertical: 12,
+                    minWidth: 98,
                     borderWidth: 1,
                     borderColor: item.border,
                   }}
                 >
                   {item.sacredId && item.fallbackGlyph ? (
-                    <View style={{ marginBottom: 8, height: 28, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={28} color={item.accent} />
+                    <View style={{ marginBottom: 7, height: 26, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={24} color={item.accent} />
                     </View>
                   ) : (
-                    <Text style={{ fontSize: 28, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                    <Text style={{ fontSize: 24, marginBottom: 7 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
                   )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
                     {item.label}

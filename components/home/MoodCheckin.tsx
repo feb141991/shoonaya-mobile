@@ -9,6 +9,7 @@ import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
+import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 
 type CheckinStatus = 'loading' | 'ready' | 'error';
@@ -110,7 +111,7 @@ export function MoodCheckin() {
             backgroundColor: loggedMoodConfig.bg,
           }}
         >
-          <SacredIcon name="mood" fallbackGlyph="smile" size={18} color={loggedMoodConfig.colour} />
+          <MoodGlyph mood={loggedMoodConfig.key} size={22} color={loggedMoodConfig.colour} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.3, textTransform: 'uppercase', color: dim }}>
@@ -150,8 +151,19 @@ export function MoodCheckin() {
           Check in with yourself today.
         </Text>
       </View>
-      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.borderDark, alignItems: 'center', justifyContent: 'center' }}>
-        <Feather name="arrow-right" size={18} color={brand} />
+      <View
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
+        }}
+      >
+        <SacredIcon name="mood" fallbackGlyph="smile" size={18} color={brand} />
       </View>
     </PressableSurface>
   );
