@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Animated,
   Image,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -1089,19 +1090,21 @@ function HomeContent() {
               without an app restart. See components/home/SankalpaCard.tsx. */}
           <SankalpaCard />
 
-          <PressableSurface
+          <Pressable
+            accessibilityRole="button"
             accessibilityLabel={`${state.dharmVeer.name}, ${dharmVeerDone ? 'seva given today' : state.dharmVeer.tagline}`}
             onPress={() => navigate(resolveNativeRoute(state.dharmVeer.href))}
             style={{
-              minHeight: 72,
-              borderRadius: 18,
+              minHeight: 70,
+              borderRadius: 16,
               paddingHorizontal: 16,
+              paddingVertical: 11,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              backgroundColor: theme.card,
+              backgroundColor: dharmVeerDone ? theme.soft : theme.card,
               borderWidth: 1,
-              borderColor: theme.premiumBorder,
+              borderColor: theme.borderSoft,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               opacity: dharmVeerDone ? 0.72 : 1,
             }}
@@ -1109,15 +1112,15 @@ function HomeContent() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
               <View
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 16,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 14,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: theme.iconWell,
                 }}
               >
-                <SacredIcon name="dharmveer" fallbackGlyph={dharmVeerIcon} size={19} color={dharmVeerColor} />
+                <SacredIcon name="dharmveer" fallbackGlyph={dharmVeerIcon} size={18} color={dharmVeerColor} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
@@ -1134,9 +1137,23 @@ function HomeContent() {
             {dharmVeerDone ? (
               <Feather name="check-circle" size={20} color={dharmVeerColor} />
             ) : (
-              <Feather name="arrow-right" size={20} color={theme.brand} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View
+                  style={{
+                    borderRadius: 999,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    backgroundColor: theme.soft,
+                    borderWidth: 1,
+                    borderColor: theme.borderSoft,
+                  }}
+                >
+                  <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.brand }}>+5 seva</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={theme.brand} />
+              </View>
             )}
-          </PressableSurface>
+          </Pressable>
 
           <MoodCheckin />
 

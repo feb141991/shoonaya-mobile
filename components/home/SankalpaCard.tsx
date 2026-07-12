@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Text, useColorScheme, View } from 'react-native';
+import { Pressable, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Svg, { Circle } from 'react-native-svg';
 
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 
@@ -92,8 +92,10 @@ export function SankalpaCard() {
   const theme = useMemo(
     () => ({
       soft: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+      glass: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
       border: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+      premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
@@ -170,15 +172,15 @@ export function SankalpaCard() {
 
   if (status === 'error') {
     return (
-      <PressableSurface
-        haptic="selection"
+      <Pressable
+        accessibilityRole="button"
         accessibilityLabel="Couldn't load your Sankalpa. Tap to retry."
         onPress={() => {
           load().catch(() => {});
         }}
         style={{
           minHeight: 72,
-          borderRadius: 18,
+          borderRadius: 16,
           paddingHorizontal: 16,
           flexDirection: 'row',
           alignItems: 'center',
@@ -186,41 +188,44 @@ export function SankalpaCard() {
           backgroundColor: theme.card,
           borderWidth: 1,
           borderColor: theme.border,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         }}
       >
         <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>
           Couldn&apos;t load your Sankalpa.
         </Text>
         <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-      </PressableSurface>
+      </Pressable>
     );
   }
 
   if (!sankalpa) {
     return (
-      <PressableSurface
+      <Pressable
+        accessibilityRole="button"
         accessibilityLabel="Set your Sankalpa"
         onPress={() => router.push('/sankalpa')}
         style={{
           minHeight: 72,
-          borderRadius: 18,
+          borderRadius: 16,
           paddingHorizontal: 16,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: theme.soft,
+          backgroundColor: theme.card,
           borderWidth: 1,
           borderColor: theme.border,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-          <Feather name="sun" size={19} color={theme.brand} />
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text }}>
+          <Feather name="sun" size={18} color={theme.brand} />
+          <Text style={{ ...TYPE.label, color: theme.text }}>
             Set your Sankalpa for this month
           </Text>
         </View>
         <Feather name="arrow-right" size={20} color={theme.brand} />
-      </PressableSurface>
+      </Pressable>
     );
   }
 
@@ -233,32 +238,29 @@ export function SankalpaCard() {
     <View
       style={{
         minHeight: 72,
-        borderRadius: 18,
+        borderRadius: 16,
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 11,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        backgroundColor: theme.soft,
+        backgroundColor: theme.card,
         borderWidth: 1,
         borderColor: theme.border,
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
-      <PressableSurface
-        accessibilityLabel={`Sankalpa, day ${day} of ${targetDays}. Open Sankalpa.`}
-        onPress={() => router.push('/sankalpa')}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}
-      >
-        <Feather name="sun" size={19} color={theme.brand} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+        <Feather name="sun" size={18} color={theme.brand} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text }} numberOfLines={1}>
+          <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
             {sankalpa.text}
           </Text>
-          <Text style={{ marginTop: 3, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
+          <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }}>
             Day {Math.min(day, targetDays || day)} of {targetDays}
           </Text>
         </View>
-      </PressableSurface>
+      </View>
 
       <ProgressRing progress={progress} done={progress >= 1} color={theme.brand} track={theme.ring} />
 

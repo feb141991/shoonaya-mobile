@@ -1,17 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  AccessibilityInfo,
-  Dimensions,
-  ScrollView,
+  Pressable,
   Text,
   useColorScheme,
   View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
 
@@ -37,7 +32,7 @@ import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
  */
 
 const WINDOW_DAYS = 14;
-const MAX_CARDS = 6;
+const MAX_CARDS = 3;
 
 type Observance = {
   date: string;
@@ -75,20 +70,10 @@ function observanceHref(o: Observance): '/vrat' | '/panchang' {
   return o.route_kind === 'vrat' ? '/vrat' : '/panchang';
 }
 
-const CARD_WIDTH = Math.round(Dimensions.get('window').width - 64);
-const CARD_GAP = 12;
-
 export function ObservanceCarousel({ tradition, timezone }: Props) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const [observances, setObservances] = useState<Observance[] | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
-
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion).catch(() => {});
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,19 +100,6 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
       .slice(0, MAX_CARDS);
   }, [observances]);
 
-  const onMomentumEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
-    setActiveIndex(idx);
-  }, []);
-
-  const scrollToIndex = useCallback(
-    (idx: number) => {
-      scrollRef.current?.scrollTo({ x: idx * (CARD_WIDTH + CARD_GAP), animated: !reducedMotion });
-      setActiveIndex(idx);
-    },
-    [reducedMotion]
-  );
-
   // Loading and empty states are both silent (no skeleton, no error banner):
   // this is a below-the-fold enrichment section, not a primary action —
   // showing nothing when there's genuinely nothing upcoming (or the fetch is
@@ -138,13 +110,13 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={{ marginBottom: 4 }}>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 10,
+          marginBottom: 8,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -172,35 +144,39 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
         </View>
       </View>
 
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + CARD_GAP}
-        decelerationRate="fast"
-        onMomentumScrollEnd={onMomentumEnd}
-        contentContainerStyle={{ gap: CARD_GAP }}
-      >
+      <View style={{ gap: 8 }}>
         {upcoming.map(({ o, days }) => (
-          <PressableSurface
+          <Pressable
             key={`${o.slug}-${o.date}`}
+            accessibilityRole="button"
             accessibilityLabel={`${o.display_name}, ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}`}
             onPress={() => router.push(observanceHref(o))}
             style={{
-              width: CARD_WIDTH,
-              minHeight: 116,
-              borderRadius: 20,
-              padding: 14,
+              minHeight: 70,
+              borderRadius: 16,
+              paddingHorizontal: 14,
+              paddingVertical: 11,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 12,
               backgroundColor: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
               borderWidth: 1,
-              borderColor: isDark ? COLORS.borderDark : COLORS.borderLight,
+              borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
-            <Text style={{ fontSize: 38 }}>{o.emoji}</Text>
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 14,
+                marginRight: 11,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+              }}
+            >
+              <Text style={{ fontSize: 24 }}>{o.emoji}</Text>
+            </View>
 
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text
@@ -214,32 +190,16 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
                   fontFamily: FONTS.sans,
                   fontSize: 10,
                   marginTop: 2,
-                  marginBottom: 4,
                   color: isDark ? COLORS.textDimDark : COLORS.textDimLight,
                 }}
               >
                 {formatObservanceDate(o.date)}
               </Text>
-              {o.description ? (
-                <Text
-                  style={{
-                    fontFamily: FONTS.sans,
-                    fontSize: 11,
-                    lineHeight: 15,
-                    color: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-                  }}
-                  numberOfLines={2}
-                >
-                  {o.description}
-                </Text>
-              ) : null}
             </View>
 
             <View
               style={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
+                alignSelf: 'center',
                 borderRadius: 999,
                 paddingHorizontal: 8,
                 paddingVertical: 3,
@@ -256,33 +216,9 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
                 {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `in ${days}d`}
               </Text>
             </View>
-          </PressableSurface>
+          </Pressable>
         ))}
-      </ScrollView>
-
-      {upcoming.length > 1 ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 }}>
-          {upcoming.map((_, i) => (
-            <PressableSurface
-              key={i}
-              haptic="selection"
-              accessibilityLabel={`Go to card ${i + 1}`}
-              hitSlop={8}
-              onPress={() => scrollToIndex(i)}
-              style={{ minHeight: 0, justifyContent: 'center' }}
-            >
-              <View
-                style={{
-                  height: 6,
-                  width: i === activeIndex ? 20 : 6,
-                  borderRadius: 999,
-                  backgroundColor: i === activeIndex ? accent : isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
-                }}
-              />
-            </PressableSurface>
-          ))}
-        </View>
-      ) : null}
+      </View>
     </View>
   );
 }
