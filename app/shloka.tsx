@@ -18,6 +18,7 @@ import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg'
 
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -286,10 +287,10 @@ export default function ShlokaScreen() {
       <Screen style={{ backgroundColor: background }}>
         <AmbientBackdrop isDark={isDark} brand={brand} />
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
             <Feather name="chevron-left" size={16} color={dim} />
             <Text style={{ color: dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
           <View style={{ borderRadius: 26, padding: 22, backgroundColor: glass, borderWidth: 1, borderColor: border }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>
               {"Could not load today's verse"}
@@ -297,7 +298,8 @@ export default function ShlokaScreen() {
             <Text style={{ marginTop: 8, color: dim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
               Check your connection and try again.
             </Text>
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={() => {
                 setLoading(true);
                 load()
@@ -307,7 +309,7 @@ export default function ShlokaScreen() {
               style={{ marginTop: 18, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, backgroundColor: brand }}
             >
               <Text style={{ color: isDark ? COLORS.darkBg : COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </ScrollView>
       </Screen>
@@ -319,8 +321,8 @@ export default function ShlokaScreen() {
       <AmbientBackdrop isDark={isDark} brand={brand} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 34, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="Go back"
             onPress={() => router.back()}
             style={{
@@ -335,10 +337,10 @@ export default function ShlokaScreen() {
             }}
           >
             <Feather name="chevron-left" size={19} color={text} />
-          </Pressable>
+          </PressableSurface>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel="Share today's verse"
               disabled={sharing}
               onPress={() => { void shareVerse(); }}
@@ -351,11 +353,10 @@ export default function ShlokaScreen() {
                 backgroundColor: glass,
                 borderWidth: 1,
                 borderColor: border,
-                opacity: sharing ? 0.65 : 1,
               }}
             >
               {sharing ? <ActivityIndicator color={brand} /> : <Feather name="share-2" size={17} color={text} />}
-            </Pressable>
+            </PressableSurface>
           </View>
         </View>
 
@@ -446,65 +447,60 @@ export default function ShlokaScreen() {
           </View>
         ) : null}
 
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
           accessibilityLabel={readToday ? 'Verse already read today' : 'Mark verse as read, earn 5 seva points'}
           disabled={readToday || marking}
           onPress={() => { void markRead(); }}
         >
-          {({ pressed }) =>
-            readToday ? (
-              <View
-                style={{
-                  minHeight: MIN_TOUCH_TARGET + 8,
-                  borderRadius: 24,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 8,
-                  backgroundColor: glass,
-                  borderWidth: 1,
-                  borderColor: border,
-                }}
-              >
-                <Feather name="check-circle" size={18} color={brand} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: brand }}>Read today</Text>
-              </View>
-            ) : (
-              // Warm gold gradient + tuned glow shadow — was a flat solid
-              // `brand` fill, which read noticeably flatter than the PWA's
-              // radiant gold CTA (rgba(250,199,117,0.90) with a matching
-              // rgba(239,159,39,0.20) shadow bloom).
-              <LinearGradient
-                colors={isDark ? [COLORS.brandGoldDark, COLORS.brandGoldLight] : [COLORS.brandGoldLight, COLORS.brandGoldDark]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  minHeight: MIN_TOUCH_TARGET + 8,
-                  borderRadius: 24,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 8,
-                  opacity: marking ? 0.7 : pressed ? 0.88 : 1,
-                  transform: [{ scale: pressed ? 0.985 : 1 }],
-                  boxShadow: isDark ? '0 14px 30px rgba(197,160,89,0.28)' : '0 14px 30px rgba(216,138,28,0.30)',
-                }}
-              >
-                {marking ? (
-                  <ActivityIndicator color={COLORS.ink} />
-                ) : (
-                  <>
-                    <Feather name="book-open" size={18} color={COLORS.ink} />
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
-                      Mark as read - earn 5 seva points
-                    </Text>
-                  </>
-                )}
-              </LinearGradient>
-            )
-          }
-        </Pressable>
+          {readToday ? (
+            <View
+              style={{
+                minHeight: MIN_TOUCH_TARGET + 8,
+                borderRadius: 24,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 8,
+                backgroundColor: glass,
+                borderWidth: 1,
+                borderColor: border,
+              }}
+            >
+              <Feather name="check-circle" size={18} color={brand} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: brand }}>Read today</Text>
+            </View>
+          ) : (
+            // Warm gold gradient + tuned glow shadow — was a flat solid
+            // `brand` fill, which read noticeably flatter than the PWA's
+            // radiant gold CTA (rgba(250,199,117,0.90) with a matching
+            // rgba(239,159,39,0.20) shadow bloom).
+            <LinearGradient
+              colors={isDark ? [COLORS.brandGoldDark, COLORS.brandGoldLight] : [COLORS.brandGoldLight, COLORS.brandGoldDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                minHeight: MIN_TOUCH_TARGET + 8,
+                borderRadius: 24,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 8,
+                boxShadow: isDark ? '0 14px 30px rgba(197,160,89,0.28)' : '0 14px 30px rgba(216,138,28,0.30)',
+              }}
+            >
+              {marking ? (
+                <ActivityIndicator color={COLORS.ink} />
+              ) : (
+                <>
+                  <Feather name="book-open" size={18} color={COLORS.ink} />
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
+                    Mark as read - earn 5 seva points
+                  </Text>
+                </>
+              )}
+            </LinearGradient>
+          )}
+        </PressableSurface>
       </ScrollView>
 
       <View
@@ -584,12 +580,13 @@ export default function ShlokaScreen() {
                 First reading of your streak.
               </Text>
             ) : null}
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={dismissCelebration}
               style={{ marginTop: 12, borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10, backgroundColor: brand }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.ink }}>Continue</Text>
-            </Pressable>
+            </PressableSurface>
           </Animated.View>
         </Animated.View>
       ) : null}

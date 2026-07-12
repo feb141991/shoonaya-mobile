@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -158,10 +157,10 @@ export default function KundaliScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Vedic Kundali</Text>
         <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: -8 }}>
@@ -221,9 +220,9 @@ export default function KundaliScreen() {
         <View style={{ flex: 1, backgroundColor: theme.bg }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>New Birth Chart</Text>
-            <Pressable onPress={() => setShowForm(false)} hitSlop={10} style={{ padding: 4 }}>
+            <PressableSurface haptic="selection" onPress={() => setShowForm(false)} hitSlop={10} style={{ padding: 4, minHeight: 0 }}>
               <Feather name="x" size={24} color={theme.text} />
-            </Pressable>
+            </PressableSurface>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>

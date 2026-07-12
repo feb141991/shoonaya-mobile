@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -267,10 +266,10 @@ export default function NityaKarmaScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <EmptyState
             icon="sunrise"
@@ -293,10 +292,10 @@ export default function NityaKarmaScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="full" />
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <View>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Nitya Karma</Text>
@@ -426,52 +425,58 @@ export default function NityaKarmaScreen() {
 
                   {/* Action row: Copy & Share Note */}
                   <View style={{ flexDirection: 'row', gap: 16, marginTop: 8 }}>
-                    <Pressable
+                    <PressableSurface
+                      haptic="selection"
                       onPress={() => {
                         Clipboard.setStringAsync(`${step.label}\n${step.description}`)
                           .catch(() => {});
                       }}
                       hitSlop={8}
+                      style={{ minHeight: 0 }}
                     >
                       <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textDecorationLine: 'underline' }}>
                         Copy note
                       </Text>
-                    </Pressable>
-                    <Pressable
+                    </PressableSurface>
+                    <PressableSurface
+                      haptic="selection"
                       onPress={() => {
                         Share.share({ message: `${step.label}\n${step.description}` })
                           .catch(() => {});
                       }}
                       hitSlop={8}
+                      style={{ minHeight: 0 }}
                     >
                       <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textDecorationLine: 'underline' }}>
                         Share note
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   </View>
 
                   {/* Deep links */}
                   {step.id === 'japa_done' && !step.done && (
-                    <Pressable
+                    <PressableSurface
+                      haptic="selection"
                       onPress={() => router.push('/japa')}
-                      style={{ marginTop: 8 }}
+                      style={{ marginTop: 8, minHeight: 0 }}
                       hitSlop={8}
                     >
                       <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Open Japa Counter →
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   )}
                   {step.id === 'shloka_done' && !step.done && (
-                    <Pressable
+                    <PressableSurface
+                      haptic="selection"
                       onPress={() => router.push('/pathshala')}
-                      style={{ marginTop: 8 }}
+                      style={{ marginTop: 8, minHeight: 0 }}
                       hitSlop={8}
                     >
                       <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Open Pathshala →
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   )}
                 </View>
 
