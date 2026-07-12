@@ -14,6 +14,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
@@ -169,9 +170,9 @@ export default function KundaliScreen() {
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 20 }}>Saved Profiles</Text>
-          <Pressable onPress={() => setShowForm(true)} style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
+          <PressableSurface onPress={() => setShowForm(true)} haptic="selection" style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
             <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>+ New Chart</Text>
-          </Pressable>
+          </PressableSurface>
         </View>
 
         {profiles.length === 0 ? (
@@ -181,9 +182,9 @@ export default function KundaliScreen() {
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
               Add your birth details to calculate your Lagna, Rashi, and planetary positions.
             </Text>
-            <Pressable onPress={() => setShowForm(true)} style={{ backgroundColor: COLORS.brandGold, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, marginTop: 12 }}>
+            <PressableSurface onPress={() => setShowForm(true)} style={{ backgroundColor: COLORS.brandGold, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, marginTop: 12 }}>
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Create Profile</Text>
-            </Pressable>
+            </PressableSurface>
           </Card>
         ) : (
           profiles.map(p => (
@@ -207,9 +208,9 @@ export default function KundaliScreen() {
                 </Text>
               )}
               <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 12 }} />
-              <Pressable style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
+              <PressableSurface style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>View Chart →</Text>
-              </Pressable>
+              </PressableSurface>
             </Card>
           ))
         )}
@@ -274,13 +275,13 @@ export default function KundaliScreen() {
                   }}
                   onSubmitEditing={searchCity}
                 />
-                <Pressable
+                <PressableSurface
                   onPress={searchCity}
                   disabled={searchingCity || formData.cityQuery.length < 2}
                   style={{ backgroundColor: COLORS.brandGold, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12, opacity: searchingCity || formData.cityQuery.length < 2 ? 0.5 : 1 }}
                 >
                   {searchingCity ? <ActivityIndicator color={COLORS.ink} size="small" /> : <Feather name="search" size={18} color={COLORS.ink} />}
-                </Pressable>
+                </PressableSurface>
               </View>
               {geocodeResult && (
                 <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
@@ -289,7 +290,7 @@ export default function KundaliScreen() {
               )}
             </View>
 
-            <Pressable
+            <PressableSurface
               onPress={handleGenerateChart}
               disabled={submitting || !geocodeResult}
               style={{
@@ -302,7 +303,7 @@ export default function KundaliScreen() {
               }}
             >
               {submitting ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Generate Chart</Text>}
-            </Pressable>
+            </PressableSurface>
           </ScrollView>
         </View>
       </Modal>

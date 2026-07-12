@@ -15,6 +15,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { PathshalaPath } from '@/lib/pathshala-types';
@@ -366,7 +367,7 @@ export default function LessonReaderScreen() {
         <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, marginTop: 8, textAlign: 'center' }}>
           Upgrade to Shoonaya Pro to unlock this path.
         </Text>
-        <Pressable
+        <PressableSurface
           onPress={() => router.back()}
           style={{
             marginTop: 20,
@@ -377,7 +378,7 @@ export default function LessonReaderScreen() {
           }}
         >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
-        </Pressable>
+        </PressableSurface>
       </View>
     );
   }
@@ -389,7 +390,7 @@ export default function LessonReaderScreen() {
         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
           Could not load this lesson.
         </Text>
-        <Pressable
+        <PressableSurface
           onPress={() => router.back()}
           style={{
             marginTop: 20,
@@ -400,7 +401,7 @@ export default function LessonReaderScreen() {
           }}
         >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
-        </Pressable>
+        </PressableSurface>
       </View>
     );
   }
@@ -415,7 +416,7 @@ export default function LessonReaderScreen() {
         <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, marginTop: 8, textAlign: 'center' }}>
           Return to Pathshala and choose a lesson.
         </Text>
-        <Pressable
+        <PressableSurface
           onPress={() => router.back()}
           style={{
             marginTop: 20,
@@ -426,7 +427,7 @@ export default function LessonReaderScreen() {
           }}
         >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
-        </Pressable>
+        </PressableSurface>
       </View>
     );
   }
@@ -470,9 +471,10 @@ export default function LessonReaderScreen() {
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             {(['en', 'hi'] as const).map((option) => (
-              <Pressable
+              <PressableSurface
                 key={option}
                 onPress={() => setLanguage(option)}
+                haptic="selection"
                 style={{
                   borderRadius: 999,
                   paddingHorizontal: 14,
@@ -485,15 +487,16 @@ export default function LessonReaderScreen() {
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? COLORS.brandGold : dim }}>
                   {option.toUpperCase()}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             ))}
           </View>
 
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
             {(['small', 'normal', 'large', 'xl'] as const).map((option) => (
-              <Pressable
+              <PressableSurface
                 key={option}
                 onPress={() => saveFontSize(option)}
+                haptic="selection"
                 style={{
                   borderRadius: 999,
                   paddingHorizontal: 12,
@@ -506,7 +509,7 @@ export default function LessonReaderScreen() {
                 <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: option === fontSize ? COLORS.brandGold : dim }}>
                   {option === 'small' ? 'Small' : option === 'normal' ? 'Normal' : option === 'large' ? 'Large' : 'XL'}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             ))}
           </View>
 
@@ -558,7 +561,7 @@ export default function LessonReaderScreen() {
               gap: 14,
             }}
           >
-            <Pressable
+            <PressableSurface
               onPress={() => { void handlePlayPause(); }}
               style={{
                 width: 48,
@@ -574,7 +577,7 @@ export default function LessonReaderScreen() {
               ) : (
                 <Feather name={audioIcon ?? 'play'} size={20} color={COLORS.ink} />
               )}
-            </Pressable>
+            </PressableSurface>
 
             <View style={{ flex: 1, gap: 6 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
@@ -590,9 +593,10 @@ export default function LessonReaderScreen() {
               </Text>
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 {SPEED_OPTIONS.map((speed) => (
-                  <Pressable
+                  <PressableSurface
                     key={speed}
                     onPress={() => { void handleSpeedChange(speed); }}
+                    haptic="selection"
                     style={{
                       borderRadius: 8,
                       paddingHorizontal: 10,
@@ -611,7 +615,7 @@ export default function LessonReaderScreen() {
                     >
                       {speed}×
                     </Text>
-                  </Pressable>
+                  </PressableSurface>
                 ))}
               </View>
             </View>
@@ -637,7 +641,7 @@ export default function LessonReaderScreen() {
           </View>
 
           {/* Dharma Mitra Ask AI Link */}
-          <Pressable
+          <PressableSurface
             accessibilityRole="button"
             accessibilityLabel="Ask Dharma Mitra about this verse"
             onPress={() => {
@@ -666,12 +670,13 @@ export default function LessonReaderScreen() {
               Ask Dharma Mitra about this verse
             </Text>
             <Feather name="chevron-right" size={16} color={dim} />
-          </Pressable>
+          </PressableSurface>
 
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Pressable
+            <PressableSurface
               onPress={() => goToLesson(lessonIndex - 1)}
               disabled={lessonIndex === 0}
+              haptic="selection"
               style={{
                 flex: 1,
                 borderRadius: 20,
@@ -683,11 +688,12 @@ export default function LessonReaderScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Previous</Text>
-            </Pressable>
+            </PressableSurface>
 
-            <Pressable
+            <PressableSurface
               onPress={() => goToLesson(lessonIndex + 1)}
               disabled={lessonIndex >= lessons.length - 1}
+              haptic="selection"
               style={{
                 flex: 1,
                 borderRadius: 20,
@@ -699,10 +705,10 @@ export default function LessonReaderScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Next</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
 
-          <Pressable
+          <PressableSurface
             onPress={() => { void handleDone(); }}
             disabled={saving}
             style={{
@@ -721,7 +727,7 @@ export default function LessonReaderScreen() {
                 Done
               </Text>
             )}
-          </Pressable>
+          </PressableSurface>
         </ScrollView>
       </View>
     </GestureDetector>

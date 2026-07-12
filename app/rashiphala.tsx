@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
@@ -133,9 +134,10 @@ export default function RashiphalaScreen() {
           {RASHI_LIST.map((rashi) => {
             const isSelected = selectedRashi === rashi.key;
             return (
-              <Pressable
+              <PressableSurface
                 key={rashi.key}
                 onPress={() => setSelectedRashi(rashi.key)}
+                haptic="selection"
                 style={{
                   width: 80,
                   alignItems: 'center',
@@ -150,7 +152,7 @@ export default function RashiphalaScreen() {
                 <Text style={{ fontSize: 28 }}>{rashi.symbol}</Text>
                 <Text style={{ marginTop: 8, color: isSelected ? theme.brand : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{rashi.sa}</Text>
                 <Text style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5 }}>{rashi.en}</Text>
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </ScrollView>
@@ -170,7 +172,7 @@ export default function RashiphalaScreen() {
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, textAlign: 'center' }}>
               {errorMessage ?? 'Please try again in a moment.'}
             </Text>
-            <Pressable
+            <PressableSurface
               onPress={() => {
                 setInitialLoad(false);
                 setSelectedRashi((current) => normalizeRashiKey(current) ?? 'aries');
@@ -186,7 +188,7 @@ export default function RashiphalaScreen() {
               }}
             >
               <Text style={{ color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Try again</Text>
-            </Pressable>
+            </PressableSurface>
           </Card>
         </View>
       ) : (

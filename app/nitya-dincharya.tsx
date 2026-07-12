@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
@@ -332,7 +333,7 @@ export default function NityaKarmaScreen() {
                 {state.allDoneMessage}
               </Text>
             </View>
-            <Pressable
+            <PressableSurface
               accessibilityRole="button"
               accessibilityLabel="Share your completion card"
               onPress={() => { void shareCompletionCard(); }}
@@ -351,7 +352,7 @@ export default function NityaKarmaScreen() {
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
                 {shareLoading ? 'Creating card...' : 'Share completion card'}
               </Text>
-            </Pressable>
+            </PressableSurface>
           </Card>
         ) : (
           <Card style={{ backgroundColor: theme.card, borderColor: theme.border }}>
@@ -383,7 +384,7 @@ export default function NityaKarmaScreen() {
           {state.steps.map((step) => {
             const isBusy = busyStepId === step.id;
             return (
-              <Pressable
+              <PressableSurface
                 key={step.id}
                 accessibilityRole="button"
                 accessibilityLabel={`${step.label}, ${step.done ? 'done' : 'mark as done'}`}
@@ -489,7 +490,7 @@ export default function NityaKarmaScreen() {
                     }}
                   />
                 )}
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </View>

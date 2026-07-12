@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
@@ -320,7 +321,7 @@ export default function QuizScreen() {
                 }
 
                 return (
-                  <Pressable
+                  <PressableSurface
                     key={`${option}-${index}`}
                     accessibilityRole="button"
                     accessibilityLabel={`${option}. ${showFeedback ? (isAnswerCorrect ? 'Correct answer' : (wasChosen ? 'Incorrect answer' : '')) : ''}`}
@@ -328,6 +329,7 @@ export default function QuizScreen() {
                       void handleAnswer(index);
                     }}
                     disabled={answeredToday || saving}
+                    haptic="selection"
                     style={{
                       borderRadius: 20,
                       borderWidth: 1,
@@ -350,7 +352,7 @@ export default function QuizScreen() {
                     {showFeedback && wasChosen && !isAnswerCorrect ? (
                       <Feather name="x" size={18} color={COLORS.danger} />
                     ) : null}
-                  </Pressable>
+                  </PressableSurface>
                 );
               })}
             </View>
@@ -399,7 +401,7 @@ export default function QuizScreen() {
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
               {saveData?.streak ?? 1}-day streak maintained
             </Text>
-            <Pressable
+            <PressableSurface
               accessibilityRole="button"
               accessibilityLabel="Share your quiz result"
               onPress={() => {
@@ -414,7 +416,7 @@ export default function QuizScreen() {
               }}
             >
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Share result</Text>
-            </Pressable>
+            </PressableSurface>
           </Card>
         ) : null}
       </ScrollView>

@@ -1,6 +1,7 @@
-import { Pressable, Text, View, useColorScheme } from 'react-native';
+import { Text, View, useColorScheme } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { Temple } from '@/lib/overpass';
 
@@ -42,8 +43,9 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Pressable
+        <PressableSurface
           onPress={onSave}
+          haptic="selection"
           style={{
             flex: 1,
             borderRadius: 16,
@@ -60,9 +62,9 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: saved ? COLORS.brandGold : text }}>
             {saved ? 'Saved' : 'Save'}
           </Text>
-        </Pressable>
+        </PressableSurface>
 
-        <Pressable
+        <PressableSurface
           onPress={onCheckIn}
           style={{
             flex: 1,
@@ -75,7 +77,7 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
             Check-in
           </Text>
-        </Pressable>
+        </PressableSurface>
       </View>
     </View>
   );

@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Pill } from '@/components/ui/Pill';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import {
@@ -158,7 +159,7 @@ function LiveDarshanContent() {
           <View style={{ gap: 12 }}>
             {filtered.map((stream) => (
               <View key={stream.id} style={{ gap: 6 }}>
-                <Pressable
+                <PressableSurface
                   accessibilityRole="button"
                   accessibilityLabel={`Watch ${stream.title} on YouTube. ${stream.location}. ${stream.schedule}.`}
                   onPress={() => void openStream(stream)}
@@ -223,14 +224,14 @@ function LiveDarshanContent() {
                       {stream.location} · {stream.schedule}
                     </Text>
                   </View>
-                </Pressable>
+                </PressableSurface>
 
                 {openError?.id === stream.id ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 }}>
                     <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
                       {openError.message}
                     </Text>
-                    <Pressable
+                    <PressableSurface
                       accessibilityRole="button"
                       accessibilityLabel={`Retry opening ${stream.title}`}
                       onPress={() => void openStream(stream)}
@@ -239,7 +240,7 @@ function LiveDarshanContent() {
                       <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Retry
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   </View>
                 ) : null}
               </View>

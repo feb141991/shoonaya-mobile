@@ -12,6 +12,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { PathCard } from '@/components/pathshala/PathCard';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -316,9 +317,10 @@ function PathshalaContent() {
           ] as const).map(([key, label]) => {
             const active = activeTab === key;
             return (
-              <Pressable
+              <PressableSurface
                 key={key}
                 onPress={() => setActiveTab(key)}
+                haptic="selection"
                 style={{
                   flex: 1,
                   borderRadius: 18,
@@ -336,7 +338,7 @@ function PathshalaContent() {
                 >
                   {label}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </View>
@@ -441,11 +443,12 @@ function PathshalaContent() {
                           {path.difficulty}
                         </Text>
                       </View>
-                      <Pressable
+                      <PressableSurface
                         onPress={() => {
                           try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
                           void enroll(path);
                         }}
+                        haptic="none"
                         style={{
                           borderRadius: 16,
                           backgroundColor: COLORS.brandGold,
@@ -454,14 +457,14 @@ function PathshalaContent() {
                         }}
                       >
                         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: bg }}>Enroll</Text>
-                      </Pressable>
+                      </PressableSurface>
                     </View>
                   ))}
-                <Pressable onPress={() => setActiveTab('explore')} style={{ paddingVertical: 8 }}>
+                <PressableSurface onPress={() => setActiveTab('explore')} haptic="selection" style={{ paddingVertical: 8, alignItems: 'center' }}>
                   <Text style={{ textAlign: 'center', fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
                     See all paths →
                   </Text>
-                </Pressable>
+                </PressableSurface>
               </View>
             )}
 
@@ -558,9 +561,10 @@ function PathshalaContent() {
           <View style={{ gap: 16 }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {(['all', 'beginner', 'intermediate', 'advanced'] as const).map((option) => (
-                <Pressable
+                <PressableSurface
                   key={option}
                   onPress={() => setDifficulty(option)}
+                  haptic="selection"
                   style={{
                     borderRadius: 999,
                     borderWidth: 1,
@@ -573,7 +577,7 @@ function PathshalaContent() {
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: difficulty === option ? COLORS.brandGold : dim, textTransform: 'capitalize' }}>
                     {option}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               ))}
             </View>
 

@@ -17,6 +17,7 @@ const Notifications = isExpoGo ? null : (() => { try { return require('expo-noti
 import { calculatePanchang, getTithiReminder, type TithiReminder } from '@sangam/panchang-engine';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
@@ -328,12 +329,13 @@ export default function VratScreen() {
           {TRADITION_FILTERS.map((tradition) => {
             const active = selectedTradition === tradition;
             return (
-              <Pressable
+              <PressableSurface
                 key={tradition}
                 onPress={() => setSelectedTradition(tradition)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={`Filter by ${tradition}`}
+                haptic="selection"
                 hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
                 style={{
                   borderRadius: 999,
@@ -347,7 +349,7 @@ export default function VratScreen() {
                 <Text style={{ color: active ? COLORS.ink : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                   {tradition.toUpperCase()}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </ScrollView>
@@ -356,14 +358,14 @@ export default function VratScreen() {
           <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Today</Text>
             {todayReminder && todayVrat ? (
-              <Pressable onPress={() => setSelectedVrat(todayVrat)} style={{ gap: 4 }}>
+              <PressableSurface onPress={() => setSelectedVrat(todayVrat)} haptic="selection" style={{ gap: 4 }}>
                 <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.serifBold, fontSize: 20 }}>
                   {todayReminder.title}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
                   {todayReminder.body}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             ) : (
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
                 No special observance today — browse below or check what&apos;s coming up.
@@ -376,16 +378,17 @@ export default function VratScreen() {
           <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Upcoming</Text>
             {upcomingVrats.slice(0, 5).map((upcoming) => (
-              <Pressable
+              <PressableSurface
                 key={`${upcoming.slug}-${upcoming.date}`}
                 onPress={() => setSelectedVrat(upcoming.vratData)}
+                haptic="selection"
                 style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
               >
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14 }}>
                   {upcoming.vratData.emoji} {upcoming.vratData.name}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>{upcoming.date}</Text>
-              </Pressable>
+              </PressableSurface>
             ))}
           </Card>
         )}
@@ -407,9 +410,9 @@ export default function VratScreen() {
                   {selectedVrat.tagline}
                 </Text>
               </View>
-              <Pressable onPress={() => setSelectedVrat(null)}>
+              <PressableSurface onPress={() => setSelectedVrat(null)} haptic="selection" hitSlop={10}>
                 <Feather name="x" size={18} color={theme.dim} />
-              </Pressable>
+              </PressableSurface>
             </View>
 
             <View style={{ gap: 12 }}>
@@ -426,7 +429,7 @@ export default function VratScreen() {
                   <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}>{selectedVrat.breakFastTime}</Text>
                 </>
               ) : null}
-              <Pressable
+              <PressableSurface
                 onPress={() => {
                   void setReminder(selectedVrat);
                 }}
@@ -438,7 +441,7 @@ export default function VratScreen() {
                 }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Set reminder</Text>
-              </Pressable>
+              </PressableSurface>
 
               {observedToday ? (
                 <View
@@ -460,7 +463,7 @@ export default function VratScreen() {
                   </Text>
                 </View>
               ) : (
-                <Pressable
+                <PressableSurface
                   onPress={() => {
                     void handleObserve();
                   }}
@@ -478,7 +481,7 @@ export default function VratScreen() {
                   <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
                     🙏 Mark as Observed{observeCount > 0 ? `  (${observeCount}× before)` : ''}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               )}
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
                 {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat'}
@@ -487,14 +490,14 @@ export default function VratScreen() {
           </Card>
         ) : (
           vrats.map((vrat) => (
-            <Pressable key={vrat.id} onPress={() => setSelectedVrat(vrat)}>
+            <PressableSurface key={vrat.id} onPress={() => setSelectedVrat(vrat)} haptic="selection">
               <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>
                   {vrat.emoji} {vrat.name}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>{vrat.tagline}</Text>
               </Card>
-            </Pressable>
+            </PressableSurface>
           ))
         )}
       </ScrollView>

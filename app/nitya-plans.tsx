@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -270,9 +271,10 @@ export default function NityaPlansScreen() {
           {(['all', '7', '21'] as const).map((opt) => {
             const active = filter === opt;
             return (
-              <Pressable
+              <PressableSurface
                 key={opt}
                 onPress={() => setFilter(opt)}
+                haptic="selection"
                 style={{
                   paddingHorizontal: 16,
                   paddingVertical: 8,
@@ -285,7 +287,7 @@ export default function NityaPlansScreen() {
                 <Text style={{ color: active ? COLORS.ink : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                   {opt === 'all' ? 'All Plans' : `${opt}-Day`}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </View>
@@ -307,8 +309,9 @@ export default function NityaPlansScreen() {
                   gap: 12,
                 }}
               >
-                <Pressable
+                <PressableSurface
                   onPress={() => setSelectedPlan(plan)}
+                  haptic="selection"
                   style={{ gap: 10 }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -349,7 +352,7 @@ export default function NityaPlansScreen() {
                       </Text>
                     </View>
                   )}
-                </Pressable>
+                </PressableSurface>
               </Card>
             );
           })}
@@ -380,10 +383,10 @@ export default function NityaPlansScreen() {
                 return (
                   <View style={{ flex: 1, padding: 20, justifyContent: 'space-between' }}>
                     <ScrollView contentContainerStyle={{ gap: 16 }}>
-                      <Pressable onPress={() => setViewingDayIndex(null)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <PressableSurface onPress={() => setViewingDayIndex(null)} haptic="selection" style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}>
                         <Feather name="chevron-left" size={16} color={theme.dim} />
                         <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back to overview</Text>
-                      </Pressable>
+                      </PressableSurface>
 
                       <View style={{ backgroundColor: `${plan.accentColor}18`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, alignSelf: 'flex-start' }}>
                         <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
@@ -413,7 +416,7 @@ export default function NityaPlansScreen() {
                     </ScrollView>
 
                     {isActive && day.day === currentDay && (
-                      <Pressable
+                      <PressableSurface
                         onPress={() => handleMarkDayComplete(plan, currentDay)}
                         disabled={actionLoading}
                         style={{
@@ -425,7 +428,7 @@ export default function NityaPlansScreen() {
                         }}
                       >
                         {actionLoading ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Mark Day {day.day} Complete</Text>}
-                      </Pressable>
+                      </PressableSurface>
                     )}
                   </View>
                 );
@@ -456,9 +459,10 @@ export default function NityaPlansScreen() {
                         const isToday = isActive && day.day === currentDay;
 
                         return (
-                          <Pressable
+                          <PressableSurface
                             key={day.day}
                             disabled={!isActive}
+                            haptic="selection"
                             onPress={() => setViewingDayIndex(idx)}
                             style={{
                               backgroundColor: isToday ? `${plan.accentColor}10` : theme.card,
@@ -488,7 +492,7 @@ export default function NityaPlansScreen() {
                               </View>
                             )}
                             {isActive && <Feather name="chevron-right" size={16} color={theme.dim} />}
-                          </Pressable>
+                          </PressableSurface>
                         );
                       })}
                     </View>
@@ -497,7 +501,7 @@ export default function NityaPlansScreen() {
                   {/* Actions footer */}
                   <View style={{ borderTopWidth: 1, borderTopColor: theme.border, padding: 16, gap: 10, backgroundColor: theme.card }}>
                     {!isActive && !isCompleted && (
-                      <Pressable
+                      <PressableSurface
                         onPress={() => handleStartPlan(plan)}
                         disabled={actionLoading}
                         style={{
@@ -509,12 +513,12 @@ export default function NityaPlansScreen() {
                         }}
                       >
                         {actionLoading ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Begin Journey</Text>}
-                      </Pressable>
+                      </PressableSurface>
                     )}
 
                     {isActive && (
                       <View style={{ gap: 8 }}>
-                        <Pressable
+                        <PressableSurface
                           onPress={() => setViewingDayIndex(currentDay - 1)}
                           style={{
                             backgroundColor: plan.accentColor,
@@ -524,36 +528,36 @@ export default function NityaPlansScreen() {
                           }}
                         >
                           <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Continue Day {currentDay}</Text>
-                        </Pressable>
+                        </PressableSurface>
 
                         <View style={{ flexDirection: 'row', gap: 8 }}>
-                          <Pressable
+                          <PressableSurface
                             onPress={() => handleRestartPlan(plan)}
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
                             <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>🔄 Restart</Text>
-                          </Pressable>
-                          <Pressable
+                          </PressableSurface>
+                          <PressableSurface
                             onPress={() => handleAbandonPlan(plan)}
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
                             <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>⏸ Pause</Text>
-                          </Pressable>
-                          <Pressable
+                          </PressableSurface>
+                          <PressableSurface
                             onPress={() => handleLeavePlan(plan)}
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: COLORS.dangerBg, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
                             <Text style={{ color: COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>✕ Leave</Text>
-                          </Pressable>
+                          </PressableSurface>
                         </View>
                       </View>
                     )}
 
                     {isCompleted && (
-                      <Pressable
+                      <PressableSurface
                         onPress={() => handleStartPlan(plan)}
                         disabled={actionLoading}
                         style={{
@@ -565,7 +569,7 @@ export default function NityaPlansScreen() {
                         }}
                       >
                         <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Begin Again</Text>
-                      </Pressable>
+                      </PressableSurface>
                     )}
                   </View>
                 </View>

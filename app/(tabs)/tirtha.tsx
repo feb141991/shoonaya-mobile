@@ -17,6 +17,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { TempleCard } from '@/components/tirtha/TempleCard';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -351,7 +352,7 @@ export default function TirthaScreen() {
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Tirtha</Text>
 
-          <Pressable
+          <PressableSurface
             accessibilityRole="button"
             accessibilityLabel="Open Live Darshan"
             onPress={() => router.push('/live-darshan')}
@@ -386,7 +387,7 @@ export default function TirthaScreen() {
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={dim} />
-          </Pressable>
+          </PressableSurface>
 
           <View
             style={{
@@ -405,9 +406,10 @@ export default function TirthaScreen() {
             ] as const).map(([key, label]) => {
               const active = passportTab === key;
               return (
-                <Pressable
+                <PressableSurface
                   key={key}
                   onPress={() => setPassportTab(key)}
+                  haptic="selection"
                   style={{
                     flex: 1,
                     borderRadius: 18,
@@ -419,7 +421,7 @@ export default function TirthaScreen() {
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: active ? COLORS.brandGold : dim }}>
                     {label}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               );
             })}
           </View>
@@ -454,12 +456,12 @@ export default function TirthaScreen() {
                       fontSize: 14,
                     }}
                   />
-                  <Pressable onPress={() => void searchCity()}>
+                  <PressableSurface onPress={() => void searchCity()} haptic="selection" hitSlop={8}>
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold }}>Search</Text>
-                  </Pressable>
+                  </PressableSurface>
                 </View>
                 {!permissionGranted && (
-                  <Pressable 
+                  <PressableSurface
                     onPress={() => void requestLocation()}
                     style={{
                       width: 48,
@@ -471,7 +473,7 @@ export default function TirthaScreen() {
                     }}
                   >
                     <Feather name="navigation" size={20} color={COLORS.ink} />
-                  </Pressable>
+                  </PressableSurface>
                 )}
               </View>
 
@@ -604,9 +606,10 @@ export default function TirthaScreen() {
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {TIRTHA_MOODS.map((mood) => (
-                <Pressable
+                <PressableSurface
                   key={mood.key}
                   onPress={() => setCheckinMood(mood.key)}
+                  haptic="selection"
                   style={{
                     borderRadius: 999,
                     borderWidth: 1,
@@ -618,7 +621,7 @@ export default function TirthaScreen() {
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: checkinMood === mood.key ? COLORS.brandGold : dim }}>
                     {mood.label}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               ))}
             </View>
 
@@ -645,7 +648,7 @@ export default function TirthaScreen() {
               <Switch value={community} onValueChange={setCommunity} />
             </View>
 
-            <Pressable
+            <PressableSurface
               onPress={() => void submitCheckIn()}
               disabled={submitting}
               style={{
@@ -659,7 +662,7 @@ export default function TirthaScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>
                 {submitting ? 'Saving…' : 'Save visit'}
               </Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </View>
       </Modal>

@@ -1,5 +1,6 @@
-import { Pressable, Text, View, useColorScheme } from 'react-native';
+import { Text, View, useColorScheme } from 'react-native';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { COLORS, FONTS } from '@/lib/constants';
 
@@ -25,7 +26,7 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
 
   return (
-    <Pressable
+    <PressableSurface
       onPress={onPress}
       style={{
         borderRadius: 24,
@@ -83,10 +84,10 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
             }}
           />
         </View>
-        <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
-          {progressPct}% complete
-        </Text>
-      </View>
-    </Pressable>
+      <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+        {progressPct}% complete
+      </Text>
+    </View>
+    </PressableSurface>
   );
 }

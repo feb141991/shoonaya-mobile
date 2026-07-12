@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, Text, View, useColorScheme } fr
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
@@ -146,9 +147,9 @@ export default function PathLessonListScreen() {
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>
           Could not load this path.
         </Text>
-        <Pressable onPress={() => { void loadPath(); }} style={{ marginTop: 16 }}>
+        <PressableSurface onPress={() => { void loadPath(); }} style={{ marginTop: 16, alignSelf: 'flex-start' }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.brandGold }}>Try again</Text>
-        </Pressable>
+        </PressableSurface>
       </Screen>
     );
   }
@@ -196,8 +197,9 @@ export default function PathLessonListScreen() {
           const isLocked = index > currentLesson && !isComplete;
 
           return (
-            <Pressable
+            <PressableSurface
               disabled={isLocked}
+              haptic="selection"
               onPress={() =>
                 router.push({
                   pathname: '/pathshala/[pathId]/[lessonId]',
@@ -247,7 +249,7 @@ export default function PathLessonListScreen() {
                 </Text>
               </View>
               <Feather name="chevron-right" size={18} color={dim} />
-            </Pressable>
+            </PressableSurface>
           );
         }}
       />
