@@ -138,15 +138,15 @@ export const COLORS = {
   // Floating bottom navigation — matched to Home hero's warm ivory/gold
   // glass instead of the previous flat tab-bar strip. Kept as tokens so
   // the nav can be tuned with the rest of the Home surface language.
-  navGlassTopLight: 'rgba(255,253,248,0.96)',
-  navGlassMidLight: 'rgba(255,248,235,0.93)',
-  navGlassBottomLight: 'rgba(246,232,207,0.94)',
-  navGlassTopDark: 'rgba(38,28,18,0.94)',
-  navGlassMidDark: 'rgba(19,17,14,0.92)',
-  navGlassBottomDark: 'rgba(15,12,9,0.94)',
-  navGlowGoldLight: 'rgba(216,138,28,0.10)',
-  navGlowGoldDark: 'rgba(197,160,89,0.10)',
-  navGlowIvoryLight: 'rgba(255,255,255,0.55)',
+  navGlassTopLight: 'rgba(255,253,248,0.72)',
+  navGlassMidLight: 'rgba(255,248,235,0.62)',
+  navGlassBottomLight: 'rgba(246,232,207,0.66)',
+  navGlassTopDark: 'rgba(38,28,18,0.66)',
+  navGlassMidDark: 'rgba(19,17,14,0.58)',
+  navGlassBottomDark: 'rgba(15,12,9,0.62)',
+  navGlowGoldLight: 'rgba(216,138,28,0.16)',
+  navGlowGoldDark: 'rgba(197,160,89,0.14)',
+  navGlowIvoryLight: 'rgba(255,255,255,0.44)',
   navGlowIvoryDark: 'rgba(255,248,225,0.06)',
 
   // ── PWA divine-hero gradient overlay (src/app/globals.css .divine-hero-overlay

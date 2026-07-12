@@ -969,7 +969,8 @@ function HomeContent() {
               </Text>
             ) : null}
 
-            <PressableSurface
+            <Pressable
+              accessibilityRole="button"
               accessibilityLabel={state.nextPractice.actionLabel}
               onPress={() => {
                 if (state.nextPractice.progress >= 1) {
@@ -984,19 +985,28 @@ function HomeContent() {
                 marginTop: 10,
                 minHeight: 44,
                 borderRadius: 13,
-                backgroundColor: theme.brand,
-                paddingHorizontal: 16,
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'row',
-                gap: 8,
+                overflow: 'hidden',
               }}
             >
-              <Text style={{ color: isDark ? COLORS.darkBg : COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
-                {state.nextPractice.actionLabel}
-              </Text>
-              <Feather name="arrow-right" size={17} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
-            </PressableSurface>
+              <LinearGradient
+                colors={[theme.brand, isDark ? COLORS.brandPrimaryStrongDark : COLORS.brandPrimaryStrongLight]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  minHeight: 44,
+                  paddingHorizontal: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                }}
+              >
+                <Text style={{ color: isDark ? COLORS.darkBg : COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
+                  {state.nextPractice.actionLabel}
+                </Text>
+                <Feather name="arrow-right" size={17} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+              </LinearGradient>
+            </Pressable>
           </View>
 
           <View
