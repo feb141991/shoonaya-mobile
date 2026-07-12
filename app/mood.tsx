@@ -38,13 +38,25 @@ const TIME_OPTIONS = [
   { key: 'open',   label: 'I have all the time',   desc: 'Deep immersion today',           emoji: '∞' },
 ] as const;
 
+const QUICK_CHIPS = [
+  { label: 'Japa', href: '/japa' },
+  { label: 'Nitya Karma', href: '/nitya-karma' },
+  { label: 'Panchang', href: '/panchang' },
+  { label: 'Live Darshan', href: '/live-darshan' },
+] as const;
+
+const FEATURED_ITEMS = [
+  { title: 'Sacred Kosh', desc: 'Look up a dharmic idea', href: '/kosh', icon: 'book-open' },
+  { title: 'Pathshala', desc: 'Study with a calm lesson', href: '/(tabs)/pathshala', icon: 'layers' },
+] as const;
+
 export default function MoodScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
   const { width: windowWidth } = useWindowDimensions();
-  const moodCardWidth = Math.floor((Math.min(windowWidth, 430) - 56) / 2);
+  const moodCardWidth = Math.floor((Math.min(windowWidth, 430) - 72) / 3);
   const MOODS = MOODS_CONFIG[isDark ? 'dark' : 'light'] || MOODS_CONFIG.dark;
   const entrance = useRef(new Animated.Value(0)).current;
   const shimmer = useRef(new Animated.Value(0)).current;
@@ -229,9 +241,30 @@ export default function MoodScreen() {
     }
   };
 
+  const renderBackButton = (onPress?: () => void) => (
+    <Pressable
+      accessibilityLabel="Go back"
+      accessibilityRole="button"
+      onPress={onPress ?? (() => router.back())}
+      style={[
+        styles.backButton,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        },
+      ]}
+    >
+      <Feather name="chevron-left" size={23} color={theme.text} />
+    </Pressable>
+  );
+
   if (loading && step === 1) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
+        <View style={styles.headerRow}>
+          {renderBackButton()}
+        </View>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={theme.brand} />
         </View>
@@ -243,9 +276,7 @@ export default function MoodScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={styles.headerRow}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={[styles.backButton, { minHeight: 0 }]}>
-            <Feather name="arrow-left" size={24} color={theme.dim} />
-          </PressableSurface>
+          {renderBackButton()}
         </View>
         <View style={styles.center}>
           <Text style={[styles.title, { color: theme.text, fontSize: 22, textAlign: 'center' }]}>
@@ -273,9 +304,7 @@ export default function MoodScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={styles.headerRow}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={[styles.backButton, { minHeight: 0 }]}>
-            <Feather name="arrow-left" size={24} color={theme.dim} />
-          </PressableSurface>
+          {renderBackButton()}
         </View>
         <View style={styles.center}>
           {moodStatus?.lastMood ? (
@@ -348,13 +377,22 @@ export default function MoodScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
-          <PressableSurface haptic="selection" onPress={() => {
+          {renderBackButton(() => {
             if (step === 3) setStep(2);
             else if (step === 2) setStep(1);
             else router.back();
-          }} style={[styles.backButton, { minHeight: 0 }]}>
-            <Feather name="arrow-left" size={24} color={theme.dim} />
-          </PressableSurface>
+          })}
+          {step !== 1 ? (
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Restart mood check-in"
+              onPress={startOver}
+              style={[styles.resetPill, { borderColor: theme.border, backgroundColor: theme.card }]}
+            >
+              <Feather name="rotate-ccw" size={13} color={theme.dim} />
+              <Text style={[styles.resetText, { color: theme.dim }]}>Change mood</Text>
+            </PressableSurface>
+          ) : null}
         </View>
 
         <Animated.View
@@ -370,16 +408,16 @@ export default function MoodScreen() {
             ],
           }}
         >
-          <Text style={[styles.eyebrow, { color: theme.brand }]}>Bhavana check-in</Text>
+          <Text style={[styles.eyebrow, { color: theme.dim }]}>Mood-based guidance</Text>
           <Text style={[styles.title, { color: theme.text }]}>
-          {step === 1 && "How are you feeling?"}
-          {step === 2 && "How much time do you have?"}
-          {step === 3 && !showReturn && "Recommendations for you"}
-          {step === 3 && showReturn && "How do you feel now?"}
+            {step === 1 && "How are you feeling?"}
+            {step === 2 && "How much time do you have?"}
+            {step === 3 && !showReturn && "Recommendations for you"}
+            {step === 3 && showReturn && "How do you feel now?"}
           </Text>
           {step === 1 ? (
             <Text style={[styles.subtitle, { color: theme.dim, marginTop: -SPACING.lg, marginBottom: SPACING.xl }]}>
-              Choose the state closest to your heart. Shoonaya will suggest a gentle next step.
+              Pick what&apos;s closest to your state right now.
             </Text>
           ) : null}
         </Animated.View>
@@ -446,11 +484,67 @@ export default function MoodScreen() {
                 </Text>
               </Pressable>
             ))}
+
+            <View style={styles.belowFold}>
+              <Text style={[styles.sectionEyebrow, { color: theme.dim }]}>Quick explore</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+                {QUICK_CHIPS.map((chip) => (
+                  <Pressable
+                    key={chip.label}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${chip.label}`}
+                    onPress={() => router.push(resolveNativeRoute(chip.href, '/(tabs)'))}
+                    style={[styles.quickChip, { backgroundColor: theme.brandSoft, borderColor: theme.border }]}
+                  >
+                    <Text style={[styles.quickChipText, { color: theme.brand }]}>{chip.label}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <Text style={[styles.sectionEyebrow, { color: theme.dim, marginTop: SPACING.lg }]}>Featured</Text>
+              <View style={styles.featureGrid}>
+                {FEATURED_ITEMS.map((item) => (
+                  <Pressable
+                    key={item.title}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${item.title}`}
+                    onPress={() => router.push(resolveNativeRoute(item.href, '/(tabs)'))}
+                    style={[
+                      styles.featureCard,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                      },
+                    ]}
+                  >
+                    <View pointerEvents="none" style={[styles.featureGlow, { backgroundColor: theme.brandSoft }]} />
+                    <Feather name={item.icon as keyof typeof Feather.glyphMap} size={24} color={theme.brand} />
+                    <Text style={[styles.featureTitle, { color: theme.text }]}>{item.title}</Text>
+                    <Text style={[styles.featureDesc, { color: theme.dim }]}>{item.desc}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
           </Animated.View>
         )}
 
         {step === 2 && (
           <View style={styles.list}>
+            {selectedMood ? (
+              <View style={styles.selectedMoodWrap}>
+                <View
+                  style={[
+                    styles.selectedMoodIcon,
+                    { backgroundColor: selectedMood.bg, borderColor: `${selectedMood.colour}35` },
+                  ]}
+                >
+                  <MoodGlyph mood={selectedMood.key} color={selectedMood.colour} size={36} />
+                </View>
+                <Text style={[styles.selectedMoodLabel, { color: theme.dim }]}>You&apos;re feeling</Text>
+                <Text style={[styles.selectedMoodTitle, { color: selectedMood.colour }]}>{selectedMood.label}</Text>
+              </View>
+            ) : null}
             {TIME_OPTIONS.map(opt => (
               <PressableSurface key={opt.key} haptic="selection" onPress={() => handleTimeSelect(opt.key)}>
                 <Card tone="auto" style={styles.timeCard}>
@@ -463,6 +557,7 @@ export default function MoodScreen() {
                       {opt.desc}
                     </Text>
                   </View>
+                  <Feather name="chevron-right" size={17} color={theme.dim} />
                 </Card>
               </PressableSurface>
             ))}
@@ -622,58 +717,79 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   backButton: {
-    padding: SPACING.sm,
-    marginLeft: -SPACING.sm,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetPill: {
+    minHeight: 38,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  resetText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.sansSemiBold,
   },
   title: {
     fontFamily: FONTS.serifBold,
-    fontSize: 28,
-    lineHeight: 34,
-    marginBottom: SPACING.xxl,
+    fontSize: 26,
+    lineHeight: 32,
+    marginBottom: SPACING.xl,
+    textAlign: 'center',
   },
   eyebrow: {
     ...TYPE.chip,
     textTransform: 'uppercase',
-    letterSpacing: 1.9,
-    marginBottom: SPACING.sm,
+    letterSpacing: 2.1,
+    marginBottom: SPACING.xs,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: FONTS.sans,
-    fontSize: 16,
+    fontSize: 13,
+    lineHeight: 19,
     marginTop: SPACING.sm,
+    textAlign: 'center',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: SPACING.md,
+    rowGap: SPACING.sm,
   },
   moodCard: {
-    width: '48%',
-    minHeight: 150,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.lg,
-    borderRadius: 22,
+    minHeight: 116,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.md,
+    borderRadius: 19,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   glyphContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
     borderWidth: 1,
   },
   moodLabel: {
-    ...TYPE.body,
+    ...TYPE.caption,
     fontFamily: FONTS.sansSemiBold,
     textAlign: 'center',
     maxWidth: '100%',
@@ -687,18 +803,18 @@ const styles = StyleSheet.create({
   },
   moodGlow: {
     position: 'absolute',
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    top: -54,
-    left: -50,
-    opacity: 0.62,
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    top: -46,
+    left: -46,
+    opacity: 0.58,
   },
   moodGlint: {
     position: 'absolute',
     top: -20,
     bottom: -20,
-    width: 34,
+    width: 26,
     backgroundColor: COLORS.brandAccentLight,
   },
   sparkle: {
@@ -709,16 +825,97 @@ const styles = StyleSheet.create({
     opacity: 0.48,
   },
   sparkleOne: {
-    top: 24,
-    right: 26,
+    top: 22,
+    right: 22,
   },
   sparkleTwo: {
-    bottom: 30,
-    right: 44,
+    bottom: 26,
+    right: 28,
+  },
+  belowFold: {
+    width: '100%',
+    marginTop: SPACING.xl,
+  },
+  sectionEyebrow: {
+    ...TYPE.chip,
+    textTransform: 'uppercase',
+    letterSpacing: 1.8,
+    marginBottom: SPACING.sm,
+  },
+  chipRow: {
+    gap: SPACING.sm,
+    paddingRight: SPACING.lg,
+  },
+  quickChip: {
+    minHeight: 36,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: SPACING.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickChipText: {
+    ...TYPE.caption,
+    fontFamily: FONTS.sansSemiBold,
+  },
+  featureGrid: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  featureCard: {
+    flex: 1,
+    minHeight: 118,
+    borderRadius: 21,
+    borderWidth: 1,
+    padding: SPACING.md,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  featureGlow: {
+    position: 'absolute',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    top: -28,
+    right: -20,
+    opacity: 0.8,
+  },
+  featureTitle: {
+    ...TYPE.body,
+    fontFamily: FONTS.sansSemiBold,
+    marginTop: SPACING.md,
+  },
+  featureDesc: {
+    ...TYPE.caption,
+    marginTop: 2,
   },
   list: {
     flexDirection: 'column',
     gap: SPACING.md,
+  },
+  selectedMoodWrap: {
+    alignItems: 'center',
+    paddingTop: SPACING.xs,
+    paddingBottom: SPACING.lg,
+  },
+  selectedMoodIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    marginBottom: SPACING.md,
+  },
+  selectedMoodLabel: {
+    ...TYPE.caption,
+    fontFamily: FONTS.sansMedium,
+    marginBottom: 2,
+  },
+  selectedMoodTitle: {
+    fontFamily: FONTS.serifBold,
+    fontSize: 24,
+    lineHeight: 30,
   },
   timeCard: {
     flexDirection: 'row',
