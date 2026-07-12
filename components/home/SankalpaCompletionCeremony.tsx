@@ -3,6 +3,7 @@ import { AccessibilityInfo, Animated, Pressable, Text, View } from 'react-native
 import { Feather } from '@expo/vector-icons';
 
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS } from '@/lib/constants';
 
 /**
@@ -106,15 +107,15 @@ export function SankalpaCompletionCeremony({ visible, onClose, sankalpaTitle, du
       <ConfettiOverlay show={visible} density="soft" />
       <Pressable accessibilityRole="button" accessibilityLabel="Dismiss" onPress={dismiss} style={{ position: 'absolute', inset: 0 }} />
 
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
+        haptic="selection"
         accessibilityLabel="Close"
         hitSlop={10}
         onPress={dismiss}
-        style={{ position: 'absolute', top: 24, right: 24, padding: 6 }}
+        style={{ position: 'absolute', top: 24, right: 24, padding: 6, minHeight: 0 }}
       >
         <Feather name="x" size={22} color={COLORS.textDimDark} />
-      </Pressable>
+      </PressableSurface>
 
       <Animated.View style={{ transform: [{ scale }], alignItems: 'center', maxWidth: 420 }}>
         <View
@@ -177,8 +178,7 @@ export function SankalpaCompletionCeremony({ visible, onClose, sankalpaTitle, du
           </Text>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
           accessibilityLabel="Complete journey"
           onPress={dismiss}
           style={{
@@ -194,7 +194,7 @@ export function SankalpaCompletionCeremony({ visible, onClose, sankalpaTitle, du
           }}
         >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: accent }}>Complete Journey →</Text>
-        </Pressable>
+        </PressableSurface>
       </Animated.View>
     </Animated.View>
   );

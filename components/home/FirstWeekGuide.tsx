@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { Text, useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
 
@@ -240,9 +241,8 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
           {acts.map((act) => {
             const done = completed.has(act.id);
             return (
-              <Pressable
+              <PressableSurface
                 key={act.id}
-                accessibilityRole="button"
                 accessibilityLabel={`${act.title}${done ? ', completed' : ''}`}
                 onPress={() => {
                   markDone(act.id);
@@ -292,13 +292,13 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
                 {!done ? (
                   <Feather name="chevron-right" size={14} color={isDark ? COLORS.textDimDark : COLORS.textDimLight} />
                 ) : null}
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </View>
 
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
+          haptic="selection"
           accessibilityLabel="Dismiss first week guide"
           onPress={dismiss}
           style={{ paddingHorizontal: 16, paddingVertical: 12, alignItems: 'flex-end', minHeight: MIN_TOUCH_TARGET }}
@@ -313,7 +313,7 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
           >
             I know the app — dismiss
           </Text>
-        </Pressable>
+        </PressableSurface>
       </View>
     </View>
   );

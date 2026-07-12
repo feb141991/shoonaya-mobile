@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { Text, useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 
 /**
@@ -190,8 +191,8 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
             </Text>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="Dismiss Brahma Muhurta reminder"
             hitSlop={10}
             onPress={dismiss}
@@ -205,11 +206,10 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
             }}
           >
             <Feather name="x" size={14} color={isDark ? COLORS.textDimDark : COLORS.textDimLight} />
-          </Pressable>
+          </PressableSurface>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
           accessibilityLabel="Begin Japa"
           onPress={() => router.push('/japa')}
           style={{
@@ -227,7 +227,7 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
             </Text>
             <Feather name="chevron-right" size={14} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
           </View>
-        </Pressable>
+        </PressableSurface>
       </View>
     </View>
   );

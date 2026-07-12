@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Dimensions,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -12,8 +11,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
 
 /**
  * ObservanceCarousel — swipeable card carousel for upcoming sacred days.
@@ -182,9 +182,8 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
         contentContainerStyle={{ gap: CARD_GAP }}
       >
         {upcoming.map(({ o, days }) => (
-          <Pressable
+          <PressableSurface
             key={`${o.slug}-${o.date}`}
-            accessibilityRole="button"
             accessibilityLabel={`${o.display_name}, ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}`}
             onPress={() => router.push(observanceHref(o))}
             style={{
@@ -257,20 +256,20 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
                 {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `in ${days}d`}
               </Text>
             </View>
-          </Pressable>
+          </PressableSurface>
         ))}
       </ScrollView>
 
       {upcoming.length > 1 ? (
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 }}>
           {upcoming.map((_, i) => (
-            <Pressable
+            <PressableSurface
               key={i}
-              accessibilityRole="button"
+              haptic="selection"
               accessibilityLabel={`Go to card ${i + 1}`}
               hitSlop={8}
               onPress={() => scrollToIndex(i)}
-              style={{ minHeight: MIN_TOUCH_TARGET / 2, justifyContent: 'center' }}
+              style={{ minHeight: 0, justifyContent: 'center' }}
             >
               <View
                 style={{
@@ -280,7 +279,7 @@ export function ObservanceCarousel({ tradition, timezone }: Props) {
                   backgroundColor: i === activeIndex ? accent : isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
                 }}
               />
-            </Pressable>
+            </PressableSurface>
           ))}
         </View>
       ) : null}

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -7,6 +7,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 
 /**
@@ -169,8 +170,8 @@ export function SankalpaCard() {
 
   if (status === 'error') {
     return (
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
+        haptic="selection"
         accessibilityLabel="Couldn't load your Sankalpa. Tap to retry."
         onPress={() => {
           load().catch(() => {});
@@ -191,14 +192,13 @@ export function SankalpaCard() {
           Couldn&apos;t load your Sankalpa.
         </Text>
         <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-      </Pressable>
+      </PressableSurface>
     );
   }
 
   if (!sankalpa) {
     return (
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
         accessibilityLabel="Set your Sankalpa"
         onPress={() => router.push('/sankalpa')}
         style={{
@@ -220,7 +220,7 @@ export function SankalpaCard() {
           </Text>
         </View>
         <Feather name="arrow-right" size={20} color={theme.brand} />
-      </Pressable>
+      </PressableSurface>
     );
   }
 
@@ -244,8 +244,7 @@ export function SankalpaCard() {
         borderColor: theme.border,
       }}
     >
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
         accessibilityLabel={`Sankalpa, day ${day} of ${targetDays}. Open Sankalpa.`}
         onPress={() => router.push('/sankalpa')}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}
@@ -259,12 +258,12 @@ export function SankalpaCard() {
             Day {Math.min(day, targetDays || day)} of {targetDays}
           </Text>
         </View>
-      </Pressable>
+      </PressableSurface>
 
       <ProgressRing progress={progress} done={progress >= 1} color={theme.brand} track={theme.ring} />
 
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
+        haptic="none"
         accessibilityLabel={checkedToday ? 'Sankalpa honoured today' : 'Mark today honoured'}
         onPress={() => {
           void handleCheckIn();
@@ -280,6 +279,7 @@ export function SankalpaCard() {
           backgroundColor: checkedToday ? `${theme.brand}22` : theme.brand,
           borderWidth: checkedToday ? 1 : 0,
           borderColor: `${theme.brand}4d`,
+          minHeight: 0,
         }}
       >
         <Feather
@@ -287,7 +287,7 @@ export function SankalpaCard() {
           size={checkedToday ? 18 : 16}
           color={checkedToday ? theme.brand : isDark ? COLORS.darkBg : COLORS.creamBg}
         />
-      </Pressable>
+      </PressableSurface>
     </View>
   );
 }
