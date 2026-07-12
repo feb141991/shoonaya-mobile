@@ -167,7 +167,7 @@ export default function NityaAshramaScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -204,12 +204,12 @@ export default function NityaAshramaScreen() {
                       paddingVertical: 10,
                       borderRadius: 12,
                       borderWidth: 1,
-                      borderColor: active ? COLORS.brandGold : theme.border,
+                      borderColor: active ? theme.brand : theme.border,
                       backgroundColor: active ? theme.brandSoft : theme.bg,
                       alignItems: 'center',
                     }}
                   >
-                    <Text style={{ color: active ? COLORS.brandGold : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                    <Text style={{ color: active ? theme.brand : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                       {g === 'general' ? 'General' : 'Female'}
                     </Text>
                   </PressableSurface>
@@ -229,7 +229,7 @@ export default function NityaAshramaScreen() {
                   onPress={() => setSelectedStage(opt.key)}
                   style={{
                     backgroundColor: active ? theme.brandSoft : theme.card,
-                    borderColor: active ? COLORS.brandGold : theme.border,
+                    borderColor: active ? theme.brand : theme.border,
                     borderWidth: active ? 1.5 : 1,
                     borderRadius: 16,
                     padding: 16,
@@ -243,7 +243,7 @@ export default function NityaAshramaScreen() {
                     <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{opt.title}</Text>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16 }}>{opt.desc}</Text>
                   </View>
-                  {active && <Ionicons name="checkmark-circle" size={24} color={COLORS.brandGold} />}
+                  {active && <Ionicons name="checkmark-circle" size={24} color={theme.brand} />}
                 </PressableSurface>
               );
             })}

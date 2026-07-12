@@ -68,7 +68,7 @@ export default function LedgerScreen() {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );

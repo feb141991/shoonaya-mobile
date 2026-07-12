@@ -97,7 +97,7 @@ export default function ShieldsScreen() {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -167,10 +167,10 @@ export default function ShieldsScreen() {
                   <Text style={{ color: theme.dim, fontFamily: FONTS.sans }}> • {nextShield.desc}</Text>
                 </Text>
               </View>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.brandGold }}>{value} / {nextShield.threshold}</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.brand }}>{value} / {nextShield.threshold}</Text>
             </View>
             <View style={{ height: 8, borderRadius: 4, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, overflow: 'hidden' }}>
-              <View style={{ height: '100%', width: `${progress}%`, backgroundColor: COLORS.brandGold, borderRadius: 4 }} />
+              <View style={{ height: '100%', width: `${progress}%`, backgroundColor: theme.brand, borderRadius: 4 }} />
             </View>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
               {nextShield.threshold - value} more {activeTab === 'streak' ? 'days' : 'sessions'} to unlock
@@ -180,7 +180,7 @@ export default function ShieldsScreen() {
 
         {/* Shields List */}
         <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 20 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
             {earnedCount}/{shields.length} Earned
           </Text>
 
@@ -211,7 +211,7 @@ export default function ShieldsScreen() {
                         {shield.detail}
                       </Text>
                       {earned && (
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, marginTop: 4 }}>Unlocked ✦</Text>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, marginTop: 4 }}>Unlocked ✦</Text>
                       )}
                     </View>
                     <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>

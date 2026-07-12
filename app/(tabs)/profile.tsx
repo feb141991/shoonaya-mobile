@@ -496,7 +496,7 @@ export default function ProfileScreen() {
       const heatmap = Array.isArray(data.heatmap) ? (data.heatmap as ReportHeatmapDay[]) : [];
       const heatmapHtml = heatmap.map((day) => {
         const nityaCount = day.nitya ?? 0;
-        const level = nityaCount >= 7 ? COLORS.brandGold : nityaCount > 0 ? COLORS.brandSoftLight : day.japa ? COLORS.dangerBg : COLORS.borderLight;
+        const level = nityaCount >= 7 ? COLORS.brandGoldLight : nityaCount > 0 ? COLORS.brandSoftLight : day.japa ? COLORS.dangerBg : COLORS.borderLight;
         return `<div title="${day.date ?? ''}" style="width:18px;height:18px;border-radius:4px;background:${level}"></div>`;
       }).join('');
       const mantrasHtml = (data.japa?.top_mantras ?? []).map(([name, count]: [string, number]) =>
@@ -556,7 +556,7 @@ export default function ProfileScreen() {
   <h2>30-Day Heatmap</h2>
   <div class="heatmap">${heatmapHtml}</div>
   <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:${COLORS.textDimLight}">
-    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.brandGold};margin-right:4px;vertical-align:middle"></span>Full Nitya</span>
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.brandGoldLight};margin-right:4px;vertical-align:middle"></span>Full Nitya</span>
     <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.brandSoftLight};margin-right:4px;vertical-align:middle"></span>Partial Nitya</span>
     <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${COLORS.dangerBg};margin-right:4px;vertical-align:middle"></span>Japa only</span>
   </div>
@@ -608,7 +608,7 @@ export default function ProfileScreen() {
               }}
             />
           ) : (
-            <ActivityIndicator color={COLORS.brandGold} />
+            <ActivityIndicator color={theme.brand} />
           )}
         </View>
       </Screen>
@@ -1151,8 +1151,8 @@ export default function ProfileScreen() {
                     paddingVertical: 4,
                   }}
                 >
-                  <Feather name="lock" size={10} color={COLORS.brandGold} />
-                  <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Secured</Text>
+                  <Feather name="lock" size={10} color={theme.brand} />
+                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Secured</Text>
                 </View>
               </View>
               <View
@@ -1261,8 +1261,8 @@ export default function ProfileScreen() {
                       flex: 1,
                       borderRadius: 16,
                       borderWidth: 1,
-                      borderColor: active ? COLORS.brandGold : theme.border,
-                      backgroundColor: active ? COLORS.brandGold : theme.bg,
+                      borderColor: active ? theme.brand : theme.border,
+                      backgroundColor: active ? theme.brand : theme.bg,
                       paddingVertical: 12,
                       alignItems: 'center',
                     }}
@@ -1298,7 +1298,7 @@ export default function ProfileScreen() {
                 style={{
                   flex: 1,
                   borderRadius: 16,
-                  backgroundColor: COLORS.brandGold,
+                  backgroundColor: theme.brand,
                   paddingVertical: 14,
                   alignItems: 'center',
                 }}

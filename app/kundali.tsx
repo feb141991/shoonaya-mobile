@@ -148,7 +148,7 @@ export default function KundaliScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -181,7 +181,7 @@ export default function KundaliScreen() {
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
               Add your birth details to calculate your Lagna, Rashi, and planetary positions.
             </Text>
-            <PressableSurface onPress={() => setShowForm(true)} style={{ backgroundColor: COLORS.brandGold, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, marginTop: 12 }}>
+            <PressableSurface onPress={() => setShowForm(true)} style={{ backgroundColor: theme.brand, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, marginTop: 12 }}>
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Create Profile</Text>
             </PressableSurface>
           </Card>
@@ -202,7 +202,7 @@ export default function KundaliScreen() {
                 )}
               </View>
               {p.lagna && (
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginTop: 12 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginTop: 12 }}>
                   Ascendant (Lagna): {p.lagna}
                 </Text>
               )}
@@ -277,13 +277,13 @@ export default function KundaliScreen() {
                 <PressableSurface
                   onPress={searchCity}
                   disabled={searchingCity || formData.cityQuery.length < 2}
-                  style={{ backgroundColor: COLORS.brandGold, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12, opacity: searchingCity || formData.cityQuery.length < 2 ? 0.5 : 1 }}
+                  style={{ backgroundColor: theme.brand, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12, opacity: searchingCity || formData.cityQuery.length < 2 ? 0.5 : 1 }}
                 >
                   {searchingCity ? <ActivityIndicator color={COLORS.ink} size="small" /> : <Feather name="search" size={18} color={COLORS.ink} />}
                 </PressableSurface>
               </View>
               {geocodeResult && (
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
                   ✓ Resolved: {geocodeResult.city}, {geocodeResult.country} ({geocodeResult.timezone})
                 </Text>
               )}
@@ -293,7 +293,7 @@ export default function KundaliScreen() {
               onPress={handleGenerateChart}
               disabled={submitting || !geocodeResult}
               style={{
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: theme.brand,
                 paddingVertical: 16,
                 borderRadius: 24,
                 alignItems: 'center',

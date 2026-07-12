@@ -113,7 +113,7 @@ export default function MoodInsightsScreen() {
 
         {loading ? (
           <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator color={COLORS.brandGold} />
+            <ActivityIndicator color={theme.brand} />
             <Text style={{ marginTop: 12, fontFamily: FONTS.sans, color: theme.dim }}>Loading insights...</Text>
           </View>
         ) : (
@@ -128,8 +128,8 @@ export default function MoodInsightsScreen() {
               marginBottom: 8,
             }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
-                <Feather name="moon" size={16} color={COLORS.brandGold} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1 }}>Divine Reflection</Text>
+                <Feather name="moon" size={16} color={theme.brand} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1 }}>Divine Reflection</Text>
               </View>
               <Text style={{ fontFamily: FONTS.serif, fontSize: 15, color: theme.text, lineHeight: 24 }}>
                 {aiReflection || "Your journey is unique. Keep logging your daily moods to unlock deeper spiritual reflections."}
@@ -138,7 +138,7 @@ export default function MoodInsightsScreen() {
 
             {/* Metrics Grid */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <StatBox icon="calendar" label="Check-ins" value={metrics?.totalCheckins || 0} color={COLORS.brandGold} />
+              <StatBox icon="calendar" label="Check-ins" value={metrics?.totalCheckins || 0} color={theme.brand} />
               <StatBox icon="check-circle" label="Actions Completed" value={metrics?.completedActions || 0} color={COLORS.success} />
             </View>
             <View style={{ flexDirection: 'row', gap: 12 }}>

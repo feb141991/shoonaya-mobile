@@ -171,7 +171,7 @@ const INITIAL_STATE: HomeSummary = {
     transliteration: 'Vasudhaiva Kutumbakam',
     meaning: 'The whole world is one family, a reminder to act with kinship and dignity.',
     source: 'Maha Upanishad',
-    accentColour: COLORS.brandGold,
+    accentColour: COLORS.brandGoldLight,
     accentLight: COLORS.authGoldWellBg,
   },
   panchang: {
@@ -459,12 +459,12 @@ function HomeContent() {
 
   const nextPracticeRow = state.practices.find((row) => row.id === state.nextPractice.id);
   const nextPracticeIcon = nextPracticeRow?.icon ?? 'compass';
-  const nextPracticeColor = nextPracticeRow?.color ?? COLORS.brandGold;
+  const nextPracticeColor = nextPracticeRow?.color ?? theme.brand;
 
   const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
   const dharmVeerDone = dharmVeerRow?.done ?? false;
   const dharmVeerIcon = dharmVeerRow?.icon ?? 'shield';
-  const dharmVeerColor = dharmVeerRow?.color ?? COLORS.brandGold;
+  const dharmVeerColor = dharmVeerRow?.color ?? theme.brand;
 
   const loadHome = useCallback(async () => {
     setLoadError(false);
@@ -587,7 +587,7 @@ function HomeContent() {
         ref={scrollRef}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 34 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
         showsVerticalScrollIndicator={false}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}

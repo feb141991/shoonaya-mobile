@@ -439,7 +439,7 @@ export default function JapaScreen() {
           cy={y}
           r={r}
           fill={`url(#${gradientId})`}
-          stroke={isActive ? COLORS.brandGold : malaSkin.beadBorder}
+          stroke={isActive ? theme.brand : malaSkin.beadBorder}
           strokeWidth={isSumeru ? 1.5 : 0.5}
         />
       );
@@ -482,7 +482,7 @@ export default function JapaScreen() {
         </View>
 
         {loading ? (
-          <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={theme.brand} style={{ marginTop: 40 }} />
         ) : (
           <>
             <View style={{ alignItems: 'center', marginBottom: 2, marginTop: 2, gap: 4 }}>
@@ -594,7 +594,7 @@ export default function JapaScreen() {
                 gap: 14,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
                 PRACTICE SETUP
               </Text>
 
@@ -668,7 +668,7 @@ export default function JapaScreen() {
                   justifyContent: 'space-between',
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: mantraAudioEnabled ? COLORS.brandGold : border,
+                  borderColor: mantraAudioEnabled ? theme.brand : border,
                   backgroundColor: mantraAudioEnabled ? cardBg : 'transparent',
                   paddingHorizontal: 14,
                   paddingVertical: 12,
@@ -676,19 +676,19 @@ export default function JapaScreen() {
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   {mantraAudioLoading ? (
-                    <ActivityIndicator color={COLORS.brandGold} size="small" />
+                    <ActivityIndicator color={theme.brand} size="small" />
                   ) : (
                     <Feather
                       name={mantraAudioEnabled ? 'volume-2' : 'volume-x'}
                       size={16}
-                      color={mantraAudioEnabled ? COLORS.brandGold : dim}
+                      color={mantraAudioEnabled ? theme.brand : dim}
                     />
                   )}
                   <Text
                     style={{
                       fontFamily: FONTS.sansMedium,
                       fontSize: 13,
-                      color: mantraAudioEnabled ? COLORS.brandGold : dim,
+                      color: mantraAudioEnabled ? theme.brand : dim,
                     }}
                   >
                     Background mantra audio
@@ -699,7 +699,7 @@ export default function JapaScreen() {
                     width: 40,
                     height: 22,
                     borderRadius: 11,
-                    backgroundColor: mantraAudioEnabled ? COLORS.brandGold : border,
+                    backgroundColor: mantraAudioEnabled ? theme.brand : border,
                     alignItems: mantraAudioEnabled ? 'flex-end' : 'flex-start',
                     justifyContent: 'center',
                     paddingHorizontal: 2,
@@ -866,7 +866,7 @@ export default function JapaScreen() {
               onPress={() => setHistoryOpen(false)}
               style={{
                 borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: theme.brand,
                 paddingVertical: 14,
                 alignItems: 'center',
               }}
@@ -1085,7 +1085,7 @@ export default function JapaScreen() {
             borderRadius: 16,
             backgroundColor: cardBg,
             borderWidth: 1,
-            borderColor: COLORS.brandGold,
+            borderColor: theme.brand,
             paddingVertical: 12,
             alignItems: 'center',
           }}

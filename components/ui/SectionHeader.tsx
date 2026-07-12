@@ -1,16 +1,18 @@
-import { Pressable, Text, useColorScheme, View, type ViewProps } from 'react-native';
+import { Text, useColorScheme, View, type ViewProps } from 'react-native';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { TYPE, themeColor } from '@/lib/constants';
 
 // Small-caps eyebrow label, e.g. bhakti.tsx's "CONTROLS" header above the
 // mantra/audio controls block. Optional trailing action (e.g. "See all")
 // for list-style sections.
 //
-// The eyebrow label itself is COLORS.brandGold unconditionally — same
-// value in both themes, matching every screen's existing convention for
-// gold accents (e.g. bhakti.tsx's own "CONTROLS" header). The trailing
-// action text is a dim/secondary tone, which *does* differ by theme
-// (textDimLight vs textDimDark), so it reads useColorScheme().
+// The eyebrow label uses theme.brand (the theme-aware brandGoldDark/
+// brandGoldLight pair — see lib/constants.ts), so it renders the PWA's
+// actual light-mode primary (#D88A1C) rather than always showing the
+// dark-mode gold value regardless of theme. The trailing action text is a
+// dim/secondary tone, which also differs by theme (textDimLight vs
+// textDimDark), so both read useColorScheme().
 
 type SectionHeaderProps = ViewProps & {
   label: string;
@@ -37,16 +39,17 @@ export function SectionHeader({ label, actionLabel, onAction, style, ...props }:
       </Text>
 
       {actionLabel && onAction ? (
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
+          haptic="selection"
           accessibilityLabel={actionLabel}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           onPress={onAction}
+          style={{ minHeight: 0 }}
         >
           <Text style={{ ...TYPE.label, color: theme.dim }}>
             {actionLabel}
           </Text>
-        </Pressable>
+        </PressableSurface>
       ) : null}
     </View>
   );

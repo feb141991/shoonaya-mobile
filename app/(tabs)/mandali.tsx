@@ -451,7 +451,7 @@ export default function MandaliScreen() {
             />
           ) : (
             <LinearGradient
-              colors={[COLORS.brandGold, '#D4A646']}
+              colors={[theme.brand, '#D4A646']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{

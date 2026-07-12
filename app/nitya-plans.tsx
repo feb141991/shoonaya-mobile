@@ -23,8 +23,8 @@ export default function NityaPlansScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = isDark
-    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: COLORS.textDimDark, border: COLORS.borderDark, accent: COLORS.brandGold }
-    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: COLORS.textDimLight, border: COLORS.homeBorderSoftLight, accent: COLORS.brandGold };
+    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: COLORS.textDimDark, border: COLORS.borderDark, accent: COLORS.brandGoldDark }
+    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: COLORS.textDimLight, border: COLORS.homeBorderSoftLight, accent: COLORS.brandGoldLight };
 
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -244,7 +244,7 @@ export default function NityaPlansScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.accent} />
         </View>
       </Screen>
     );
@@ -278,9 +278,9 @@ export default function NityaPlansScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 8,
                   borderRadius: 16,
-                  backgroundColor: active ? COLORS.brandGold : theme.card,
+                  backgroundColor: active ? theme.accent : theme.card,
                   borderWidth: 1,
-                  borderColor: active ? COLORS.brandGold : theme.border,
+                  borderColor: active ? theme.accent : theme.border,
                 }}
               >
                 <Text style={{ color: active ? COLORS.ink : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
@@ -535,14 +535,14 @@ export default function NityaPlansScreen() {
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
-                            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>🔄 Restart</Text>
+                            <Text style={{ color: theme.accent, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>🔄 Restart</Text>
                           </PressableSurface>
                           <PressableSurface
                             onPress={() => handleAbandonPlan(plan)}
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
-                            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>⏸ Pause</Text>
+                            <Text style={{ color: theme.accent, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>⏸ Pause</Text>
                           </PressableSurface>
                           <PressableSurface
                             onPress={() => handleLeavePlan(plan)}
