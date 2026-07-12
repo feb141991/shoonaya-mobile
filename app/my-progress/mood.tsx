@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
@@ -92,8 +92,9 @@ export default function MoodInsightsScreen() {
         {/* Toggle */}
         <View style={{ flexDirection: 'row', backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 24, padding: 4, marginBottom: 24 }}>
           {(['weekly', 'monthly'] as const).map(tf => (
-            <Pressable
+            <PressableSurface
               key={tf}
+              haptic="selection"
               onPress={() => setTimeframe(tf)}
               style={{
                 flex: 1,
@@ -106,7 +107,7 @@ export default function MoodInsightsScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: timeframe === tf ? theme.text : theme.dim, textTransform: 'capitalize' }}>
                 {tf}
               </Text>
-            </Pressable>
+            </PressableSurface>
           ))}
         </View>
 

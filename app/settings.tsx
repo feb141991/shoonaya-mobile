@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Pressable,
   ScrollView,
   Switch,
   Text,
@@ -22,6 +21,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Pill } from '@/components/ui/Pill';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -161,8 +161,8 @@ function DangerButton({
 }) {
   const busy = !!loading;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressableSurface
+      haptic="none"
       accessibilityLabel={label}
       accessibilityState={{ disabled: busy, busy }}
       disabled={busy}
@@ -170,7 +170,7 @@ function DangerButton({
         if (!busy) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
         onPress();
       }}
-      style={({ pressed }) => ({
+      style={{
         minHeight: MIN_TOUCH_TARGET,
         borderRadius: RADII.lg,
         borderWidth: 1,
@@ -180,16 +180,14 @@ function DangerButton({
         alignItems: 'center',
         justifyContent: 'center',
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-        opacity: busy ? 0.6 : pressed ? 0.85 : 1,
-        transform: [{ scale: pressed && !busy ? 0.985 : 1 }],
-      })}
+      }}
     >
       {busy ? (
         <ActivityIndicator color={COLORS.danger} />
       ) : (
         <Text style={{ ...TYPE.label, fontSize: 14.5, color: COLORS.danger }}>{label}</Text>
       )}
-    </Pressable>
+    </PressableSurface>
   );
 }
 
@@ -597,7 +595,8 @@ export default function SettingsScreen() {
             </View>
 
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 }}>
-              <Pressable
+              <PressableSurface
+                haptic="selection"
                 accessibilityRole="link"
                 accessibilityLabel="Terms of Service"
                 hitSlop={10}
@@ -607,8 +606,9 @@ export default function SettingsScreen() {
                 <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
                   Terms
                 </Text>
-              </Pressable>
-              <Pressable
+              </PressableSurface>
+              <PressableSurface
+                haptic="selection"
                 accessibilityRole="link"
                 accessibilityLabel="Privacy Policy"
                 hitSlop={10}
@@ -618,7 +618,7 @@ export default function SettingsScreen() {
                 <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
                   Privacy
                 </Text>
-              </Pressable>
+              </PressableSurface>
             </View>
           </>
         )}

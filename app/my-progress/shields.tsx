@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -11,6 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
@@ -137,8 +137,9 @@ export default function ShieldsScreen() {
         {/* Tabs */}
         <View style={{ flexDirection: 'row', backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 24, padding: 4, marginBottom: 24 }}>
           {(['streak', 'sessions'] as const).map(tf => (
-            <Pressable
+            <PressableSurface
               key={tf}
+              haptic="selection"
               onPress={() => setActiveTab(tf)}
               style={{
                 flex: 1,
@@ -151,7 +152,7 @@ export default function ShieldsScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: activeTab === tf ? theme.text : theme.dim, textTransform: 'capitalize' }}>
                 {tf} ({tf === 'streak' ? streak : totalSessions})
               </Text>
-            </Pressable>
+            </PressableSurface>
           ))}
         </View>
 

@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Animated,
   Image,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -349,8 +348,8 @@ function PanchangPill({
   const currentSlide = slides[idx];
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressableSurface
+      haptic="selection"
       accessibilityLabel={`Panchang info: ${currentSlide.label}. Tap to cycle`}
       onPress={handleCycle}
       hitSlop={4}
@@ -394,7 +393,7 @@ function PanchangPill({
           />
         ))}
       </View>
-    </Pressable>
+    </PressableSurface>
   );
 }
 
@@ -646,8 +645,8 @@ function HomeContent() {
           />
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel={unreadNotifications > 0 ? `Notifications, ${unreadNotifications} unread` : 'Notifications'}
               onPress={() => navigate('/notifications')}
               style={{
@@ -677,11 +676,11 @@ function HomeContent() {
                   }}
                 />
               ) : null}
-            </Pressable>
+            </PressableSurface>
 
             {/* Mood Pill */}
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel="Check in with your mood"
               onPress={() => navigate('/mood')}
               hitSlop={4}
@@ -729,14 +728,14 @@ function HomeContent() {
                   How are you feeling?
                 </Text>
               )}
-            </Pressable>
+            </PressableSurface>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               {/* Karma pill removed from here per request — karma points are
                   still visible on Profile. Replaced with a Panchang quick-
                   access icon, matching the bell's circular treatment. */}
-              <Pressable
-                accessibilityRole="button"
+              <PressableSurface
+                haptic="selection"
                 accessibilityLabel="Open today's Panchang"
                 onPress={() => navigate('/panchang')}
                 style={{
@@ -751,10 +750,10 @@ function HomeContent() {
                 }}
               >
                 <Feather name="calendar" size={18} color={theme.text} />
-              </Pressable>
+              </PressableSurface>
 
-              <Pressable
-                accessibilityRole="button"
+              <PressableSurface
+                haptic="selection"
                 accessibilityLabel="Open profile"
                 onPress={() => navigate('/(tabs)/profile')}
                 style={{
@@ -776,7 +775,7 @@ function HomeContent() {
                     {state.profile.firstName.charAt(0)}
                   </Text>
                 )}
-              </Pressable>
+              </PressableSurface>
             </View>
           </View>
 
@@ -803,8 +802,8 @@ function HomeContent() {
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
 
               {state.panchang.observance ? (
-                <Pressable
-                  accessibilityRole="button"
+                <PressableSurface
+                  haptic="selection"
                   accessibilityLabel={`Open calendar, ${state.panchang.observance.label}`}
                   onPress={() => navigate(state.panchang.observance!.href as Href)}
                   hitSlop={4}
@@ -834,12 +833,12 @@ function HomeContent() {
                   >
                     {state.panchang.observance.label}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               ) : null}
             </View>
           </View>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}. Tap to open, mark as read, and earn seva points`}
             onPress={() => navigate('/shloka')}
             style={{
@@ -865,7 +864,7 @@ function HomeContent() {
             <Text style={{ marginTop: 8, ...TYPE.homeHeroMeaning, color: theme.dim, textAlign: 'center' }} numberOfLines={1}>
               {state.sacredText.meaning}
             </Text>
-          </Pressable>
+          </PressableSurface>
         </View>
 
         <View style={{ paddingHorizontal: 20, marginTop: -48, gap: 12 }}>

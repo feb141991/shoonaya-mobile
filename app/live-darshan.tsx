@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { Linking, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -104,15 +104,15 @@ function LiveDarshanContent() {
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: 56, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}>
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
+          haptic="selection"
           accessibilityLabel="Back"
           onPress={() => router.back()}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}
         >
           <Feather name="chevron-left" size={16} color={dim} />
           <Text style={{ color: dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <View>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Live Darshan</Text>
