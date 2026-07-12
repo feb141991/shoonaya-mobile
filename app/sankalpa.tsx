@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
-  Pressable,
+  Animated,
   ScrollView,
   Text,
   TextInput,
@@ -60,6 +61,33 @@ type SankalpaRow = {
   status: SankalpaStatus;
 };
 
+// Mirrors the shape returned by GET /api/sankalpa/history (web repo).
+type SankalpaHistoryRow = {
+  id: string;
+  text: string;
+  related_practice: string | null;
+  target_days: number | null;
+  start_date: string;
+  end_date: string;
+  status: 'completed' | 'abandoned';
+  created_at: string;
+  updated_at: string;
+};
+
+type SankalpaHistoryStats = {
+  totalCompleted: number;
+  totalAbandoned: number;
+  completionRate: number;
+  longestDurationDays: number;
+};
+
+// Mirrors GET /api/sankalpa/suggest's `source` field — 'ai' when the
+// personalized model call succeeded, 'fallback' when the static curated
+// bank was used instead (AI unavailable/timed out/malformed). The UI
+// treats both the same functionally; only the label above the chips
+// differs, so the fallback path never reads as broken.
+type SuggestSource = 'ai' | 'fallback';
+
 function todayUtcString(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -75,6 +103,38 @@ function clampProgress(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+// UTC-safe "start_date + n days" — matches the UTC-date convention this
+// screen already uses for todayUtcString()/buildDayNumber() so the checkin
+// grid never drifts a day off from what the API considers each date to be.
+function addDaysUtc(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+type Theme = ReturnType<typeof themeColor>;
+
+function StatPill({ label, value, theme }: { label: string; value: string; theme: Theme }) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: theme.border,
+        backgroundColor: theme.card,
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        alignItems: 'center',
+        gap: 2,
+      }}
+    >
+      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: theme.text }}>{value}</Text>
+      <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, textAlign: 'center' }}>{label}</Text>
+    </View>
+  );
+}
+
 export default function SankalpaScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
@@ -83,12 +143,33 @@ export default function SankalpaScreen() {
   const [loadError, setLoadError] = useState(false);
   const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(null);
   const [checkedInToday, setCheckedInToday] = useState(false);
+  const [checkins, setCheckins] = useState<string[]>([]);
   const [checkingIn, setCheckingIn] = useState(false);
   const [completing, setCompleting] = useState(false);
 
   const [creating, setCreating] = useState(false);
   const [text, setText] = useState('');
   const [targetDays, setTargetDays] = useState<(typeof TARGET_DAY_OPTIONS)[number]>(21);
+
+  // Suggested-sankalpa chips (create flow only). AI-personalized when
+  // possible, always backed by the static bank — see loadSuggestions().
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsSource, setSuggestionsSource] = useState<SuggestSource | null>(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  // Previous-Sankalpas history — lazy-loaded on first expand so a screen
+  // visit that never opens it costs zero extra requests.
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [history, setHistory] = useState<SankalpaHistoryRow[]>([]);
+  const [historyStats, setHistoryStats] = useState<SankalpaHistoryStats | null>(null);
+
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const historyChevron = useRef(new Animated.Value(0)).current;
+  const historyContentOpacity = useRef(new Animated.Value(0)).current;
+  const gridOpacity = useRef(new Animated.Value(0)).current;
+  const gridTranslate = useRef(new Animated.Value(8)).current;
 
   // Ceremony is purely presentational — see components/home/
   // SankalpaCompletionCeremony.tsx. karmaAwarded comes straight from the
@@ -104,12 +185,20 @@ export default function SankalpaScreen() {
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
+    return () => sub.remove();
+  }, []);
+
   const loadCheckins = useCallback(async (sankalpaId: string) => {
     const response = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(sankalpaId)}`);
     if (!response.ok) return;
     const payload = (await response.json()) as { checkins?: string[] };
+    const list = payload.checkins ?? [];
+    setCheckins(list);
     const today = todayUtcString();
-    setCheckedInToday((payload.checkins ?? []).includes(today));
+    setCheckedInToday(list.includes(today));
   }, []);
 
   const loadSankalpa = useCallback(async () => {
@@ -125,6 +214,7 @@ export default function SankalpaScreen() {
     const payload = (await response.json()) as { sankalpa: SankalpaRow | null };
     setSankalpa(payload.sankalpa);
     setCheckedInToday(false);
+    setCheckins([]);
 
     if (payload.sankalpa) {
       await loadCheckins(payload.sankalpa.id);
@@ -144,6 +234,90 @@ export default function SankalpaScreen() {
     };
     void run();
   }, [loadSankalpa]);
+
+  // Active-vow checkin grid entrance — fades/lifts in once per vow (keyed
+  // by id so switching to a newly created Sankalpa re-triggers it), skipped
+  // entirely under reduced motion.
+  useEffect(() => {
+    if (!sankalpa) return;
+    if (reducedMotion) {
+      gridOpacity.setValue(1);
+      gridTranslate.setValue(0);
+      return;
+    }
+    gridOpacity.setValue(0);
+    gridTranslate.setValue(8);
+    Animated.parallel([
+      Animated.timing(gridOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
+      Animated.spring(gridTranslate, { toValue: 0, useNativeDriver: true, friction: 8, tension: 60 }),
+    ]).start();
+  }, [sankalpa?.id, reducedMotion, gridOpacity, gridTranslate]);
+
+  const loadSuggestions = useCallback(async () => {
+    setLoadingSuggestions(true);
+    try {
+      const response = await apiFetch('/api/sankalpa/suggest');
+      if (!response.ok) return;
+      const payload = (await response.json()) as { suggestions?: string[]; source?: SuggestSource };
+      setSuggestions(payload.suggestions ?? []);
+      setSuggestionsSource(payload.source ?? null);
+    } catch {
+      // Best-effort — suggestions are an enhancement; the create flow works
+      // fine with an empty text field if this fails.
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }, []);
+
+  // Fetch suggestions once the active-vow check resolves to "none" — never
+  // on the active-vow path, and never more than once per empty-state visit.
+  useEffect(() => {
+    if (!loading && !sankalpa && suggestions.length === 0 && !loadingSuggestions) {
+      void loadSuggestions();
+    }
+  }, [loading, sankalpa, suggestions.length, loadingSuggestions, loadSuggestions]);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await apiFetch('/api/sankalpa/history');
+      if (!response.ok) return;
+      const payload = (await response.json()) as {
+        history?: SankalpaHistoryRow[];
+        stats?: SankalpaHistoryStats;
+      };
+      setHistory(payload.history ?? []);
+      setHistoryStats(payload.stats ?? null);
+      setHistoryLoaded(true);
+    } catch {
+      // Best-effort — history is supplementary; the section just shows
+      // nothing new if this fails, it doesn't block the rest of the screen.
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  const toggleHistory = useCallback(() => {
+    const next = !historyExpanded;
+    setHistoryExpanded(next);
+    Animated.timing(historyChevron, {
+      toValue: next ? 1 : 0,
+      duration: reducedMotion ? 0 : 200,
+      useNativeDriver: true,
+    }).start();
+
+    if (next) {
+      historyContentOpacity.setValue(reducedMotion ? 1 : 0);
+      Animated.timing(historyContentOpacity, {
+        toValue: 1,
+        duration: reducedMotion ? 0 : 220,
+        useNativeDriver: true,
+      }).start();
+      if (!historyLoaded && !historyLoading) {
+        void loadHistory();
+      }
+    }
+  }, [historyExpanded, historyChevron, historyContentOpacity, reducedMotion, historyLoaded, historyLoading, loadHistory]);
 
   const handleCreate = useCallback(async () => {
     const trimmed = text.trim();
@@ -314,6 +488,48 @@ export default function SankalpaScreen() {
                     }}
                   />
                 </View>
+
+                {targetDaysValue > 0 ? (
+                  <Animated.View
+                    style={{
+                      opacity: gridOpacity,
+                      transform: [{ translateY: gridTranslate }],
+                      marginTop: 14,
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      gap: 6,
+                    }}
+                  >
+                    {Array.from({ length: targetDaysValue }).map((_, i) => {
+                      const dateStr = addDaysUtc(sankalpa.start_date, i);
+                      const isChecked = checkins.includes(dateStr);
+                      const isToday = dateStr === today;
+                      const isFuture = dateStr > today;
+                      const isMissed = !isFuture && !isChecked && !isToday;
+
+                      return (
+                        <View
+                          key={dateStr}
+                          accessibilityLabel={
+                            isChecked ? `Day ${i + 1}, honored` : isToday ? `Day ${i + 1}, today` : isMissed ? `Day ${i + 1}, missed` : `Day ${i + 1}, upcoming`
+                          }
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: 5,
+                            backgroundColor: isChecked
+                              ? theme.brand
+                              : isMissed
+                                ? theme.border
+                                : 'transparent',
+                            borderWidth: isToday && !isChecked ? 1.5 : isFuture ? 1 : 0,
+                            borderColor: isToday ? theme.brand : theme.border,
+                          }}
+                        />
+                      );
+                    })}
+                  </Animated.View>
+                ) : null}
               </View>
             </Card>
 
@@ -364,6 +580,42 @@ export default function SankalpaScreen() {
           </>
         ) : (
           <Card tone="auto" elevated style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 16 }}>
+            {loadingSuggestions ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <ActivityIndicator size="small" color={theme.brand} />
+                <Text style={{ ...TYPE.micro, color: theme.dim }}>Finding suggestions for you…</Text>
+              </View>
+            ) : suggestions.length > 0 ? (
+              <View>
+                <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 10 }}>
+                  {suggestionsSource === 'ai' ? 'Suggested for you' : 'Need a starting point?'}
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {suggestions.map((suggestion, i) => (
+                    <PressableSurface
+                      key={`${i}-${suggestion.slice(0, 12)}`}
+                      accessibilityLabel={`Use suggestion: ${suggestion}`}
+                      haptic="selection"
+                      onPress={() => setText(suggestion)}
+                      style={{
+                        maxWidth: '100%',
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                        backgroundColor: theme.card,
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text }}>
+                        {suggestion}
+                      </Text>
+                    </PressableSurface>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
             <View>
               <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 8 }}>
                 Your intention
@@ -440,6 +692,82 @@ export default function SankalpaScreen() {
             />
           </Card>
         )}
+
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 0, padding: 0, overflow: 'hidden' }}>
+          <PressableSurface
+            accessibilityRole="button"
+            accessibilityLabel={historyExpanded ? 'Collapse previous Sankalpas' : 'Expand previous Sankalpas'}
+            accessibilityState={{ expanded: historyExpanded }}
+            haptic="selection"
+            onPress={toggleHistory}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Feather name="clock" size={16} color={theme.dim} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Previous Sankalpas</Text>
+            </View>
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotate: historyChevron.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }),
+                  },
+                ],
+              }}
+            >
+              <Feather name="chevron-down" size={18} color={theme.dim} />
+            </Animated.View>
+          </PressableSurface>
+
+          {historyExpanded ? (
+            <Animated.View style={{ opacity: historyContentOpacity, paddingHorizontal: 16, paddingBottom: 16, gap: 14 }}>
+              {historyLoading ? (
+                <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+                  <ActivityIndicator color={theme.brand} />
+                </View>
+              ) : historyStats && historyStats.totalCompleted + historyStats.totalAbandoned > 0 ? (
+                <>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <StatPill label="Completed" value={String(historyStats.totalCompleted)} theme={theme} />
+                    <StatPill label="Completion rate" value={`${historyStats.completionRate}%`} theme={theme} />
+                    <StatPill label="Longest" value={`${historyStats.longestDurationDays}d`} theme={theme} />
+                  </View>
+                  <View style={{ gap: 4 }}>
+                    {history.map((row) => (
+                      <View
+                        key={row.id}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 10,
+                          paddingVertical: 8,
+                          borderBottomWidth: 1,
+                          borderBottomColor: theme.border,
+                        }}
+                      >
+                        <Feather
+                          name={row.status === 'completed' ? 'check-circle' : 'x-circle'}
+                          size={16}
+                          color={row.status === 'completed' ? COLORS.success : theme.dim}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text numberOfLines={1} style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text }}>
+                            {row.text}
+                          </Text>
+                          <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 2 }}>
+                            {row.target_days ?? '—'} days · {row.status === 'completed' ? 'Completed' : 'Abandoned'}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <Text style={{ ...TYPE.body, color: theme.dim }}>No previous Sankalpas yet.</Text>
+              )}
+            </Animated.View>
+          ) : null}
+        </Card>
       </ScrollView>
 
       <SankalpaCompletionCeremony
