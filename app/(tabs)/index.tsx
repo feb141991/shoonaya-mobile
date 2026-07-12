@@ -30,7 +30,6 @@ import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { MoodCheckin } from '@/components/home/MoodCheckin';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
-import { ObservanceCarousel } from '@/components/home/ObservanceCarousel';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { apiFetch } from '@/lib/api';
@@ -587,7 +586,7 @@ function HomeContent() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 34 }}
+        contentContainerStyle={{ paddingBottom: 128 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
         showsVerticalScrollIndicator={false}
         onScroll={navScrollHandler}
@@ -816,7 +815,7 @@ function HomeContent() {
               {greeting}, {state.profile.firstName}
             </Text>
 
-            <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6 }}>
               <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
 
               {state.panchang.observance ? (
@@ -828,6 +827,7 @@ function HomeContent() {
                   style={{
                     minHeight: 36,
                     borderRadius: 999,
+                    maxWidth: '92%',
                     paddingHorizontal: 12,
                     paddingVertical: 4,
                     alignItems: 'center',
@@ -916,8 +916,6 @@ function HomeContent() {
           {state.firstWeek ? (
             <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
           ) : null}
-
-          <ObservanceCarousel tradition={state.profile.tradition} timezone={state.date.timezone} />
 
           <View
             style={{
@@ -1018,10 +1016,10 @@ function HomeContent() {
               overflow: 'hidden',
             }}
           >
-            <PressableSurface
+            <Pressable
+              accessibilityRole="button"
               accessibilityState={{ expanded: practicesOpen }}
               accessibilityLabel={practicesOpen ? 'Hide all practices' : 'View all practices'}
-              haptic="selection"
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
                 minHeight: 44,
@@ -1029,18 +1027,19 @@ function HomeContent() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                gap: 12,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>
+              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
                 <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
               </View>
-            </PressableSurface>
+            </Pressable>
 
             {practicesOpen ? (
               <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 7 }}>
@@ -1337,7 +1336,7 @@ function HomeContent() {
                 // this task's required SacredIconName list, so it stays on
                 // its emoji glyph rather than growing the union unasked.
                 { label: 'Tirtha',      href: '/(tabs)/tirtha',    icon: '🛕', sacredId: null,                              fallbackGlyph: null,             accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
-                // Seva omitted pending future feature-build
+                { label: 'Seva',        href: '/my-progress',      icon: '🤲', sacredId: null,                              fallbackGlyph: null,             accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
               ]).map(item => (
                 <PressableSurface
                   key={item.label}

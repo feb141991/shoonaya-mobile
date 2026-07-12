@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -23,7 +23,7 @@ export function MoodCheckin() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
+  const border = isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
@@ -69,6 +69,7 @@ export function MoodCheckin() {
           backgroundColor: cardBg,
           borderWidth: 1,
           borderColor: border,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
@@ -92,10 +93,12 @@ export function MoodCheckin() {
         onPress={navigateToMood}
         style={{
           borderRadius: 18,
-          padding: 16,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
           backgroundColor: cardBg,
           borderWidth: 1,
           borderColor: border,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
@@ -103,21 +106,23 @@ export function MoodCheckin() {
       >
         <View
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
+            width: 42,
+            height: 42,
+            borderRadius: 21,
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: loggedMoodConfig.bg,
+            borderWidth: 1,
+            borderColor: `${loggedMoodConfig.colour}33`,
           }}
         >
           <MoodGlyph mood={loggedMoodConfig.key} size={22} color={loggedMoodConfig.colour} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.3, textTransform: 'uppercase', color: dim }}>
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: dim }}>
             Today&apos;s mood
           </Text>
-          <Text style={{ marginTop: 2, fontFamily: FONTS.sansSemiBold, fontSize: 15, color: loggedMoodConfig.colour }}>
+          <Text style={{ marginTop: 2, ...TYPE.cardHeading, fontFamily: FONTS.sansSemiBold, color: text }} numberOfLines={1}>
             Feeling {loggedMoodConfig.label}
           </Text>
         </View>
@@ -133,10 +138,12 @@ export function MoodCheckin() {
       onPress={navigateToMood}
       style={{
         borderRadius: 18,
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
         backgroundColor: cardBg,
         borderWidth: 1,
         borderColor: border,
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -144,10 +151,10 @@ export function MoodCheckin() {
       }}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.3, textTransform: 'uppercase', color: brand }}>
+        <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: brand }}>
           How are you feeling?
         </Text>
-        <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 13, color: text }}>
+        <Text style={{ marginTop: 4, ...TYPE.caption, color: dim }}>
           Check in with yourself today.
         </Text>
       </View>

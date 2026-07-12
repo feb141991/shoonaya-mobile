@@ -52,10 +52,11 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // screen (app/live-darshan.tsx) that had no dispatch line here, so it was
   // silently swallowed by whatever fallback the caller passed (Home, in
   // app/mood.tsx's case) instead of opening Live Darshan. The engine's other
-  // fixed-card hrefs, '/mandali' (handled above) and '/seva' (no native
-  // screen — confirmed via docs/NATIVE_ROUTE_SURFACING_MATRIX.md, correctly
-  // falls through to fallback), were already covered or already correct.
+  // fixed-card hrefs, '/mandali' (handled above) and '/seva' (mapped to the
+  // Progress hub because there is no separate native Seva screen yet, and
+  // Profile/My Progress already expose the user's Seva score honestly).
   if (pathname.startsWith('/live-darshan')) return '/live-darshan' as Href;
+  if (pathname.startsWith('/seva')) return '/my-progress' as Href;
   // Vichaar Sabha thread ids (e.g. a shared-thread deep link, or a future
   // "someone replied to your thread" push) — /vichaar-sabha/[id] mirrors
   // the dharm-veer/[id] pattern above. Bare /vichaar-sabha is the list.

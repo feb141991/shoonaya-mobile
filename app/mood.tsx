@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
   useColorScheme,
+  useWindowDimensions,
   View,
   StyleSheet,
   Linking
@@ -14,7 +16,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, SHADOWS, SPACING, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { resolveNativeRoute } from '@/lib/routes';
@@ -39,6 +41,8 @@ export default function MoodScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
+  const { width: windowWidth } = useWindowDimensions();
+  const moodCardWidth = Math.floor((Math.min(windowWidth, 430) - 56) / 2);
   const MOODS = MOODS_CONFIG[isDark ? 'dark' : 'light'] || MOODS_CONFIG.dark;
 
   const [loading, setLoading] = useState(true);
@@ -297,12 +301,14 @@ export default function MoodScreen() {
         {step === 1 && (
           <View style={styles.grid}>
             {MOODS.map(mood => (
-              <PressableSurface
+              <Pressable
                 key={mood.key}
-                haptic="selection"
+                accessibilityRole="button"
+                accessibilityLabel={`I feel ${mood.label}`}
                 style={[
                   styles.moodCard,
                   {
+                    width: moodCardWidth,
                     backgroundColor: theme.card,
                     borderColor: theme.border,
                     boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
@@ -310,13 +316,13 @@ export default function MoodScreen() {
                 ]}
                 onPress={() => handleMoodSelect(mood)}
               >
-                <View style={[styles.glyphContainer, { backgroundColor: mood.bg }]}>
-                  <MoodGlyph mood={mood.key} color={mood.colour} size={40} />
+                <View style={[styles.glyphContainer, { backgroundColor: mood.bg, borderColor: `${mood.colour}33` }]}>
+                  <MoodGlyph mood={mood.key} color={mood.colour} size={30} />
                 </View>
-                <Text style={[styles.moodLabel, { color: theme.text }]}>
+                <Text style={[styles.moodLabel, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.84}>
                   {mood.label}
                 </Text>
-              </PressableSurface>
+              </Pressable>
             ))}
           </View>
         )}
@@ -350,13 +356,14 @@ export default function MoodScreen() {
                 </Text>
                 <View style={styles.grid}>
                   {MOODS.map(mood => (
-                    <PressableSurface
+                    <Pressable
                       key={mood.key}
-                      haptic="selection"
+                      accessibilityRole="button"
                       accessibilityLabel={`I feel ${mood.label} now`}
                       style={[
                         styles.moodCard,
                         {
+                          width: moodCardWidth,
                           backgroundColor: theme.card,
                           borderColor: theme.border,
                           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
@@ -364,13 +371,13 @@ export default function MoodScreen() {
                       ]}
                       onPress={() => handleAfterMoodPick(mood)}
                     >
-                      <View style={[styles.glyphContainer, { backgroundColor: mood.bg, width: 48, height: 48, marginBottom: SPACING.sm }]}>
-                        <MoodGlyph mood={mood.key} color={mood.colour} size={28} />
+                        <View style={[styles.glyphContainer, { backgroundColor: mood.bg, borderColor: `${mood.colour}33`, width: 52, height: 52, borderRadius: 26, marginBottom: SPACING.sm }]}>
+                        <MoodGlyph mood={mood.key} color={mood.colour} size={26} />
                       </View>
-                      <Text style={[styles.moodLabel, { color: theme.text, fontSize: 14 }]}>
+                      <Text style={[styles.moodLabel, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.84}>
                         {mood.label}
                       </Text>
-                    </PressableSurface>
+                    </Pressable>
                   ))}
                 </View>
                 <PressableSurface
@@ -513,28 +520,33 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -SPACING.xs,
+    justifyContent: 'space-between',
+    rowGap: SPACING.md,
   },
   moodCard: {
-    width: '46%',
-    margin: '2%',
-    padding: SPACING.lg,
-    borderRadius: 16,
+    width: '48%',
+    minHeight: 126,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.lg,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   glyphContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
+    borderWidth: 1,
   },
   moodLabel: {
-    fontFamily: FONTS.sansMedium,
-    fontSize: 16,
+    ...TYPE.body,
+    fontFamily: FONTS.sansSemiBold,
+    textAlign: 'center',
+    maxWidth: '100%',
   },
   list: {
     flexDirection: 'column',
