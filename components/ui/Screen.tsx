@@ -1,5 +1,13 @@
-import type { PropsWithChildren } from 'react';
-import { useColorScheme, View, type ViewProps, Pressable, Text } from 'react-native';
+import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
+import {
+  AccessibilityInfo,
+  Animated,
+  useColorScheme,
+  View,
+  type ViewProps,
+  Pressable,
+  Text,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
@@ -11,6 +19,7 @@ type ScreenProps = PropsWithChildren<ViewProps> & {
     onBack?: () => void;
     rightElement?: React.ReactNode;
   };
+  entrance?: 'none' | 'fade-up';
 };
 
 // Default background stays COLORS.creamBg unconditionally (not system-theme
@@ -23,9 +32,51 @@ type ScreenProps = PropsWithChildren<ViewProps> & {
 // resolve left-to-right), so this default only matters for screens that
 // haven't opted into their own theming, and changing it would have altered
 // Login's appearance without being asked to touch it.
-export function Screen({ children, style, header, ...props }: ScreenProps) {
+export function Screen({ children, style, header, entrance = 'fade-up', ...props }: ScreenProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
+  const contentOpacity = useRef(new Animated.Value(entrance === 'none' ? 1 : 0)).current;
+  const contentTranslate = useRef(new Animated.Value(entrance === 'none' ? 0 : 10)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (mounted) setReduceMotion(enabled);
+      })
+      .catch(() => {});
+
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (entrance === 'none' || reduceMotion) {
+      contentOpacity.setValue(1);
+      contentTranslate.setValue(0);
+      return;
+    }
+
+    contentOpacity.setValue(0);
+    contentTranslate.setValue(10);
+    Animated.parallel([
+      Animated.timing(contentOpacity, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.spring(contentTranslate, {
+        toValue: 0,
+        friction: 9,
+        tension: 70,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [contentOpacity, contentTranslate, entrance, reduceMotion]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
@@ -67,7 +118,7 @@ export function Screen({ children, style, header, ...props }: ScreenProps) {
           {header.rightElement && <View>{header.rightElement}</View>}
         </View>
       )}
-      <View
+      <Animated.View
         style={[
           {
             flex: 1,
@@ -75,14 +126,16 @@ export function Screen({ children, style, header, ...props }: ScreenProps) {
             paddingHorizontal: SPACING.xl,
             paddingBottom: SPACING.lg,
             // Only add default top padding if there's no header. Otherwise, the header provides the breathing room.
-            paddingTop: header ? 0 : 16, 
+            paddingTop: header ? 0 : 16,
+            opacity: contentOpacity,
+            transform: [{ translateY: contentTranslate }],
           },
           style,
         ]}
         {...props}
       >
         {children}
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
