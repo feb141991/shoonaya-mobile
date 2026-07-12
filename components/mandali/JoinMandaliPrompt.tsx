@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { fetchNearbyMandalis, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
 
@@ -129,21 +130,21 @@ export function JoinMandaliPrompt({
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>{detected.city}</Text>
             {detected.country ? <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>{detected.country}</Text> : null}
           </View>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="Clear detected city"
             hitSlop={10}
             onPress={() => {
               setDetected(null);
               setNearby([]);
             }}
+            style={{ minHeight: 0 }}
           >
             <Feather name="x" size={16} color={dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
       ) : (
-        <Pressable
-          accessibilityRole="button"
+        <PressableSurface
           onPress={() => void detectLocation()}
           disabled={locating}
           style={{
@@ -167,7 +168,7 @@ export function JoinMandaliPrompt({
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>Detect my location</Text>
             </>
           )}
-        </Pressable>
+        </PressableSurface>
       )}
 
       {!detected ? (
@@ -189,13 +190,13 @@ export function JoinMandaliPrompt({
             placeholderTextColor={dim}
             style={{ borderRadius: 14, borderWidth: 1, borderColor: border, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 14, color: text }}
           />
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             onPress={useManualCity}
-            style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: surface, borderWidth: 1, borderColor: border }}
+            style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: surface, borderWidth: 1, borderColor: border, minHeight: 0 }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>Use this city</Text>
-          </Pressable>
+          </PressableSurface>
         </View>
       ) : null}
 
@@ -203,8 +204,7 @@ export function JoinMandaliPrompt({
 
       {detected ? (
         <>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
             onPress={() => void joinMine()}
             disabled={joiningMine}
             style={{
@@ -221,7 +221,7 @@ export function JoinMandaliPrompt({
             ) : (
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14.5, color: COLORS.ink }}>Join {detected.city} Mandali</Text>
             )}
-          </Pressable>
+          </PressableSurface>
 
           {loadingNearby ? (
             <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, textAlign: 'center' }}>Finding nearby mandalis…</Text>
@@ -238,14 +238,14 @@ export function JoinMandaliPrompt({
                       {m.city}{m.distanceKm != null ? ` · ${Math.round(m.distanceKm)} km away` : ''} · {m.member_count} members
                     </Text>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
+                  <PressableSurface
+                    haptic="selection"
                     onPress={() => void joinById(m.id)}
                     disabled={joiningId === m.id}
-                    style={{ borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: cardBg, borderWidth: 1, borderColor: border }}
+                    style={{ borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: cardBg, borderWidth: 1, borderColor: border, minHeight: 0 }}
                   >
                     {joiningId === m.id ? <ActivityIndicator size="small" color={brand} /> : <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Join</Text>}
-                  </Pressable>
+                  </PressableSurface>
                 </View>
               ))}
             </View>

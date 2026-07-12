@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { CommentRow } from '@/lib/mandali';
 
@@ -46,17 +47,17 @@ export function PostComments({
 
   return (
     <View style={{ marginTop: 10 }}>
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
+        haptic="selection"
         onPress={onToggleExpand}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 0 }}
       >
         <Feather name="message-circle" size={14} color={dim} />
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim }}>
           {comments.length > 0 ? `${comments.length} comment${comments.length === 1 ? '' : 's'}` : 'Comment'}
         </Text>
         <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={dim} />
-      </Pressable>
+      </PressableSurface>
 
       {expanded ? (
         <View style={{ marginTop: 10, gap: 10 }}>
@@ -97,8 +98,7 @@ export function PostComments({
               onSubmitEditing={submit}
               returnKeyType="send"
             />
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
               accessibilityLabel="Send comment"
               disabled={posting || !draft.trim()}
               onPress={submit}
@@ -110,10 +110,11 @@ export function PostComments({
                 justifyContent: 'center',
                 backgroundColor: draft.trim() ? brand : border,
                 opacity: posting ? 0.6 : 1,
+                minHeight: 0,
               }}
             >
               {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={14} color={COLORS.ink} />}
-            </Pressable>
+            </PressableSurface>
           </View>
         </View>
       ) : null}

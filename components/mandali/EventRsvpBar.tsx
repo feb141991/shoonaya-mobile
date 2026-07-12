@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { RsvpRow, RsvpStatus } from '@/lib/mandali';
 
@@ -43,9 +44,9 @@ export function EventRsvpBar({
       {options.map((opt) => {
         const active = myStatus === opt.value;
         return (
-          <Pressable
+          <PressableSurface
             key={opt.value}
-            accessibilityRole="button"
+            haptic="selection"
             accessibilityLabel={`RSVP ${opt.label}`}
             onPress={() => onRsvp(postId, opt.value)}
             style={{
@@ -55,13 +56,14 @@ export function EventRsvpBar({
               backgroundColor: active ? brand : surface,
               borderWidth: active ? 0 : 1,
               borderColor: border,
+              minHeight: 0,
             }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? COLORS.ink : dim }}>
               {opt.label}
               {opt.count > 0 ? ` · ${opt.count}` : ''}
             </Text>
-          </Pressable>
+          </PressableSurface>
         );
       })}
     </View>
