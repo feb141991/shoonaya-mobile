@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   Animated,
@@ -100,6 +101,20 @@ export default function ShlokaScreen() {
   const celebrationScale = useRef(new Animated.Value(0.86)).current;
   const celebrationOpacity = useRef(new Animated.Value(0)).current;
 
+  // Entrance + icon-glow motion — brings this page in line with the PWA
+  // shloka modal (motion.div fade/slide/scale entrance, SacredGlowIcon
+  // pulse on the icon wells), which this screen previously had none of.
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const verseOpacity = useRef(new Animated.Value(0)).current;
+  const verseTranslate = useRef(new Animated.Value(14)).current;
+  const iconPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
+    return () => sub.remove();
+  }, []);
+
   const load = useCallback(async () => {
     setLoadError(false);
     const {
@@ -156,6 +171,39 @@ export default function ShlokaScreen() {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [load]);
+
+  // Verse-card entrance, once per loaded verse. Skipped under reduced
+  // motion (card just renders at its final position/opacity).
+  useEffect(() => {
+    if (!sacredText) return;
+    if (reducedMotion) {
+      verseOpacity.setValue(1);
+      verseTranslate.setValue(0);
+      return;
+    }
+    verseOpacity.setValue(0);
+    verseTranslate.setValue(14);
+    Animated.parallel([
+      Animated.timing(verseOpacity, { toValue: 1, duration: 340, useNativeDriver: true }),
+      Animated.spring(verseTranslate, { toValue: 0, useNativeDriver: true, friction: 8, tension: 60 }),
+    ]).start();
+  }, [sacredText, reducedMotion, verseOpacity, verseTranslate]);
+
+  // Slow, continuous glow pulse behind the header icon well — mirrors the
+  // PWA's SacredGlowIcon `animated` variant. Never starts under reduced
+  // motion rather than starting and immediately being stopped.
+  useEffect(() => {
+    if (reducedMotion || !sacredText) return;
+    iconPulse.setValue(0);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(iconPulse, { toValue: 1, duration: 1900, useNativeDriver: true }),
+        Animated.timing(iconPulse, { toValue: 0, duration: 1900, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [reducedMotion, sacredText, iconPulse]);
 
   const today = profile ? spiritualDate(profile.timezone) : null;
   const readToday = Boolean(profile && today && profile.lastShlokaDate === today);
@@ -312,8 +360,22 @@ export default function ShlokaScreen() {
         </View>
 
         <View style={{ alignItems: 'center', paddingTop: 8, gap: 8 }}>
-          <View style={{ width: 62, height: 62, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: border }}>
-            <Text style={{ fontSize: 28 }}>{sacredText.icon}</Text>
+          <View style={{ width: 62, height: 62, alignItems: 'center', justifyContent: 'center' }}>
+            <Animated.View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                width: 62,
+                height: 62,
+                borderRadius: 31,
+                backgroundColor: brand,
+                opacity: iconPulse.interpolate({ inputRange: [0, 1], outputRange: [0.14, 0.30] }),
+                transform: [{ scale: iconPulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) }],
+              }}
+            />
+            <View style={{ width: 62, height: 62, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: border }}>
+              <Text style={{ fontSize: 28 }}>{sacredText.icon}</Text>
+            </View>
           </View>
           <Text style={{ ...TYPE.chip, color: brand, textTransform: 'uppercase', letterSpacing: 2.4 }}>
             {sacredText.label}
@@ -325,8 +387,10 @@ export default function ShlokaScreen() {
           ) : null}
         </View>
 
-        <View
+        <Animated.View
           style={{
+            opacity: verseOpacity,
+            transform: [{ translateY: verseTranslate }],
             borderRadius: 28,
             paddingVertical: 24,
             paddingHorizontal: 18,
@@ -348,7 +412,7 @@ export default function ShlokaScreen() {
           >
             {sacredText.original}
           </Text>
-        </View>
+        </Animated.View>
 
         {sacredText.transliteration && sacredText.transliteration !== sacredText.original ? (
           <Text style={{ fontFamily: FONTS.serif, fontSize: 17, lineHeight: 25, fontStyle: 'italic', color: dim, textAlign: 'center' }}>
@@ -387,31 +451,59 @@ export default function ShlokaScreen() {
           accessibilityLabel={readToday ? 'Verse already read today' : 'Mark verse as read, earn 5 seva points'}
           disabled={readToday || marking}
           onPress={() => { void markRead(); }}
-          style={({ pressed }) => ({
-            minHeight: MIN_TOUCH_TARGET + 8,
-            borderRadius: 24,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            gap: 8,
-            backgroundColor: readToday ? glass : brand,
-            borderWidth: readToday ? 1 : 0,
-            borderColor: border,
-            opacity: marking ? 0.7 : pressed && !readToday ? 0.88 : 1,
-            transform: [{ scale: pressed && !readToday ? 0.985 : 1 }],
-            boxShadow: readToday ? undefined : (isDark ? SHADOWS.md.dark : SHADOWS.md.light),
-          })}
         >
-          {marking ? (
-            <ActivityIndicator color={readToday ? brand : COLORS.ink} />
-          ) : (
-            <>
-              <Feather name={readToday ? 'check-circle' : 'book-open'} size={18} color={readToday ? brand : COLORS.ink} />
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: readToday ? brand : COLORS.ink }}>
-                {readToday ? 'Read today' : 'Mark as read - earn 5 seva points'}
-              </Text>
-            </>
-          )}
+          {({ pressed }) =>
+            readToday ? (
+              <View
+                style={{
+                  minHeight: MIN_TOUCH_TARGET + 8,
+                  borderRadius: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                  backgroundColor: glass,
+                  borderWidth: 1,
+                  borderColor: border,
+                }}
+              >
+                <Feather name="check-circle" size={18} color={brand} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: brand }}>Read today</Text>
+              </View>
+            ) : (
+              // Warm gold gradient + tuned glow shadow — was a flat solid
+              // `brand` fill, which read noticeably flatter than the PWA's
+              // radiant gold CTA (rgba(250,199,117,0.90) with a matching
+              // rgba(239,159,39,0.20) shadow bloom).
+              <LinearGradient
+                colors={isDark ? [COLORS.brandGoldDark, COLORS.brandGoldLight] : [COLORS.brandGoldLight, COLORS.brandGoldDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  minHeight: MIN_TOUCH_TARGET + 8,
+                  borderRadius: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                  opacity: marking ? 0.7 : pressed ? 0.88 : 1,
+                  transform: [{ scale: pressed ? 0.985 : 1 }],
+                  boxShadow: isDark ? '0 14px 30px rgba(197,160,89,0.28)' : '0 14px 30px rgba(216,138,28,0.30)',
+                }}
+              >
+                {marking ? (
+                  <ActivityIndicator color={COLORS.ink} />
+                ) : (
+                  <>
+                    <Feather name="book-open" size={18} color={COLORS.ink} />
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
+                      Mark as read - earn 5 seva points
+                    </Text>
+                  </>
+                )}
+              </LinearGradient>
+            )
+          }
         </Pressable>
       </ScrollView>
 
