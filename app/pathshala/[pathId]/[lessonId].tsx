@@ -81,6 +81,7 @@ export default function LessonReaderScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const params = useLocalSearchParams<{ pathId?: string | string[]; lessonId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
   const lessonId = Array.isArray(params.lessonId) ? params.lessonId[0] : params.lessonId;
@@ -353,7 +354,7 @@ export default function LessonReaderScreen() {
   if (fetchState === 'loading' || loadingState) {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={COLORS.brandGold} />
+        <ActivityIndicator color={brand} />
       </View>
     );
   }
@@ -361,7 +362,7 @@ export default function LessonReaderScreen() {
   if (fetchState === 'locked') {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <Feather name="lock" size={40} color={COLORS.brandGold} />
+        <Feather name="lock" size={40} color={brand} />
         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
           Pro required
         </Text>
@@ -373,7 +374,7 @@ export default function LessonReaderScreen() {
           style={{
             marginTop: 20,
             borderRadius: 18,
-            backgroundColor: COLORS.brandGold,
+            backgroundColor: brand,
             paddingHorizontal: 24,
             paddingVertical: 14,
           }}
@@ -387,7 +388,7 @@ export default function LessonReaderScreen() {
   if (fetchState === 'error') {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <Feather name="alert-circle" size={40} color={COLORS.brandGold} />
+        <Feather name="alert-circle" size={40} color={brand} />
         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
           Could not load this lesson.
         </Text>
@@ -396,7 +397,7 @@ export default function LessonReaderScreen() {
           style={{
             marginTop: 20,
             borderRadius: 18,
-            backgroundColor: COLORS.brandGold,
+            backgroundColor: brand,
             paddingHorizontal: 24,
             paddingVertical: 14,
           }}
@@ -410,7 +411,7 @@ export default function LessonReaderScreen() {
   if (!pathId || !lesson || !entry || !path || fetchState === 'not_found') {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <Feather name="book-open" size={40} color={COLORS.brandGold} />
+        <Feather name="book-open" size={40} color={brand} />
         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
           Lesson not found.
         </Text>
@@ -422,7 +423,7 @@ export default function LessonReaderScreen() {
           style={{
             marginTop: 20,
             borderRadius: 18,
-            backgroundColor: COLORS.brandGold,
+            backgroundColor: brand,
             paddingHorizontal: 24,
             paddingVertical: 14,
           }}
@@ -479,11 +480,11 @@ export default function LessonReaderScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   borderWidth: 1,
-                  borderColor: option === language ? COLORS.brandGold : border,
+                  borderColor: option === language ? brand : border,
                   backgroundColor: option === language ? cardBg : 'transparent',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? COLORS.brandGold : dim }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? brand : dim }}>
                   {option.toUpperCase()}
                 </Text>
               </PressableSurface>
@@ -501,11 +502,11 @@ export default function LessonReaderScreen() {
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderWidth: 1,
-                  borderColor: option === fontSize ? COLORS.brandGold : border,
+                  borderColor: option === fontSize ? brand : border,
                   backgroundColor: option === fontSize ? cardBg : 'transparent',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: option === fontSize ? COLORS.brandGold : dim }}>
+                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: option === fontSize ? brand : dim }}>
                   {option === 'small' ? 'Small' : option === 'normal' ? 'Normal' : option === 'large' ? 'Large' : 'XL'}
                 </Text>
               </PressableSurface>
@@ -566,7 +567,7 @@ export default function LessonReaderScreen() {
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: brand,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -579,7 +580,7 @@ export default function LessonReaderScreen() {
             </PressableSurface>
 
             <View style={{ flex: 1, gap: 6 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
                 {audioState === 'loading'
                   ? 'Preparing recitation…'
                   : audioState === 'playing'
@@ -601,7 +602,7 @@ export default function LessonReaderScreen() {
                       paddingHorizontal: 10,
                       paddingVertical: 5,
                       borderWidth: 1,
-                      borderColor: audioSpeed === speed ? COLORS.brandGold : border,
+                      borderColor: audioSpeed === speed ? brand : border,
                       backgroundColor: audioSpeed === speed ? cardBg : 'transparent',
                     }}
                   >
@@ -609,7 +610,7 @@ export default function LessonReaderScreen() {
                       style={{
                         fontFamily: FONTS.sansMedium,
                         fontSize: 11,
-                        color: audioSpeed === speed ? COLORS.brandGold : dim,
+                        color: audioSpeed === speed ? brand : dim,
                       }}
                     >
                       {speed}×
@@ -630,13 +631,13 @@ export default function LessonReaderScreen() {
               gap: 10,
             }}
           >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>
               {localizedMeaning.label}
             </Text>
             <Text style={{ fontFamily: FONTS.sans, fontSize: FONT_SCALE[fontSize].meaning, lineHeight: FONT_SCALE[fontSize].meaning * 1.55, color: text }}>
               {localizedMeaning.meaning}
             </Text>
-            {localizedMeaning.isLoading ? <ActivityIndicator color={COLORS.brandGold} /> : null}
+            {localizedMeaning.isLoading ? <ActivityIndicator color={brand} /> : null}
           </View>
 
           {/* Dharma Mitra Ask AI Link */}
@@ -664,7 +665,7 @@ export default function LessonReaderScreen() {
               marginTop: 4,
             }}
           >
-            <Feather name="zap" size={16} color={COLORS.brandGold} />
+            <Feather name="zap" size={16} color={brand} />
             <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
               Ask Dharma Mitra about this verse
             </Text>
@@ -712,7 +713,7 @@ export default function LessonReaderScreen() {
             disabled={saving}
             style={{
               borderRadius: 24,
-              backgroundColor: COLORS.brandGold,
+              backgroundColor: brand,
               paddingVertical: 16,
               alignItems: 'center',
               justifyContent: 'center',

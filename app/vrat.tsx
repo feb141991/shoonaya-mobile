@@ -115,6 +115,7 @@ export default function VratScreen() {
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+      brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
   );
@@ -304,7 +305,7 @@ export default function VratScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -332,8 +333,8 @@ export default function VratScreen() {
                 style={{
                   borderRadius: 999,
                   borderWidth: 1,
-                  borderColor: active ? COLORS.brandGold : theme.border,
-                  backgroundColor: active ? COLORS.brandGold : theme.card,
+                  borderColor: active ? theme.brand : theme.border,
+                  backgroundColor: active ? theme.brand : theme.card,
                   paddingHorizontal: 16,
                   paddingVertical: 10,
                 }}
@@ -351,7 +352,7 @@ export default function VratScreen() {
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Today</Text>
             {todayReminder && todayVrat ? (
               <PressableSurface onPress={() => setSelectedVrat(todayVrat)} haptic="selection" style={{ gap: 4 }}>
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.serifBold, fontSize: 20 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 20 }}>
                   {todayReminder.title}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
@@ -427,7 +428,7 @@ export default function VratScreen() {
                 }}
                 style={{
                   borderRadius: 18,
-                  backgroundColor: COLORS.brandGold,
+                  backgroundColor: theme.brand,
                   paddingVertical: 14,
                   alignItems: 'center',
                 }}

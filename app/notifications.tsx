@@ -66,6 +66,7 @@ export default function NotificationsScreen() {
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
       unreadBg: COLORS.selectionWellSelected,
+      brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
   );
@@ -202,7 +203,7 @@ export default function NotificationsScreen() {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView
         contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <PressableSurface
@@ -239,7 +240,7 @@ export default function NotificationsScreen() {
                   paddingHorizontal: 7,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: COLORS.brandGold,
+                  backgroundColor: theme.brand,
                 }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{unreadCount}</Text>
@@ -258,7 +259,7 @@ export default function NotificationsScreen() {
               hitSlop={8}
               style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
             >
-              <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+              <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
                 Mark all read
               </Text>
             </PressableSurface>
@@ -342,7 +343,7 @@ export default function NotificationsScreen() {
                       {row.title}
                     </Text>
                     {!row.read ? (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.brandGold }} />
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.brand }} />
                     ) : null}
                   </View>
 
@@ -376,7 +377,7 @@ export default function NotificationsScreen() {
           </Text>
         </PressableSurface>
 
-        {refreshing ? <ActivityIndicator color={COLORS.brandGold} /> : null}
+        {refreshing ? <ActivityIndicator color={theme.brand} /> : null}
       </ScrollView>
     </View>
   );

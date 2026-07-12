@@ -109,6 +109,7 @@ function PathshalaContent() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const [activeTab, setActiveTab] = useState<TabKey>('progress');
   const [difficulty, setDifficulty] = useState<DifficultyFilter>('all');
@@ -289,7 +290,7 @@ function PathshalaContent() {
             onRefresh={() => {
               void loadData(true);
             }}
-            tintColor={COLORS.brandGold}
+            tintColor={brand}
           />
         }
         contentContainerStyle={{ paddingBottom: 28, gap: 18 }}
@@ -336,7 +337,7 @@ function PathshalaContent() {
                   style={{
                     fontFamily: FONTS.sansSemiBold,
                     fontSize: 13,
-                    color: active ? COLORS.brandGold : dim,
+                    color: active ? brand : dim,
                   }}
                 >
                   {label}
@@ -365,7 +366,7 @@ function PathshalaContent() {
                 gap: 14,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
                 YOUR GURUKUL
               </Text>
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
@@ -430,7 +431,7 @@ function PathshalaContent() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           borderWidth: 1,
-                          borderColor: COLORS.brandGold,
+                          borderColor: brand,
                         }}
                       >
                         <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[path.tradition] ?? '📖'}</Text>
@@ -442,7 +443,7 @@ function PathshalaContent() {
                         <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }} numberOfLines={1}>
                           {path.description}
                         </Text>
-                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: COLORS.brandGold, textTransform: 'capitalize' }}>
+                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: brand, textTransform: 'capitalize' }}>
                           {path.difficulty}
                         </Text>
                       </View>
@@ -454,7 +455,7 @@ function PathshalaContent() {
                         haptic="none"
                         style={{
                           borderRadius: 16,
-                          backgroundColor: COLORS.brandGold,
+                          backgroundColor: brand,
                           paddingHorizontal: 14,
                           paddingVertical: 10,
                         }}
@@ -481,7 +482,7 @@ function PathshalaContent() {
                 gap: 14,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
                 DIFFICULTY PROGRESSION
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
@@ -507,9 +508,9 @@ function PathshalaContent() {
                             borderRadius: 999,
                             alignItems: 'center',
                             justifyContent: 'center',
-                            backgroundColor: complete ? COLORS.brandGold : 'transparent',
+                            backgroundColor: complete ? brand : 'transparent',
                             borderWidth: complete ? 0 : 1.5,
-                            borderColor: current ? COLORS.brandGold : border,
+                            borderColor: current ? brand : border,
                           }}
                         >
                           {complete ? (
@@ -522,7 +523,7 @@ function PathshalaContent() {
                                 width: 10,
                                 height: 10,
                                 borderRadius: 999,
-                                backgroundColor: COLORS.brandGold,
+                                backgroundColor: brand,
                               }}
                             />
                           ) : null}
@@ -539,10 +540,10 @@ function PathshalaContent() {
                             backgroundColor:
                               index === 0
                                 ? completedLessonsByDifficulty.beginner
-                                  ? COLORS.brandGold
+                                  ? brand
                                   : border
                                 : completedLessonsByDifficulty.intermediate
-                                  ? COLORS.brandGold
+                                  ? brand
                                   : border,
                           }}
                         />
@@ -571,13 +572,13 @@ function PathshalaContent() {
                   style={{
                     borderRadius: 999,
                     borderWidth: 1,
-                    borderColor: difficulty === option ? COLORS.brandGold : border,
+                    borderColor: difficulty === option ? brand : border,
                     backgroundColor: difficulty === option ? cardBg : 'transparent',
                     paddingHorizontal: 14,
                     paddingVertical: 10,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: difficulty === option ? COLORS.brandGold : dim, textTransform: 'capitalize' }}>
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: difficulty === option ? brand : dim, textTransform: 'capitalize' }}>
                     {option}
                   </Text>
                 </PressableSurface>

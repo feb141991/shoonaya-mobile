@@ -48,6 +48,7 @@ export default function PathLessonListScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const params = useLocalSearchParams<{ pathId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
 
@@ -129,7 +130,7 @@ export default function PathLessonListScreen() {
   if (fetchState === 'loading') {
     return (
       <Screen style={{ backgroundColor: bg }}>
-        <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={brand} style={{ marginTop: 40 }} />
       </Screen>
     );
   }
@@ -149,7 +150,7 @@ export default function PathLessonListScreen() {
           Could not load this path.
         </Text>
         <PressableSurface onPress={() => { void loadPath(); }} style={{ marginTop: 16, alignSelf: 'flex-start' }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.brandGold }}>Try again</Text>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>Try again</Text>
         </PressableSurface>
       </Screen>
     );
@@ -163,7 +164,7 @@ export default function PathLessonListScreen() {
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>{path.title}</Text>
         </View>
         <View style={{ alignItems: 'center', marginTop: 40, gap: 12, paddingHorizontal: 24 }}>
-          <Feather name="lock" size={32} color={COLORS.brandGold} />
+          <Feather name="lock" size={32} color={brand} />
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>Pro required</Text>
           <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
             Upgrade to Shoonaya Pro to unlock this path.
@@ -222,9 +223,9 @@ export default function PathLessonListScreen() {
                   borderRadius: 999,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: isComplete ? COLORS.brandGold : 'transparent',
+                  backgroundColor: isComplete ? brand : 'transparent',
                   borderWidth: isComplete ? 0 : 1,
-                  borderColor: isLocked ? border : COLORS.brandGold,
+                  borderColor: isLocked ? border : brand,
                 }}
               >
                 {isComplete ? (
@@ -232,7 +233,7 @@ export default function PathLessonListScreen() {
                 ) : isLocked ? (
                   <Feather name="lock" size={14} color={dim} />
                 ) : (
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
                     {index + 1}
                   </Text>
                 )}

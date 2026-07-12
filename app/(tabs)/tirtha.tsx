@@ -93,6 +93,7 @@ export default function TirthaScreen() {
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const inputBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const mapRef = useRef<MapView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -345,7 +346,7 @@ export default function TirthaScreen() {
     <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void initialize(true)} tintColor={COLORS.brandGold} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => void initialize(true)} tintColor={brand} />
         }
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 36 }}
       >
@@ -378,7 +379,7 @@ export default function TirthaScreen() {
                 backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
               }}
             >
-              <Feather name="radio" size={18} color={COLORS.brandGold} />
+              <Feather name="radio" size={18} color={brand} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Live Darshan</Text>
@@ -418,7 +419,7 @@ export default function TirthaScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: active ? COLORS.brandGold : dim }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: active ? brand : dim }}>
                     {label}
                   </Text>
                 </PressableSurface>
@@ -457,7 +458,7 @@ export default function TirthaScreen() {
                     }}
                   />
                   <PressableSurface onPress={() => void searchCity()} haptic="selection" hitSlop={8}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold }}>Search</Text>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>Search</Text>
                   </PressableSurface>
                 </View>
                 {!permissionGranted && (
@@ -467,7 +468,7 @@ export default function TirthaScreen() {
                       width: 48,
                       height: 48,
                       borderRadius: 18,
-                      backgroundColor: COLORS.brandGold,
+                      backgroundColor: brand,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
@@ -502,13 +503,13 @@ export default function TirthaScreen() {
                     coordinate={{ latitude: temple.lat, longitude: temple.lon }}
                     title={temple.name}
                     description={temple.address}
-                    pinColor={COLORS.brandGold}
+                    pinColor={brand}
                   />
                 ))}
               </MapView>
               {loading ? (
                 <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
-                  <ActivityIndicator color={COLORS.brandGold} />
+                  <ActivityIndicator color={brand} />
                 </View>
               ) : null}
             </View>
@@ -541,11 +542,11 @@ export default function TirthaScreen() {
               }}
             >
               <View>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>Saved places</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Saved places</Text>
                 <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{savedPlaces.length}</Text>
               </View>
               <View>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.brandGold }}>Visits</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Visits</Text>
                 <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{visits.length}</Text>
               </View>
             </View>
@@ -613,12 +614,12 @@ export default function TirthaScreen() {
                   style={{
                     borderRadius: 999,
                     borderWidth: 1,
-                    borderColor: checkinMood === mood.key ? COLORS.brandGold : border,
+                    borderColor: checkinMood === mood.key ? brand : border,
                     paddingHorizontal: 12,
                     paddingVertical: 8,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: checkinMood === mood.key ? COLORS.brandGold : dim }}>
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: checkinMood === mood.key ? brand : dim }}>
                     {mood.label}
                   </Text>
                 </PressableSurface>
@@ -653,7 +654,7 @@ export default function TirthaScreen() {
               disabled={submitting}
               style={{
                 borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: brand,
                 paddingVertical: 14,
                 alignItems: 'center',
                 opacity: submitting ? 0.7 : 1,

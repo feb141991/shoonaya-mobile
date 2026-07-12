@@ -81,6 +81,7 @@ export default function PanchangScreen() {
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+      brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
   );
@@ -176,7 +177,7 @@ export default function PanchangScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -213,8 +214,8 @@ export default function PanchangScreen() {
                   minWidth: 72,
                   borderRadius: 18,
                   borderWidth: 1,
-                  borderColor: active ? COLORS.brandGold : theme.border,
-                  backgroundColor: active ? COLORS.brandGold : theme.card,
+                  borderColor: active ? theme.brand : theme.border,
+                  backgroundColor: active ? theme.brand : theme.card,
                   paddingVertical: 10,
                   paddingHorizontal: 12,
                   alignItems: 'center',
@@ -251,7 +252,7 @@ export default function PanchangScreen() {
                   <Text style={{ fontStyle: 'italic' }}>Set your Rashi below to personalise</Text>
                 )}
               </Text>
-              <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
+              <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
                 Daily · Weekly · Monthly
               </Text>
             </View>
@@ -261,7 +262,7 @@ export default function PanchangScreen() {
           {(showRashiPicker || !profileState.rashi) && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, borderTopWidth: 1, borderTopColor: theme.border }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {profileState.rashi ? 'Change your Rashi' : '✦ Set your Rashi for personalised readings'}
                 </Text>
                 {profileState.rashi && showRashiPicker && (
@@ -288,11 +289,11 @@ export default function PanchangScreen() {
                         borderRadius: 12,
                         borderWidth: 1,
                         backgroundColor: isSelected ? (isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight) : theme.bg,
-                        borderColor: isSelected ? COLORS.brandGold : theme.border,
+                        borderColor: isSelected ? theme.brand : theme.border,
                       }}
                     >
                       <Text style={{ fontSize: 20 }}>{r.symbol}</Text>
-                      <Text style={{ marginTop: 6, color: isSelected ? COLORS.brandGold : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{r.en}</Text>
+                      <Text style={{ marginTop: 6, color: isSelected ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{r.en}</Text>
                     </PressableSurface>
                   );
                 })}
@@ -362,8 +363,8 @@ export default function PanchangScreen() {
                   alignSelf: 'flex-start',
                 }}
               >
-                <Feather name="check-circle" size={16} color={COLORS.brandGold} />
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                <Feather name="check-circle" size={16} color={theme.brand} />
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
                   Observed today
                 </Text>
               </View>
@@ -381,7 +382,7 @@ export default function PanchangScreen() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    backgroundColor: COLORS.brandGold,
+                    backgroundColor: theme.brand,
                   }}
                 >
                   {markingViewed ? (
@@ -406,7 +407,7 @@ export default function PanchangScreen() {
                       onPress={markObserved}
                       style={{ minHeight: 0 }}
                     >
-                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Retry
                       </Text>
                     </PressableSurface>
@@ -459,7 +460,7 @@ export default function PanchangScreen() {
                   </Text>
                   <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 2 }}>{festival.date}</Text>
                 </View>
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
                   {festival.kind.toUpperCase()}
                 </Text>
               </View>

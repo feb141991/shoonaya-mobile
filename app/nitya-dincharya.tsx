@@ -84,6 +84,7 @@ export default function NityaKarmaScreen() {
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+      brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
   );
@@ -257,7 +258,7 @@ export default function NityaKarmaScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
@@ -306,7 +307,7 @@ export default function NityaKarmaScreen() {
 
         {state.streak.current > 0 ? (
           <Card style={{ backgroundColor: theme.card, borderColor: theme.border, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Feather name="award" size={20} color={COLORS.brandGold} />
+            <Feather name="award" size={20} color={theme.brand} />
             <View style={{ flex: 1 }}>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                 {state.streak.current}-day streak
@@ -339,7 +340,7 @@ export default function NityaKarmaScreen() {
               disabled={shareLoading}
               style={{
                 borderRadius: 16,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: theme.brand,
                 minHeight: 44,
                 paddingVertical: 12,
                 alignItems: 'center',
@@ -371,7 +372,7 @@ export default function NityaKarmaScreen() {
                 style={{
                   width: `${state.total > 0 ? (state.completedCount / state.total) * 100 : 0}%`,
                   height: '100%',
-                  backgroundColor: COLORS.brandGold,
+                  backgroundColor: theme.brand,
                   borderRadius: 3,
                 }}
               />
@@ -411,7 +412,7 @@ export default function NityaKarmaScreen() {
                     backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                   }}
                 >
-                  <Feather name={step.icon} size={18} color={step.done ? COLORS.success : COLORS.brandGold} />
+                  <Feather name={step.icon} size={18} color={step.done ? COLORS.success : theme.brand} />
                 </View>
 
                 <View style={{ flex: 1 }}>
@@ -434,7 +435,7 @@ export default function NityaKarmaScreen() {
                       hitSlop={8}
                       style={{ minHeight: 0 }}
                     >
-                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textDecorationLine: 'underline' }}>
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textDecorationLine: 'underline' }}>
                         Copy note
                       </Text>
                     </PressableSurface>
@@ -447,7 +448,7 @@ export default function NityaKarmaScreen() {
                       hitSlop={8}
                       style={{ minHeight: 0 }}
                     >
-                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textDecorationLine: 'underline' }}>
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textDecorationLine: 'underline' }}>
                         Share note
                       </Text>
                     </PressableSurface>
@@ -461,7 +462,7 @@ export default function NityaKarmaScreen() {
                       style={{ marginTop: 8, minHeight: 0 }}
                       hitSlop={8}
                     >
-                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Open Japa Counter →
                       </Text>
                     </PressableSurface>
@@ -473,7 +474,7 @@ export default function NityaKarmaScreen() {
                       style={{ marginTop: 8, minHeight: 0 }}
                       hitSlop={8}
                     >
-                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Open Pathshala →
                       </Text>
                     </PressableSurface>
@@ -481,7 +482,7 @@ export default function NityaKarmaScreen() {
                 </View>
 
                 {isBusy ? (
-                  <ActivityIndicator size="small" color={COLORS.brandGold} />
+                  <ActivityIndicator size="small" color={theme.brand} />
                 ) : step.done ? (
                   <Feather name="check-circle" size={22} color={COLORS.success} />
                 ) : (

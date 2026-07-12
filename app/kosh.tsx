@@ -75,6 +75,7 @@ function RelicCard({
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const bob = useSharedValue(0);
   const scale = useSharedValue(1);
 
@@ -116,7 +117,7 @@ function RelicCard({
           minHeight: 210,
           borderRadius: 24,
           borderWidth: active ? 2 : 1,
-          borderColor: active ? COLORS.brandGold : border,
+          borderColor: active ? brand : border,
           backgroundColor: bg,
           padding: 14,
           justifyContent: 'space-between',
@@ -177,6 +178,7 @@ export default function KoshScreen() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -328,7 +330,7 @@ export default function KoshScreen() {
               style={{
                 borderRadius: 999,
                 borderWidth: 1,
-                borderColor: filter === option ? COLORS.brandGold : border,
+                borderColor: filter === option ? brand : border,
                 backgroundColor: filter === option ? cardBg : 'transparent',
                 paddingHorizontal: 14,
                 paddingVertical: 10,
@@ -338,7 +340,7 @@ export default function KoshScreen() {
                 style={{
                   fontFamily: FONTS.sansMedium,
                   fontSize: 12,
-                  color: filter === option ? COLORS.brandGold : dim,
+                  color: filter === option ? brand : dim,
                   textTransform: 'capitalize',
                 }}
               >
@@ -350,7 +352,7 @@ export default function KoshScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={brand} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={filteredRelics}
@@ -359,7 +361,7 @@ export default function KoshScreen() {
           columnWrapperStyle={{ gap: 14 }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 36, gap: 14 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={COLORS.brandGold} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={brand} />
           }
           renderItem={({ item }) => {
             const isUnlocked = unlocked.some((relic) => relic.id === item.id);
@@ -380,7 +382,7 @@ export default function KoshScreen() {
                     }
                   }}
                 />
-                {savingRelic === item.id ? <ActivityIndicator color={COLORS.brandGold} style={{ marginTop: 8 }} /> : null}
+                {savingRelic === item.id ? <ActivityIndicator color={brand} style={{ marginTop: 8 }} /> : null}
               </View>
             );
           }}
@@ -418,7 +420,7 @@ export default function KoshScreen() {
               style={{
                 marginTop: 8,
                 borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: brand,
                 paddingVertical: 14,
                 alignItems: 'center',
               }}

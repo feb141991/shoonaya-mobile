@@ -71,7 +71,7 @@ export default function AiChatScreen() {
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-      userBubble: COLORS.brandGold,
+      userBubble: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
   );
@@ -252,7 +252,7 @@ export default function AiChatScreen() {
   if (loadingProfile) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.bg, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color={COLORS.brandGold} />
+        <ActivityIndicator color={theme.userBubble} />
       </View>
     );
   }
@@ -347,7 +347,7 @@ export default function AiChatScreen() {
               width: 42,
               height: 42,
               borderRadius: 21,
-              backgroundColor: input.trim() ? COLORS.brandGold : theme.border,
+              backgroundColor: input.trim() ? theme.userBubble : theme.border,
               alignItems: 'center',
               justifyContent: 'center',
             }}

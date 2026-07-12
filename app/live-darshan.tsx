@@ -60,6 +60,7 @@ function LiveDarshanContent() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const [status, setStatus] = useState<ScreenStatus>('loading');
   const [streams, setStreams] = useState<LiveStream[]>([]);
@@ -237,7 +238,7 @@ function LiveDarshanContent() {
                       onPress={() => void openStream(stream)}
                       style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
                     >
-                      <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Retry
                       </Text>
                     </PressableSurface>
