@@ -189,6 +189,39 @@ export const COLORS = {
   // theme, but a badge sitting on a photo needs to stay legible against the
   // photo itself, not the surrounding screen.
   onMediaWhite: '#FFFFFF',
+
+  // Practice-tile category colors — ported 1:1 from the PWA's Home quick-
+  // access grid (src/app/(main)/home/sections/SadhanaSection.tsx and
+  // CommunitySection.tsx), so a given practice always carries the same
+  // color on both platforms rather than every tile sharing one brand hue.
+  // PWA computes its light-mode bg by swapping the same color's alpha from
+  // 0.14 (dark) to 0.12 (light) and its border from the same base color at
+  // 0.3 alpha, independent of theme — replicated exactly here as separate
+  // tokens instead of a runtime string-replace.
+  tileGold: '#C5A059',
+  tileGoldBgDark: 'rgba(197,160,89,0.14)',
+  tileGoldBgLight: 'rgba(197,160,89,0.12)',
+  tileGoldBorder: 'rgba(197,160,89,0.3)',
+  tilePurple: '#A594E0',
+  tilePurpleBgDark: 'rgba(165,148,224,0.14)',
+  tilePurpleBgLight: 'rgba(165,148,224,0.12)',
+  tilePurpleBorder: 'rgba(165,148,224,0.3)',
+  tileViolet: '#8B5CF6',
+  tileVioletBgDark: 'rgba(139,92,246,0.14)',
+  tileVioletBgLight: 'rgba(139,92,246,0.12)',
+  tileVioletBorder: 'rgba(139,92,246,0.3)',
+  tileGreen: '#6BC47E',
+  tileGreenBgDark: 'rgba(107,196,126,0.14)',
+  tileGreenBgLight: 'rgba(107,196,126,0.12)',
+  tileGreenBorder: 'rgba(107,196,126,0.3)',
+  tileCoral: '#FF8A65',
+  tileCoralBgDark: 'rgba(255,138,101,0.14)',
+  tileCoralBgLight: 'rgba(255,138,101,0.12)',
+  tileCoralBorder: 'rgba(255,138,101,0.3)',
+  tileBlue: '#64B5F6',
+  tileBlueBgDark: 'rgba(100,181,246,0.14)',
+  tileBlueBgLight: 'rgba(100,181,246,0.12)',
+  tileBlueBorder: 'rgba(100,181,246,0.3)',
 } as const;
 
 export const themeColor = (isDark: boolean) => ({
