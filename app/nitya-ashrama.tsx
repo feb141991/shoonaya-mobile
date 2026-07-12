@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -13,6 +12,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -178,10 +178,10 @@ export default function NityaAshramaScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
             <Feather name="chevron-left" size={16} color={theme.dim} />
             <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
 
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Ashrama Dharma</Text>
           <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: -8 }}>
@@ -195,8 +195,9 @@ export default function NityaAshramaScreen() {
               {(['general', 'female'] as const).map((g) => {
                 const active = selectedGender === g;
                 return (
-                  <Pressable
+                  <PressableSurface
                     key={g}
+                    haptic="selection"
                     onPress={() => setSelectedGender(g)}
                     style={{
                       flex: 1,
@@ -211,7 +212,7 @@ export default function NityaAshramaScreen() {
                     <Text style={{ color: active ? COLORS.brandGold : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                       {g === 'general' ? 'General' : 'Female'}
                     </Text>
-                  </Pressable>
+                  </PressableSurface>
                 );
               })}
             </View>
@@ -222,8 +223,9 @@ export default function NityaAshramaScreen() {
             {ASHRAMA_OPTIONS.map((opt) => {
               const active = selectedStage === opt.key;
               return (
-                <Pressable
+                <PressableSurface
                   key={opt.key}
+                  haptic="selection"
                   onPress={() => setSelectedStage(opt.key)}
                   style={{
                     backgroundColor: active ? theme.brandSoft : theme.card,
@@ -242,12 +244,12 @@ export default function NityaAshramaScreen() {
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16 }}>{opt.desc}</Text>
                   </View>
                   {active && <Ionicons name="checkmark-circle" size={24} color={COLORS.brandGold} />}
-                </Pressable>
+                </PressableSurface>
               );
             })}
           </View>
 
-          <Pressable
+          <PressableSurface
             onPress={handleSaveSetup}
             disabled={savingSetup || !selectedStage}
             style={{
@@ -257,11 +259,10 @@ export default function NityaAshramaScreen() {
               borderRadius: 24,
               alignItems: 'center',
               marginTop: 12,
-              opacity: savingSetup || !selectedStage ? 0.6 : 1,
             }}
           >
             {savingSetup ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Unlock Ashrama Dharma</Text>}
-          </Pressable>
+          </PressableSurface>
         </ScrollView>
       </Screen>
     );
@@ -275,14 +276,14 @@ export default function NityaAshramaScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
             <Feather name="chevron-left" size={16} color={theme.dim} />
             <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
 
-          <Pressable onPress={handleResetStage} style={{ backgroundColor: COLORS.dangerBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+          <PressableSurface haptic="selection" onPress={handleResetStage} style={{ backgroundColor: COLORS.dangerBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, minHeight: 0 }}>
             <Text style={{ color: COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Change Stage</Text>
-          </Pressable>
+          </PressableSurface>
         </View>
 
         <View style={{ gap: 4 }}>
@@ -314,8 +315,9 @@ export default function NityaAshramaScreen() {
           {duties.map((duty) => {
             const isChecked = checkedIds.has(duty.id);
             return (
-              <Pressable
+              <PressableSurface
                 key={duty.id}
+                haptic="selection"
                 onPress={() => toggleDuty(duty.id)}
                 style={{
                   backgroundColor: isChecked ? COLORS.successBg : theme.card,
@@ -348,7 +350,7 @@ export default function NityaAshramaScreen() {
                 ) : (
                   <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: theme.dim }} />
                 )}
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </View>

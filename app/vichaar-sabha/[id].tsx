@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -126,10 +127,10 @@ export default function ThreadDetailScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 14 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Vichaar Sabha</Text>
-        </Pressable>
+        </PressableSurface>
 
         <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 22, padding: 18, gap: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -167,9 +168,9 @@ export default function ThreadDetailScreen() {
             {REACTIONS.map(({ type, emoji, label }) => {
               const active = myReactions.has(type);
               return (
-                <Pressable
+                <PressableSurface
                   key={type}
-                  accessibilityRole="button"
+                  haptic="selection"
                   accessibilityLabel={label}
                   onPress={() => void handleToggleReaction(type)}
                   style={{
@@ -186,7 +187,7 @@ export default function ThreadDetailScreen() {
                 >
                   <Text style={{ fontSize: 13 }}>{emoji}</Text>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? COLORS.ink : theme.dim }}>{thread.reactions[type] || ''}</Text>
-                </Pressable>
+                </PressableSurface>
               );
             })}
           </View>
@@ -232,14 +233,14 @@ export default function ThreadDetailScreen() {
             placeholderTextColor={theme.dim}
             style={{ minHeight: 70, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text, textAlignVertical: 'top' }}
           />
-          <Pressable
+          <PressableSurface
             onPress={() => void submitReply()}
             disabled={submitting || !replyBody.trim()}
             style={{ alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11, backgroundColor: replyBody.trim() ? theme.brand : theme.border }}
           >
             {submitting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={14} color={COLORS.ink} />}
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.ink }}>{submitting ? 'Posting…' : 'Reply'}</Text>
-          </Pressable>
+          </PressableSurface>
         </View>
       </ScrollView>
     </Screen>

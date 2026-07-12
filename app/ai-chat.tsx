@@ -4,7 +4,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   Text,
   TextInput,
   useColorScheme,
@@ -13,6 +12,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -264,10 +264,10 @@ export default function AiChatScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
     >
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 12 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharma Mitra</Text>
         <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: 4 }}>
@@ -280,8 +280,9 @@ export default function AiChatScreen() {
               Ask a direct question. The response streams as it is generated.
             </Text>
             {SUGGESTED_PROMPTS.map((prompt) => (
-              <Pressable
+              <PressableSurface
                 key={prompt}
+                haptic="selection"
                 onPress={() => {
                   void sendMessage(prompt);
                 }}
@@ -295,7 +296,7 @@ export default function AiChatScreen() {
                 }}
               >
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 15 }}>{prompt}</Text>
-              </Pressable>
+              </PressableSurface>
             ))}
           </View>
         ) : (
@@ -337,7 +338,7 @@ export default function AiChatScreen() {
               paddingTop: 4,
             }}
           />
-          <Pressable
+          <PressableSurface
             onPress={() => {
               void sendMessage();
             }}
@@ -356,7 +357,7 @@ export default function AiChatScreen() {
             ) : (
               <Feather name="send" size={18} color={COLORS.ink} />
             )}
-          </Pressable>
+          </PressableSurface>
         </View>
       </View>
     </KeyboardAvoidingView>

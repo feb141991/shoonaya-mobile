@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
@@ -148,10 +149,10 @@ export default function DharmVeerDetailScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
             <Feather name="chevron-left" size={16} color={textDim} />
             <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
 
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 26 }}>
@@ -163,7 +164,8 @@ export default function DharmVeerDetailScreen() {
                 : 'Check your connection and try again.'}
             </Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable
+              <PressableSurface
+                haptic="selection"
                 onPress={retry}
                 style={{
                   alignSelf: 'flex-start',
@@ -174,8 +176,9 @@ export default function DharmVeerDetailScreen() {
                 }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-              </Pressable>
-              <Pressable
+              </PressableSurface>
+              <PressableSurface
+                haptic="selection"
                 onPress={() => router.back()}
                 style={{
                   alignSelf: 'flex-start',
@@ -187,7 +190,7 @@ export default function DharmVeerDetailScreen() {
                 }}
               >
                 <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Go back</Text>
-              </Pressable>
+              </PressableSurface>
             </View>
           </Card>
         </ScrollView>
@@ -226,10 +229,10 @@ export default function DharmVeerDetailScreen() {
         />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={textDim} />
           <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 16 }}>
           <DharmVeerPoster hero={hero} />
@@ -325,7 +328,8 @@ export default function DharmVeerDetailScreen() {
               textAlignVertical: 'top',
             }}
           />
-          <Pressable
+          <PressableSurface
+            haptic="selection"
             onPress={() => { void askDharmaMitra(); }}
             disabled={!askMoreQuery.trim() || askMoreLoading}
             style={{
@@ -336,7 +340,6 @@ export default function DharmVeerDetailScreen() {
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: COLORS.brandGold,
-              opacity: !askMoreQuery.trim() || askMoreLoading ? 0.55 : 1,
             }}
           >
             {askMoreLoading ? (
@@ -344,7 +347,7 @@ export default function DharmVeerDetailScreen() {
             ) : (
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Ask AI</Text>
             )}
-          </Pressable>
+          </PressableSurface>
           {askMoreResponse ? (
             <View style={{ borderRadius: 18, borderWidth: 1, borderColor: border, backgroundColor: surface, padding: 14 }}>
               <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{askMoreResponse}</Text>
@@ -352,7 +355,8 @@ export default function DharmVeerDetailScreen() {
           ) : null}
         </Card>
 
-        <Pressable
+        <PressableSurface
+          haptic="selection"
           onPress={() => router.push('/dharm-veer')}
           style={{
             flexDirection: 'row',
@@ -369,8 +373,9 @@ export default function DharmVeerDetailScreen() {
             {"Open today's Dharm Veer practice"}
           </Text>
           <Feather name="arrow-right" size={16} color={text} />
-        </Pressable>
-        <Pressable
+        </PressableSurface>
+        <PressableSurface
+          haptic="selection"
           onPress={() => { void shareHero(); }}
           style={{
             flexDirection: 'row',
@@ -384,7 +389,7 @@ export default function DharmVeerDetailScreen() {
         >
           <Feather name="share-2" size={16} color={COLORS.ink} />
           <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Share reflection</Text>
-        </Pressable>
+        </PressableSurface>
       </ScrollView>
     </Screen>
   );

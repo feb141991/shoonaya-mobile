@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
@@ -204,26 +205,26 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Pressable
+          <PressableSurface
+            haptic="selection"
             onPress={() => router.back()}
-            accessibilityRole="button"
             accessibilityLabel="Back"
             hitSlop={10}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MIN_TOUCH_TARGET }}
           >
             <Feather name="chevron-left" size={16} color={theme.dim} />
             <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
 
-          <Pressable
+          <PressableSurface
+            haptic="selection"
             onPress={() => router.push('/settings')}
-            accessibilityRole="button"
             accessibilityLabel="Notification settings"
             hitSlop={10}
             style={{ minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
           >
             <Feather name="settings" size={18} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -247,20 +248,20 @@ export default function NotificationsScreen() {
           </View>
 
           {unreadCount > 0 ? (
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={() => {
                 void handleMarkAllRead();
               }}
               disabled={markingAll}
-              accessibilityRole="button"
               accessibilityLabel="Mark all read"
               hitSlop={8}
-              style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', opacity: markingAll ? 0.6 : 1 }}
+              style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
             >
               <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
                 Mark all read
               </Text>
-            </Pressable>
+            </PressableSurface>
           ) : null}
         </View>
 
@@ -297,12 +298,12 @@ export default function NotificationsScreen() {
         ) : (
           <View style={{ gap: 10 }}>
             {notifications.map((row) => (
-              <Pressable
+              <PressableSurface
                 key={row.id}
+                haptic="none"
                 onPress={() => {
                   void handleRowPress(row);
                 }}
-                accessibilityRole="button"
                 accessibilityLabel={`${row.title}${row.read ? '' : ', unread'}`}
                 style={{
                   borderRadius: 18,
@@ -358,21 +359,22 @@ export default function NotificationsScreen() {
                     {formatNotificationDate(row.created_at)}
                   </Text>
                 </View>
-              </Pressable>
+              </PressableSurface>
             ))}
           </View>
         )}
 
-        <Pressable
-          onPress={() => router.push('/settings')}
+        <PressableSurface
+          haptic="selection"
           accessibilityRole="link"
+          onPress={() => router.push('/settings')}
           accessibilityLabel="Manage notification settings"
           style={{ minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}
         >
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
             Manage notification settings
           </Text>
-        </Pressable>
+        </PressableSurface>
 
         {refreshing ? <ActivityIndicator color={COLORS.brandGold} /> : null}
       </ScrollView>

@@ -4,7 +4,6 @@ import {
   FlatList,
   Image,
   Modal,
-  Pressable,
   RefreshControl,
   Text,
   useColorScheme,
@@ -23,6 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { API_BASE, COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SACRED_RELICS, getUnlockedRelics, type Relic } from '@/lib/relics';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -108,7 +108,8 @@ function RelicCard({
 
   return (
     <Animated.View style={animatedStyle}>
-      <Pressable
+      <PressableSurface
+        haptic="selection"
         onPress={onPress}
         style={{
           flex: 1,
@@ -162,7 +163,7 @@ function RelicCard({
             {unlocked ? relic.effect : getRequirementCopy(relic, streak, sevaScore)}
           </Text>
         </View>
-      </Pressable>
+      </PressableSurface>
     </Animated.View>
   );
 }
@@ -290,9 +291,9 @@ export default function KoshScreen() {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <View style={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 16, gap: 18 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} hitSlop={12} style={{ minHeight: 0 }}>
             <Feather name="arrow-left" size={22} color={text} />
-          </Pressable>
+          </PressableSurface>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Kosh</Text>
         </View>
 
@@ -320,8 +321,9 @@ export default function KoshScreen() {
 
         <View style={{ flexDirection: 'row', gap: 10 }}>
           {(['all', 'unlocked', 'locked'] as const).map((option) => (
-            <Pressable
+            <PressableSurface
               key={option}
+              haptic="selection"
               onPress={() => setFilter(option)}
               style={{
                 borderRadius: 999,
@@ -342,7 +344,7 @@ export default function KoshScreen() {
               >
                 {option}
               </Text>
-            </Pressable>
+            </PressableSurface>
           ))}
         </View>
       </View>
@@ -410,7 +412,8 @@ export default function KoshScreen() {
             <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: text }}>
               {selectedLocked?.description ?? ''}
             </Text>
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={() => setSelectedLocked(null)}
               style={{
                 marginTop: 8,
@@ -421,7 +424,7 @@ export default function KoshScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>Close</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </View>
       </Modal>

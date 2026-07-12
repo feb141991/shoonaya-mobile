@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -13,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
@@ -290,8 +290,8 @@ export default function NityaKarmaHubScreen() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 34 }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: 4, gap: 20 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel="Go back"
               onPress={() => router.back()}
               style={{
@@ -306,7 +306,7 @@ export default function NityaKarmaHubScreen() {
               }}
             >
               <Feather name="chevron-left" size={19} color={theme.text} />
-            </Pressable>
+            </PressableSurface>
 
             {dincharyaStats.streak > 0 ? (
               <View
@@ -374,11 +374,11 @@ export default function NityaKarmaHubScreen() {
             </View>
           ) : (
             <View style={{ gap: 14 }}>
-              <Pressable
-                accessibilityRole="button"
+              <PressableSurface
+                haptic="selection"
                 accessibilityLabel={`Open Dincharya. ${progressLabel}`}
                 onPress={() => router.push('/nitya-dincharya')}
-                style={({ pressed }) => ({
+                style={{
                   borderRadius: 28,
                   padding: 18,
                   gap: 16,
@@ -386,9 +386,7 @@ export default function NityaKarmaHubScreen() {
                   borderWidth: 1,
                   borderColor: theme.premiumBorder,
                   boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
-                  opacity: pressed ? 0.92 : 1,
-                  transform: [{ scale: pressed ? 0.99 : 1 }],
-                })}
+                }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                   <View
@@ -442,13 +440,13 @@ export default function NityaKarmaHubScreen() {
                     <Feather name="arrow-right" size={16} color={theme.brand} />
                   </View>
                 </View>
-              </Pressable>
+              </PressableSurface>
 
-              <Pressable
-                accessibilityRole="button"
+              <PressableSurface
+                haptic="selection"
                 accessibilityLabel="Open Sadhana Patha"
                 onPress={() => router.push('/nitya-plans')}
-                style={({ pressed }) => ({
+                style={{
                   minHeight: 78,
                   borderRadius: 24,
                   padding: 16,
@@ -459,8 +457,7 @@ export default function NityaKarmaHubScreen() {
                   borderWidth: 1,
                   borderColor: theme.border,
                   boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                  opacity: pressed ? 0.9 : 1,
-                })}
+                }}
               >
                 <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
                   <SacredIcon name="japa" fallbackGlyph="disc" size={21} color={theme.brand} />
@@ -472,13 +469,13 @@ export default function NityaKarmaHubScreen() {
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={20} color={theme.dim} />
-              </Pressable>
+              </PressableSurface>
 
-              <Pressable
-                accessibilityRole="button"
+              <PressableSurface
+                haptic="selection"
                 accessibilityLabel="Open Ashrama Dharma"
                 onPress={() => router.push('/nitya-ashrama')}
-                style={({ pressed }) => ({
+                style={{
                   minHeight: 78,
                   borderRadius: 24,
                   padding: 16,
@@ -489,8 +486,7 @@ export default function NityaKarmaHubScreen() {
                   borderWidth: 1,
                   borderColor: theme.border,
                   boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                  opacity: pressed ? 0.9 : 1,
-                })}
+                }}
               >
                 <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name="compass" size={21} color={theme.brand} />
@@ -511,7 +507,7 @@ export default function NityaKarmaHubScreen() {
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={20} color={theme.dim} />
-              </Pressable>
+              </PressableSurface>
             </View>
           )}
         </View>

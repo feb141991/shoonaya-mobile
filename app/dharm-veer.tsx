@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   Switch,
   Text,
@@ -24,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
@@ -313,17 +313,18 @@ export default function DharmVeerScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
             <Feather name="chevron-left" size={16} color={textDim} />
             <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
 
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
               {"Unable to load today's profile. Check your connection and try again."}
             </Text>
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={() => {
                 setLoading(true);
                 loadState()
@@ -339,7 +340,7 @@ export default function DharmVeerScreen() {
               }}
             >
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-            </Pressable>
+            </PressableSurface>
           </Card>
         </ScrollView>
       </Screen>
@@ -350,10 +351,10 @@ export default function DharmVeerScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
             <Feather name="chevron-left" size={16} color={textDim} />
             <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </Pressable>
+          </PressableSurface>
 
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
@@ -393,10 +394,10 @@ export default function DharmVeerScreen() {
         </View>
       ) : null}
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
           <Feather name="chevron-left" size={16} color={textDim} />
           <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <View style={{ gap: 4 }}>
           <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
@@ -437,8 +438,9 @@ export default function DharmVeerScreen() {
             {(['gratitude', 'devotion', 'peace', 'courage'] as const).map((option) => {
               const active = mood === option;
               return (
-                <Pressable
+                <PressableSurface
                   key={option}
+                  haptic="selection"
                   onPress={() => setMood(option)}
                   style={{
                     borderRadius: 999,
@@ -452,7 +454,7 @@ export default function DharmVeerScreen() {
                   <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                     {option}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               );
             })}
           </View>
