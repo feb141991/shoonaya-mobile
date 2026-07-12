@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
+  Animated,
   Pressable,
   ScrollView,
   Text,
@@ -44,6 +46,9 @@ export default function MoodScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const moodCardWidth = Math.floor((Math.min(windowWidth, 430) - 56) / 2);
   const MOODS = MOODS_CONFIG[isDark ? 'dark' : 'light'] || MOODS_CONFIG.dark;
+  const entrance = useRef(new Animated.Value(0)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState(false);
@@ -68,6 +73,45 @@ export default function MoodScreen() {
   const [afterMood, setAfterMood] = useState<MoodConfig | null>(null);
   const [returnRecs, setReturnRecs] = useState<Recommendation[]>([]);
   const [returnRecsLoading, setReturnRecsLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (mounted) setReducedMotion(enabled);
+      })
+      .catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReducedMotion);
+    return () => {
+      mounted = false;
+      subscription?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    entrance.setValue(reducedMotion ? 1 : 0);
+    if (reducedMotion) return;
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 520,
+      useNativeDriver: true,
+    }).start();
+  }, [entrance, reducedMotion, step]);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      shimmer.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, { toValue: 1, duration: 1400, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0, duration: 1400, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [reducedMotion, shimmer]);
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -280,6 +324,28 @@ export default function MoodScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View
+          style={[
+            styles.bgOrb,
+            {
+              top: 92,
+              right: -72,
+              backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.bgOrb,
+            {
+              left: -86,
+              top: 330,
+              backgroundColor: isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight,
+            },
+          ]}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
           <PressableSurface haptic="selection" onPress={() => {
@@ -291,15 +357,50 @@ export default function MoodScreen() {
           </PressableSurface>
         </View>
 
-        <Text style={[styles.title, { color: theme.text }]}>
+        <Animated.View
+          style={{
+            opacity: entrance,
+            transform: [
+              {
+                translateY: entrance.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [18, 0],
+                }),
+              },
+            ],
+          }}
+        >
+          <Text style={[styles.eyebrow, { color: theme.brand }]}>Bhavana check-in</Text>
+          <Text style={[styles.title, { color: theme.text }]}>
           {step === 1 && "How are you feeling?"}
           {step === 2 && "How much time do you have?"}
           {step === 3 && !showReturn && "Recommendations for you"}
           {step === 3 && showReturn && "How do you feel now?"}
-        </Text>
+          </Text>
+          {step === 1 ? (
+            <Text style={[styles.subtitle, { color: theme.dim, marginTop: -SPACING.lg, marginBottom: SPACING.xl }]}>
+              Choose the state closest to your heart. Shoonaya will suggest a gentle next step.
+            </Text>
+          ) : null}
+        </Animated.View>
 
         {step === 1 && (
-          <View style={styles.grid}>
+          <Animated.View
+            style={[
+              styles.grid,
+              {
+                opacity: entrance,
+                transform: [
+                  {
+                    scale: entrance.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.98, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
             {MOODS.map(mood => (
               <Pressable
                 key={mood.key}
@@ -310,12 +411,33 @@ export default function MoodScreen() {
                   {
                     width: moodCardWidth,
                     backgroundColor: theme.card,
-                    borderColor: theme.border,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                    borderColor: `${mood.colour}30`,
+                    boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                   },
                 ]}
                 onPress={() => handleMoodSelect(mood)}
               >
+                <View pointerEvents="none" style={[styles.moodGlow, { backgroundColor: mood.bg }]} />
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.moodGlint,
+                    {
+                      opacity: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.08, 0.28] }),
+                      transform: [
+                        {
+                          translateX: shimmer.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-80, 90],
+                          }),
+                        },
+                        { rotate: '18deg' },
+                      ],
+                    },
+                  ]}
+                />
+                <View pointerEvents="none" style={[styles.sparkle, styles.sparkleOne, { backgroundColor: mood.colour }]} />
+                <View pointerEvents="none" style={[styles.sparkle, styles.sparkleTwo, { backgroundColor: mood.colour }]} />
                 <View style={[styles.glyphContainer, { backgroundColor: mood.bg, borderColor: `${mood.colour}33` }]}>
                   <MoodGlyph mood={mood.key} color={mood.colour} size={30} />
                 </View>
@@ -324,7 +446,7 @@ export default function MoodScreen() {
                 </Text>
               </Pressable>
             ))}
-          </View>
+          </Animated.View>
         )}
 
         {step === 2 && (
@@ -496,7 +618,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContent: {
-    paddingBottom: SPACING.xxl,
+    paddingBottom: SPACING.xxl * 2,
   },
   headerRow: {
     flexDirection: 'row',
@@ -510,7 +632,14 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FONTS.serifBold,
     fontSize: 28,
+    lineHeight: 34,
     marginBottom: SPACING.xxl,
+  },
+  eyebrow: {
+    ...TYPE.chip,
+    textTransform: 'uppercase',
+    letterSpacing: 1.9,
+    marginBottom: SPACING.sm,
   },
   subtitle: {
     fontFamily: FONTS.sans,
@@ -525,21 +654,22 @@ const styles = StyleSheet.create({
   },
   moodCard: {
     width: '48%',
-    minHeight: 126,
+    minHeight: 150,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.lg,
-    borderRadius: 18,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   glyphContainer: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.md,
     borderWidth: 1,
   },
   moodLabel: {
@@ -547,6 +677,44 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.sansSemiBold,
     textAlign: 'center',
     maxWidth: '100%',
+  },
+  bgOrb: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    opacity: 0.55,
+  },
+  moodGlow: {
+    position: 'absolute',
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    top: -54,
+    left: -50,
+    opacity: 0.62,
+  },
+  moodGlint: {
+    position: 'absolute',
+    top: -20,
+    bottom: -20,
+    width: 34,
+    backgroundColor: COLORS.brandAccentLight,
+  },
+  sparkle: {
+    position: 'absolute',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.48,
+  },
+  sparkleOne: {
+    top: 24,
+    right: 26,
+  },
+  sparkleTwo: {
+    bottom: 30,
+    right: 44,
   },
   list: {
     flexDirection: 'column',
