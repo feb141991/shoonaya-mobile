@@ -390,7 +390,7 @@ export default function KoshScreen() {
       )}
 
       <Modal transparent visible={Boolean(selectedLocked)} animationType="slide" onRequestClose={() => setSelectedLocked(null)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.28)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
           <View
             style={{
               borderTopLeftRadius: 28,
