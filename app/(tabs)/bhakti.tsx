@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -162,43 +163,34 @@ export default function BhaktiScreen() {
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {PRACTICE_CARDS.map((card) => (
-              <Pressable
+              <PressableSurface
                 key={card.id}
+                haptic="none"
                 onPress={() => handlePracticePress(card.href)}
-                accessibilityRole="button"
                 accessibilityLabel={`${card.label}, ${card.detail}`}
-                style={{ width: '48%', minHeight: 44 }}
+                style={{ width: '48%' }}
               >
-                {({ pressed }) => (
-                  <Card
-                    tone="auto"
+                <Card tone="auto" style={{ gap: 12 }}>
+                  <View
                     style={{
-                      gap: 12,
-                      opacity: pressed ? 0.85 : 1,
-                      transform: [{ scale: pressed ? 0.985 : 1 }],
+                      width: 44,
+                      height: 44,
+                      borderRadius: RADII.md,
+                      backgroundColor: theme.iconWell,
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: RADII.md,
-                        backgroundColor: theme.iconWell,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <SacredIcon name={card.id} fallbackGlyph={card.fallbackGlyph} size={20} color={theme.brand} />
-                    </View>
-                    <View style={{ gap: 4 }}>
-                      <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{card.label}</Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                        {card.detail}
-                      </Text>
-                    </View>
-                  </Card>
-                )}
-              </Pressable>
+                    <SacredIcon name={card.id} fallbackGlyph={card.fallbackGlyph} size={20} color={theme.brand} />
+                  </View>
+                  <View style={{ gap: 4 }}>
+                    <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{card.label}</Text>
+                    <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                      {card.detail}
+                    </Text>
+                  </View>
+                </Card>
+              </PressableSurface>
             ))}
           </View>
         </View>
@@ -209,34 +201,25 @@ export default function BhaktiScreen() {
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {activeContentCards.map(card => (
-              <Pressable
+              <PressableSurface
                 key={card.id}
+                haptic="none"
                 onPress={() => handleContentCardPress(card)}
-                accessibilityRole="button"
                 accessibilityLabel={`${card.title}, coming soon`}
-                style={{ width: '48%', minHeight: 44 }}
+                style={{ width: '48%' }}
               >
-                {({ pressed }) => (
-                  <Card
-                    tone="auto"
-                    style={{
-                      gap: 12,
-                      opacity: pressed ? 0.85 : 1,
-                      transform: [{ scale: pressed ? 0.985 : 1 }],
-                    }}
-                  >
-                    <View style={{ width: 40, height: 40, borderRadius: RADII.md, backgroundColor: card.tint, alignItems: 'center', justifyContent: 'center' }}>
-                      <Feather name={card.icon} size={20} color={theme.text} />
-                    </View>
-                    <View style={{ gap: 4 }}>
-                      <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                        {card.description}
-                      </Text>
-                    </View>
-                  </Card>
-                )}
-              </Pressable>
+                <Card tone="auto" style={{ gap: 12 }}>
+                  <View style={{ width: 40, height: 40, borderRadius: RADII.md, backgroundColor: card.tint, alignItems: 'center', justifyContent: 'center' }}>
+                    <Feather name={card.icon} size={20} color={theme.text} />
+                  </View>
+                  <View style={{ gap: 4 }}>
+                    <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
+                    <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                      {card.description}
+                    </Text>
+                  </View>
+                </Card>
+              </PressableSurface>
             ))}
           </View>
         </View>

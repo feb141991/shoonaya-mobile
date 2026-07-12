@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -11,6 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
@@ -187,16 +187,16 @@ export default function PanchangScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable
+        <PressableSurface
+          haptic="selection"
           onPress={() => router.back()}
-          accessibilityRole="button"
           accessibilityLabel="Back"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}
         >
           <Feather name="chevron-left" size={16} color={theme.dim} />
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        </PressableSurface>
 
         <Text style={{ color: theme.text, ...TYPE.screenTitle }}>Panchang</Text>
 
@@ -204,10 +204,12 @@ export default function PanchangScreen() {
           {dateStrip.map((date) => {
             const active = date.toDateString() === selectedDate.toDateString();
             return (
-              <Pressable
+              <PressableSurface
                 key={date.toISOString()}
+                haptic="selection"
                 onPress={() => setSelectedDate(date)}
                 style={{
+                  minHeight: 0,
                   minWidth: 72,
                   borderRadius: 18,
                   borderWidth: 1,
@@ -225,18 +227,17 @@ export default function PanchangScreen() {
                 <Text style={{ color: active ? COLORS.ink : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
                   {date.getDate()}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             );
           })}
         </ScrollView>
 
         {/* Your Rashiphala Card */}
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
             accessibilityLabel="Open your Rashiphala reading"
             onPress={() => router.push('/rashiphala')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
+            style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
           >
             <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 24 }}>{rashiObj ? rashiObj.symbol : '✨'}</Text>
@@ -255,7 +256,7 @@ export default function PanchangScreen() {
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
 
           {(showRashiPicker || !profileState.rashi) && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, borderTopWidth: 1, borderTopColor: theme.border }}>
@@ -264,20 +265,22 @@ export default function PanchangScreen() {
                   {profileState.rashi ? 'Change your Rashi' : '✦ Set your Rashi for personalised readings'}
                 </Text>
                 {profileState.rashi && showRashiPicker && (
-                  <Pressable onPress={() => setShowRashiPicker(false)}>
+                  <PressableSurface haptic="selection" onPress={() => setShowRashiPicker(false)} style={{ minHeight: 0 }}>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textDecorationLine: 'underline' }}>Cancel</Text>
-                  </Pressable>
+                  </PressableSurface>
                 )}
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {Object.entries(RASHI_MAP).map(([key, r]) => {
                   const isSelected = profileState.rashi === key;
                   return (
-                    <Pressable
+                    <PressableSurface
                       key={key}
+                      haptic="selection"
                       disabled={savingRashi}
                       onPress={() => saveRashi(key)}
                       style={{
+                        minHeight: 0,
                         width: '23%',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -286,12 +289,11 @@ export default function PanchangScreen() {
                         borderWidth: 1,
                         backgroundColor: isSelected ? (isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight) : theme.bg,
                         borderColor: isSelected ? COLORS.brandGold : theme.border,
-                        opacity: savingRashi ? 0.7 : 1,
                       }}
                     >
                       <Text style={{ fontSize: 20 }}>{r.symbol}</Text>
                       <Text style={{ marginTop: 6, color: isSelected ? COLORS.brandGold : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{r.en}</Text>
-                    </Pressable>
+                    </PressableSurface>
                   );
                 })}
               </View>
@@ -299,19 +301,18 @@ export default function PanchangScreen() {
           )}
 
           {profileState.rashi && !showRashiPicker && (
-            <Pressable onPress={() => setShowRashiPicker(true)} style={{ paddingBottom: 16, alignItems: 'center' }}>
+            <PressableSurface haptic="selection" onPress={() => setShowRashiPicker(true)} style={{ minHeight: 0, paddingBottom: 16, alignItems: 'center' }}>
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, textDecorationLine: 'underline' }}>Change Rashi</Text>
-            </Pressable>
+            </PressableSurface>
           )}
         </Card>
 
         {/* Kundali Entry Point */}
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, padding: 0, overflow: 'hidden' }}>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
             accessibilityLabel="Generate your Vedic Kundali birth chart"
             onPress={() => router.push('/kundali')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
+            style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
           >
             <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 24 }}>🛕</Text>
@@ -323,7 +324,7 @@ export default function PanchangScreen() {
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </Card>
 
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
@@ -368,8 +369,7 @@ export default function PanchangScreen() {
               </View>
             ) : (
               <View style={{ gap: 8 }}>
-                <Pressable
-                  accessibilityRole="button"
+                <PressableSurface
                   accessibilityLabel="Mark today's Panchang as observed"
                   onPress={markObserved}
                   disabled={markingViewed}
@@ -382,7 +382,6 @@ export default function PanchangScreen() {
                     justifyContent: 'center',
                     gap: 8,
                     backgroundColor: COLORS.brandGold,
-                    opacity: markingViewed ? 0.7 : 1,
                   }}
                 >
                   {markingViewed ? (
@@ -395,21 +394,22 @@ export default function PanchangScreen() {
                       </Text>
                     </>
                   )}
-                </Pressable>
+                </PressableSurface>
                 {markError ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, flex: 1 }}>
                       {markError}
                     </Text>
-                    <Pressable
-                      accessibilityRole="button"
+                    <PressableSurface
+                      haptic="selection"
                       accessibilityLabel="Retry marking Panchang as observed"
                       onPress={markObserved}
+                      style={{ minHeight: 0 }}
                     >
                       <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                         Retry
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   </View>
                 ) : null}
               </View>
