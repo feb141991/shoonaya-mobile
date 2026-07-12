@@ -14,6 +14,7 @@ import { Feather } from '@expo/vector-icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 
+import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
@@ -455,9 +456,7 @@ export default function LessonReaderScreen() {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <Pressable onPress={() => router.back()} hitSlop={12}>
-              <Feather name="arrow-left" size={22} color={text} />
-            </Pressable>
+            <BackButton showLabel={false} iconSize={22} iconColor={text} />
             <Text style={{ flex: 1, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 14, color: dim }}>
               Lesson {lessonIndex + 1} of {lessons.length}
             </Text>

@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, Text, View, useColorScheme } fr
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -158,9 +159,7 @@ export default function PathLessonListScreen() {
     return (
       <Screen style={{ backgroundColor: bg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Feather name="arrow-left" size={22} color={text} />
-          </Pressable>
+          <BackButton showLabel={false} iconSize={22} iconColor={text} />
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>{path.title}</Text>
         </View>
         <View style={{ alignItems: 'center', marginTop: 40, gap: 12, paddingHorizontal: 24 }}>
@@ -177,9 +176,7 @@ export default function PathLessonListScreen() {
   return (
     <Screen style={{ backgroundColor: bg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Feather name="arrow-left" size={22} color={text} />
-        </Pressable>
+        <BackButton showLabel={false} iconSize={22} iconColor={text} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{path.title}</Text>
           <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>

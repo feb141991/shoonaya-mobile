@@ -16,6 +16,7 @@ const Notifications = isExpoGo ? null : (() => { try { return require('expo-noti
 
 import { calculatePanchang, getTithiReminder, type TithiReminder } from '@sangam/panchang-engine';
 
+import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
@@ -312,16 +313,7 @@ export default function VratScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-        >
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        <BackButton />
 
         <Text style={{ color: theme.text, ...TYPE.screenTitle }}>Vrat</Text>
 

@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
+import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -243,10 +244,7 @@ export default function SankalpaScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, minHeight: MIN_TOUCH_TARGET }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        <BackButton style={{ marginBottom: 8 }} />
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <EmptyState
             icon="sun"
@@ -273,10 +271,7 @@ export default function SankalpaScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => router.back()} hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MIN_TOUCH_TARGET }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        <BackButton />
 
         <View>
           <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>

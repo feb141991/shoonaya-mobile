@@ -12,6 +12,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
+import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -256,16 +257,7 @@ export default function QuizScreen() {
         contentContainerStyle={{ paddingBottom: 32, gap: 16 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
       >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-        >
-          <Feather name="chevron-left" size={16} color={textDim} />
-          <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </Pressable>
+        <BackButton />
 
         <Text style={{ color: text, ...TYPE.screenTitle }}>Daily Quiz</Text>
         <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
