@@ -5,7 +5,6 @@ import {
   Image,
   Linking,
   Modal,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -24,6 +23,7 @@ import { shareCapturedShoonayaCard } from '@/lib/share-card';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -229,10 +229,10 @@ function MetricTile({
   }
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressableSurface
+      haptic="selection"
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         flex: 1,
         minWidth: 76,
         borderRadius: 18,
@@ -242,12 +242,10 @@ function MetricTile({
         padding: 10,
         alignItems: 'center',
         gap: 5,
-        opacity: pressed ? 0.86 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
+      }}
     >
       {content}
-    </Pressable>
+    </PressableSurface>
   );
 }
 
@@ -267,12 +265,11 @@ function ActionRow({
   theme: ReturnType<typeof themeColor>;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressableSurface
       accessibilityLabel={subtitle ? `${label}. ${subtitle}` : label}
       onPress={onPress}
       disabled={loading}
-      style={({ pressed }) => ({
+      style={{
         minHeight: 58,
         borderRadius: 20,
         borderWidth: 1,
@@ -283,8 +280,7 @@ function ActionRow({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        opacity: loading ? 0.65 : pressed ? 0.86 : 1,
-      })}
+      }}
     >
       <View
         style={{
@@ -303,7 +299,7 @@ function ActionRow({
         {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim }}>{subtitle}</Text> : null}
       </View>
       {loading ? <ActivityIndicator size="small" color={theme.dim} /> : <Feather name="chevron-right" size={18} color={theme.dim} />}
-    </Pressable>
+    </PressableSurface>
   );
 }
 
@@ -714,11 +710,11 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel="Edit profile"
               onPress={() => setEditVisible(true)}
-              style={({ pressed }) => ({
+              style={{
                 minHeight: 44,
                 borderRadius: 22,
                 paddingHorizontal: 16,
@@ -728,19 +724,18 @@ export default function ProfileScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 8,
-                opacity: pressed ? 0.86 : 1,
-              })}
+              }}
             >
               <Feather name="edit-3" size={15} color={theme.brand} />
               <Text style={{ ...TYPE.label, color: theme.brand }}>Edit profile</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="Open Sacred Kosh"
             onPress={() => router.push('/kosh')}
-            style={({ pressed }) => ({
+            style={{
               borderRadius: 22,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
@@ -749,8 +744,7 @@ export default function ProfileScreen() {
               flexDirection: 'row',
               alignItems: 'center',
               gap: 12,
-              opacity: pressed ? 0.88 : 1,
-            })}
+            }}
           >
             {relicImage ? (
               <Image source={{ uri: relicImage }} style={{ width: 48, height: 48, borderRadius: 16 }} />
@@ -777,7 +771,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </Card>
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -793,9 +787,9 @@ export default function ProfileScreen() {
               <Text style={{ ...TYPE.section, color: theme.brand }}>Sacred Kosh</Text>
               <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Your relics</Text>
             </View>
-            <Pressable accessibilityRole="button" onPress={() => router.push('/kosh')}>
+            <PressableSurface haptic="selection" style={{ minHeight: 0 }} onPress={() => router.push('/kosh')}>
               <Text style={{ ...TYPE.label, color: theme.brand }}>View all</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
@@ -803,12 +797,12 @@ export default function ProfileScreen() {
               const isUnlocked = unlockedRelics.some((item) => item.id === relic.id);
               const isActive = profile.active_symbol_id === relic.id;
               return (
-                <Pressable
+                <PressableSurface
                   key={relic.id}
-                  accessibilityRole="button"
+                  haptic="selection"
                   accessibilityLabel={`${relic.name}. ${isUnlocked ? 'Unlocked' : 'Locked'}`}
                   onPress={() => router.push('/kosh')}
-                  style={{ width: 62, alignItems: 'center', gap: 7 }}
+                  style={{ minHeight: 0, width: 62, alignItems: 'center', gap: 7 }}
                 >
                   <View
                     style={{
@@ -831,7 +825,7 @@ export default function ProfileScreen() {
                   <Text numberOfLines={2} style={{ ...TYPE.chip, color: isUnlocked ? theme.dim : theme.border, textAlign: 'center' }}>
                     {relic.name}
                   </Text>
-                </Pressable>
+                </PressableSurface>
               );
             })}
           </ScrollView>
@@ -858,21 +852,20 @@ export default function ProfileScreen() {
               </Text>
             </View>
             {(profileCompletion?.pct ?? 100) < 100 ? (
-              <Pressable
-                accessibilityRole="button"
+              <PressableSurface
+                haptic="selection"
                 accessibilityLabel="Complete profile"
                 onPress={() => router.push('/settings')}
-                style={({ pressed }) => ({
+                style={{
                   minHeight: 44,
                   borderRadius: 22,
                   backgroundColor: theme.brand,
                   paddingHorizontal: 14,
                   justifyContent: 'center',
-                  opacity: pressed ? 0.86 : 1,
-                })}
+                }}
               >
                 <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Complete</Text>
-              </Pressable>
+              </PressableSurface>
             ) : null}
           </View>
         </Card>
@@ -922,21 +915,20 @@ export default function ProfileScreen() {
                 Status: {profile.subscription_status}
               </Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               onPress={() => router.push('/settings')}
-              style={({ pressed }) => ({
+              style={{
                 borderRadius: 18,
                 backgroundColor: theme.brand,
                 paddingHorizontal: 16,
                 paddingVertical: 12,
-                opacity: pressed ? 0.86 : 1,
-              })}
+              }}
             >
               <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>
                 {profile.is_pro ? 'Manage plan' : 'Upgrade to Pro'}
               </Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </Card>
 
@@ -951,23 +943,22 @@ export default function ProfileScreen() {
                 {profile.kul_id ? 'Lineage & community' : 'Connect with your heritage'}
               </Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               onPress={() => Alert.alert('Coming Soon', 'Kul features are coming soon.')}
-              style={({ pressed }) => ({
+              style={{
                 borderRadius: 18,
                 backgroundColor: theme.brandSoft,
                 borderWidth: 1,
                 borderColor: theme.premiumBorder,
                 paddingHorizontal: 16,
                 paddingVertical: 12,
-                opacity: pressed ? 0.86 : 1,
-              })}
+              }}
             >
               <Text style={{ ...TYPE.label, color: theme.brand }}>
                 {profile.kul_id ? 'Invite' : 'Join'}
               </Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </Card>
 
@@ -982,11 +973,11 @@ export default function ProfileScreen() {
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Pressable
-              accessibilityRole="button"
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel="Share Shoonaya on WhatsApp"
               onPress={() => { void shareWhatsApp(); }}
-              style={({ pressed }) => ({
+              style={{
                 flex: 1,
                 borderRadius: 16,
                 borderWidth: 1,
@@ -997,17 +988,16 @@ export default function ProfileScreen() {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-                opacity: pressed ? 0.86 : 1,
-              })}
+              }}
             >
               <Feather name="message-circle" size={18} color={COLORS.whatsApp} />
               <Text style={{ ...TYPE.label, color: COLORS.whatsApp }}>WhatsApp</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
               accessibilityLabel="Copy invite code"
               onPress={() => { void copyInvite(); }}
-              style={({ pressed }) => ({
+              style={{
                 flex: 1,
                 borderRadius: 16,
                 borderWidth: 1,
@@ -1018,12 +1008,11 @@ export default function ProfileScreen() {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-                opacity: pressed ? 0.86 : 1,
-              })}
+              }}
             >
               <Feather name="copy" size={18} color={theme.text} />
               <Text style={{ ...TYPE.label, color: theme.text }}>Copy Code</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </Card>
 
@@ -1059,12 +1048,13 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        <Pressable
+        <PressableSurface
+          haptic="selection"
           onPress={() => {
             void handleSignOut();
           }}
           disabled={signingOut}
-          style={({ pressed }) => ({
+          style={{
             marginTop: 4,
             borderRadius: 18,
             borderWidth: 1,
@@ -1072,15 +1062,14 @@ export default function ProfileScreen() {
             backgroundColor: theme.card,
             paddingVertical: 14,
             alignItems: 'center',
-            opacity: signingOut ? 0.7 : pressed ? 0.86 : 1,
-          })}
+          }}
         >
           <Text style={{ ...TYPE.label, color: theme.text }}>Sign out</Text>
-        </Pressable>
+        </PressableSurface>
 
         <View style={{ marginTop: 24, alignItems: 'center', gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 16 }}>
-            <Pressable onPress={async () => {
+            <PressableSurface haptic="selection" style={{ minHeight: 0 }} onPress={async () => {
               const url = `${API_BASE}/terms`;
               try {
                 const canOpen = await Linking.canOpenURL(url);
@@ -1091,8 +1080,8 @@ export default function ProfileScreen() {
               }
             }}>
               <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>Terms</Text>
-            </Pressable>
-            <Pressable onPress={async () => {
+            </PressableSurface>
+            <PressableSurface haptic="selection" style={{ minHeight: 0 }} onPress={async () => {
               const url = `${API_BASE}/privacy`;
               try {
                 const canOpen = await Linking.canOpenURL(url);
@@ -1103,7 +1092,7 @@ export default function ProfileScreen() {
               }
             }}>
               <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>Privacy</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
           <Text style={{ ...TYPE.caption, color: theme.dim }}>Shoonaya · Find your infinity</Text>
         </View>
@@ -1199,9 +1188,9 @@ export default function ProfileScreen() {
                   {sampradayaOptions.map((option) => {
                     const active = editState.sampradaya === option.value;
                     return (
-                      <Pressable
+                      <PressableSurface
                         key={option.value}
-                        accessibilityRole="button"
+                        haptic="selection"
                         accessibilityState={{ selected: active }}
                         accessibilityLabel={`${sampradayaLabel}: ${option.label}`}
                         onPress={() => setEditState((current) => ({ ...current, sampradaya: option.value }))}
@@ -1220,7 +1209,7 @@ export default function ProfileScreen() {
                         <Text style={{ color: active ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                           {option.label}
                         </Text>
-                      </Pressable>
+                      </PressableSurface>
                     );
                   })}
                 </View>
@@ -1232,9 +1221,9 @@ export default function ProfileScreen() {
                   {ishtaDevataOptions.map((option) => {
                     const active = editState.ishtaDevata === option.value;
                     return (
-                      <Pressable
+                      <PressableSurface
                         key={option.value}
-                        accessibilityRole="button"
+                        haptic="selection"
                         accessibilityState={{ selected: active }}
                         accessibilityLabel={`${ishtaDevataLabel}: ${option.label}`}
                         onPress={() => setEditState((current) => ({ ...current, ishtaDevata: option.value }))}
@@ -1253,7 +1242,7 @@ export default function ProfileScreen() {
                         <Text style={{ color: active ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                           {option.emoji} {option.label}
                         </Text>
-                      </Pressable>
+                      </PressableSurface>
                     );
                   })}
                 </View>
@@ -1264,8 +1253,9 @@ export default function ProfileScreen() {
               {(['en', 'hi', 'pa'] as AppLanguage[]).map((language) => {
                 const active = editState.appLanguage === language;
                 return (
-                  <Pressable
+                  <PressableSurface
                     key={language}
+                    haptic="selection"
                     onPress={() => setEditState((current) => ({ ...current, appLanguage: language }))}
                     style={{
                       flex: 1,
@@ -1280,13 +1270,14 @@ export default function ProfileScreen() {
                     <Text style={{ color: active ? COLORS.ink : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
                       {language.toUpperCase()}
                     </Text>
-                  </Pressable>
+                  </PressableSurface>
                 );
               })}
             </View>
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-              <Pressable
+              <PressableSurface
+                haptic="selection"
                 onPress={() => setEditVisible(false)}
                 style={{
                   flex: 1,
@@ -1298,8 +1289,8 @@ export default function ProfileScreen() {
                 }}
               >
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Cancel</Text>
-              </Pressable>
-              <Pressable
+              </PressableSurface>
+              <PressableSurface
                 onPress={() => {
                   void handleSave();
                 }}
@@ -1310,13 +1301,12 @@ export default function ProfileScreen() {
                   backgroundColor: COLORS.brandGold,
                   paddingVertical: 14,
                   alignItems: 'center',
-                  opacity: saving ? 0.7 : 1,
                 }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                   {saving ? 'Saving...' : 'Save'}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             </View>
           </View>
         </View>

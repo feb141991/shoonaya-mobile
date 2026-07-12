@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -19,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 
 import { Screen } from '@/components/ui/Screen';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -455,15 +455,16 @@ export default function JapaScreen() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Pressable onPress={() => router.back()} hitSlop={16}>
+            <PressableSurface haptic="selection" onPress={() => router.back()} hitSlop={16} style={{ minHeight: 0 }}>
               <Feather name="arrow-left" size={24} color={text} />
-            </Pressable>
+            </PressableSurface>
             <View>
               <Text style={{ ...TYPE.screenTitle, color: text }}>Japa Mala</Text>
               <Text style={{ ...TYPE.caption, color: dim }}>{practiceType.replaceAll('_', ' ')} · {malaSkin.label}</Text>
             </View>
           </View>
-          <Pressable
+          <PressableSurface
+            haptic="selection"
             onPress={() => router.push('/kosh')}
             style={{
               borderRadius: 999,
@@ -477,7 +478,7 @@ export default function JapaScreen() {
             }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>Kosh</Text>
-          </Pressable>
+          </PressableSurface>
         </View>
 
         {loading ? (
@@ -498,7 +499,8 @@ export default function JapaScreen() {
                 {mantra.meaning}
               </Text>
             </View>
-            <Pressable
+            <PressableSurface
+              haptic="none"
               onPress={() => { void increment(); }}
               style={{
                 borderRadius: 30,
@@ -580,7 +582,7 @@ export default function JapaScreen() {
                   </Text>
                 </View>
               </LinearGradient>
-            </Pressable>
+            </PressableSurface>
 
             <View
               style={{
@@ -601,8 +603,9 @@ export default function JapaScreen() {
                 <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: dim }}>TARGET ROUNDS</Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {[1, 3, 5, 11, 21].map(n => (
-                    <Pressable
+                    <PressableSurface
                       key={n}
+                      haptic="selection"
                       onPress={() => {
                         setTargetRounds(n);
                         void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
@@ -620,7 +623,7 @@ export default function JapaScreen() {
                       }}
                     >
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: targetRounds === n ? theme.brand : text }}>{n}</Text>
-                    </Pressable>
+                    </PressableSurface>
                   ))}
                 </View>
               </View>
@@ -630,8 +633,9 @@ export default function JapaScreen() {
                   { label: 'Mala', value: malaSkin.label, icon: 'circle', action: () => setCustomizeOpen(true) },
                   { label: 'Scene', value: scene.name, icon: scene.icon, action: () => setCustomizeOpen(true) },
                 ].map((item) => (
-                  <Pressable
+                  <PressableSurface
                     key={item.label}
+                    haptic="selection"
                     onPress={item.action}
                     style={{
                       flex: 1,
@@ -650,12 +654,13 @@ export default function JapaScreen() {
                       <Text style={{ ...TYPE.chip, color: theme.brand }}>{item.label}</Text>
                     </View>
                     <Text style={{ ...TYPE.label, color: text }} numberOfLines={1}>{item.value}</Text>
-                  </Pressable>
+                  </PressableSurface>
                 ))}
               </View>
 
               {/* Mantra audio toggle */}
-              <Pressable
+              <PressableSurface
+                haptic="none"
                 onPress={() => { void toggleMantraAudio(); }}
                 style={{
                   flexDirection: 'row',
@@ -709,16 +714,14 @@ export default function JapaScreen() {
                     }}
                   />
                 </View>
-              </Pressable>
+              </PressableSurface>
 
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {mantraOptions.map((item, index) => (
-                  <Pressable
+                  <PressableSurface
                     key={item.key}
-                    onPress={() => {
-                      try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
-                      setMantraIndex(index);
-                    }}
+                    haptic="selection"
+                    onPress={() => setMantraIndex(index)}
                     style={{
                       borderRadius: 999,
                       borderWidth: 1,
@@ -739,9 +742,10 @@ export default function JapaScreen() {
                     >
                       {item.label}
                     </Text>
-                  </Pressable>
+                  </PressableSurface>
                 ))}
-                <Pressable
+                <PressableSurface
+                  haptic="selection"
                   onPress={() => setCustomMantraOpen(true)}
                   style={{
                     minHeight: MIN_TOUCH_TARGET,
@@ -756,11 +760,12 @@ export default function JapaScreen() {
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.brand }}>
                     Personal mantra
                   </Text>
-                </Pressable>
+                </PressableSurface>
               </View>
 
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                <Pressable
+                <PressableSurface
+                  haptic="selection"
                   onPress={() => {
                     setCount(0);
                     setCompletedRounds(0);
@@ -780,9 +785,10 @@ export default function JapaScreen() {
                   }}
                 >
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>Reset</Text>
-                </Pressable>
+                </PressableSurface>
 
-                <Pressable
+                <PressableSurface
+                  haptic="selection"
                   onPress={() => setHistoryOpen(true)}
                   style={{
                     flex: 1,
@@ -796,7 +802,7 @@ export default function JapaScreen() {
                   }}
                 >
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>Session history</Text>
-                </Pressable>
+                </PressableSurface>
               </View>
             </View>
           </>
@@ -855,7 +861,8 @@ export default function JapaScreen() {
                 ))
               )}
             </ScrollView>
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={() => setHistoryOpen(false)}
               style={{
                 borderRadius: 18,
@@ -865,7 +872,7 @@ export default function JapaScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>Close</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </View>
       </Modal>
@@ -898,9 +905,9 @@ export default function JapaScreen() {
                   {Object.entries(MALA_SKINS).map(([id, skin]) => {
                     const selected = (selectedMalaId ?? 'default') === id;
                     return (
-                      <Pressable
+                      <PressableSurface
                         key={id}
-                        accessibilityRole="button"
+                        haptic="selection"
                         accessibilityState={{ selected }}
                         onPress={() => {
                           setSelectedMalaId(id);
@@ -931,7 +938,7 @@ export default function JapaScreen() {
                           <Text style={{ ...TYPE.label, color: text }}>{skin.label}</Text>
                         </View>
                         <Text style={{ ...TYPE.caption, color: dim }}>Tap through each bead with this texture.</Text>
-                      </Pressable>
+                      </PressableSurface>
                     );
                   })}
                 </View>
@@ -943,9 +950,9 @@ export default function JapaScreen() {
                   {BG_SCENES.map((item) => {
                     const selected = selectedSceneId === item.id;
                     return (
-                      <Pressable
+                      <PressableSurface
                         key={item.id}
-                        accessibilityRole="button"
+                        haptic="selection"
                         accessibilityState={{ selected }}
                         onPress={() => {
                           setSelectedSceneId(item.id);
@@ -970,13 +977,14 @@ export default function JapaScreen() {
                           </View>
                           {selected ? <Feather name="check-circle" size={18} color={COLORS.onMediaWhite} /> : null}
                         </LinearGradient>
-                      </Pressable>
+                      </PressableSurface>
                     );
                   })}
                 </View>
               </View>
             </ScrollView>
-            <Pressable
+            <PressableSurface
+              haptic="selection"
               onPress={() => setCustomizeOpen(false)}
               style={{
                 borderRadius: 18,
@@ -987,7 +995,7 @@ export default function JapaScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>Done</Text>
-            </Pressable>
+            </PressableSurface>
           </View>
         </View>
       </Modal>
@@ -1027,7 +1035,8 @@ export default function JapaScreen() {
               }}
             />
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable
+              <PressableSurface
+                haptic="selection"
                 onPress={() => setCustomMantraOpen(false)}
                 style={{
                   flex: 1,
@@ -1040,8 +1049,8 @@ export default function JapaScreen() {
                 }}
               >
                 <Text style={{ ...TYPE.label, color: text }}>Cancel</Text>
-              </Pressable>
-              <Pressable
+              </PressableSurface>
+              <PressableSurface
                 onPress={() => {
                   const trimmed = customMantraText.trim();
                   void AsyncStorage.setItem(JAPA_CUSTOM_MANTRA_KEY, trimmed);
@@ -1060,7 +1069,7 @@ export default function JapaScreen() {
                 }}
               >
                 <Text style={{ ...TYPE.label, color: bg }}>Save</Text>
-              </Pressable>
+              </PressableSurface>
             </View>
           </View>
         </View>
@@ -1190,7 +1199,7 @@ export default function JapaScreen() {
               )}
             </View>
 
-            <Pressable
+            <PressableSurface
               onPress={() => {
                 setCompletionVisible(false);
                 setConfettiVisible(false);
@@ -1211,9 +1220,10 @@ export default function JapaScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: bg }}>Another mala</Text>
-            </Pressable>
+            </PressableSurface>
             <View style={{ flexDirection: 'row', gap: 10, alignSelf: 'stretch' }}>
-              <Pressable
+              <PressableSurface
+                haptic="selection"
                 onPress={() => {
                   setCompletionVisible(false);
                   setConfettiVisible(false);
@@ -1230,8 +1240,9 @@ export default function JapaScreen() {
                 }}
               >
                 <Text style={{ ...TYPE.label, color: text }}>Done</Text>
-              </Pressable>
-              <Pressable
+              </PressableSurface>
+              <PressableSurface
+                haptic="selection"
                 onPress={() => {
                   void shareCapturedShoonayaCard(japaShareCardRef, {
                     fileName: 'shoonaya-japa-card.png',
@@ -1251,7 +1262,7 @@ export default function JapaScreen() {
                 }}
               >
                 <Text style={{ ...TYPE.label, color: theme.brand }}>Share</Text>
-              </Pressable>
+              </PressableSurface>
             </View>
           </View>
         </View>

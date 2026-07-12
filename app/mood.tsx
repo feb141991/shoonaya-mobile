@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -14,6 +13,7 @@ import { useRouter, type Href } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, SHADOWS, SPACING, themeColor } from '@/lib/constants';
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
@@ -195,9 +195,9 @@ export default function MoodScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={[styles.backButton, { minHeight: 0 }]}>
             <Feather name="arrow-left" size={24} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
         <View style={styles.center}>
           <Text style={[styles.title, { color: theme.text, fontSize: 22, textAlign: 'center' }]}>
@@ -206,8 +206,8 @@ export default function MoodScreen() {
           <Text style={[styles.subtitle, { color: theme.dim, textAlign: 'center' }]}>
             Check your connection and try again.
           </Text>
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="Retry loading Mood"
             onPress={() => {
               loadStatus();
@@ -215,7 +215,7 @@ export default function MoodScreen() {
             style={[styles.retryBtn, { borderColor: theme.brand, marginTop: SPACING.xl, paddingHorizontal: SPACING.xxl }]}
           >
             <Text style={[styles.retryText, { color: theme.brand }]}>Retry</Text>
-          </Pressable>
+          </PressableSurface>
         </View>
       </Screen>
     );
@@ -225,9 +225,9 @@ export default function MoodScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <PressableSurface haptic="selection" onPress={() => router.back()} style={[styles.backButton, { minHeight: 0 }]}>
             <Feather name="arrow-left" size={24} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
         <View style={styles.center}>
           {moodStatus?.lastMood ? (
@@ -251,24 +251,24 @@ export default function MoodScreen() {
             Return tomorrow for another reflection.
           </Text>
 
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="Log a different mood"
             onPress={startOver}
             style={[styles.retryBtn, { borderColor: theme.brand, marginTop: SPACING.xxl, paddingHorizontal: SPACING.xxl }]}
           >
             <Text style={[styles.retryText, { color: theme.brand }]}>Log a different mood</Text>
-          </Pressable>
+          </PressableSurface>
 
-          <Pressable
-            accessibilityRole="button"
+          <PressableSurface
+            haptic="selection"
             accessibilityLabel="View mood insights"
             onPress={() => router.push('/my-progress/mood' as Href)}
-            style={{ marginTop: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, justifyContent: 'center' }}
+            style={{ marginTop: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim }}>View mood insights</Text>
             <Feather name="arrow-right" size={14} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
       </Screen>
     );
@@ -278,13 +278,13 @@ export default function MoodScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => {
+          <PressableSurface haptic="selection" onPress={() => {
             if (step === 3) setStep(2);
             else if (step === 2) setStep(1);
             else router.back();
-          }} style={styles.backButton}>
+          }} style={[styles.backButton, { minHeight: 0 }]}>
             <Feather name="arrow-left" size={24} color={theme.dim} />
-          </Pressable>
+          </PressableSurface>
         </View>
 
         <Text style={[styles.title, { color: theme.text }]}>
@@ -297,8 +297,9 @@ export default function MoodScreen() {
         {step === 1 && (
           <View style={styles.grid}>
             {MOODS.map(mood => (
-              <Pressable
+              <PressableSurface
                 key={mood.key}
+                haptic="selection"
                 style={[
                   styles.moodCard,
                   {
@@ -315,7 +316,7 @@ export default function MoodScreen() {
                 <Text style={[styles.moodLabel, { color: theme.text }]}>
                   {mood.label}
                 </Text>
-              </Pressable>
+              </PressableSurface>
             ))}
           </View>
         )}
@@ -323,7 +324,7 @@ export default function MoodScreen() {
         {step === 2 && (
           <View style={styles.list}>
             {TIME_OPTIONS.map(opt => (
-              <Pressable key={opt.key} onPress={() => handleTimeSelect(opt.key)}>
+              <PressableSurface key={opt.key} haptic="selection" onPress={() => handleTimeSelect(opt.key)}>
                 <Card tone="auto" style={styles.timeCard}>
                   <Text style={styles.timeEmoji}>{opt.emoji}</Text>
                   <View style={styles.timeTextContainer}>
@@ -335,7 +336,7 @@ export default function MoodScreen() {
                     </Text>
                   </View>
                 </Card>
-              </Pressable>
+              </PressableSurface>
             ))}
           </View>
         )}
@@ -349,9 +350,9 @@ export default function MoodScreen() {
                 </Text>
                 <View style={styles.grid}>
                   {MOODS.map(mood => (
-                    <Pressable
+                    <PressableSurface
                       key={mood.key}
-                      accessibilityRole="button"
+                      haptic="selection"
                       accessibilityLabel={`I feel ${mood.label} now`}
                       style={[
                         styles.moodCard,
@@ -369,11 +370,11 @@ export default function MoodScreen() {
                       <Text style={[styles.moodLabel, { color: theme.text, fontSize: 14 }]}>
                         {mood.label}
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   ))}
                 </View>
-                <Pressable
-                  accessibilityRole="button"
+                <PressableSurface
+                  haptic="selection"
                   accessibilityLabel="Skip and finish check-in"
                   onPress={() => {
                     // showReturn is already true here, so finishFlow()'s
@@ -381,10 +382,10 @@ export default function MoodScreen() {
                     // complete-and-navigate path instead of re-triggering.
                     void finishFlow();
                   }}
-                  style={{ marginTop: SPACING.lg, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+                  style={{ marginTop: SPACING.lg, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim }}>Skip</Text>
-                </Pressable>
+                </PressableSurface>
               </>
             ) : (
               <>
@@ -401,23 +402,22 @@ export default function MoodScreen() {
                   <ActivityIndicator size="small" color={theme.brand} style={{ marginVertical: SPACING.lg }} />
                 ) : returnRecs.length > 0 ? (
                   returnRecs.map(rec => (
-                    <Pressable key={rec.id} onPress={() => handleReturnRecClick(rec)}>
+                    <PressableSurface key={rec.id} haptic="selection" onPress={() => handleReturnRecClick(rec)}>
                       <Card tone="auto" style={[styles.recCard, { borderColor: afterMood.colour, borderWidth: 1 }]}>
                         <Text style={[styles.recTitle, { color: theme.text }]}>{rec.title}</Text>
                         <Text style={[styles.recDesc, { color: theme.dim }]}>{rec.description}</Text>
                       </Card>
-                    </Pressable>
+                    </PressableSurface>
                   ))
                 ) : null}
 
-                <Pressable
-                  accessibilityRole="button"
+                <PressableSurface
                   accessibilityLabel="Done, close mood check-in"
                   onPress={handleReturnDone}
                   style={[styles.finishBtn, { backgroundColor: theme.brand }]}
                 >
                   <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Done</Text>
-                </Pressable>
+                </PressableSurface>
               </>
             )}
           </View>
@@ -433,12 +433,13 @@ export default function MoodScreen() {
                 <Text style={[styles.recDesc, { color: theme.dim }]}>
                   {recommendationError}
                 </Text>
-                <Pressable
+                <PressableSurface
+                  haptic="selection"
                   style={[styles.retryBtn, { borderColor: theme.brand }]}
                   onPress={() => selectedTime && handleTimeSelect(selectedTime)}
                 >
                   <Text style={[styles.retryText, { color: theme.brand }]}>Try again</Text>
-                </Pressable>
+                </PressableSurface>
               </Card>
             ) : recommendationItems.length === 0 ? (
               <Text style={[styles.subtitle, { color: theme.dim, textAlign: 'center', marginTop: 40 }]}>
@@ -446,7 +447,7 @@ export default function MoodScreen() {
               </Text>
             ) : (
               recommendationItems.map(rec => (
-                <Pressable key={rec.id} onPress={() => handleRecClick(rec)}>
+                <PressableSurface key={rec.id} haptic="selection" onPress={() => handleRecClick(rec)}>
                   <Card tone="auto" style={[styles.recCard, { borderColor: selectedMood?.colour, borderWidth: 1 }]}>
                     <Text style={[styles.recTitle, { color: theme.text }]}>
                       {rec.title}
@@ -465,14 +466,14 @@ export default function MoodScreen() {
                       )}
                     </View>
                   </Card>
-                </Pressable>
+                </PressableSurface>
               ))
             )}
-            
+
             {!fetchingRecs && (
-              <Pressable style={[styles.finishBtn, { backgroundColor: theme.brand }]} onPress={finishFlow}>
+              <PressableSurface style={[styles.finishBtn, { backgroundColor: theme.brand }]} onPress={finishFlow}>
                 <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Finish Check-in</Text>
-              </Pressable>
+              </PressableSurface>
             )}
           </View>
         )}
