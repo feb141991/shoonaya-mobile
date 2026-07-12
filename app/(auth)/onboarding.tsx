@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Button } from '@/components/ui/Button';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
@@ -349,9 +349,9 @@ export default function OnboardingScreen() {
     emoji?: string;
     onPress: () => void;
   }) => (
-    <Pressable
+    <PressableSurface
+      haptic="none"
       onPress={() => { void selectWithHaptic(onPress); }}
-      accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={description ? `${label}, ${description}` : label}
       style={{
@@ -390,7 +390,7 @@ export default function OnboardingScreen() {
         ) : null}
       </View>
       {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
-    </Pressable>
+    </PressableSurface>
   );
 
   return (
@@ -497,10 +497,10 @@ export default function OnboardingScreen() {
                 {GENDERS.map((g) => {
                   const selected = gender === g.key;
                   return (
-                    <Pressable
+                    <PressableSurface
                       key={g.key}
+                      haptic="none"
                       onPress={() => { void selectWithHaptic(() => setGender(g.key)); }}
-                      accessibilityRole="button"
                       accessibilityState={{ selected }}
                       style={{
                         flex: 1,
@@ -517,7 +517,7 @@ export default function OnboardingScreen() {
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
                         {g.emoji} {g.label}
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   );
                 })}
               </View>
@@ -531,10 +531,10 @@ export default function OnboardingScreen() {
                 {RASHIS.map((item) => {
                   const selected = rashi === item.key;
                   return (
-                    <Pressable
+                    <PressableSurface
                       key={item.key}
+                      haptic="none"
                       onPress={() => { void selectWithHaptic(() => setRashi(selected ? '' : item.key)); }}
-                      accessibilityRole="button"
                       accessibilityState={{ selected }}
                       style={{
                         width: '31.5%',
@@ -558,7 +558,7 @@ export default function OnboardingScreen() {
                       <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
                         {item.dates}
                       </Text>
-                    </Pressable>
+                    </PressableSurface>
                   );
                 })}
               </View>
@@ -575,10 +575,10 @@ export default function OnboardingScreen() {
               {NAKSHATRAS.map((item) => {
                 const selected = nakshatra === item.key;
                 return (
-                  <Pressable
+                  <PressableSurface
                     key={item.key}
+                    haptic="none"
                     onPress={() => { void selectWithHaptic(() => setNakshatra(selected ? '' : item.key)); }}
-                    accessibilityRole="button"
                     accessibilityState={{ selected }}
                     accessibilityLabel={`${item.label}, ruled by ${item.ruler}, deity ${item.deity}`}
                     style={{
@@ -600,7 +600,7 @@ export default function OnboardingScreen() {
                     <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: dim, textAlign: 'center' }}>
                       {item.sanskrit}
                     </Text>
-                  </Pressable>
+                  </PressableSurface>
                 );
               })}
             </View>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { API_BASE, COLORS, FONTS } from '@/lib/constants';
@@ -115,7 +116,7 @@ export default function OtpScreen() {
             placeholderTextColor={COLORS.textDimLight}
           />
 
-          <Pressable
+          <PressableSurface
             onPress={() => {
               void handleVerify();
             }}
@@ -126,13 +127,12 @@ export default function OtpScreen() {
               backgroundColor: COLORS.brandGold,
               paddingVertical: 15,
               alignItems: 'center',
-              opacity: submitting || code.trim().length < 4 ? 0.6 : 1,
             }}
           >
             <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
               Verify code
             </Text>
-          </Pressable>
+          </PressableSurface>
 
           {submitting ? (
             <View style={{ alignItems: 'center', marginTop: 12 }}>

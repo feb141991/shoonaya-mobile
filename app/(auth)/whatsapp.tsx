@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS } from '@/lib/constants';
 import { API_BASE } from '@/lib/constants';
@@ -79,7 +80,7 @@ export default function WhatsAppScreen() {
             placeholderTextColor={COLORS.textDimLight}
           />
 
-          <Pressable
+          <PressableSurface
             onPress={() => {
               void handleSendCode();
             }}
@@ -90,13 +91,12 @@ export default function WhatsAppScreen() {
               backgroundColor: COLORS.brandGold,
               paddingVertical: 15,
               alignItems: 'center',
-              opacity: submitting || phone.trim().length < 8 ? 0.6 : 1,
             }}
           >
             <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
               Send code
             </Text>
-          </Pressable>
+          </PressableSurface>
 
           <View style={{ paddingTop: 14, gap: 6 }}>
             <Text
@@ -117,8 +117,9 @@ export default function WhatsAppScreen() {
                 flexWrap: 'wrap',
               }}
             >
-              <Pressable
+              <PressableSurface
                 accessibilityRole="link"
+                haptic="selection"
                 hitSlop={8}
                 onPress={() => { void Linking.openURL(TERMS_URL); }}
                 style={{
@@ -137,12 +138,13 @@ export default function WhatsAppScreen() {
                 >
                   Terms of Service
                 </Text>
-              </Pressable>
+              </PressableSurface>
               <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 13 }}>
                 &
               </Text>
-              <Pressable
+              <PressableSurface
                 accessibilityRole="link"
+                haptic="selection"
                 hitSlop={8}
                 onPress={() => { void Linking.openURL(PRIVACY_URL); }}
                 style={{
@@ -161,7 +163,7 @@ export default function WhatsAppScreen() {
                 >
                   Privacy Policy
                 </Text>
-              </Pressable>
+              </PressableSurface>
             </View>
           </View>
 

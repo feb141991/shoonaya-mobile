@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Platform, ScrollView, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
@@ -7,6 +7,7 @@ import { Feather, FontAwesome } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Card } from '@/components/ui/Card';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
@@ -62,12 +63,11 @@ function AuthButton({
   icon?: ReactNode;
 }) {
   return (
-    <Pressable
+    <PressableSurface
       disabled={disabled}
       onPress={() => {
         void onPress();
       }}
-      accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       style={{
@@ -83,7 +83,6 @@ function AuthButton({
         justifyContent: 'space-between',
         alignSelf: 'stretch',
         width: '100%',
-        opacity: disabled ? 0.6 : 1,
       }}
     >
       <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -110,7 +109,7 @@ function AuthButton({
       ) : (
         <TrailingArrow color={COLORS.textDimLight} />
       )}
-    </Pressable>
+    </PressableSurface>
   );
 }
 
@@ -340,9 +339,9 @@ export default function LoginScreen() {
             <AuthDivider label="or continue with phone" />
 
             <Link href="/(auth)/whatsapp" asChild>
-              <Pressable
+              <PressableSurface
+                haptic="selection"
                 disabled={busy}
-                accessibilityRole="button"
                 accessibilityLabel="Continue with WhatsApp"
                 accessibilityState={{ disabled: busy }}
                 style={{
@@ -358,7 +357,6 @@ export default function LoginScreen() {
                   justifyContent: 'space-between',
                   alignSelf: 'stretch',
                   width: '100%',
-                  opacity: busy ? 0.6 : 1,
                 }}
               >
                 <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -379,7 +377,7 @@ export default function LoginScreen() {
                   </Text>
                 </View>
                 <TrailingArrow color={COLORS.brandGold} />
-              </Pressable>
+              </PressableSurface>
             </Link>
 
             <View style={{ marginTop: 4, gap: 6 }}>
@@ -401,7 +399,8 @@ export default function LoginScreen() {
                   flexWrap: 'wrap',
                 }}
               >
-                <Pressable
+                <PressableSurface
+                  haptic="selection"
                   accessibilityRole="link"
                   hitSlop={8}
                   onPress={() => { void Linking.openURL(TERMS_URL); }}
@@ -421,11 +420,12 @@ export default function LoginScreen() {
                   >
                     Terms of Service
                   </Text>
-                </Pressable>
+                </PressableSurface>
                 <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 13 }}>
                   &
                 </Text>
-                <Pressable
+                <PressableSurface
+                  haptic="selection"
                   accessibilityRole="link"
                   hitSlop={8}
                   onPress={() => { void Linking.openURL(PRIVACY_URL); }}
@@ -445,7 +445,7 @@ export default function LoginScreen() {
                   >
                     Privacy Policy
                   </Text>
-                </Pressable>
+                </PressableSurface>
               </View>
             </View>
 
