@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { COLORS, FONTS } from '@/lib/constants';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import { type PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
@@ -292,6 +293,8 @@ function PathshalaContent() {
           />
         }
         contentContainerStyle={{ paddingBottom: 28, gap: 18 }}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
       >
         <View style={{ gap: 8 }}>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Pathshala</Text>

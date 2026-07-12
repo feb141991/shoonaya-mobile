@@ -23,6 +23,7 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -447,7 +448,11 @@ export default function JapaScreen() {
 
   return (
     <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
-      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 18, paddingBottom: 36, gap: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 18, paddingBottom: 36, gap: 16 }}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => router.back()} hitSlop={16}>

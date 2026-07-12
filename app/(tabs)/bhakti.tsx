@@ -11,6 +11,7 @@ import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Surface } from '@/components/ui/Surface';
 import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 
 const TRADITION_HERO: Record<string, { greeting: string; sub: string }> = {
@@ -138,7 +139,11 @@ export default function BhaktiScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100, gap: 28 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100, gap: 28 }}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
+      >
 
         {/* Hero */}
         <View style={{ gap: 6 }}>

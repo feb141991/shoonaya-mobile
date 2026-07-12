@@ -23,6 +23,7 @@ import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import {
   BLEND_THRESHOLD,
@@ -598,7 +599,11 @@ export default function MandaliScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 28, gap: 16 }}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
+      >
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"

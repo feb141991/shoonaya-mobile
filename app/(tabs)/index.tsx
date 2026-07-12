@@ -35,6 +35,7 @@ import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
@@ -238,11 +239,6 @@ function resolveAssetUrl(url: string | null | undefined) {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
   return `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
-}
-
-function formatKarma(points: number) {
-  if (points >= 1000) return `${Math.floor(points / 1000)}k`;
-  return String(points);
 }
 
 function ProgressRing({
@@ -594,6 +590,8 @@ function HomeContent() {
         contentContainerStyle={{ paddingBottom: 34 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
         showsVerticalScrollIndicator={false}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
       >
         <View
           style={{
@@ -734,30 +732,26 @@ function HomeContent() {
             </Pressable>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {state.profile.karmaPoints > 0 ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${state.profile.karmaPoints} karma points`}
-                  onPress={() => navigate('/(tabs)/profile')}
-                  style={{
-                    minHeight: MIN_TOUCH_TARGET,
-                    borderRadius: 20,
-                    paddingHorizontal: 12,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'row',
-                    gap: 5,
-                    backgroundColor: COLORS.homeGoldPillBg,
-                    borderWidth: 1,
-                    borderColor: COLORS.homeGoldPillBorder,
-                  }}
-                >
-                  <Feather name="star" size={12} color={theme.brand} />
-                  <Text style={{ ...TYPE.chip, color: theme.brand }}>
-                    {formatKarma(state.profile.karmaPoints)}
-                  </Text>
-                </Pressable>
-              ) : null}
+              {/* Karma pill removed from here per request — karma points are
+                  still visible on Profile. Replaced with a Panchang quick-
+                  access icon, matching the bell's circular treatment. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open today's Panchang"
+                onPress={() => navigate('/panchang')}
+                style={{
+                  width: MIN_TOUCH_TARGET,
+                  height: MIN_TOUCH_TARGET,
+                  borderRadius: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.heroOverlay,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                }}
+              >
+                <Feather name="calendar" size={18} color={theme.text} />
+              </Pressable>
 
               <Pressable
                 accessibilityRole="button"
