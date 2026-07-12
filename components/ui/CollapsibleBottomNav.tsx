@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname, useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
@@ -169,28 +170,34 @@ export function CollapsibleBottomNav() {
 
   const activeTab = TABS.find((tab) => tab.match(pathname)) ?? TABS[0];
 
-  const EXPANDED_HEIGHT = 70;
-  const COLLAPSED_SIZE = 58;
+  const EXPANDED_HEIGHT = 74;
+  const COLLAPSED_WIDTH = 72;
+  const COLLAPSED_HEIGHT = 58;
   const EXPANDED_WIDTH = Math.min(windowWidth - 24, 640);
   const expandedLeft = (windowWidth - EXPANDED_WIDTH) / 2;
   const collapsedLeft = Math.max(16, insets.left);
   const bottom = insets.bottom + 12;
+  const collapsedBottom = bottom + 22;
 
   const animatedWidth = collapseProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [EXPANDED_WIDTH, COLLAPSED_SIZE],
+    outputRange: [EXPANDED_WIDTH, COLLAPSED_WIDTH],
   });
   const animatedHeight = collapseProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [EXPANDED_HEIGHT, COLLAPSED_SIZE],
+    outputRange: [EXPANDED_HEIGHT, COLLAPSED_HEIGHT],
   });
   const animatedRadius = collapseProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [35, 29],
+    outputRange: [37, 29],
   });
   const animatedLeft = collapseProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [expandedLeft, collapsedLeft],
+  });
+  const animatedBottom = collapseProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [bottom, collapsedBottom],
   });
   const expandedOpacity = collapseProgress.interpolate({
     inputRange: [0, 0.4, 1],
@@ -206,19 +213,54 @@ export function CollapsibleBottomNav() {
       pointerEvents="box-none"
       style={{
         position: 'absolute',
-        bottom,
+        bottom: animatedBottom,
         left: animatedLeft,
         width: animatedWidth,
         height: animatedHeight,
         borderRadius: animatedRadius,
-        overflow: 'visible',
-        backgroundColor: theme.glass,
+        overflow: 'hidden',
+        backgroundColor: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
         borderWidth: 1,
         borderColor: theme.premiumBorder,
-        boxShadow: isDark ? SHADOWS.tabBar.dark : SHADOWS.tabBar.light,
+        boxShadow: isDark ? SHADOWS.navFloating.dark : SHADOWS.navFloating.light,
         zIndex: 50,
       }}
     >
+      <LinearGradient
+        pointerEvents="none"
+        colors={
+          isDark
+            ? [COLORS.navGlassTopDark, COLORS.navGlassMidDark, COLORS.navGlassBottomDark]
+            : [COLORS.navGlassTopLight, COLORS.navGlassMidLight, COLORS.navGlassBottomLight]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', inset: 0 }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: -28,
+          bottom: -42,
+          width: 150,
+          height: 92,
+          borderRadius: 80,
+          backgroundColor: isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight,
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          right: 34,
+          top: -34,
+          width: 112,
+          height: 72,
+          borderRadius: 70,
+          backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowIvoryLight,
+        }}
+      />
       {/* Expanded: full tab row */}
       <Animated.View
         pointerEvents={collapsed ? 'none' : 'auto'}
@@ -228,7 +270,7 @@ export function CollapsibleBottomNav() {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingHorizontal: 8,
+          paddingHorizontal: 7,
           opacity: expandedOpacity,
         }}
       >
@@ -245,30 +287,36 @@ export function CollapsibleBottomNav() {
                 onPress={() => router.navigate(tab.href)}
                 style={{ flex: 1, minHeight: 0, alignItems: 'center', marginTop: -22 }}
               >
-                <View
+                <LinearGradient
+                  colors={
+                    isActive
+                      ? [theme.brand, isDark ? COLORS.brandPrimaryStrongDark : COLORS.brandPrimaryStrongLight]
+                      : [theme.card, isDark ? COLORS.surfaceSoftDark : COLORS.surfaceSoftLight]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
+                    width: 54,
+                    height: 54,
+                    borderRadius: 27,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isActive ? theme.brand : theme.card,
-                    borderWidth: isActive ? 0 : 1,
+                    borderWidth: 1,
                     borderColor: theme.premiumBorder,
                     boxShadow: isActive
-                      ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+                      ? (isDark ? SHADOWS.navCenterActive.dark : SHADOWS.navCenterActive.light)
                       : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
                   }}
                 >
                   {tab.renderIcon(isActive ? COLORS.ink : theme.brand, 22)}
-                </View>
+                </LinearGradient>
                 <Text
                   style={{
                     fontFamily: FONTS.sansSemiBold,
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: '700',
                     letterSpacing: 0.4,
-                    marginTop: 3,
+                    marginTop: 2,
                     color,
                   }}
                 >
@@ -285,16 +333,31 @@ export function CollapsibleBottomNav() {
               accessibilityLabel={tab.label}
               accessibilityState={{ selected: isActive }}
               onPress={() => router.navigate(tab.href)}
-              style={{ flex: 1, minHeight: 0, alignItems: 'center', paddingVertical: 10 }}
+              style={{ flex: 1, minHeight: 0, alignItems: 'center', paddingVertical: 8 }}
             >
-              {tab.renderIcon(color, 21)}
+              <View
+                style={{
+                  minWidth: isActive ? 58 : 44,
+                  height: 34,
+                  borderRadius: 18,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isActive
+                    ? (isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight)
+                    : 'transparent',
+                  borderWidth: isActive ? 1 : 0,
+                  borderColor: isActive ? theme.premiumBorder : 'transparent',
+                }}
+              >
+                {tab.renderIcon(color, 20)}
+              </View>
               <Text
                 style={{
                   fontFamily: FONTS.sansSemiBold,
-                  fontSize: 9,
+                  fontSize: 10,
                   fontWeight: '700',
                   letterSpacing: 0.4,
-                  marginTop: 3,
+                  marginTop: 2,
                   color,
                 }}
               >
@@ -305,9 +368,9 @@ export function CollapsibleBottomNav() {
                   style={{
                     position: 'absolute',
                     bottom: 2,
-                    width: 4,
-                    height: 4,
-                    borderRadius: 2,
+                    width: 16,
+                    height: 3,
+                    borderRadius: 999,
                     backgroundColor: theme.brand,
                   }}
                 />
@@ -328,12 +391,15 @@ export function CollapsibleBottomNav() {
           onPress={() => setCollapsed(false)}
           style={{
             flex: 1,
-            borderRadius: COLLAPSED_SIZE / 2,
+            borderRadius: COLLAPSED_HEIGHT / 2,
             alignItems: 'center',
             justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 6,
           }}
         >
-          {activeTab.renderIcon(theme.brand, 21)}
+          {activeTab.renderIcon(theme.brand, 22)}
+          <Feather name="chevron-up" size={13} color={theme.dim} />
         </PressableSurface>
       </Animated.View>
     </Animated.View>

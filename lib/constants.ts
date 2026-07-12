@@ -135,6 +135,20 @@ export const COLORS = {
   premiumBorderLight: 'rgba(216,138,28,0.15)',
   premiumBorderDark: 'rgba(197,160,89,0.18)',
 
+  // Floating bottom navigation — matched to Home hero's warm ivory/gold
+  // glass instead of the previous flat tab-bar strip. Kept as tokens so
+  // the nav can be tuned with the rest of the Home surface language.
+  navGlassTopLight: 'rgba(255,253,248,0.96)',
+  navGlassMidLight: 'rgba(255,248,235,0.93)',
+  navGlassBottomLight: 'rgba(246,232,207,0.94)',
+  navGlassTopDark: 'rgba(38,28,18,0.94)',
+  navGlassMidDark: 'rgba(19,17,14,0.92)',
+  navGlassBottomDark: 'rgba(15,12,9,0.94)',
+  navGlowGoldLight: 'rgba(216,138,28,0.10)',
+  navGlowGoldDark: 'rgba(197,160,89,0.10)',
+  navGlowIvoryLight: 'rgba(255,255,255,0.55)',
+  navGlowIvoryDark: 'rgba(255,248,225,0.06)',
+
   // ── PWA divine-hero gradient overlay (src/app/globals.css .divine-hero-overlay
   // / .divine-hero-readability) — ported for expo-linear-gradient. Two
   // layers: a top-anchored darkening scrim (keeps header icons/greeting
@@ -319,6 +333,14 @@ export const SHADOWS = {
   tabBar: {
     light: '0 -2px 10px rgba(59, 43, 22, 0.07)',
     dark: '0 -2px 10px rgba(0, 0, 0, 0.30)',
+  },
+  navFloating: {
+    light: '0 -10px 34px rgba(105,75,35,0.13), 0 0 30px rgba(216,138,28,0.14)',
+    dark: '0 -10px 30px rgba(0,0,0,0.42), 0 0 26px rgba(197,160,89,0.14)',
+  },
+  navCenterActive: {
+    light: '0 12px 26px rgba(159,99,20,0.20)',
+    dark: '0 10px 24px rgba(0,0,0,0.34)',
   },
 } as const;
 
