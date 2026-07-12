@@ -63,7 +63,7 @@ export default function TabsLayout() {
           name="japa"
           options={{
             title: 'Japa',
-            tabBarIcon: ({ color, size }) => <Feather name="heart" color={color} size={size} />,
+            tabBarIcon: ({ color, size }) => <SacredIcon name="japa" fallbackGlyph="heart" color={color} size={size} />,
           }}
         />
 

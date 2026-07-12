@@ -13,19 +13,18 @@ import type { OpaqueColorValue } from 'react-native';
 // language on its own; it swaps what each icon well renders, from directly
 // calling <Feather> to going through this seam instead.
 //
-// Why not real 3D icons yet: no PNG/WebP icon art exists anywhere in this
-// repo or the web repo (checked both — web's own equivalent, SacredIcon.tsx,
-// is likewise a flat inline-SVG glyph set, not 3D art; native's assets/
-// directory has only Android adaptive-icon layers, nothing usable here).
-// Fabricating placeholder "3D-style" icons inside this change would produce
-// worse visual quality than the existing clean Feather glyphs and would have
-// to be redone once real art exists — so this slice ships the *seam* only:
-// an asset map keyed by feature name, empty today, with every existing
-// call site's current Feather glyph preserved as an explicit, required
-// fallback. The moment a real PNG/WebP lands for a given name, one line in
-// ICON_ASSETS below is all that's needed — no call-site changes, no layout
-// changes, per this task's "prefer static PNG/WebP assets first, do not
-// introduce runtime 3D unless there is a specific interactive need" brief.
+// Icon art: static app-owned PNG assets now live at assets/icons/ (source
+// SVGs at assets/icons/src/), one per SacredIconName, hand-drawn as flat
+// single-color silhouettes with transparent negative-space cutouts (e.g.
+// mood's eyes/mouth, dharmveer's flame emblem) rather than true 3D/rendered
+// art — no 3D icon library or pre-rendered 3D asset exists in either repo
+// (see NATIVE_VISUAL_DEBT_MATRIX.md's "3D icon approach" section), and
+// fabricating fake-3D placeholder art would look worse than a clean flat
+// set. Rendered via expo-image with `tintColor` so the same asset still
+// recolors per call site exactly like the Feather fallback did — several
+// call sites render the same SacredIconName in different accent colors
+// depending on context (e.g. Home's Sadhana/Community tile rows pass
+// tileGold/tilePurple/etc. per practice, not always brand gold).
 export type SacredIconName =
   | 'japa'
   | 'bhakti'
@@ -43,9 +42,23 @@ export type SacredIconName =
   | 'live-darshan'
   | 'progress';
 
-// Empty by design — see file header. Populate as real static assets land,
-// e.g. `japa: require('@/assets/icons/japa.webp')`.
-const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {};
+const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
+  japa: require('@/assets/icons/japa.png'),
+  bhakti: require('@/assets/icons/bhakti.png'),
+  pathshala: require('@/assets/icons/pathshala.png'),
+  mandali: require('@/assets/icons/mandali.png'),
+  nitya: require('@/assets/icons/nitya.png'),
+  panchang: require('@/assets/icons/panchang.png'),
+  vrat: require('@/assets/icons/vrat.png'),
+  shloka: require('@/assets/icons/shloka.png'),
+  dharmveer: require('@/assets/icons/dharmveer.png'),
+  quiz: require('@/assets/icons/quiz.png'),
+  mood: require('@/assets/icons/mood.png'),
+  profile: require('@/assets/icons/profile.png'),
+  kosh: require('@/assets/icons/kosh.png'),
+  'live-darshan': require('@/assets/icons/live-darshan.png'),
+  progress: require('@/assets/icons/progress.png'),
+};
 
 type SacredIconProps = {
   name: SacredIconName;
@@ -70,7 +83,7 @@ export function SacredIcon({ name, fallbackGlyph, size = 20, color }: SacredIcon
     return (
       <Image
         source={asset}
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, tintColor: color }}
         contentFit="contain"
         accessibilityIgnoresInvertColors
       />

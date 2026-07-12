@@ -134,7 +134,7 @@ export function CollapsibleBottomNav() {
         href: '/japa',
         label: 'Japa',
         match: (p) => p === '/japa',
-        renderIcon: (color, size) => <Feather name="heart" color={color} size={size} />,
+        renderIcon: (color, size) => <SacredIcon name="japa" fallbackGlyph="heart" size={size} color={color} />,
       },
       {
         key: 'bhakti',
