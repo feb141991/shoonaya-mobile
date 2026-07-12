@@ -20,6 +20,7 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   return (
     <View
@@ -50,7 +51,7 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
             flex: 1,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: saved ? COLORS.brandGold : border,
+            borderColor: saved ? brand : border,
             paddingVertical: 12,
             alignItems: 'center',
             flexDirection: 'row',
@@ -58,8 +59,8 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
             gap: 8,
           }}
         >
-          <Feather name="bookmark" size={14} color={saved ? COLORS.brandGold : text} />
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: saved ? COLORS.brandGold : text }}>
+          <Feather name="bookmark" size={14} color={saved ? brand : text} />
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: saved ? brand : text }}>
             {saved ? 'Saved' : 'Save'}
           </Text>
         </PressableSurface>
@@ -69,7 +70,7 @@ export function TempleCard({ temple, distanceLabel, saved, onSave, onCheckIn }: 
           style={{
             flex: 1,
             borderRadius: 16,
-            backgroundColor: COLORS.brandGold,
+            backgroundColor: brand,
             paddingVertical: 12,
             alignItems: 'center',
           }}

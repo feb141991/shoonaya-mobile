@@ -88,6 +88,7 @@ export default function QuizScreen() {
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const surface = isDark ? COLORS.darkBg : COLORS.creamBg;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const spiritualToday = useMemo(() => spiritualDate(state.timezone), [state.timezone]);
 
   const loadQuiz = useCallback(async () => {
@@ -244,7 +245,7 @@ export default function QuizScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={brand} />
         </View>
       </Screen>
     );
@@ -255,7 +256,7 @@ export default function QuizScreen() {
       <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32, gap: 16 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.brandGold} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={brand} />}
       >
         <BackButton />
 
@@ -279,7 +280,7 @@ export default function QuizScreen() {
                   style={{
                     width: '100%',
                     height: '100%',
-                    backgroundColor: COLORS.brandGold,
+                    backgroundColor: brand,
                   }}
                 />
               </View>
@@ -402,7 +403,7 @@ export default function QuizScreen() {
               style={{
                 marginTop: 4,
                 borderRadius: 18,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: brand,
                 paddingVertical: 14,
                 alignItems: 'center',
               }}

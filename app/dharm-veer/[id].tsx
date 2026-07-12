@@ -44,6 +44,7 @@ export default function DharmVeerDetailScreen() {
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const surface = isDark ? COLORS.darkBg : COLORS.creamBg;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -139,7 +140,7 @@ export default function DharmVeerDetailScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={brand} />
         </View>
       </Screen>
     );
@@ -172,7 +173,7 @@ export default function DharmVeerDetailScreen() {
                   borderRadius: 999,
                   paddingHorizontal: 18,
                   paddingVertical: 10,
-                  backgroundColor: COLORS.brandGold,
+                  backgroundColor: brand,
                 }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
@@ -242,7 +243,7 @@ export default function DharmVeerDetailScreen() {
             {hero.nameLocal ? (
               <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>{hero.nameLocal}</Text>
             ) : null}
-            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
               {hero.emoji} {hero.tradition.toUpperCase()} · {hero.era} · {hero.region}
             </Text>
           </View>
@@ -252,24 +253,24 @@ export default function DharmVeerDetailScreen() {
           </Text>
 
           <View style={{ gap: 6 }}>
-            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Journey</Text>
+            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Journey</Text>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.journey}</Text>
           </View>
 
           <View style={{ gap: 6 }}>
-            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>The Trial</Text>
+            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>The Trial</Text>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.trial}</Text>
           </View>
 
           <Card style={{ backgroundColor: surface, borderColor: border, padding: 14 }}>
-            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 6 }}>
+            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 6 }}>
               Teaching
             </Text>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{hero.teaching}</Text>
           </Card>
 
           <View style={{ gap: 6 }}>
-            <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
               Moral for Today
             </Text>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.moral}</Text>
@@ -277,7 +278,7 @@ export default function DharmVeerDetailScreen() {
 
           {hero.legacy ? (
             <View style={{ gap: 6 }}>
-              <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Legacy</Text>
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Legacy</Text>
               <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.legacy}</Text>
             </View>
           ) : null}
@@ -286,7 +287,7 @@ export default function DharmVeerDetailScreen() {
             <View
               style={{
                 borderLeftWidth: 3,
-                borderLeftColor: COLORS.brandGold,
+                borderLeftColor: brand,
                 paddingLeft: 14,
                 gap: 4,
               }}
@@ -339,7 +340,7 @@ export default function DharmVeerDetailScreen() {
               paddingHorizontal: 18,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: COLORS.brandGold,
+              backgroundColor: brand,
             }}
           >
             {askMoreLoading ? (
@@ -384,7 +385,7 @@ export default function DharmVeerDetailScreen() {
             gap: 8,
             borderRadius: 999,
             minHeight: MIN_TOUCH_TARGET,
-            backgroundColor: COLORS.brandGold,
+            backgroundColor: brand,
           }}
         >
           <Feather name="share-2" size={16} color={COLORS.ink} />

@@ -101,6 +101,7 @@ export default function DharmVeerScreen() {
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const surface = isDark ? COLORS.darkBg : COLORS.creamBg;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const today = useMemo(() => spiritualDate(profile?.timezone ?? 'UTC'), [profile?.timezone]);
   const storageKey = useMemo(() => `shoonaya-dharm-veer-mobile-${today}`, [today]);
@@ -303,7 +304,7 @@ export default function DharmVeerScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={COLORS.brandGold} />
+          <ActivityIndicator color={brand} />
         </View>
       </Screen>
     );
@@ -336,7 +337,7 @@ export default function DharmVeerScreen() {
                 borderRadius: 999,
                 paddingHorizontal: 18,
                 paddingVertical: 10,
-                backgroundColor: COLORS.brandGold,
+                backgroundColor: brand,
               }}
             >
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
@@ -413,7 +414,7 @@ export default function DharmVeerScreen() {
 
               <View style={{ gap: 4 }}>
                 <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{currentHero.name}</Text>
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
                   {currentHero.emoji} {currentHero.tradition.toUpperCase()} · {currentHero.era}
                 </Text>
               </View>
@@ -423,7 +424,7 @@ export default function DharmVeerScreen() {
               </ScrollView>
 
               <Card style={{ backgroundColor: surface, borderColor: border, padding: 14 }}>
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 6 }}>
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 6 }}>
                   Teaching
                 </Text>
                 <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{currentHero.teaching}</Text>
@@ -447,8 +448,8 @@ export default function DharmVeerScreen() {
                     paddingHorizontal: 14,
                     paddingVertical: 8,
                     borderWidth: 1,
-                    borderColor: active ? COLORS.brandGold : border,
-                    backgroundColor: active ? COLORS.brandGold : cardBg,
+                    borderColor: active ? brand : border,
+                    backgroundColor: active ? brand : cardBg,
                   }}
                 >
                   <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
@@ -482,7 +483,7 @@ export default function DharmVeerScreen() {
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Share with community</Text>
-            <Switch value={privacyCommunity} onValueChange={setPrivacyCommunity} trackColor={{ true: COLORS.brandGold }} />
+            <Switch value={privacyCommunity} onValueChange={setPrivacyCommunity} trackColor={{ true: brand }} />
           </View>
         </Card>
 

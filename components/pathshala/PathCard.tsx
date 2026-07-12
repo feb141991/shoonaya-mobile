@@ -24,6 +24,7 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   return (
     <PressableSurface
@@ -60,7 +61,7 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
             backgroundColor: bg,
           }}
         >
-          <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: COLORS.brandGold, textTransform: 'capitalize' }}>
+          <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: brand, textTransform: 'capitalize' }}>
             {path.difficulty}
           </Text>
         </View>
@@ -79,7 +80,7 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
             style={{
               width: `${Math.max(0, Math.min(progressPct, 100))}%`,
               height: '100%',
-              backgroundColor: COLORS.brandGold,
+              backgroundColor: brand,
               borderRadius: 999,
             }}
           />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 
@@ -24,6 +25,7 @@ export function MoodCheckin() {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const [status, setStatus] = useState<CheckinStatus>('loading');
   const [hasLoggedMoodToday, setHasLoggedMoodToday] = useState(false);
@@ -74,17 +76,17 @@ export function MoodCheckin() {
         <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
           Couldn&apos;t load your mood check-in.
         </Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Retry loading mood check-in" onPress={loadStatus}>
-          <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-        </Pressable>
+        <PressableSurface haptic="selection" accessibilityLabel="Retry loading mood check-in" onPress={loadStatus} style={{ minHeight: 0 }}>
+          <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
+        </PressableSurface>
       </View>
     );
   }
 
   if (hasLoggedMoodToday && loggedMoodConfig) {
     return (
-      <Pressable
-        accessibilityRole="button"
+      <PressableSurface
+        haptic="selection"
         accessibilityLabel={`You logged feeling ${loggedMoodConfig.label} today. Tap to view mood.`}
         onPress={navigateToMood}
         style={{
@@ -119,13 +121,13 @@ export function MoodCheckin() {
           </Text>
         </View>
         <Feather name="chevron-right" size={20} color={dim} />
-      </Pressable>
+      </PressableSurface>
     );
   }
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressableSurface
+      haptic="selection"
       accessibilityLabel="Check in with your mood"
       onPress={navigateToMood}
       style={{
@@ -141,7 +143,7 @@ export function MoodCheckin() {
       }}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.3, textTransform: 'uppercase', color: COLORS.brandGold }}>
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.3, textTransform: 'uppercase', color: brand }}>
           How are you feeling?
         </Text>
         <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 13, color: text }}>
@@ -149,8 +151,8 @@ export function MoodCheckin() {
         </Text>
       </View>
       <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.borderDark, alignItems: 'center', justifyContent: 'center' }}>
-        <Feather name="arrow-right" size={18} color={COLORS.brandGold} />
+        <Feather name="arrow-right" size={18} color={brand} />
       </View>
-    </Pressable>
+    </PressableSurface>
   );
 }
