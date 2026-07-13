@@ -1218,63 +1218,58 @@ function HomeContent() {
               {([
                 {
                   label: 'Panchang',
-                  detail: tithiPill,
                   href: '/panchang',
-                  icon: 'panchang' as SacredIconName,
+                  icon: '📅',
                   fallbackGlyph: 'calendar' as const,
                 },
                 {
                   label: 'Rashiphal',
-                  detail: 'Daily rashi guidance',
                   href: '/rashiphala',
-                  icon: null,
+                  icon: '✨',
                   fallbackGlyph: 'star' as const,
                 },
                 {
                   label: 'Kundali',
-                  detail: 'Birth chart',
                   href: '/kundali',
-                  icon: null,
+                  icon: '🪐',
                   fallbackGlyph: 'circle' as const,
                 },
               ]).map((item) => (
                 <PressableSurface
                   key={item.label}
-                  accessibilityLabel={`${item.label}, ${item.detail}`}
+                  accessibilityLabel={item.label}
                   onPress={() => navigate(item.href as Href)}
                   style={{
                     flex: 1,
-                    minHeight: 104,
-                    borderRadius: 18,
-                    padding: 12,
+                    minHeight: 112,
+                    borderRadius: 22,
+                    paddingVertical: 14,
+                    paddingHorizontal: 8,
                     backgroundColor: theme.glass,
                     borderWidth: 1,
                     borderColor: theme.premiumBorder,
                     boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   <View
                     style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 14,
+                      width: 58,
+                      height: 58,
+                      borderRadius: 22,
                       alignItems: 'center',
                       justifyContent: 'center',
                       backgroundColor: theme.iconWell,
-                      marginBottom: 10,
+                      marginBottom: 9,
                     }}
                   >
-                    {item.icon ? (
-                      <SacredIcon name={item.icon} fallbackGlyph={item.fallbackGlyph} size={18} color={theme.brand} />
-                    ) : (
-                      <Feather name={item.fallbackGlyph} size={18} color={theme.brand} />
-                    )}
+                    <Text style={{ fontSize: 32, lineHeight: 38 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      {item.icon}
+                    </Text>
                   </View>
-                  <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
+                  <Text style={{ ...TYPE.label, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
                     {item.label}
-                  </Text>
-                  <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                    {item.detail}
                   </Text>
                 </PressableSurface>
               ))}
@@ -1298,22 +1293,24 @@ function HomeContent() {
                   pressedStyle={{ transform: [{ scale: 0.94 }] }}
                   style={{
                     alignItems: 'center',
+                    justifyContent: 'center',
                     backgroundColor: item.bg,
-                    borderRadius: 18,
-                    paddingVertical: 12,
-                    minWidth: 78,
+                    borderRadius: 22,
+                    paddingVertical: 14,
+                    minWidth: 104,
+                    minHeight: 100,
                     borderWidth: 1,
                     borderColor: item.border,
                   }}
                 >
                   {item.sacredId && item.fallbackGlyph ? (
-                    <View style={{ marginBottom: 7, height: 26, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={24} color={item.accent} />
+                    <View style={{ marginBottom: 8, height: 44, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={42} color={item.accent} />
                     </View>
                   ) : (
-                    <Text style={{ fontSize: 24, marginBottom: 7 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                    <Text style={{ fontSize: 38, lineHeight: 44, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
                   )}
-                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
+                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
                     {item.label}
                   </Text>
                 </PressableSurface>
@@ -1345,22 +1342,24 @@ function HomeContent() {
                   pressedStyle={{ transform: [{ scale: 0.94 }] }}
                   style={{
                     alignItems: 'center',
+                    justifyContent: 'center',
                     backgroundColor: item.bg,
-                    borderRadius: 18,
-                    paddingVertical: 12,
-                    minWidth: 98,
+                    borderRadius: 22,
+                    paddingVertical: 14,
+                    minWidth: 112,
+                    minHeight: 100,
                     borderWidth: 1,
                     borderColor: item.border,
                   }}
                 >
                   {item.sacredId && item.fallbackGlyph ? (
-                    <View style={{ marginBottom: 7, height: 26, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={24} color={item.accent} />
+                    <View style={{ marginBottom: 8, height: 44, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={42} color={item.accent} />
                     </View>
                   ) : (
-                    <Text style={{ fontSize: 24, marginBottom: 7 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                    <Text style={{ fontSize: 38, lineHeight: 44, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
                   )}
-                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
+                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
                     {item.label}
                   </Text>
                 </PressableSurface>

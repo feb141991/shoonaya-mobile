@@ -448,6 +448,8 @@ export default function JapaScreen() {
 
   return (
     <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
+      <View pointerEvents="none" style={{ position: 'absolute', top: 90, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
+      <View pointerEvents="none" style={{ position: 'absolute', top: 420, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
       <ScrollView
         contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 18, paddingBottom: 36, gap: 16 }}
         onScroll={navScrollHandler}
@@ -455,8 +457,25 @@ export default function JapaScreen() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <PressableSurface haptic="selection" onPress={() => router.back()} hitSlop={16} style={{ minHeight: 0 }}>
-              <Feather name="arrow-left" size={24} color={text} />
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Go back"
+              onPress={() => router.back()}
+              hitSlop={16}
+              style={{
+                width: 44,
+                height: 44,
+                minHeight: 44,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: cardBg,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              }}
+            >
+              <Feather name="chevron-left" size={23} color={text} />
             </PressableSurface>
             <View>
               <Text style={{ ...TYPE.screenTitle, color: text }}>Japa Mala</Text>
@@ -628,24 +647,26 @@ export default function JapaScreen() {
                 </View>
               </View>
 
-              <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {[
-                  { label: 'Mala', value: malaSkin.label, icon: 'circle', action: () => setCustomizeOpen(true) },
-                  { label: 'Scene', value: scene.name, icon: scene.icon, action: () => setCustomizeOpen(true) },
+                  { label: 'Mala', value: malaSkin.label, icon: 'circle' as const, action: () => setCustomizeOpen(true), active: true },
+                  { label: 'Scene', value: scene.name, icon: scene.icon as keyof typeof Feather.glyphMap, action: () => setCustomizeOpen(true), active: true },
+                  { label: 'Audio', value: mantraAudioEnabled ? 'On' : 'Off', icon: mantraAudioEnabled ? 'volume-2' as const : 'volume-x' as const, action: () => { void toggleMantraAudio(); }, active: mantraAudioEnabled },
+                  { label: 'Sessions', value: `${history.length} recent`, icon: 'clock' as const, action: () => setHistoryOpen(true), active: history.length > 0 },
                 ].map((item) => (
                   <PressableSurface
                     key={item.label}
                     haptic="selection"
                     onPress={item.action}
                     style={{
-                      flex: 1,
-                      minHeight: 64,
+                      width: '48%',
+                      minHeight: 82,
                       borderRadius: 18,
                       borderWidth: 1,
-                      borderColor: theme.premiumBorder,
-                      backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                      borderColor: item.active ? theme.premiumBorder : border,
+                      backgroundColor: item.active ? (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight) : 'transparent',
                       padding: 12,
-                      justifyContent: 'center',
+                      justifyContent: 'space-between',
                       gap: 4,
                     }}
                   >
@@ -657,64 +678,6 @@ export default function JapaScreen() {
                   </PressableSurface>
                 ))}
               </View>
-
-              {/* Mantra audio toggle */}
-              <PressableSurface
-                haptic="none"
-                onPress={() => { void toggleMantraAudio(); }}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: mantraAudioEnabled ? theme.brand : border,
-                  backgroundColor: mantraAudioEnabled ? cardBg : 'transparent',
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  {mantraAudioLoading ? (
-                    <ActivityIndicator color={theme.brand} size="small" />
-                  ) : (
-                    <Feather
-                      name={mantraAudioEnabled ? 'volume-2' : 'volume-x'}
-                      size={16}
-                      color={mantraAudioEnabled ? theme.brand : dim}
-                    />
-                  )}
-                  <Text
-                    style={{
-                      fontFamily: FONTS.sansMedium,
-                      fontSize: 13,
-                      color: mantraAudioEnabled ? theme.brand : dim,
-                    }}
-                  >
-                    Background mantra audio
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    width: 40,
-                    height: 22,
-                    borderRadius: 11,
-                    backgroundColor: mantraAudioEnabled ? theme.brand : border,
-                    alignItems: mantraAudioEnabled ? 'flex-end' : 'flex-start',
-                    justifyContent: 'center',
-                    paddingHorizontal: 2,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: 9,
-                      backgroundColor: mantraAudioEnabled ? COLORS.ink : COLORS.creamBg,
-                    }}
-                  />
-                </View>
-              </PressableSurface>
 
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {mantraOptions.map((item, index) => (
@@ -789,7 +752,7 @@ export default function JapaScreen() {
 
                 <PressableSurface
                   haptic="selection"
-                  onPress={() => setHistoryOpen(true)}
+                  onPress={() => setCustomizeOpen(true)}
                   style={{
                     flex: 1,
                     borderRadius: 18,
@@ -801,7 +764,7 @@ export default function JapaScreen() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>Session history</Text>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>Customize</Text>
                 </PressableSurface>
               </View>
             </View>
