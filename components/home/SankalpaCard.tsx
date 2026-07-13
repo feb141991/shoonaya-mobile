@@ -218,7 +218,20 @@ export function SankalpaCard() {
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-          <Feather name="sun" size={18} color={theme.brand} />
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <Feather name="sun" size={18} color={theme.brand} />
+          </View>
           <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
             Set your Sankalpa for this month
           </Text>
@@ -237,12 +250,12 @@ export function SankalpaCard() {
     <View
       style={{
         minHeight: 72,
-        borderRadius: 16,
+        borderRadius: 22,
         paddingHorizontal: 16,
         paddingVertical: 11,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 14,
         backgroundColor: theme.card,
         borderWidth: 1,
         borderColor: theme.border,
@@ -250,7 +263,20 @@ export function SankalpaCard() {
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-        <Feather name="sun" size={18} color={theme.brand} />
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 14,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }}
+        >
+          <Feather name="sun" size={18} color={theme.brand} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={{ ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
             {sankalpa.text}

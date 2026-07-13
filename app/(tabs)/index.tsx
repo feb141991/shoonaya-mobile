@@ -949,32 +949,23 @@ function HomeContent() {
               navigate(actionRoute);
             }}
             style={{
-              minHeight: 86,
+              minHeight: 72,
               borderRadius: 22,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 11,
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 12,
-              overflow: 'hidden',
+              gap: 14,
             }}
           >
-            <LinearGradient
-              colors={isDark
-                ? ['rgba(197,160,89,0.16)', 'rgba(197,160,89,0.04)', 'rgba(0,0,0,0)']
-                : ['rgba(250,232,196,0.88)', 'rgba(255,251,244,0.42)', 'rgba(255,255,255,0)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
             <IconTile
               name={nextPracticeRow?.id ?? 'japa'}
               fallbackGlyph={nextPracticeIcon}
-              size="md"
+              size="sm"
               color={nextPracticeColor}
               accent={nextPracticeColor}
             />
