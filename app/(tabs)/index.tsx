@@ -950,13 +950,13 @@ function HomeContent() {
             }}
             style={{
               minHeight: 86,
-              borderRadius: 24,
+              borderRadius: 22,
               paddingHorizontal: 14,
               paddingVertical: 12,
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
-              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               flexDirection: 'row',
               alignItems: 'center',
               gap: 12,
@@ -971,53 +971,29 @@ function HomeContent() {
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 17,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: `${nextPracticeColor}18`,
-                borderWidth: 1,
-                borderColor: `${nextPracticeColor}30`,
-              }}
-            >
-              <SacredIcon
-                name={nextPracticeRow?.id ?? 'japa'}
-                fallbackGlyph={nextPracticeIcon}
-                size={24}
-                color={nextPracticeColor}
-              />
-            </View>
+            <IconTile
+              name={nextPracticeRow?.id ?? 'japa'}
+              fallbackGlyph={nextPracticeIcon}
+              size="md"
+              color={nextPracticeColor}
+              accent={nextPracticeColor}
+            />
             <View style={{ flex: 1 }}>
-              <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: theme.brand }} numberOfLines={1}>
+              <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }} numberOfLines={1}>
                 {state.nextPractice.contextLabel}
               </Text>
-              <Text style={{ marginTop: 2, fontFamily: FONTS.serifBold, fontSize: 21, lineHeight: 26, color: theme.text }} numberOfLines={1}>
+              <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
                 {state.nextPractice.title}
               </Text>
-              <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 15, color: theme.dim }} numberOfLines={1}>
-                {state.nextPractice.suggestion}
+              <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+                {state.nextPractice.progress >= 1 ? 'Completed — tap to view all practices' : state.nextPractice.suggestion}
               </Text>
             </View>
-            <View style={{ alignItems: 'flex-end', gap: 6 }}>
-              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={theme.brand} track={theme.ringTrack} size={30} />
-              <View
-                style={{
-                  minHeight: 28,
-                  borderRadius: 999,
-                  paddingHorizontal: 9,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.soft,
-                }}
-              >
-                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.brand }} numberOfLines={1}>
-                  {state.nextPractice.progress >= 1 ? 'All' : state.nextPractice.actionLabel.replace(/^Go to /, '')}
-                </Text>
-              </View>
-            </View>
+            {state.nextPractice.progress >= 1 ? (
+              <Feather name="check-circle" size={22} color={theme.brand} />
+            ) : (
+              <Feather name="chevron-right" size={22} color={theme.brand} />
+            )}
           </PressableSurface>
 
           <View
@@ -1107,7 +1083,7 @@ function HomeContent() {
             onPress={() => navigate(resolveNativeRoute(state.dharmVeer.href))}
             style={{
               minHeight: 70,
-              borderRadius: 16,
+              borderRadius: 22,
               paddingHorizontal: 16,
               paddingVertical: 11,
               flexDirection: 'row',
@@ -1115,18 +1091,18 @@ function HomeContent() {
               justifyContent: 'space-between',
               backgroundColor: dharmVeerDone ? theme.soft : theme.card,
               borderWidth: 1,
-              borderColor: theme.borderSoft,
+              borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               opacity: dharmVeerDone ? 0.72 : 1,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-              <IconTile name="dharmveer" fallbackGlyph={dharmVeerIcon} size="sm" color={dharmVeerColor} accent={dharmVeerColor} />
+              <IconTile name="dharmveer" fallbackGlyph={dharmVeerIcon} size="md" color={dharmVeerColor} accent={dharmVeerColor} />
               <View style={{ flex: 1 }}>
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                   Dharm Veer
                 </Text>
-                <Text style={{ marginTop: 3, ...TYPE.label, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
+                <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
                   {state.dharmVeer.name}
                 </Text>
                 <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
@@ -1162,7 +1138,7 @@ function HomeContent() {
             onPress={() => navigate('/panchang')}
             style={{
               minHeight: 102,
-              borderRadius: 20,
+              borderRadius: 22,
               padding: 16,
               backgroundColor: theme.card,
               borderWidth: 1,
@@ -1175,7 +1151,7 @@ function HomeContent() {
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                   Sacred rhythm
                 </Text>
-                <Text style={{ marginTop: 6, ...TYPE.title, color: theme.text }}>
+                <Text style={{ marginTop: 5, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
                   {tithiPill}
                 </Text>
                 <Text style={{ marginTop: 4, ...TYPE.caption, color: theme.dim }}>

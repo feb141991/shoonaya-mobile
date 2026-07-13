@@ -94,8 +94,7 @@ export function SankalpaCard() {
       soft: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
       glass: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
-      premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
+      border: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
@@ -180,7 +179,7 @@ export function SankalpaCard() {
         }}
         style={{
           minHeight: 72,
-          borderRadius: 16,
+          borderRadius: 22,
           paddingHorizontal: 16,
           flexDirection: 'row',
           alignItems: 'center',
@@ -207,7 +206,7 @@ export function SankalpaCard() {
         onPress={() => router.push('/sankalpa')}
         style={{
           minHeight: 72,
-          borderRadius: 16,
+          borderRadius: 22,
           paddingHorizontal: 16,
           flexDirection: 'row',
           alignItems: 'center',
@@ -220,7 +219,7 @@ export function SankalpaCard() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
           <Feather name="sun" size={18} color={theme.brand} />
-          <Text style={{ ...TYPE.label, color: theme.text }}>
+          <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
             Set your Sankalpa for this month
           </Text>
         </View>
@@ -253,7 +252,7 @@ export function SankalpaCard() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
         <Feather name="sun" size={18} color={theme.brand} />
         <View style={{ flex: 1 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
+          <Text style={{ ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
             {sankalpa.text}
           </Text>
           <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }}>

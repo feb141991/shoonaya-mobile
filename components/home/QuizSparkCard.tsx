@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, SHADOWS, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
@@ -171,13 +171,13 @@ export function QuizSparkCard() {
           <SacredIcon name="quiz" fallbackGlyph="help-circle" size={34} color={brand} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ ...TYPE.section, color: brand }}>
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }}>
             {title}
           </Text>
-          <Text style={{ marginTop: 5, ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: text }} numberOfLines={2}>
+          <Text style={{ marginTop: 4, ...TYPE.cardHeading, color: text }} numberOfLines={2}>
             {quiz.question}
           </Text>
-          <Text style={{ marginTop: 5, ...TYPE.caption, color: dim }} numberOfLines={1}>
+          <Text style={{ marginTop: 4, ...TYPE.caption, color: dim }} numberOfLines={1}>
             One question. One clear dharmic reflection.
           </Text>
         </View>
