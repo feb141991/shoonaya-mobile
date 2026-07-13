@@ -551,6 +551,7 @@ function HomeContent() {
   );
 
   const heroImageUrl = resolveAssetUrl(state.hero.imageUrl);
+  const avatarImageUrl = resolveAssetUrl(state.profile.avatarUrl);
   const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
 
   const panchang = useMemo(
@@ -871,21 +872,60 @@ function HomeContent() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
+                  padding: 2,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                  overflow: 'hidden',
+                  borderWidth: 2,
+                  borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
                 }}
               >
-                {relicImageUrl ? (
-                  <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
-                ) : (
-                  <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
-                    {state.profile.firstName.charAt(0)}
-                  </Text>
-                )}
+                <View
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 22,
+                    overflow: 'hidden',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
+                  }}
+                >
+                  {avatarImageUrl ? (
+                    <Image
+                      source={{ uri: avatarImageUrl }}
+                      accessibilityIgnoresInvertColors
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="cover"
+                    />
+                  ) : relicImageUrl ? (
+                    <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                  ) : (
+                    <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
+                      {state.profile.firstName.charAt(0)}
+                    </Text>
+                  )}
+                </View>
+                {avatarImageUrl && relicImageUrl ? (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      right: -1,
+                      bottom: -1,
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: COLORS.homeGoldPillBg,
+                      borderWidth: 1,
+                      borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
+                    }}
+                  >
+                    <Image source={{ uri: relicImageUrl }} style={{ width: 12, height: 12 }} resizeMode="contain" />
+                  </View>
+                ) : null}
               </PressableSurface>
             </View>
           </View>
