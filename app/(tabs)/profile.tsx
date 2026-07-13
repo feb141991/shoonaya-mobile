@@ -17,6 +17,9 @@ import Svg, { Circle } from 'react-native-svg';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { decode } from 'base64-arraybuffer';
 
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
@@ -43,9 +46,14 @@ type AppLanguage = 'en' | 'hi' | 'pa';
 type ProfileData = {
   id: string;
   full_name: string;
+  username: string;
+  avatar_url: string | null;
   tradition: Tradition;
   sampradaya: string;
   ishta_devata: string;
+  city: string;
+  country: string;
+  life_stage: string;
   app_language: AppLanguage;
   active_symbol_id: string | null;
   seva_score: number;
@@ -66,9 +74,14 @@ type ProgressSummary = {
   profile: {
     id: string;
     fullName: string;
+    username: string;
+    avatarUrl: string | null;
     tradition: Tradition;
     sampradaya: string;
     ishtaDevata: string;
+    city: string;
+    country: string;
+    lifeStage: string;
     appLanguage: AppLanguage;
     activeSymbolId: string | null;
     sevaScore: number;
@@ -96,6 +109,16 @@ type ProgressSummary = {
     quiz: {
       doneToday: boolean;
     };
+    highlights: {
+      totalBeads: number;
+      totalRounds: number;
+      totalMinutes: number;
+      totalSessions: number;
+      topMantra: string | null;
+      nityaDays: number;
+      pathshalaEntriesOpened: number;
+      bookmarkedVerses: number;
+    };
   };
 };
 
@@ -122,6 +145,32 @@ const TRADITION_META: Record<Tradition, { label: string; emoji: string }> = {
   buddhist: { label: 'Buddhist', emoji: '☸️' },
   jain: { label: 'Jain', emoji: '卐' },
 };
+
+const LIFE_STAGE_LABELS: Record<string, string> = {
+  brahmacharya: 'Brahmacharya',
+  grihastha: 'Grihastha',
+  vanaprastha: 'Vanaprastha',
+  sannyasa: 'Sannyasa',
+};
+
+function formatMinutes(totalMinutes: number) {
+  if (totalMinutes >= 60) return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+  return `${totalMinutes}m`;
+}
+
+function getSpiritualLevel(sevaScore: number) {
+  if (sevaScore >= 500) return { label: 'Acharya', sanskrit: 'आचार्य', current: sevaScore, next: sevaScore };
+  if (sevaScore >= 100) return { label: 'Shishya', sanskrit: 'शिष्य', current: sevaScore, next: 500 };
+  return { label: 'Jigyasu', sanskrit: 'जिज्ञासु', current: sevaScore, next: 100 };
+}
+
+function resolveAvatarPath(url: string | null) {
+  if (!url) return null;
+  const marker = '/storage/v1/object/public/avatars/';
+  const index = url.indexOf(marker);
+  if (index < 0) return null;
+  return decodeURIComponent(url.slice(index + marker.length).split('?')[0] ?? '');
+}
 
 function getKulName(kuls: KulRelation): string | null {
   if (Array.isArray(kuls)) {
@@ -315,6 +364,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
 
@@ -348,9 +398,14 @@ export default function ProfileScreen() {
     const nextProfile: ProfileData = {
       id: payload.profile.id,
       full_name: payload.profile.fullName,
+      username: payload.profile.username,
+      avatar_url: payload.profile.avatarUrl,
       tradition: payload.profile.tradition,
       sampradaya: payload.profile.sampradaya,
       ishta_devata: payload.profile.ishtaDevata,
+      city: payload.profile.city,
+      country: payload.profile.country,
+      life_stage: payload.profile.lifeStage,
       app_language: payload.profile.appLanguage,
       active_symbol_id: payload.profile.activeSymbolId,
       seva_score: payload.profile.sevaScore,
@@ -437,6 +492,88 @@ export default function ProfileScreen() {
     } finally {
       setSigningOut(false);
     }
+  };
+
+  const updateAvatarUrl = async (avatarUrl: string | null) => {
+    const response = await apiFetch('/api/native/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ avatar_url: avatarUrl }),
+    });
+    if (!response.ok) throw new Error('Could not save avatar');
+  };
+
+  const pickAvatar = async () => {
+    if (!profile || avatarUploading) return;
+    setAvatarUploading(true);
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Allow photo access to update your profile picture.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.86,
+        base64: true,
+      });
+
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      if (!asset?.base64) throw new Error('Could not read selected image');
+
+      const contentType = asset.mimeType ?? 'image/jpeg';
+      if (!contentType.startsWith('image/')) throw new Error('Please select an image file');
+      const extension = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+      const path = `${profile.id}/avatar.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, decode(asset.base64), { contentType, upsert: true, cacheControl: '3600' });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = data.publicUrl;
+      await updateAvatarUrl(publicUrl);
+      setProfile((current) => current ? { ...current, avatar_url: `${publicUrl}?t=${Date.now()}` } : current);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not update profile picture';
+      Alert.alert('Photo update failed', message);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    if (!profile || avatarUploading) return;
+    setAvatarUploading(true);
+    try {
+      const path = resolveAvatarPath(profile.avatar_url);
+      await updateAvatarUrl(null);
+      if (path) {
+        await supabase.storage.from('avatars').remove([path]);
+      }
+      setProfile((current) => current ? { ...current, avatar_url: null } : current);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not remove profile picture';
+      Alert.alert('Photo removal failed', message);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const openAvatarActions = () => {
+    if (!profile || avatarUploading) return;
+
+    Alert.alert('Profile picture', 'Choose how your public profile photo should appear.', [
+      { text: 'Choose photo', onPress: () => { void pickAvatar(); } },
+      ...(profile.avatar_url
+        ? [{ text: 'Remove photo', style: 'destructive' as const, onPress: () => { void removeAvatar(); } }]
+        : []),
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   };
 
   const inviteCode = useMemo(() => profile ? profile.id.replace(/-/g, '').slice(0, 8).toUpperCase() : '', [profile]);
@@ -625,13 +762,213 @@ export default function ProfileScreen() {
     : 0;
   const initials = profile.full_name.trim().slice(0, 1).toUpperCase() || 'S';
   const subscriptionLabel = profile.is_pro ? 'Pro Member' : 'Free Plan';
+  const username = profile.username || profile.id.replace(/-/g, '').slice(0, 10);
+  const spiritualLevel = getSpiritualLevel(profile.seva_score);
+  const levelPct = spiritualLevel.next > spiritualLevel.current
+    ? Math.max(0.08, Math.min(1, spiritualLevel.current / spiritualLevel.next))
+    : 1;
+  const nextLevelLabel = spiritualLevel.next > spiritualLevel.current ? spiritualLevel.next : spiritualLevel.current;
+  const lifeStageLabel = profile.life_stage ? (LIFE_STAGE_LABELS[profile.life_stage] ?? profile.life_stage) : 'Ashrama';
+  const highlights = progressData?.highlights;
+  const avatarSource = profile.avatar_url
+    ? { uri: profile.avatar_url }
+    : relicImage
+      ? { uri: relicImage }
+      : null;
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 30, gap: 16 }}>
-        <View style={{ gap: 6 }}>
-          <Text style={{ ...TYPE.section, color: theme.brand }}>Your Shoonaya</Text>
-          <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Profile</Text>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 34, gap: 16 }}>
+        <View style={{ minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.glass,
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            }}
+          >
+            <Feather name="chevron-left" size={24} color={theme.text} />
+          </PressableSurface>
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Open notifications"
+              onPress={() => router.push('/notifications')}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.glass,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              }}
+            >
+              <Feather name="message-square" size={21} color={theme.text} />
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Open settings"
+              onPress={() => router.push('/settings')}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.glass,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              }}
+            >
+              <Feather name="settings" size={21} color={theme.text} />
+            </PressableSurface>
+          </View>
+        </View>
+
+        <View style={{ alignItems: 'center', gap: 14, paddingTop: 4, paddingBottom: 6 }}>
+          <View style={{ width: 142, height: 142, alignItems: 'center', justifyContent: 'center' }}>
+            <LinearGradient
+              colors={[theme.brand, theme.premiumBorder, theme.brand]}
+              start={{ x: 0.05, y: 0.1 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                position: 'absolute',
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                opacity: isDark ? 0.88 : 1,
+              }}
+            />
+            <View
+              style={{
+                width: 124,
+                height: 124,
+                borderRadius: 62,
+                backgroundColor: theme.card,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                borderWidth: 2,
+                borderColor: theme.accent,
+              }}
+            >
+              {avatarSource ? (
+                <Image source={avatarSource} style={{ width: 124, height: 124 }} />
+              ) : (
+                <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 48 }}>{initials}</Text>
+              )}
+            </View>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Change profile picture"
+              onPress={openAvatarActions}
+              disabled={avatarUploading}
+              style={{
+                position: 'absolute',
+                right: 0,
+                bottom: 6,
+                width: 52,
+                height: 52,
+                borderRadius: 18,
+                backgroundColor: theme.brand,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: theme.bg,
+                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+              }}
+            >
+              {avatarUploading ? (
+                <ActivityIndicator color={COLORS.ink} size="small" />
+              ) : (
+                <Feather name="camera" size={20} color={COLORS.ink} />
+              )}
+            </PressableSurface>
+          </View>
+
+          <View style={{ alignItems: 'center', gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ ...TYPE.display, fontSize: 34, lineHeight: 40, color: theme.text, textAlign: 'center' }}>
+                {profile.full_name}
+              </Text>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Edit profile"
+                onPress={() => setEditVisible(true)}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 15,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: theme.glass,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="edit-3" size={18} color={theme.brand} />
+              </PressableSurface>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
+              <Text style={{ ...TYPE.label, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1.2 }}>@{username}</Text>
+              <View
+                style={{
+                  borderRadius: 999,
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  backgroundColor: profile.is_pro ? theme.brandSoft : theme.glass,
+                  borderWidth: 1,
+                  borderColor: profile.is_pro ? theme.premiumBorder : theme.borderSoft,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
+                <Feather name="star" size={13} color={profile.is_pro ? theme.brand : theme.dim} />
+                <Text style={{ ...TYPE.chip, color: profile.is_pro ? theme.brand : theme.dim }}>{subscriptionLabel}</Text>
+              </View>
+            </View>
+            <View
+              style={{
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.accent,
+                paddingHorizontal: 18,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>{traditionMeta.emoji}</Text>
+              <Text style={{ ...TYPE.label, color: theme.brand }}>
+                {spiritualLevel.label} · {spiritualLevel.sanskrit}
+              </Text>
+            </View>
+            <View style={{ width: 250, gap: 5, alignItems: 'center' }}>
+              <View style={{ width: '100%', height: 3, borderRadius: 999, backgroundColor: theme.borderSoft, overflow: 'hidden' }}>
+                <View style={{ width: `${levelPct * 100}%`, height: 3, borderRadius: 999, backgroundColor: theme.brand }} />
+              </View>
+              <Text style={{ ...TYPE.caption, color: theme.brand }}>
+                {profile.seva_score} / {nextLevelLabel} Seva to {spiritualLevel.next > spiritualLevel.current ? spiritualLevel.label === 'Jigyasu' ? 'Shishya' : 'Acharya' : spiritualLevel.label}
+              </Text>
+            </View>
+          </View>
         </View>
 
         <Card
@@ -641,144 +978,65 @@ export default function ProfileScreen() {
             backgroundColor: theme.glass,
             borderColor: theme.premiumBorder,
             gap: 18,
-            overflow: 'hidden',
             boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
           }}
         >
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              top: -80,
-              right: -54,
-              width: 190,
-              height: 190,
-              borderRadius: 95,
-              backgroundColor: theme.brandSoft,
-            }}
-          />
-
-          <View style={{ alignItems: 'center', gap: 12 }}>
-            <View
-              style={{
-                width: 86,
-                height: 86,
-                borderRadius: 43,
-                backgroundColor: theme.brand,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 3,
-                borderColor: theme.accent,
-                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-              }}
-            >
-              <Text style={{ color: isDark ? COLORS.darkBg : COLORS.ink, fontFamily: FONTS.serifBold, fontSize: 34 }}>{initials}</Text>
-            </View>
-            <View style={{ alignItems: 'center', gap: 5 }}>
-              <Text style={{ ...TYPE.display, fontSize: 32, lineHeight: 36, color: theme.text, textAlign: 'center' }}>
-                {profile.full_name}
-              </Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>@{profile.id.replace(/-/g, '').slice(0, 10)}</Text>
-            </View>
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
-              <View
-                style={{
-                  borderRadius: 999,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  backgroundColor: theme.brandSoft,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                }}
-              >
-                <Text style={{ ...TYPE.chip, color: theme.brand }}>
-                  {traditionMeta.emoji} {traditionMeta.label}
-                </Text>
-              </View>
-              <View
-                style={{
-                  borderRadius: 999,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  backgroundColor: profile.is_pro ? theme.brandSoft : theme.cardSoft,
-                  borderWidth: 1,
-                  borderColor: profile.is_pro ? theme.premiumBorder : theme.borderSoft,
-                }}
-              >
-                <Text style={{ ...TYPE.chip, color: profile.is_pro ? theme.brand : theme.dim }}>{subscriptionLabel}</Text>
-              </View>
-            </View>
-
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Edit profile"
-              onPress={() => setEditVisible(true)}
-              style={{
-                minHeight: 44,
-                borderRadius: 22,
-                paddingHorizontal: 16,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                backgroundColor: theme.accent,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <Feather name="edit-3" size={15} color={theme.brand} />
-              <Text style={{ ...TYPE.label, color: theme.brand }}>Edit profile</Text>
-            </PressableSurface>
+          <View style={{ gap: 4 }}>
+            <Text style={{ ...TYPE.section, color: theme.brand }}>Sadhana Highlights</Text>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>Lifelong practice at a glance</Text>
           </View>
 
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Open Sacred Kosh"
-            onPress={() => router.push('/kosh')}
-            style={{
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              backgroundColor: theme.accent,
-              padding: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            {relicImage ? (
-              <Image source={{ uri: relicImage }} style={{ width: 48, height: 48, borderRadius: 16 }} />
-            ) : (
-              <View
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            {[
+              { label: 'Beads', value: String(highlights?.totalBeads ?? 0), route: '/my-progress' as const },
+              { label: 'Day Streak 🔥', value: String(streak), route: '/my-progress' as const },
+              { label: 'Rounds', value: String(highlights?.totalRounds ?? 0), route: '/my-progress' as const },
+              { label: 'In Practice', value: formatMinutes(highlights?.totalMinutes ?? 0), route: '/my-progress' as const },
+              { label: 'Nitya Days', value: `${highlights?.nityaDays ?? 0}/30`, route: '/my-progress' as const },
+              { label: 'Saved Verses', value: String(highlights?.bookmarkedVerses ?? 0), route: '/kosh' as const },
+            ].map((item) => (
+              <PressableSurface
+                key={item.label}
+                haptic="selection"
+                accessibilityLabel={`${item.label}: ${item.value}`}
+                onPress={() => router.push(item.route)}
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 16,
-                  backgroundColor: theme.brandSoft,
+                  width: '47.8%',
+                  minHeight: 92,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                  backgroundColor: theme.glass,
+                  paddingHorizontal: 12,
+                  paddingVertical: 14,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  gap: 6,
                 }}
               >
-                <SacredIcon name="kosh" fallbackGlyph="star" size={20} color={theme.brand} />
-              </View>
-            )}
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ ...TYPE.label, color: theme.text }}>
-                {activeRelic?.name ?? (unlockedCount > 0 ? 'Equip your relic' : 'Sacred Kosh')}
-              </Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                {unlockedCount} of {totalVisibleRelics} relics unlocked
-              </Text>
-            </View>
-            <Feather name="chevron-right" size={18} color={theme.dim} />
-          </PressableSurface>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 28 }}>{item.value}</Text>
+                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1.4, textAlign: 'center' }}>
+                  {item.label}
+                </Text>
+              </PressableSurface>
+            ))}
+          </View>
+
+          <View style={{ gap: 8 }}>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>
+              Favourite mantra: <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold }}>{highlights?.topMantra ?? traditionMeta.emoji}</Text>
+            </Text>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>
+              Pathshala entries opened: <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold }}>{highlights?.pathshalaEntriesOpened ?? 0}</Text>
+            </Text>
+          </View>
         </Card>
 
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           <MetricTile label="Streak" value={`${streak} 🔥`} icon="zap" onPress={() => router.push('/my-progress')} theme={theme} />
           <MetricTile label="Seva" value={String(profile.seva_score)} icon="heart" onPress={() => router.push('/my-progress')} theme={theme} />
           <MetricTile label="Relics" value={`${unlockedCount}/${totalVisibleRelics}`} icon="star" onPress={() => router.push('/kosh')} theme={theme} />
-          <MetricTile label="Nitya" value={`${progressData?.streaks.nitya ?? 0}d`} icon="sun" onPress={() => router.push('/my-progress')} theme={theme} />
+          <MetricTile label="Ashrama" value={lifeStageLabel} icon="sun" onPress={() => router.push('/settings')} theme={theme} />
         </View>
 
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
@@ -903,33 +1161,6 @@ export default function ProfileScreen() {
           ) : (
             <ActivityIndicator color={theme.brand} />
           )}
-        </Card>
-
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-                {profile.is_pro ? 'Pro active' : 'Free plan'}
-              </Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                Status: {profile.subscription_status}
-              </Text>
-            </View>
-            <PressableSurface
-              haptic="selection"
-              onPress={() => router.push('/settings')}
-              style={{
-                borderRadius: 18,
-                backgroundColor: theme.brand,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-              }}
-            >
-              <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>
-                {profile.is_pro ? 'Manage plan' : 'Upgrade to Pro'}
-              </Text>
-            </PressableSurface>
-          </View>
         </Card>
 
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>

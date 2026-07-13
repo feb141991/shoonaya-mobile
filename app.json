@@ -81,6 +81,14 @@
         }
       ],
       "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Shoonaya uses your photo library so you can update your profile picture.",
+          "cameraPermission": "Shoonaya uses your camera so you can take a profile picture.",
+          "microphonePermission": false
+        }
+      ],
       "expo-sharing",
       "expo-image",
       "expo-audio",
