@@ -24,6 +24,8 @@
  * every existing icon in assets/icons/ already renders at), same base
  * filename, written to assets/icons/.
  */
+/// <reference types="node" />
+
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -50,7 +52,7 @@ function main() {
 
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 
-  const svgFiles = readdirSync(SRC_DIR).filter((f) => f.endsWith('.svg'));
+  const svgFiles = readdirSync(SRC_DIR).filter((f: string) => f.endsWith('.svg'));
   if (svgFiles.length === 0) {
     console.error(`No .svg files found in ${SRC_DIR}`);
     process.exit(1);
