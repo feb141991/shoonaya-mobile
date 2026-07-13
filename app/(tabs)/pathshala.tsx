@@ -443,6 +443,42 @@ function PathshalaContent() {
               </Text>
             </View>
           ) : null}
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Saved verses"
+            onPress={() => router.push('/pathshala/saved')}
+            style={{
+              width: 40,
+              height: 40,
+              minHeight: 40,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+            }}
+          >
+            <Feather name="bookmark" size={17} color={text} />
+          </PressableSurface>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Learning insights"
+            onPress={() => router.push('/pathshala/insights')}
+            style={{
+              width: 40,
+              height: 40,
+              minHeight: 40,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+            }}
+          >
+            <Feather name="bar-chart-2" size={17} color={text} />
+          </PressableSurface>
         </View>
 
         {/* Verse of the day — reuses the same sacredText payload as
