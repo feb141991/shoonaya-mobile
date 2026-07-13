@@ -4,6 +4,7 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useEffect, useState, useCallback } from 'react';
+import { AppState } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -103,6 +104,26 @@ export default function RootLayout() {
     },
     [router, rootSegment, childSegment]
   );
+
+  // ── Keep Supabase session refresh alive across backgrounding ─────────
+  // supabase-js's `autoRefreshToken: true` (lib/supabase.ts) runs a JS timer
+  // that React Native pauses whenever the app is backgrounded, so a session
+  // that's been backgrounded past its token lifetime can come back stale.
+  // This is Supabase's own documented fix for React Native: explicitly
+  // start/stop the refresh timer on AppState transitions. Without this,
+  // authenticated writes made right after returning from background (e.g.
+  // marking today's shloka read) can fail with a stale/expired token even
+  // though the user never signed out.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        supabase.auth.startAutoRefresh();
+      } else {
+        supabase.auth.stopAutoRefresh();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
   useEffect(() => {

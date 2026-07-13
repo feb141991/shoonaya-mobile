@@ -218,7 +218,8 @@ export default function ShlokaScreen() {
     try {
       const response = await apiFetch('/api/native/shloka/read', { method: 'POST' });
       if (!response.ok) {
-        throw new Error('save failed');
+        const body = await response.text().catch(() => '');
+        throw new Error(`save failed (${response.status}): ${body.slice(0, 300)}`);
       }
       const result = (await response.json()) as {
         date?: string;
@@ -242,9 +243,17 @@ export default function ShlokaScreen() {
         Animated.spring(celebrationScale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 70 }),
         Animated.timing(celebrationOpacity, { toValue: 1, duration: 240, useNativeDriver: true }),
       ]).start();
-    } catch {
+    } catch (err) {
       setProfile(previousProfile);
-      Alert.alert("Could not save today's reading", 'Check your connection and try again.');
+      console.error('markRead failed:', err);
+      const message = err instanceof Error ? err.message : '';
+      const isAuthError = message.includes('(401)') || message.includes('(403)');
+      Alert.alert(
+        "Could not save today's reading",
+        isAuthError
+          ? 'Your session expired. Please sign out and back in, then try again.'
+          : 'Check your connection and try again.'
+      );
     } finally {
       setMarking(false);
     }
