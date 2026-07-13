@@ -306,10 +306,14 @@ function ProgressRing({
 
 function PanchangPill({
   panchang,
+  summary,
   selectedDateIso,
+  theme,
 }: {
   panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
+  summary: HomeSummary['panchang'];
   selectedDateIso: string;
+  theme: { heroOverlay: string; borderSoft: string; text: string; brand: string };
 }) {
   const [idx, setIdx] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -332,12 +336,19 @@ function PanchangPill({
       rows.push(row);
     };
 
+    add(summary.observance ? {
+      key: 'observance',
+      icon: summary.observance.emoji ?? '🪔',
+      label: summary.observance.label,
+    } : null);
+    add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
+    add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
     add({ key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` });
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
-    add({ key: 'date', icon: '', label: getDateLabel(selectedDateIso) });
+    add({ key: 'date', icon: '📅', label: getDateLabel(selectedDateIso) });
 
     return rows;
-  }, [panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, selectedDateIso]);
+  }, [panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, selectedDateIso, summary.festivalLabel, summary.observance, summary.vratLabel]);
   const total = slides.length;
 
   useEffect(() => {
@@ -397,7 +408,7 @@ function PanchangPill({
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
-        {currentSlide.icon ? <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text> : null}
+        <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
         <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
           {currentSlide.label}
         </Text>
@@ -422,92 +433,6 @@ function PanchangPill({
           />
         ))}
       </View>
-    </PressableSurface>
-  );
-}
-
-function ObservancePill({ summary }: { summary: HomeSummary['panchang'] }) {
-  const [idx, setIdx] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const slides = useMemo(() => {
-    const seen = new Set<string>();
-    const rows: { key: string; icon: string; label: string }[] = [];
-    const add = (row: { key: string; icon: string; label: string } | null) => {
-      if (!row?.label) return;
-      const normalized = row.label.trim().toLowerCase();
-      if (!normalized || seen.has(normalized)) return;
-      seen.add(normalized);
-      rows.push(row);
-    };
-    add(summary.observance ? { key: 'observance', icon: summary.observance.emoji ?? '🪔', label: summary.observance.label } : null);
-    add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
-    add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
-    return rows;
-  }, [summary.festivalLabel, summary.observance, summary.vratLabel]);
-
-  const total = slides.length;
-
-  useEffect(() => {
-    setIdx((current) => (total > 0 ? current % total : 0));
-  }, [total]);
-
-  useEffect(() => {
-    if (total <= 1) return;
-    const t = setInterval(() => {
-      Animated.timing(fadeAnim, { toValue: 0, duration: 140, useNativeDriver: true }).start(() => {
-        setIdx((i) => (i + 1) % total);
-        Animated.timing(fadeAnim, { toValue: 1, duration: 140, useNativeDriver: true }).start();
-      });
-    }, 3600);
-    return () => clearInterval(t);
-  }, [fadeAnim, total]);
-
-  if (total === 0) return null;
-
-  const currentSlide = slides[idx] ?? slides[0];
-
-  return (
-    <PressableSurface
-      haptic="selection"
-      accessibilityLabel={`Sacred day: ${currentSlide.label}. Tap to cycle`}
-      onPress={() => setIdx((i) => (i + 1) % total)}
-      hitSlop={4}
-      style={{
-        minHeight: 34,
-        borderRadius: 999,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        gap: 6,
-        backgroundColor: COLORS.homePwaObservanceBg,
-        borderWidth: 1,
-        borderColor: COLORS.homePwaObservanceBorder,
-        maxWidth: '92%',
-      }}
-    >
-      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
-        <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
-        <Text style={{ ...TYPE.chip, fontSize: 11, lineHeight: 14, color: COLORS.homePwaObservanceText }} numberOfLines={1}>
-          {currentSlide.label}
-        </Text>
-      </Animated.View>
-      {total > 1 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 4 }}>
-          {slides.map((s, i) => (
-            <View
-              key={s.key}
-              style={{
-                width: i === idx ? 9 : 4,
-                height: 4,
-                borderRadius: 99,
-                backgroundColor: i === idx ? COLORS.homePwaPillDotActive : COLORS.homePwaPillDotInactive,
-              }}
-            />
-          ))}
-        </View>
-      ) : null}
     </PressableSurface>
   );
 }
@@ -551,7 +476,6 @@ function HomeContent() {
   );
 
   const heroImageUrl = resolveAssetUrl(state.hero.imageUrl);
-  const avatarImageUrl = resolveAssetUrl(state.profile.avatarUrl);
   const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
 
   const panchang = useMemo(
@@ -864,6 +788,27 @@ function HomeContent() {
             </PressableSurface>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {/* Karma pill removed from here per request — karma points are
+                  still visible on Profile. Replaced with a Panchang quick-
+                  access icon, matching the bell's circular treatment. */}
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Open today's Panchang"
+                onPress={() => navigate('/panchang')}
+                style={{
+                  width: MIN_TOUCH_TARGET,
+                  height: MIN_TOUCH_TARGET,
+                  borderRadius: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.heroOverlay,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                }}
+              >
+                <Feather name="calendar" size={18} color={theme.text} />
+              </PressableSurface>
+
               <PressableSurface
                 haptic="selection"
                 accessibilityLabel="Open profile"
@@ -872,60 +817,21 @@ function HomeContent() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  padding: 2,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: theme.heroOverlay,
-                  borderWidth: 2,
-                  borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                  overflow: 'hidden',
                 }}
               >
-                <View
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 22,
-                    overflow: 'hidden',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.homeShlokaGlassLight,
-                  }}
-                >
-                  {avatarImageUrl ? (
-                    <Image
-                      source={{ uri: avatarImageUrl }}
-                      accessibilityIgnoresInvertColors
-                      style={{ width: '100%', height: '100%' }}
-                      resizeMode="cover"
-                    />
-                  ) : relicImageUrl ? (
-                    <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
-                  ) : (
-                    <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
-                      {state.profile.firstName.charAt(0)}
-                    </Text>
-                  )}
-                </View>
-                {avatarImageUrl && relicImageUrl ? (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      right: -1,
-                      bottom: -1,
-                      width: 18,
-                      height: 18,
-                      borderRadius: 9,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: COLORS.homeGoldPillBg,
-                      borderWidth: 1,
-                      borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
-                    }}
-                  >
-                    <Image source={{ uri: relicImageUrl }} style={{ width: 12, height: 12 }} resizeMode="contain" />
-                  </View>
-                ) : null}
+                {relicImageUrl ? (
+                  <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                ) : (
+                  <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
+                    {state.profile.firstName.charAt(0)}
+                  </Text>
+                )}
               </PressableSurface>
             </View>
           </View>
@@ -950,8 +856,7 @@ function HomeContent() {
             </Text>
 
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6 }}>
-              <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} />
-              <ObservancePill summary={state.panchang} />
+              <PanchangPill panchang={panchang} summary={state.panchang} selectedDateIso={state.date.iso} theme={theme} />
             </View>
           </View>
         </View>
@@ -1031,7 +936,7 @@ function HomeContent() {
               borderRadius: 17,
               paddingHorizontal: 12,
               paddingVertical: 10,
-              backgroundColor: theme.card,
+              backgroundColor: theme.glass,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
@@ -1081,7 +986,7 @@ function HomeContent() {
               borderRadius: 16,
               backgroundColor: theme.card,
               borderWidth: 1,
-              borderColor: theme.premiumBorder,
+              borderColor: theme.borderSoft,
               overflow: 'hidden',
             }}
           >
@@ -1092,21 +997,21 @@ function HomeContent() {
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
                 minHeight: 44,
-                paddingHorizontal: 12,
+                paddingHorizontal: 14,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 8,
+                gap: 12,
               }}
             >
-              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 10.5, color: theme.dim }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
-                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={15} color={theme.dim} />
+                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
               </View>
             </Pressable>
 
@@ -1118,42 +1023,42 @@ function HomeContent() {
                     accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                     onPress={() => navigate(resolveNativeRoute(row.href))}
                     style={{
-                      minHeight: 40,
-                      borderRadius: 13,
-                      paddingHorizontal: 9,
+                      minHeight: 44,
+                      borderRadius: 14,
+                      paddingHorizontal: 10,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       backgroundColor: theme.soft,
                     }}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, flex: 1, minWidth: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
                       <View
                         style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 11,
+                          width: 30,
+                          height: 30,
+                          borderRadius: 12,
                           alignItems: 'center',
                           justifyContent: 'center',
                           backgroundColor: theme.iconWell,
                         }}
                       >
-                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={14} color={PRACTICE_COLOR[row.id]} />
+                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={15} color={PRACTICE_COLOR[row.id]} />
                       </View>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, lineHeight: 15, color: theme.text }} numberOfLines={1}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: theme.text }} numberOfLines={1}>
                           {row.label}
                         </Text>
-                        <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 9.5, lineHeight: 12, color: theme.dim }} numberOfLines={1}>
+                        <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 10.5, lineHeight: 13, color: theme.dim }} numberOfLines={1}>
                           {row.streak && row.streak > 0 ? `${row.detail} · ${row.streak} day streak` : row.detail}
                         </Text>
                       </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, lineHeight: 12, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, lineHeight: 12, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
                         {row.done ? 'Done' : 'Start'}
                       </Text>
-                      <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} size={24} />
+                      <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} size={26} />
                     </View>
                   </PressableSurface>
                 ))}
