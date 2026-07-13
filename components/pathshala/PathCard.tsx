@@ -1,15 +1,9 @@
 import { Text, View, useColorScheme } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import type { PathshalaPath } from '@/lib/pathshala-types';
-import { COLORS, FONTS } from '@/lib/constants';
-
-const TRADITION_EMOJI: Record<string, string> = {
-  hindu: '🪷',
-  sikh: '☬',
-  buddhist: '☸️',
-  jain: '🤲',
-};
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 
 type PathCardProps = {
   path: PathshalaPath;
@@ -24,25 +18,42 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const theme = themeColor(isDark);
+  const brand = theme.brand;
+  const progress = Math.max(0, Math.min(progressPct, 100));
 
   return (
     <PressableSurface
       onPress={onPress}
       style={{
-        borderRadius: 24,
+        minHeight: MIN_TOUCH_TARGET,
+        borderRadius: 26,
         backgroundColor: bg,
         borderWidth: 1,
         borderColor: border,
-        padding: 16,
-        gap: 12,
+        padding: 17,
+        gap: 14,
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <View style={{ flex: 1, gap: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 20 }}>{TRADITION_EMOJI[path.tradition] ?? '📖'}</Text>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text, flex: 1 }}>
+            <View
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: theme.brandSoft,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+              }}
+            >
+              <Feather name="book-open" size={17} color={brand} />
+            </View>
+            <Text style={{ ...TYPE.cardHeading, color: text, flex: 1 }} numberOfLines={2}>
               {path.title}
             </Text>
           </View>
@@ -57,8 +68,8 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
             paddingHorizontal: 10,
             paddingVertical: 6,
             borderWidth: 1,
-            borderColor: border,
-            backgroundColor: bg,
+            borderColor: theme.premiumBorder,
+            backgroundColor: theme.brandSoft,
           }}
         >
           <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: brand, textTransform: 'capitalize' }}>
@@ -72,13 +83,13 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
           style={{
             height: 8,
             borderRadius: 999,
-            backgroundColor: border,
+            backgroundColor: isDark ? COLORS.homeRingTrackDark : COLORS.homeRingTrackLight,
             overflow: 'hidden',
           }}
         >
           <View
             style={{
-              width: `${Math.max(0, Math.min(progressPct, 100))}%`,
+              width: `${progress}%`,
               height: '100%',
               backgroundColor: brand,
               borderRadius: 999,
@@ -86,7 +97,7 @@ export function PathCard({ path, progressPct, onPress }: PathCardProps) {
           />
         </View>
       <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
-        {progressPct}% complete
+        {progress}% complete
       </Text>
     </View>
     </PressableSurface>

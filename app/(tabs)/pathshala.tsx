@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -57,7 +56,7 @@ function parseEnrollmentResponse(value: unknown): EnrollmentRow | null {
   };
 }
 
-type TabKey = 'progress' | 'explore';
+type TabKey = 'progress' | 'paths' | 'explore';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
 
 type EnrollmentRow = {
@@ -105,13 +104,6 @@ function parsePathsResponse(value: unknown): PathshalaPath[] {
   return Array.isArray(paths) ? paths.filter(isPathshalaPath) : [];
 }
 
-const TRADITION_EMOJI: Record<string, string> = {
-  hindu: '🪷',
-  sikh: '☬',
-  buddhist: '☸️',
-  jain: '🤲',
-};
-
 // Mirrors PWA's TRADITION_SEAT map (PathshalaClient.tsx) — the tradition-
 // aware eyebrow above "Today's Lesson" ("Your Seat · Gurukul" etc.).
 const TRADITION_SEAT: Record<string, string> = {
@@ -127,6 +119,42 @@ const TRADITION_SEAT: Record<string, string> = {
 // placeholder here keeps native/PWA behavior identical rather than
 // fabricating a native-only "real" streak the backend doesn't track.
 const STREAK_PLACEHOLDER: Array<true | false | 'pending'> = [true, true, true, false, true, true, 'pending'];
+
+const DIFFICULTY_WEIGHT: Record<PathshalaPath['difficulty'], number> = {
+  beginner: 0,
+  intermediate: 1,
+  advanced: 2,
+};
+
+const PATHSHALA_TABS: Array<{ key: TabKey; label: string }> = [
+  { key: 'progress', label: 'My Progress' },
+  { key: 'paths', label: 'Paths' },
+  { key: 'explore', label: 'Explore' },
+];
+
+const EXPLORE_CARDS = [
+  {
+    id: 'saved',
+    title: 'Saved Verses',
+    description: 'Return to bookmarked study notes and verses.',
+    icon: 'bookmark',
+    href: '/pathshala/saved',
+  },
+  {
+    id: 'insights',
+    title: 'Learning Insights',
+    description: 'See your Pathshala rhythm and completed lessons.',
+    icon: 'bar-chart-2',
+    href: '/pathshala/insights',
+  },
+  {
+    id: 'beginner',
+    title: 'Beginner Gurukul',
+    description: 'Start with the gentlest scripture paths.',
+    icon: 'book-open',
+    filter: 'beginner',
+  },
+] as const;
 
 function PathshalaContent() {
   const router = useRouter();
@@ -241,9 +269,28 @@ function PathshalaContent() {
     return map;
   }, [enrollments]);
 
+  const sortedPaths = useMemo(() => {
+    return [...paths].sort((a, b) => {
+      const traditionA = a.tradition === tradition ? 0 : 1;
+      const traditionB = b.tradition === tradition ? 0 : 1;
+      if (traditionA !== traditionB) return traditionA - traditionB;
+      const difficultyDelta = DIFFICULTY_WEIGHT[a.difficulty] - DIFFICULTY_WEIGHT[b.difficulty];
+      if (difficultyDelta !== 0) return difficultyDelta;
+      return a.title.localeCompare(b.title);
+    });
+  }, [paths, tradition]);
+
   const enrolledPaths = useMemo(
-    () => paths.filter((path) => progressMap.has(path.id)),
-    [paths, progressMap]
+    () => sortedPaths
+      .filter((path) => progressMap.has(path.id))
+      .sort((a, b) => {
+        const progressA = progressMap.get(a.id);
+        const progressB = progressMap.get(b.id);
+        const currentA = progressA?.current_lesson ?? 0;
+        const currentB = progressB?.current_lesson ?? 0;
+        return currentB - currentA;
+      }),
+    [progressMap, sortedPaths]
   );
 
   // First enrollment is the "Today's Lesson" hero; the rest render under
@@ -254,10 +301,10 @@ function PathshalaContent() {
 
   const filteredPaths = useMemo(() => {
     if (difficulty === 'all') {
-      return paths;
+      return sortedPaths;
     }
-    return paths.filter((path) => path.difficulty === difficulty);
-  }, [difficulty, paths]);
+    return sortedPaths.filter((path) => path.difficulty === difficulty);
+  }, [difficulty, sortedPaths]);
 
   const openPath = useCallback(
     (path: PathshalaPath) => {
@@ -405,9 +452,11 @@ function PathshalaContent() {
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: theme.cardSoft,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
             }}
           >
-            <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[tradition] ?? '📖'}</Text>
+            <Feather name="book-open" size={20} color={brand} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ ...TYPE.screenTitle, color: text }}>Pathshala</Text>
@@ -526,30 +575,30 @@ function PathshalaContent() {
         <View
           style={{
             borderRadius: 24,
-            backgroundColor: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
+            backgroundColor: theme.cardSoft,
             borderWidth: 1,
-            borderColor: border,
+            borderColor: theme.borderSoft,
             padding: 4,
             flexDirection: 'row',
             gap: 4,
+            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           }}
         >
-          {([
-            ['progress', 'Progress'],
-            ['explore', 'Paths'],
-          ] as const).map(([key, label]) => {
+          {PATHSHALA_TABS.map(({ key, label }) => {
             const active = activeTab === key;
             return (
               <PressableSurface
                 key={key}
                 onPress={() => setActiveTab(key)}
                 haptic="selection"
+                accessibilityState={{ selected: active }}
                 style={{
                   flex: 1,
                   borderRadius: 16,
-                  paddingVertical: 9,
+                  paddingVertical: 10,
                   alignItems: 'center',
                   backgroundColor: active ? cardBg : 'transparent',
+                  boxShadow: active ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                 }}
               >
                 <Text
@@ -683,11 +732,11 @@ function PathshalaContent() {
               })()
             ) : (
               <EmptyState
-                emoji="📖"
+                emoji="📚"
                 title="No paths enrolled yet"
                 subtitle="Choose a beginner path below to begin your disciplined, daily study."
                 ctaLabel="Explore paths"
-                onCta={() => setActiveTab('explore')}
+                onCta={() => setActiveTab('paths')}
               />
             )}
 
@@ -745,7 +794,7 @@ function PathshalaContent() {
                           borderColor: brand,
                         }}
                       >
-                        <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[path.tradition] ?? '📖'}</Text>
+                        <Feather name="book-open" size={18} color={brand} />
                       </View>
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
@@ -872,8 +921,17 @@ function PathshalaContent() {
               </Text>
             </View>
           </View>
-        ) : (
+        ) : activeTab === 'paths' ? (
           <View style={{ gap: 16 }}>
+            <View style={{ gap: 4 }}>
+              <Text style={{ ...TYPE.section, letterSpacing: 1.1, textTransform: 'uppercase', color: brand }}>
+                Sacred Paths
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 19, color: dim }}>
+                Browse structured learning paths, sorted by your tradition and level.
+              </Text>
+            </View>
+
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {(['all', 'beginner', 'intermediate', 'advanced'] as const).map((option) => (
                 <PressableSurface
@@ -918,6 +976,118 @@ function PathshalaContent() {
                 />
               );
             })}
+          </View>
+        ) : (
+          <View style={{ gap: 16 }}>
+            <View
+              style={{
+                borderRadius: 26,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                padding: 18,
+                gap: 12,
+                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+              }}
+            >
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.brandSoft,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                }}
+              >
+                <Feather name="search" size={22} color={brand} />
+              </View>
+              <View style={{ gap: 5 }}>
+                <Text style={{ ...TYPE.cardHeading, color: text }}>Explore Pathshala</Text>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: dim }}>
+                  Saved verses, insights, and beginner routes in one quiet study shelf.
+                </Text>
+              </View>
+            </View>
+
+            {EXPLORE_CARDS.map((item) => (
+              <PressableSurface
+                key={item.id}
+                haptic="selection"
+                accessibilityLabel={`Open ${item.title}`}
+                onPress={() => {
+                  if ('href' in item) {
+                    router.push(item.href);
+                  } else if ('filter' in item) {
+                    setDifficulty(item.filter);
+                    setActiveTab('paths');
+                  }
+                }}
+                style={{
+                  borderRadius: 24,
+                  backgroundColor: cardBg,
+                  borderWidth: 1,
+                  borderColor: border,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 14,
+                  boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 18,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.brandSoft,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                  }}
+                >
+                  <Feather name={item.icon} size={19} color={brand} />
+                </View>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
+                    {item.title}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17, color: dim }} numberOfLines={2}>
+                    {item.description}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={dim} />
+              </PressableSurface>
+            ))}
+
+            <View style={{ gap: 12 }}>
+              <Text style={{ ...TYPE.section, letterSpacing: 1.1, textTransform: 'uppercase', color: brand }}>
+                Recommended Next
+              </Text>
+              {sortedPaths.slice(0, 3).map((path) => {
+                const enrollment = progressMap.get(path.id);
+                const progressPct = enrollment
+                  ? Math.round((((enrollment.completed_lessons ?? []).length || 0) / path.total_lessons) * 100)
+                  : 0;
+                return (
+                  <PathCard
+                    key={path.id}
+                    path={path}
+                    progressPct={progressPct}
+                    onPress={() => {
+                      if (enrollment) {
+                        openPath(path);
+                      } else {
+                        void enroll(path);
+                      }
+                    }}
+                  />
+                );
+              })}
+            </View>
           </View>
         )}
       </ScrollView>
