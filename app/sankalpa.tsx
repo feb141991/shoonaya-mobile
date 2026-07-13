@@ -22,7 +22,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
@@ -463,8 +463,8 @@ export default function SankalpaScreen() {
             end={{ x: 1, y: 1 }}
             style={{ padding: 18, gap: 8 }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 19, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="sun" size={22} color={theme.brand} />
+            <View style={{ width: 48, height: 48, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="sun" size={24} color={theme.brand} />
             </View>
             <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
             <Text style={{ ...TYPE.body, color: theme.dim }}>
@@ -477,8 +477,8 @@ export default function SankalpaScreen() {
           <>
             <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                  <View style={{ width: 44, height: 44, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name="sun" size={20} color={theme.brand} />
+                  <View style={{ width: 48, height: 48, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="sun" size={24} color={theme.brand} />
                 </View>
                 <Text style={{ ...TYPE.cardHeading, flex: 1, color: theme.text }}>
                   {sankalpa.text}
@@ -594,7 +594,21 @@ export default function SankalpaScreen() {
             <Button
               label="Mark complete"
               loading={completing}
-              onPress={() => { void handleComplete(); }}
+              onPress={() => {
+                // Confirm first — this is a one-way action (loadSankalpa()
+                // clears the active vow back to null on success) — matching
+                // the confirm-before-irreversible-action pattern already
+                // established elsewhere in the app (e.g. profile.tsx's
+                // openAvatarActions destructive confirm).
+                Alert.alert(
+                  'Complete this Sankalpa?',
+                  'This marks your vow as fulfilled and ends it. This cannot be undone.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Complete', onPress: () => { void handleComplete(); } },
+                  ]
+                );
+              }}
             />
           </>
         ) : (

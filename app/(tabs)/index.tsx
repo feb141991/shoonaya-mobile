@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
+  Alert,
   Animated,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -15,12 +17,17 @@ import {
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
 import { fetchMoodStatus, type MoodStatus } from '@/lib/mood';
 import { findMoodConfig } from '@/lib/mood-registry';
+import { heroThemeOptionsFor } from '@/lib/heroThemes';
+import { supabase } from '@/lib/supabase';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -42,6 +49,11 @@ import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
+
+// Local-only hero background pick, mirroring PWA's localStorage key
+// 'shoonaya_hero_pick' (HeroSection.tsx) — a manual preset choice is never
+// written to the server, only an actual upload is (profiles.cover_url).
+const HERO_OVERRIDE_STORAGE_KEY = 'shoonaya_hero_override_url';
 
 // /api/native/home-summary currently sends Nitya Karma and Pathshala with
 // the same green (#5aaa38), so the two rows read as indistinguishable in
@@ -463,6 +475,16 @@ function HomeContent() {
   const [state, setState] = useState<HomeSummary>(INITIAL_STATE);
   const [loadError, setLoadError] = useState(false);
   const [practicesOpen, setPracticesOpen] = useState(false);
+  // Hero background editor — see the "Hero background" block below for the
+  // upload/preset-pick handlers. localHeroOverride mirrors PWA's
+  // `customCover` local-state pattern (HeroSection.tsx): a preset pick is
+  // local-only (AsyncStorage, never written to the server, same as PWA's
+  // localStorage-only `shoonaya_hero_pick`), while an upload both persists
+  // to profiles.cover_url (so it survives reinstall/other devices) and
+  // updates this local override immediately for optimistic display.
+  const [localHeroOverride, setLocalHeroOverride] = useState<string | null>(null);
+  const [heroPickerOpen, setHeroPickerOpen] = useState(false);
+  const [heroBusy, setHeroBusy] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [moodStatus, setMoodStatus] = useState<MoodStatus | null>(null);
 
@@ -491,8 +513,109 @@ function HomeContent() {
     [isDark]
   );
 
-  const heroImageUrl = resolveAssetUrl(state.hero.imageUrl);
-  const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
+  // localHeroOverride (a raw resolved URL, not a theme id) always wins when
+  // set — it represents either an uploaded photo (already public) or a
+  // manually-picked preset. Falls back to state.hero.imageUrl, which the
+  // backend already resolves through the full tradition/festival/DB-asset
+  // engine (see /api/native/home-summary's resolveHomeHeroTheme call).
+  const heroImageUrl = resolveAssetUrl(localHeroOverride ?? state.hero.imageUrl);
+  const avatarImageUrl = resolveAssetUrl(state.profile.avatarUrl);
+
+  useEffect(() => {
+    AsyncStorage.getItem(HERO_OVERRIDE_STORAGE_KEY)
+      .then((saved) => { if (saved) setLocalHeroOverride(saved); })
+      .catch(() => {});
+  }, []);
+
+  const pickHeroPreset = useCallback(async (imageUrl: string) => {
+    const resolved = resolveAssetUrl(imageUrl);
+    setLocalHeroOverride(resolved);
+    setHeroPickerOpen(false);
+    try {
+      await AsyncStorage.setItem(HERO_OVERRIDE_STORAGE_KEY, resolved ?? '');
+    } catch {
+      // Non-fatal — the pick still applies for this session even if it
+      // doesn't persist across restarts.
+    }
+  }, []);
+
+  const resetHeroToDefault = useCallback(async () => {
+    setHeroBusy(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('profiles').update({ cover_url: null }).eq('id', user.id);
+      }
+      setLocalHeroOverride(null);
+      await AsyncStorage.removeItem(HERO_OVERRIDE_STORAGE_KEY);
+      setHeroPickerOpen(false);
+    } catch (err) {
+      Alert.alert('Could not reset background', err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setHeroBusy(false);
+    }
+  }, []);
+
+  const uploadCustomHero = useCallback(async () => {
+    if (heroBusy) return;
+    setHeroBusy(true);
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Allow photo access to set a custom background.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.85,
+        base64: true,
+      });
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+      if (!asset?.base64) throw new Error('Could not read selected image');
+      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+        throw new Error('Photo must be under 5 MB');
+      }
+
+      const contentType = asset.mimeType ?? 'image/jpeg';
+      if (!contentType.startsWith('image/')) throw new Error('Please select an image file');
+      const extension = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('You need to be signed in to update your background');
+
+      // Same bucket + path convention as PWA's handleCoverUpload
+      // (HeroSection.tsx): reuses the 'avatars' Storage bucket under a
+      // profiles/{userId}/home_cover_{timestamp} prefix rather than a
+      // dedicated bucket.
+      const path = `profiles/${user.id}/home_cover_${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, decode(asset.base64), { contentType, upsert: true, cacheControl: '3600' });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = data.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ cover_url: publicUrl })
+        .eq('id', user.id);
+      if (updateError) throw updateError;
+
+      setLocalHeroOverride(publicUrl);
+      await AsyncStorage.setItem(HERO_OVERRIDE_STORAGE_KEY, publicUrl);
+      setHeroPickerOpen(false);
+    } catch (err) {
+      Alert.alert('Background update failed', err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setHeroBusy(false);
+    }
+  }, [heroBusy]);
 
   const panchang = useMemo(
     () => calculatePanchang(
@@ -700,6 +823,31 @@ function HomeContent() {
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_READABILITY_HEIGHT }}
           />
 
+          {/* Hero background editor trigger — bottom-right of the hero photo,
+              matching PWA's Images-icon button position (HeroSection.tsx).
+              Opens the picker sheet (presets + upload), see heroPickerOpen
+              Modal below the closing SafeAreaView. */}
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Change home background"
+            onPress={() => setHeroPickerOpen(true)}
+            style={{
+              position: 'absolute',
+              right: 16,
+              bottom: 16,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.heroOverlay,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+            }}
+          >
+            <Feather name="image" size={16} color={theme.text} />
+          </PressableSurface>
+
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <PressableSurface
               haptic="selection"
@@ -749,9 +897,9 @@ function HomeContent() {
                 justifyContent: 'center',
                 flexDirection: 'row',
                 gap: 6,
-                backgroundColor: COLORS.homePwaObservanceBg,
+                backgroundColor: theme.heroOverlay,
                 borderWidth: 1,
-                borderColor: COLORS.homePwaObservanceBorder,
+                borderColor: theme.borderSoft,
               }}
             >
               {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
@@ -769,7 +917,7 @@ function HomeContent() {
                     >
                       <MoodGlyph
                         mood={moodStatus.lastMood}
-                        color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaObservanceText}
+                        color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? theme.text}
                         size={13}
                       />
                     </View>
@@ -781,7 +929,7 @@ function HomeContent() {
                       ...TYPE.chip,
                       fontSize: 11,
                       lineHeight: 14,
-                      color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
+                      color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || theme.text,
                     }}
                     numberOfLines={1}
                   >
@@ -794,7 +942,7 @@ function HomeContent() {
                     ...TYPE.chip,
                     fontSize: 11,
                     lineHeight: 14,
-                    color: COLORS.homePwaObservanceText,
+                    color: theme.text,
                   }}
                   numberOfLines={1}
                 >
@@ -803,53 +951,38 @@ function HomeContent() {
               )}
             </PressableSurface>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {/* Karma pill removed from here per request — karma points are
-                  still visible on Profile. Replaced with a Panchang quick-
-                  access icon, matching the bell's circular treatment. */}
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Open today's Panchang"
-                onPress={() => navigate('/panchang')}
-                style={{
-                  width: MIN_TOUCH_TARGET,
-                  height: MIN_TOUCH_TARGET,
-                  borderRadius: 22,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                }}
-              >
-                <Feather name="calendar" size={18} color={theme.text} />
-              </PressableSurface>
-
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Open profile"
-                onPress={() => navigate('/(tabs)/profile')}
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                  overflow: 'hidden',
-                }}
-              >
-                {relicImageUrl ? (
-                  <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
-                ) : (
-                  <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
-                    {state.profile.firstName.charAt(0)}
-                  </Text>
-                )}
-              </PressableSurface>
-            </View>
+            {/* Calendar/Panchang icon removed from here per request — Panchang
+                stays reachable via its own tile in the Sadhana grid below.
+                Karma pill was already removed from here in an earlier pass;
+                karma points remain visible on Profile. Profile button now
+                shows the user's real avatar photo (state.profile.avatarUrl,
+                already returned by /api/native/home-summary but previously
+                unused here) instead of the relic emblem, matching PWA's
+                hero-header avatar. */}
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Open profile"
+              onPress={() => navigate('/(tabs)/profile')}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: theme.heroOverlay,
+                borderWidth: 2,
+                borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.45)',
+                overflow: 'hidden',
+              }}
+            >
+              {avatarImageUrl ? (
+                <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              ) : (
+                <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
+                  {state.profile.firstName.charAt(0)}
+                </Text>
+              )}
+            </PressableSurface>
           </View>
 
           {/* PWA (HeroSection.tsx) stacks city -> greeting -> pill with only
@@ -1001,23 +1134,29 @@ function HomeContent() {
                 {state.nextPractice.suggestion}
               </Text>
             </View>
-            <View style={{ alignItems: 'flex-end', gap: 6 }}>
-              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={theme.brand} track={theme.ringTrack} size={30} />
-              <View
-                style={{
-                  minHeight: 28,
-                  borderRadius: 999,
-                  paddingHorizontal: 9,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.soft,
-                }}
-              >
-                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.brand }} numberOfLines={1}>
-                  {state.nextPractice.progress >= 1 ? 'All' : state.nextPractice.actionLabel.replace(/^Go to /, '')}
-                </Text>
-              </View>
-            </View>
+            {/* Gold gradient CTA pill, matching PWA's "Smart Daily Sadhana
+                CTA" button treatment (HeroSection.tsx getDailySadhanaCta) —
+                replaces the ring+chip pairing, which read as a status
+                summary rather than PWA's clear tap-to-continue affordance. */}
+            <LinearGradient
+              colors={['#c89b43', '#a97725']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                minHeight: 34,
+                borderRadius: 999,
+                paddingHorizontal: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                flexShrink: 0,
+              }}
+            >
+              <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: '#FFF8EB' }} numberOfLines={1}>
+                {state.nextPractice.progress >= 1 ? 'View all' : state.nextPractice.actionLabel.replace(/^Go to /, '')}
+              </Text>
+              <Feather name="chevron-right" size={14} color="#FFF8EB" />
+            </LinearGradient>
           </PressableSurface>
 
           <View
@@ -1370,6 +1509,104 @@ function HomeContent() {
 
         </View>
       </ScrollView>
+
+      {/* Hero background picker sheet — presets + custom upload, native port
+          of PWA's HeroSection.tsx heroPicker bottom sheet. Preset picks are
+          local-only (AsyncStorage), uploads persist to profiles.cover_url —
+          see pickHeroPreset/uploadCustomHero/resetHeroToDefault above. */}
+      <Modal
+        visible={heroPickerOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setHeroPickerOpen(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' }}
+          onPress={() => setHeroPickerOpen(false)}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: theme.card,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              paddingHorizontal: 20,
+              paddingTop: 18,
+              paddingBottom: 32,
+              gap: 16,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Change background</Text>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Close"
+                onPress={() => setHeroPickerOpen(false)}
+                style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.soft }}
+              >
+                <Feather name="x" size={16} color={theme.dim} />
+              </PressableSurface>
+            </View>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {heroThemeOptionsFor(state.profile.tradition).map((option) => (
+                <PressableSurface
+                  key={option.id}
+                  haptic="selection"
+                  disabled={heroBusy}
+                  accessibilityLabel={option.label}
+                  onPress={() => { void pickHeroPreset(option.heroImage); }}
+                  style={{ width: '31%', aspectRatio: 1, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: theme.border }}
+                >
+                  <Image source={{ uri: resolveAssetUrl(option.heroImage) ?? undefined }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                  <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, paddingVertical: 4, alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+                    <Text style={{ ...TYPE.micro, color: '#FFF' }} numberOfLines={1}>{option.label}</Text>
+                  </View>
+                </PressableSurface>
+              ))}
+            </View>
+
+            <PressableSurface
+              haptic="selection"
+              disabled={heroBusy}
+              accessibilityLabel="Upload a custom photo"
+              onPress={() => { void uploadCustomHero(); }}
+              style={{
+                minHeight: 48,
+                borderRadius: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+              }}
+            >
+              {heroBusy ? (
+                <ActivityIndicator size="small" color={theme.brand} />
+              ) : (
+                <>
+                  <Feather name="upload" size={16} color={theme.brand} />
+                  <Text style={{ ...TYPE.label, fontFamily: FONTS.sansSemiBold, color: theme.brand }}>Upload custom photo</Text>
+                </>
+              )}
+            </PressableSurface>
+
+            {localHeroOverride ? (
+              <PressableSurface
+                haptic="selection"
+                disabled={heroBusy}
+                accessibilityLabel="Reset to default background"
+                onPress={() => { void resetHeroToDefault(); }}
+                style={{ minHeight: 40, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ ...TYPE.caption, color: theme.dim }}>Reset to default</Text>
+              </PressableSurface>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
