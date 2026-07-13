@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
@@ -42,6 +43,8 @@ export function QuizSparkCard() {
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const quizGlow = isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight;
+  const quizBorder = COLORS.tilePurpleBorder;
 
   const [status, setStatus] = useState<Status>('loading');
   const [quiz, setQuiz] = useState<DailyQuiz | null>(null);
@@ -126,43 +129,73 @@ export function QuizSparkCard() {
       accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
       onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
       style={{
-        minHeight: 70,
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 11,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
+        minHeight: 94,
+        borderRadius: 22,
+        padding: 1,
+        overflow: 'hidden',
         backgroundColor: cardBg,
         borderWidth: 1,
-        borderColor: border,
-        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        borderColor: quizBorder || border,
+        boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
       }}
     >
-      <View
+      <LinearGradient
+        colors={[
+          isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight,
+          isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
+          minHeight: 92,
+          borderRadius: 21,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+          gap: 14,
         }}
       >
-        <SacredIcon name="quiz" fallbackGlyph="help-circle" size={16} color={brand} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }}>
-          {title}
-        </Text>
-        <Text style={{ marginTop: 3, ...TYPE.label, fontFamily: FONTS.sansSemiBold, color: text }} numberOfLines={1}>
-          {quiz.question}
-        </Text>
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: brand }}>Play</Text>
-        <Feather name="arrow-right" size={14} color={brand} />
-      </View>
+        <View
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 20,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: quizGlow,
+            borderWidth: 1,
+            borderColor: quizBorder,
+          }}
+        >
+          <SacredIcon name="quiz" fallbackGlyph="help-circle" size={34} color={brand} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...TYPE.section, color: brand }}>
+            {title}
+          </Text>
+          <Text style={{ marginTop: 5, ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: text }} numberOfLines={2}>
+            {quiz.question}
+          </Text>
+          <Text style={{ marginTop: 5, ...TYPE.caption, color: dim }} numberOfLines={1}>
+            One question. One clear dharmic reflection.
+          </Text>
+        </View>
+        <View
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 18,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.authGoldWellBg,
+            borderWidth: 1,
+            borderColor: quizBorder,
+          }}
+        >
+          <Feather name="arrow-right" size={18} color={brand} />
+        </View>
+      </LinearGradient>
     </PressableSurface>
   );
 }

@@ -904,7 +904,7 @@ function HomeContent() {
               borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.homeShlokaGlassBorderLight,
             }}
           >
-            <Text style={{ ...TYPE.chip, letterSpacing: 2.1, textTransform: 'uppercase', color: theme.brand }}>
+            <Text style={{ ...TYPE.chip, letterSpacing: 2.1, textTransform: 'uppercase', color: theme.brand, textAlign: 'center', alignSelf: 'center' }}>
               {state.sacredText.label}
             </Text>
             <Text
@@ -945,95 +945,65 @@ function HomeContent() {
             <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
           ) : null}
 
-          <View
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel={`${state.nextPractice.contextLabel}: ${state.nextPractice.title}. ${state.nextPractice.actionLabel}`}
+            onPress={() => {
+              if (state.nextPractice.progress >= 1) {
+                setPracticesOpen(true);
+                return;
+              }
+              navigate(actionRoute);
+            }}
             style={{
-              borderRadius: 18,
-              padding: 12,
+              minHeight: 70,
+              borderRadius: 17,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
               backgroundColor: theme.glass,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 11,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
-              <View
-                style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 13,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.soft,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                }}
-              >
-                <SacredIcon
-                  name={nextPracticeRow?.id ?? 'japa'}
-                  fallbackGlyph={nextPracticeIcon}
-                  size={17}
-                  color={nextPracticeColor}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
-                  {state.nextPractice.contextLabel}
-                </Text>
-                <Text style={{ marginTop: 4, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
-                  {state.nextPractice.title}
-                </Text>
-                <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                  {state.nextPractice.suggestion}
-                </Text>
-              </View>
-              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={theme.brand} track={theme.ringTrack} />
-            </View>
-
-            {state.nextPractice.nudge ? (
-              <Text style={{ marginTop: 8, ...TYPE.micro, color: theme.dim }} numberOfLines={1}>
-                {state.nextPractice.nudge}
-              </Text>
-            ) : null}
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={state.nextPractice.actionLabel}
-              onPress={() => {
-                if (state.nextPractice.progress >= 1) {
-                  // Day complete — "View all practices" should show the
-                  // in-page practice list, not deep-link into one practice.
-                  setPracticesOpen(true);
-                  return;
-                }
-                navigate(actionRoute);
-              }}
+            <View
               style={{
-                marginTop: 10,
-                minHeight: 44,
+                width: 34,
+                height: 34,
                 borderRadius: 13,
-                overflow: 'hidden',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: theme.soft,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
               }}
             >
-              <LinearGradient
-                colors={[theme.brand, isDark ? COLORS.brandPrimaryStrongDark : COLORS.brandPrimaryStrongLight]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  minHeight: 44,
-                  paddingHorizontal: 16,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 8,
-                }}
-              >
-                <Text style={{ color: isDark ? COLORS.darkBg : COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
-                  {state.nextPractice.actionLabel}
-                </Text>
-                <Feather name="arrow-right" size={17} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
-              </LinearGradient>
-            </Pressable>
-          </View>
+              <SacredIcon
+                name={nextPracticeRow?.id ?? 'japa'}
+                fallbackGlyph={nextPracticeIcon}
+                size={18}
+                color={nextPracticeColor}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: theme.brand }} numberOfLines={1}>
+                {state.nextPractice.contextLabel}
+              </Text>
+              <Text style={{ marginTop: 2, fontFamily: FONTS.serifBold, fontSize: 18, lineHeight: 22, color: theme.text }} numberOfLines={1}>
+                {state.nextPractice.title}
+              </Text>
+              <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 14, color: theme.dim }} numberOfLines={1}>
+                {state.nextPractice.suggestion}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'center', gap: 5 }}>
+              <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={theme.brand} track={theme.ringTrack} size={30} />
+              <Feather name="arrow-right" size={15} color={theme.brand} />
+            </View>
+          </PressableSurface>
 
           <View
             style={{
@@ -1058,7 +1028,7 @@ function HomeContent() {
                 gap: 12,
               }}
             >
-              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }} numberOfLines={1}>
+              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -1070,16 +1040,16 @@ function HomeContent() {
             </Pressable>
 
             {practicesOpen ? (
-              <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 7 }}>
+              <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 6 }}>
                 {state.practices.map((row) => (
                   <PressableSurface
                     key={row.id}
                     accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                     onPress={() => navigate(resolveNativeRoute(row.href))}
                     style={{
-                      minHeight: 54,
+                      minHeight: 44,
                       borderRadius: 14,
-                      paddingHorizontal: 12,
+                      paddingHorizontal: 10,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1089,30 +1059,30 @@ function HomeContent() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
                       <View
                         style={{
-                          width: 38,
-                          height: 38,
-                          borderRadius: 14,
+                          width: 30,
+                          height: 30,
+                          borderRadius: 12,
                           alignItems: 'center',
                           justifyContent: 'center',
                           backgroundColor: theme.iconWell,
                         }}
                       >
-                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={17} color={PRACTICE_COLOR[row.id]} />
+                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={15} color={PRACTICE_COLOR[row.id]} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: theme.text }} numberOfLines={1}>
                           {row.label}
                         </Text>
-                        <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+                        <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 10.5, lineHeight: 13, color: theme.dim }} numberOfLines={1}>
                           {row.streak && row.streak > 0 ? `${row.detail} · ${row.streak} day streak` : row.detail}
                         </Text>
                       </View>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, lineHeight: 12, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
                         {row.done ? 'Done' : 'Start'}
                       </Text>
-                      <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} />
+                      <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} size={26} />
                     </View>
                   </PressableSurface>
                 ))}
@@ -1239,7 +1209,7 @@ function HomeContent() {
               were hard to discover. Keep them as contextual Home access
               rather than adding a sixth bottom tab. */}
           <View style={{ marginTop: 12 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>
               Jyotish & Panchang
             </Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -1248,18 +1218,21 @@ function HomeContent() {
                   label: 'Panchang',
                   href: '/panchang',
                   icon: '📅',
+                  sacredId: 'panchang' as SacredIconName,
                   fallbackGlyph: 'calendar' as const,
                 },
                 {
                   label: 'Rashiphal',
                   href: '/rashiphala',
-                  icon: '✨',
+                  icon: '🔮',
+                  sacredId: null,
                   fallbackGlyph: 'star' as const,
                 },
                 {
                   label: 'Kundali',
                   href: '/kundali',
-                  icon: '🪐',
+                  icon: '🌌',
+                  sacredId: null,
                   fallbackGlyph: 'circle' as const,
                 },
               ]).map((item) => (
@@ -1269,9 +1242,9 @@ function HomeContent() {
                   onPress={() => navigate(item.href as Href)}
                   style={{
                     flex: 1,
-                    minHeight: 112,
+                    minHeight: 136,
                     borderRadius: 22,
-                    paddingVertical: 14,
+                    paddingVertical: 16,
                     paddingHorizontal: 8,
                     backgroundColor: theme.glass,
                     borderWidth: 1,
@@ -1283,18 +1256,22 @@ function HomeContent() {
                 >
                   <View
                     style={{
-                      width: 58,
-                      height: 58,
-                      borderRadius: 22,
+                      width: 92,
+                      height: 92,
+                      borderRadius: 34,
                       alignItems: 'center',
                       justifyContent: 'center',
                       backgroundColor: theme.iconWell,
                       marginBottom: 9,
                     }}
                   >
-                    <Text style={{ fontSize: 32, lineHeight: 38 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      {item.icon}
-                    </Text>
+                    {item.sacredId ? (
+                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={66} color={theme.brand} />
+                    ) : (
+                      <Text style={{ fontSize: 58, lineHeight: 66 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                        {item.icon}
+                      </Text>
+                    )}
                   </View>
                   <Text style={{ ...TYPE.label, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
                     {item.label}
@@ -1306,38 +1283,38 @@ function HomeContent() {
 
           {/* Quick Actions Row */}
           <View style={{ marginTop: 12 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Sadhana</Text>
+            <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Sadhana</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {([
                 { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold,   bg: isDark ? COLORS.tileGoldBgDark   : COLORS.tileGoldBgLight,   border: COLORS.tileGoldBorder },
                 { label: 'Quiz',     href: '/quiz',        icon: '🧠', sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
                 { label: 'AI Guide', href: '/ai-chat',     icon: '✨', sacredId: null,                         fallbackGlyph: null,                   accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
-                { label: 'Progress', href: '/my-progress', icon: '📈', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'bar-chart-2' as const, accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
+                { label: 'Progress', href: '/my-progress', icon: '📊', sacredId: null,                         fallbackGlyph: null,                   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
               ]).map(item => (
                 <PressableSurface
                   key={item.label}
                   accessibilityLabel={item.label}
                   onPress={() => navigate(item.href as Href)}
                   pressedStyle={{ transform: [{ scale: 0.94 }] }}
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: item.bg,
-                    borderRadius: 22,
-                    paddingVertical: 14,
-                    minWidth: 104,
-                    minHeight: 100,
-                    borderWidth: 1,
-                    borderColor: item.border,
-                  }}
-                >
-                  {item.sacredId && item.fallbackGlyph ? (
-                    <View style={{ marginBottom: 8, height: 44, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={42} color={item.accent} />
-                    </View>
-                  ) : (
-                    <Text style={{ fontSize: 38, lineHeight: 44, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
-                  )}
+	                  style={{
+	                    alignItems: 'center',
+	                    justifyContent: 'center',
+	                    backgroundColor: item.bg,
+	                    borderRadius: 22,
+	                    paddingVertical: 16,
+	                    minWidth: 132,
+	                    minHeight: 138,
+	                    borderWidth: 1,
+	                    borderColor: item.border,
+	                  }}
+	                >
+	                  {item.sacredId && item.fallbackGlyph ? (
+	                    <View style={{ marginBottom: 10, height: 76, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+	                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={72} color={item.accent} />
+	                    </View>
+	                  ) : (
+	                    <Text style={{ fontSize: 68, lineHeight: 76, marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+	                  )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
                     {item.label}
                   </Text>
@@ -1348,10 +1325,10 @@ function HomeContent() {
 
           {/* Community Row */}
           <View style={{ marginTop: 12, marginBottom: 12 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Community</Text>
+            <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Community</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {([
-                { label: 'Live Darshan', href: '/live-darshan',    icon: '📺', sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
+                { label: 'Live Darshan', href: '/live-darshan',    icon: '🛕', sacredId: null,                                  fallbackGlyph: null,             accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
                 { label: 'Mandali',      href: '/(tabs)/mandali',  icon: '👥', sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
@@ -1368,25 +1345,25 @@ function HomeContent() {
                   accessibilityLabel={item.label}
                   onPress={() => navigate(item.href as Href)}
                   pressedStyle={{ transform: [{ scale: 0.94 }] }}
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: item.bg,
-                    borderRadius: 22,
-                    paddingVertical: 14,
-                    minWidth: 112,
-                    minHeight: 100,
-                    borderWidth: 1,
-                    borderColor: item.border,
-                  }}
-                >
-                  {item.sacredId && item.fallbackGlyph ? (
-                    <View style={{ marginBottom: 8, height: 44, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={42} color={item.accent} />
-                    </View>
-                  ) : (
-                    <Text style={{ fontSize: 38, lineHeight: 44, marginBottom: 8 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
-                  )}
+	                  style={{
+	                    alignItems: 'center',
+	                    justifyContent: 'center',
+	                    backgroundColor: item.bg,
+	                    borderRadius: 22,
+	                    paddingVertical: 16,
+	                    minWidth: 132,
+	                    minHeight: 138,
+	                    borderWidth: 1,
+	                    borderColor: item.border,
+	                  }}
+	                >
+	                  {item.sacredId && item.fallbackGlyph ? (
+	                    <View style={{ marginBottom: 10, height: 76, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+	                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={72} color={item.accent} />
+	                    </View>
+	                  ) : (
+	                    <Text style={{ fontSize: 68, lineHeight: 76, marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+	                  )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
                     {item.label}
                   </Text>
