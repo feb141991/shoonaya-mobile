@@ -317,6 +317,7 @@ export default function ProfileScreen() {
   const [reportLoading, setReportLoading] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
   const [email, setEmail] = useState('');
@@ -372,6 +373,7 @@ export default function ProfileScreen() {
     };
 
     setProfile(nextProfile);
+    setAvatarFailed(false);
 
     if (nextProfile) {
       setEditState({
@@ -751,10 +753,11 @@ export default function ProfileScreen() {
   const lifeStageLabel = profile.life_stage ? (LIFE_STAGE_LABELS[profile.life_stage] ?? profile.life_stage) : 'Ashrama';
   const highlights = progressData?.highlights;
   const avatarSource = profile.avatar_url
-    ? { uri: profile.avatar_url }
+    ? { uri: profile.avatar_url.startsWith('http') ? profile.avatar_url : `${API_BASE}${profile.avatar_url}` }
     : relicImage
       ? { uri: relicImage }
       : null;
+  const displayAvatarSource = avatarFailed ? (relicImage ? { uri: relicImage } : null) : avatarSource;
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
@@ -846,8 +849,13 @@ export default function ProfileScreen() {
                 borderColor: theme.accent,
               }}
             >
-              {avatarSource ? (
-                <Image source={avatarSource} style={{ width: 124, height: 124 }} />
+              {displayAvatarSource ? (
+                <Image
+                  source={displayAvatarSource}
+                  style={{ width: 124, height: 124 }}
+                  resizeMode="cover"
+                  onError={() => setAvatarFailed(true)}
+                />
               ) : (
                 <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 48 }}>{initials}</Text>
               )}
@@ -859,11 +867,11 @@ export default function ProfileScreen() {
               disabled={avatarUploading}
               style={{
                 position: 'absolute',
-                right: 0,
-                bottom: 6,
-                width: 52,
-                height: 52,
-                borderRadius: 18,
+                right: 2,
+                bottom: 8,
+                width: 48,
+                height: 48,
+                borderRadius: 17,
                 backgroundColor: theme.brand,
                 alignItems: 'center',
                 justifyContent: 'center',

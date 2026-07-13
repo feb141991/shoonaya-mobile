@@ -13,6 +13,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
@@ -21,7 +22,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
@@ -447,18 +448,36 @@ export default function SankalpaScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <BackButton />
 
-        <View>
-          <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
-          <Text style={{ ...TYPE.body, marginTop: 4, color: theme.dim }}>
-            {sankalpa ? 'Your active vow' : 'Set an intention to hold for a fixed number of days'}
-          </Text>
+        <View
+          style={{
+            borderRadius: 28,
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+          }}
+        >
+          <LinearGradient
+            colors={isDark ? [COLORS.cardBgDark, COLORS.selectionWellDark] : [COLORS.cardBgLight, COLORS.brandSoftLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 18, gap: 8 }}
+          >
+            <View style={{ width: 48, height: 48, borderRadius: 19, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="sun" size={22} color={theme.brand} />
+            </View>
+            <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>
+              {sankalpa ? 'Your active vow, held one day at a time.' : 'Set an intention to hold for a fixed number of days.'}
+            </Text>
+          </LinearGradient>
         </View>
 
         {sankalpa ? (
           <>
-            <Card tone="auto" elevated style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 14 }}>
+            <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name="sun" size={20} color={theme.brand} />
                 </View>
                 <Text style={{ ...TYPE.cardHeading, flex: 1, color: theme.text }}>
@@ -579,7 +598,7 @@ export default function SankalpaScreen() {
             />
           </>
         ) : (
-          <Card tone="auto" elevated style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 16 }}>
+            <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 16, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
             {loadingSuggestions ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <ActivityIndicator size="small" color={theme.brand} />

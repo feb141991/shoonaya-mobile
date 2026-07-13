@@ -617,15 +617,6 @@ export default function MandaliScreen() {
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </PressableSurface>
 
-        <View style={{ flexDirection: 'row', backgroundColor: theme.card, borderRadius: 12, padding: 4, marginHorizontal: 16 }}>
-          <View style={{ flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: theme.bg, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>Local Feed</Text>
-          </View>
-          <PressableSurface haptic="selection" onPress={() => router.push('/vichaar-sabha')} accessibilityLabel="Switch to Global Sabha" style={{ minHeight: 0, flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Global Sabha</Text>
-          </PressableSurface>
-        </View>
-
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: theme.text, ...TYPE.screenTitle }}>{profile?.mandaliName ?? 'Mandali'}</Text>

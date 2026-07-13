@@ -488,25 +488,7 @@ function PathshalaContent() {
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 5,
-                    borderRadius: 999,
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                    backgroundColor: theme.chipFill,
-                  }}
-                >
-                  <Text style={{ fontSize: 11 }}>{sacredText.icon === '\u0950' ? '📖' : sacredText.icon}</Text>
-                  <Text style={{ ...TYPE.chip, letterSpacing: 1, textTransform: 'uppercase', color: theme.chipText }} numberOfLines={1}>
-                    {sacredText.source || sacredText.label} · Today
-                  </Text>
-                </View>
-              </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
               <PressableSurface
                 haptic="selection"
                 accessibilityLabel="Share today's verse"
