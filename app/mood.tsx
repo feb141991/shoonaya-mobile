@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
+  Alert,
   Animated,
   Pressable,
   ScrollView,
@@ -18,7 +19,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { resolveNativeRoute } from '@/lib/routes';
@@ -37,6 +38,56 @@ const TIME_OPTIONS = [
   { key: 'medium', label: 'About 15 minutes',      desc: 'A meaningful session',           emoji: '🕐' },
   { key: 'open',   label: 'I have all the time',   desc: 'Deep immersion today',           emoji: '∞' },
 ] as const;
+
+const RECOMMENDATION_TIME: Record<string, string> = {
+  stotram: '3min',
+  katha: '5min',
+  dhyana: '10min',
+  discover: '5min',
+  japa: '8min',
+  pathshala: '5min',
+  nitya: '10min',
+};
+
+const RECOMMENDATION_ICON: Record<string, keyof typeof Feather.glyphMap> = {
+  stotram: 'music',
+  katha: 'book-open',
+  dhyana: 'circle',
+  discover: 'compass',
+  japa: 'repeat',
+  pathshala: 'layers',
+  nitya: 'sunrise',
+  darshan: 'radio',
+  mandali: 'users',
+  seva: 'heart',
+};
+
+const FIXED_RECOMMENDATIONS: Recommendation[] = [
+  {
+    id: 'fixed-darshan',
+    title: 'Live Darshan',
+    description: 'Witness sacred aarti live',
+    href: '/live-darshan',
+    type: 'darshan',
+    duration: 'Live',
+  },
+  {
+    id: 'fixed-mandali',
+    title: 'Talk to Sangat',
+    description: 'Share with your community',
+    href: '/mandali',
+    type: 'mandali',
+    duration: 'Community',
+  },
+  {
+    id: 'fixed-seva',
+    title: 'Do Seva',
+    description: 'Turn your mood into service',
+    href: '/seva',
+    type: 'seva',
+    duration: 'Seva',
+  },
+];
 
 const QUICK_CHIPS = [
   { label: 'Japa', href: '/japa' },
@@ -189,6 +240,41 @@ export default function MoodScreen() {
     setFetchingRecs(false);
   };
 
+  const handleMoodOnly = async () => {
+    if (!selectedMood) return;
+    setLoading(true);
+    try {
+      let id = checkinId;
+      if (!id) {
+        id = await startMoodCheckin(selectedMood.key);
+        if (id) setCheckinId(id);
+      }
+
+      if (!id) {
+        Alert.alert('Could not save mood', 'Check your connection and try again.');
+        return;
+      }
+
+      const saved = await completeMoodSession(id, 'mood_only');
+      if (!saved) {
+        Alert.alert('Could not save mood', 'Check your connection and try again.');
+        return;
+      }
+
+      setMoodStatus({
+        hasCompletedToday: true,
+        hasDismissedToday: false,
+        openSession: null,
+        lastCompletedMood: selectedMood.key,
+        hasLoggedMoodToday: true,
+        lastMood: selectedMood.key,
+      });
+      setStep(4);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRecClick = async (rec: Recommendation) => {
     setActionClicked(true);
     if (checkinId) {
@@ -239,6 +325,48 @@ export default function MoodScreen() {
     } else {
       Linking.openURL(rec.href).catch(() => {});
     }
+  };
+
+  const renderRecommendationCard = (rec: Recommendation, index: number, compact = false) => {
+    const activeMoodForCard = compact ? afterMood ?? selectedMood : selectedMood ?? afterMood;
+    const accent = activeMoodForCard?.colour ?? theme.brand;
+    const soft = activeMoodForCard?.bg ?? theme.brandSoft;
+    const icon = RECOMMENDATION_ICON[rec.type] ?? 'sparkles';
+    const time = rec.duration ?? RECOMMENDATION_TIME[rec.type] ?? '5 min';
+
+    return (
+      <PressableSurface
+        key={`${rec.id}-${index}`}
+        haptic="selection"
+        accessibilityLabel={`Open ${rec.title}`}
+        onPress={() => compact ? handleReturnRecClick(rec) : handleRecClick(rec)}
+        style={[
+          styles.pathCard,
+          {
+            width: compact ? 168 : 154,
+            backgroundColor: soft,
+            borderColor: `${accent}26`,
+            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+          },
+        ]}
+      >
+        <View style={[styles.pathIcon, { backgroundColor: `${accent}18`, borderColor: `${accent}30` }]}>
+          <Feather name={icon} size={16} color={accent} />
+        </View>
+        <Text style={[styles.pathBadge, { color: accent }]} numberOfLines={1}>
+          {time}
+        </Text>
+        <Text style={[styles.pathTitle, { color: theme.text }]} numberOfLines={2}>
+          {rec.title}
+        </Text>
+        <Text style={[styles.pathDesc, { color: theme.dim }]} numberOfLines={2}>
+          {rec.description}
+        </Text>
+        <Text style={[styles.pathAction, { color: accent }]} numberOfLines={1}>
+          Open →
+        </Text>
+      </PressableSurface>
+    );
   };
 
   const renderBackButton = (onPress?: () => void) => (
@@ -561,6 +689,29 @@ export default function MoodScreen() {
                 </Card>
               </PressableSurface>
             ))}
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Save mood without recommendations"
+              onPress={handleMoodOnly}
+              disabled={loading}
+              style={[
+                styles.moodOnlyButton,
+                {
+                  backgroundColor: selectedMood?.bg ?? theme.card,
+                  borderColor: selectedMood?.colour ?? theme.premiumBorder,
+                  opacity: loading ? 0.6 : 1,
+                },
+              ]}
+            >
+              <View style={[styles.moodOnlyIcon, { backgroundColor: `${selectedMood?.colour ?? theme.brand}18` }]}>
+                <Feather name="check" size={16} color={selectedMood?.colour ?? theme.brand} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.moodOnlyTitle, { color: theme.text }]}>Just set my mood</Text>
+                <Text style={[styles.moodOnlyDesc, { color: theme.dim }]}>Save today&apos;s mood without recommendations</Text>
+              </View>
+              {loading ? <ActivityIndicator size="small" color={selectedMood?.colour ?? theme.brand} /> : null}
+            </PressableSurface>
           </View>
         )}
 
@@ -625,14 +776,9 @@ export default function MoodScreen() {
                 {returnRecsLoading ? (
                   <ActivityIndicator size="small" color={theme.brand} style={{ marginVertical: SPACING.lg }} />
                 ) : returnRecs.length > 0 ? (
-                  returnRecs.map(rec => (
-                    <PressableSurface key={rec.id} haptic="selection" onPress={() => handleReturnRecClick(rec)}>
-                      <Card tone="auto" style={[styles.recCard, { borderColor: afterMood.colour, borderWidth: 1 }]}>
-                        <Text style={[styles.recTitle, { color: theme.text }]}>{rec.title}</Text>
-                        <Text style={[styles.recDesc, { color: theme.dim }]}>{rec.description}</Text>
-                      </Card>
-                    </PressableSurface>
-                  ))
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pathRail}>
+                    {returnRecs.map((rec, index) => renderRecommendationCard(rec, index, true))}
+                  </ScrollView>
                 ) : null}
 
                 <PressableSurface
@@ -670,28 +816,22 @@ export default function MoodScreen() {
                 No recommendations found for this mood right now.
               </Text>
             ) : (
-              recommendationItems.map(rec => (
-                <PressableSurface key={rec.id} haptic="selection" onPress={() => handleRecClick(rec)}>
-                  <Card tone="auto" style={[styles.recCard, { borderColor: selectedMood?.colour, borderWidth: 1 }]}>
-                    <Text style={[styles.recTitle, { color: theme.text }]}>
-                      {rec.title}
-                    </Text>
-                    <Text style={[styles.recDesc, { color: theme.dim }]}>
-                      {rec.description}
-                    </Text>
-                    <View style={styles.recMeta}>
-                      <Text style={[styles.recMetaText, { color: selectedMood?.colour }]}>
-                        {rec.type.toUpperCase()}
-                      </Text>
-                      {rec.duration && (
-                        <Text style={[styles.recMetaText, { color: theme.dim }]}>
-                          • {rec.duration}
-                        </Text>
-                      )}
+              <>
+                <View style={styles.pathIntro}>
+                  {selectedMood ? (
+                    <View style={[styles.glyphContainer, { backgroundColor: selectedMood.bg, width: 46, height: 46, borderRadius: 23, marginBottom: 0 }]}>
+                      <MoodGlyph mood={selectedMood.key} color={selectedMood.colour} size={23} />
                     </View>
-                  </Card>
-                </PressableSurface>
-              ))
+                  ) : null}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.pathIntroTitle, { color: theme.text }]}>A small path for this mood</Text>
+                    <Text style={[styles.pathIntroDesc, { color: theme.dim }]}>Choose one practice, or finish after simply naming the mood.</Text>
+                  </View>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pathRail}>
+                  {[...recommendationItems.slice(0, 4), ...FIXED_RECOMMENDATIONS].map((rec, index) => renderRecommendationCard(rec, index))}
+                </ScrollView>
+              </>
             )}
 
             {!fetchingRecs && (
@@ -937,6 +1077,88 @@ const styles = StyleSheet.create({
   timeDesc: {
     fontFamily: FONTS.sans,
     fontSize: 14,
+  },
+  moodOnlyButton: {
+    minHeight: MIN_TOUCH_TARGET,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: SPACING.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  moodOnlyIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moodOnlyTitle: {
+    ...TYPE.body,
+    fontFamily: FONTS.sansSemiBold,
+  },
+  moodOnlyDesc: {
+    ...TYPE.caption,
+    marginTop: 2,
+  },
+  pathIntro: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  pathIntroTitle: {
+    ...TYPE.body,
+    fontFamily: FONTS.sansSemiBold,
+  },
+  pathIntroDesc: {
+    ...TYPE.caption,
+    marginTop: 2,
+  },
+  pathRail: {
+    gap: SPACING.md,
+    paddingRight: SPACING.xl,
+    paddingVertical: SPACING.xs,
+  },
+  pathCard: {
+    minHeight: 178,
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: SPACING.md,
+    overflow: 'hidden',
+  },
+  pathIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  pathBadge: {
+    ...TYPE.chip,
+    textTransform: 'uppercase',
+    letterSpacing: 1.4,
+    marginBottom: SPACING.xs,
+  },
+  pathTitle: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 13,
+    lineHeight: 17,
+    marginBottom: 4,
+  },
+  pathDesc: {
+    fontFamily: FONTS.sans,
+    fontSize: 11,
+    lineHeight: 15,
+    flex: 1,
+  },
+  pathAction: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 11,
+    marginTop: SPACING.sm,
   },
   recCard: {
     padding: SPACING.xl,
