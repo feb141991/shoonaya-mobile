@@ -256,7 +256,7 @@ He established the practice of 'Langar' (community kitchen) where kings and paup
     tradition: 'hindu',
     region: 'Kalady, Kerala',
     regionLocal: 'कालड़ी, केरल',
-    emoji: '🕉️',
+    emoji: '🪷',
     tagline: 'He walked the length of India at 16 and rebuilt an entire civilisation of thought.',
     taglineLocal: '१६ वर्ष की आयु में पूरे भारत की पदयात्रा कर उन्होंने भारतीय दर्शन को पुनर्जीवित किया।',
     journey:
@@ -521,7 +521,7 @@ Vivekananda walked the length of India alone, seeing the poverty and the spiritu
 // ── Tradition Metadata ─────────────────────────────────────────────────────
 
 export const TRADITION_META: Record<string, { label: string; labelLocal: string; dharmVeerLocal: string; emoji: string; color: string }> = {
-  hindu:    { label: 'Sanatan Dharma', labelLocal: 'सनातन धर्म', dharmVeerLocal: 'धर्म वीर', emoji: '🕉️', color: 'rgba(255, 120, 0, 0.12)' },
+  hindu:    { label: 'Sanatan Dharma', labelLocal: 'सनातन धर्म', dharmVeerLocal: 'धर्म वीर', emoji: '🪷', color: 'rgba(255, 120, 0, 0.12)' },
   sikh:     { label: 'Sikhi',          labelLocal: 'ਸਿੱਖੀ',     dharmVeerLocal: 'ਧਰਮ ਵੀਰ', emoji: '☬', color: 'rgba(0, 100, 255, 0.12)' },
   buddhist: { label: 'Buddha Dhamma',  labelLocal: 'बुद्ध धम्म', dharmVeerLocal: 'धर्म वीर', emoji: '☸️', color: 'rgba(255, 200, 0, 0.12)' },
   jain:     { label: 'Jain Dharma',    labelLocal: 'जैन धर्म',   dharmVeerLocal: 'धर्म वीर', emoji: '🤲', color: 'rgba(0, 200, 50, 0.12)' },

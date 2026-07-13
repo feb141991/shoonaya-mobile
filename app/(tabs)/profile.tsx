@@ -138,10 +138,10 @@ const INITIAL_EDIT: EditState = {
 };
 
 const TRADITION_META: Record<Tradition, { label: string; emoji: string }> = {
-  hindu: { label: 'Hindu', emoji: '🕉️' },
+  hindu: { label: 'Hindu', emoji: '🪷' },
   sikh: { label: 'Sikh', emoji: '☬' },
   buddhist: { label: 'Buddhist', emoji: '☸️' },
-  jain: { label: 'Jain', emoji: '卐' },
+  jain: { label: 'Jain', emoji: '🤲' },
 };
 
 const LIFE_STAGE_LABELS: Record<string, string> = {

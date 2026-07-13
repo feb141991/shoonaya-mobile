@@ -165,7 +165,7 @@ export default function VichaarSabhaScreen() {
         </Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
-          {[{ value: 'all', label: 'All', emoji: '🕉️' }, ...FORUM_CATEGORIES].map((cat) => {
+          {[{ value: 'all', label: 'All', emoji: '✨' }, ...FORUM_CATEGORIES].map((cat) => {
             const active = activeCategory === cat.value;
             return (
               <PressableSurface

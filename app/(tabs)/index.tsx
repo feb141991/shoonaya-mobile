@@ -180,7 +180,7 @@ const INITIAL_STATE: HomeSummary = {
   },
   sacredText: {
     label: "Today's Verse",
-    icon: 'ॐ',
+    icon: '📖',
     original: 'वसुधैव कुटुम्बकम्',
     transliteration: 'Vasudhaiva Kutumbakam',
     meaning: 'The whole world is one family, a reminder to act with kinship and dignity.',

@@ -5,10 +5,10 @@ import type { PathshalaPath } from '@/lib/pathshala-types';
 import { COLORS, FONTS } from '@/lib/constants';
 
 const TRADITION_EMOJI: Record<string, string> = {
-  hindu: '🕉️',
+  hindu: '🪷',
   sikh: '☬',
   buddhist: '☸️',
-  jain: '卐',
+  jain: '🤲',
 };
 
 type PathCardProps = {

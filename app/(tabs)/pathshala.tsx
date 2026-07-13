@@ -76,11 +76,6 @@ type SacredText = {
   source: string;
 };
 
-type Observance = {
-  emoji: string | null;
-  label: string;
-} | null;
-
 function isPathshalaPath(value: unknown): value is PathshalaPath {
   if (!value || typeof value !== 'object') {
     return false;
@@ -111,10 +106,10 @@ function parsePathsResponse(value: unknown): PathshalaPath[] {
 }
 
 const TRADITION_EMOJI: Record<string, string> = {
-  hindu: '🕉️',
+  hindu: '🪷',
   sikh: '☬',
   buddhist: '☸️',
-  jain: '卐',
+  jain: '🤲',
 };
 
 // Mirrors PWA's TRADITION_SEAT map (PathshalaClient.tsx) — the tradition-
@@ -153,7 +148,6 @@ function PathshalaContent() {
   const [paths, setPaths] = useState<PathshalaPath[]>([]);
   const [tradition, setTradition] = useState<string>('hindu');
   const [sacredText, setSacredText] = useState<SacredText | null>(null);
-  const [observance, setObservance] = useState<Observance>(null);
   const [sharing, setSharing] = useState(false);
   const dataLoadedRef = useRef(false);
   const shareCardRef = useRef<View | null>(null);
@@ -190,7 +184,6 @@ function PathshalaContent() {
       if (summaryRes.ok) {
         const summaryJson = (await summaryRes.json()) as {
           sacredText?: Partial<SacredText>;
-          panchang?: { observance?: { emoji: string | null; label: string } | null };
         };
         if (summaryJson.sacredText?.original) {
           setSacredText({
@@ -202,7 +195,6 @@ function PathshalaContent() {
             source: summaryJson.sacredText.source ?? '',
           });
         }
-        setObservance(summaryJson.panchang?.observance ?? null);
       }
 
       if (!pathsRes.ok) {
@@ -415,7 +407,7 @@ function PathshalaContent() {
               backgroundColor: theme.cardSoft,
             }}
           >
-            <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[tradition] ?? '🕉️'}</Text>
+            <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[tradition] ?? '📖'}</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ ...TYPE.screenTitle, color: text }}>Pathshala</Text>
@@ -496,24 +488,8 @@ function PathshalaContent() {
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                  borderRadius: 999,
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  backgroundColor: theme.chipFill,
-                }}
-              >
-                <Text style={{ fontSize: 11 }}>{sacredText.icon}</Text>
-                <Text style={{ ...TYPE.chip, letterSpacing: 1, textTransform: 'uppercase', color: theme.chipText }} numberOfLines={1}>
-                  {sacredText.source || sacredText.label} · Today
-                </Text>
-              </View>
-              {observance ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View
                   style={{
                     flexDirection: 'row',
@@ -522,20 +498,38 @@ function PathshalaContent() {
                     borderRadius: 999,
                     paddingHorizontal: 10,
                     paddingVertical: 5,
-                    backgroundColor: COLORS.homePwaObservanceBg,
-                    borderWidth: 1,
-                    borderColor: COLORS.homePwaObservanceBorder,
+                    backgroundColor: theme.chipFill,
                   }}
                 >
-                  <Text style={{ fontSize: 11, lineHeight: 14 }}>{observance.emoji ?? '🌙'}</Text>
-                  <Text
-                    style={{ ...TYPE.chip, fontSize: 11, lineHeight: 14, color: COLORS.homePwaObservanceText }}
-                    numberOfLines={1}
-                  >
-                    {observance.label}
+                  <Text style={{ fontSize: 11 }}>{sacredText.icon === '\u0950' ? '📖' : sacredText.icon}</Text>
+                  <Text style={{ ...TYPE.chip, letterSpacing: 1, textTransform: 'uppercase', color: theme.chipText }} numberOfLines={1}>
+                    {sacredText.source || sacredText.label} · Today
                   </Text>
                 </View>
-              ) : null}
+              </View>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Share today's verse"
+                disabled={sharing}
+                onPress={() => { void shareVerse(); }}
+                style={{
+                  width: 44,
+                  height: 44,
+                  minHeight: 44,
+                  borderRadius: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.cardSoft,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                }}
+              >
+                {sharing ? (
+                  <ActivityIndicator color={brand} size="small" />
+                ) : (
+                  <Feather name="share-2" size={17} color={brand} />
+                )}
+              </PressableSurface>
             </View>
 
             <Text style={{ ...TYPE.shloka, color: text }}>{sacredText.original}</Text>
@@ -544,32 +538,6 @@ function PathshalaContent() {
                 {sacredText.meaning}
               </Text>
             ) : null}
-
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Share today's verse"
-              disabled={sharing}
-              onPress={() => { void shareVerse(); }}
-              style={{
-                alignSelf: 'flex-start',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-                borderRadius: 999,
-                paddingHorizontal: 14,
-                minHeight: MIN_TOUCH_TARGET,
-                backgroundColor: theme.cardSoft,
-                borderWidth: 1,
-                borderColor: theme.borderSoft,
-              }}
-            >
-              {sharing ? (
-                <ActivityIndicator color={brand} size="small" />
-              ) : (
-                <Feather name="share-2" size={14} color={brand} />
-              )}
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Share this verse</Text>
-            </PressableSurface>
           </View>
         ) : null}
 
@@ -579,14 +547,14 @@ function PathshalaContent() {
             backgroundColor: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
             borderWidth: 1,
             borderColor: border,
-            padding: 6,
+            padding: 4,
             flexDirection: 'row',
-            gap: 6,
+            gap: 4,
           }}
         >
           {([
-            ['progress', 'My Progress'],
-            ['explore', 'Explore'],
+            ['progress', 'Progress'],
+            ['explore', 'Paths'],
           ] as const).map(([key, label]) => {
             const active = activeTab === key;
             return (
@@ -596,8 +564,8 @@ function PathshalaContent() {
                 haptic="selection"
                 style={{
                   flex: 1,
-                  borderRadius: 18,
-                  paddingVertical: 12,
+                  borderRadius: 16,
+                  paddingVertical: 9,
                   alignItems: 'center',
                   backgroundColor: active ? cardBg : 'transparent',
                 }}
@@ -605,7 +573,8 @@ function PathshalaContent() {
                 <Text
                   style={{
                     fontFamily: FONTS.sansSemiBold,
-                    fontSize: 13,
+                    fontSize: 12,
+                    letterSpacing: 0.2,
                     color: active ? brand : dim,
                   }}
                 >
@@ -626,7 +595,7 @@ function PathshalaContent() {
         ) : activeTab === 'progress' ? (
           <View style={{ gap: 18 }}>
             <Text style={{ ...TYPE.section, letterSpacing: 1.1, textTransform: 'uppercase', color: brand }}>
-              {seatLabel}
+              {seatLabel.replace('Your Seat · ', '')}
             </Text>
 
             {primaryPath ? (

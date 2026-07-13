@@ -101,7 +101,7 @@ function getSacredSymbol(tradition: string | null) {
   if (tradition === 'sikh') return 'ੴ';
   if (tradition === 'buddhist') return '☸';
   if (tradition === 'jain') return '☮';
-  return 'ॐ';
+  return '🪷';
 }
 
 function getCompletionTitle(tradition: string | null) {
