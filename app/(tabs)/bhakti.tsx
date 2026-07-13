@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
+import type { SacredIconName } from '@/components/ui/SacredIcon';
+import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Surface } from '@/components/ui/Surface';
 import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
@@ -83,13 +84,7 @@ function StatPill({ icon, label, brand }: { icon: keyof typeof Feather.glyphMap;
 export default function BhaktiScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
-  const theme = useMemo(
-    () => ({
-      ...themeColor(isDark),
-      iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
-    }),
-    [isDark]
-  );
+  const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   const [tradition, setTradition] = useState('hindu');
   const [japaStreak, setJapaStreak] = useState(0);
@@ -171,18 +166,7 @@ export default function BhaktiScreen() {
                 style={{ width: '48%' }}
               >
                 <Card tone="auto" style={{ gap: 12 }}>
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: RADII.md,
-                      backgroundColor: theme.iconWell,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <SacredIcon name={card.id} fallbackGlyph={card.fallbackGlyph} size={20} color={theme.brand} />
-                  </View>
+                  <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
                   <View style={{ gap: 4 }}>
                     <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{card.label}</Text>
                     <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>

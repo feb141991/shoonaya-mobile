@@ -8,7 +8,7 @@ import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { SacredIcon } from '@/components/ui/SacredIcon';
+import { IconTile } from '@/components/ui/IconTile';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 
@@ -158,20 +158,7 @@ export function MoodCheckin() {
           Check in with yourself today.
         </Text>
       </View>
-      <View
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 19,
-          backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
-        }}
-      >
-        <SacredIcon name="mood" fallbackGlyph="smile" size={18} color={brand} />
-      </View>
+      <IconTile name="mood" fallbackGlyph="smile" size="sm" color={brand} />
     </PressableSurface>
   );
 }

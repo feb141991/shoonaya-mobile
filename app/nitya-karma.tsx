@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { SacredIcon } from '@/components/ui/SacredIcon';
+import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -389,20 +389,7 @@ export default function NityaKarmaHubScreen() {
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                  <View
-                    style={{
-                      width: 58,
-                      height: 58,
-                      borderRadius: 22,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: theme.brandSoft,
-                      borderWidth: 1,
-                      borderColor: theme.premiumBorder,
-                    }}
-                  >
-                    <SacredIcon name="nitya" fallbackGlyph="sunrise" size={24} color={theme.brand} />
-                  </View>
+                  <IconTile name="nitya" fallbackGlyph="sunrise" size="lg" color={theme.brand} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Dincharya</Text>
                     <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3 }}>
@@ -459,9 +446,7 @@ export default function NityaKarmaHubScreen() {
                   boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                 }}
               >
-                <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-                  <SacredIcon name="japa" fallbackGlyph="disc" size={21} color={theme.brand} />
-                </View>
+                <IconTile name="japa" fallbackGlyph="disc" size="md" color={theme.brand} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Sadhana Patha</Text>
                   <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>

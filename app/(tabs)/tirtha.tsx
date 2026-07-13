@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 
 import { TempleCard } from '@/components/tirtha/TempleCard';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { SacredIcon } from '@/components/ui/SacredIcon';
+import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -370,18 +370,7 @@ export default function TirthaScreen() {
               gap: 12,
             }}
           >
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
-              }}
-            >
-              <SacredIcon name="live-darshan" fallbackGlyph="radio" size={18} color={brand} />
-            </View>
+            <IconTile name="live-darshan" fallbackGlyph="radio" size="md" color={brand} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Live Darshan</Text>
               <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 12, color: dim }}>

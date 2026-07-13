@@ -26,6 +26,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
+import { IconTile } from '@/components/ui/IconTile';
+import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { QuizSparkCard } from '@/components/home/QuizSparkCard';
@@ -467,7 +469,6 @@ function HomeContent() {
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       shadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
       ringTrack: isDark ? COLORS.homeRingTrackDark : COLORS.homeRingTrackLight,
-      iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
       // PWA's brand-primary is theme-aware, not one static value: light mode
       // uses a deeper terracotta while dark mode keeps the softer gold.
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
@@ -1033,18 +1034,7 @@ function HomeContent() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                      <View
-                        style={{
-                          width: 30,
-                          height: 30,
-                          borderRadius: 12,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: theme.iconWell,
-                        }}
-                      >
-                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={15} color={PRACTICE_COLOR[row.id]} />
-                      </View>
+                      <IconTile name={row.id} fallbackGlyph={row.icon} size="sm" color={PRACTICE_COLOR[row.id]} accent={PRACTICE_COLOR[row.id]} />
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: theme.text }} numberOfLines={1}>
                           {row.label}
@@ -1093,18 +1083,7 @@ function HomeContent() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-              <View
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 14,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.iconWell,
-                }}
-              >
-                <SacredIcon name="dharmveer" fallbackGlyph={dharmVeerIcon} size={18} color={dharmVeerColor} />
-              </View>
+              <IconTile name="dharmveer" fallbackGlyph={dharmVeerIcon} size="sm" color={dharmVeerColor} accent={dharmVeerColor} />
               <View style={{ flex: 1 }}>
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                   Dharm Veer
@@ -1230,23 +1209,26 @@ function HomeContent() {
                     justifyContent: 'center',
                   }}
                 >
-                  <View
-                    style={{
-                      width: 92,
-                      height: 92,
-                      borderRadius: 34,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: theme.iconWell,
-                      marginBottom: 9,
-                    }}
-                  >
-                    {item.sacredId ? (
-                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={66} color={theme.brand} />
+                  <View style={{ marginBottom: 9 }}>
+                    {item.sacredId && item.fallbackGlyph ? (
+                      <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="xl" color={theme.brand} />
                     ) : (
-                      <Text style={{ fontSize: 58, lineHeight: 66 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                        {item.icon}
-                      </Text>
+                      <View
+                        style={{
+                          width: ICON_WELL.xl.box,
+                          height: ICON_WELL.xl.box,
+                          borderRadius: ICON_WELL.xl.radius,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: iconWellColor(isDark).bg,
+                          borderWidth: 1,
+                          borderColor: iconWellColor(isDark).border,
+                        }}
+                      >
+                        <Text style={{ fontSize: 58, lineHeight: 66 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                          {item.icon}
+                        </Text>
+                      </View>
                     )}
                   </View>
                   <Text style={{ ...TYPE.label, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
