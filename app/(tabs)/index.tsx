@@ -306,10 +306,12 @@ function ProgressRing({
 
 function PanchangPill({
   panchang,
+  summary,
   selectedDateIso,
   theme,
 }: {
   panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
+  summary: HomeSummary['panchang'];
   selectedDateIso: string;
   theme: { heroOverlay: string; borderSoft: string; text: string; brand: string };
 }) {
@@ -323,7 +325,35 @@ function PanchangPill({
     return () => sub.remove();
   }, []);
 
-  const total = 3;
+  const slides = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: { key: string; icon: string; label: string }[] = [];
+    const add = (row: { key: string; icon: string; label: string } | null) => {
+      if (!row?.label) return;
+      const normalized = row.label.trim().toLowerCase();
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      rows.push(row);
+    };
+
+    add(summary.observance ? {
+      key: 'observance',
+      icon: summary.observance.emoji ?? '🪔',
+      label: summary.observance.label,
+    } : null);
+    add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
+    add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
+    add({ key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` });
+    add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
+    add({ key: 'date', icon: '📅', label: getDateLabel(selectedDateIso) });
+
+    return rows;
+  }, [panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, selectedDateIso, summary.festivalLabel, summary.observance, summary.vratLabel]);
+  const total = slides.length;
+
+  useEffect(() => {
+    setIdx((current) => (total > 0 ? current % total : 0));
+  }, [total]);
 
   useEffect(() => {
     // Reduced motion means calm, not just "no fade" — auto-cycling on a
@@ -331,7 +361,7 @@ function PanchangPill({
     // not auto-advancing at all when reduced motion is on; the pill stays on
     // one slide until the user explicitly taps (handleCycle below, which
     // already skips the animation in that case too).
-    if (reducedMotion) {
+    if (reducedMotion || total <= 1) {
       return;
     }
     const t = setInterval(() => {
@@ -344,6 +374,7 @@ function PanchangPill({
   }, [fadeAnim, reducedMotion, total]);
 
   const handleCycle = useCallback(() => {
+    if (total <= 1) return;
     if (reducedMotion) {
       setIdx((i) => (i + 1) % total);
     } else {
@@ -352,14 +383,9 @@ function PanchangPill({
         Animated.timing(fadeAnim, { toValue: 1, duration: 100, useNativeDriver: true }).start();
       });
     }
-  }, [fadeAnim, reducedMotion]);
+  }, [fadeAnim, reducedMotion, total]);
 
-  const slides: { key: string; icon: string; label: string }[] = [
-    { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` },
-    { key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` },
-    { key: 'date', icon: '📅', label: getDateLabel(selectedDateIso) },
-  ];
-  const currentSlide = slides[idx];
+  const currentSlide = slides[idx] ?? slides[0] ?? { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` };
 
   return (
     <PressableSurface
@@ -830,57 +856,7 @@ function HomeContent() {
             </Text>
 
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6 }}>
-              <PanchangPill panchang={panchang} selectedDateIso={state.date.iso} theme={theme} />
-
-              {state.panchang.observance ? (
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityLabel={`Open calendar, ${state.panchang.observance.label}`}
-                  onPress={() => navigate(state.panchang.observance!.href as Href)}
-                  hitSlop={4}
-                  style={{
-                    minHeight: 36,
-                    borderRadius: 999,
-                    maxWidth: '92%',
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'row',
-                    gap: 6,
-                    backgroundColor: COLORS.homePwaObservanceBg,
-                    borderWidth: 1,
-                    borderColor: COLORS.homePwaObservanceBorder,
-                  }}
-                >
-                  {/* Emoji glyphs bake in their own vertical padding (most
-                      visible on Android), which threw the icon and label off
-                      the same baseline despite the row already being
-                      flexDirection:'row' + alignItems:'center'. Centering
-                      the emoji inside its own fixed-size box, plus disabling
-                      Android's extra text padding on both spans, keeps icon
-                      and label glued to one visual line regardless of the
-                      emoji font's internal metrics. */}
-                  <View style={{ width: 14, height: 14, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 12, includeFontPadding: false, textAlignVertical: 'center' }}>
-                      {state.panchang.observance.emoji}
-                    </Text>
-                  </View>
-                  <Text
-                    style={{
-                      ...TYPE.chip,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      includeFontPadding: false,
-                      textAlignVertical: 'center',
-                      color: COLORS.homePwaObservanceText,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {state.panchang.observance.label}
-                  </Text>
-                </PressableSurface>
-              ) : null}
+              <PanchangPill panchang={panchang} summary={state.panchang} selectedDateIso={state.date.iso} theme={theme} />
             </View>
           </View>
         </View>
