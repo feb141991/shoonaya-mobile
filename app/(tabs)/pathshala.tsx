@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -17,9 +18,11 @@ import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
-import { COLORS, FONTS } from '@/lib/constants';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { type PathshalaPath } from '@/lib/pathshala-types';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch } from '@/lib/api';
@@ -64,6 +67,20 @@ type EnrollmentRow = {
   status: string | null;
 };
 
+type SacredText = {
+  label: string;
+  icon: string;
+  original: string;
+  transliteration: string;
+  meaning: string;
+  source: string;
+};
+
+type Observance = {
+  emoji: string | null;
+  label: string;
+} | null;
+
 function isPathshalaPath(value: unknown): value is PathshalaPath {
   if (!value || typeof value !== 'object') {
     return false;
@@ -100,6 +117,22 @@ const TRADITION_EMOJI: Record<string, string> = {
   jain: '卐',
 };
 
+// Mirrors PWA's TRADITION_SEAT map (PathshalaClient.tsx) — the tradition-
+// aware eyebrow above "Today's Lesson" ("Your Seat · Gurukul" etc.).
+const TRADITION_SEAT: Record<string, string> = {
+  hindu: 'Your Seat · Gurukul',
+  sikh: 'Your Seat · Pathshala',
+  buddhist: 'Your Seat · Dhamma Path',
+  jain: 'Your Seat · Svadhyaya',
+};
+
+// Same 7-dot streak visual PWA ships today — PWA's own `streakDays` array is
+// explicitly a static placeholder (not yet wired to real per-day history;
+// see JapaClient/PathshalaClient source), so mirroring the identical
+// placeholder here keeps native/PWA behavior identical rather than
+// fabricating a native-only "real" streak the backend doesn't track.
+const STREAK_PLACEHOLDER: Array<true | false | 'pending'> = [true, true, true, false, true, true, 'pending'];
+
 function PathshalaContent() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -110,6 +143,7 @@ function PathshalaContent() {
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const theme = themeColor(isDark);
 
   const [activeTab, setActiveTab] = useState<TabKey>('progress');
   const [difficulty, setDifficulty] = useState<DifficultyFilter>('all');
@@ -117,7 +151,12 @@ function PathshalaContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
   const [paths, setPaths] = useState<PathshalaPath[]>([]);
+  const [tradition, setTradition] = useState<string>('hindu');
+  const [sacredText, setSacredText] = useState<SacredText | null>(null);
+  const [observance, setObservance] = useState<Observance>(null);
+  const [sharing, setSharing] = useState(false);
   const dataLoadedRef = useRef(false);
+  const shareCardRef = useRef<View | null>(null);
 
   const scrollRef = useScrollToTop();
 
@@ -140,7 +179,32 @@ function PathshalaContent() {
     }
 
     try {
-      const pathsRes = await apiFetch('/api/pathshala/paths');
+      const [pathsRes, profileResult, summaryRes] = await Promise.all([
+        apiFetch('/api/pathshala/paths'),
+        supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle(),
+        apiFetch('/api/native/home-summary'),
+      ]);
+
+      setTradition(profileResult.data?.tradition ?? 'hindu');
+
+      if (summaryRes.ok) {
+        const summaryJson = (await summaryRes.json()) as {
+          sacredText?: Partial<SacredText>;
+          panchang?: { observance?: { emoji: string | null; label: string } | null };
+        };
+        if (summaryJson.sacredText?.original) {
+          setSacredText({
+            label: summaryJson.sacredText.label ?? "Today's Verse",
+            icon: summaryJson.sacredText.icon ?? '📖',
+            original: summaryJson.sacredText.original,
+            transliteration: summaryJson.sacredText.transliteration ?? '',
+            meaning: summaryJson.sacredText.meaning ?? '',
+            source: summaryJson.sacredText.source ?? '',
+          });
+        }
+        setObservance(summaryJson.panchang?.observance ?? null);
+      }
+
       if (!pathsRes.ok) {
         setPaths([]);
         setEnrollments([]);
@@ -189,6 +253,12 @@ function PathshalaContent() {
     () => paths.filter((path) => progressMap.has(path.id)),
     [paths, progressMap]
   );
+
+  // First enrollment is the "Today's Lesson" hero; the rest render under
+  // "Also enrolled in" — matches PWA's ContinueLearningHero + ActivePathCard
+  // split (PathshalaClient.tsx).
+  const primaryPath = enrolledPaths[0] ?? null;
+  const secondaryPaths = enrolledPaths.slice(1);
 
   const filteredPaths = useMemo(() => {
     if (difficulty === 'all') {
@@ -280,6 +350,23 @@ function PathshalaContent() {
     return 'beginner';
   }, [enrolledPaths]);
 
+  const shareVerse = useCallback(async () => {
+    if (!sacredText || sharing) return;
+    setSharing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      await shareCapturedShoonayaCard(shareCardRef, {
+        fileName: 'shoonaya-pathshala-verse.png',
+        dialogTitle: "Share today's verse",
+        fallbackMessage: `${sacredText.original}\n\n${sacredText.meaning}`,
+      });
+    } finally {
+      setSharing(false);
+    }
+  }, [sacredText, sharing]);
+
+  const seatLabel = TRADITION_SEAT[tradition] ?? TRADITION_SEAT.hindu;
+
   return (
     <Screen style={{ backgroundColor: bg }}>
       <ScrollView
@@ -297,12 +384,158 @@ function PathshalaContent() {
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Pathshala</Text>
-          <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim }}>
-            Scripture learning, daily discipline, and guided study.
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            hitSlop={16}
+            style={{
+              width: 44,
+              height: 44,
+              minHeight: 44,
+              borderRadius: 22,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: cardBg,
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            }}
+          >
+            <Feather name="chevron-left" size={23} color={text} />
+          </PressableSurface>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.cardSoft,
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>{TRADITION_EMOJI[tradition] ?? '🕉️'}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...TYPE.screenTitle, color: text }}>Pathshala</Text>
+            <Text style={{ ...TYPE.caption, color: dim }} numberOfLines={1}>
+              {seatLabel.replace('Your Seat · ', '')} · Sacred Learning
+            </Text>
+          </View>
+          {enrolledPaths.length > 0 ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 7,
+                backgroundColor: theme.cardSoft,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+              }}
+            >
+              <Feather name="award" size={13} color={brand} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
+                {enrolledPaths.length}
+              </Text>
+            </View>
+          ) : null}
         </View>
+
+        {/* Verse of the day — reuses the same sacredText payload as
+            app/shloka.tsx and the Home hero card; presented here with a
+            "Share this verse" action, matching PWA's Pathshala hero section. */}
+        {sacredText ? (
+          <View
+            style={{
+              borderRadius: 24,
+              backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              padding: 18,
+              gap: 12,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            }}
+          >
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  borderRadius: 999,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  backgroundColor: theme.chipFill,
+                }}
+              >
+                <Text style={{ fontSize: 11 }}>{sacredText.icon}</Text>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1, textTransform: 'uppercase', color: theme.chipText }} numberOfLines={1}>
+                  {sacredText.source || sacredText.label} · Today
+                </Text>
+              </View>
+              {observance ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 5,
+                    borderRadius: 999,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    backgroundColor: COLORS.homePwaObservanceBg,
+                    borderWidth: 1,
+                    borderColor: COLORS.homePwaObservanceBorder,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, lineHeight: 14 }}>{observance.emoji ?? '🌙'}</Text>
+                  <Text
+                    style={{ ...TYPE.chip, fontSize: 11, lineHeight: 14, color: COLORS.homePwaObservanceText }}
+                    numberOfLines={1}
+                  >
+                    {observance.label}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            <Text style={{ ...TYPE.shloka, color: text }}>{sacredText.original}</Text>
+            {sacredText.meaning ? (
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, color: dim }}>
+                {sacredText.meaning}
+              </Text>
+            ) : null}
+
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Share today's verse"
+              disabled={sharing}
+              onPress={() => { void shareVerse(); }}
+              style={{
+                alignSelf: 'flex-start',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                borderRadius: 999,
+                paddingHorizontal: 14,
+                minHeight: MIN_TOUCH_TARGET,
+                backgroundColor: theme.cardSoft,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+              }}
+            >
+              {sharing ? (
+                <ActivityIndicator color={brand} size="small" />
+              ) : (
+                <Feather name="share-2" size={14} color={brand} />
+              )}
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Share this verse</Text>
+            </PressableSurface>
+          </View>
+        ) : null}
 
         <View
           style={{
@@ -356,53 +589,144 @@ function PathshalaContent() {
           </View>
         ) : activeTab === 'progress' ? (
           <View style={{ gap: 18 }}>
-            <View
-              style={{
-                borderRadius: 24,
-                backgroundColor: cardBg,
-                borderWidth: 1,
-                borderColor: border,
-                padding: 18,
-                gap: 14,
-              }}
-            >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
-                YOUR GURUKUL
-              </Text>
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
-                Continue your learning
-              </Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim }}>
-                {enrolledPaths.length > 0
-                  ? `You are enrolled in ${enrolledPaths.length} sacred path${enrolledPaths.length === 1 ? '' : 's'}.`
-                  : 'Choose a path and begin disciplined, daily study.'}
-              </Text>
-            </View>
+            <Text style={{ ...TYPE.section, letterSpacing: 1.1, textTransform: 'uppercase', color: brand }}>
+              {seatLabel}
+            </Text>
 
-              {enrolledPaths.length === 0 ? (
-                <EmptyState
-                  emoji="📖"
-                  title="No paths enrolled yet"
-                  subtitle="Choose a beginner path below to begin your disciplined, daily study."
-                  ctaLabel="Explore paths"
-                  onCta={() => setActiveTab('explore')}
-                />
-              ) : enrolledPaths.map((path) => {
-                const enrollment = progressMap.get(path.id);
-                const progressPct = Math.round(
-                  (((enrollment?.completed_lessons ?? []).length || 0) / path.total_lessons) * 100
-                );
+            {primaryPath ? (
+              (() => {
+                const enrollment = progressMap.get(primaryPath.id);
+                const doneCount = (enrollment?.completed_lessons ?? []).length;
+                const resumeLesson = enrollment?.current_lesson ?? doneCount;
+                const progressPct = Math.round((doneCount / primaryPath.total_lessons) * 100);
+
                 return (
-                  <PathCard
-                    key={path.id}
-                    path={path}
-                    progressPct={progressPct}
-                    onPress={() => openPath(path)}
-                  />
-                );
-              })}
+                  <View
+                    style={{
+                      borderRadius: 24,
+                      backgroundColor: cardBg,
+                      borderWidth: 1,
+                      borderLeftWidth: 4,
+                      borderLeftColor: brand,
+                      borderColor: border,
+                      padding: 18,
+                      gap: 12,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: brand }}>
+                      Today&apos;s Lesson
+                    </Text>
+                    <Text style={{ ...TYPE.cardHeading, color: text }}>{primaryPath.title}</Text>
+                    <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
+                      Lesson {Math.min(resumeLesson + 1, primaryPath.total_lessons)} of {primaryPath.total_lessons}
+                    </Text>
 
-            {enrolledPaths.length > 0 ? null : (
+                    <View style={{ gap: 6 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: brand }}>
+                          {progressPct}% Complete
+                        </Text>
+                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: dim }}>
+                          {doneCount}/{primaryPath.total_lessons}
+                        </Text>
+                      </View>
+                      <View style={{ height: 8, borderRadius: 999, backgroundColor: border, overflow: 'hidden' }}>
+                        <View
+                          style={{
+                            width: `${Math.max(0, Math.min(progressPct, 100))}%`,
+                            height: '100%',
+                            backgroundColor: brand,
+                            borderRadius: 999,
+                          }}
+                        />
+                      </View>
+                    </View>
+
+                    <PressableSurface
+                      haptic="selection"
+                      onPress={() => openPath(primaryPath)}
+                      style={{
+                        marginTop: 4,
+                        minHeight: MIN_TOUCH_TARGET,
+                        borderRadius: 16,
+                        backgroundColor: brand,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <Feather name="play" size={14} color={bg} />
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>
+                        {doneCount === 0 ? 'Begin Path' : `Continue · Lesson ${Math.min(resumeLesson + 1, primaryPath.total_lessons)}`}
+                      </Text>
+                    </PressableSurface>
+
+                    <View style={{ gap: 8 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: dim }}>
+                        7-Day Learning Streak
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        {STREAK_PLACEHOLDER.map((state, index) => (
+                          <View
+                            key={index}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 14,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: state === true ? brand : 'transparent',
+                              borderWidth: state === true ? 0 : 1.5,
+                              borderColor: state === 'pending' ? brand : border,
+                              borderStyle: state === 'pending' ? 'dashed' : 'solid',
+                            }}
+                          >
+                            {state === true ? (
+                              <Feather name="check" size={13} color={bg} />
+                            ) : state === 'pending' ? (
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: brand }} />
+                            ) : null}
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })()
+            ) : (
+              <EmptyState
+                emoji="📖"
+                title="No paths enrolled yet"
+                subtitle="Choose a beginner path below to begin your disciplined, daily study."
+                ctaLabel="Explore paths"
+                onCta={() => setActiveTab('explore')}
+              />
+            )}
+
+            {secondaryPaths.length > 0 ? (
+              <View style={{ gap: 12 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: dim }}>
+                  Also enrolled in
+                </Text>
+                {secondaryPaths.map((path) => {
+                  const enrollment = progressMap.get(path.id);
+                  const progressPct = Math.round(
+                    (((enrollment?.completed_lessons ?? []).length || 0) / path.total_lessons) * 100
+                  );
+                  return (
+                    <PathCard
+                      key={path.id}
+                      path={path}
+                      progressPct={progressPct}
+                      onPress={() => openPath(path)}
+                    />
+                  );
+                })}
+              </View>
+            ) : null}
+
+            {primaryPath === null && (
               <View style={{ gap: 12 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim }}>
                   BEGIN YOUR JOURNEY
@@ -610,6 +934,22 @@ function PathshalaContent() {
           </View>
         )}
       </ScrollView>
+
+      {sacredText ? (
+        <View pointerEvents="none" collapsable={false} style={{ position: 'absolute', left: -420, top: 0, opacity: 0.01 }}>
+          <ShoonayaShareCard
+            ref={shareCardRef}
+            data={{
+              tradition,
+              headlineValue: sacredText.source || sacredText.label,
+              title: sacredText.label,
+              subtitle: sacredText.source,
+              caption: sacredText.meaning || sacredText.original,
+              footer: 'Shared from Shoonaya · Pathshala',
+            }}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }

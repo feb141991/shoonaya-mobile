@@ -28,7 +28,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
-import { MoodCheckin } from '@/components/home/MoodCheckin';
+import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
@@ -40,6 +40,20 @@ import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
+
+// /api/native/home-summary currently sends Nitya Karma and Pathshala with
+// the same green (#5aaa38), so the two rows read as indistinguishable in
+// "View all practices" — PWA's own NextPracticeCard ITEM_PALETTE (the
+// source of truth this list should match) gives every practice a distinct
+// colour. Overriding client-side here rather than in the API route, since
+// this is the one place in the app that renders per-practice colour.
+const PRACTICE_COLOR: Record<PracticeId, string> = {
+  japa: '#F59E4A',
+  nitya: '#C5A059',
+  pathshala: '#6BC47E',
+  quiz: '#A594E0',
+  dharmveer: '#FF8A65',
+};
 
 type PracticeRow = {
   id: PracticeId;
@@ -459,12 +473,12 @@ function HomeContent() {
 
   const nextPracticeRow = state.practices.find((row) => row.id === state.nextPractice.id);
   const nextPracticeIcon = nextPracticeRow?.icon ?? 'compass';
-  const nextPracticeColor = nextPracticeRow?.color ?? theme.brand;
+  const nextPracticeColor = nextPracticeRow ? PRACTICE_COLOR[nextPracticeRow.id] : theme.brand;
 
   const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
   const dharmVeerDone = dharmVeerRow?.done ?? false;
   const dharmVeerIcon = dharmVeerRow?.icon ?? 'shield';
-  const dharmVeerColor = dharmVeerRow?.color ?? theme.brand;
+  const dharmVeerColor = PRACTICE_COLOR.dharmveer;
 
   const loadHome = useCallback(async () => {
     setLoadError(false);
@@ -839,12 +853,26 @@ function HomeContent() {
                     borderColor: COLORS.homePwaObservanceBorder,
                   }}
                 >
-                  <Text style={{ fontSize: 12, lineHeight: 14 }}>{state.panchang.observance.emoji}</Text>
+                  {/* Emoji glyphs bake in their own vertical padding (most
+                      visible on Android), which threw the icon and label off
+                      the same baseline despite the row already being
+                      flexDirection:'row' + alignItems:'center'. Centering
+                      the emoji inside its own fixed-size box, plus disabling
+                      Android's extra text padding on both spans, keeps icon
+                      and label glued to one visual line regardless of the
+                      emoji font's internal metrics. */}
+                  <View style={{ width: 14, height: 14, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 12, includeFontPadding: false, textAlignVertical: 'center' }}>
+                      {state.panchang.observance.emoji}
+                    </Text>
+                  </View>
                   <Text
                     style={{
                       ...TYPE.chip,
                       fontSize: 11,
                       lineHeight: 14,
+                      includeFontPadding: false,
+                      textAlignVertical: 'center',
                       color: COLORS.homePwaObservanceText,
                     }}
                     numberOfLines={1}
@@ -1069,7 +1097,7 @@ function HomeContent() {
                           backgroundColor: theme.iconWell,
                         }}
                       >
-                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={17} color={row.color} />
+                        <SacredIcon name={row.id} fallbackGlyph={row.icon} size={17} color={PRACTICE_COLOR[row.id]} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: theme.text }}>
@@ -1081,10 +1109,10 @@ function HomeContent() {
                       </View>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: row.done ? row.color : theme.dim }}>
+                      <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
                         {row.done ? 'Done' : 'Start'}
                       </Text>
-                      <ProgressRing done={row.done} progress={row.progress} color={row.color} track={theme.ringTrack} />
+                      <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} />
                     </View>
                   </PressableSurface>
                 ))}
@@ -1164,7 +1192,7 @@ function HomeContent() {
             )}
           </Pressable>
 
-          <MoodCheckin />
+          <QuizSparkCard />
 
           <PressableSurface
             accessibilityLabel="Open Panchang"

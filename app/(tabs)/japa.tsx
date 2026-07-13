@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   Modal,
   ScrollView,
   Text,
@@ -124,6 +126,13 @@ function formatDuration(totalSeconds: number) {
   return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
 }
 
+// Animated primitives for the bead ring — mirrors PWA's motion.circle pulse
+// ring (JapaClient.tsx: "current-pulse"/"flash ripple") using RN's Animated
+// API + react-native-svg's AnimatedComponent, since Reanimated isn't wired
+// into this screen and the existing scene/mala Animated.timing calls
+// elsewhere in the app already use this same classic-Animated pattern.
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 export default function JapaScreen() {
   const router = useRouter();
   const japaShareCardRef = useRef<View>(null);
@@ -163,6 +172,41 @@ export default function JapaScreen() {
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [durationSecs, setDurationSecs] = useState(0);
 
+  // ── Bead-ring motion — matches PWA's "current-pulse" breathing ring and
+  // per-tap "flash ripple" (JapaClient.tsx), plus a sacred-geometry accent
+  // that reveals itself as completedRounds grows (PWA's <SacredGeometry/>).
+  const [bloomIndex, setBloomIndex] = useState<number | null>(null);
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  const bloomAnim = useRef(new Animated.Value(0)).current;
+  const geometryAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseAnim]);
+
+  useEffect(() => {
+    Animated.timing(geometryAnim, {
+      toValue: Math.min(completedRounds / 3, 1),
+      duration: 650,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [completedRounds, geometryAnim]);
+
+  const triggerBloom = useCallback((index: number) => {
+    setBloomIndex(index);
+    bloomAnim.setValue(0);
+    Animated.timing(bloomAnim, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(() => {
+      setBloomIndex(null);
+    });
+  }, [bloomAnim]);
 
   const malaSkin = useMemo(() => getMalaSkin(selectedMalaId ?? activeSymbolId), [activeSymbolId, selectedMalaId]);
   const mantras = useMemo(() => getJapaMantrasForTradition(tradition), [tradition]);
@@ -405,6 +449,13 @@ export default function JapaScreen() {
     setCount((current) => {
       const next = current >= 108 ? 108 : current + 1;
 
+      // Flash the bead that was just told (index = pre-increment count) —
+      // mirrors PWA's per-tap "flash ripple". Uses `current` from this
+      // updater rather than the outer closure's `count`, since `increment`
+      // is memoized without a `count` dependency (functional setCount is
+      // used precisely to stay stable across renders).
+      triggerBloom(current >= 108 ? 107 : current);
+
       // Start audio on first bead if enabled
       if (next === 1 && mantraAudioEnabled && !mantraAudioActive.current) {
         void startMantraAudio();
@@ -412,7 +463,7 @@ export default function JapaScreen() {
 
       return next;
     });
-  }, [mantraAudioEnabled, saving, startMantraAudio]);
+  }, [mantraAudioEnabled, saving, startMantraAudio, triggerBloom]);
 
   useEffect(() => {
     if (count === 108 && !saving) {
@@ -420,17 +471,27 @@ export default function JapaScreen() {
     }
   }, [completeRound, count, saving]);
 
+  function beadPosition(index: number) {
+    const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
+    return { x: CENTER + Math.cos(angle) * RADIUS, y: CENTER + Math.sin(angle) * RADIUS };
+  }
+
+  // Three-tier bead state (done / current / upcoming) — previously every
+  // non-current bead rendered identically regardless of progress, so the
+  // ring never visibly "filled in" as rounds advanced. Done beads now stay
+  // lit with the richer `grad-done` gradient as the current bead moves on,
+  // giving the same at-a-glance progress read as PWA's bead-done/bead-un
+  // split.
   const beadElements = useMemo(() => {
     const activeIndex = count >= 108 ? 107 : count;
     return Array.from({ length: 108 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
-      const x = CENTER + Math.cos(angle) * RADIUS;
-      const y = CENTER + Math.sin(angle) * RADIUS;
-      const isActive = index === activeIndex;
+      const { x, y } = beadPosition(index);
+      const isDone = index < activeIndex;
+      const isCurrent = index === activeIndex;
       const isSumeru = index === 0;
 
       const r = isSumeru ? 10.5 : 7.5;
-      const gradientId = `grad-${isActive ? 'active' : 'inactive'}`;
+      const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
 
       return (
         <Circle
@@ -439,12 +500,22 @@ export default function JapaScreen() {
           cy={y}
           r={r}
           fill={`url(#${gradientId})`}
-          stroke={isActive ? theme.brand : malaSkin.beadBorder}
-          strokeWidth={isSumeru ? 1.5 : 0.5}
+          stroke={isCurrent ? theme.brand : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
+          strokeWidth={isCurrent ? 1.6 : isSumeru ? 1.5 : 0.5}
+          strokeOpacity={isDone ? 0.9 : 1}
         />
       );
     });
-  }, [count, malaSkin.beadBorder, malaSkin.beadColor]);
+  }, [count, malaSkin.beadBorder, malaSkin.beadColor, theme.brand]);
+
+  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count), [count]);
+  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0), [bloomIndex]);
+
+  const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [11, 17] });
+  const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] });
+  const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 20] });
+  const bloomOpacity = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] });
+  const geometryOpacity = geometryAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
 
   return (
     <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
@@ -455,49 +526,31 @@ export default function JapaScreen() {
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Go back"
-              onPress={() => router.back()}
-              hitSlop={16}
-              style={{
-                width: 44,
-                height: 44,
-                minHeight: 44,
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                backgroundColor: cardBg,
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-              }}
-            >
-              <Feather name="chevron-left" size={23} color={text} />
-            </PressableSurface>
-            <View>
-              <Text style={{ ...TYPE.screenTitle, color: text }}>Japa Mala</Text>
-              <Text style={{ ...TYPE.caption, color: dim }}>{practiceType.replaceAll('_', ' ')} · {malaSkin.label}</Text>
-            </View>
-          </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <PressableSurface
             haptic="selection"
-            onPress={() => router.push('/kosh')}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            hitSlop={16}
             style={{
-              borderRadius: 999,
+              width: 44,
+              height: 44,
+              minHeight: 44,
+              borderRadius: 22,
               borderWidth: 1,
-              borderColor: border,
+              borderColor: theme.premiumBorder,
               backgroundColor: cardBg,
-              minHeight: MIN_TOUCH_TARGET,
-              paddingHorizontal: 14,
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>Kosh</Text>
+            <Feather name="chevron-left" size={23} color={text} />
           </PressableSurface>
+          <View>
+            <Text style={{ ...TYPE.screenTitle, color: text }}>Japa Mala</Text>
+            <Text style={{ ...TYPE.caption, color: dim }}>{practiceType.replaceAll('_', ' ')} · {malaSkin.label}</Text>
+          </View>
         </View>
 
         {loading ? (
@@ -561,8 +614,13 @@ export default function JapaScreen() {
                 <Svg width={SVG_SIZE} height={SVG_SIZE}>
                   <Defs>
                     <RadialGradient id="grad-inactive" cx="30%" cy="30%" r="70%">
-                      <Stop offset="0%" stopColor={malaSkin.beadColor} stopOpacity="1" />
-                      <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+                      <Stop offset="0%" stopColor={malaSkin.beadColor} stopOpacity="0.55" />
+                      <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="0.55" />
+                    </RadialGradient>
+                    <RadialGradient id="grad-done" cx="30%" cy="30%" r="70%">
+                      <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
+                      <Stop offset="35%" stopColor={malaSkin.beadColor} stopOpacity="1" />
+                      <Stop offset="100%" stopColor={theme.brand} stopOpacity="1" />
                     </RadialGradient>
                     <RadialGradient id="grad-active" cx="30%" cy="30%" r="70%">
                       <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
@@ -570,6 +628,31 @@ export default function JapaScreen() {
                       <Stop offset="100%" stopColor={COLORS.brandEarthLight} stopOpacity="1" />
                     </RadialGradient>
                   </Defs>
+
+                  {/* Sacred geometry accent — reveals itself as rounds
+                      complete, echoing PWA's <SacredGeometry/> milestone
+                      unlock without the full layered-triangle asset set. */}
+                  <AnimatedCircle
+                    cx={CENTER}
+                    cy={CENTER}
+                    r={RADIUS - 26}
+                    fill="none"
+                    stroke={COLORS.onMediaWhite}
+                    strokeWidth={1}
+                    strokeDasharray="2 8"
+                    opacity={geometryOpacity}
+                  />
+                  <AnimatedCircle
+                    cx={CENTER}
+                    cy={CENTER}
+                    r={RADIUS - 46}
+                    fill="none"
+                    stroke={COLORS.onMediaWhite}
+                    strokeWidth={1}
+                    strokeDasharray="1 10"
+                    opacity={geometryOpacity}
+                  />
+
                   <Line
                     x1={CENTER}
                     y1={CENTER}
@@ -579,6 +662,34 @@ export default function JapaScreen() {
                     strokeWidth={2}
                   />
                   {beadElements}
+
+                  {/* Breathing pulse ring around the bead currently being
+                      counted — PWA's "current-pulse" motion.circle. */}
+                  {count < 108 ? (
+                    <AnimatedCircle
+                      cx={currentBeadPos.x}
+                      cy={currentBeadPos.y}
+                      r={pulseRadius}
+                      fill="none"
+                      stroke={theme.brand}
+                      strokeWidth={1.5}
+                      opacity={pulseOpacity}
+                    />
+                  ) : null}
+
+                  {/* One-shot flash ripple on the bead just tapped — PWA's
+                      per-tap "flash ripple" burst. */}
+                  {bloomIndex !== null ? (
+                    <AnimatedCircle
+                      cx={bloomBeadPos.x}
+                      cy={bloomBeadPos.y}
+                      r={bloomRadius}
+                      fill="none"
+                      stroke={theme.brand}
+                      strokeWidth={2}
+                      opacity={bloomOpacity}
+                    />
+                  ) : null}
                 </Svg>
                 <View
                   style={{
