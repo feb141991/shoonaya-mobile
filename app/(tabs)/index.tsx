@@ -407,14 +407,13 @@ function PanchangPill({
       onPress={handleCycle}
       hitSlop={4}
       style={{
-        minHeight: 36,
+        minHeight: slides.length > 1 ? 42 : 36,
         borderRadius: 999,
         paddingHorizontal: 12,
-        paddingVertical: 4,
+        paddingVertical: slides.length > 1 ? 5 : 4,
         alignItems: 'center',
         justifyContent: 'center',
-        flexDirection: 'row',
-        gap: 6,
+        gap: 3,
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: COLORS.homePwaObservanceBorder,
@@ -437,7 +436,7 @@ function PanchangPill({
           theme-flipped — the pill always sits over the hero's darkened
           image area in both light and dark mode, same as in PWA. */}
       {slides.length > 1 ? (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, alignSelf: 'center' }}>
         {slides.map((s, i) => (
           <View
             key={s.key}
