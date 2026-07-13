@@ -130,8 +130,6 @@ type ReportHeatmapDay = {
   japa?: boolean;
 };
 
-type ProfileRoute = '/settings' | '/mandali' | '/my-progress' | '/kosh';
-
 const INITIAL_EDIT: EditState = {
   fullName: '',
   sampradaya: '',
@@ -177,6 +175,14 @@ function getKulName(kuls: KulRelation): string | null {
     return kuls[0]?.name ?? null;
   }
   return kuls?.name ?? null;
+}
+
+async function readApiError(response: Response) {
+  const body = await response.json().catch(() => null);
+  if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') {
+    return body.error;
+  }
+  return `Request failed with status ${response.status}`;
 }
 
 function ProgressRing({
@@ -298,60 +304,6 @@ function MetricTile({
   );
 }
 
-function ActionRow({
-  label,
-  subtitle,
-  icon,
-  onPress,
-  loading,
-  theme,
-}: {
-  label: string;
-  subtitle?: string;
-  icon: keyof typeof Feather.glyphMap;
-  onPress: () => void;
-  loading?: boolean;
-  theme: ReturnType<typeof themeColor>;
-}) {
-  return (
-    <PressableSurface
-      accessibilityLabel={subtitle ? `${label}. ${subtitle}` : label}
-      onPress={onPress}
-      disabled={loading}
-      style={{
-        minHeight: 58,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
-        backgroundColor: theme.glass,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-      }}
-    >
-      <View
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 16,
-          backgroundColor: theme.brandSoft,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Feather name={icon} size={17} color={theme.brand} />
-      </View>
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text style={{ ...TYPE.label, color: theme.text }}>{loading ? 'Generating...' : label}</Text>
-        {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim }}>{subtitle}</Text> : null}
-      </View>
-      {loading ? <ActivityIndicator size="small" color={theme.dim} /> : <Feather name="chevron-right" size={18} color={theme.dim} />}
-    </PressableSurface>
-  );
-}
-
 export default function ProfileScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -367,6 +319,7 @@ export default function ProfileScreen() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
+  const [email, setEmail] = useState('');
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -386,6 +339,9 @@ export default function ProfileScreen() {
 
     const payload = (await response.json()) as ProgressSummary;
     setSummary(payload);
+
+    const { data: authData } = await supabase.auth.getUser();
+    setEmail(authData.user?.email ?? '');
 
     const { data: profileRow } = await supabase
       .from('profiles')
@@ -495,11 +451,29 @@ export default function ProfileScreen() {
   };
 
   const updateAvatarUrl = async (avatarUrl: string | null) => {
+    if (!profile) throw new Error('Profile is not loaded');
+
     const response = await apiFetch('/api/native/profile', {
       method: 'PATCH',
       body: JSON.stringify({ avatar_url: avatarUrl }),
     });
-    if (!response.ok) throw new Error('Could not save avatar');
+
+    if (response.ok) return;
+
+    const apiError = await readApiError(response);
+    console.warn('[profile] avatar API save failed; falling back to RLS profile update', apiError);
+
+    // The PWA still writes avatar_url directly under the user's own-row RLS
+    // policy. Keep this fallback so installed native builds do not break when
+    // the production API route has not deployed yet.
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('id', profile.id);
+
+    if (error) {
+      throw new Error(`${apiError}; direct profile save failed: ${error.message}`);
+    }
   };
 
   const pickAvatar = async () => {
@@ -523,6 +497,9 @@ export default function ProfileScreen() {
       if (result.canceled) return;
       const asset = result.assets[0];
       if (!asset?.base64) throw new Error('Could not read selected image');
+      if (asset.fileSize && asset.fileSize > 2 * 1024 * 1024) {
+        throw new Error('Photo must be under 2 MB');
+      }
 
       const contentType = asset.mimeType ?? 'image/jpeg';
       if (!contentType.startsWith('image/')) throw new Error('Please select an image file');
@@ -577,14 +554,17 @@ export default function ProfileScreen() {
   };
 
   const inviteCode = useMemo(() => profile ? profile.id.replace(/-/g, '').slice(0, 8).toUpperCase() : '', [profile]);
+  const firstName = profile?.full_name.trim().split(' ')[0] || 'Seeker';
+  const inviteLink = profile ? `${API_BASE}/invite/${inviteCode.toLowerCase()}` : API_BASE;
+  const pathLabel = profile ? `${TRADITION_META[profile.tradition].label.toUpperCase()} PATH` : 'SHOONAYA PATH';
 
   const copyInvite = async () => {
-    await Clipboard.setStringAsync(inviteCode);
-    Alert.alert('Copied', 'Your invite code is copied to clipboard.');
+    await Clipboard.setStringAsync(inviteLink);
+    Alert.alert('Copied', 'Your invite link is copied to clipboard.');
   };
 
   const shareWhatsApp = async () => {
-    const text = `Join me on Shoonaya. Use my invite code: ${inviteCode}`;
+    const text = `Join me on Shoonaya: ${inviteLink}`;
     const url = `whatsapp://send?text=${encodeURIComponent(text)}`;
     try {
       if (await Linking.canOpenURL(url)) {
@@ -1163,140 +1143,274 @@ export default function ProfileScreen() {
           )}
         </Card>
 
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 12 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ ...TYPE.section, color: theme.brand }}>Lineage</Text>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-                {profile.kul_id ? profile.kul_name : 'Join your Kul'}
-              </Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                {profile.kul_id ? 'Lineage & community' : 'Connect with your heritage'}
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={profile.kul_id ? `Invite to ${profile.kul_name ?? 'Kul'}` : 'Join your Kul'}
+          onPress={() => Alert.alert('Coming Soon', 'Kul features are coming soon.')}
+          style={{
+            minHeight: 86,
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: theme.borderSoft,
+            backgroundColor: theme.card,
+            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+          }}
+        >
+          <View
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: theme.glass,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="shield" size={20} color={theme.dim} />
+          </View>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={{ ...TYPE.section, color: theme.dim }}>Lineage</Text>
+            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
+              {profile.kul_id ? profile.kul_name : 'Join your Kul'}
+            </Text>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>
+              {profile.kul_id ? 'Lineage & community' : 'Connect with your ancestral lineage'}
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={22} color={theme.text} />
+        </PressableSurface>
+
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.brandSoft,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="user-plus" size={22} color={theme.brand} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{firstName}, bring someone to the path</Text>
+              <Text style={{ ...TYPE.body, color: theme.dim }}>Share Shoonaya with a friend or family member</Text>
+            </View>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Invite someone to Shoonaya"
+              onPress={() => { void shareWhatsApp(); }}
+              style={{
+                minHeight: 46,
+                borderRadius: 18,
+                backgroundColor: theme.brand,
+                paddingHorizontal: 18,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Feather name="share-2" size={17} color={isDark ? COLORS.darkBg : COLORS.ink} />
+              <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Invite</Text>
+            </PressableSurface>
+          </View>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Copy invite link"
+            onPress={() => { void copyInvite(); }}
+            style={{
+              minHeight: 48,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+              backgroundColor: theme.glass,
+              paddingHorizontal: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <Text style={{ ...TYPE.body, color: theme.dim }}>Your invite link:</Text>
+            <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.brand, flex: 1 }}>
+              {inviteLink.replace(/^https?:\/\//, '')}
+            </Text>
+          </PressableSurface>
+        </Card>
+
+        <Card
+          elevated
+          tone="auto"
+          style={{
+            backgroundColor: theme.glass,
+            borderColor: theme.premiumBorder,
+            alignItems: 'center',
+            gap: 18,
+            paddingVertical: 28,
+          }}
+        >
+          <View
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: 18,
+              backgroundColor: theme.brandSoft,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            }}
+          >
+            <Text style={{ fontSize: 28 }}>{traditionMeta.emoji}</Text>
+          </View>
+          <View style={{ alignItems: 'center', gap: 6 }}>
+            <Text style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>{profile.full_name}</Text>
+            <Text style={{ ...TYPE.section, color: theme.dim, textAlign: 'center' }}>
+              {streak}-day streak · {profile.seva_score} seva · {pathLabel}
+            </Text>
+          </View>
+          <View style={{ width: '100%', height: 1, backgroundColor: theme.borderSoft }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Share journey card"
+              onPress={() => { void shareProfileCard(); }}
+              disabled={shareLoading}
+              style={{
+                width: 76,
+                minHeight: 78,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: COLORS.whatsAppBorder,
+                backgroundColor: COLORS.whatsAppBg,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {shareLoading ? <ActivityIndicator color={COLORS.whatsApp} /> : <Feather name="message-circle" size={24} color={COLORS.whatsApp} />}
+              <Text style={{ ...TYPE.chip, color: theme.dim }}>WhatsApp</Text>
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Share journey card"
+              onPress={() => { void shareProfileCard(); }}
+              disabled={shareLoading}
+              style={{
+                width: 76,
+                minHeight: 78,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+                backgroundColor: theme.glass,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Feather name="twitter" size={24} color={theme.text} />
+              <Text style={{ ...TYPE.chip, color: theme.dim }}>X / Twitter</Text>
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Copy profile invite link"
+              onPress={() => { void copyInvite(); }}
+              style={{
+                width: 76,
+                minHeight: 78,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.brandSoft,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Feather name="link" size={24} color={theme.brand} />
+              <Text style={{ ...TYPE.chip, color: theme.dim }}>Copy Link</Text>
+            </PressableSurface>
+          </View>
+        </Card>
+
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 18 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={{ ...TYPE.body, color: theme.dim }}>Connected email</Text>
+              <Text numberOfLines={2} style={{ ...TYPE.cardHeading, color: theme.text }}>
+                {email || 'Email unavailable'}
               </Text>
             </View>
             <PressableSurface
               haptic="selection"
-              onPress={() => Alert.alert('Coming Soon', 'Kul features are coming soon.')}
+              accessibilityLabel="Sign out"
+              onPress={() => { void handleSignOut(); }}
+              disabled={signingOut}
               style={{
+                width: 54,
+                height: 54,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: COLORS.dangerBorder,
+                backgroundColor: COLORS.dangerBg,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {signingOut ? <ActivityIndicator color={COLORS.danger} /> : <Feather name="log-out" size={22} color={COLORS.danger} />}
+            </PressableSurface>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Open settings"
+              onPress={() => router.push('/settings')}
+              style={{
+                flex: 1,
+                minHeight: 56,
                 borderRadius: 18,
-                backgroundColor: theme.brandSoft,
                 borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-              }}
-            >
-              <Text style={{ ...TYPE.label, color: theme.brand }}>
-                {profile.kul_id ? 'Invite' : 'Join'}
-              </Text>
-            </PressableSurface>
-          </View>
-        </Card>
-
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
-          <View>
-            <Text style={{ ...TYPE.section, color: theme.brand }}>Invite & Refer</Text>
-            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-              Invite Friends
-            </Text>
-            <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 4 }}>
-              Share your invite code: <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>{inviteCode}</Text>
-            </Text>
-          </View>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Share Shoonaya on WhatsApp"
-              onPress={() => { void shareWhatsApp(); }}
-              style={{
-                flex: 1,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: COLORS.whatsAppBorder,
-                backgroundColor: COLORS.whatsAppBg,
-                paddingVertical: 12,
-                alignItems: 'center',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
-              <Feather name="message-circle" size={18} color={COLORS.whatsApp} />
-              <Text style={{ ...TYPE.label, color: COLORS.whatsApp }}>WhatsApp</Text>
-            </PressableSurface>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Copy invite code"
-              onPress={() => { void copyInvite(); }}
-              style={{
-                flex: 1,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: theme.border,
+                borderColor: theme.borderSoft,
                 backgroundColor: theme.glass,
-                paddingVertical: 12,
                 alignItems: 'center',
-                flexDirection: 'row',
                 justifyContent: 'center',
-                gap: 8,
+                flexDirection: 'row',
+                gap: 9,
               }}
             >
-              <Feather name="copy" size={18} color={theme.text} />
-              <Text style={{ ...TYPE.label, color: theme.text }}>Copy Code</Text>
+              <Feather name="settings" size={18} color={theme.brand} />
+              <Text style={{ ...TYPE.label, color: theme.text }}>Settings</Text>
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Download Sadhana report"
+              onPress={() => { void downloadReport(); }}
+              disabled={reportLoading}
+              style={{
+                flex: 1,
+                minHeight: 56,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+                backgroundColor: theme.glass,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 9,
+              }}
+            >
+              {reportLoading ? <ActivityIndicator color={theme.brand} /> : <Feather name="download" size={18} color={theme.brand} />}
+              <Text style={{ ...TYPE.label, color: theme.text }}>Report</Text>
             </PressableSurface>
           </View>
         </Card>
-
-        <View style={{ gap: 10 }}>
-          <ActionRow
-            label="Share Journey"
-            subtitle="Create and share your Shoonaya card"
-            icon="share-2"
-            loading={shareLoading}
-            onPress={() => { void shareProfileCard(); }}
-            theme={theme}
-          />
-          <ActionRow
-            label="Sadhana Report"
-            subtitle="Download your practice summary"
-            icon="pie-chart"
-            loading={reportLoading}
-            onPress={() => { void downloadReport(); }}
-            theme={theme}
-          />
-          {[
-            { label: 'Settings', subtitle: 'Preferences, reminders, privacy', route: '/settings' as ProfileRoute, icon: 'settings' as const },
-            { label: 'Mandali', subtitle: 'Your local Sangam and Sabha', route: '/mandali' as ProfileRoute, icon: 'users' as const },
-          ].map((item) => (
-            <ActionRow
-              key={item.label}
-              label={item.label}
-              subtitle={item.subtitle}
-              icon={item.icon}
-              onPress={() => router.push(item.route)}
-              theme={theme}
-            />
-          ))}
-        </View>
-
-        <PressableSurface
-          haptic="selection"
-          onPress={() => {
-            void handleSignOut();
-          }}
-          disabled={signingOut}
-          style={{
-            marginTop: 4,
-            borderRadius: 18,
-            borderWidth: 1,
-            borderColor: theme.border,
-            backgroundColor: theme.card,
-            paddingVertical: 14,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ ...TYPE.label, color: theme.text }}>Sign out</Text>
-        </PressableSurface>
 
         <View style={{ marginTop: 24, alignItems: 'center', gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 16 }}>
