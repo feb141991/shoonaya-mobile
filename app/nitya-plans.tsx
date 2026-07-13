@@ -8,23 +8,89 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { GUIDED_PLANS, type GuidedPlan, type GuidedPathStatus } from '@/lib/guided-paths';
+
+function progressFor(plan: GuidedPlan, status: GuidedPathStatus | undefined, currentDay: number) {
+  if (status === 'completed') return 1;
+  if (status !== 'active') return 0;
+  return Math.max(0, Math.min(1, (currentDay - 1) / plan.duration));
+}
+
+function PlanProgressDots({
+  plan,
+  status,
+  currentDay,
+}: {
+  plan: GuidedPlan;
+  status: GuidedPathStatus | undefined;
+  currentDay: number;
+}) {
+  const filledDots = status === 'completed' ? plan.duration : status === 'active' ? Math.max(0, currentDay - 1) : 0;
+  const dotSlots = plan.days.slice(0, 7);
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+      {dotSlots.map((day) => {
+        const filled = day.day <= filledDots;
+        return (
+          <View
+            key={day.day}
+            style={{
+              width: filled ? 14 : 11,
+              height: filled ? 14 : 11,
+              borderRadius: 999,
+              backgroundColor: filled ? (status === 'completed' ? COLORS.success : plan.accentColor) : `${plan.accentColor}28`,
+              borderWidth: filled ? 0 : 1,
+              borderColor: `${plan.accentColor}35`,
+              boxShadow: filled && status === 'active' ? `0 0 8px ${plan.accentColor}55` : undefined,
+            }}
+          />
+        );
+      })}
+      {plan.days.length > 7 ? (
+        <Text style={{ color: `${plan.accentColor}80`, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>
+          +{plan.days.length - 7}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function PlanGlyph({ plan, size = 54 }: { plan: GuidedPlan; size?: number }) {
+  return (
+    <LinearGradient
+      colors={[`${plan.accentColor}24`, `${plan.accentColor}10`, `${plan.accentColor}06`]}
+      start={{ x: 0.15, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: Math.round(size * 0.32),
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: plan.borderColor,
+      }}
+    >
+      <Text style={{ fontSize: Math.round(size * 0.48) }}>{plan.emoji}</Text>
+    </LinearGradient>
+  );
+}
 
 export default function NityaPlansScreen() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
-  const theme = isDark
-    ? { bg: COLORS.darkBg, card: COLORS.cardBgDark, text: COLORS.creamBg, dim: COLORS.textDimDark, border: COLORS.borderDark, accent: COLORS.brandGoldDark }
-    : { bg: COLORS.creamBg, card: COLORS.cardBgLight, text: COLORS.ink, dim: COLORS.textDimLight, border: COLORS.homeBorderSoftLight, accent: COLORS.brandGoldLight };
+  const theme = themeColor(isDark);
+  const shadow = isDark ? SHADOWS.md.dark : SHADOWS.md.light;
 
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -244,29 +310,128 @@ export default function NityaPlansScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.accent} />
+          <ActivityIndicator color={theme.brand} />
         </View>
       </Screen>
     );
   }
 
   return (
-    <Screen style={{ backgroundColor: theme.bg }}>
+    <Screen style={{ backgroundColor: theme.bg }} entrance="fade-up">
       <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-        {/* Back button */}
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        {/* Header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.glass,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+            }}
+          >
+            <Feather name="chevron-left" size={20} color={theme.brand} />
+          </PressableSurface>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Sadhana Patha</Text>
+            <Text style={{ color: theme.dim, ...TYPE.micro }}>7-day and 21-day structured practices</Text>
+          </View>
+        </View>
 
-        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Sadhana Patha</Text>
-        <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: -8 }}>
-          Embark on structured guided practices to deepen your daily rhythm.
-        </Text>
+        {activePlan ? (
+          <PressableSurface
+            haptic="selection"
+            onPress={() => setSelectedPlan(activePlan)}
+            accessibilityLabel={`Continue ${activePlan.title}`}
+            style={{
+              borderRadius: 22,
+              overflow: 'hidden',
+              boxShadow: shadow,
+            }}
+          >
+            <LinearGradient
+              colors={[`${activePlan.accentColor}20`, `${activePlan.accentColor}08`, theme.card]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                padding: 18,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: `${activePlan.accentColor}33`,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+              }}
+            >
+              <PlanGlyph plan={activePlan} size={48} />
+              <View style={{ flex: 1, gap: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Feather name="zap" size={13} color={activePlan.accentColor} />
+                  <Text style={{ color: activePlan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+                    Day {dayMap[activePlan.id] ?? 1} of {activePlan.duration}
+                  </Text>
+                </View>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{activePlan.title}</Text>
+                <View style={{ height: 5, borderRadius: 999, overflow: 'hidden', backgroundColor: `${activePlan.accentColor}20` }}>
+                  <View
+                    style={{
+                      height: '100%',
+                      width: `${Math.round(progressFor(activePlan, 'active', dayMap[activePlan.id] ?? 1) * 100)}%`,
+                      backgroundColor: activePlan.accentColor,
+                    }}
+                  />
+                </View>
+              </View>
+              <Feather name="arrow-right" size={17} color={activePlan.accentColor} />
+            </LinearGradient>
+          </PressableSurface>
+        ) : (
+          <LinearGradient
+            colors={[theme.card, isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight, `${theme.brand}10`]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 28,
+              padding: 22,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
+            }}
+          >
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -50,
+                right: -42,
+                width: 150,
+                height: 150,
+                borderRadius: 75,
+                backgroundColor: theme.brandSoft,
+              }}
+            />
+            <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11, letterSpacing: 2.2 }}>
+              Structured Practice
+            </Text>
+            <Text style={{ color: theme.text, ...TYPE.title, marginTop: 12 }}>
+              The Vedic tradition says: 21 days forms a samskara.
+            </Text>
+            <Text style={{ color: theme.dim, ...TYPE.body, marginTop: 10 }}>
+              Choose the path that calls to you. Show up each day. Let repetition do its quiet work.
+            </Text>
+          </LinearGradient>
+        )}
 
         {/* Filters */}
-        <View style={{ flexDirection: 'row', gap: 8, marginVertical: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
           {(['all', '7', '21'] as const).map((opt) => {
             const active = filter === opt;
             return (
@@ -278,12 +443,12 @@ export default function NityaPlansScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 8,
                   borderRadius: 16,
-                  backgroundColor: active ? theme.accent : theme.card,
+                  backgroundColor: active ? theme.brandSoft : theme.card,
                   borderWidth: 1,
-                  borderColor: active ? theme.accent : theme.border,
+                  borderColor: active ? theme.premiumBorder : theme.borderSoft,
                 }}
               >
-                <Text style={{ color: active ? COLORS.ink : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                <Text style={{ color: active ? theme.brandStrong : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                   {opt === 'all' ? 'All Plans' : `${opt}-Day`}
                 </Text>
               </PressableSurface>
@@ -297,62 +462,101 @@ export default function NityaPlansScreen() {
             const status = statusMap[plan.id];
             const currentDay = dayMap[plan.id] ?? 1;
             const progress = plan.duration > 0 ? (currentDay - 1) / plan.duration : 0;
+            const isActive = status === 'active';
+            const isCompleted = status === 'completed';
 
             return (
-              <Card
+              <PressableSurface
                 key={plan.id}
+                haptic="selection"
+                onPress={() => setSelectedPlan(plan)}
                 style={{
-                  backgroundColor: theme.card,
-                  borderColor: status === 'active' ? plan.accentColor : theme.border,
-                  borderWidth: status === 'active' ? 1.5 : 1,
-                  gap: 12,
+                  borderRadius: 28,
+                  overflow: 'hidden',
+                  boxShadow: isActive ? `0 8px 24px ${plan.accentColor}18` : shadow,
                 }}
               >
-                <PressableSurface
-                  onPress={() => setSelectedPlan(plan)}
-                  haptic="selection"
-                  style={{ gap: 10 }}
+                <LinearGradient
+                  colors={[`${plan.accentColor}16`, theme.card]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    borderRadius: 28,
+                    borderWidth: 1,
+                    borderColor: isActive ? plan.borderColor : theme.borderSoft,
+                    overflow: 'hidden',
+                  }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: `${plan.accentColor}18`, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 24 }}>{plan.emoji}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>{plan.title}</Text>
-                        {status === 'active' && (
-                          <View style={{ backgroundColor: `${plan.accentColor}15`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                            <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>ACTIVE</Text>
-                          </View>
-                        )}
-                        {status === 'completed' && (
-                          <View style={{ backgroundColor: COLORS.successBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                            <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>DONE ✓</Text>
-                          </View>
-                        )}
+                  <View style={{ padding: 18, gap: 14 }}>
+                    {(isActive || isCompleted) && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 14,
+                          right: 14,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          paddingHorizontal: 9,
+                          paddingVertical: 5,
+                          borderRadius: 999,
+                          backgroundColor: isCompleted ? COLORS.successBg : `${plan.accentColor}22`,
+                          borderWidth: 1,
+                          borderColor: isCompleted ? COLORS.successBorder : `${plan.accentColor}44`,
+                        }}
+                      >
+                        <Feather name={isCompleted ? 'check-circle' : 'zap'} size={11} color={isCompleted ? COLORS.success : plan.accentColor} />
+                        <Text style={{ color: isCompleted ? COLORS.success : plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>
+                          {isCompleted ? 'Done' : `Day ${currentDay}/${plan.duration}`}
+                        </Text>
                       </View>
-                      <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
-                        {plan.duration}-Day Plan · {plan.difficulty}
-                      </Text>
+                    )}
+
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                      <PlanGlyph plan={plan} />
+                      <View style={{ flex: 1, paddingRight: isActive || isCompleted ? 74 : 0 }}>
+                        <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.7, textTransform: 'uppercase' }}>
+                          {plan.duration} Days · {plan.difficulty}
+                        </Text>
+                        <Text style={{ color: theme.text, ...TYPE.cardHeading, marginTop: 3 }}>{plan.title}</Text>
+                        <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17, marginTop: 5 }}>
+                          {plan.tagline}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {isActive ? (
+                      <View style={{ gap: 5 }}>
+                        <View style={{ height: 4, backgroundColor: `${plan.accentColor}18`, borderRadius: 2, overflow: 'hidden' }}>
+                          <View style={{ width: `${progress * 100}%`, height: '100%', backgroundColor: plan.accentColor }} />
+                        </View>
+                        <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textAlign: 'right' }}>
+                          {currentDay - 1} of {plan.duration} days done
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    <View
+                      style={{
+                        borderTopWidth: 1,
+                        borderTopColor: `${plan.accentColor}18`,
+                        paddingTop: 12,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <PlanProgressDots plan={plan} status={status} currentDay={currentDay} />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={{ color: `${plan.accentColor}90`, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+                          {isActive ? `Day ${currentDay}` : 'View plan'}
+                        </Text>
+                        <Feather name="chevron-right" size={14} color={`${plan.accentColor}90`} />
+                      </View>
                     </View>
                   </View>
-
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18 }}>
-                    {plan.tagline}
-                  </Text>
-
-                  {status === 'active' && (
-                    <View style={{ gap: 4, marginTop: 4 }}>
-                      <View style={{ height: 4, backgroundColor: `${plan.accentColor}18`, borderRadius: 2, overflow: 'hidden' }}>
-                        <View style={{ width: `${progress * 100}%`, height: '100%', backgroundColor: plan.accentColor }} />
-                      </View>
-                      <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textAlign: 'right' }}>
-                        Day {currentDay - 1} of {plan.duration} days done
-                      </Text>
-                    </View>
-                  )}
-                </PressableSurface>
-              </Card>
+                </LinearGradient>
+              </PressableSurface>
             );
           })}
         </View>
@@ -370,30 +574,53 @@ export default function NityaPlansScreen() {
           return (
             <View style={{ flex: 1, backgroundColor: theme.bg }}>
               {/* Sheet header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{plan.title}</Text>
-                <PressableSurface haptic="selection" onPress={() => { setSelectedPlan(null); setViewingDayIndex(null); }} hitSlop={10} style={{ padding: 4, minHeight: 0 }}>
-                  <Feather name="x" size={24} color={theme.text} />
+              <View style={{ alignItems: 'center', paddingTop: 10 }}>
+                <View style={{ width: 42, height: 4, borderRadius: 999, backgroundColor: theme.borderSoft }} />
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12 }}>
+                <Text numberOfLines={1} style={{ flex: 1, color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>{plan.title}</Text>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityLabel="Close plan details"
+                  onPress={() => { setSelectedPlan(null); setViewingDayIndex(null); }}
+                  hitSlop={10}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.glass,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                  }}
+                >
+                  <Feather name="x" size={17} color={theme.text} />
                 </PressableSurface>
               </View>
 
               {viewingDayIndex !== null && plan.days[viewingDayIndex] ? (() => {
                 const day = plan.days[viewingDayIndex];
                 return (
-                  <View style={{ flex: 1, padding: 20, justifyContent: 'space-between' }}>
-                    <ScrollView contentContainerStyle={{ gap: 16 }}>
-                      <PressableSurface onPress={() => setViewingDayIndex(null)} haptic="selection" style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}>
+                  <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                    <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 18, gap: 16 }}>
+                      <PressableSurface
+                        onPress={() => setViewingDayIndex(null)}
+                        haptic="selection"
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}
+                      >
                         <Feather name="chevron-left" size={16} color={theme.dim} />
                         <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back to overview</Text>
                       </PressableSurface>
 
-                      <View style={{ backgroundColor: `${plan.accentColor}18`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, alignSelf: 'flex-start' }}>
+                      <View style={{ backgroundColor: `${plan.accentColor}18`, borderWidth: 1, borderColor: `${plan.accentColor}33`, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Feather name="target" size={12} color={plan.accentColor} />
                         <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
                           Day {day.day} of {plan.duration}
                         </Text>
                       </View>
 
-                      <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>
+                      <Text style={{ color: theme.text, ...TYPE.title }}>
                         {day.title}
                       </Text>
 
@@ -404,58 +631,118 @@ export default function NityaPlansScreen() {
                         </Text>
                       </View>
 
-                      <Card style={{ backgroundColor: `${plan.accentColor}0a`, borderColor: `${plan.accentColor}25` }}>
-                        <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-                          Today&apos;s Focus: {day.focus}
+                      <LinearGradient
+                        colors={[`${plan.accentColor}12`, theme.card]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          borderRadius: 22,
+                          padding: 18,
+                          borderWidth: 1,
+                          borderColor: `${plan.accentColor}25`,
+                        }}
+                      >
+                        <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 8 }}>
+                          Today&apos;s Practice · {day.focus}
                         </Text>
-                        <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>
+                        <Text style={{ color: theme.text, ...TYPE.body, lineHeight: 22 }}>
                           {day.practice}
                         </Text>
-                      </Card>
+                      </LinearGradient>
+
+                      <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 19 }}>
+                        Approach today&apos;s practice with sincerity. Even a few minutes with full attention is stronger than a long session done mechanically.
+                      </Text>
                     </ScrollView>
 
                     {isActive && day.day === currentDay && (
-                      <PressableSurface
-                        onPress={() => handleMarkDayComplete(plan, currentDay)}
-                        disabled={actionLoading}
-                        style={{
-                          backgroundColor: plan.accentColor,
-                          paddingVertical: 16,
-                          borderRadius: 24,
-                          alignItems: 'center',
-                          opacity: actionLoading ? 0.7 : 1,
-                        }}
-                      >
-                        {actionLoading ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Mark Day {day.day} Complete</Text>}
-                      </PressableSurface>
+                      <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18, borderTopWidth: 1, borderTopColor: theme.borderSoft, backgroundColor: theme.bg }}>
+                        <PressableSurface
+                          onPress={() => handleMarkDayComplete(plan, currentDay)}
+                          disabled={actionLoading}
+                          style={{
+                            borderRadius: 18,
+                            overflow: 'hidden',
+                            opacity: actionLoading ? 0.7 : 1,
+                            boxShadow: `0 10px 28px ${plan.accentColor}30`,
+                          }}
+                        >
+                          <LinearGradient
+                            colors={[`${plan.accentColor}ee`, `${plan.accentColor}aa`]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{ minHeight: 54, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+                          >
+                            {actionLoading ? <ActivityIndicator color={COLORS.ink} /> : (
+                              <>
+                                <Feather name="check-circle" size={16} color={COLORS.ink} />
+                                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Mark Day {day.day} Complete</Text>
+                              </>
+                            )}
+                          </LinearGradient>
+                        </PressableSurface>
+                      </View>
                     )}
                   </View>
                 );
               })() : (
                 <View style={{ flex: 1 }}>
-                  <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
+                  <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, gap: 20 }}>
                     {/* Hero details */}
-                    <View style={{ alignItems: 'center', gap: 10 }}>
-                      <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: `${plan.accentColor}18`, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 32 }}>{plan.emoji}</Text>
-                      </View>
+                    <LinearGradient
+                      colors={[`${plan.accentColor}18`, theme.card]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        borderRadius: 28,
+                        padding: 22,
+                        alignItems: 'center',
+                        gap: 10,
+                        borderWidth: 1,
+                        borderColor: plan.borderColor,
+                      }}
+                    >
+                      <PlanGlyph plan={plan} size={68} />
                       <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
                         {plan.duration}-Day Plan · {plan.difficulty}
                       </Text>
-                      <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24, textAlign: 'center' }}>
+                      <Text style={{ color: theme.text, ...TYPE.title, textAlign: 'center' }}>
                         {plan.title}
                       </Text>
                       <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
                         {plan.description}
                       </Text>
-                    </View>
+                      {isActive && (
+                        <View style={{ alignItems: 'center', gap: 7, marginTop: 2 }}>
+                          <View style={{ backgroundColor: `${plan.accentColor}1a`, borderWidth: 1, borderColor: `${plan.accentColor}44`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Feather name="zap" size={12} color={plan.accentColor} />
+                            <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Day {currentDay} of {plan.duration}</Text>
+                          </View>
+                          <View style={{ width: 180, height: 5, borderRadius: 999, overflow: 'hidden', backgroundColor: `${plan.accentColor}20` }}>
+                            <View style={{ height: '100%', width: `${Math.round(progressFor(plan, status, currentDay) * 100)}%`, backgroundColor: plan.accentColor }} />
+                          </View>
+                          <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 10 }}>
+                            {currentDay - 1} of {plan.duration} days done
+                          </Text>
+                        </View>
+                      )}
+                      {isCompleted && (
+                        <View style={{ backgroundColor: COLORS.successBg, borderWidth: 1, borderColor: COLORS.successBorder, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Feather name="check-circle" size={12} color={COLORS.success} />
+                          <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Completed</Text>
+                        </View>
+                      )}
+                    </LinearGradient>
 
                     {/* Day list */}
                     <View style={{ gap: 10 }}>
-                      <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 18 }}>Daily Practices</Text>
+                      <Text style={{ color: theme.dim, ...TYPE.section, fontSize: 11 }}>
+                        {isActive ? 'Your journey so far' : 'What you will practise'}
+                      </Text>
                       {plan.days.map((day, idx) => {
                         const isDone = isActive && day.day < currentDay;
                         const isToday = isActive && day.day === currentDay;
+                        const isFuture = isActive && day.day > currentDay;
 
                         return (
                           <PressableSurface
@@ -464,14 +751,15 @@ export default function NityaPlansScreen() {
                             haptic="selection"
                             onPress={() => setViewingDayIndex(idx)}
                             style={{
-                              backgroundColor: isToday ? `${plan.accentColor}10` : theme.card,
-                              borderColor: isToday ? plan.accentColor : theme.border,
+                              backgroundColor: isToday ? `${plan.accentColor}12` : isDone ? COLORS.successBg : theme.card,
+                              borderColor: isToday ? `${plan.accentColor}33` : isDone ? COLORS.successBorder : theme.borderSoft,
                               borderWidth: 1,
-                              borderRadius: 16,
+                              borderRadius: 18,
                               padding: 14,
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 12,
+                              opacity: isFuture ? 0.58 : 1,
                             }}
                           >
                             <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDone ? COLORS.successBg : `${plan.accentColor}15`, alignItems: 'center', justifyContent: 'center' }}>
@@ -482,7 +770,7 @@ export default function NityaPlansScreen() {
                               )}
                             </View>
                             <View style={{ flex: 1 }}>
-                              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{day.title}</Text>
+                              <Text style={{ color: isDone ? theme.dim : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14, textDecorationLine: isDone ? 'line-through' : 'none' }}>{day.title}</Text>
                               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>{day.focus} · {day.duration} min</Text>
                             </View>
                             {isToday && (
@@ -498,20 +786,31 @@ export default function NityaPlansScreen() {
                   </ScrollView>
 
                   {/* Actions footer */}
-                  <View style={{ borderTopWidth: 1, borderTopColor: theme.border, padding: 16, gap: 10, backgroundColor: theme.card }}>
+                  <View style={{ borderTopWidth: 1, borderTopColor: theme.borderSoft, padding: 16, gap: 10, backgroundColor: theme.bg }}>
                     {!isActive && !isCompleted && (
                       <PressableSurface
                         onPress={() => handleStartPlan(plan)}
                         disabled={actionLoading}
                         style={{
-                          backgroundColor: plan.accentColor,
-                          paddingVertical: 16,
-                          borderRadius: 24,
-                          alignItems: 'center',
+                          borderRadius: 18,
+                          overflow: 'hidden',
                           opacity: actionLoading ? 0.7 : 1,
+                          boxShadow: `0 10px 28px ${plan.accentColor}30`,
                         }}
                       >
-                        {actionLoading ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Begin Journey</Text>}
+                        <LinearGradient
+                          colors={[`${plan.accentColor}ee`, `${plan.accentColor}aa`]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{ minHeight: 54, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+                        >
+                          {actionLoading ? <ActivityIndicator color={COLORS.ink} /> : (
+                            <>
+                              <Feather name="play" size={15} color={COLORS.ink} />
+                              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Begin {plan.duration}-Day Journey</Text>
+                            </>
+                          )}
+                        </LinearGradient>
                       </PressableSurface>
                     )}
 
@@ -520,13 +819,20 @@ export default function NityaPlansScreen() {
                         <PressableSurface
                           onPress={() => setViewingDayIndex(currentDay - 1)}
                           style={{
-                            backgroundColor: plan.accentColor,
-                            paddingVertical: 16,
-                            borderRadius: 24,
-                            alignItems: 'center',
+                            borderRadius: 18,
+                            overflow: 'hidden',
+                            boxShadow: `0 8px 22px ${plan.accentColor}24`,
                           }}
                         >
-                          <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Continue Day {currentDay}</Text>
+                          <LinearGradient
+                            colors={[`${plan.accentColor}ee`, `${plan.accentColor}aa`]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{ minHeight: 54, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+                          >
+                            <Feather name="arrow-right" size={15} color={COLORS.ink} />
+                            <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Continue Day {currentDay}</Text>
+                          </LinearGradient>
                         </PressableSurface>
 
                         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -535,14 +841,14 @@ export default function NityaPlansScreen() {
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
-                            <Text style={{ color: theme.accent, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>🔄 Restart</Text>
+                            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Restart</Text>
                           </PressableSurface>
                           <PressableSurface
                             onPress={() => handleAbandonPlan(plan)}
                             disabled={actionLoading}
                             style={{ flex: 1, backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight, paddingVertical: 12, borderRadius: 16, alignItems: 'center' }}
                           >
-                            <Text style={{ color: theme.accent, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>⏸ Pause</Text>
+                            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Pause</Text>
                           </PressableSurface>
                           <PressableSurface
                             onPress={() => handleLeavePlan(plan)}
@@ -570,6 +876,9 @@ export default function NityaPlansScreen() {
                         <Text style={{ color: plan.accentColor, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Begin Again</Text>
                       </PressableSurface>
                     )}
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 10, textAlign: 'center' }}>
+                      {isActive ? 'Mark each day complete after your practice to advance.' : 'Your progress is saved automatically each day.'}
+                    </Text>
                   </View>
                 </View>
               )}
