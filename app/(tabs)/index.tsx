@@ -311,11 +311,13 @@ function PanchangPill({
   summary,
   selectedDateIso,
   theme,
+  kind = 'panchang',
 }: {
   panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
   summary: HomeSummary['panchang'];
   selectedDateIso: string;
   theme: { heroOverlay: string; borderSoft: string; text: string; brand: string };
+  kind?: 'panchang' | 'observance';
 }) {
   const [idx, setIdx] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -338,19 +340,23 @@ function PanchangPill({
       rows.push(row);
     };
 
-    add(summary.observance ? {
-      key: 'observance',
-      icon: summary.observance.emoji ?? '🪔',
-      label: summary.observance.label,
-    } : null);
-    add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
-    add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
+    if (kind === 'observance') {
+      add(summary.observance ? {
+        key: 'observance',
+        icon: summary.observance.emoji ?? '🪔',
+        label: summary.observance.label,
+      } : null);
+      add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
+      add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
+      return rows;
+    }
+
     add({ key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` });
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
     add({ key: 'date', icon: '📅', label: getDateLabel(selectedDateIso) });
 
     return rows;
-  }, [panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, selectedDateIso, summary.festivalLabel, summary.observance, summary.vratLabel]);
+  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, selectedDateIso, summary.festivalLabel, summary.observance, summary.vratLabel]);
   const total = slides.length;
 
   useEffect(() => {
@@ -387,12 +393,17 @@ function PanchangPill({
     }
   }, [fadeAnim, reducedMotion, total]);
 
+  if (kind === 'observance' && slides.length === 0) {
+    return null;
+  }
+
   const currentSlide = slides[idx] ?? slides[0] ?? { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` };
+  const isObservance = kind === 'observance';
 
   return (
     <PressableSurface
       haptic="selection"
-      accessibilityLabel={`Panchang info: ${currentSlide.label}. Tap to cycle`}
+      accessibilityLabel={`${isObservance ? 'Sacred observance' : 'Panchang info'}: ${currentSlide.label}. Tap to cycle`}
       onPress={handleCycle}
       hitSlop={4}
       style={{
@@ -404,14 +415,17 @@ function PanchangPill({
         justifyContent: 'center',
         flexDirection: 'row',
         gap: 6,
-        backgroundColor: COLORS.homePwaPillBg,
+        backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
+        borderWidth: isObservance ? 1 : 0,
+        borderColor: COLORS.homePwaObservanceBorder,
         minWidth: 120,
+        maxWidth: '100%',
         overflow: 'hidden',
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
-        <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
+        <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? COLORS.homePwaObservanceText : COLORS.homePwaPillText }} numberOfLines={1}>
           {currentSlide.label}
         </Text>
       </Animated.View>
@@ -422,6 +436,7 @@ function PanchangPill({
           cream PWA uses verbatim (rgba(255,240,200,*)) rather than
           theme-flipped — the pill always sits over the hero's darkened
           image area in both light and dark mode, same as in PWA. */}
+      {slides.length > 1 ? (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 4 }}>
         {slides.map((s, i) => (
           <View
@@ -435,6 +450,7 @@ function PanchangPill({
           />
         ))}
       </View>
+      ) : null}
     </PressableSurface>
   );
 }
@@ -856,8 +872,9 @@ function HomeContent() {
               {greeting}, {state.profile.firstName}
             </Text>
 
-            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6 }}>
+            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} selectedDateIso={state.date.iso} theme={theme} />
+              <PanchangPill panchang={panchang} summary={state.panchang} selectedDateIso={state.date.iso} theme={theme} kind="observance" />
             </View>
           </View>
         </View>
@@ -933,35 +950,44 @@ function HomeContent() {
               navigate(actionRoute);
             }}
             style={{
-              minHeight: 70,
-              borderRadius: 17,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              backgroundColor: theme.glass,
+              minHeight: 86,
+              borderRadius: 24,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 11,
+              gap: 12,
+              overflow: 'hidden',
             }}
           >
+            <LinearGradient
+              colors={isDark
+                ? ['rgba(197,160,89,0.16)', 'rgba(197,160,89,0.04)', 'rgba(0,0,0,0)']
+                : ['rgba(250,232,196,0.88)', 'rgba(255,251,244,0.42)', 'rgba(255,255,255,0)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
             <View
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 13,
+                width: 44,
+                height: 44,
+                borderRadius: 17,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: theme.soft,
+                backgroundColor: `${nextPracticeColor}18`,
                 borderWidth: 1,
-                borderColor: theme.borderSoft,
+                borderColor: `${nextPracticeColor}30`,
               }}
             >
               <SacredIcon
                 name={nextPracticeRow?.id ?? 'japa'}
                 fallbackGlyph={nextPracticeIcon}
-                size={18}
+                size={24}
                 color={nextPracticeColor}
               />
             </View>
@@ -969,16 +995,29 @@ function HomeContent() {
               <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: theme.brand }} numberOfLines={1}>
                 {state.nextPractice.contextLabel}
               </Text>
-              <Text style={{ marginTop: 2, fontFamily: FONTS.serifBold, fontSize: 18, lineHeight: 22, color: theme.text }} numberOfLines={1}>
+              <Text style={{ marginTop: 2, fontFamily: FONTS.serifBold, fontSize: 21, lineHeight: 26, color: theme.text }} numberOfLines={1}>
                 {state.nextPractice.title}
               </Text>
-              <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 14, color: theme.dim }} numberOfLines={1}>
+              <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 15, color: theme.dim }} numberOfLines={1}>
                 {state.nextPractice.suggestion}
               </Text>
             </View>
-            <View style={{ alignItems: 'center', gap: 5 }}>
+            <View style={{ alignItems: 'flex-end', gap: 6 }}>
               <ProgressRing done={state.nextPractice.progress >= 1} progress={state.nextPractice.progress} color={theme.brand} track={theme.ringTrack} size={30} />
-              <Feather name="arrow-right" size={15} color={theme.brand} />
+              <View
+                style={{
+                  minHeight: 28,
+                  borderRadius: 999,
+                  paddingHorizontal: 9,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.soft,
+                }}
+              >
+                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.brand }} numberOfLines={1}>
+                  {state.nextPractice.progress >= 1 ? 'All' : state.nextPractice.actionLabel.replace(/^Go to /, '')}
+                </Text>
+              </View>
             </View>
           </PressableSurface>
 
@@ -1286,7 +1325,7 @@ function HomeContent() {
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Community</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {([
-                { label: 'Live Darshan', href: '/live-darshan',    icon: '🛕', sacredId: null,                                  fallbackGlyph: null,             accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
+                { label: 'Live Darshan', href: '/live-darshan',    icon: '📡', sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
                 { label: 'Mandali',      href: '/(tabs)/mandali',  icon: '👥', sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
