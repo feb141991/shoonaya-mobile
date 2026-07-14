@@ -1183,9 +1183,10 @@ function HomeContent() {
             accessibilityLabel="Open Panchang"
             onPress={() => navigate('/panchang')}
             style={{
-              minHeight: 102,
+              minHeight: 86,
               borderRadius: 22,
-              padding: 16,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
@@ -1194,15 +1195,15 @@ function HomeContent() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-                <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} accent={theme.brand} />
-                <View style={{ flex: 1 }}>
+                <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} />
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                     Sacred rhythm
                   </Text>
                   <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
                     {tithiPill}
                   </Text>
-                  <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }}>
+                  <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
                     Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
                   </Text>
                   {state.panchang.viewedToday ? (
