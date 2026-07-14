@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
@@ -443,6 +444,18 @@ export default function SankalpaScreen() {
   const targetDaysValue = sankalpa?.target_days ?? 0;
   const progress = targetDaysValue > 0 ? clampProgress(day / targetDaysValue) : 0;
 
+  function confirmComplete() {
+    if (!sankalpa) return;
+    Alert.alert(
+      'Complete this Sankalpa?',
+      `You're on day ${Math.min(day, targetDaysValue || day)} of ${targetDaysValue}. Marking it complete ends the vow now.`,
+      [
+        { text: 'Not yet', style: 'cancel' },
+        { text: 'Complete', style: 'default', onPress: () => { void handleComplete(); } },
+      ]
+    );
+  }
+
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -463,8 +476,19 @@ export default function SankalpaScreen() {
             end={{ x: 1, y: 1 }}
             style={{ padding: 18, gap: 8 }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 19, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="sun" size={22} color={theme.brand} />
+            <View
+              style={{
+                width: ICON_WELL.md.box,
+                height: ICON_WELL.md.box,
+                borderRadius: ICON_WELL.md.radius,
+                backgroundColor: iconWellColor(isDark).bg,
+                borderWidth: 1,
+                borderColor: iconWellColor(isDark).border,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="sun" size={ICON_WELL.md.icon} color={theme.brand} />
             </View>
             <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
             <Text style={{ ...TYPE.body, color: theme.dim }}>
@@ -476,9 +500,20 @@ export default function SankalpaScreen() {
         {sankalpa ? (
           <>
             <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                  <View style={{ width: 44, height: 44, borderRadius: 18, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name="sun" size={20} color={theme.brand} />
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View
+                  style={{
+                    width: ICON_WELL.md.box,
+                    height: ICON_WELL.md.box,
+                    borderRadius: ICON_WELL.md.radius,
+                    backgroundColor: iconWellColor(isDark).bg,
+                    borderWidth: 1,
+                    borderColor: iconWellColor(isDark).border,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="sun" size={ICON_WELL.md.icon} color={theme.brand} />
                 </View>
                 <Text style={{ ...TYPE.cardHeading, flex: 1, color: theme.text }}>
                   {sankalpa.text}
@@ -594,7 +629,7 @@ export default function SankalpaScreen() {
             <Button
               label="Mark complete"
               loading={completing}
-              onPress={() => { void handleComplete(); }}
+              onPress={confirmComplete}
             />
           </>
         ) : (
@@ -712,7 +747,7 @@ export default function SankalpaScreen() {
           </Card>
         )}
 
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 0, padding: 0, overflow: 'hidden' }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 0, padding: 0, overflow: 'hidden' }}>
           <PressableSurface
             accessibilityRole="button"
             accessibilityLabel={historyExpanded ? 'Collapse previous Sankalpas' : 'Expand previous Sankalpas'}
@@ -723,7 +758,7 @@ export default function SankalpaScreen() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Feather name="clock" size={16} color={theme.dim} />
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.text }}>Previous Sankalpas</Text>
+              <Text style={{ ...TYPE.label, color: theme.text }}>Previous Sankalpas</Text>
             </View>
             <Animated.View
               style={{
@@ -770,10 +805,10 @@ export default function SankalpaScreen() {
                           color={row.status === 'completed' ? COLORS.success : theme.dim}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text numberOfLines={1} style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text }}>
+                          <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.text }}>
                             {row.text}
                           </Text>
-                          <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 2 }}>
+                          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
                             {row.target_days ?? '—'} days · {row.status === 'completed' ? 'Completed' : 'Abandoned'}
                           </Text>
                         </View>
