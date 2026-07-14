@@ -989,10 +989,10 @@ function HomeContent() {
 
           <View
             style={{
-              borderRadius: 16,
+              borderRadius: 22,
               backgroundColor: theme.card,
               borderWidth: 1,
-              borderColor: theme.borderSoft,
+              borderColor: theme.premiumBorder,
               overflow: 'hidden',
             }}
           >
@@ -1003,18 +1003,18 @@ function HomeContent() {
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
                 minHeight: 44,
-                paddingHorizontal: 14,
+                paddingHorizontal: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 12,
               }}
             >
-              <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: theme.dim }} numberOfLines={1}>
+              <Text style={{ ...TYPE.label, flex: 1, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <Text style={{ ...TYPE.micro, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
+                <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
                 <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
@@ -1041,16 +1041,16 @@ function HomeContent() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
                       <IconTile name={row.id} fallbackGlyph={row.icon} size="sm" color={PRACTICE_COLOR[row.id]} accent={PRACTICE_COLOR[row.id]} />
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: theme.text }} numberOfLines={1}>
+                        <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
                           {row.label}
                         </Text>
-                        <Text style={{ marginTop: 1, fontFamily: FONTS.sans, fontSize: 10.5, lineHeight: 13, color: theme.dim }} numberOfLines={1}>
+                        <Text style={{ marginTop: 1, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
                           {row.streak && row.streak > 0 ? `${row.detail} · ${row.streak} day streak` : row.detail}
                         </Text>
                       </View>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, lineHeight: 12, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
+                      <Text style={{ ...TYPE.chip, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
                         {row.done ? 'Done' : 'Start'}
                       </Text>
                       <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} size={26} />

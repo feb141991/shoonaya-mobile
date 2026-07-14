@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
 
 /**
@@ -187,11 +187,11 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
     <View style={{ marginBottom: 16 }}>
       <View
         style={{
-          borderRadius: 18,
+          borderRadius: 22,
           overflow: 'hidden',
           backgroundColor: isDark ? `${accent}0a` : `${accent}08`,
           borderWidth: 1,
-          borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+          borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
         }}
       >
         <View
@@ -205,19 +205,10 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: FONTS.sansSemiBold,
-                fontSize: 10,
-                letterSpacing: 1.2,
-                textTransform: 'uppercase',
-                color: accent,
-                marginBottom: 3,
-              }}
-            >
+            <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: accent, marginBottom: 3 }}>
               Your first week
             </Text>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: isDark ? COLORS.creamBg : COLORS.ink }}>
+            <Text style={{ ...TYPE.cardHeading, color: isDark ? COLORS.creamBg : COLORS.ink }}>
               {firstName ? `Welcome, ${firstName} 🙏` : 'Begin your journey'}
             </Text>
           </View>
@@ -256,7 +247,7 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
                   paddingVertical: 12,
                   minHeight: MIN_TOUCH_TARGET,
                   borderTopWidth: 1,
-                  borderTopColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+                  borderTopColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
                 }}
               >
                 <Feather
@@ -268,8 +259,7 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 13,
+                      ...TYPE.label,
                       color: done ? (isDark ? COLORS.textDimDark : COLORS.textDimLight) : isDark ? COLORS.creamBg : COLORS.ink,
                       textDecorationLine: done ? 'line-through' : 'none',
                     }}
@@ -277,14 +267,7 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
                     {act.title}
                   </Text>
                   {!done ? (
-                    <Text
-                      style={{
-                        fontFamily: FONTS.sans,
-                        fontSize: 11,
-                        marginTop: 1,
-                        color: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-                      }}
-                    >
+                    <Text style={{ ...TYPE.caption, marginTop: 1, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }}>
                       {act.desc}
                     </Text>
                   ) : null}

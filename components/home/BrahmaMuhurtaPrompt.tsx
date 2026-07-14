@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import { COLORS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
 
 /**
  * BrahmaMuhurtaPrompt — sunrise-aware japa reminder.
@@ -145,15 +145,15 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
     <View style={{ marginBottom: 16 }}>
       <View
         style={{
-          borderRadius: 18,
+          borderRadius: 22,
           paddingVertical: 14,
           paddingHorizontal: 16,
           backgroundColor: isDark ? `${accent}14` : `${accent}0f`,
           borderWidth: 1,
-          borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+          borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
           <View
             style={{
               width: 36,
@@ -162,29 +162,18 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+              borderWidth: 1,
+              borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
             }}
           >
             <Feather name="sunrise" size={16} color={accent} />
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: FONTS.sansSemiBold,
-                fontSize: 14,
-                color: isDark ? COLORS.creamBg : COLORS.ink,
-              }}
-            >
+            <Text style={{ ...TYPE.label, color: isDark ? COLORS.creamBg : COLORS.ink }}>
               {isActive ? 'Brahma Muhurta — sacred window open' : `Brahma Muhurta in ${countdown}`}
             </Text>
-            <Text
-              style={{
-                fontFamily: FONTS.sans,
-                fontSize: 11,
-                marginTop: 2,
-                color: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-              }}
-            >
+            <Text style={{ ...TYPE.caption, marginTop: 2, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }}>
               {isActive
                 ? `${brahmaMuhurta} · ${countdown} · Optimal japa time`
                 : `${brahmaMuhurta} · Ideal for mantra and meditation`}
@@ -222,7 +211,7 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+            <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
               Begin Japa
             </Text>
             <Feather name="chevron-right" size={14} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
