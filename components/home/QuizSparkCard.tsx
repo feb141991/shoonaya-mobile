@@ -6,23 +6,23 @@ import { useRouter } from 'expo-router';
 import { IconTile } from '@/components/ui/IconTile';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
-import { COLORS, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 
-// Native port of PWA's "Daily Quiz Spark Card" (HomeDashboard's
-// SadhanaSection.tsx, immediately below the Dharm Veer card) — self-fetching
-// like SankalpaCard.tsx/MoodCheckin.tsx so Home doesn't need to widen
-// /api/native/home-summary's contract just for the question preview text.
-// Renders nothing once today's quiz has been answered, or if there's no
-// quiz configured for the user's tradition today — matching PWA's own
-// `quiz && quizAnswered === null` gate exactly (the whole row disappears
-// rather than showing a "come back tomorrow" placeholder).
+// Native port of PWA's compact "Daily Quiz Spark Card" (HomeDashboard's
+// SadhanaSection.tsx, immediately below the Dharm Veer card). Unlike PWA's
+// modal card, native keeps this as a persistent route entry: /quiz owns the
+// completed/error state, so Home should not make the feature disappear.
 
 type DailyQuiz = {
   question: string;
   tradition: string;
+};
+
+type QuizStats = {
+  streak?: number;
 };
 
 type Status = 'loading' | 'ready' | 'hidden' | 'error';
@@ -47,6 +47,7 @@ export function QuizSparkCard() {
 
   const [status, setStatus] = useState<Status>('loading');
   const [quiz, setQuiz] = useState<DailyQuiz | null>(null);
+  const [quizStreak, setQuizStreak] = useState(0);
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -69,37 +70,33 @@ export function QuizSparkCard() {
       const timezone = profile?.timezone ?? 'UTC';
       const today = spiritualDate(timezone);
 
-      const [quizResponse, savedResponse] = await Promise.all([
+      const [quizResponse, statsResponse, savedResponse] = await Promise.all([
         apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`),
+        apiFetch('/api/quiz/stats').catch(() => null),
         supabase
           .from('quiz_responses')
-          .select('date')
+          .select('question')
           .eq('user_id', user.id)
           .eq('date', today)
           .maybeSingle(),
       ]);
 
-      if (savedResponse.data) {
-        // Already answered today — matches PWA hiding the card entirely.
-        setStatus('hidden');
-        return;
+      if (statsResponse?.ok) {
+        const stats = (await statsResponse.json()) as QuizStats;
+        setQuizStreak(stats.streak ?? 0);
       }
 
-      if (!quizResponse.ok) {
-        setStatus('hidden');
-        return;
-      }
+      const quizData = quizResponse.ok ? ((await quizResponse.json()) as Partial<DailyQuiz>) : null;
+      const previewQuestion =
+        quizData?.question ||
+        savedResponse.data?.question ||
+        "Answer today's dharmic question";
 
-      const quizData = (await quizResponse.json()) as Partial<DailyQuiz>;
-      if (!quizData.question) {
-        setStatus('hidden');
-        return;
-      }
-
-      setQuiz({ question: quizData.question, tradition });
+      setQuiz({ question: previewQuestion, tradition });
       setStatus('ready');
     } catch {
-      setStatus('error');
+      setQuiz({ question: "Answer today's dharmic question", tradition: 'hindu' });
+      setStatus('ready');
     }
   }, []);
 
@@ -128,32 +125,43 @@ export function QuizSparkCard() {
       accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
       onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
       style={{
-        minHeight: 72,
-        borderRadius: 22,
-        paddingHorizontal: 16,
-        paddingVertical: 11,
+        minHeight: 64,
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 14,
+        gap: 12,
+        position: 'relative',
         backgroundColor: cardBg,
         borderWidth: 1,
         borderColor: quizBorder || border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
-      <IconTile name="quiz" fallbackGlyph="help-circle" size="sm" color={brand} accent={quizAccent} />
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }}>
-          {title}
-        </Text>
-        <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
-          {quiz.question}
-        </Text>
-        <Text style={{ marginTop: 2, ...TYPE.caption, color: dim }} numberOfLines={1}>
-          One question. One clear dharmic reflection.
-        </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, paddingRight: 72 }}>
+        <IconTile name="quiz" fallbackGlyph="help-circle" size="sm" color={brand} accent={quizAccent} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.35, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
+            {title}
+          </Text>
+          <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 18, color: text }} numberOfLines={1}>
+            {quiz.question}
+          </Text>
+        </View>
       </View>
-      <Feather name="chevron-right" size={22} color={brand} />
+      <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {quizStreak > 1 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <Feather name="zap" size={12} color={brand} />
+            <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
+          </View>
+        ) : null}
+        <Text style={{ ...TYPE.chip, letterSpacing: 1.1, textTransform: 'uppercase', color: dim }}>
+          Play
+        </Text>
+        <Feather name="chevron-right" size={16} color={brand} />
+      </View>
     </PressableSurface>
   );
 }
