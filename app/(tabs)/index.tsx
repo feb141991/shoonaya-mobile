@@ -16,7 +16,6 @@ import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
 import { fetchMoodStatus, type MoodStatus } from '@/lib/mood';
@@ -55,6 +54,16 @@ const PRACTICE_COLOR: Record<PracticeId, string> = {
   pathshala: '#6BC47E',
   quiz: '#A594E0',
   dharmveer: '#FF8A65',
+};
+
+// "View all practices" row glyphs — plain emoji on a white/cream well,
+// matching the reference screenshot (no colour-tinted icon background).
+const PRACTICE_EMOJI: Record<PracticeId, string> = {
+  japa: '📿',
+  nitya: '🌅',
+  pathshala: '📖',
+  quiz: '🧠',
+  dharmveer: '⚔️',
 };
 
 type PracticeRow = {
@@ -244,23 +253,10 @@ function resolveAssetUrl(url: string | null | undefined) {
   return `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
 }
 
-function ProgressRing({
-  done,
-  progress,
-  color,
-  track,
-  size = 34,
-}: {
-  done: boolean;
-  progress: number;
-  color: string;
-  track: string;
-  size?: number;
-}) {
-  const radius = size / 2 - 3.5;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(1, progress));
-
+// "View all practices" status badge — a filled colour disc with a white
+// checkmark when done, or a hollow ring in the practice's own colour when
+// not, matching the reference screenshot exactly (not a progress arc).
+function PracticeStatusBadge({ done, color, size = 34 }: { done: boolean; color: string; size?: number }) {
   return (
     <View
       accessibilityElementsHidden
@@ -268,28 +264,15 @@ function ProgressRing({
       style={{
         width: size,
         height: size,
+        borderRadius: size / 2,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: done ? color : 'transparent',
+        borderWidth: done ? 0 : 2,
+        borderColor: color,
       }}
     >
-      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute' }}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={track} strokeWidth={2.5} />
-        {done || clamped > 0 ? (
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeDasharray={`${clamped * circumference} ${circumference}`}
-            rotation="-90"
-            origin={`${size / 2}, ${size / 2}`}
-          />
-        ) : null}
-      </Svg>
-      {done ? <Feather name="check" size={size <= 26 ? 12 : 15} color={color} /> : null}
+      {done ? <Feather name="check" size={size <= 26 ? 13 : 16} color="#fff" /> : null}
     </View>
   );
 }
@@ -1048,7 +1031,7 @@ function HomeContent() {
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
-              overflow: 'hidden',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             }}
           >
             <Pressable
@@ -1057,64 +1040,76 @@ function HomeContent() {
               accessibilityLabel={practicesOpen ? 'Hide all practices' : 'View all practices'}
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
-                minHeight: 44,
-                paddingHorizontal: 16,
+                minHeight: 56,
+                paddingHorizontal: 18,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 12,
               }}
             >
-              <Text style={{ ...TYPE.label, flex: 1, color: theme.dim }} numberOfLines={1}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 17, lineHeight: 22, flex: 1, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 17, lineHeight: 22, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
-                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={17} color={theme.dim} />
+                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.dim} />
               </View>
             </Pressable>
-
-            {practicesOpen ? (
-              <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 6 }}>
-                {state.practices.map((row) => (
-                  <PressableSurface
-                    key={row.id}
-                    accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
-                    onPress={() => navigate(resolveNativeRoute(row.href))}
-                    style={{
-                      minHeight: 44,
-                      borderRadius: 14,
-                      paddingHorizontal: 10,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      backgroundColor: theme.soft,
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                      <IconTile name={row.id} fallbackGlyph={row.icon} size="sm" color={PRACTICE_COLOR[row.id]} accent={PRACTICE_COLOR[row.id]} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
-                          {row.label}
-                        </Text>
-                        <Text style={{ marginTop: 1, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                          {row.streak && row.streak > 0 ? `${row.detail} · ${row.streak} day streak` : row.detail}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ ...TYPE.chip, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
-                        {row.done ? 'Done' : 'Start'}
-                      </Text>
-                      <ProgressRing done={row.done} progress={row.progress} color={PRACTICE_COLOR[row.id]} track={theme.ringTrack} size={26} />
-                    </View>
-                  </PressableSurface>
-                ))}
-              </View>
-            ) : null}
           </View>
+
+          {practicesOpen ? (
+            <View style={{ gap: 8 }}>
+              {state.practices.map((row) => (
+                <PressableSurface
+                  key={row.id}
+                  accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
+                  onPress={() => navigate(resolveNativeRoute(row.href))}
+                  style={{
+                    minHeight: 66,
+                    borderRadius: 22,
+                    paddingHorizontal: 16,
+                    paddingVertical: 11,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: theme.card,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 14,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: theme.card,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ fontSize: 20, lineHeight: 24 }}>{PRACTICE_EMOJI[row.id]}</Text>
+                    </View>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, lineHeight: 21, color: theme.text, flex: 1 }} numberOfLines={1}>
+                      {row.label}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
+                      {row.done ? 'Done' : 'Start'}
+                    </Text>
+                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} size={34} />
+                  </View>
+                </PressableSurface>
+              ))}
+            </View>
+          ) : null}
 
           {/* Self-contained: fetches its own active Sankalpa + today's
               check-in status via /api/sankalpa* (not home-summary's static
