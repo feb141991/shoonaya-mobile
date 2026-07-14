@@ -332,12 +332,19 @@ function PanchangPill({
   const slides = useMemo(() => {
     const seen = new Set<string>();
     const rows: { key: string; icon: string; label: string }[] = [];
-    const add = (row: { key: string; icon: string; label: string } | null) => {
+    const normalizeObservanceKey = (label: string) => label
+      .replace(/^[^\p{L}\p{N}]+/u, '')
+      .replace(/^(today is|tomorrow is)\s+/i, '')
+      .replace(/\s+in\s+\d+\s+days$/i, '')
+      .replace(/\s+today$/i, '')
+      .trim()
+      .toLowerCase();
+    const add = (row: { key: string; icon: string; label: string; dedupeKey?: string } | null) => {
       if (!row?.label) return;
-      const normalized = row.label.trim().toLowerCase();
+      const normalized = (row.dedupeKey ?? normalizeObservanceKey(row.label));
       if (!normalized || seen.has(normalized)) return;
       seen.add(normalized);
-      rows.push(row);
+      rows.push({ key: row.key, icon: row.icon, label: row.label });
     };
 
     if (kind === 'observance') {
@@ -345,6 +352,7 @@ function PanchangPill({
         key: 'observance',
         icon: summary.observance.emoji ?? '🪔',
         label: summary.observance.label,
+        dedupeKey: summary.observance.name.trim().toLowerCase(),
       } : null);
       add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
       add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
