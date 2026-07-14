@@ -135,6 +135,20 @@ const BG_SCENES = [
     colors: [COLORS.darkBg, COLORS.navy, COLORS.cardBgDark] as const,
     lightColors: [COLORS.brandAccentLight, COLORS.navyBg, COLORS.creamBg] as const,
   },
+  {
+    id: 'forest',
+    name: 'Forest Ashram',
+    icon: 'feather',
+    colors: [COLORS.darkBg, COLORS.tileGreen, COLORS.cardBgDark] as const,
+    lightColors: [COLORS.homeHeroLight, COLORS.tileGreen, COLORS.creamBg] as const,
+  },
+  {
+    id: 'cosmos',
+    name: 'Cosmos',
+    icon: 'star',
+    colors: [COLORS.darkBg, COLORS.tileViolet, COLORS.cardBgDark] as const,
+    lightColors: [COLORS.homeRaisedLight, COLORS.tileViolet, COLORS.creamBg] as const,
+  },
 ] as const;
 
 type JapaSceneId = typeof BG_SCENES[number]['id'];
@@ -198,6 +212,54 @@ function capitalize(value: string | null | undefined) {
 // into this screen and the existing scene/mala Animated.timing calls
 // elsewhere in the app already use this same classic-Animated pattern.
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+// Shared selectable-row wrapper for Choose Mala / Choose Mantra — adds a
+// brief scale pulse whenever `selected` turns true (on top of
+// PressableSurface's own press-scale + haptic), so picking an option reads
+// as a deliberate, animated choice rather than a flat list tap. Local to
+// this file since it's only used by these two picker screens.
+function SelectableCard({
+  selected,
+  onPress,
+  style,
+  children,
+  haptic = 'selection',
+  accessibilityLabel,
+}: {
+  selected: boolean;
+  onPress: () => void;
+  style: object;
+  children: React.ReactNode;
+  haptic?: 'impact' | 'selection' | 'none';
+  accessibilityLabel?: string;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const wasSelected = useRef(selected);
+
+  useEffect(() => {
+    if (selected && !wasSelected.current) {
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.03, duration: 110, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 5, tension: 140, useNativeDriver: true }),
+      ]).start();
+    }
+    wasSelected.current = selected;
+  }, [scale, selected]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <PressableSurface
+        haptic={haptic}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ selected }}
+        onPress={onPress}
+        style={style}
+      >
+        {children}
+      </PressableSurface>
+    </Animated.View>
+  );
+}
 
 export default function JapaScreen() {
   const router = useRouter();
@@ -735,7 +797,7 @@ export default function JapaScreen() {
           <View pointerEvents="none" style={{ position: 'absolute', top: 90, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
           <View pointerEvents="none" style={{ position: 'absolute', top: 420, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
           <ScrollView
-            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
+            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 150, gap: 16 }}
             onScroll={navScrollHandler}
             scrollEventThrottle={16}
           >
@@ -888,6 +950,7 @@ export default function JapaScreen() {
                             borderWidth: 1,
                             borderColor: selected ? theme.brand : theme.premiumBorder,
                             backgroundColor: selected ? theme.brand : cardBg,
+                            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                           }}
                         >
                           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? (isDark ? COLORS.darkBg : COLORS.creamBg) : dim }}>
@@ -979,13 +1042,14 @@ export default function JapaScreen() {
                   style={{
                     borderRadius: 999,
                     minHeight: MIN_TOUCH_TARGET,
+                    paddingVertical: 17,
                     backgroundColor: theme.brand,
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, letterSpacing: 0.2, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
                     Begin Japa
                   </Text>
                 </PressableSurface>
@@ -997,13 +1061,16 @@ export default function JapaScreen() {
                   style={{
                     borderRadius: 999,
                     minHeight: MIN_TOUCH_TARGET,
+                    paddingVertical: 14,
                     borderWidth: 1,
                     borderColor: theme.premiumBorder,
+                    backgroundColor: cardBg,
                     alignItems: 'center',
                     justifyContent: 'center',
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 13, color: dim }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
                     Change mala, mantra or background
                   </Text>
                 </PressableSurface>
@@ -1011,10 +1078,23 @@ export default function JapaScreen() {
                 {history.length > 0 ? (
                   <PressableSurface
                     haptic="selection"
+                    accessibilityLabel="View recent sessions"
                     onPress={() => setHistoryOpen(true)}
-                    style={{ alignItems: 'center', paddingVertical: 6 }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      borderRadius: 999,
+                      minHeight: MIN_TOUCH_TARGET,
+                      paddingVertical: 12,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                    }}
                   >
-                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12.5, color: theme.brand }}>
+                    <Feather name="clock" size={14} color={theme.brand} />
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>
                       View recent sessions ({history.length})
                     </Text>
                   </PressableSurface>
@@ -1028,7 +1108,7 @@ export default function JapaScreen() {
         // background (scene) picker, confirming chains to Choose Mantra. ──
         <>
           <ScrollView
-            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 32, gap: 18 }}
+            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 150, gap: 18 }}
             onScroll={navScrollHandler}
             scrollEventThrottle={16}
           >
@@ -1066,14 +1146,14 @@ export default function JapaScreen() {
               </Text>
             </View>
 
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12 }}>
               {Object.entries(MALA_SKINS).map(([id, skin]) => {
                 const selected = (selectedMalaId ?? 'default') === id;
                 return (
-                  <PressableSurface
+                  <SelectableCard
                     key={id}
-                    haptic="selection"
-                    accessibilityState={{ selected }}
+                    selected={selected}
+                    accessibilityLabel={`Select ${skin.label} mala`}
                     onPress={() => {
                       setSelectedMalaId(id);
                       void AsyncStorage.setItem(JAPA_MALA_KEY, id);
@@ -1087,20 +1167,32 @@ export default function JapaScreen() {
                       borderColor: selected ? skin.glowColor : theme.premiumBorder,
                       backgroundColor: selected ? theme.brandSoft : cardBg,
                       padding: 14,
+                      boxShadow: selected
+                        ? `0 6px 18px ${skin.glowColor}`
+                        : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
                     }}
                   >
-                    <Svg width={52} height={52}>
-                      <Line x1={26} y1={26} x2={26} y2={6} stroke={skin.threadColor} strokeWidth={1.2} />
-                      {Array.from({ length: 16 }, (_, index) => {
-                        const angle = (Math.PI * 2 * index) / 16 - Math.PI / 2;
-                        const r = index === 0 ? 3.6 : 2.4;
+                    <Svg width={56} height={56}>
+                      <Defs>
+                        <RadialGradient id={`mala-bead-${id}`} cx="30%" cy="30%" r="70%">
+                          <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.85" />
+                          <Stop offset="45%" stopColor={skin.beadColor} stopOpacity="1" />
+                          <Stop offset="100%" stopColor={skin.beadBorder} stopOpacity="1" />
+                        </RadialGradient>
+                      </Defs>
+                      <Circle cx={28} cy={28} r={24} fill={skin.glowColor} opacity={selected ? 0.22 : 0} />
+                      <Line x1={28} y1={28} x2={28} y2={7} stroke={skin.threadColor} strokeWidth={1.3} />
+                      {Array.from({ length: 18 }, (_, index) => {
+                        const angle = (Math.PI * 2 * index) / 18 - Math.PI / 2;
+                        const isGuru = index === 0;
+                        const r = isGuru ? 4 : 2.6;
                         return (
                           <Circle
                             key={index}
-                            cx={26 + Math.cos(angle) * 21}
-                            cy={26 + Math.sin(angle) * 21}
+                            cx={28 + Math.cos(angle) * 22}
+                            cy={28 + Math.sin(angle) * 22}
                             r={r}
-                            fill={skin.beadColor}
+                            fill={`url(#mala-bead-${id})`}
                             stroke={skin.beadBorder}
                             strokeWidth={0.6}
                           />
@@ -1114,11 +1206,21 @@ export default function JapaScreen() {
                       </Text>
                     </View>
                     {selected ? (
-                      <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
-                        <Feather name="check" size={12} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
+                        <Feather name="check" size={13} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
                       </View>
-                    ) : null}
-                  </PressableSurface>
+                    ) : (
+                      <View
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 12,
+                          borderWidth: 1.5,
+                          borderColor: theme.premiumBorder,
+                        }}
+                      />
+                    )}
+                  </SelectableCard>
                 );
               })}
             </View>
@@ -1127,34 +1229,54 @@ export default function JapaScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: dim }}>
                 Practice background
               </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 2 }}>
                 {BG_SCENES.map((item) => {
                   const selected = selectedSceneId === item.id;
                   return (
-                    <PressableSurface
+                    <SelectableCard
                       key={item.id}
-                      haptic="selection"
-                      accessibilityState={{ selected }}
+                      selected={selected}
+                      accessibilityLabel={`Select ${item.name} background`}
                       onPress={() => {
                         setSelectedSceneId(item.id);
                         void AsyncStorage.setItem(JAPA_SCENE_KEY, item.id);
                       }}
-                      style={{ alignItems: 'center', width: 62, gap: 6 }}
+                      style={{ alignItems: 'center', width: 64, gap: 6 }}
                     >
                       <LinearGradient
                         colors={isDark ? item.colors : item.lightColors}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={{
-                          width: 56,
-                          height: 56,
+                          width: 58,
+                          height: 58,
                           borderRadius: 18,
                           borderWidth: selected ? 2 : 1,
                           borderColor: selected ? theme.brand : theme.premiumBorder,
                           alignItems: 'center',
                           justifyContent: 'center',
+                          boxShadow: selected
+                            ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+                            : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
                         }}
                       >
+                        {selected ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              width: 16,
+                              height: 16,
+                              borderRadius: 8,
+                              backgroundColor: theme.brand,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Feather name="check" size={9} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                          </View>
+                        ) : null}
                         <Feather name={item.icon as keyof typeof Feather.glyphMap} size={18} color={COLORS.onMediaWhite} />
                       </LinearGradient>
                       <Text
@@ -1163,7 +1285,7 @@ export default function JapaScreen() {
                       >
                         {item.name}
                       </Text>
-                    </PressableSurface>
+                    </SelectableCard>
                   );
                 })}
               </ScrollView>
@@ -1176,13 +1298,14 @@ export default function JapaScreen() {
               style={{
                 borderRadius: 999,
                 minHeight: MIN_TOUCH_TARGET,
+                paddingVertical: 17,
                 backgroundColor: theme.brand,
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, letterSpacing: 0.2, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
                 Choose mantra →
               </Text>
             </PressableSurface>
@@ -1193,7 +1316,7 @@ export default function JapaScreen() {
         // + preset list + target rounds, confirming begins practice. ──────
         <>
           <ScrollView
-            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 32, gap: 18 }}
+            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 150, gap: 18 }}
             onScroll={navScrollHandler}
             scrollEventThrottle={16}
           >
@@ -1229,8 +1352,9 @@ export default function JapaScreen() {
             </View>
 
             {/* Personal mantra card */}
-            <PressableSurface
-              haptic="selection"
+            <SelectableCard
+              selected={mantraOptions[mantraIndex]?.key === 'custom'}
+              accessibilityLabel={customMantra ? 'Select personal mantra' : 'Add personal mantra'}
               onPress={() => {
                 if (customMantra) {
                   setMantraIndex(mantraOptions.length - 1);
@@ -1245,6 +1369,9 @@ export default function JapaScreen() {
                 backgroundColor: mantraOptions[mantraIndex]?.key === 'custom' ? theme.brandSoft : cardBg,
                 padding: 14,
                 gap: 4,
+                boxShadow: mantraOptions[mantraIndex]?.key === 'custom'
+                  ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+                  : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1271,17 +1398,17 @@ export default function JapaScreen() {
               <Text style={{ ...TYPE.caption, color: dim }}>
                 {customMantra ? customMantra.devanagari : 'Use your own mantra in mala practice'}
               </Text>
-            </PressableSurface>
+            </SelectableCard>
 
             {/* Preset mantras */}
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12 }}>
               {mantras.map((item, index) => {
                 const selected = mantraIndex === index;
                 return (
-                  <PressableSurface
+                  <SelectableCard
                     key={item.key}
-                    haptic="selection"
-                    accessibilityState={{ selected }}
+                    selected={selected}
+                    accessibilityLabel={`Select ${item.label} mantra`}
                     onPress={() => setMantraIndex(index)}
                     style={{
                       borderRadius: 18,
@@ -1290,19 +1417,24 @@ export default function JapaScreen() {
                       backgroundColor: selected ? theme.brandSoft : cardBg,
                       padding: 14,
                       gap: 4,
+                      boxShadow: selected
+                        ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+                        : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: theme.brand }}>{item.devanagari}</Text>
                       {selected ? (
-                        <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
-                          <Feather name="check" size={11} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
+                          <Feather name="check" size={12} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
                         </View>
-                      ) : null}
+                      ) : (
+                        <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: theme.premiumBorder }} />
+                      )}
                     </View>
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>{item.label}</Text>
                     <Text style={{ ...TYPE.caption, color: dim }}>{item.meaning}</Text>
-                  </PressableSurface>
+                  </SelectableCard>
                 );
               })}
             </View>
@@ -1333,6 +1465,7 @@ export default function JapaScreen() {
                         borderWidth: 1,
                         borderColor: selected ? theme.brand : theme.premiumBorder,
                         backgroundColor: selected ? theme.brandSoft : cardBg,
+                        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                       }}
                     >
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? theme.brand : dim }}>{n}</Text>
@@ -1352,13 +1485,14 @@ export default function JapaScreen() {
               style={{
                 borderRadius: 999,
                 minHeight: MIN_TOUCH_TARGET,
+                paddingVertical: 17,
                 backgroundColor: theme.brand,
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, letterSpacing: 0.2, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
                 {mantraOptions[mantraIndex]?.key === 'custom' && !customMantra ? 'Add your mantra →' : 'Begin practice →'}
               </Text>
             </PressableSurface>
