@@ -16,8 +16,8 @@ function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) 
   return <View style={[{ backgroundColor: color, borderRadius: 8 }, style]} />;
 }
 
-const HERO_MIN_HEIGHT = 170;
-const HERO_SHLOKA_TOP_SPACE = 8;
+const HERO_MIN_HEIGHT = 420;
+const HERO_SHLOKA_TOP_SPACE = 42;
 
 export function HomeSkeleton() {
   const isDark = useColorScheme() === 'dark';
@@ -30,7 +30,7 @@ export function HomeSkeleton() {
     <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={['top']}>
       <View style={{ flex: 1 }}>
         {/* Hero */}
-        <View style={{ minHeight: HERO_MIN_HEIGHT, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'flex-start' }}>
+        <View style={{ minHeight: HERO_MIN_HEIGHT, width: '100%', paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'flex-start' }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
             <View style={{ flexDirection: 'row', gap: 10 }}>
