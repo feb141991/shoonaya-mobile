@@ -57,7 +57,7 @@ function clampProgress(value: number): number {
 }
 
 function ProgressRing({ progress, done, color, track }: { progress: number; done: boolean; color: string; track: string }) {
-  const size = 30;
+  const size = 26;
   const radius = size / 2 - 3;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(1, progress));
@@ -178,7 +178,7 @@ export function SankalpaCard() {
           load().catch(() => {});
         }}
         style={{
-          minHeight: 72,
+          minHeight: 58,
           borderRadius: 22,
           paddingHorizontal: 16,
           flexDirection: 'row',
@@ -190,10 +190,10 @@ export function SankalpaCard() {
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         }}
       >
-        <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>
+        <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12.5, color: theme.dim }}>
           Couldn&apos;t load your Sankalpa.
         </Text>
-        <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
+        <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12.5 }}>Retry</Text>
       </Pressable>
     );
   }
@@ -205,7 +205,7 @@ export function SankalpaCard() {
         accessibilityLabel="Set your Sankalpa"
         onPress={() => router.push('/sankalpa')}
         style={{
-          minHeight: 72,
+          minHeight: 58,
           borderRadius: 22,
           paddingHorizontal: 16,
           flexDirection: 'row',
@@ -217,7 +217,7 @@ export function SankalpaCard() {
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
           <View
             style={{
               width: 36,
@@ -230,13 +230,13 @@ export function SankalpaCard() {
               borderColor: theme.border,
             }}
           >
-            <Feather name="sun" size={18} color={theme.brand} />
+            <Feather name="sun" size={16} color={theme.brand} />
           </View>
-          <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
+          <Text style={{ ...TYPE.label, color: theme.text, flex: 1 }} numberOfLines={1}>
             Set your Sankalpa for this month
           </Text>
         </View>
-        <Feather name="arrow-right" size={20} color={theme.brand} />
+        <Feather name="arrow-right" size={18} color={theme.brand} />
       </Pressable>
     );
   }
@@ -249,20 +249,20 @@ export function SankalpaCard() {
   return (
     <View
       style={{
-        minHeight: 72,
+        minHeight: 58,
         borderRadius: 22,
         paddingHorizontal: 16,
-        paddingVertical: 11,
+        paddingVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 14,
+        gap: 12,
         backgroundColor: theme.card,
         borderWidth: 1,
         borderColor: theme.border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
         <View
           style={{
             width: 36,
@@ -275,13 +275,13 @@ export function SankalpaCard() {
             borderColor: theme.border,
           }}
         >
-          <Feather name="sun" size={18} color={theme.brand} />
+          <Feather name="sun" size={16} color={theme.brand} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
+          <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
             {sankalpa.text}
           </Text>
-          <Text style={{ marginTop: 3, ...TYPE.caption, color: theme.dim }}>
+          <Text style={{ marginTop: 1, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
             Day {Math.min(day, targetDays || day)} of {targetDays}
           </Text>
         </View>
@@ -298,9 +298,9 @@ export function SankalpaCard() {
         disabled={checkedToday || checkingIn}
         hitSlop={6}
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
+          width: 32,
+          height: 32,
+          borderRadius: 16,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: checkedToday ? `${theme.brand}22` : theme.brand,
@@ -311,7 +311,7 @@ export function SankalpaCard() {
       >
         <Feather
           name={checkedToday ? 'check-circle' : 'check'}
-          size={checkedToday ? 18 : 16}
+          size={checkedToday ? 16 : 14}
           color={checkedToday ? theme.brand : isDark ? COLORS.darkBg : COLORS.creamBg}
         />
       </PressableSurface>

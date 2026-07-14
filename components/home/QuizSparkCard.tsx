@@ -144,7 +144,7 @@ export function QuizSparkCard() {
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, paddingRight: 72 }}>
-        <IconTile name="quiz" fallbackGlyph="help-circle" size="sm" color={brand} accent={quizAccent} />
+        <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} accent={quizAccent} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={{ ...TYPE.chip, letterSpacing: 1.35, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
             {title}
