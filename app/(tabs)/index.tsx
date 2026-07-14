@@ -664,7 +664,7 @@ function HomeContent() {
       >
         <View
           style={{
-            minHeight: HERO_MIN_HEIGHT,
+            height: HERO_MIN_HEIGHT,
             width: '100%',
             paddingHorizontal: 20,
             paddingTop: 18,
@@ -715,145 +715,162 @@ function HomeContent() {
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_READABILITY_HEIGHT, zIndex: 1 }}
           />
 
-          <View style={{ position: 'relative', zIndex: 2, alignSelf: 'stretch', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel={unreadNotifications > 0 ? `Notifications, ${unreadNotifications} unread` : 'Notifications'}
-              onPress={() => navigate('/notifications')}
-              style={{
-                minWidth: MIN_TOUCH_TARGET,
-                minHeight: MIN_TOUCH_TARGET,
-                borderRadius: 22,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: theme.heroOverlay,
-                borderWidth: 1,
-                borderColor: theme.borderSoft,
-              }}
-            >
-              <Feather name="bell" size={18} color={theme.text} />
-              {unreadNotifications > 0 ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    width: 9,
-                    height: 9,
-                    borderRadius: 5,
-                    backgroundColor: theme.brand,
-                    borderWidth: 1.5,
-                    borderColor: theme.heroOverlay,
-                  }}
-                />
-              ) : null}
-            </PressableSurface>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={unreadNotifications > 0 ? `Notifications, ${unreadNotifications} unread` : 'Notifications'}
+            onPress={() => {
+              void Haptics.selectionAsync().catch(() => {});
+              navigate('/notifications');
+            }}
+            style={{
+              position: 'absolute',
+              zIndex: 3,
+              top: 18,
+              left: 20,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.heroOverlay,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+            }}
+          >
+            <Feather name="bell" size={18} color={theme.text} />
+            {unreadNotifications > 0 ? (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  width: 9,
+                  height: 9,
+                  borderRadius: 5,
+                  backgroundColor: theme.brand,
+                  borderWidth: 1.5,
+                  borderColor: theme.heroOverlay,
+                }}
+              />
+            ) : null}
+          </Pressable>
 
-            {/* Mood Pill */}
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Check in with your mood"
-              onPress={() => navigate('/mood')}
-              hitSlop={4}
-              style={{
-                minHeight: 36,
-                borderRadius: 999,
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'row',
-                gap: 6,
-                backgroundColor: COLORS.homePwaObservanceBg,
-                borderWidth: 1,
-                borderColor: COLORS.homePwaObservanceBorder,
-              }}
-            >
-              {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
-                <>
-                  {findMoodConfig(isDark, moodStatus.lastMood) ? (
-                    <View
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 11,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: findMoodConfig(isDark, moodStatus.lastMood)?.bg,
-                      }}
-                    >
-                      <MoodGlyph
-                        mood={moodStatus.lastMood}
-                        color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaObservanceText}
-                        size={13}
-                      />
-                    </View>
-                  ) : (
-                    <Text style={{ fontSize: 12, lineHeight: 14 }}>✨</Text>
-                  )}
-                  <Text
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Check in with your mood"
+            onPress={() => {
+              void Haptics.selectionAsync().catch(() => {});
+              navigate('/mood');
+            }}
+            hitSlop={4}
+            style={{
+              position: 'absolute',
+              zIndex: 3,
+              top: 22,
+              right: 78,
+              minHeight: 36,
+              width: 180,
+              borderRadius: 999,
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 6,
+              backgroundColor: COLORS.homePwaObservanceBg,
+              borderWidth: 1,
+              borderColor: COLORS.homePwaObservanceBorder,
+            }}
+          >
+            {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
+              <>
+                {findMoodConfig(isDark, moodStatus.lastMood) ? (
+                  <View
                     style={{
-                      ...TYPE.chip,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: findMoodConfig(isDark, moodStatus.lastMood)?.bg,
                     }}
-                    numberOfLines={1}
                   >
-                    Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
-                  </Text>
-                </>
-              ) : (
+                    <MoodGlyph
+                      mood={moodStatus.lastMood}
+                      color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaObservanceText}
+                      size={13}
+                    />
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 12, lineHeight: 14 }}>✨</Text>
+                )}
                 <Text
                   style={{
                     ...TYPE.chip,
                     fontSize: 11,
                     lineHeight: 14,
-                    color: COLORS.homePwaObservanceText,
+                    color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
                   }}
                   numberOfLines={1}
                 >
-                  How are you feeling?
+                  Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
                 </Text>
-              )}
-            </PressableSurface>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Open profile"
-                onPress={() => navigate('/(tabs)/profile')}
+              </>
+            ) : (
+              <Text
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                  overflow: 'hidden',
+                  ...TYPE.chip,
+                  fontSize: 11,
+                  lineHeight: 14,
+                  color: COLORS.homePwaObservanceText,
                 }}
+                numberOfLines={1}
               >
-                {avatarImageUrl ? (
-                  <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                ) : relicImageUrl ? (
-                  <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
-                ) : (
-                  <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
-                    {state.profile.firstName.charAt(0)}
-                  </Text>
-                )}
-              </PressableSurface>
-            </View>
-          </View>
+                How are you feeling?
+              </Text>
+            )}
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            onPress={() => {
+              void Haptics.selectionAsync().catch(() => {});
+              navigate('/(tabs)/profile');
+            }}
+            style={{
+              position: 'absolute',
+              zIndex: 4,
+              top: 18,
+              right: 20,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.heroOverlay,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+              overflow: 'hidden',
+            }}
+          >
+            {avatarImageUrl ? (
+              <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            ) : relicImageUrl ? (
+              <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
+            ) : (
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 20, lineHeight: 24, fontWeight: '700', color: theme.text }}>
+                {state.profile.firstName.charAt(0)}
+              </Text>
+            )}
+          </Pressable>
 
           {/* PWA (HeroSection.tsx) stacks city -> greeting -> pill with only
               mt-3/mt-1.5 between the icon row above and this block — a
               tight rhythm. This block previously used marginTop: 48, which
               is why the greeting/pills read as noticeably lower/detached
               from the bell+avatar row than PWA's version. */}
-          <View style={{ position: 'relative', zIndex: 2, alignSelf: 'stretch', marginTop: 18, alignItems: 'flex-start' }}>
+          <View style={{ position: 'absolute', zIndex: 2, top: 78, left: 20, right: 20, alignItems: 'flex-start' }}>
             {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Feather name="map-pin" size={12} color={theme.dim} />
