@@ -767,7 +767,8 @@ function HomeContent() {
               position: 'absolute',
               zIndex: 3,
               top: 22,
-              right: 78,
+              left: '50%',
+              marginLeft: -90,
               minHeight: 36,
               width: 180,
               borderRadius: 999,
@@ -969,16 +970,13 @@ function HomeContent() {
               navigate(actionRoute);
             }}
             style={{
-              borderRadius: 26,
-              paddingHorizontal: 18,
-              paddingVertical: 16,
+              borderRadius: 24,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
               borderWidth: 1,
               borderColor: 'rgba(205,166,92,0.28)',
               boxShadow: '0 12px 28px rgba(105,75,35,0.10), inset 0 1px 0 rgba(255,255,255,0.75)',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 14,
+              gap: 12,
               overflow: 'hidden',
             }}
           >
@@ -988,12 +986,12 @@ function HomeContent() {
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 }}>
               <View
                 style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
                   backgroundColor: 'rgba(217,178,105,0.18)',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1002,39 +1000,45 @@ function HomeContent() {
                 <SacredIcon
                   name={nextPracticeRow?.id ?? 'japa'}
                   fallbackGlyph={sadhanaComplete ? 'star' : nextPracticeIcon}
-                  size={26}
+                  size={23}
                   color="#a97725"
                 />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 18, lineHeight: 22, letterSpacing: -0.2, color: '#3f2b1f' }} numberOfLines={1}>
+                <Text style={{ ...TYPE.cardHeading, color: '#3f2b1f' }} numberOfLines={1}>
                   {sadhanaTitle}
                 </Text>
-                <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 17, color: 'rgba(63,43,31,0.66)' }} numberOfLines={1}>
+                <Text style={{ marginTop: 3, ...TYPE.caption, color: 'rgba(63,43,31,0.66)' }} numberOfLines={1}>
                   {sadhanaSubtitle}
                 </Text>
               </View>
             </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                flexShrink: 0,
-                borderRadius: 999,
-                paddingLeft: 16,
-                paddingRight: 12,
-                paddingVertical: 11,
-                backgroundColor: '#b6842f',
-                boxShadow: '0 8px 18px rgba(160,112,39,0.28), inset 0 1px 0 rgba(255,255,255,0.35)',
-              }}
-            >
-              <Ionicons name="sparkles" size={15} color="#fff8e8" />
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: '#fff8e8' }}>
-                {sadhanaButtonLabel}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <Text style={{ ...TYPE.chip, letterSpacing: 1.1, textTransform: 'uppercase', color: 'rgba(63,43,31,0.58)' }} numberOfLines={1}>
+                {completedCount} of {state.practices.length} practices
               </Text>
-              <Feather name="chevron-right" size={15} color="#fff8e8" style={{ opacity: 0.65, marginLeft: -2 }} />
+              <View
+                style={{
+                  minHeight: 38,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  flexShrink: 0,
+                  borderRadius: 999,
+                  paddingLeft: 15,
+                  paddingRight: 12,
+                  paddingVertical: 9,
+                  backgroundColor: '#b6842f',
+                  boxShadow: '0 8px 18px rgba(160,112,39,0.22), inset 0 1px 0 rgba(255,255,255,0.35)',
+                }}
+              >
+                <Ionicons name="sparkles" size={14} color="#fff8e8" />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, lineHeight: 17, color: '#fff8e8' }}>
+                  {sadhanaButtonLabel}
+                </Text>
+                <Feather name="chevron-right" size={14} color="#fff8e8" style={{ opacity: 0.72, marginLeft: -2 }} />
+              </View>
             </View>
           </PressableSurface>
 
