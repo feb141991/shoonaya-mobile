@@ -153,7 +153,6 @@ type HomeSummary = {
   firstWeek: boolean;
 };
 
-const SANSKRIT_WEEKDAYS = ['Ravivara', 'Somavara', 'Mangalavara', 'Budhavara', 'Guruvāra', 'Shukravara', 'Shanivara'];
 const HERO_MIN_HEIGHT = 650;
 const HERO_READABILITY_HEIGHT = 330;
 
@@ -239,17 +238,6 @@ function getTimeGreeting(hour: number): string | null {
   return null;
 }
 
-function getDateLabel(isoDate: string) {
-  const date = new Date(`${isoDate}T12:00:00`);
-  const english = new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
-  const sanskritWeekday = SANSKRIT_WEEKDAYS[date.getDay()] ?? 'Dina';
-  return `${sanskritWeekday} · ${english}`;
-}
-
 function resolveAssetUrl(url: string | null | undefined) {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
@@ -309,13 +297,11 @@ function ProgressRing({
 function PanchangPill({
   panchang,
   summary,
-  selectedDateIso,
   theme,
   kind = 'panchang',
 }: {
   panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
   summary: HomeSummary['panchang'];
-  selectedDateIso: string;
   theme: { heroOverlay: string; borderSoft: string; text: string; brand: string };
   kind?: 'panchang' | 'observance';
 }) {
@@ -361,10 +347,9 @@ function PanchangPill({
 
     add({ key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` });
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
-    add({ key: 'date', icon: '📅', label: getDateLabel(selectedDateIso) });
 
     return rows;
-  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, selectedDateIso, summary.festivalLabel, summary.observance, summary.vratLabel]);
+  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.festivalLabel, summary.observance, summary.vratLabel]);
   const total = slides.length;
 
   useEffect(() => {
@@ -500,6 +485,7 @@ function HomeContent() {
   );
 
   const heroImageUrl = resolveAssetUrl(state.hero.imageUrl);
+  const avatarImageUrl = resolveAssetUrl(state.profile.avatarUrl);
   const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
 
   const panchang = useMemo(
@@ -832,27 +818,6 @@ function HomeContent() {
             </PressableSurface>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {/* Karma pill removed from here per request — karma points are
-                  still visible on Profile. Replaced with a Panchang quick-
-                  access icon, matching the bell's circular treatment. */}
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Open today's Panchang"
-                onPress={() => navigate('/panchang')}
-                style={{
-                  width: MIN_TOUCH_TARGET,
-                  height: MIN_TOUCH_TARGET,
-                  borderRadius: 22,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                }}
-              >
-                <Feather name="calendar" size={18} color={theme.text} />
-              </PressableSurface>
-
               <PressableSurface
                 haptic="selection"
                 accessibilityLabel="Open profile"
@@ -869,7 +834,9 @@ function HomeContent() {
                   overflow: 'hidden',
                 }}
               >
-                {relicImageUrl ? (
+                {avatarImageUrl ? (
+                  <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                ) : relicImageUrl ? (
                   <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
                 ) : (
                   <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
@@ -900,8 +867,8 @@ function HomeContent() {
             </Text>
 
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
-              <PanchangPill panchang={panchang} summary={state.panchang} selectedDateIso={state.date.iso} theme={theme} />
-              <PanchangPill panchang={panchang} summary={state.panchang} selectedDateIso={state.date.iso} theme={theme} kind="observance" />
+              <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
+              <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" />
             </View>
           </View>
         </View>
