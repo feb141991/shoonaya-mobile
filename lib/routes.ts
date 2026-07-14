@@ -28,6 +28,10 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // route there either). Previously both collapsed onto the single
   // '/(tabs)/bhakti' screen, back when that file was actually the Japa
   // counter under a mislabeled name.
+  // Insights is its own native screen (app/japa-insights.tsx), ported from
+  // PWA's /japa/insights (which itself redirects to /bhakti/mala/insights)
+  // — must be checked before the general Japa/Bhakti-mala match below.
+  if (pathname.startsWith('/japa/insights') || pathname.startsWith('/bhakti/mala/insights')) return '/japa-insights' as Href;
   if (pathname.startsWith('/bhakti/mala') || pathname.startsWith('/japa')) return '/japa';
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala/')) return path as Href;

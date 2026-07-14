@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Line, Defs, RadialGradient, Stop } from 'react-native-svg';
@@ -739,7 +739,7 @@ export default function JapaScreen() {
             onScroll={navScrollHandler}
             scrollEventThrottle={16}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <PressableSurface
                 haptic="selection"
                 accessibilityLabel="Go back"
@@ -759,6 +759,27 @@ export default function JapaScreen() {
                 }}
               >
                 <Feather name="chevron-left" size={20} color={text} />
+              </PressableSurface>
+
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Japa insights"
+                onPress={() => router.push('/japa-insights' as Href)}
+                hitSlop={16}
+                style={{
+                  width: 44,
+                  height: 44,
+                  minHeight: 44,
+                  borderRadius: 22,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: cardBg,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                }}
+              >
+                <Feather name="bar-chart-2" size={17} color={theme.brand} />
               </PressableSurface>
             </View>
 
