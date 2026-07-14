@@ -1,7 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  LayoutAnimation,
+  Platform,
+  ScrollView,
+  Text,
+  UIManager,
+  View,
+  useColorScheme,
+} from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -74,10 +89,70 @@ function consistencyLabel(pct: number) {
   return 'Getting Started';
 }
 
+// Excellent/Great read as "on track" (brand gold), Good/Building read as
+// "in progress" (a softer amber-neutral), Getting Started stays dim rather
+// than alarming — a first-week user isn't behind on anything yet.
+function consistencyTone(pct: number, theme: ReturnType<typeof themeColor>) {
+  if (pct >= 70) return theme.brand;
+  if (pct >= 25) return theme.text;
+  return theme.dim;
+}
+
 function streakRiskLabel(daysSinceLast: number) {
   if (daysSinceLast <= 1) return { label: 'Low', tone: 'ok' as const };
   if (daysSinceLast <= 3) return { label: 'Medium', tone: 'warn' as const };
   return { label: 'High', tone: 'alert' as const };
+}
+
+// Grows a horizontal fill bar from 0 to `pct` on mount and whenever `pct`
+// changes (e.g. switching time-range pills) — the old version rendered the
+// target width directly with no motion at all.
+function AnimatedBar({ pct, color, trackColor, height = 8 }: { pct: number; color: string; trackColor: string; height?: number }) {
+  const width = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(width, {
+      toValue: Math.max(0, Math.min(100, pct)),
+      duration: 700,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false, // width can't use the native driver
+    }).start();
+  }, [pct, width]);
+
+  const animatedWidth = width.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
+
+  return (
+    <View style={{ height, borderRadius: height / 2, backgroundColor: trackColor, overflow: 'hidden' }}>
+      <Animated.View style={{ width: animatedWidth, height: '100%', backgroundColor: color, borderRadius: height / 2 }} />
+    </View>
+  );
+}
+
+// One day-of-week column — grows to its target height with a per-index
+// stagger so the chart reads left-to-right instead of popping in at once.
+function AnimatedColumn({ targetHeight, color, index, maxHeight = 56 }: { targetHeight: number; color: string; index: number; maxHeight?: number }) {
+  const height = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(height, {
+      toValue: targetHeight,
+      duration: 520,
+      delay: index * 45,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false, // height can't use the native driver
+    }).start();
+  }, [height, index, targetHeight]);
+
+  return (
+    <Animated.View
+      style={{
+        width: 14,
+        height: height.interpolate({ inputRange: [0, maxHeight], outputRange: [3, maxHeight] }),
+        borderRadius: 5,
+        backgroundColor: color,
+      }}
+    />
+  );
 }
 
 export default function JapaInsightsScreen() {
@@ -316,10 +391,10 @@ export default function JapaInsightsScreen() {
               <Text style={{ ...TYPE.section, color: theme.brand }}>Overview</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {[
-                  { label: 'Total beads', value: stats.totalBeads.toLocaleString('en-IN') },
-                  { label: 'Total time', value: formatDuration(stats.totalDuration) },
-                  { label: 'Sessions', value: String(stats.totalSessions) },
-                  { label: 'Avg / session', value: formatDuration(stats.avgDuration) },
+                  { label: 'Total beads', value: stats.totalBeads.toLocaleString('en-IN'), icon: 'circle' as const },
+                  { label: 'Total time', value: formatDuration(stats.totalDuration), icon: 'clock' as const },
+                  { label: 'Sessions', value: String(stats.totalSessions), icon: 'layers' as const },
+                  { label: 'Avg / session', value: formatDuration(stats.avgDuration), icon: 'trending-up' as const },
                 ].map((tile) => (
                   <View
                     key={tile.label}
@@ -329,12 +404,15 @@ export default function JapaInsightsScreen() {
                       backgroundColor: theme.brandSoft,
                       paddingVertical: 12,
                       paddingHorizontal: 12,
-                      gap: 3,
+                      gap: 6,
                     }}
                   >
-                    <Text style={{ ...TYPE.caption, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 9.5 }}>
-                      {tile.label}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name={tile.icon} size={12} color={theme.brand} />
+                      <Text style={{ ...TYPE.caption, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 9.5 }}>
+                        {tile.label}
+                      </Text>
+                    </View>
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: theme.text }}>{tile.value}</Text>
                   </View>
                 ))}
@@ -361,11 +439,11 @@ export default function JapaInsightsScreen() {
               <Text style={{ ...TYPE.section, color: theme.brand }}>Practice consistency</Text>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
                 <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: theme.text }}>{stats.consistencyPct}%</Text>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>{consistencyLabel(stats.consistencyPct)}</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: consistencyTone(stats.consistencyPct, theme) }}>
+                  {consistencyLabel(stats.consistencyPct)}
+                </Text>
               </View>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.premiumBorder, overflow: 'hidden' }}>
-                <View style={{ width: `${stats.consistencyPct}%`, height: '100%', backgroundColor: theme.brand, borderRadius: 4 }} />
-              </View>
+              <AnimatedBar pct={stats.consistencyPct} color={theme.brand} trackColor={theme.premiumBorder} />
               <Text style={{ ...TYPE.caption, color: theme.dim }}>
                 Practiced on {stats.uniqueDays} of {stats.windowDays} day{stats.windowDays === 1 ? '' : 's'}
               </Text>
@@ -373,13 +451,10 @@ export default function JapaInsightsScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 72, marginTop: 4 }}>
                 {stats.dayOfWeekBeads.map((val, index) => (
                   <View key={index} style={{ alignItems: 'center', gap: 6, flex: 1 }}>
-                    <View
-                      style={{
-                        width: 14,
-                        height: Math.max(3, (val / maxDayBeads) * 56),
-                        borderRadius: 5,
-                        backgroundColor: val > 0 ? theme.brand : theme.premiumBorder,
-                      }}
+                    <AnimatedColumn
+                      index={index}
+                      targetHeight={Math.max(3, (val / maxDayBeads) * 56)}
+                      color={val > 0 ? theme.brand : theme.premiumBorder}
                     />
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim }}>{DAY_LETTERS[index]}</Text>
                   </View>
@@ -426,9 +501,10 @@ export default function JapaInsightsScreen() {
             >
               <Text style={{ ...TYPE.section, color: theme.brand }}>Practice dashboard</Text>
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1, borderRadius: 14, backgroundColor: theme.brandSoft, padding: 12, gap: 3 }}>
+                <View style={{ flex: 1, borderRadius: 14, backgroundColor: theme.brandSoft, padding: 12, gap: 6 }}>
                   <Text style={{ ...TYPE.caption, color: theme.dim, fontSize: 9.5, textTransform: 'uppercase' }}>Completion rate</Text>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: theme.text }}>{stats.completionRate}%</Text>
+                  <AnimatedBar pct={stats.completionRate} color={theme.brand} trackColor={theme.card} height={4} />
                 </View>
                 <View style={{ flex: 1, borderRadius: 14, backgroundColor: theme.brandSoft, padding: 12, gap: 3 }}>
                   <Text style={{ ...TYPE.caption, color: theme.dim, fontSize: 9.5, textTransform: 'uppercase' }}>Streak risk</Text>
@@ -512,46 +588,18 @@ export default function JapaInsightsScreen() {
               <Text style={{ ...TYPE.section, color: theme.brand }}>Recent sessions</Text>
               {filtered.slice(0, 7).map((row) => {
                 const id = row.id ?? malaSessionCreatedAt(row);
-                const expanded = expandedId === id;
-                const beads = malaSessionBeads(row);
-                const rounds = malaSessionRounds(row);
-                const duration = malaSessionDurationSeconds(row);
-                const mantra = malaSessionMantra(row) ?? 'Mantra';
-                const created = malaSessionCreatedAt(row);
-
                 return (
-                  <PressableSurface
+                  <SessionRow
                     key={id}
-                    haptic="selection"
-                    onPress={() => setExpandedId(expanded ? null : id)}
-                    style={{
-                      borderRadius: 16,
-                      borderWidth: 1,
-                      borderColor: theme.premiumBorder,
-                      backgroundColor: theme.card,
-                      padding: 14,
-                      gap: expanded ? 8 : 0,
+                    row={row}
+                    expanded={expandedId === id}
+                    theme={theme}
+                    isDark={isDark}
+                    onToggle={() => {
+                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      setExpandedId((current) => (current === id ? null : id));
                     }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <Text style={{ fontSize: 20 }}>📿</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: theme.text }} numberOfLines={1}>
-                          {mantra}
-                        </Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                          {beads.toLocaleString('en-IN')} beads · {created ? relativeDay(created) : ''}
-                        </Text>
-                      </View>
-                      <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={theme.dim} />
-                    </View>
-                    {expanded ? (
-                      <View style={{ borderTopWidth: 1, borderTopColor: theme.premiumBorder, paddingTop: 8, gap: 4 }}>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>Rounds: {rounds}</Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>Duration: {formatDuration(duration)}</Text>
-                      </View>
-                    ) : null}
-                  </PressableSurface>
+                  />
                 );
               })}
             </View>
@@ -569,4 +617,82 @@ function formatHourRange(hourStart: number) {
     return `${hour12} ${period}`;
   };
   return `${fmt(hourStart)} – ${fmt((hourStart + 2) % 24)}`;
+}
+
+// One recent-session row — the chevron rotates (rather than just swapping
+// icon glyph) and the row itself gets a light scale-in on press, so
+// expanding a session reads as a deliberate animated reveal. The actual
+// height change is handled by the caller's LayoutAnimation.configureNext()
+// right before the state flip, which smoothly animates the row growing/
+// shrinking without any manual height math here.
+function SessionRow({
+  row,
+  expanded,
+  theme,
+  isDark,
+  onToggle,
+}: {
+  row: MalaSessionRow;
+  expanded: boolean;
+  theme: ReturnType<typeof themeColor>;
+  isDark: boolean;
+  onToggle: () => void;
+}) {
+  const rotate = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(rotate, {
+      toValue: expanded ? 1 : 0,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [expanded, rotate]);
+
+  const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+
+  const beads = malaSessionBeads(row);
+  const rounds = malaSessionRounds(row);
+  const duration = malaSessionDurationSeconds(row);
+  const mantra = malaSessionMantra(row) ?? 'Mantra';
+  const created = malaSessionCreatedAt(row);
+
+  return (
+    <PressableSurface
+      haptic="selection"
+      onPress={onToggle}
+      style={{
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: expanded ? theme.brand : theme.premiumBorder,
+        backgroundColor: theme.card,
+        padding: 14,
+        gap: expanded ? 8 : 0,
+        boxShadow: expanded ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 16 }}>📿</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: theme.text }} numberOfLines={1}>
+            {mantra}
+          </Text>
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>
+            {beads.toLocaleString('en-IN')} beads · {created ? relativeDay(created) : ''}
+          </Text>
+        </View>
+        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+          <Feather name="chevron-down" size={16} color={expanded ? theme.brand : theme.dim} />
+        </Animated.View>
+      </View>
+      {expanded ? (
+        <View style={{ borderTopWidth: 1, borderTopColor: theme.premiumBorder, paddingTop: 8, gap: 4 }}>
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>Rounds: {rounds}</Text>
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>Duration: {formatDuration(duration)}</Text>
+        </View>
+      ) : null}
+    </PressableSurface>
+  );
 }
