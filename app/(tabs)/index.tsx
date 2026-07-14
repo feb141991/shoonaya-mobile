@@ -1062,21 +1062,18 @@ function HomeContent() {
                     accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                     onPress={() => navigate(resolveNativeRoute(row.href))}
                     style={{
-                      width: '100%',
-                      alignSelf: 'stretch',
                       minHeight: 44,
                       borderRadius: 14,
                       paddingHorizontal: 10,
-                      paddingVertical: 7,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       backgroundColor: theme.soft,
                     }}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
                       <IconTile name={row.id} fallbackGlyph={row.icon} size="sm" color={PRACTICE_COLOR[row.id]} accent={PRACTICE_COLOR[row.id]} />
-                      <View style={{ flex: 1, minWidth: 0 }}>
+                      <View style={{ flex: 1 }}>
                         <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
                           {row.label}
                         </Text>
@@ -1085,7 +1082,7 @@ function HomeContent() {
                         </Text>
                       </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 'auto' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Text style={{ ...TYPE.chip, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
                         {row.done ? 'Done' : 'Start'}
                       </Text>
