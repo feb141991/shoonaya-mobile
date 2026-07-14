@@ -5,6 +5,7 @@ import {
   Animated,
   Easing,
   Modal,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -30,10 +31,33 @@ import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from '@/lib/traditions';
+import { getNityaRankProgress } from '@/lib/nitya-rank';
+import { getMalaVolumeMilestone } from '@/lib/mala-milestones';
+import { pickDharmaFact } from '@/lib/dharma-facts';
+import { spiritualDate } from '@/lib/spiritualDate';
+
+// Native Japa — rebuilt to mirror PWA's src/app/(main)/japa/JapaClient.tsx
+// screen flow (Phase 1 of a phased port; see conversation for phases 2/3):
+//   Screen 'launcher' — "Choose your practice": selected mantra, mala/target/
+//     streak pills, target-rounds chips, a daily Dharma Reflection, a "Your
+//     Path" streak-rank card, a "Lifetime Japa" volume card, and Begin Japa.
+//   Screen 'practice' — full-screen bead-ring counting, tap anywhere to
+//     count, X (top-left) always opens the exit-confirm sheet, a settings
+//     icon (top-right) opens the existing mala/scene/mantra picker.
+//   Exit-confirm sheet ("Stop this session?") — End & save / Continue
+//     practice / Discard and leave (or "Leave setup" with zero progress),
+//     matching JapaClient.tsx's StopPracticeSheet copy and branching exactly.
+// Deliberately out of scope for this phase (tracked as follow-ups): the
+// dedicated mantra/mala picker SCREENS (native folds them into the existing
+// "Customize" sheet instead), the ambient-sound "Sacred Sounds" sheet, and
+// the ✨-gradient tradition accent colour (native uses the app's one
+// consistent `theme.brand` gold everywhere else, so this screen keeps that
+// rather than introducing a second, screen-local accent system).
 
 type ProfileRow = {
   active_symbol_id: string | null;
   tradition: string | null;
+  timezone: string | null;
 };
 
 type MalaSessionRow = {
@@ -43,20 +67,38 @@ type MalaSessionRow = {
   completed_at: string | null;
 };
 
+type SadhanaTodayRow = {
+  japa_done: boolean | null;
+  streak_count: number | null;
+};
+
 type ToastState = {
   visible: boolean;
   message: string;
 };
 
+type JapaLifetimeData = {
+  totalBeads: number;
+  totalRounds: number;
+  lastPracticed: string | null;
+};
+
+const EMPTY_LIFETIME: JapaLifetimeData = { totalBeads: 0, totalRounds: 0, lastPracticed: null };
+
 const HISTORY_LIMIT = 12;
 const SVG_SIZE = 320;
+const PRACTICE_SVG_SIZE = 340;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
+const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2;
+const PRACTICE_RADIUS = 128;
+const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
 const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
 const JAPA_CUSTOM_MANTRA_KEY = 'shoonaya.japa.customMantra';
 const JAPA_TARGET_ROUNDS_KEY = 'shoonaya.japa.targetRounds';
+const JAPA_LIFETIME_KEY = 'shoonaya.japa.lifetime';
 
 const BG_SCENES = [
   {
@@ -126,6 +168,11 @@ function formatDuration(totalSeconds: number) {
   return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
 }
 
+function capitalize(value: string | null | undefined) {
+  if (!value) return 'Dharma';
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 // Animated primitives for the bead ring — mirrors PWA's motion.circle pulse
 // ring (JapaClient.tsx: "current-pulse"/"flash ripple") using RN's Animated
 // API + react-native-svg's AnimatedComponent, since Reanimated isn't wired
@@ -145,12 +192,20 @@ export default function JapaScreen() {
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const theme = themeColor(isDark);
 
+  // 'launcher' = PWA's "Choose your practice" config screen; 'practice' =
+  // PWA's full-screen bead-ring counting screen. Internal state switch, not
+  // a route change — matches JapaClient.tsx's own single-page screen model.
+  const [screen, setScreen] = useState<'launcher' | 'practice'>('launcher');
+
   const [loading, setLoading] = useState(true);
   const [count, setCount] = useState(0);
   const [completedRounds, setCompletedRounds] = useState(0);
   const [mantraIndex, setMantraIndex] = useState(0);
   const [activeSymbolId, setActiveSymbolId] = useState<string | null>(null);
   const [tradition, setTradition] = useState<string | null>('hindu');
+  const [streak, setStreak] = useState(0);
+  const [japaAlreadyDoneToday, setJapaAlreadyDoneToday] = useState(false);
+  const [lifetime, setLifetime] = useState<JapaLifetimeData>(EMPTY_LIFETIME);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<MalaSessionRow[]>([]);
   const [saving, setSaving] = useState(false);
@@ -167,6 +222,13 @@ export default function JapaScreen() {
   const [completionInsight, setCompletionInsight] = useState<string | null>(null);
   const [completionInsightLoading, setCompletionInsightLoading] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
+
+  // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
+  // (close) button on the practice screen, matching JapaClient.tsx exactly
+  // (the only other two trigger sites in PWA — a bottom "End" pill and the
+  // Settings sheet's "Change Mala & Mantra" — aren't built in this phase).
+  const [showStopSheet, setShowStopSheet] = useState(false);
+  const [stopSaving, setStopSaving] = useState(false);
 
   const [targetRounds, setTargetRounds] = useState(1);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
@@ -225,11 +287,16 @@ export default function JapaScreen() {
   const mantra = mantraOptions[mantraIndex] ?? mantraOptions[0];
   const practiceType = getJapaPracticeType(tradition);
   const scene = BG_SCENES.find((item) => item.id === selectedSceneId) ?? BG_SCENES[0];
+  const traditionLabel = capitalize(tradition);
+  const rank = useMemo(() => getNityaRankProgress(tradition, streak), [tradition, streak]);
+  const volume = useMemo(() => getMalaVolumeMilestone(lifetime.totalBeads), [lifetime.totalBeads]);
+  const fact = useMemo(() => pickDharmaFact(tradition), [tradition]);
 
   const audioPlayer = useAudioPlayer();
   const mantraAudioActive = useRef(false);
 
-  // Load saved mantra audio preference
+  // Load saved local preferences (audio/mala/scene/custom mantra/target
+  // rounds/lifetime totals).
   useEffect(() => {
     Promise.all([
       AsyncStorage.getItem(MANTRA_AUDIO_KEY),
@@ -237,14 +304,25 @@ export default function JapaScreen() {
       AsyncStorage.getItem(JAPA_SCENE_KEY),
       AsyncStorage.getItem(JAPA_CUSTOM_MANTRA_KEY),
       AsyncStorage.getItem(JAPA_TARGET_ROUNDS_KEY),
+      AsyncStorage.getItem(JAPA_LIFETIME_KEY),
     ])
-      .then(([audio, malaId, sceneId, customText, rounds]) => {
+      .then(([audio, malaId, sceneId, customText, rounds, lifetimeRaw]) => {
         if (audio === 'true') setMantraAudioEnabled(true);
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
         const parsedRounds = rounds ? Number(rounds) : 1;
-        if ([1, 3, 5, 11, 21].includes(parsedRounds)) setTargetRounds(parsedRounds);
+        if (TARGET_OPTIONS.includes(parsedRounds as (typeof TARGET_OPTIONS)[number])) setTargetRounds(parsedRounds);
+        if (lifetimeRaw) {
+          try {
+            const parsed = JSON.parse(lifetimeRaw) as Partial<JapaLifetimeData>;
+            setLifetime({
+              totalBeads: typeof parsed.totalBeads === 'number' ? parsed.totalBeads : 0,
+              totalRounds: typeof parsed.totalRounds === 'number' ? parsed.totalRounds : 0,
+              lastPracticed: parsed.lastPracticed ?? null,
+            });
+          } catch {}
+        }
       })
       .catch(() => {});
   }, []);
@@ -252,6 +330,18 @@ export default function JapaScreen() {
   useEffect(() => {
     if (mantraIndex >= mantraOptions.length) setMantraIndex(0);
   }, [mantraIndex, mantraOptions.length]);
+
+  const updateLifetime = useCallback(async (beadsToAdd: number) => {
+    setLifetime((prev) => {
+      const next: JapaLifetimeData = {
+        totalBeads: prev.totalBeads + beadsToAdd,
+        totalRounds: prev.totalRounds + (beadsToAdd >= 108 ? 1 : 0),
+        lastPracticed: new Date().toISOString(),
+      };
+      void AsyncStorage.setItem(JAPA_LIFETIME_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   const loadContext = useCallback(async () => {
     setLoading(true);
@@ -265,7 +355,7 @@ export default function JapaScreen() {
     }
 
     const [profileResult, historyResult] = await Promise.all([
-      supabase.from('profiles').select('active_symbol_id, tradition').eq('id', user.id).single(),
+      supabase.from('profiles').select('active_symbol_id, tradition, timezone').eq('id', user.id).single(),
       supabase
         .from('mala_sessions')
         .select('id, mantra, count, completed_at')
@@ -279,6 +369,18 @@ export default function JapaScreen() {
     setTradition(profile?.tradition ?? 'hindu');
     setMantraIndex(0);
     setHistory((historyResult.data as MalaSessionRow[] | null) ?? []);
+
+    const today = spiritualDate(profile?.timezone ?? 'UTC');
+    const { data: sadhanaData } = await supabase
+      .from('daily_sadhana')
+      .select('japa_done, streak_count')
+      .eq('user_id', user.id)
+      .eq('date', today)
+      .maybeSingle();
+    const sadhana = sadhanaData as SadhanaTodayRow | null;
+    setJapaAlreadyDoneToday(Boolean(sadhana?.japa_done));
+    setStreak(sadhana?.streak_count ?? 0);
+
     setLoading(false);
   }, []);
 
@@ -376,6 +478,7 @@ export default function JapaScreen() {
     const goalComplete = nextRounds >= targetRounds;
     setCompletedRounds(nextRounds);
     setCount(0);
+    void updateLifetime(108);
 
     if (elapsed > 0) {
       setDurationSecs(elapsed);
@@ -393,12 +496,9 @@ export default function JapaScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
 
-    // /api/japa/complete is now a real route (previously missing — this
-    // call always 404'd and silently fell through to a direct, native-only
-    // mala_sessions insert that bypassed daily_sadhana/karma/streak; see the
-    // route's own file header for the full mutation contract it now owns).
-    // No fallback insert here anymore: a failure should surface, not
-    // silently write a partial, inconsistent record straight to the table.
+    // /api/japa/complete owns the mala_sessions insert, daily_sadhana
+    // (japa_done/streak_count) upsert, and karma award — see the route's own
+    // file header for the full mutation contract.
     try {
       const response = await apiFetch('/api/japa/complete', {
         method: 'POST',
@@ -433,11 +533,11 @@ export default function JapaScreen() {
 
     setSaving(false);
     await loadContext();
-  }, [activeSymbolId, completedRounds, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition]);
+  }, [activeSymbolId, completedRounds, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition, updateLifetime]);
 
   const increment = useCallback(async () => {
     if (saving) return;
-    
+
     if (count === 0 && completedRounds === 0 && sessionStartTime === null) {
       setSessionStartTime(Date.now());
     }
@@ -463,7 +563,7 @@ export default function JapaScreen() {
 
       return next;
     });
-  }, [mantraAudioEnabled, saving, startMantraAudio, triggerBloom]);
+  }, [completedRounds, count, mantraAudioEnabled, saving, sessionStartTime, startMantraAudio, triggerBloom]);
 
   useEffect(() => {
     if (count === 108 && !saving) {
@@ -471,9 +571,61 @@ export default function JapaScreen() {
     }
   }, [completeRound, count, saving]);
 
-  function beadPosition(index: number) {
+  // ── Launcher → practice / exit-confirm flow — mirrors JapaClient.tsx's
+  // handleStartPractice / StopPracticeSheet actions exactly. ─────────────
+  const handleStartPractice = useCallback(() => {
+    if (sessionStartTime === null) setSessionStartTime(Date.now());
+    setScreen('practice');
+  }, [sessionStartTime]);
+
+  const hasProgress = completedRounds > 0 || count > 0;
+
+  const handleSaveAndStop = useCallback(async () => {
+    setStopSaving(true);
+    try {
+      // Each finished round already saved itself via completeRound() the
+      // moment it hit 108 beads — the only thing that can still be
+      // unsaved here is a partial, in-progress round (1-107 beads).
+      // /api/japa/complete accepts rounds:0 for exactly this case (see the
+      // route's own contract — completionType becomes 'ended_manually').
+      if (count > 0) {
+        await apiFetch('/api/japa/complete', {
+          method: 'POST',
+          body: JSON.stringify({
+            mantra: mantra.label,
+            count,
+            rounds: 0,
+            tradition,
+            practiceType,
+            activeSymbolId,
+          }),
+        }).catch(() => null);
+        void updateLifetime(count);
+      }
+    } finally {
+      setCount(0);
+      setCompletedRounds(0);
+      setDurationSecs(0);
+      setSessionStartTime(null);
+      setStopSaving(false);
+      setShowStopSheet(false);
+      setScreen('launcher');
+      await loadContext();
+    }
+  }, [activeSymbolId, count, loadContext, mantra.label, practiceType, tradition, updateLifetime]);
+
+  const handleDiscardAndStop = useCallback(() => {
+    setCount(0);
+    setCompletedRounds(0);
+    setDurationSecs(0);
+    setSessionStartTime(null);
+    setShowStopSheet(false);
+    setScreen('launcher');
+  }, []);
+
+  function beadPosition(index: number, center: number, radius: number) {
     const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
-    return { x: CENTER + Math.cos(angle) * RADIUS, y: CENTER + Math.sin(angle) * RADIUS };
+    return { x: center + Math.cos(angle) * radius, y: center + Math.sin(angle) * radius };
   }
 
   // Three-tier bead state (done / current / upcoming) — previously every
@@ -482,15 +634,15 @@ export default function JapaScreen() {
   // lit with the richer `grad-done` gradient as the current bead moves on,
   // giving the same at-a-glance progress read as PWA's bead-done/bead-un
   // split.
-  const beadElements = useMemo(() => {
+  function buildBeadElements(center: number, radius: number) {
     const activeIndex = count >= 108 ? 107 : count;
     return Array.from({ length: 108 }, (_, index) => {
-      const { x, y } = beadPosition(index);
+      const { x, y } = beadPosition(index, center, radius);
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
       const isSumeru = index === 0;
 
-      const r = isSumeru ? 10.5 : 7.5;
+      const r = isSumeru ? 11 : 8;
       const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
 
       return (
@@ -506,382 +658,557 @@ export default function JapaScreen() {
         />
       );
     });
-  }, [count, malaSkin.beadBorder, malaSkin.beadColor, theme.brand]);
+  }
 
-  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count), [count]);
-  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0), [bloomIndex]);
+  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS), [count]);
+  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS), [bloomIndex]);
 
-  const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [11, 17] });
+  const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 18] });
   const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] });
-  const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 20] });
+  const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [9, 22] });
   const bloomOpacity = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] });
   const geometryOpacity = geometryAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
 
+  const beadGradientDefs = (
+    <Defs>
+      <RadialGradient id="grad-inactive" cx="30%" cy="30%" r="70%">
+        <Stop offset="0%" stopColor={malaSkin.beadColor} stopOpacity="0.55" />
+        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="0.55" />
+      </RadialGradient>
+      <RadialGradient id="grad-done" cx="30%" cy="30%" r="70%">
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
+        <Stop offset="35%" stopColor={malaSkin.beadColor} stopOpacity="1" />
+        <Stop offset="100%" stopColor={theme.brand} stopOpacity="1" />
+      </RadialGradient>
+      <RadialGradient id="grad-active" cx="30%" cy="30%" r="70%">
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="30%" stopColor={theme.brand} stopOpacity="1" />
+        <Stop offset="100%" stopColor={COLORS.brandEarthLight} stopOpacity="1" />
+      </RadialGradient>
+    </Defs>
+  );
+
   return (
     <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
-      <View pointerEvents="none" style={{ position: 'absolute', top: 90, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
-      <View pointerEvents="none" style={{ position: 'absolute', top: 420, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
-      <ScrollView
-        contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 18, paddingBottom: 36, gap: 16 }}
-        onScroll={navScrollHandler}
-        scrollEventThrottle={16}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-            hitSlop={16}
-            style={{
-              width: 44,
-              height: 44,
-              minHeight: 44,
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              backgroundColor: cardBg,
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            }}
+      {screen === 'launcher' ? (
+        <>
+          <View pointerEvents="none" style={{ position: 'absolute', top: 90, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
+          <View pointerEvents="none" style={{ position: 'absolute', top: 420, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
+          <ScrollView
+            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
+            onScroll={navScrollHandler}
+            scrollEventThrottle={16}
           >
-            <Feather name="chevron-left" size={23} color={text} />
-          </PressableSurface>
-          <View>
-            <Text style={{ ...TYPE.screenTitle, color: text }}>Japa Mala</Text>
-            <Text style={{ ...TYPE.caption, color: dim }}>{practiceType.replaceAll('_', ' ')} · {malaSkin.label}</Text>
-          </View>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator color={theme.brand} style={{ marginTop: 40 }} />
-        ) : (
-          <>
-            <View style={{ alignItems: 'center', marginBottom: 2, marginTop: 2, gap: 4 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: theme.brand }}>
-                {targetRounds} round{targetRounds > 1 ? 's' : ''} sankalpa
-              </Text>
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, color: theme.brand, textAlign: 'center' }}>
-                {mantra.devanagari}
-              </Text>
-              <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 13, color: text, marginTop: 4 }}>
-                {mantra.label}
-              </Text>
-              <Text style={{ ...TYPE.caption, color: dim, textAlign: 'center', maxWidth: 300 }}>
-                {mantra.meaning}
-              </Text>
-            </View>
-            <PressableSurface
-              haptic="none"
-              onPress={() => { void increment(); }}
-              style={{
-                borderRadius: 30,
-                overflow: 'hidden',
-              }}
-            >
-              <LinearGradient
-                colors={isDark ? scene.colors : scene.lightColors}
-                start={{ x: 0.12, y: 0 }}
-                end={{ x: 0.9, y: 1 }}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Go back"
+                onPress={() => router.back()}
+                hitSlop={16}
                 style={{
-                  borderRadius: 30,
+                  width: 44,
+                  height: 44,
+                  minHeight: 44,
+                  borderRadius: 22,
                   borderWidth: 1,
                   borderColor: theme.premiumBorder,
-                  padding: 16,
+                  backgroundColor: cardBg,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: 358,
-                  boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
+                  boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                 }}
               >
+                <Feather name="chevron-left" size={20} color={text} />
+              </PressableSurface>
+            </View>
+
+            {loading ? (
+              <ActivityIndicator color={theme.brand} style={{ marginTop: 40 }} />
+            ) : (
+              <>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: theme.brand }}>
+                  Japa Mala · {traditionLabel}
+                </Text>
+                <Text style={{ fontFamily: FONTS.serif, fontSize: 34, lineHeight: 40, color: text, marginTop: 2 }}>
+                  Choose your practice
+                </Text>
+
+                {japaAlreadyDoneToday ? (
+                  <LinearGradient
+                    colors={['#C5A059', '#E8D09A', '#C5A059']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ borderRadius: 999, paddingVertical: 10, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: '#160F08' }}>
+                      Japa complete for today 🙏
+                    </Text>
+                  </LinearGradient>
+                ) : null}
+
+                {/* Selected Mantra hero card */}
                 <View
                   style={{
-                    position: 'absolute',
-                    top: 14,
-                    left: 16,
-                    right: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    borderRadius: 28,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: cardBg,
+                    padding: 18,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                    <Feather name={scene.icon as keyof typeof Feather.glyphMap} size={13} color={COLORS.onMediaWhite} />
-                    <Text style={{ ...TYPE.chip, color: COLORS.onMediaWhite }}>{scene.name}</Text>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand }}>
+                    Selected mantra
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 38, lineHeight: 46, color: theme.brand, marginTop: 10 }}>
+                    {mantra.devanagari}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 15, color: text, marginTop: 4 }}>
+                    {mantra.label}
+                  </Text>
+                  <Text style={{ ...TYPE.caption, color: dim, marginTop: 6 }}>
+                    {mantra.meaning}
+                  </Text>
+
+                  <View style={{ height: 1, backgroundColor: theme.premiumBorder, marginTop: 16, marginBottom: 12 }} />
+
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {[
+                      { label: 'Mala', value: malaSkin.label },
+                      { label: 'Target', value: `${targetRounds} × 108` },
+                      { label: 'Streak', value: streak > 0 ? `${streak} days` : 'Start' },
+                    ].map((pill) => (
+                      <View
+                        key={pill.label}
+                        style={{
+                          flex: 1,
+                          borderRadius: 14,
+                          borderWidth: 1,
+                          borderColor: theme.premiumBorder,
+                          backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                          paddingHorizontal: 10,
+                          paddingVertical: 9,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, letterSpacing: 0.8, textTransform: 'uppercase', color: dim }}>
+                          {pill.label}
+                        </Text>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text, marginTop: 2 }} numberOfLines={1}>
+                          {pill.value}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
-                  <Text style={{ ...TYPE.chip, color: COLORS.onMediaWhite }}>{completedRounds}/{targetRounds} malas</Text>
                 </View>
-                <Svg width={SVG_SIZE} height={SVG_SIZE}>
-                  <Defs>
-                    <RadialGradient id="grad-inactive" cx="30%" cy="30%" r="70%">
-                      <Stop offset="0%" stopColor={malaSkin.beadColor} stopOpacity="0.55" />
-                      <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="0.55" />
-                    </RadialGradient>
-                    <RadialGradient id="grad-done" cx="30%" cy="30%" r="70%">
-                      <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
-                      <Stop offset="35%" stopColor={malaSkin.beadColor} stopOpacity="1" />
-                      <Stop offset="100%" stopColor={theme.brand} stopOpacity="1" />
-                    </RadialGradient>
-                    <RadialGradient id="grad-active" cx="30%" cy="30%" r="70%">
-                      <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
-                      <Stop offset="30%" stopColor={theme.brand} stopOpacity="1" />
-                      <Stop offset="100%" stopColor={COLORS.brandEarthLight} stopOpacity="1" />
-                    </RadialGradient>
-                  </Defs>
 
-                  {/* Sacred geometry accent — reveals itself as rounds
-                      complete, echoing PWA's <SacredGeometry/> milestone
-                      unlock without the full layered-triangle asset set. */}
-                  <AnimatedCircle
-                    cx={CENTER}
-                    cy={CENTER}
-                    r={RADIUS - 26}
-                    fill="none"
-                    stroke={COLORS.onMediaWhite}
-                    strokeWidth={1}
-                    strokeDasharray="2 8"
-                    opacity={geometryOpacity}
-                  />
-                  <AnimatedCircle
-                    cx={CENTER}
-                    cy={CENTER}
-                    r={RADIUS - 46}
-                    fill="none"
-                    stroke={COLORS.onMediaWhite}
-                    strokeWidth={1}
-                    strokeDasharray="1 10"
-                    opacity={geometryOpacity}
-                  />
+                {/* Target Rounds */}
+                <View style={{ gap: 10 }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: dim }}>
+                    Target rounds
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {TARGET_OPTIONS.map((n) => {
+                      const selected = targetRounds === n;
+                      return (
+                        <PressableSurface
+                          key={n}
+                          haptic="selection"
+                          accessibilityState={{ selected }}
+                          onPress={() => {
+                            setTargetRounds(n);
+                            void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
+                          }}
+                          style={{
+                            flex: 1,
+                            minHeight: 40,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: selected ? theme.brand : theme.premiumBorder,
+                            backgroundColor: selected ? theme.brand : cardBg,
+                          }}
+                        >
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? (isDark ? COLORS.darkBg : COLORS.creamBg) : dim }}>
+                            {n}
+                          </Text>
+                        </PressableSurface>
+                      );
+                    })}
+                  </View>
+                </View>
 
-                  <Line
-                    x1={CENTER}
-                    y1={CENTER}
-                    x2={CENTER}
-                    y2={CENTER - RADIUS}
-                    stroke={malaSkin.threadColor}
-                    strokeWidth={2}
-                  />
-                  {beadElements}
-
-                  {/* Breathing pulse ring around the bead currently being
-                      counted — PWA's "current-pulse" motion.circle. */}
-                  {count < 108 ? (
-                    <AnimatedCircle
-                      cx={currentBeadPos.x}
-                      cy={currentBeadPos.y}
-                      r={pulseRadius}
-                      fill="none"
-                      stroke={theme.brand}
-                      strokeWidth={1.5}
-                      opacity={pulseOpacity}
-                    />
-                  ) : null}
-
-                  {/* One-shot flash ripple on the bead just tapped — PWA's
-                      per-tap "flash ripple" burst. */}
-                  {bloomIndex !== null ? (
-                    <AnimatedCircle
-                      cx={bloomBeadPos.x}
-                      cy={bloomBeadPos.y}
-                      r={bloomRadius}
-                      fill="none"
-                      stroke={theme.brand}
-                      strokeWidth={2}
-                      opacity={bloomOpacity}
-                    />
-                  ) : null}
-                </Svg>
+                {/* Dharma Reflection */}
                 <View
                   style={{
-                    position: 'absolute',
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: cardBg,
+                    padding: 16,
+                    gap: 6,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand }}>
+                    Dharma reflection
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serif, fontSize: 13.5, lineHeight: 22, color: text }}>
+                    {fact.text}
+                  </Text>
+                  {fact.source ? (
+                    <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim }}>— {fact.source}</Text>
+                  ) : null}
+                </View>
+
+                {/* Your Path + Lifetime Japa */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: cardBg,
+                      padding: 16,
+                      gap: 8,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase', color: dim }}>
+                      Your path
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 15, color: text }}>{rank.label}</Text>
+                    <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.premiumBorder, overflow: 'hidden' }}>
+                      <View style={{ width: `${rank.progress * 100}%`, height: '100%', backgroundColor: theme.brand, borderRadius: 3 }} />
+                    </View>
+                    <Text style={{ ...TYPE.caption, fontSize: 10.5, color: dim }}>
+                      {rank.next ? `${rank.daysToNext} day${rank.daysToNext === 1 ? '' : 's'} to ${rank.next}` : 'Highest path held'}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={{
+                      flex: 1,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: cardBg,
+                      padding: 16,
+                      gap: 8,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase', color: dim }}>
+                      Lifetime japa
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 15, color: theme.brand }}>
+                      {volume.totalBeads.toLocaleString('en-IN')}
+                    </Text>
+                    <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.premiumBorder, overflow: 'hidden' }}>
+                      <View style={{ width: `${volume.progress * 100}%`, height: '100%', backgroundColor: theme.brand, borderRadius: 3 }} />
+                    </View>
+                    <Text style={{ ...TYPE.caption, fontSize: 10.5, color: dim }}>
+                      {volume.nextLabel ? `${Math.round(volume.progress * 100)}% to ${volume.nextLabel}` : volume.label}
+                    </Text>
+                  </View>
+                </View>
+
+                <PressableSurface
+                  haptic="impact"
+                  accessibilityLabel="Begin Japa"
+                  onPress={handleStartPractice}
+                  style={{
+                    borderRadius: 999,
+                    minHeight: MIN_TOUCH_TARGET,
+                    backgroundColor: theme.brand,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderRadius: 80,
-                    paddingHorizontal: 22,
-                    paddingVertical: 18,
-                    backgroundColor: isDark ? COLORS.homeShlokaGlassDark : COLORS.premiumGlassLight,
-                    borderWidth: 1,
-                    borderColor: isDark ? COLORS.homeShlokaGlassBorderDark : COLORS.premiumBorderLight,
+                    boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, color: text }}>
-                    {count} / 108
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                    Begin Japa
                   </Text>
-                  <Text style={{ ...TYPE.caption, color: dim }}>
-                    tap the mala
+                </PressableSurface>
+
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityLabel="Change mala, mantra or background"
+                  onPress={() => setCustomizeOpen(true)}
+                  style={{
+                    borderRadius: 999,
+                    minHeight: MIN_TOUCH_TARGET,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 13, color: dim }}>
+                    Change mala, mantra or background
                   </Text>
-                </View>
-              </LinearGradient>
+                </PressableSurface>
+
+                {history.length > 0 ? (
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => setHistoryOpen(true)}
+                    style={{ alignItems: 'center', paddingVertical: 6 }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12.5, color: theme.brand }}>
+                      View recent sessions ({history.length})
+                    </Text>
+                  </PressableSurface>
+                ) : null}
+              </>
+            )}
+          </ScrollView>
+        </>
+      ) : (
+        // ── Full-screen bead-ring practice screen ──────────────────────
+        <View style={{ flex: 1 }}>
+          <LinearGradient
+            colors={isDark ? scene.colors : scene.lightColors}
+            start={{ x: 0.12, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={{ flex: 1 }}
+          >
+            <Pressable
+              onPress={() => { void increment(); }}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE}>
+                {beadGradientDefs}
+                <AnimatedCircle
+                  cx={PRACTICE_CENTER}
+                  cy={PRACTICE_CENTER}
+                  r={PRACTICE_RADIUS - 26}
+                  fill="none"
+                  stroke={COLORS.onMediaWhite}
+                  strokeWidth={1}
+                  strokeDasharray="2 8"
+                  opacity={geometryOpacity}
+                />
+                <AnimatedCircle
+                  cx={PRACTICE_CENTER}
+                  cy={PRACTICE_CENTER}
+                  r={PRACTICE_RADIUS - 46}
+                  fill="none"
+                  stroke={COLORS.onMediaWhite}
+                  strokeWidth={1}
+                  strokeDasharray="1 10"
+                  opacity={geometryOpacity}
+                />
+                <Line
+                  x1={PRACTICE_CENTER}
+                  y1={PRACTICE_CENTER}
+                  x2={PRACTICE_CENTER}
+                  y2={PRACTICE_CENTER - PRACTICE_RADIUS}
+                  stroke={malaSkin.threadColor}
+                  strokeWidth={2}
+                />
+                {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
+                {count < 108 ? (
+                  <AnimatedCircle
+                    cx={currentBeadPos.x}
+                    cy={currentBeadPos.y}
+                    r={pulseRadius}
+                    fill="none"
+                    stroke={theme.brand}
+                    strokeWidth={1.5}
+                    opacity={pulseOpacity}
+                  />
+                ) : null}
+                {bloomIndex !== null ? (
+                  <AnimatedCircle
+                    cx={bloomBeadPos.x}
+                    cy={bloomBeadPos.y}
+                    r={bloomRadius}
+                    fill="none"
+                    stroke={theme.brand}
+                    strokeWidth={2}
+                    opacity={bloomOpacity}
+                  />
+                ) : null}
+              </Svg>
+              <View style={{ position: 'absolute', alignItems: 'center' }}>
+                <Text style={{ fontFamily: FONTS.serifBold, fontSize: count >= 100 ? 52 : 60, color: COLORS.onMediaWhite }}>
+                  {count} <Text style={{ fontFamily: FONTS.sans, fontSize: 20, color: `${COLORS.onMediaWhite}a6` }}>/ 108</Text>
+                </Text>
+                {count === 0 ? (
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: `${COLORS.onMediaWhite}80`, marginTop: 6 }}>
+                    tap anywhere to begin
+                  </Text>
+                ) : null}
+              </View>
+            </Pressable>
+
+            {/* Close (X) — always opens the exit-confirm sheet, matching
+                JapaClient.tsx's top-left close button exactly. */}
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Stop session"
+              onPress={() => setShowStopSheet(true)}
+              hitSlop={10}
+              style={{
+                position: 'absolute',
+                top: 56,
+                left: 20,
+                width: 40,
+                height: 40,
+                minHeight: 40,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDark ? 'rgba(8,6,4,0.50)' : 'rgba(255,253,248,0.65)',
+                borderWidth: 1,
+                borderColor: `${theme.brand}30`,
+              }}
+            >
+              <Feather name="x" size={17} color={theme.brand} />
+            </PressableSurface>
+
+            {/* Settings — opens the same mala/scene/mantra customize sheet
+                the launcher screen uses ("Practice settings" in PWA). */}
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Practice settings"
+              onPress={() => setCustomizeOpen(true)}
+              hitSlop={10}
+              style={{
+                position: 'absolute',
+                top: 56,
+                right: 20,
+                width: 40,
+                height: 40,
+                minHeight: 40,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDark ? 'rgba(8,6,4,0.36)' : 'rgba(255,253,248,0.42)',
+                borderWidth: 1,
+                borderColor: `${theme.brand}28`,
+              }}
+            >
+              <Feather name="sliders" size={15} color={theme.brand} />
             </PressableSurface>
 
             <View
               style={{
-                borderRadius: 24,
+                position: 'absolute',
+                top: 56,
+                left: 72,
+                right: 72,
+                alignItems: 'center',
+              }}
+              pointerEvents="none"
+            >
+              <Text style={{ ...TYPE.chip, color: COLORS.onMediaWhite }}>{completedRounds}/{targetRounds} malas</Text>
+            </View>
+          </LinearGradient>
+        </View>
+      )}
+
+      {/* ── Exit-confirm sheet — mirrors JapaClient.tsx's StopPracticeSheet
+          copy, branching, and button styles exactly. ───────────────────── */}
+      <Modal transparent visible={showStopSheet} animationType="slide" onRequestClose={() => setShowStopSheet(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.62)', justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1 }} onPress={() => setShowStopSheet(false)} />
+          <View
+            style={{
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              backgroundColor: isDark ? 'rgba(10,8,14,0.97)' : 'rgba(248,244,236,0.97)',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(197,160,89,0.14)' : 'rgba(0,0,0,0.07)',
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: 40,
+              gap: 14,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 10,
+                    letterSpacing: 1.6,
+                    textTransform: 'uppercase',
+                    color: isDark ? '#C5A059' : '#7A4A1E',
+                  }}
+                >
+                  Focused mala
+                </Text>
+                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: isDark ? 'rgba(245,225,185,0.95)' : '#2D1F0E' }}>
+                  Stop this session?
+                </Text>
+              </View>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Continue practice"
+                onPress={() => setShowStopSheet(false)}
+                hitSlop={10}
+                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Feather name="x" size={16} color={isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)'} />
+              </PressableSurface>
+            </View>
+
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 19, color: isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)' }}>
+              {hasProgress
+                ? 'Save your current beads before leaving, or discard this unfinished session.'
+                : 'No beads have been counted yet. You can leave setup or continue practice.'}
+            </Text>
+
+            {hasProgress ? (
+              <PressableSurface
+                haptic="selection"
+                disabled={stopSaving}
+                onPress={() => { void handleSaveAndStop(); }}
+                style={{ borderRadius: 18, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', opacity: stopSaving ? 0.6 : 1 }}
+              >
+                <LinearGradient
+                  colors={isDark ? ['#C5A059', '#8a5818'] : ['#8B5E3C', '#5a3010']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ width: '100%', borderRadius: 18, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? '#fde8c8' : '#fff8f0' }}>
+                    {stopSaving ? 'Saving...' : 'End & save'}
+                  </Text>
+                </LinearGradient>
+              </PressableSurface>
+            ) : null}
+
+            <PressableSurface
+              haptic="selection"
+              onPress={() => setShowStopSheet(false)}
+              style={{
+                borderRadius: 18,
+                minHeight: MIN_TOUCH_TARGET,
                 borderWidth: 1,
-                borderColor: border,
-                backgroundColor: cardBg,
-                padding: 16,
-                gap: 14,
+                borderColor: isDark ? 'rgba(197,160,89,0.14)' : 'rgba(0,0,0,0.07)',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
-                PRACTICE SETUP
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? 'rgba(245,225,185,0.95)' : '#2D1F0E' }}>
+                Continue practice
               </Text>
+            </PressableSurface>
 
-              {/* Target Rounds */}
-              <View style={{ gap: 10, marginBottom: 4 }}>
-                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: dim }}>TARGET ROUNDS</Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {[1, 3, 5, 11, 21].map(n => (
-                    <PressableSurface
-                      key={n}
-                      haptic="selection"
-                      onPress={() => {
-                        setTargetRounds(n);
-                        void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
-                      }}
-                      style={{
-                        flex: 1,
-                        minHeight: MIN_TOUCH_TARGET,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: targetRounds === n ? theme.brand : border,
-                        backgroundColor: targetRounds === n ? (isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight) : cardBg
-                      }}
-                    >
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: targetRounds === n ? theme.brand : text }}>{n}</Text>
-                    </PressableSurface>
-                  ))}
-                </View>
-              </View>
-
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                {[
-                  { label: 'Mala', value: malaSkin.label, icon: 'circle' as const, action: () => setCustomizeOpen(true), active: true },
-                  { label: 'Scene', value: scene.name, icon: scene.icon as keyof typeof Feather.glyphMap, action: () => setCustomizeOpen(true), active: true },
-                  { label: 'Audio', value: mantraAudioEnabled ? 'On' : 'Off', icon: mantraAudioEnabled ? 'volume-2' as const : 'volume-x' as const, action: () => { void toggleMantraAudio(); }, active: mantraAudioEnabled },
-                  { label: 'Sessions', value: `${history.length} recent`, icon: 'clock' as const, action: () => setHistoryOpen(true), active: history.length > 0 },
-                ].map((item) => (
-                  <PressableSurface
-                    key={item.label}
-                    haptic="selection"
-                    onPress={item.action}
-                    style={{
-                      width: '48%',
-                      minHeight: 82,
-                      borderRadius: 18,
-                      borderWidth: 1,
-                      borderColor: item.active ? theme.premiumBorder : border,
-                      backgroundColor: item.active ? (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight) : 'transparent',
-                      padding: 12,
-                      justifyContent: 'space-between',
-                      gap: 4,
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Feather name={item.icon as keyof typeof Feather.glyphMap} size={15} color={theme.brand} />
-                      <Text style={{ ...TYPE.chip, color: theme.brand }}>{item.label}</Text>
-                    </View>
-                    <Text style={{ ...TYPE.label, color: text }} numberOfLines={1}>{item.value}</Text>
-                  </PressableSurface>
-                ))}
-              </View>
-
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                {mantraOptions.map((item, index) => (
-                  <PressableSurface
-                    key={item.key}
-                    haptic="selection"
-                    onPress={() => setMantraIndex(index)}
-                    style={{
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      minHeight: MIN_TOUCH_TARGET,
-                      justifyContent: 'center',
-                      borderColor: index === mantraIndex ? theme.brand : border,
-                      backgroundColor: index === mantraIndex ? cardBg : 'transparent',
-                      paddingHorizontal: 12,
-                      paddingVertical: 9,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: FONTS.sansMedium,
-                        fontSize: 12,
-                        color: index === mantraIndex ? theme.brand : dim,
-                      }}
-                    >
-                      {item.label}
-                    </Text>
-                  </PressableSurface>
-                ))}
-                <PressableSurface
-                  haptic="selection"
-                  onPress={() => setCustomMantraOpen(true)}
-                  style={{
-                    minHeight: MIN_TOUCH_TARGET,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: theme.premiumBorder,
-                    backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-                    paddingHorizontal: 12,
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.brand }}>
-                    Personal mantra
-                  </Text>
-                </PressableSurface>
-              </View>
-
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <PressableSurface
-                  haptic="selection"
-                  onPress={() => {
-                    setCount(0);
-                    setCompletedRounds(0);
-                    setDurationSecs(0);
-                    setSessionStartTime(null);
-                    setCompletionStats(null);
-                  }}
-                  style={{
-                    flex: 1,
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: border,
-                    minHeight: MIN_TOUCH_TARGET,
-                    paddingVertical: 14,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>Reset</Text>
-                </PressableSurface>
-
-                <PressableSurface
-                  haptic="selection"
-                  onPress={() => setCustomizeOpen(true)}
-                  style={{
-                    flex: 1,
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: border,
-                    minHeight: MIN_TOUCH_TARGET,
-                    paddingVertical: 14,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>Customize</Text>
-                </PressableSurface>
-              </View>
-            </View>
-          </>
-        )}
-      </ScrollView>
+            <PressableSurface
+              haptic="selection"
+              onPress={handleDiscardAndStop}
+              style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)' }}>
+                {hasProgress ? 'Discard and leave' : 'Leave setup'}
+              </Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </Modal>
 
       <Modal transparent visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
         <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
@@ -962,7 +1289,7 @@ export default function JapaScreen() {
               borderColor: border,
               padding: 22,
               gap: 18,
-              maxHeight: '78%',
+              maxHeight: '82%',
             }}
           >
             <View style={{ alignItems: 'center' }}>
@@ -970,9 +1297,60 @@ export default function JapaScreen() {
             </View>
             <View style={{ gap: 4 }}>
               <Text style={{ ...TYPE.screenTitle, color: text }}>Practice atmosphere</Text>
-              <Text style={{ ...TYPE.caption, color: dim }}>Choose the mala and setting that help you settle.</Text>
+              <Text style={{ ...TYPE.caption, color: dim }}>Choose the mantra, mala and setting that help you settle.</Text>
             </View>
             <ScrollView contentContainerStyle={{ gap: 18 }} showsVerticalScrollIndicator={false}>
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.section, color: theme.brand }}>Mantra</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                  {mantraOptions.map((item, index) => (
+                    <PressableSurface
+                      key={item.key}
+                      haptic="selection"
+                      accessibilityState={{ selected: index === mantraIndex }}
+                      onPress={() => setMantraIndex(index)}
+                      style={{
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        minHeight: MIN_TOUCH_TARGET,
+                        justifyContent: 'center',
+                        borderColor: index === mantraIndex ? theme.brand : border,
+                        backgroundColor: index === mantraIndex ? theme.brandSoft : 'transparent',
+                        paddingHorizontal: 12,
+                        paddingVertical: 9,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: FONTS.sansMedium,
+                          fontSize: 12,
+                          color: index === mantraIndex ? theme.brand : dim,
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                    </PressableSurface>
+                  ))}
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => setCustomMantraOpen(true)}
+                    style={{
+                      minHeight: MIN_TOUCH_TARGET,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                      paddingHorizontal: 12,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.brand }}>
+                      Personal mantra
+                    </Text>
+                  </PressableSurface>
+                </View>
+              </View>
+
               <View style={{ gap: 10 }}>
                 <Text style={{ ...TYPE.section, color: theme.brand }}>Mala</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -1055,6 +1433,31 @@ export default function JapaScreen() {
                     );
                   })}
                 </View>
+              </View>
+
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.section, color: theme.brand }}>Mantra audio</Text>
+                <PressableSurface
+                  haptic="selection"
+                  onPress={() => { void toggleMantraAudio(); }}
+                  style={{
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: mantraAudioEnabled ? theme.brand : border,
+                    backgroundColor: mantraAudioEnabled ? theme.brandSoft : (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight),
+                    padding: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minHeight: MIN_TOUCH_TARGET,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Feather name={mantraAudioEnabled ? 'volume-2' : 'volume-x'} size={17} color={theme.brand} />
+                    <Text style={{ ...TYPE.label, color: text }}>Spoken mantra loop</Text>
+                  </View>
+                  <Text style={{ ...TYPE.caption, color: theme.brand }}>{mantraAudioEnabled ? 'On' : 'Off'}</Text>
+                </PressableSurface>
               </View>
             </ScrollView>
             <PressableSurface
@@ -1302,6 +1705,7 @@ export default function JapaScreen() {
                   setCompletionVisible(false);
                   setConfettiVisible(false);
                   setCompletionInsight(null);
+                  setScreen('launcher');
                 }}
                 style={{
                   flex: 1,
