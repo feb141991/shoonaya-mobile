@@ -38,12 +38,16 @@ export function QuizSparkCard() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight;
+  // Outer card border matches the same premiumBorder every other Home card
+  // (Dharm Veer, Sankalpa, Sacred Rhythm) uses, so this row reads as part of
+  // the same card family rather than a one-off. The purple stays only on
+  // the icon well's accent below — that's the intentional "this is the quiz"
+  // identity color, not the card boundary.
+  const border = isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const quizAccent = COLORS.tilePurple;
-  const quizBorder = COLORS.tilePurpleBorder;
 
   const [status, setStatus] = useState<Status>('loading');
   const [quiz, setQuiz] = useState<DailyQuiz | null>(null);
@@ -125,17 +129,17 @@ export function QuizSparkCard() {
       accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
       onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
       style={{
-        minHeight: 64,
-        borderRadius: 20,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
+        minHeight: 70,
+        borderRadius: 22,
+        paddingHorizontal: 16,
+        paddingVertical: 11,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
         position: 'relative',
         backgroundColor: cardBg,
         borderWidth: 1,
-        borderColor: quizBorder || border,
+        borderColor: border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >

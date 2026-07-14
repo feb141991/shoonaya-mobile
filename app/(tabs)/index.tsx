@@ -1193,24 +1193,27 @@ function HomeContent() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
-                  Sacred rhythm
-                </Text>
-                <Text style={{ marginTop: 5, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
-                  {tithiPill}
-                </Text>
-                <Text style={{ marginTop: 4, ...TYPE.caption, color: theme.dim }}>
-                  Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
-                </Text>
-                {state.panchang.viewedToday ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                    <Feather name="check-circle" size={13} color={theme.brand} />
-                    <Text style={{ ...TYPE.label, color: theme.brand }}>
-                      Observed today
-                    </Text>
-                  </View>
-                ) : null}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+                <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} accent={theme.brand} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
+                    Sacred rhythm
+                  </Text>
+                  <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
+                    {tithiPill}
+                  </Text>
+                  <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }}>
+                    Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
+                  </Text>
+                  {state.panchang.viewedToday ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      <Feather name="check-circle" size={13} color={theme.brand} />
+                      <Text style={{ ...TYPE.label, color: theme.brand }}>
+                        Observed today
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
               </View>
               {refreshing ? (
                 <ActivityIndicator color={theme.brand} />
