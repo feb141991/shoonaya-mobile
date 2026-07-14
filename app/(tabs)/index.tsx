@@ -153,8 +153,8 @@ type HomeSummary = {
   firstWeek: boolean;
 };
 
-const HERO_MIN_HEIGHT = 650;
-const HERO_READABILITY_HEIGHT = 330;
+const HERO_MIN_HEIGHT = 170;
+const HERO_READABILITY_HEIGHT = 90;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -664,7 +664,7 @@ function HomeContent() {
       >
         <View
           style={{
-            minHeight: HERO_MIN_HEIGHT,
+            height: HERO_MIN_HEIGHT,
             paddingHorizontal: 20,
             paddingTop: 18,
             paddingBottom: 34,
@@ -677,7 +677,7 @@ function HomeContent() {
             <Image
               source={{ uri: heroImageUrl }}
               accessibilityIgnoresInvertColors
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, { zIndex: 0 }]}
               resizeMode="cover"
             />
           ) : null}
@@ -700,7 +700,7 @@ function HomeContent() {
               'transparent',
             ]}
             locations={[0, 0.4, 0.8]}
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, { zIndex: 0 }]}
           />
           <LinearGradient
             pointerEvents="none"
@@ -711,10 +711,10 @@ function HomeContent() {
               theme.background,
             ]}
             locations={[0, 0.35, 0.75, 1]}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_READABILITY_HEIGHT }}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_READABILITY_HEIGHT, zIndex: 0 }}
           />
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ zIndex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <PressableSurface
               haptic="selection"
               accessibilityLabel={unreadNotifications > 0 ? `Notifications, ${unreadNotifications} unread` : 'Notifications'}
@@ -852,7 +852,7 @@ function HomeContent() {
               tight rhythm. This block previously used marginTop: 48, which
               is why the greeting/pills read as noticeably lower/detached
               from the bell+avatar row than PWA's version. */}
-          <View style={{ marginTop: 18, alignItems: 'flex-start' }}>
+          <View style={{ zIndex: 1, marginTop: 18, alignItems: 'flex-start' }}>
             {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Feather name="map-pin" size={12} color={theme.dim} />

@@ -16,8 +16,8 @@ function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) 
   return <View style={[{ backgroundColor: color, borderRadius: 8 }, style]} />;
 }
 
-const HERO_MIN_HEIGHT = 720;
-const HERO_SHLOKA_TOP_SPACE = 340;
+const HERO_MIN_HEIGHT = 170;
+const HERO_SHLOKA_TOP_SPACE = 8;
 
 export function HomeSkeleton() {
   const isDark = useColorScheme() === 'dark';
