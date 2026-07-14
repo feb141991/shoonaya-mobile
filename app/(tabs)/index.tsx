@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
@@ -517,6 +517,26 @@ function HomeContent() {
   const nextPracticeIcon = nextPracticeRow?.icon ?? 'compass';
   const nextPracticeColor = nextPracticeRow ? PRACTICE_COLOR[nextPracticeRow.id] : theme.brand;
 
+  // Copy mirrors PWA's getDailySadhanaCta() (HeroSection.tsx) exactly — same
+  // three states (begin / continue / complete), same "Next: X · detail" and
+  // "Start with X · N practices today" phrasing — so the two apps read the
+  // same sentence, not just the same layout.
+  const sadhanaComplete = state.nextPractice.progress >= 1;
+  const traditionLabel = state.profile.tradition
+    ? state.profile.tradition.charAt(0).toUpperCase() + state.profile.tradition.slice(1)
+    : 'Dharma';
+  const sadhanaTitle = sadhanaComplete
+    ? "Today's Sadhana Complete"
+    : completedCount === 0
+      ? "Begin Today's Sadhana"
+      : "Continue Today's Sadhana";
+  const sadhanaSubtitle = sadhanaComplete
+    ? `Your ${traditionLabel} rhythm is steady today · +seva earned`
+    : completedCount === 0
+      ? `Start with ${state.nextPractice.title} · ${state.practices.length - completedCount} practices today`
+      : `Next: ${state.nextPractice.title} · ${state.nextPractice.suggestion}`;
+  const sadhanaButtonLabel = sadhanaComplete ? "Today's Recap" : completedCount === 0 ? 'Begin' : 'Continue';
+
   const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
   const dharmVeerDone = dharmVeerRow?.done ?? false;
   const dharmVeerIcon = dharmVeerRow?.icon ?? 'shield';
@@ -938,53 +958,91 @@ function HomeContent() {
             <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
           ) : null}
 
+          {/* Smart daily Sadhana CTA — mirrors PWA's HeroSection.tsx card
+              exactly (same 26px radius, cream/gold gradient, 54px icon well,
+              gold-gradient pill button with sparkle + chevron). PWA renders
+              this identically in light and dark mode — no isDark branch on
+              the source — so this card intentionally doesn't theme-switch
+              either; it's a fixed "premium accent" treatment, not a themed
+              surface. */}
           <PressableSurface
             haptic="selection"
-            accessibilityLabel={`${state.nextPractice.contextLabel}: ${state.nextPractice.title}. ${state.nextPractice.actionLabel}`}
+            accessibilityLabel={`${sadhanaTitle}. ${sadhanaSubtitle}. ${sadhanaButtonLabel}`}
             onPress={() => {
-              if (state.nextPractice.progress >= 1) {
-                setPracticesOpen(true);
+              if (sadhanaComplete) {
+                navigate('/my-progress');
                 return;
               }
               navigate(actionRoute);
             }}
             style={{
-              minHeight: 72,
-              borderRadius: 22,
-              paddingHorizontal: 16,
-              paddingVertical: 11,
-              backgroundColor: theme.card,
+              borderRadius: 26,
+              paddingHorizontal: 18,
+              paddingVertical: 16,
               borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              borderColor: 'rgba(205,166,92,0.28)',
+              boxShadow: '0 12px 28px rgba(105,75,35,0.10), inset 0 1px 0 rgba(255,255,255,0.75)',
               flexDirection: 'row',
               alignItems: 'center',
+              justifyContent: 'space-between',
               gap: 14,
+              overflow: 'hidden',
             }}
           >
-            <IconTile
-              name={nextPracticeRow?.id ?? 'japa'}
-              fallbackGlyph={nextPracticeIcon}
-              size="sm"
-              color={nextPracticeColor}
-              accent={nextPracticeColor}
+            <LinearGradient
+              colors={['rgba(255,248,234,0.96)', 'rgba(250,236,211,0.88)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
             />
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }} numberOfLines={1}>
-                {state.nextPractice.contextLabel}
-              </Text>
-              <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
-                {state.nextPractice.title}
-              </Text>
-              <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                {state.nextPractice.progress >= 1 ? 'Completed — tap to view all practices' : state.nextPractice.suggestion}
-              </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+              <View
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 18,
+                  backgroundColor: 'rgba(217,178,105,0.18)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <SacredIcon
+                  name={nextPracticeRow?.id ?? 'japa'}
+                  fallbackGlyph={sadhanaComplete ? 'star' : nextPracticeIcon}
+                  size={26}
+                  color="#a97725"
+                />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 18, lineHeight: 22, letterSpacing: -0.2, color: '#3f2b1f' }} numberOfLines={1}>
+                  {sadhanaTitle}
+                </Text>
+                <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 17, color: 'rgba(63,43,31,0.66)' }} numberOfLines={1}>
+                  {sadhanaSubtitle}
+                </Text>
+              </View>
             </View>
-            {state.nextPractice.progress >= 1 ? (
-              <Feather name="check-circle" size={22} color={theme.brand} />
-            ) : (
-              <Feather name="chevron-right" size={22} color={theme.brand} />
-            )}
+
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                flexShrink: 0,
+                borderRadius: 999,
+                paddingLeft: 16,
+                paddingRight: 12,
+                paddingVertical: 11,
+                backgroundColor: '#b6842f',
+                boxShadow: '0 8px 18px rgba(160,112,39,0.28), inset 0 1px 0 rgba(255,255,255,0.35)',
+              }}
+            >
+              <Ionicons name="sparkles" size={15} color="#fff8e8" />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: '#fff8e8' }}>
+                {sadhanaButtonLabel}
+              </Text>
+              <Feather name="chevron-right" size={15} color="#fff8e8" style={{ opacity: 0.65, marginLeft: -2 }} />
+            </View>
           </PressableSurface>
 
           <View
