@@ -261,6 +261,376 @@ function SelectableCard({
   );
 }
 
+// ── Practice-screen background animation — one distinct, theme-relevant
+// motion per scene (Midnight/Himalayan Dawn/Temple Lamp/River Ghat/Forest
+// Ashram/Cosmos), layered over the existing static LinearGradient. Pure RN
+// Animated (no new dependency), useNativeDriver throughout. Deterministic
+// per-particle placement/timing via a seeded pseudo-random helper, so
+// layout doesn't reshuffle on every re-render.
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 9973.1) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+type ParticleMotion = 'twinkle' | 'drift-up' | 'wave';
+
+function BackgroundParticle({
+  seed,
+  color,
+  size,
+  motion,
+  duration,
+}: {
+  seed: number;
+  color: string;
+  size: number;
+  motion: ParticleMotion;
+  duration: number;
+}) {
+  const opacity = useRef(new Animated.Value(seededRandom(seed) * 0.5 + 0.2)).current;
+  const translateY = useRef(new Animated.Value(motion === 'drift-up' ? 46 : 0)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const left = `${(seededRandom(seed * 1.7) * 92 + 3).toFixed(1)}%` as `${number}%`;
+  const top = `${(seededRandom(seed * 2.3) * 88 + 4).toFixed(1)}%` as `${number}%`;
+
+  useEffect(() => {
+    const delay = seededRandom(seed * 3.1) * duration;
+    let loop: Animated.CompositeAnimation;
+
+    if (motion === 'twinkle') {
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(opacity, { toValue: 0.9, duration: duration * 0.5, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.12, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      );
+    } else if (motion === 'drift-up') {
+      loop = Animated.loop(
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(translateY, { toValue: -70, duration, delay, easing: Easing.linear, useNativeDriver: true }),
+            Animated.timing(translateY, { toValue: 46, duration: 0, useNativeDriver: true }),
+          ]),
+          Animated.sequence([
+            Animated.timing(translateX, { toValue: seededRandom(seed * 4.4) > 0.5 ? 8 : -8, duration: duration / 2, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+            Animated.timing(translateX, { toValue: 0, duration: duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          ]),
+          Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.8, duration: duration * 0.25, delay, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: duration * 0.75, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          ]),
+        ])
+      );
+    } else {
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(translateX, { toValue: 14, duration: duration / 2, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(translateX, { toValue: -14, duration: duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      );
+    }
+
+    loop.start();
+    return () => loop.stop();
+  }, [duration, motion, opacity, seed, translateX, translateY]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: color,
+        opacity,
+        transform: [{ translateY }, { translateX }],
+      }}
+    />
+  );
+}
+
+function AmbientGlow({
+  color,
+  size,
+  cornerX,
+  cornerY,
+  seed,
+}: {
+  color: string;
+  size: number;
+  cornerX: 'left' | 'right';
+  cornerY: 'top' | 'bottom';
+  seed: number;
+}) {
+  const translate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(translate, { toValue: 1, duration: 9000 + seededRandom(seed) * 6000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(translate, { toValue: 0, duration: 9000 + seededRandom(seed * 1.4) * 6000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [seed, translate]);
+
+  const dx = translate.interpolate({ inputRange: [0, 1], outputRange: [0, cornerX === 'left' ? 30 : -30] });
+  const dy = translate.interpolate({ inputRange: [0, 1], outputRange: [0, cornerY === 'top' ? 22 : -22] });
+
+  const positionStyle: { left?: number; right?: number; top?: number; bottom?: number } = {};
+  if (cornerX === 'left') positionStyle.left = -size * 0.35;
+  else positionStyle.right = -size * 0.35;
+  if (cornerY === 'top') positionStyle.top = -size * 0.3;
+  else positionStyle.bottom = -size * 0.3;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        positionStyle,
+        {
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color,
+          transform: [{ translateX: dx }, { translateY: dy }],
+        },
+      ]}
+    />
+  );
+}
+
+// Temple Lamp — an irregularly flickering warm glow near the top, mimicking
+// a diya flame (random-duration opacity/scale jitter rather than a smooth
+// loop, since a real flame never pulses evenly).
+function FlameFlicker() {
+  const opacity = useRef(new Animated.Value(0.5)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      const toOpacity = 0.35 + seededRandom(Date.now() % 997) * 0.5;
+      const toScale = 0.92 + seededRandom((Date.now() % 991) + 3) * 0.22;
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: toOpacity, duration: 140 + seededRandom(Date.now() % 500) * 160, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: toScale, duration: 140 + seededRandom((Date.now() % 500) + 7) * 160, useNativeDriver: true }),
+      ]).start(() => tick());
+    };
+    tick();
+    return () => {
+      cancelled = true;
+    };
+  }, [opacity, scale]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: '14%',
+        left: '50%',
+        marginLeft: -70,
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: 'rgba(255,150,60,0.35)',
+        opacity,
+        transform: [{ scale }],
+      }}
+    />
+  );
+}
+
+// Himalayan Dawn — a soft light band slowly sweeping side to side, like
+// early sun crossing a ridgeline.
+function DawnSweep({ color }: { color: string }) {
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateX, { toValue: 1, duration: 9000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: 0, duration: 9000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [translateX]);
+
+  const tx = translateX.interpolate({ inputRange: [0, 1], outputRange: [-140, 140] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: '18%',
+        left: '50%',
+        marginLeft: -110,
+        width: 220,
+        height: 90,
+        borderRadius: 100,
+        backgroundColor: color,
+        opacity: 0.16,
+        transform: [{ translateX: tx }],
+      }}
+    />
+  );
+}
+
+// River Ghat — thin horizontal ripple bands drifting sideways at different
+// speeds/opacities, layered to suggest moving water.
+function WaveBand({ topPct, color, seed }: { topPct: number; color: string; seed: number }) {
+  const translateX = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateX, { toValue: 20, duration: 4200 + seededRandom(seed) * 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: -20, duration: 4200 + seededRandom(seed * 1.6) * 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [seed, translateX]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: `${topPct}%`,
+        left: '-10%',
+        width: '120%',
+        height: 2,
+        borderRadius: 1,
+        backgroundColor: color,
+        opacity: 0.35,
+        transform: [{ translateX }],
+      }}
+    />
+  );
+}
+
+// Cosmos — an occasional shooting star streaking across, on a long random
+// interval so it reads as a rare event rather than a constant loop.
+function ShootingStar({ delaySeed }: { delaySeed: number }) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const run = () => {
+      if (cancelled) return;
+      progress.setValue(0);
+      Animated.timing(progress, { toValue: 1, duration: 750, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(() => {
+        if (cancelled) return;
+        const wait = 9000 + seededRandom(delaySeed + (Date.now() % 100)) * 6000;
+        timer = setTimeout(run, wait);
+      });
+    };
+    timer = setTimeout(run, 2000 + seededRandom(delaySeed) * 6000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [delaySeed, progress]);
+
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-60, 220] });
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-20, 90] });
+  const opacity = progress.interpolate({ inputRange: [0, 0.1, 0.8, 1], outputRange: [0, 1, 1, 0] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: '18%',
+        left: '10%',
+        width: 46,
+        height: 1.6,
+        borderRadius: 1,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        opacity,
+        transform: [{ rotate: '24deg' }, { translateX }, { translateY }],
+      }}
+    />
+  );
+}
+
+const SCENE_PARTICLES: Record<
+  JapaSceneId,
+  { count: number; color: string; minSize: number; maxSize: number; motion: ParticleMotion; minDuration: number; maxDuration: number }
+> = {
+  midnight: { count: 16, color: 'rgba(255,255,255,0.85)', minSize: 1.4, maxSize: 3, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
+  himalayan: { count: 10, color: 'rgba(255,222,175,0.85)', minSize: 1.8, maxSize: 3.4, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
+  temple: { count: 9, color: 'rgba(255,176,102,0.9)', minSize: 2, maxSize: 3.6, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
+  river: { count: 12, color: 'rgba(190,225,255,0.75)', minSize: 1.6, maxSize: 3, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
+  forest: { count: 12, color: 'rgba(198,230,180,0.85)', minSize: 1.8, maxSize: 3.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
+  cosmos: { count: 26, color: 'rgba(255,255,255,0.9)', minSize: 1, maxSize: 2.6, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
+};
+
+const SCENE_GLOW: Record<JapaSceneId, string> = {
+  midnight: 'rgba(150,170,255,0.16)',
+  himalayan: 'rgba(255,196,120,0.20)',
+  temple: 'rgba(255,140,60,0.20)',
+  river: 'rgba(120,200,255,0.16)',
+  forest: 'rgba(130,210,140,0.18)',
+  cosmos: 'rgba(180,140,255,0.20)',
+};
+
+// Distinct, theme-relevant motion per scene, on top of the shared
+// twinkle/drift particle field: Temple flickers like a real flame,
+// Himalayan Dawn gets a slow light sweep, River Ghat gets rippling wave
+// bands, Cosmos gets occasional shooting stars.
+function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
+  const particleConfig = SCENE_PARTICLES[sceneId];
+  const glowColor = SCENE_GLOW[sceneId];
+
+  const particles = useMemo(
+    () =>
+      Array.from({ length: particleConfig.count }, (_, index) => {
+        const seed = index + 1;
+        const size = particleConfig.minSize + seededRandom(seed * 5.2) * (particleConfig.maxSize - particleConfig.minSize);
+        const duration = particleConfig.minDuration + seededRandom(seed * 7.7) * (particleConfig.maxDuration - particleConfig.minDuration);
+        return { seed, size, duration };
+      }),
+    [particleConfig]
+  );
+
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <AmbientGlow color={glowColor} size={230} cornerX="left" cornerY="top" seed={11} />
+      <AmbientGlow color={glowColor} size={200} cornerX="right" cornerY="bottom" seed={23} />
+      {particles.map((p) => (
+        <BackgroundParticle key={p.seed} seed={p.seed} color={particleConfig.color} size={p.size} motion={particleConfig.motion} duration={p.duration} />
+      ))}
+      {sceneId === 'temple' ? <FlameFlicker /> : null}
+      {sceneId === 'himalayan' ? <DawnSweep color="rgba(255,214,150,0.5)" /> : null}
+      {sceneId === 'river' ? (
+        <>
+          <WaveBand topPct={30} color="rgba(190,225,255,0.5)" seed={31} />
+          <WaveBand topPct={52} color="rgba(190,225,255,0.4)" seed={37} />
+          <WaveBand topPct={74} color="rgba(190,225,255,0.3)" seed={41} />
+        </>
+      ) : null}
+      {sceneId === 'cosmos' ? (
+        <>
+          <ShootingStar delaySeed={51} />
+          <ShootingStar delaySeed={67} />
+        </>
+      ) : null}
+    </View>
+  );
+}
+
 export default function JapaScreen() {
   const router = useRouter();
   const japaShareCardRef = useRef<View>(null);
@@ -1507,6 +1877,7 @@ export default function JapaScreen() {
             end={{ x: 0.9, y: 1 }}
             style={{ flex: 1 }}
           >
+            <SceneBackdrop sceneId={scene.id} />
             <Pressable
               onPress={() => { void increment(); }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
