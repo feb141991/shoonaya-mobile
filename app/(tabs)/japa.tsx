@@ -47,12 +47,18 @@ import { spiritualDate } from '@/lib/spiritualDate';
 //   Exit-confirm sheet ("Stop this session?") — End & save / Continue
 //     practice / Discard and leave (or "Leave setup" with zero progress),
 //     matching JapaClient.tsx's StopPracticeSheet copy and branching exactly.
+// Phase 2 adds the dedicated ChooseMala/ChooseMantra screens (opened from
+// the launcher's "Change mala, mantra or background" link, chaining
+// mala→mantra→practice exactly as JapaClient.tsx does) and richens the
+// completion celebration (ripple rings, glow, tradition subtitle line).
+// The in-practice "settings" icon still opens the lighter "Customize" sheet,
+// now trimmed to just Scene + Mantra audio (quick, non-interrupting tweaks)
+// since mala/mantra selection now has its own dedicated flow.
 // Deliberately out of scope for this phase (tracked as follow-ups): the
-// dedicated mantra/mala picker SCREENS (native folds them into the existing
-// "Customize" sheet instead), the ambient-sound "Sacred Sounds" sheet, and
-// the ✨-gradient tradition accent colour (native uses the app's one
-// consistent `theme.brand` gold everywhere else, so this screen keeps that
-// rather than introducing a second, screen-local accent system).
+// ambient-sound "Sacred Sounds" sheet, and the ✨-gradient tradition accent
+// colour (native uses the app's one consistent `theme.brand` gold everywhere
+// else, so this screen keeps that rather than introducing a second,
+// screen-local accent system). Japa Insights page is Phase 3.
 
 type ProfileRow = {
   active_symbol_id: string | null;
@@ -132,6 +138,19 @@ const BG_SCENES = [
 ] as const;
 
 type JapaSceneId = typeof BG_SCENES[number]['id'];
+
+// Short taglines for the ChooseMala screen's mala list — MALA_SKINS itself
+// (lib/mala-skins.ts, shared with the bead-ring renderer) only carries
+// color/label fields, so this stays local to the picker's presentation.
+const MALA_TAGLINES: Record<string, string> = {
+  default: 'Calming · all traditions',
+  'sacred-mala': 'Sacred · Shaiva',
+  'krishna-flute': 'Clarity · breath practice',
+  'tulsi-leaf': 'Pure · Vaishnava',
+  'brahma-lotus': 'Soft focus · universal',
+  'the-sage-halo': 'Radiant · festival practice',
+  'bodhi-leaf': 'Grounding · meditation',
+};
 type CompletionStats = {
   rounds: number;
   beads: number;
@@ -192,10 +211,13 @@ export default function JapaScreen() {
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const theme = themeColor(isDark);
 
-  // 'launcher' = PWA's "Choose your practice" config screen; 'practice' =
-  // PWA's full-screen bead-ring counting screen. Internal state switch, not
-  // a route change — matches JapaClient.tsx's own single-page screen model.
-  const [screen, setScreen] = useState<'launcher' | 'practice'>('launcher');
+  // 'launcher' = PWA's "Choose your practice" config screen; 'chooseMala' /
+  // 'chooseMantra' = PWA's dedicated ChooseMalaScreen/ChooseMantraScreen
+  // (opened from the launcher's "Change mala, mantra or background" link,
+  // chained mala→mantra→practice exactly as JapaClient.tsx does); 'practice'
+  // = PWA's full-screen bead-ring counting screen. Internal state switch,
+  // not a route change — matches JapaClient.tsx's own single-page model.
+  const [screen, setScreen] = useState<'launcher' | 'chooseMala' | 'chooseMantra' | 'practice'>('launcher');
 
   const [loading, setLoading] = useState(true);
   const [count, setCount] = useState(0);
@@ -578,6 +600,24 @@ export default function JapaScreen() {
     setScreen('practice');
   }, [sessionStartTime]);
 
+  // "Change mala, mantra or background" — chains launcher → ChooseMala →
+  // ChooseMantra → practice, mirroring JapaClient.tsx's own
+  // handleConfirmMala/handleConfirmMantra chain exactly.
+  const openMalaPicker = useCallback(() => setScreen('chooseMala'), []);
+  const confirmMalaAndChooseMantra = useCallback(() => setScreen('chooseMantra'), []);
+  const backToLauncher = useCallback(() => setScreen('launcher'), []);
+  const backToChooseMala = useCallback(() => setScreen('chooseMala'), []);
+  const confirmMantraAndBegin = useCallback(() => {
+    const isCustomSelected = mantraOptions[mantraIndex]?.key === 'custom';
+    if (isCustomSelected && customMantra === null) {
+      // No saved personal-mantra text yet — open the entry sheet instead of
+      // confirming, matching PWA's "Add Your Mantra →" button state.
+      setCustomMantraOpen(true);
+      return;
+    }
+    handleStartPractice();
+  }, [customMantra, handleStartPractice, mantraIndex, mantraOptions]);
+
   const hasProgress = completedRounds > 0 || count > 0;
 
   const handleSaveAndStop = useCallback(async () => {
@@ -932,7 +972,7 @@ export default function JapaScreen() {
                 <PressableSurface
                   haptic="selection"
                   accessibilityLabel="Change mala, mantra or background"
-                  onPress={() => setCustomizeOpen(true)}
+                  onPress={openMalaPicker}
                   style={{
                     borderRadius: 999,
                     minHeight: MIN_TOUCH_TARGET,
@@ -960,6 +1000,347 @@ export default function JapaScreen() {
                 ) : null}
               </>
             )}
+          </ScrollView>
+        </>
+      ) : screen === 'chooseMala' ? (
+        // ── Choose Mala — PWA's ChooseMalaScreen: mala list + practice
+        // background (scene) picker, confirming chains to Choose Mantra. ──
+        <>
+          <ScrollView
+            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 32, gap: 18 }}
+            onScroll={navScrollHandler}
+            scrollEventThrottle={16}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Back"
+                onPress={backToLauncher}
+                hitSlop={16}
+                style={{
+                  width: 40,
+                  height: 40,
+                  minHeight: 40,
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: cardBg,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="chevron-left" size={18} color={theme.brand} />
+              </PressableSurface>
+            </View>
+
+            <View style={{ gap: 4 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: theme.brand }}>
+                Japa Mala
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 30, lineHeight: 36, color: text }}>
+                Choose your mala
+              </Text>
+              <Text style={{ ...TYPE.caption, color: dim, marginTop: 2 }}>
+                The sacred beads carry the energy of your tradition.
+              </Text>
+            </View>
+
+            <View style={{ gap: 10 }}>
+              {Object.entries(MALA_SKINS).map(([id, skin]) => {
+                const selected = (selectedMalaId ?? 'default') === id;
+                return (
+                  <PressableSurface
+                    key={id}
+                    haptic="selection"
+                    accessibilityState={{ selected }}
+                    onPress={() => {
+                      setSelectedMalaId(id);
+                      void AsyncStorage.setItem(JAPA_MALA_KEY, id);
+                    }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 14,
+                      borderRadius: 18,
+                      borderWidth: selected ? 1.5 : 1,
+                      borderColor: selected ? skin.glowColor : theme.premiumBorder,
+                      backgroundColor: selected ? theme.brandSoft : cardBg,
+                      padding: 14,
+                    }}
+                  >
+                    <Svg width={52} height={52}>
+                      <Line x1={26} y1={26} x2={26} y2={6} stroke={skin.threadColor} strokeWidth={1.2} />
+                      {Array.from({ length: 16 }, (_, index) => {
+                        const angle = (Math.PI * 2 * index) / 16 - Math.PI / 2;
+                        const r = index === 0 ? 3.6 : 2.4;
+                        return (
+                          <Circle
+                            key={index}
+                            cx={26 + Math.cos(angle) * 21}
+                            cy={26 + Math.sin(angle) * 21}
+                            r={r}
+                            fill={skin.beadColor}
+                            stroke={skin.beadBorder}
+                            strokeWidth={0.6}
+                          />
+                        );
+                      })}
+                    </Svg>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>{skin.label}</Text>
+                      <Text style={{ ...TYPE.caption, color: dim, marginTop: 2 }}>
+                        {MALA_TAGLINES[id] ?? 'Traditional prayer beads'}
+                      </Text>
+                    </View>
+                    {selected ? (
+                      <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
+                        <Feather name="check" size={12} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                      </View>
+                    ) : null}
+                  </PressableSurface>
+                );
+              })}
+            </View>
+
+            <View style={{ gap: 10 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: dim }}>
+                Practice background
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                {BG_SCENES.map((item) => {
+                  const selected = selectedSceneId === item.id;
+                  return (
+                    <PressableSurface
+                      key={item.id}
+                      haptic="selection"
+                      accessibilityState={{ selected }}
+                      onPress={() => {
+                        setSelectedSceneId(item.id);
+                        void AsyncStorage.setItem(JAPA_SCENE_KEY, item.id);
+                      }}
+                      style={{ alignItems: 'center', width: 62, gap: 6 }}
+                    >
+                      <LinearGradient
+                        colors={isDark ? item.colors : item.lightColors}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 18,
+                          borderWidth: selected ? 2 : 1,
+                          borderColor: selected ? theme.brand : theme.premiumBorder,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Feather name={item.icon as keyof typeof Feather.glyphMap} size={18} color={COLORS.onMediaWhite} />
+                      </LinearGradient>
+                      <Text
+                        numberOfLines={1}
+                        style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: selected ? theme.brand : dim, textAlign: 'center' }}
+                      >
+                        {item.name}
+                      </Text>
+                    </PressableSurface>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            <PressableSurface
+              haptic="impact"
+              accessibilityLabel="Choose mantra"
+              onPress={confirmMalaAndChooseMantra}
+              style={{
+                borderRadius: 999,
+                minHeight: MIN_TOUCH_TARGET,
+                backgroundColor: theme.brand,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                Choose mantra →
+              </Text>
+            </PressableSurface>
+          </ScrollView>
+        </>
+      ) : screen === 'chooseMantra' ? (
+        // ── Choose Mantra — PWA's ChooseMantraScreen: personal mantra card
+        // + preset list + target rounds, confirming begins practice. ──────
+        <>
+          <ScrollView
+            contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 32, gap: 18 }}
+            onScroll={navScrollHandler}
+            scrollEventThrottle={16}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Back"
+                onPress={backToChooseMala}
+                hitSlop={16}
+                style={{
+                  width: 40,
+                  height: 40,
+                  minHeight: 40,
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: cardBg,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="chevron-left" size={18} color={theme.brand} />
+              </PressableSurface>
+            </View>
+
+            <View style={{ gap: 4 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: theme.brand }}>
+                Japa Mala
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 30, lineHeight: 36, color: text }}>
+                Choose your mantra
+              </Text>
+            </View>
+
+            {/* Personal mantra card */}
+            <PressableSurface
+              haptic="selection"
+              onPress={() => {
+                if (customMantra) {
+                  setMantraIndex(mantraOptions.length - 1);
+                } else {
+                  setCustomMantraOpen(true);
+                }
+              }}
+              style={{
+                borderRadius: 18,
+                borderWidth: mantraOptions[mantraIndex]?.key === 'custom' ? 1.5 : 1,
+                borderColor: mantraOptions[mantraIndex]?.key === 'custom' ? theme.brand : theme.premiumBorder,
+                backgroundColor: mantraOptions[mantraIndex]?.key === 'custom' ? theme.brandSoft : cardBg,
+                padding: 14,
+                gap: 4,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: text }}>
+                  {customMantra ? 'Personal mantra' : 'Add personal mantra'}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {customMantra ? (
+                    <PressableSurface
+                      haptic="selection"
+                      onPress={() => setCustomMantraOpen(true)}
+                      style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: theme.premiumBorder }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 10.5, color: dim }}>Edit</Text>
+                    </PressableSurface>
+                  ) : null}
+                  {mantraOptions[mantraIndex]?.key === 'custom' ? (
+                    <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
+                      <Feather name="check" size={11} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+              <Text style={{ ...TYPE.caption, color: dim }}>
+                {customMantra ? customMantra.devanagari : 'Use your own mantra in mala practice'}
+              </Text>
+            </PressableSurface>
+
+            {/* Preset mantras */}
+            <View style={{ gap: 10 }}>
+              {mantras.map((item, index) => {
+                const selected = mantraIndex === index;
+                return (
+                  <PressableSurface
+                    key={item.key}
+                    haptic="selection"
+                    accessibilityState={{ selected }}
+                    onPress={() => setMantraIndex(index)}
+                    style={{
+                      borderRadius: 18,
+                      borderWidth: selected ? 1.5 : 1,
+                      borderColor: selected ? theme.brand : theme.premiumBorder,
+                      backgroundColor: selected ? theme.brandSoft : cardBg,
+                      padding: 14,
+                      gap: 4,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: theme.brand }}>{item.devanagari}</Text>
+                      {selected ? (
+                        <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
+                          <Feather name="check" size={11} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>{item.label}</Text>
+                    <Text style={{ ...TYPE.caption, color: dim }}>{item.meaning}</Text>
+                  </PressableSurface>
+                );
+              })}
+            </View>
+
+            {/* Target rounds */}
+            <View style={{ gap: 10 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: dim }}>
+                Target rounds
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {TARGET_OPTIONS.map((n) => {
+                  const selected = targetRounds === n;
+                  return (
+                    <PressableSurface
+                      key={n}
+                      haptic="selection"
+                      accessibilityState={{ selected }}
+                      onPress={() => {
+                        setTargetRounds(n);
+                        void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
+                      }}
+                      style={{
+                        flex: 1,
+                        minHeight: 40,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: selected ? theme.brand : theme.premiumBorder,
+                        backgroundColor: selected ? theme.brandSoft : cardBg,
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? theme.brand : dim }}>{n}</Text>
+                    </PressableSurface>
+                  );
+                })}
+              </View>
+              <Text style={{ ...TYPE.caption, color: dim, textAlign: 'center' }}>
+                {targetRounds} mala{targetRounds > 1 ? 's' : ''} = {targetRounds * 108} beads
+              </Text>
+            </View>
+
+            <PressableSurface
+              haptic="impact"
+              accessibilityLabel={mantraOptions[mantraIndex]?.key === 'custom' && !customMantra ? 'Add your mantra' : 'Begin practice'}
+              onPress={confirmMantraAndBegin}
+              style={{
+                borderRadius: 999,
+                minHeight: MIN_TOUCH_TARGET,
+                backgroundColor: theme.brand,
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                {mantraOptions[mantraIndex]?.key === 'custom' && !customMantra ? 'Add your mantra →' : 'Begin practice →'}
+              </Text>
+            </PressableSurface>
           </ScrollView>
         </>
       ) : (
@@ -1297,105 +1678,9 @@ export default function JapaScreen() {
             </View>
             <View style={{ gap: 4 }}>
               <Text style={{ ...TYPE.screenTitle, color: text }}>Practice atmosphere</Text>
-              <Text style={{ ...TYPE.caption, color: dim }}>Choose the mantra, mala and setting that help you settle.</Text>
+              <Text style={{ ...TYPE.caption, color: dim }}>Quick, in-session tweaks — mantra and mala live under "Change mala, mantra or background" on the setup screen.</Text>
             </View>
             <ScrollView contentContainerStyle={{ gap: 18 }} showsVerticalScrollIndicator={false}>
-              <View style={{ gap: 10 }}>
-                <Text style={{ ...TYPE.section, color: theme.brand }}>Mantra</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {mantraOptions.map((item, index) => (
-                    <PressableSurface
-                      key={item.key}
-                      haptic="selection"
-                      accessibilityState={{ selected: index === mantraIndex }}
-                      onPress={() => setMantraIndex(index)}
-                      style={{
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        minHeight: MIN_TOUCH_TARGET,
-                        justifyContent: 'center',
-                        borderColor: index === mantraIndex ? theme.brand : border,
-                        backgroundColor: index === mantraIndex ? theme.brandSoft : 'transparent',
-                        paddingHorizontal: 12,
-                        paddingVertical: 9,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: FONTS.sansMedium,
-                          fontSize: 12,
-                          color: index === mantraIndex ? theme.brand : dim,
-                        }}
-                      >
-                        {item.label}
-                      </Text>
-                    </PressableSurface>
-                  ))}
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={() => setCustomMantraOpen(true)}
-                    style={{
-                      minHeight: MIN_TOUCH_TARGET,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: theme.premiumBorder,
-                      backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-                      paddingHorizontal: 12,
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.brand }}>
-                      Personal mantra
-                    </Text>
-                  </PressableSurface>
-                </View>
-              </View>
-
-              <View style={{ gap: 10 }}>
-                <Text style={{ ...TYPE.section, color: theme.brand }}>Mala</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {Object.entries(MALA_SKINS).map(([id, skin]) => {
-                    const selected = (selectedMalaId ?? 'default') === id;
-                    return (
-                      <PressableSurface
-                        key={id}
-                        haptic="selection"
-                        accessibilityState={{ selected }}
-                        onPress={() => {
-                          setSelectedMalaId(id);
-                          void AsyncStorage.setItem(JAPA_MALA_KEY, id);
-                        }}
-                        style={{
-                          width: '47%',
-                          minHeight: 78,
-                          borderRadius: 18,
-                          borderWidth: 1,
-                          borderColor: selected ? theme.brand : border,
-                          backgroundColor: selected ? theme.brandSoft : (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight),
-                          padding: 12,
-                          gap: 8,
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <View
-                            style={{
-                              width: 18,
-                              height: 18,
-                              borderRadius: 9,
-                              backgroundColor: skin.beadColor,
-                              borderWidth: 1,
-                              borderColor: skin.beadBorder,
-                            }}
-                          />
-                          <Text style={{ ...TYPE.label, color: text }}>{skin.label}</Text>
-                        </View>
-                        <Text style={{ ...TYPE.caption, color: dim }}>Tap through each bead with this texture.</Text>
-                      </PressableSurface>
-                    );
-                  })}
-                </View>
-              </View>
-
               <View style={{ gap: 10 }}>
                 <Text style={{ ...TYPE.section, color: theme.brand }}>Scene</Text>
                 <View style={{ gap: 10 }}>
@@ -1624,9 +1909,35 @@ export default function JapaScreen() {
               maxWidth: 420,
             }}
           >
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 58, color: theme.brand }}>
-              {getSacredSymbol(tradition)}
-            </Text>
+            <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center' }}>
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  width: 130,
+                  height: 130,
+                  borderRadius: 65,
+                  backgroundColor: theme.brand,
+                  opacity: 0.14,
+                }}
+              />
+              <View
+                pointerEvents="none"
+                style={{ position: 'absolute', width: 96, height: 96, borderRadius: 48, borderWidth: 1, borderColor: `${theme.brand}55` }}
+              />
+              <View
+                pointerEvents="none"
+                style={{ position: 'absolute', width: 78, height: 78, borderRadius: 39, borderWidth: 1, borderColor: `${theme.brand}30` }}
+              />
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 58, color: theme.brand }}>
+                {getSacredSymbol(tradition)}
+              </Text>
+            </View>
+            {tradition === 'sikh' ? (
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 19, color: theme.brand, marginTop: -8 }}>
+                ਵਾਹਿਗੁਰੂ
+              </Text>
+            ) : null}
             <Text style={{ ...TYPE.title, color: text, textAlign: 'center' }}>
               {getCompletionTitle(tradition)}
             </Text>
