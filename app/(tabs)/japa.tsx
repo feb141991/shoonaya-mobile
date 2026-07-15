@@ -1461,6 +1461,8 @@ export default function JapaScreen() {
                     onPress={handleStartPractice}
                     onPressIn={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
                     style={({ pressed }) => ({
+                      width: '100%',
+                      alignSelf: 'stretch',
                       minHeight: MIN_TOUCH_TARGET,
                       paddingVertical: 17,
                       alignItems: 'center',
@@ -1475,10 +1477,11 @@ export default function JapaScreen() {
                   </Pressable>
                 </View>
 
-                <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'stretch' }}>
                   <View
                     style={{
-                      flex: history.length > 0 ? 1 : undefined,
+                      flex: 1,
+                      minWidth: 0,
                       borderRadius: 18,
                       borderWidth: 1,
                       borderColor: theme.premiumBorder,
@@ -1493,18 +1496,31 @@ export default function JapaScreen() {
                       onPress={openMalaPicker}
                       onPressIn={() => void Haptics.selectionAsync()}
                       style={({ pressed }) => ({
+                        width: '100%',
+                        alignSelf: 'stretch',
                         minHeight: MIN_TOUCH_TARGET,
-                        paddingHorizontal: 12,
+                        paddingHorizontal: 14,
                         paddingVertical: 12,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
+                        justifyContent: 'flex-start',
+                        gap: 10,
                         opacity: pressed ? 0.82 : 1,
                       })}
                     >
-                      <Feather name="sliders" size={14} color={theme.brand} />
-                      <Text numberOfLines={1} style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+                      <View
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 14,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: theme.brandSoft,
+                        }}
+                      >
+                        <Feather name="sliders" size={14} color={theme.brand} />
+                      </View>
+                      <Text numberOfLines={1} style={{ flex: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
                         Change mala
                       </Text>
                     </Pressable>
@@ -1514,6 +1530,7 @@ export default function JapaScreen() {
                     <View
                       style={{
                         flex: 1,
+                        minWidth: 0,
                         borderRadius: 18,
                         borderWidth: 1,
                         borderColor: theme.premiumBorder,
@@ -1528,18 +1545,31 @@ export default function JapaScreen() {
                         onPress={() => setHistoryOpen(true)}
                         onPressIn={() => void Haptics.selectionAsync()}
                         style={({ pressed }) => ({
+                          width: '100%',
+                          alignSelf: 'stretch',
                           minHeight: MIN_TOUCH_TARGET,
-                          paddingHorizontal: 12,
+                          paddingHorizontal: 14,
                           paddingVertical: 12,
                           flexDirection: 'row',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8,
+                          justifyContent: 'flex-start',
+                          gap: 10,
                           opacity: pressed ? 0.82 : 1,
                         })}
                       >
-                        <Feather name="clock" size={14} color={theme.brand} />
-                        <Text numberOfLines={1} style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+                        <View
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 14,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: theme.brandSoft,
+                          }}
+                        >
+                          <Feather name="clock" size={14} color={theme.brand} />
+                        </View>
+                        <Text numberOfLines={1} style={{ flex: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
                           Recent sessions
                         </Text>
                       </Pressable>
