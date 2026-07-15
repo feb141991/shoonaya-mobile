@@ -40,12 +40,8 @@ type PracticeCard = {
 
 const PRACTICE_CARDS: PracticeCard[] = [
   { id: 'japa', fallbackGlyph: 'heart', label: 'Japa Mala', detail: 'Digital mala for mantra & Naam Simran', href: '/japa' },
-  { id: 'nitya', fallbackGlyph: 'sunrise', label: 'Nitya Karma', detail: 'Your daily sacred rituals', href: '/nitya-karma' },
-  { id: 'shloka', fallbackGlyph: 'book-open', label: 'Shloka', detail: "Today's verse & reflection", href: '/shloka' },
   { id: 'dharmveer', fallbackGlyph: 'shield', label: 'Dharm Veer', detail: 'Stories of dharmic courage', href: '/dharm-veer' },
-  { id: 'panchang', fallbackGlyph: 'calendar', label: 'Panchang', detail: "Today's tithi & muhurta", href: '/panchang' },
   { id: 'vrat', fallbackGlyph: 'moon', label: 'Vrat', detail: 'Observances & fasting days', href: '/vrat' },
-  { id: 'kosh', fallbackGlyph: 'star', label: 'Sacred Kosh', detail: 'Your relics & artifacts', href: '/kosh' },
 ];
 
 type ContentCard = {
