@@ -154,11 +154,11 @@ export function QuizSparkCard() {
           paddingVertical: 11,
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 12,
-          position: 'relative',
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0, paddingRight: 78 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
           <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} accent={COLORS.tileCoral} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
@@ -167,9 +167,12 @@ export function QuizSparkCard() {
             <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
               {quiz.question}
             </Text>
+            <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
+              Test your dharmic memory
+            </Text>
           </View>
         </View>
-        <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {quizStreak > 1 ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
               <Feather name="zap" size={12} color={brand} />

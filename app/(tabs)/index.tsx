@@ -1233,7 +1233,7 @@ function HomeContent() {
                 {refreshing ? (
                   <ActivityIndicator color={theme.brand} />
                 ) : (
-                  <Feather name="chevron-right" size={22} color={theme.brand} />
+                  <Feather name="chevron-right" size={18} color={theme.brand} />
                 )}
               </View>
             </PressableSurface>
