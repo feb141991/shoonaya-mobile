@@ -272,7 +272,7 @@ function PracticeStatusBadge({ done, color, size = 34 }: { done: boolean; color:
         borderColor: color,
       }}
     >
-      {done ? <Feather name="check" size={size <= 26 ? 13 : 16} color="#fff" /> : null}
+      {done ? <Feather name="check" size={size <= 30 ? 14 : 16} color="#fff" /> : null}
     </View>
   );
 }
@@ -1048,14 +1048,14 @@ function HomeContent() {
                 gap: 12,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 17, lineHeight: 22, flex: 1, color: theme.dim }} numberOfLines={1}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 20, flex: 1, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 17, lineHeight: 22, color: theme.dim }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 20, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
-                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.dim} />
+                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={16} color={theme.dim} />
               </View>
             </Pressable>
           </View>
@@ -1068,20 +1068,24 @@ function HomeContent() {
                   accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                   onPress={() => navigate(resolveNativeRoute(row.href))}
                   style={{
+                    width: '100%',
+                    alignSelf: 'stretch',
                     minHeight: 66,
                     borderRadius: 22,
-                    paddingHorizontal: 16,
+                    paddingLeft: 16,
+                    paddingRight: 84,
                     paddingVertical: 11,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
+                    justifyContent: 'flex-start',
+                    position: 'relative',
                     backgroundColor: theme.card,
                     borderWidth: 1,
                     borderColor: theme.premiumBorder,
                     boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
                     <View
                       style={{
                         width: 40,
@@ -1096,15 +1100,15 @@ function HomeContent() {
                     >
                       <Text style={{ fontSize: 20, lineHeight: 24 }}>{PRACTICE_EMOJI[row.id]}</Text>
                     </View>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, lineHeight: 21, color: theme.text, flex: 1 }} numberOfLines={1}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text, flex: 1 }} numberOfLines={1}>
                       {row.label}
                     </Text>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
+                  <View style={{ position: 'absolute', right: 16, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
                       {row.done ? 'Done' : 'Start'}
                     </Text>
-                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} size={34} />
+                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} size={26} />
                   </View>
                 </PressableSurface>
               ))}
@@ -1178,10 +1182,12 @@ function HomeContent() {
             accessibilityLabel="Open Panchang"
             onPress={() => navigate('/panchang')}
             style={{
-              minHeight: 86,
+              width: '100%',
+              alignSelf: 'stretch',
+              minHeight: 72,
               borderRadius: 22,
               paddingHorizontal: 16,
-              paddingVertical: 12,
+              paddingVertical: 10,
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.premiumBorder,
@@ -1189,17 +1195,17 @@ function HomeContent() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
-                <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} accent={COLORS.tileCoral} />
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
+                  <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: theme.dim }}>
                     Sacred rhythm
                   </Text>
-                  <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
+                  <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text }} numberOfLines={1}>
                     {tithiPill}
                   </Text>
                   <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                    Nakshatra {panchang.nakshatra}. Yoga {panchang.yoga}. Brahma Muhurta {panchang.brahmaMuhurta}.
+                    {panchang.nakshatra} nakshatra · {panchang.yoga} yoga
                   </Text>
                   {state.panchang.viewedToday ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>

@@ -40,10 +40,12 @@ export function QuizSparkCard() {
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   // Outer card border matches the same premiumBorder every other Home card
   // (Dharm Veer, Sankalpa, Sacred Rhythm) uses, so this row reads as part of
-  // the same card family rather than a one-off. The icon well below also
-  // uses the app's default (no accent) gold tint now, matching the near-
-  // white/cream well every other Home card row uses (Dharm Veer, Sankalpa,
-  // Sacred Rhythm) rather than standing out as a differently-colored card.
+  // the same card family rather than a one-off. The icon well uses the same
+  // coral/peach tint as Dharm Veer's well (COLORS.tileCoral, the literal
+  // value dharmVeerColor resolves to) so the two "hero" rows share one
+  // unified accent family instead of each inventing its own; the icon well
+  // itself is sized "lg" (56px) per lib/icons.ts's own reserved "hero cards
+  // — Quiz, Dincharya" comment.
   const border = isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
@@ -128,10 +130,12 @@ export function QuizSparkCard() {
       accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
       onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
       style={{
-        minHeight: 70,
+        width: '100%',
+        alignSelf: 'stretch',
+        minHeight: 80,
         borderRadius: 22,
         paddingHorizontal: 16,
-        paddingVertical: 11,
+        paddingVertical: 12,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
@@ -143,12 +147,12 @@ export function QuizSparkCard() {
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, paddingRight: 72 }}>
-        <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} />
+        <IconTile name="quiz" fallbackGlyph="help-circle" size="lg" color={brand} accent={COLORS.tileCoral} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ ...TYPE.chip, letterSpacing: 1.35, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
+          <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
             {title}
           </Text>
-          <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
+          <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: text }} numberOfLines={1}>
             {quiz.question}
           </Text>
         </View>
