@@ -3,12 +3,12 @@ import { Pressable, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import Svg, { Circle } from 'react-native-svg';
 
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
+import { ProgressRing } from '@/components/ui/ProgressRing';
 
 /**
  * SankalpaCard — self-contained Home row for the active Sankalpa.
@@ -54,36 +54,6 @@ function buildDayNumber(startDate: string, today: string): number {
 
 function clampProgress(value: number): number {
   return Math.max(0, Math.min(1, value));
-}
-
-function ProgressRing({ progress, done, color, track }: { progress: number; done: boolean; color: string; track: string }) {
-  const size = 26;
-  const radius = size / 2 - 3;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(1, progress));
-
-  return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute' }}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={track} strokeWidth={2.5} />
-        {done || clamped > 0 ? (
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeDasharray={`${clamped * circumference} ${circumference}`}
-            rotation="-90"
-            origin={`${size / 2}, ${size / 2}`}
-          />
-        ) : null}
-      </Svg>
-      {done ? <Feather name="check" size={13} color={color} /> : null}
-    </View>
-  );
 }
 
 export function SankalpaCard() {

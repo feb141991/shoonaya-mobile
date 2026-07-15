@@ -25,6 +25,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
+import { ProgressRing } from '@/components/ui/ProgressRing';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
 // (Alert.alert "coming soon" on tap, see app/(tabs)/index.tsx). This screen
@@ -105,15 +106,6 @@ function clampProgress(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-// UTC-safe "start_date + n days" — matches the UTC-date convention this
-// screen already uses for todayUtcString()/buildDayNumber() so the checkin
-// grid never drifts a day off from what the API considers each date to be.
-function addDaysUtc(dateStr: string, days: number): string {
-  const d = new Date(`${dateStr}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
 type Theme = ReturnType<typeof themeColor>;
 
 function StatPill({ label, value, theme }: { label: string; value: string; theme: Theme }) {
@@ -137,7 +129,17 @@ function StatPill({ label, value, theme }: { label: string; value: string; theme
   );
 }
 
-function SankalpaIconWell({ theme, isDark, size = 'md' }: { theme: Theme; isDark: boolean; size?: 'md' | 'lg' }) {
+function SankalpaIconWell({
+  theme,
+  isDark,
+  size = 'md',
+  icon = 'sun',
+}: {
+  theme: Theme;
+  isDark: boolean;
+  size?: 'md' | 'lg';
+  icon?: keyof typeof Feather.glyphMap;
+}) {
   const well = size === 'lg' ? ICON_WELL.lg : ICON_WELL.md;
   const colors = iconWellColor(isDark);
 
@@ -154,7 +156,7 @@ function SankalpaIconWell({ theme, isDark, size = 'md' }: { theme: Theme; isDark
         justifyContent: 'center',
       }}
     >
-      <Feather name="sun" size={well.icon} color={theme.brand} />
+      <Feather name={icon} size={well.icon} color={theme.brand} />
     </View>
   );
 }
@@ -200,8 +202,6 @@ export default function SankalpaScreen() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const historyChevron = useRef(new Animated.Value(0)).current;
   const historyContentOpacity = useRef(new Animated.Value(0)).current;
-  const gridOpacity = useRef(new Animated.Value(0)).current;
-  const gridTranslate = useRef(new Animated.Value(8)).current;
 
   // Ceremony is purely presentational — see components/home/
   // SankalpaCompletionCeremony.tsx. karmaAwarded comes straight from the
@@ -266,24 +266,6 @@ export default function SankalpaScreen() {
     };
     void run();
   }, [loadSankalpa]);
-
-  // Active-vow checkin grid entrance — fades/lifts in once per vow (keyed
-  // by id so switching to a newly created Sankalpa re-triggers it), skipped
-  // entirely under reduced motion.
-  useEffect(() => {
-    if (!sankalpa) return;
-    if (reducedMotion) {
-      gridOpacity.setValue(1);
-      gridTranslate.setValue(0);
-      return;
-    }
-    gridOpacity.setValue(0);
-    gridTranslate.setValue(8);
-    Animated.parallel([
-      Animated.timing(gridOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
-      Animated.spring(gridTranslate, { toValue: 0, useNativeDriver: true, friction: 8, tension: 60 }),
-    ]).start();
-  }, [sankalpa?.id, reducedMotion, gridOpacity, gridTranslate]);
 
   const loadSuggestions = useCallback(async () => {
     setLoadingSuggestions(true);
@@ -506,7 +488,7 @@ export default function SankalpaScreen() {
             end={{ x: 1, y: 1 }}
             style={{ padding: 20, gap: 10 }}
           >
-            <SankalpaIconWell theme={theme} isDark={isDark} size="lg" />
+            <SankalpaIconWell theme={theme} isDark={isDark} size="lg" icon="sunrise" />
             <SectionLabel theme={theme}>Sacred intention</SectionLabel>
             <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
             <Text style={{ ...TYPE.body, color: theme.dim }}>
@@ -517,147 +499,114 @@ export default function SankalpaScreen() {
 
         {sankalpa ? (
           <>
-            <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
-                <SankalpaIconWell theme={theme} isDark={isDark} />
-                <View style={{ flex: 1, gap: 3 }}>
-                  <SectionLabel theme={theme}>Active Sankalpa</SectionLabel>
-                  <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-                    {sankalpa.text}
-                  </Text>
-                </View>
-              </View>
-
-              <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ ...TYPE.label, color: theme.dim }}>
-                    Day {Math.min(day, targetDaysValue || day)} of {targetDaysValue}
-                  </Text>
-                  <Text style={{ ...TYPE.chip, color: theme.brand }}>
-                    {Math.round(progress * 100)}%
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    marginTop: 8,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: theme.brandSoft,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <View
-                    style={{
-                      width: `${progress * 100}%`,
-                      height: '100%',
-                      backgroundColor: theme.brand,
-                      borderRadius: 3,
-                    }}
-                  />
-                </View>
-
-                {targetDaysValue > 0 ? (
-                  <Animated.View
-                    style={{
-                      opacity: gridOpacity,
-                      transform: [{ translateY: gridTranslate }],
-                      marginTop: 14,
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                      gap: 6,
-                    }}
-                  >
-                    {Array.from({ length: targetDaysValue }).map((_, i) => {
-                      const dateStr = addDaysUtc(sankalpa.start_date, i);
-                      const isChecked = checkins.includes(dateStr);
-                      const isToday = dateStr === today;
-                      const isFuture = dateStr > today;
-                      const isMissed = !isFuture && !isChecked && !isToday;
-
-                      return (
-                        <View
-                          key={dateStr}
-                          accessibilityLabel={
-                            isChecked ? `Day ${i + 1}, honored` : isToday ? `Day ${i + 1}, today` : isMissed ? `Day ${i + 1}, missed` : `Day ${i + 1}, upcoming`
-                          }
-                          style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
-                            backgroundColor: isChecked
-                              ? theme.brand
-                              : isMissed
-                                ? theme.border
-                                : 'transparent',
-                            borderWidth: isToday && !isChecked ? 1.5 : isFuture ? 1 : 0,
-                            borderColor: isToday ? theme.brand : theme.border,
-                          }}
-                        />
-                      );
-                    })}
-                  </Animated.View>
-                ) : null}
-              </View>
-            </Card>
-
-            {/* Chrome (border/bg) lives on a plain View with a flat style
-                object — PressableSurface resolves style as an array (base +
-                caller + pressedStyle) via a style-callback function that
-                also bakes in opacity/transform, and on this RN build that
-                combination was silently dropping borderColor/boxShadow set
-                on the same node (see the identical fix on Home's Quiz and
-                Sacred Rhythm cards). PressableSurface stays nested inside,
-                purely for press feedback and layout. */}
-            <View
+            <Card
+              tone="auto"
+              elevated
               style={{
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: checkedInToday ? COLORS.successBorder : theme.border,
-                backgroundColor: checkedInToday ? COLORS.successBg : theme.card,
+                backgroundColor: theme.card,
+                borderColor: theme.premiumBorder,
+                gap: 18,
+                boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
               }}
             >
-              <PressableSurface
-                accessibilityLabel={checkedInToday ? 'Checked in today' : 'Check in for today'}
-                accessibilityState={{ disabled: checkedInToday || checkingIn, busy: checkingIn }}
-                haptic="impact"
-                onPress={() => { void handleCheckIn(); }}
-                disabled={checkedInToday || checkingIn}
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <SankalpaIconWell theme={theme} isDark={isDark} icon="target" />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <SectionLabel theme={theme}>Active Sankalpa</SectionLabel>
+                  <Text style={{ marginTop: 4, ...TYPE.cardHeading, color: theme.text }}>
+                    {sankalpa.text}
+                  </Text>
+                  <Text style={{ marginTop: 5, ...TYPE.caption, color: theme.dim }}>
+                    {checkedInToday ? 'Honoured today' : 'Hold this intention with one clear action today.'}
+                  </Text>
+                </View>
+              </View>
+
+              <View
                 style={{
-                  minHeight: MIN_TOUCH_TARGET,
-                  paddingVertical: 16,
+                  borderRadius: 24,
+                  borderWidth: 1,
+                  borderColor: checkedInToday ? COLORS.successBorder : theme.borderSoft,
+                  backgroundColor: checkedInToday ? COLORS.successBg : isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                  padding: 14,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
+                  gap: 14,
                 }}
               >
-                {checkingIn ? (
-                  <ActivityIndicator color={theme.brand} />
-                ) : (
-                  <Feather
-                    name={checkedInToday ? 'check-circle' : 'circle'}
-                    size={18}
-                    color={checkedInToday ? COLORS.success : theme.dim}
-                  />
-                )}
-                <Text
+                <ProgressRing
+                  progress={progress}
+                  done={progress >= 1}
+                  color={checkedInToday ? COLORS.success : theme.brand}
+                  track={isDark ? COLORS.homeRingTrackDark : COLORS.homeRingTrackLight}
+                  size={64}
+                  strokeWidth={4}
+                />
+                <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                  <Text style={{ ...TYPE.chip, color: checkedInToday ? COLORS.success : theme.brand }}>
+                    {Math.round(progress * 100)}% held
+                  </Text>
+                  <Text style={{ ...TYPE.label, color: theme.text }}>
+                    Day {Math.min(day, targetDaysValue || day)} of {targetDaysValue}
+                  </Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+                    {checkins.length} check-ins recorded
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: checkedInToday ? COLORS.successBorder : theme.borderSoft,
+                  backgroundColor: checkedInToday ? COLORS.successBg : theme.card,
+                }}
+              >
+                <PressableSurface
+                  accessibilityLabel={checkedInToday ? 'Sankalpa honoured today' : 'Honour today’s Sankalpa'}
+                  accessibilityState={{ disabled: checkedInToday || checkingIn, busy: checkingIn }}
+                  haptic="impact"
+                  onPress={() => { void handleCheckIn(); }}
+                  disabled={checkedInToday || checkingIn}
                   style={{
-                    fontFamily: FONTS.sansSemiBold,
-                    fontSize: 15,
-                    color: checkedInToday ? COLORS.success : theme.text,
+                    minHeight: MIN_TOUCH_TARGET,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
                   }}
                 >
-                  {checkedInToday ? 'Checked in today' : 'Check in for today'}
-                </Text>
-              </PressableSurface>
-            </View>
+                  {checkingIn ? (
+                    <ActivityIndicator color={theme.brand} />
+                  ) : (
+                    <Feather
+                      name={checkedInToday ? 'check-circle' : 'circle'}
+                      size={18}
+                      color={checkedInToday ? COLORS.success : theme.brand}
+                    />
+                  )}
+                  <Text
+                    style={{
+                      fontFamily: FONTS.sansSemiBold,
+                      fontSize: 15,
+                      color: checkedInToday ? COLORS.success : theme.text,
+                    }}
+                  >
+                    {checkedInToday ? 'Honoured today' : 'Honour today'}
+                  </Text>
+                </PressableSurface>
+              </View>
+            </Card>
 
             <Button label="Mark complete" loading={completing} onPress={confirmComplete} />
           </>
         ) : (
           <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 18, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <SankalpaIconWell theme={theme} isDark={isDark} />
+              <SankalpaIconWell theme={theme} isDark={isDark} icon="edit-3" />
               <View style={{ flex: 1 }}>
                 <SectionLabel theme={theme}>Begin a vow</SectionLabel>
                 <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }}>Choose your intention</Text>
@@ -799,7 +748,7 @@ export default function SankalpaScreen() {
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <SankalpaIconWell theme={theme} isDark={isDark} />
+              <SankalpaIconWell theme={theme} isDark={isDark} icon="clock" />
               <View>
                 <SectionLabel theme={theme}>History</SectionLabel>
                 <Text style={{ marginTop: 2, ...TYPE.label, color: theme.text }}>Previous Sankalpas</Text>
