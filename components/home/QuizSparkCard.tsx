@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Text, useColorScheme, View } from 'react-native';
+import { Pressable, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { IconTile } from '@/components/ui/IconTile';
-import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, SHADOWS, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
@@ -126,66 +125,52 @@ export function QuizSparkCard() {
   const previewTitle = "Answer today's dharmic question";
 
   return (
-    // Card chrome (bg/border/shadow) lives on a plain View with a flat
-    // style object — same pattern Dharm Veer's Pressable uses. PressableSurface
-    // resolves its style as an array (base + caller + pressedStyle) via a
-    // style-callback function; on this RN build that array form was silently
-    // dropping boxShadow/borderColor here (and on the Sacred Rhythm card,
-    // which had the same structure), even though the values were correct —
-    // that's why the card looked borderless/shadowless despite the code
-    // having border/shadow set. Moving the chrome to a flat-object View and
-    // keeping PressableSurface purely for press feedback/layout fixes it.
-    <View
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
+      onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
       style={{
+        minHeight: 70,
         width: '100%',
         borderRadius: 22,
+        paddingHorizontal: 16,
+        paddingVertical: 11,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
         backgroundColor: cardBg,
         borderWidth: 1,
         borderColor: border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
-      <PressableSurface
-        haptic="selection"
-        accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
-        onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
-        style={{
-          minHeight: 70,
-          paddingHorizontal: 16,
-          paddingVertical: 11,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
-          <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} accent={COLORS.tileCoral} />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
-              {title}
-            </Text>
-            <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
-              {previewTitle}
-            </Text>
-            <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
-              Test your dharmic memory
-            </Text>
-          </View>
-        </View>
-        <View style={{ width: quizStreak > 1 ? 78 : 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-          {quizStreak > 1 ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-              <Feather name="zap" size={12} color={brand} />
-              <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
-            </View>
-          ) : null}
-          <Text style={{ ...TYPE.chip, color: brand }}>
-            Play
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+        <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} accent={COLORS.tileCoral} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
+            {title}
           </Text>
-          <Feather name="chevron-right" size={18} color={brand} />
+          <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
+            {previewTitle}
+          </Text>
+          <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
+            Test your dharmic memory
+          </Text>
         </View>
-      </PressableSurface>
-    </View>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {quizStreak > 1 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <Feather name="zap" size={12} color={brand} />
+            <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
+          </View>
+        ) : null}
+        <Text style={{ ...TYPE.chip, color: brand }}>
+          Play
+        </Text>
+        <Feather name="chevron-right" size={18} color={brand} />
+      </View>
+    </Pressable>
   );
 }

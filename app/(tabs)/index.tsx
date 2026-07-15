@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  ActivityIndicator,
   Animated,
   Image,
   Pressable,
@@ -481,7 +480,6 @@ function HomeContent() {
     [state.date.iso, state.date.latitude, state.date.longitude, state.date.timezone]
   );
 
-  const tithiPill = `${panchang.tithi} · ${panchang.paksha}`;
   const completedCount = state.practices.filter((row) => row.done).length;
   const actionRoute = resolveNativeRoute(state.nextPractice.actionHref);
 
@@ -1177,67 +1175,6 @@ function HomeContent() {
           </Pressable>
 
           <QuizSparkCard />
-
-          {/* Card chrome (bg/border/shadow) lives on a plain View with a
-              flat style object — same pattern Dharm Veer's Pressable uses.
-              PressableSurface resolves its style as an array (base + caller
-              + pressedStyle) via a style-callback function; on this RN build
-              that array form was silently dropping boxShadow/borderColor
-              here (and on the Quiz card, which had the same structure),
-              even though the values were correct — that's why the card
-              looked borderless/shadowless despite border/shadow being set
-              in code. Moving the chrome to a flat-object View and keeping
-              PressableSurface purely for press feedback/layout fixes it. */}
-          <View
-            style={{
-              width: '100%',
-              borderRadius: 22,
-              backgroundColor: theme.card,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            }}
-          >
-            <PressableSurface
-              accessibilityLabel="Open Panchang"
-              onPress={() => navigate('/panchang')}
-              style={{
-                minHeight: 70,
-                paddingHorizontal: 16,
-                paddingVertical: 11,
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
-                  <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} accent={COLORS.tileCoral} />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
-                      Sacred rhythm
-                    </Text>
-                    <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
-                      {tithiPill}
-                    </Text>
-                    <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                      {panchang.nakshatra} · {panchang.yoga}
-                    </Text>
-                    {state.panchang.viewedToday ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                        <Feather name="check-circle" size={13} color={theme.brand} />
-                        <Text style={{ ...TYPE.label, color: theme.brand }}>
-                          Observed today
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-                {refreshing ? (
-                  <ActivityIndicator color={theme.brand} />
-                ) : (
-                  <Feather name="chevron-right" size={18} color={theme.brand} />
-                )}
-              </View>
-            </PressableSurface>
-          </View>
 
           {/* Jyotish & Panchang — these are real native routes already, but
               were hard to discover. Keep them as contextual Home access
