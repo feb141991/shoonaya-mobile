@@ -184,7 +184,17 @@ export default function BhaktiScreen() {
 
   const hero = TRADITION_HERO[tradition] ?? TRADITION_HERO.hindu;
   const accent = getTraditionAccent(tradition);
-  const activeCards = CONTENT_CARDS.filter(c => !c.traditions || c.traditions.includes(tradition));
+  // Stotrams & Hymns / Sacred Chants route to the Phase 5 Sacred Library
+  // pre-filtered by tradition, matching PWA's BhaktiClient.tsx `cards.map`
+  // transform (jain gets the Hindu/Jain shared stotram set; buddhist gets
+  // its own chant set).
+  const activeCards = CONTENT_CARDS
+    .map((c): BhaktiCard => {
+      if (c.id === 'stotrams-hymns') return { ...c, href: `/bhakti/browse?tradition=${tradition === 'jain' ? 'jain' : 'hindu'}` as Href };
+      if (c.id === 'sacred-chants') return { ...c, href: '/bhakti/browse?tradition=buddhist' as Href };
+      return c;
+    })
+    .filter(c => !c.traditions || c.traditions.includes(tradition));
 
   const openComingSoon = (title: string) => {
     try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
