@@ -152,6 +152,74 @@ const BG_SCENES = [
 ] as const;
 
 type JapaSceneId = typeof BG_SCENES[number]['id'];
+type Theme = ReturnType<typeof themeColor>;
+
+function TargetRoundSelector({
+  value,
+  onChange,
+  theme,
+  isDark,
+}: {
+  value: (typeof TARGET_OPTIONS)[number];
+  onChange: (value: (typeof TARGET_OPTIONS)[number]) => void;
+  theme: Theme;
+  isDark: boolean;
+}) {
+  return (
+    <View style={{ gap: 10 }}>
+      <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: theme.dim }}>
+        Target rounds
+      </Text>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {TARGET_OPTIONS.map((n) => {
+          const selected = value === n;
+          return (
+            <View
+              key={n}
+              style={{
+                flex: 1,
+                borderRadius: 999,
+                borderWidth: 1.5,
+                borderColor: selected ? theme.brand : theme.borderSoft,
+                backgroundColor: selected
+                  ? theme.brandSoft
+                  : isDark
+                    ? COLORS.selectionWellDark
+                    : COLORS.selectionWellLight,
+              }}
+            >
+              <Pressable
+                accessibilityLabel={`${n} target round${n > 1 ? 's' : ''}`}
+                accessibilityState={{ selected }}
+                onPress={() => {
+                  void Haptics.selectionAsync().catch(() => {});
+                  onChange(n);
+                }}
+                style={{
+                  minHeight: MIN_TOUCH_TARGET,
+                  paddingHorizontal: 8,
+                  paddingVertical: 10,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 14,
+                    color: selected ? theme.brand : theme.text,
+                  }}
+                >
+                  {n}
+                </Text>
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 // Short taglines for the ChooseMala screen's mala list — MALA_SKINS itself
 // (lib/mala-skins.ts, shared with the bead-ring renderer) only carries
@@ -684,7 +752,7 @@ export default function JapaScreen() {
   const [showStopSheet, setShowStopSheet] = useState(false);
   const [stopSaving, setStopSaving] = useState(false);
 
-  const [targetRounds, setTargetRounds] = useState(1);
+  const [targetRounds, setTargetRounds] = useState<(typeof TARGET_OPTIONS)[number]>(1);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [durationSecs, setDurationSecs] = useState(0);
 
@@ -766,7 +834,9 @@ export default function JapaScreen() {
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
         const parsedRounds = rounds ? Number(rounds) : 1;
-        if (TARGET_OPTIONS.includes(parsedRounds as (typeof TARGET_OPTIONS)[number])) setTargetRounds(parsedRounds);
+        if (TARGET_OPTIONS.includes(parsedRounds as (typeof TARGET_OPTIONS)[number])) {
+          setTargetRounds(parsedRounds as (typeof TARGET_OPTIONS)[number]);
+        }
         if (lifetimeRaw) {
           try {
             const parsed = JSON.parse(lifetimeRaw) as Partial<JapaLifetimeData>;
@@ -1294,43 +1364,15 @@ export default function JapaScreen() {
                   </View>
                 </View>
 
-                {/* Target Rounds */}
-                <View style={{ gap: 10 }}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: dim }}>
-                    Target rounds
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {TARGET_OPTIONS.map((n) => {
-                      const selected = targetRounds === n;
-                      return (
-                        <PressableSurface
-                          key={n}
-                          haptic="selection"
-                          accessibilityState={{ selected }}
-                          onPress={() => {
-                            setTargetRounds(n);
-                            void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
-                          }}
-                          style={{
-                            flex: 1,
-                            minHeight: 40,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 999,
-                            borderWidth: 1,
-                            borderColor: selected ? theme.brand : theme.premiumBorder,
-                            backgroundColor: selected ? theme.brand : cardBg,
-                            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                          }}
-                        >
-                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? (isDark ? COLORS.darkBg : COLORS.creamBg) : dim }}>
-                            {n}
-                          </Text>
-                        </PressableSurface>
-                      );
-                    })}
-                  </View>
-                </View>
+                <TargetRoundSelector
+                  value={targetRounds}
+                  theme={theme}
+                  isDark={isDark}
+                  onChange={(n) => {
+                    setTargetRounds(n);
+                    void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
+                  }}
+                />
 
                 {/* Dharma Reflection */}
                 <View
@@ -1809,40 +1851,16 @@ export default function JapaScreen() {
               })}
             </View>
 
-            {/* Target rounds */}
             <View style={{ gap: 10 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: dim }}>
-                Target rounds
-              </Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {TARGET_OPTIONS.map((n) => {
-                  const selected = targetRounds === n;
-                  return (
-                    <PressableSurface
-                      key={n}
-                      haptic="selection"
-                      accessibilityState={{ selected }}
-                      onPress={() => {
-                        setTargetRounds(n);
-                        void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
-                      }}
-                      style={{
-                        flex: 1,
-                        minHeight: 40,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: selected ? theme.brand : theme.premiumBorder,
-                        backgroundColor: selected ? theme.brandSoft : cardBg,
-                        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                      }}
-                    >
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? theme.brand : dim }}>{n}</Text>
-                    </PressableSurface>
-                  );
-                })}
-              </View>
+              <TargetRoundSelector
+                value={targetRounds}
+                theme={theme}
+                isDark={isDark}
+                onChange={(n) => {
+                  setTargetRounds(n);
+                  void AsyncStorage.setItem(JAPA_TARGET_ROUNDS_KEY, String(n));
+                }}
+              />
               <Text style={{ ...TYPE.caption, color: dim, textAlign: 'center' }}>
                 {targetRounds} mala{targetRounds > 1 ? 's' : ''} = {targetRounds * 108} beads
               </Text>
