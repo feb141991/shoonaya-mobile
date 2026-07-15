@@ -85,80 +85,97 @@ export function MoodCheckin() {
     );
   }
 
+  // Chrome (bg/border/shadow) lives on a plain outer View with a flat style
+  // object — PressableSurface resolves style as an array (base + caller +
+  // pressedStyle) via a style-callback function that also bakes in
+  // opacity/transform, which was found to silently drop borderColor/
+  // boxShadow set on the same node elsewhere in this app (Home Quiz/Sacred
+  // Rhythm cards, Sankalpa screen). PressableSurface stays nested inside,
+  // purely for press feedback and layout, to avoid the same failure here.
   if (hasLoggedMoodToday && loggedMoodConfig) {
     return (
-      <PressableSurface
-        haptic="selection"
-        accessibilityLabel={`You logged feeling ${loggedMoodConfig.label} today. Tap to view mood.`}
-        onPress={navigateToMood}
+      <View
         style={{
           borderRadius: 18,
-          paddingHorizontal: 16,
-          paddingVertical: 14,
           backgroundColor: cardBg,
           borderWidth: 1,
           borderColor: border,
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 12,
         }}
       >
-        <View
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={`You logged feeling ${loggedMoodConfig.label} today. Tap to view mood.`}
+          onPress={navigateToMood}
           style={{
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: loggedMoodConfig.bg,
-            borderWidth: 1,
-            borderColor: `${loggedMoodConfig.colour}33`,
+            gap: 12,
           }}
         >
-          <MoodGlyph mood={loggedMoodConfig.key} size={22} color={loggedMoodConfig.colour} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: dim }}>
-            Today&apos;s mood
-          </Text>
-          <Text style={{ marginTop: 2, ...TYPE.cardHeading, fontFamily: FONTS.sansSemiBold, color: text }} numberOfLines={1}>
-            Feeling {loggedMoodConfig.label}
-          </Text>
-        </View>
-        <Feather name="chevron-right" size={20} color={dim} />
-      </PressableSurface>
+          <View
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: loggedMoodConfig.bg,
+              borderWidth: 1,
+              borderColor: `${loggedMoodConfig.colour}33`,
+            }}
+          >
+            <MoodGlyph mood={loggedMoodConfig.key} size={22} color={loggedMoodConfig.colour} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: dim }}>
+              Today&apos;s mood
+            </Text>
+            <Text style={{ marginTop: 2, ...TYPE.cardHeading, fontFamily: FONTS.sansSemiBold, color: text }} numberOfLines={1}>
+              Feeling {loggedMoodConfig.label}
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={dim} />
+        </PressableSurface>
+      </View>
     );
   }
 
   return (
-    <PressableSurface
-      haptic="selection"
-      accessibilityLabel="Check in with your mood"
-      onPress={navigateToMood}
+    <View
       style={{
         borderRadius: 18,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
         backgroundColor: cardBg,
         borderWidth: 1,
         borderColor: border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
       }}
     >
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: brand }}>
-          How are you feeling?
-        </Text>
-        <Text style={{ marginTop: 4, ...TYPE.caption, color: dim }}>
-          Check in with yourself today.
-        </Text>
-      </View>
-      <IconTile name="mood" fallbackGlyph="smile" size="sm" color={brand} />
-    </PressableSurface>
+      <PressableSurface
+        haptic="selection"
+        accessibilityLabel="Check in with your mood"
+        onPress={navigateToMood}
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: brand }}>
+            How are you feeling?
+          </Text>
+          <Text style={{ marginTop: 4, ...TYPE.caption, color: dim }}>
+            Check in with yourself today.
+          </Text>
+        </View>
+        <IconTile name="mood" fallbackGlyph="smile" size="sm" color={brand} />
+      </PressableSurface>
+    </View>
   );
 }

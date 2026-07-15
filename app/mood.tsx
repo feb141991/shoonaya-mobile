@@ -335,37 +335,41 @@ export default function MoodScreen() {
     const time = rec.duration ?? RECOMMENDATION_TIME[rec.type] ?? '5 min';
 
     return (
-      <PressableSurface
+      <View
         key={`${rec.id}-${index}`}
-        haptic="selection"
-        accessibilityLabel={`Open ${rec.title}`}
-        onPress={() => compact ? handleReturnRecClick(rec) : handleRecClick(rec)}
-        style={[
-          styles.pathCard,
-          {
-            width: compact ? 168 : 154,
-            backgroundColor: soft,
-            borderColor: `${accent}26`,
-            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-          },
-        ]}
+        style={{
+          width: compact ? 168 : 154,
+          borderRadius: 22,
+          borderWidth: 1,
+          overflow: 'hidden',
+          backgroundColor: soft,
+          borderColor: `${accent}26`,
+          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        }}
       >
-        <View style={[styles.pathIcon, { backgroundColor: `${accent}18`, borderColor: `${accent}30` }]}>
-          <Feather name={icon} size={16} color={accent} />
-        </View>
-        <Text style={[styles.pathBadge, { color: accent }]} numberOfLines={1}>
-          {time}
-        </Text>
-        <Text style={[styles.pathTitle, { color: theme.text }]} numberOfLines={2}>
-          {rec.title}
-        </Text>
-        <Text style={[styles.pathDesc, { color: theme.dim }]} numberOfLines={2}>
-          {rec.description}
-        </Text>
-        <Text style={[styles.pathAction, { color: accent }]} numberOfLines={1}>
-          Open →
-        </Text>
-      </PressableSurface>
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={`Open ${rec.title}`}
+          onPress={() => compact ? handleReturnRecClick(rec) : handleRecClick(rec)}
+          style={{ minHeight: 178, padding: SPACING.md }}
+        >
+          <View style={[styles.pathIcon, { backgroundColor: `${accent}18`, borderColor: `${accent}30` }]}>
+            <Feather name={icon} size={16} color={accent} />
+          </View>
+          <Text style={[styles.pathBadge, { color: accent }]} numberOfLines={1}>
+            {time}
+          </Text>
+          <Text style={[styles.pathTitle, { color: theme.text }]} numberOfLines={2}>
+            {rec.title}
+          </Text>
+          <Text style={[styles.pathDesc, { color: theme.dim }]} numberOfLines={2}>
+            {rec.description}
+          </Text>
+          <Text style={[styles.pathAction, { color: accent }]} numberOfLines={1}>
+            Open →
+          </Text>
+        </PressableSurface>
+      </View>
     );
   };
 
@@ -413,16 +417,18 @@ export default function MoodScreen() {
           <Text style={[styles.subtitle, { color: theme.dim, textAlign: 'center' }]}>
             Check your connection and try again.
           </Text>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Retry loading Mood"
-            onPress={() => {
-              loadStatus();
-            }}
-            style={[styles.retryBtn, { borderColor: theme.brand, marginTop: SPACING.xl, paddingHorizontal: SPACING.xxl }]}
-          >
-            <Text style={[styles.retryText, { color: theme.brand }]}>Retry</Text>
-          </PressableSurface>
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: theme.brand, marginTop: SPACING.xl }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Retry loading Mood"
+              onPress={() => {
+                loadStatus();
+              }}
+              style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xxl }}
+            >
+              <Text style={[styles.retryText, { color: theme.brand }]}>Retry</Text>
+            </PressableSurface>
+          </View>
         </View>
       </Screen>
     );
@@ -456,14 +462,16 @@ export default function MoodScreen() {
             Return tomorrow for another reflection.
           </Text>
 
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Log a different mood"
-            onPress={startOver}
-            style={[styles.retryBtn, { borderColor: theme.brand, marginTop: SPACING.xxl, paddingHorizontal: SPACING.xxl }]}
-          >
-            <Text style={[styles.retryText, { color: theme.brand }]}>Log a different mood</Text>
-          </PressableSurface>
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: theme.brand, marginTop: SPACING.xxl }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Log a different mood"
+              onPress={startOver}
+              style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xxl }}
+            >
+              <Text style={[styles.retryText, { color: theme.brand }]}>Log a different mood</Text>
+            </PressableSurface>
+          </View>
 
           <PressableSurface
             haptic="selection"
@@ -511,15 +519,17 @@ export default function MoodScreen() {
             else router.back();
           })}
           {step !== 1 ? (
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Restart mood check-in"
-              onPress={startOver}
-              style={[styles.resetPill, { borderColor: theme.border, backgroundColor: theme.card }]}
-            >
-              <Feather name="rotate-ccw" size={13} color={theme.dim} />
-              <Text style={[styles.resetText, { color: theme.dim }]}>Change mood</Text>
-            </PressableSurface>
+            <View style={{ borderRadius: 999, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Restart mood check-in"
+                onPress={startOver}
+                style={{ minHeight: 38, paddingHorizontal: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              >
+                <Feather name="rotate-ccw" size={13} color={theme.dim} />
+                <Text style={[styles.resetText, { color: theme.dim }]}>Change mood</Text>
+              </PressableSurface>
+            </View>
           ) : null}
         </View>
 
@@ -689,29 +699,38 @@ export default function MoodScreen() {
                 </Card>
               </PressableSurface>
             ))}
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Save mood without recommendations"
-              onPress={handleMoodOnly}
-              disabled={loading}
-              style={[
-                styles.moodOnlyButton,
-                {
-                  backgroundColor: selectedMood?.bg ?? theme.card,
-                  borderColor: selectedMood?.colour ?? theme.premiumBorder,
-                  opacity: loading ? 0.6 : 1,
-                },
-              ]}
+            <View
+              style={{
+                borderRadius: 18,
+                borderWidth: 1,
+                backgroundColor: selectedMood?.bg ?? theme.card,
+                borderColor: selectedMood?.colour ?? theme.premiumBorder,
+                opacity: loading ? 0.6 : 1,
+              }}
             >
-              <View style={[styles.moodOnlyIcon, { backgroundColor: `${selectedMood?.colour ?? theme.brand}18` }]}>
-                <Feather name="check" size={16} color={selectedMood?.colour ?? theme.brand} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.moodOnlyTitle, { color: theme.text }]}>Just set my mood</Text>
-                <Text style={[styles.moodOnlyDesc, { color: theme.dim }]}>Save today&apos;s mood without recommendations</Text>
-              </View>
-              {loading ? <ActivityIndicator size="small" color={selectedMood?.colour ?? theme.brand} /> : null}
-            </PressableSurface>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Save mood without recommendations"
+                onPress={handleMoodOnly}
+                disabled={loading}
+                style={{
+                  minHeight: MIN_TOUCH_TARGET,
+                  padding: SPACING.lg,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: SPACING.md,
+                }}
+              >
+                <View style={[styles.moodOnlyIcon, { backgroundColor: `${selectedMood?.colour ?? theme.brand}18` }]}>
+                  <Feather name="check" size={16} color={selectedMood?.colour ?? theme.brand} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.moodOnlyTitle, { color: theme.text }]}>Just set my mood</Text>
+                  <Text style={[styles.moodOnlyDesc, { color: theme.dim }]}>Save today&apos;s mood without recommendations</Text>
+                </View>
+                {loading ? <ActivityIndicator size="small" color={selectedMood?.colour ?? theme.brand} /> : null}
+              </PressableSurface>
+            </View>
           </View>
         )}
 
@@ -781,13 +800,15 @@ export default function MoodScreen() {
                   </ScrollView>
                 ) : null}
 
-                <PressableSurface
-                  accessibilityLabel="Done, close mood check-in"
-                  onPress={handleReturnDone}
-                  style={[styles.finishBtn, { backgroundColor: theme.brand }]}
-                >
-                  <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Done</Text>
-                </PressableSurface>
+                <View style={{ borderRadius: 12, backgroundColor: theme.brand, marginTop: SPACING.xxl }}>
+                  <PressableSurface
+                    accessibilityLabel="Done, close mood check-in"
+                    onPress={handleReturnDone}
+                    style={{ padding: SPACING.lg, alignItems: 'center' }}
+                  >
+                    <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Done</Text>
+                  </PressableSurface>
+                </View>
               </>
             )}
           </View>
@@ -803,13 +824,15 @@ export default function MoodScreen() {
                 <Text style={[styles.recDesc, { color: theme.dim }]}>
                   {recommendationError}
                 </Text>
-                <PressableSurface
-                  haptic="selection"
-                  style={[styles.retryBtn, { borderColor: theme.brand }]}
-                  onPress={() => selectedTime && handleTimeSelect(selectedTime)}
-                >
-                  <Text style={[styles.retryText, { color: theme.brand }]}>Try again</Text>
-                </PressableSurface>
+                <View style={{ borderRadius: 12, borderWidth: 1, borderColor: theme.brand, marginTop: SPACING.sm }}>
+                  <PressableSurface
+                    haptic="selection"
+                    style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+                    onPress={() => selectedTime && handleTimeSelect(selectedTime)}
+                  >
+                    <Text style={[styles.retryText, { color: theme.brand }]}>Try again</Text>
+                  </PressableSurface>
+                </View>
               </Card>
             ) : recommendationItems.length === 0 ? (
               <Text style={[styles.subtitle, { color: theme.dim, textAlign: 'center', marginTop: 40 }]}>
@@ -835,9 +858,11 @@ export default function MoodScreen() {
             )}
 
             {!fetchingRecs && (
-              <PressableSurface style={[styles.finishBtn, { backgroundColor: theme.brand }]} onPress={finishFlow}>
-                <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Finish Check-in</Text>
-              </PressableSurface>
+              <View style={{ borderRadius: 12, backgroundColor: theme.brand, marginTop: SPACING.xxl }}>
+                <PressableSurface style={{ padding: SPACING.lg, alignItems: 'center' }} onPress={finishFlow}>
+                  <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Finish Check-in</Text>
+                </PressableSurface>
+              </View>
             )}
           </View>
         )}
