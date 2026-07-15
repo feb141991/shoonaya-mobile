@@ -217,11 +217,11 @@ export function SankalpaCard() {
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
           <View
             style={{
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               borderRadius: 14,
               alignItems: 'center',
               justifyContent: 'center',
@@ -232,7 +232,7 @@ export function SankalpaCard() {
           >
             <Feather name="sun" size={16} color={theme.brand} />
           </View>
-          <Text style={{ ...TYPE.label, color: theme.text, flex: 1 }} numberOfLines={1}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text, flex: 1 }} numberOfLines={1}>
             Set your Sankalpa for this month
           </Text>
         </View>
@@ -249,24 +249,25 @@ export function SankalpaCard() {
   return (
     <View
       style={{
-        minHeight: 58,
+        minHeight: 64,
         borderRadius: 22,
         paddingHorizontal: 16,
         paddingVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        backgroundColor: theme.card,
+        backgroundColor: checkedToday ? theme.soft : theme.card,
         borderWidth: 1,
         borderColor: theme.border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        opacity: checkedToday ? 0.72 : 1,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
         <View
           style={{
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             borderRadius: 14,
             alignItems: 'center',
             justifyContent: 'center',
@@ -277,12 +278,12 @@ export function SankalpaCard() {
         >
           <Feather name="sun" size={16} color={theme.brand} />
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text }} numberOfLines={1}>
             {sankalpa.text}
           </Text>
           <Text style={{ marginTop: 1, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-            Day {Math.min(day, targetDays || day)} of {targetDays}
+            {checkedToday ? 'Honoured today' : `Day ${Math.min(day, targetDays || day)} of ${targetDays}`}
           </Text>
         </View>
       </View>
