@@ -1202,23 +1202,23 @@ function HomeContent() {
               accessibilityLabel="Open Panchang"
               onPress={() => navigate('/panchang')}
               style={{
-                minHeight: 72,
+                minHeight: 70,
                 paddingHorizontal: 16,
-                paddingVertical: 10,
+                paddingVertical: 11,
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
                   <IconTile name="panchang" fallbackGlyph="moon" size="md" color={theme.brand} accent={COLORS.tileCoral} />
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: theme.dim }}>
+                    <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
                       Sacred rhythm
                     </Text>
-                    <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text }} numberOfLines={1}>
+                    <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
                       {tithiPill}
                     </Text>
                     <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                      {panchang.nakshatra} nakshatra · {panchang.yoga} yoga
+                      {panchang.nakshatra} · {panchang.yoga}
                     </Text>
                     {state.panchang.viewedToday ? (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>

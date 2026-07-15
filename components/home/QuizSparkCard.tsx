@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { IconTile } from '@/components/ui/IconTile';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, SHADOWS, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
@@ -149,22 +149,22 @@ export function QuizSparkCard() {
         accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
         onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
         style={{
-          minHeight: 80,
+          minHeight: 70,
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingVertical: 11,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
           position: 'relative',
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, paddingRight: 72 }}>
-          <IconTile name="quiz" fallbackGlyph="help-circle" size="lg" color={brand} accent={COLORS.tileCoral} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0, paddingRight: 78 }}>
+          <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} accent={COLORS.tileCoral} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
+            <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: brand }} numberOfLines={1}>
               {title}
             </Text>
-            <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: text }} numberOfLines={1}>
+            <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
               {quiz.question}
             </Text>
           </View>
@@ -176,7 +176,7 @@ export function QuizSparkCard() {
               <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
             </View>
           ) : null}
-          <Text style={{ ...TYPE.chip, fontFamily: FONTS.sansSemiBold, letterSpacing: 1.1, color: brand }}>
+          <Text style={{ ...TYPE.chip, color: brand }}>
             Play
           </Text>
           <Feather name="chevron-right" size={18} color={brand} />
