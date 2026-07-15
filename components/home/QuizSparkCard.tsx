@@ -125,50 +125,63 @@ export function QuizSparkCard() {
   const title = `${TRADITION_LABEL[quiz.tradition] ?? 'Daily'} Quiz`;
 
   return (
-    <PressableSurface
-      haptic="selection"
-      accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
-      onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
+    // Card chrome (bg/border/shadow) lives on a plain View with a flat
+    // style object — same pattern Dharm Veer's Pressable uses. PressableSurface
+    // resolves its style as an array (base + caller + pressedStyle) via a
+    // style-callback function; on this RN build that array form was silently
+    // dropping boxShadow/borderColor here (and on the Sacred Rhythm card,
+    // which had the same structure), even though the values were correct —
+    // that's why the card looked borderless/shadowless despite the code
+    // having border/shadow set. Moving the chrome to a flat-object View and
+    // keeping PressableSurface purely for press feedback/layout fixes it.
+    <View
       style={{
         width: '100%',
-        alignSelf: 'stretch',
-        minHeight: 80,
         borderRadius: 22,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        position: 'relative',
         backgroundColor: cardBg,
         borderWidth: 1,
         borderColor: border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, paddingRight: 72 }}>
-        <IconTile name="quiz" fallbackGlyph="help-circle" size="lg" color={brand} accent={COLORS.tileCoral} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
-            {title}
-          </Text>
-          <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: text }} numberOfLines={1}>
-            {quiz.question}
-          </Text>
-        </View>
-      </View>
-      <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-        {quizStreak > 1 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Feather name="zap" size={12} color={brand} />
-            <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
+      <PressableSurface
+        haptic="selection"
+        accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
+        onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
+        style={{
+          minHeight: 80,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          position: 'relative',
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, paddingRight: 72 }}>
+          <IconTile name="quiz" fallbackGlyph="help-circle" size="lg" color={brand} accent={COLORS.tileCoral} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ ...TYPE.micro, letterSpacing: 1.15, textTransform: 'uppercase', color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={{ marginTop: 3, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: text }} numberOfLines={1}>
+              {quiz.question}
+            </Text>
           </View>
-        ) : null}
-        <Text style={{ ...TYPE.chip, fontFamily: FONTS.sansSemiBold, letterSpacing: 1.1, color: brand }}>
-          Play
-        </Text>
-        <Feather name="chevron-right" size={18} color={brand} />
-      </View>
-    </PressableSurface>
+        </View>
+        <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          {quizStreak > 1 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <Feather name="zap" size={12} color={brand} />
+              <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
+            </View>
+          ) : null}
+          <Text style={{ ...TYPE.chip, fontFamily: FONTS.sansSemiBold, letterSpacing: 1.1, color: brand }}>
+            Play
+          </Text>
+          <Feather name="chevron-right" size={18} color={brand} />
+        </View>
+      </PressableSurface>
+    </View>
   );
 }
