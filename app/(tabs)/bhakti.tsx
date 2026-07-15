@@ -232,7 +232,7 @@ export default function BhaktiScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
             <PressableSurface
               haptic="selection"
-              onPress={() => openComingSoon('Bhakti Insights')}
+              onPress={() => router.push('/bhakti/insights' as Href)}
               accessibilityLabel="Bhakti insights"
               style={{ borderRadius: 999 }}
             >
