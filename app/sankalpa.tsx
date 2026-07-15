@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -106,6 +107,16 @@ function clampProgress(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), ms);
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(timeout));
+  });
+}
+
 type Theme = ReturnType<typeof themeColor>;
 
 function StatPill({ label, value, theme }: { label: string; value: string; theme: Theme }) {
@@ -166,6 +177,73 @@ function SectionLabel({ children, theme }: { children: string; theme: Theme }) {
     <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: theme.brand }}>
       {children}
     </Text>
+  );
+}
+
+function CreateSankalpaButton({
+  disabled,
+  loading,
+  onPress,
+  theme,
+  isDark,
+}: {
+  disabled: boolean;
+  loading: boolean;
+  onPress: () => void;
+  theme: Theme;
+  isDark: boolean;
+}) {
+  const isInactive = disabled || loading;
+
+  return (
+    <View
+      style={{
+        borderRadius: 22,
+        backgroundColor: isInactive ? theme.brandSoft : theme.brand,
+        borderWidth: 1,
+        borderColor: isInactive ? theme.borderSoft : theme.brand,
+        boxShadow: !isInactive ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light) : undefined,
+        opacity: isInactive ? 0.68 : 1,
+      }}
+    >
+      <Pressable
+        accessibilityLabel="Begin Sankalpa"
+        accessibilityState={{ disabled: isInactive, busy: loading }}
+        disabled={isInactive}
+        onPress={() => {
+          if (!isInactive) {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            onPress();
+          }
+        }}
+        style={{
+          minHeight: 54,
+          paddingHorizontal: 18,
+          paddingVertical: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'row',
+          gap: 10,
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+        ) : (
+          <>
+            <Text
+              style={{
+                fontFamily: FONTS.sansSemiBold,
+                fontSize: 15,
+                color: isInactive ? theme.dim : isDark ? COLORS.darkBg : COLORS.creamBg,
+              }}
+            >
+              Begin Sankalpa
+            </Text>
+            <Feather name="arrow-right" size={17} color={isInactive ? theme.dim : isDark ? COLORS.darkBg : COLORS.creamBg} />
+          </>
+        )}
+      </Pressable>
+    </View>
   );
 }
 
@@ -257,7 +335,7 @@ export default function SankalpaScreen() {
     const run = async () => {
       setLoading(true);
       try {
-        await loadSankalpa();
+        await withTimeout(loadSankalpa(), 18_000, 'Sankalpa load timed out');
       } catch {
         setLoadError(true);
       } finally {
@@ -441,7 +519,7 @@ export default function SankalpaScreen() {
             ctaLabel="Retry"
             onCta={() => {
               setLoading(true);
-              loadSankalpa()
+              withTimeout(loadSankalpa(), 18_000, 'Sankalpa load timed out')
                 .catch(() => setLoadError(true))
                 .finally(() => setLoading(false));
             }}
@@ -471,7 +549,22 @@ export default function SankalpaScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <BackButton />
+        <BackButton
+          showLabel={false}
+          iconSize={22}
+          iconColor={theme.text}
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 18,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+          }}
+        />
 
         <View
           style={{
@@ -486,13 +579,17 @@ export default function SankalpaScreen() {
             colors={isDark ? [COLORS.cardBgDark, COLORS.selectionWellDark] : [COLORS.cardBgLight, COLORS.brandSoftLight]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ padding: 20, gap: 10 }}
+            style={{ padding: 22, gap: 10, minHeight: 168, justifyContent: 'center' }}
           >
-            <SankalpaIconWell theme={theme} isDark={isDark} size="lg" icon="sunrise" />
-            <SectionLabel theme={theme}>Sacred intention</SectionLabel>
-            <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>
-              {sankalpa ? 'Your active vow, held one day at a time.' : 'Set an intention to hold for a fixed number of days.'}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <SankalpaIconWell theme={theme} isDark={isDark} size="lg" icon="sunrise" />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <SectionLabel theme={theme}>Sacred intention</SectionLabel>
+                <Text style={{ marginTop: 5, ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
+              </View>
+            </View>
+            <Text style={{ ...TYPE.body, color: theme.dim, maxWidth: 310 }}>
+              {sankalpa ? 'Your active vow, held one day at a time.' : 'Set one clear vow and return to it daily.'}
             </Text>
           </LinearGradient>
         </View>
@@ -621,30 +718,35 @@ export default function SankalpaScreen() {
             ) : suggestions.length > 0 ? (
               <View>
                 <Text style={{ ...TYPE.label, color: theme.dim, marginBottom: 10 }}>
-                  {suggestionsSource === 'ai' ? 'Suggested for you' : 'Need a starting point?'}
+                  {suggestionsSource === 'ai' ? 'Pick a suggested vow' : 'Pick a suggested vow'}
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <View style={{ gap: 8 }}>
                   {suggestions.map((suggestion, i) => (
                     <View
                       key={`${i}-${suggestion.slice(0, 12)}`}
                       style={{
-                        maxWidth: '100%',
-                        borderRadius: 14,
+                        borderRadius: 18,
                         borderWidth: 1,
                         borderColor: theme.borderSoft,
                         backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                       }}
                     >
-                      <PressableSurface
+                      <Pressable
                         accessibilityLabel={`Use suggestion: ${suggestion}`}
-                        haptic="selection"
-                        onPress={() => setText(suggestion)}
-                        style={{ paddingHorizontal: 14, paddingVertical: 10, minHeight: 42 }}
+                        onPress={() => {
+                          void Haptics.selectionAsync().catch(() => {});
+                          setText(suggestion);
+                        }}
+                        style={{ paddingHorizontal: 12, paddingVertical: 9, minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 9 }}
                       >
-                        <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text }}>
+                        <Feather name="plus" size={13} color={theme.brand} />
+                        <Text
+                          numberOfLines={2}
+                          style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 17, color: theme.text }}
+                        >
                           {suggestion}
                         </Text>
-                      </PressableSurface>
+                      </Pressable>
                     </View>
                   ))}
                 </View>
@@ -653,7 +755,7 @@ export default function SankalpaScreen() {
 
             <View>
               <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 8 }}>
-                Your intention
+                Or write your own
               </Text>
               <TextInput
                 value={text}
@@ -663,7 +765,7 @@ export default function SankalpaScreen() {
                 multiline
                 maxLength={TEXT_MAX}
                 style={{
-                  minHeight: 112,
+                  minHeight: 104,
                   borderRadius: 20,
                   borderWidth: 1,
                   borderColor: theme.premiumBorder,
@@ -684,11 +786,12 @@ export default function SankalpaScreen() {
               <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 10 }}>
                 For how many days
               </Text>
-              <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 {TARGET_DAY_OPTIONS.map((days) => (
                   <View
                     key={days}
                     style={{
+                      flex: 1,
                       borderRadius: 999,
                       borderWidth: 1.5,
                       borderColor: days === targetDays ? theme.brand : theme.borderSoft,
@@ -700,18 +803,19 @@ export default function SankalpaScreen() {
                             : COLORS.selectionWellLight,
                     }}
                   >
-                    <PressableSurface
+                    <Pressable
                       accessibilityLabel={`${days} day Sankalpa`}
                       accessibilityState={{ selected: days === targetDays }}
-                      haptic="selection"
                       onPress={() => {
+                        void Haptics.selectionAsync().catch(() => {});
                         setTargetDays(days);
                       }}
                       style={{
                         minHeight: MIN_TOUCH_TARGET,
-                        paddingHorizontal: 18,
+                        paddingHorizontal: 8,
                         paddingVertical: 10,
                         justifyContent: 'center',
+                        alignItems: 'center',
                       }}
                     >
                       <Text
@@ -723,14 +827,15 @@ export default function SankalpaScreen() {
                       >
                         {days}
                       </Text>
-                    </PressableSurface>
+                    </Pressable>
                   </View>
                 ))}
               </View>
             </View>
 
-            <Button
-              label="Begin Sankalpa"
+            <CreateSankalpaButton
+              theme={theme}
+              isDark={isDark}
               loading={creating}
               disabled={text.trim().length < TEXT_MIN}
               onPress={() => { void handleCreate(); }}
@@ -745,17 +850,23 @@ export default function SankalpaScreen() {
             accessibilityState={{ expanded: historyExpanded }}
             haptic="selection"
             onPress={toggleHistory}
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}
+            style={{ minHeight: 76, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
               <SankalpaIconWell theme={theme} isDark={isDark} icon="clock" />
-              <View>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <SectionLabel theme={theme}>History</SectionLabel>
-                <Text style={{ marginTop: 2, ...TYPE.label, color: theme.text }}>Previous Sankalpas</Text>
+                <Text style={{ marginTop: 2, ...TYPE.label, color: theme.text }} numberOfLines={1}>Previous Sankalpas</Text>
               </View>
             </View>
             <Animated.View
               style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                 transform: [
                   {
                     rotate: historyChevron.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }),
