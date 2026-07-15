@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, Text, useColorScheme, View } from 'react-
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -11,10 +12,20 @@ import { Screen } from '@/components/ui/Screen';
 import type { SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { Surface } from '@/components/ui/Surface';
 import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
+import { getTraditionAccent } from '@/lib/traditions';
+
+// ── Bhakti Phase 1 of a multi-phase PWA-parity rebuild (see task list:
+// "Bhakti full PWA parity" #330-338). This screen now mirrors the PWA's
+// src/app/(main)/bhakti/BhaktiClient.tsx structure: a tradition-tinted hero
+// gradient, a "Today's Stotram" teaser, and a single unified content grid —
+// replacing the old split "Your Practice"/"Explore" sections. Content-
+// library destinations (katha reader, browse, zen, insights, stotram
+// detail, mantras) don't exist natively yet; those land in Phases 2-8 as
+// their own data-porting + screen-build passes. Until each phase lands,
+// its card's `href` is null and tapping opens the coming-soon sheet.
 
 const TRADITION_HERO: Record<string, { greeting: string; sub: string }> = {
   hindu:    { greeting: 'Jai Sri Ram 🙏',           sub: 'Bhakti, Kathas & Sacred Practice' },
@@ -23,53 +34,59 @@ const TRADITION_HERO: Record<string, { greeting: string; sub: string }> = {
   jain:     { greeting: 'Jai Jinendra 🤲',           sub: 'Kathas, Stotrams & Simran'        },
 };
 
-// ── "Your Practice" — every card here is a real, already-built native
-// route. Kept deliberately separate from CONTENT_CARDS below (which is
-// still coming-soon placeholder content), so the hierarchy reads as: real
-// destinations get the premium, icon-led treatment up top; not-yet-built
-// content stays clearly secondary. `japa-mala`, `nitya-karma`, and
-// `dharm-veer` used to live in CONTENT_CARDS too — they moved here instead
-// of appearing twice on the same screen.
-type PracticeCard = {
+// Two icon treatments in one unified grid:
+//  - 'tile': real, already-built native destinations get the premium
+//    SacredIcon-driven IconTile well (brand gold) — same treatment the old
+//    "Your Practice" cards used.
+//  - 'feather': PWA content-library cards get a Feather glyph in a
+//    per-card accent-tinted well, matching PWA's per-card `tint` — ported
+//    to a solid hex + iconWellColor-style alpha suffix (`${accent}15`
+///   fill, `${accent}28` border) since RN doesn't compose low-opacity CSS
+//    rgba() tints the same way as PWA's raw `background: rgba(...)`.
+type TileCard = {
+  kind: 'tile';
   id: SacredIconName;
   fallbackGlyph: keyof typeof Feather.glyphMap;
-  label: string;
-  detail: string;
+  title: string;
+  description: string;
   href: Href;
+  traditions?: string[];
 };
 
-const PRACTICE_CARDS: PracticeCard[] = [
-  { id: 'japa', fallbackGlyph: 'heart', label: 'Japa Mala', detail: 'Digital mala for mantra & Naam Simran', href: '/japa' },
-  { id: 'dharmveer', fallbackGlyph: 'shield', label: 'Dharm Veer', detail: 'Stories of dharmic courage', href: '/dharm-veer' },
-  { id: 'vrat', fallbackGlyph: 'moon', label: 'Vrat', detail: 'Observances & fasting days', href: '/vrat' },
-];
-
-type ContentCard = {
+type FeatherCard = {
+  kind: 'feather';
   id: string;
   icon: keyof typeof Feather.glyphMap;
   title: string;
   description: string;
-  // Solid hex accent (not rgba) — feeds the same bg/border-tint math as
-  // IconTile's iconWellColor (`${accent}15` fill, `${accent}28` border) so
-  // these wells match PracticeCard's IconTile treatment instead of the old
-  // one-off flat rgba fill with no border.
   accent: string;
+  // null = destination screen not yet built natively; opens the coming-
+  // soon sheet until its own phase (Bhakti Phase 3-8) lands.
+  href: Href | null;
   traditions?: string[];
 };
 
-// Coming-soon content only — every entry with a real destination has moved
-// to PRACTICE_CARDS above.
-const CONTENT_CARDS: ContentCard[] = [
-  { id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', traditions: ['hindu'] },
-  { id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', traditions: ['sikh'] },
-  { id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: 'Buddha\'s parables & Jataka tales', accent: '#8C64C8', traditions: ['buddhist'] },
-  { id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', traditions: ['jain'] },
-  { id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: '#C5A059', traditions: ['hindu', 'jain'] },
-  { id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', traditions: ['buddhist'] },
-  { id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850' },
-  { id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050' },
-  { id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: '#C5A059' },
-  { id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478' },
+type BhaktiCard = TileCard | FeatherCard;
+
+// Order mirrors PWA's CONTENT_CARDS exactly (tradition-specific kathas →
+// hymns/chants → universal katha content → Japa Mala → Mantras → Sattvic
+// Mode), with Dharm Veer and Vrat appended at the end — native-only
+// additions not present in PWA's Bhakti grid, kept per explicit product
+// instruction rather than dropped for strict parity.
+const CONTENT_CARDS: BhaktiCard[] = [
+  { kind: 'feather', id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', href: null, traditions: ['hindu'] },
+  { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', href: null, traditions: ['sikh'] },
+  { kind: 'feather', id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: "Buddha's parables & Jataka tales", accent: '#8C64C8', href: null, traditions: ['buddhist'] },
+  { kind: 'feather', id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', href: null, traditions: ['jain'] },
+  { kind: 'feather', id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: '#C5A059', href: null, traditions: ['hindu', 'jain'] },
+  { kind: 'feather', id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', href: null, traditions: ['buddhist'] },
+  { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850', href: null },
+  { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: null },
+  { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/japa' },
+  { kind: 'feather', id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: '#C5A059', href: null },
+  { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: null },
+  { kind: 'tile', id: 'dharmveer', fallbackGlyph: 'shield', title: 'Dharm Veer', description: 'Stories of dharmic courage', href: '/dharm-veer' },
+  { kind: 'tile', id: 'vrat', fallbackGlyph: 'moon', title: 'Vrat', description: 'Observances & fasting days', href: '/vrat' },
 ];
 
 // Splits a list into fixed-width pairs for an exact 2-column grid (each row
@@ -86,12 +103,24 @@ function chunkPairs<T>(items: T[]): T[][] {
   return rows;
 }
 
-function StatPill({ icon, label, brand }: { icon: keyof typeof Feather.glyphMap; label: string; brand: string }) {
+// Accent-tinted pill matching PWA's stat chips (`background: accent+'18'`,
+// text in accent). Only rendered when its count is > 0, same as PWA.
+function StatPill({ icon, label, accent }: { icon: keyof typeof Feather.glyphMap; label: string; accent: string }) {
   return (
-    <Surface variant="soft" radius="pill" bordered={false} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, gap: 6 }}>
-      <Feather name={icon} size={14} color={brand} />
-      <Text style={{ ...TYPE.label, color: brand }}>{label}</Text>
-    </Surface>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        borderRadius: 999,
+        backgroundColor: `${accent}18`,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+      }}
+    >
+      <Feather name={icon} size={12} color={accent} />
+      <Text style={{ ...TYPE.chip, color: accent }}>{label}</Text>
+    </View>
   );
 }
 
@@ -134,127 +163,175 @@ export default function BhaktiScreen() {
   );
 
   const hero = TRADITION_HERO[tradition] ?? TRADITION_HERO.hindu;
-  const activeContentCards = CONTENT_CARDS.filter(c => !c.traditions || c.traditions.includes(tradition));
+  const accent = getTraditionAccent(tradition);
+  const activeCards = CONTENT_CARDS.filter(c => !c.traditions || c.traditions.includes(tradition));
 
-  const handlePracticePress = (href: Href) => {
+  const openComingSoon = (title: string) => {
     try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
-    router.push(href);
+    setSelectedCardTitle(title);
+    setComingSoonVisible(true);
   };
 
-  const handleContentCardPress = (card: ContentCard) => {
+  const handleCardPress = (card: BhaktiCard) => {
     try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
-    setSelectedCardTitle(card.title);
-    setComingSoonVisible(true);
+    if (card.href) {
+      router.push(card.href);
+    } else {
+      setSelectedCardTitle(card.title);
+      setComingSoonVisible(true);
+    }
   };
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100, gap: 28 }}
+        contentContainerStyle={{ paddingBottom: 100, gap: 28 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >
 
-        {/* Hero */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ ...TYPE.hero, color: theme.text }}>{hero.greeting}</Text>
-          <Text style={{ ...TYPE.body, color: theme.dim }}>{hero.sub}</Text>
-
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-            <StatPill icon="zap" label={`${japaStreak} Day Streak`} brand={theme.brand} />
-            <StatPill icon="heart" label={`${sessionCountToday} Sessions Today`} brand={theme.brand} />
-          </View>
-        </View>
-
-        {/* Your Practice — real, working destinations only */}
-        <View style={{ gap: 12 }}>
-          <SectionHeader label="Your Practice" />
-
-          <View style={{ gap: 12 }}>
-            {chunkPairs(PRACTICE_CARDS).map((row, rowIndex) => (
-              <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-                {row.map((card) => (
-                  <PressableSurface
-                    key={card.id}
-                    haptic="selection"
-                    onPress={() => handlePracticePress(card.href)}
-                    accessibilityLabel={`${card.label}, ${card.detail}`}
-                    style={{ flex: 1 }}
-                  >
-                    <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
-                      <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
-                      <View style={{ gap: 4 }}>
-                        <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{card.label}</Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                          {card.detail}
-                        </Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
-                        <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: theme.brand }}>
-                          Open
-                        </Text>
-                        <Feather name="chevron-right" size={11} color={theme.brand} />
-                      </View>
-                    </Card>
-                  </PressableSurface>
-                ))}
-                {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+        {/* Hero — tradition-tinted gradient strip, mirrors PWA's
+            linear-gradient(160deg, accent1a 0%, accent08 55%, transparent) */}
+        <LinearGradient
+          colors={[`${accent}1a`, `${accent}08`, `${accent}00`]}
+          locations={[0, 0.55, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.3, y: 1 }}
+          style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
+            <PressableSurface
+              haptic="selection"
+              onPress={() => openComingSoon('Bhakti Insights')}
+              accessibilityLabel="Bhakti insights"
+              style={{ borderRadius: 999 }}
+            >
+              <View style={{ borderRadius: 999, backgroundColor: `${accent}18`, paddingHorizontal: 12, paddingVertical: 6 }}>
+                <Text style={{ ...TYPE.chip, color: accent }}>Insights</Text>
               </View>
-            ))}
+            </PressableSurface>
           </View>
-        </View>
 
-        {/* Explore — coming soon on native */}
-        <View style={{ gap: 12 }}>
-          <SectionHeader label="Explore" />
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.6, textTransform: 'uppercase', color: accent, marginTop: 12 }}>
+            {hero.sub}
+          </Text>
+          <Text style={{ ...TYPE.hero, color: theme.text, marginTop: 2 }}>Bhakti</Text>
+          <Text style={{ ...TYPE.body, color: theme.dim, marginTop: 4 }}>{hero.greeting}</Text>
 
-          <View style={{ gap: 12 }}>
-            {chunkPairs(activeContentCards).map((row, rowIndex) => (
-              <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-                {row.map((card) => (
-                  <PressableSurface
-                    key={card.id}
-                    haptic="selection"
-                    onPress={() => handleContentCardPress(card)}
-                    accessibilityLabel={`${card.title}, coming soon`}
-                    style={{ flex: 1 }}
-                  >
-                    <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
-                      <View
-                        style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: RADII.md,
-                          backgroundColor: `${card.accent}15`,
-                          borderWidth: 1,
-                          borderColor: `${card.accent}28`,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Feather name={card.icon} size={22} color={card.accent} />
-                      </View>
-                      <View style={{ gap: 4 }}>
-                        <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                          {card.description}
-                        </Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
-                        <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: card.accent }}>
-                          Open
-                        </Text>
-                        <Feather name="chevron-right" size={11} color={card.accent} />
-                      </View>
-                    </Card>
-                  </PressableSurface>
-                ))}
-                {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+          {(japaStreak > 0 || sessionCountToday > 0) && (
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+              {japaStreak > 0 ? <StatPill icon="zap" label={`${japaStreak}-day streak`} accent={accent} /> : null}
+              {sessionCountToday > 0 ? <StatPill icon="heart" label={`${sessionCountToday} today`} accent={accent} /> : null}
+            </View>
+          )}
+        </LinearGradient>
+
+        <View style={{ paddingHorizontal: 20, gap: 28 }}>
+
+          {/* Today's Stotram teaser — visual shell built now (Phase 1);
+              wired to a real day-rotating stotram + detail screen in
+              Phase 3 once stotrams.ts is ported. Tapping opens the
+              coming-soon sheet until then. */}
+          <PressableSurface
+            haptic="selection"
+            onPress={() => openComingSoon("Today's Stotram")}
+            accessibilityLabel="Today's stotram"
+            style={{ borderRadius: 18 }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                padding: 16,
+                borderRadius: 18,
+                backgroundColor: `${accent}0d`,
+                borderWidth: 1,
+                borderColor: `${accent}28`,
+              }}
+            >
+              <View style={{ width: 44, height: 44, borderRadius: RADII.md, backgroundColor: `${accent}22`, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="music" size={18} color={accent} />
               </View>
-            ))}
-          </View>
-        </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: accent }}>
+                  Today&apos;s Vani
+                </Text>
+                <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text, marginTop: 2 }} numberOfLines={1}>
+                  Daily Stotram
+                </Text>
+              </View>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="play" size={14} color={isDark ? COLORS.darkBg : COLORS.ink} />
+              </View>
+            </View>
+          </PressableSurface>
 
+          {/* Explore — single unified grid, matches PWA's one-grid
+              structure (drops the old split Your Practice/Explore
+              sections). */}
+          <View style={{ gap: 12 }}>
+            <SectionHeader label="Explore" />
+
+            <View style={{ gap: 12 }}>
+              {chunkPairs(activeCards).map((row, rowIndex) => (
+                <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
+                  {row.map((card) => (
+                    <PressableSurface
+                      key={card.id}
+                      haptic="selection"
+                      onPress={() => handleCardPress(card)}
+                      accessibilityLabel={card.href ? `${card.title}, ${card.description}` : `${card.title}, coming soon`}
+                      style={{ flex: 1 }}
+                    >
+                      <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
+                        {card.kind === 'tile' ? (
+                          <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
+                        ) : (
+                          <View
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: RADII.md,
+                              backgroundColor: `${card.accent}15`,
+                              borderWidth: 1,
+                              borderColor: `${card.accent}28`,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Feather name={card.icon} size={22} color={card.accent} />
+                          </View>
+                        )}
+                        <View style={{ gap: 4 }}>
+                          <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
+                          <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                            {card.description}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
+                          <Text
+                            style={{
+                              ...TYPE.chip,
+                              letterSpacing: 1.2,
+                              textTransform: 'uppercase',
+                              color: card.kind === 'tile' ? theme.brand : card.accent,
+                            }}
+                          >
+                            Open
+                          </Text>
+                          <Feather name="chevron-right" size={11} color={card.kind === 'tile' ? theme.brand : card.accent} />
+                        </View>
+                      </Card>
+                    </PressableSurface>
+                  ))}
+                  {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+                </View>
+              ))}
+            </View>
+          </View>
+
+        </View>
       </ScrollView>
 
       {/* Coming Soon Modal */}

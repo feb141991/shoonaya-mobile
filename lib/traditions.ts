@@ -1,5 +1,22 @@
 export type TraditionKey = 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
+// Per-tradition accent hex — ported verbatim from the PWA's
+// lib/tradition-config.ts (TRADITION_CONFIG[*].accentColour), used to tint
+// the Bhakti hero gradient/pills so each tradition reads as its own color
+// identity instead of the app-wide brand gold. Kept as plain hex (not an
+// alpha-suffixed token) so callers can freely compose `${accent}NN` tints,
+// matching how the PWA source computes its own gradient stops.
+export const TRADITION_ACCENT: Record<TraditionKey, string> = {
+  hindu: '#D4740F',
+  sikh: '#2E6FA8',
+  buddhist: '#B07D3A',
+  jain: '#A07830',
+};
+
+export function getTraditionAccent(tradition: string | null | undefined): string {
+  return TRADITION_ACCENT[(tradition as TraditionKey)] ?? TRADITION_ACCENT.hindu;
+}
+
 export type TraditionOption = {
   value: string;
   label: string;
