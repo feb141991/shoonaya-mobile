@@ -75,14 +75,14 @@ type BhaktiCard = TileCard | FeatherCard;
 // additions not present in PWA's Bhakti grid, kept per explicit product
 // instruction rather than dropped for strict parity.
 const CONTENT_CARDS: BhaktiCard[] = [
-  { kind: 'feather', id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', href: null, traditions: ['hindu'] },
-  { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', href: null, traditions: ['sikh'] },
-  { kind: 'feather', id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: "Buddha's parables & Jataka tales", accent: '#8C64C8', href: null, traditions: ['buddhist'] },
-  { kind: 'feather', id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', href: null, traditions: ['jain'] },
+  { kind: 'feather', id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', href: '/bhakti/katha?view=puranic' as Href, traditions: ['hindu'] },
+  { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', href: '/bhakti/katha?view=bani' as Href, traditions: ['sikh'] },
+  { kind: 'feather', id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: "Buddha's parables & Jataka tales", accent: '#8C64C8', href: '/bhakti/katha?view=dhamma' as Href, traditions: ['buddhist'] },
+  { kind: 'feather', id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', href: '/bhakti/katha?view=jain' as Href, traditions: ['jain'] },
   { kind: 'feather', id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: '#C5A059', href: null, traditions: ['hindu', 'jain'] },
   { kind: 'feather', id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', href: null, traditions: ['buddhist'] },
-  { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850', href: null },
-  { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: null },
+  { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850', href: '/bhakti/katha?view=panchatantra' as Href },
+  { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: '/bhakti/katha?view=heroes' as Href },
   { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/japa' },
   { kind: 'feather', id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: '#C5A059', href: null },
   { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: null },
