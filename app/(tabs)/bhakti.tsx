@@ -12,6 +12,7 @@ import { Screen } from '@/components/ui/Screen';
 import type { SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { apiFetch } from '@/lib/api';
 import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
@@ -134,27 +135,46 @@ export default function BhaktiScreen() {
   const [sessionCountToday, setSessionCountToday] = useState(0);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [selectedCardTitle, setSelectedCardTitle] = useState('');
+  const [dailyStotram, setDailyStotram] = useState<{ id: string; title: string; deityEmoji?: string } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       async function loadData() {
+        let userTradition = 'hindu';
         try {
           const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
-          const today = new Date().toISOString().slice(0, 10);
-          const [{ data: profile }, { data: sadhana }, { count }] = await Promise.all([
-            supabase.from('profiles').select('tradition').eq('id', user.id).single(),
-            supabase.from('daily_sadhana').select('streak_count').eq('user_id', user.id).eq('date', today).single(),
-            supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', `${today}T00:00:00`),
-          ]);
-          if (active) {
-            setTradition(profile?.tradition ?? 'hindu');
-            setJapaStreak(sadhana?.streak_count ?? 0);
-            setSessionCountToday(count ?? 0);
+          if (user) {
+            const today = new Date().toISOString().slice(0, 10);
+            const [{ data: profile }, { data: sadhana }, { count }] = await Promise.all([
+              supabase.from('profiles').select('tradition').eq('id', user.id).single(),
+              supabase.from('daily_sadhana').select('streak_count').eq('user_id', user.id).eq('date', today).single(),
+              supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', `${today}T00:00:00`),
+            ]);
+            userTradition = profile?.tradition ?? 'hindu';
+            if (active) {
+              setTradition(userTradition);
+              setJapaStreak(sadhana?.streak_count ?? 0);
+              setSessionCountToday(count ?? 0);
+            }
           }
         } catch (e) {
-          // ignore
+          // ignore — daily stotram fetch below still runs with the default tradition
+        }
+
+        // Today's Stotram — day-of-year rotating pick, matches PWA's
+        // bhakti/page.tsx server-side rotation. Fetched regardless of auth
+        // state (guests see it too), same as the web page.
+        try {
+          const response = await apiFetch(`/api/bhakti/stotram/daily?tradition=${userTradition}`);
+          if (response.ok) {
+            const json = await response.json();
+            if (active && json?.id) {
+              setDailyStotram({ id: json.id, title: json.title, deityEmoji: json.deityEmoji });
+            }
+          }
+        } catch {
+          // ignore — teaser card falls back to the coming-soon sheet
         }
       }
       void loadData();
@@ -228,13 +248,17 @@ export default function BhaktiScreen() {
 
         <View style={{ paddingHorizontal: 20, gap: 28 }}>
 
-          {/* Today's Stotram teaser — visual shell built now (Phase 1);
-              wired to a real day-rotating stotram + detail screen in
-              Phase 3 once stotrams.ts is ported. Tapping opens the
-              coming-soon sheet until then. */}
+          {/* Today's Stotram teaser — day-of-year rotating pick fetched
+              from GET /api/bhakti/stotram/daily (Phase 2), navigates into
+              the Phase 3 detail screen. Falls back to the coming-soon
+              sheet only if the fetch hasn't resolved yet. */}
           <PressableSurface
             haptic="selection"
-            onPress={() => openComingSoon("Today's Stotram")}
+            onPress={() =>
+              dailyStotram
+                ? router.push(`/bhakti/stotram/${dailyStotram.id}` as Href)
+                : openComingSoon("Today's Stotram")
+            }
             accessibilityLabel="Today's stotram"
             style={{ borderRadius: 18 }}
           >
@@ -251,14 +275,18 @@ export default function BhaktiScreen() {
               }}
             >
               <View style={{ width: 44, height: 44, borderRadius: RADII.md, backgroundColor: `${accent}22`, alignItems: 'center', justifyContent: 'center' }}>
-                <Feather name="music" size={18} color={accent} />
+                {dailyStotram?.deityEmoji ? (
+                  <Text style={{ fontSize: 18 }}>{dailyStotram.deityEmoji}</Text>
+                ) : (
+                  <Feather name="music" size={18} color={accent} />
+                )}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: accent }}>
                   Today&apos;s Vani
                 </Text>
                 <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text, marginTop: 2 }} numberOfLines={1}>
-                  Daily Stotram
+                  {dailyStotram?.title ?? 'Daily Stotram'}
                 </Text>
               </View>
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}>
