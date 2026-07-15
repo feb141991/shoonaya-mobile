@@ -587,44 +587,57 @@ export default function SankalpaScreen() {
               </View>
             </Card>
 
-            <PressableSurface
-              accessibilityLabel={checkedInToday ? 'Checked in today' : 'Check in for today'}
-              accessibilityState={{ disabled: checkedInToday || checkingIn, busy: checkingIn }}
-              haptic="impact"
-              onPress={() => { void handleCheckIn(); }}
-              disabled={checkedInToday || checkingIn}
+            {/* Chrome (border/bg) lives on a plain View with a flat style
+                object — PressableSurface resolves style as an array (base +
+                caller + pressedStyle) via a style-callback function that
+                also bakes in opacity/transform, and on this RN build that
+                combination was silently dropping borderColor/boxShadow set
+                on the same node (see the identical fix on Home's Quiz and
+                Sacred Rhythm cards). PressableSurface stays nested inside,
+                purely for press feedback and layout. */}
+            <View
               style={{
                 borderRadius: 20,
                 borderWidth: 1,
                 borderColor: checkedInToday ? COLORS.successBorder : theme.border,
                 backgroundColor: checkedInToday ? COLORS.successBg : theme.card,
-                minHeight: MIN_TOUCH_TARGET,
-                paddingVertical: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
               }}
             >
-              {checkingIn ? (
-                <ActivityIndicator color={theme.brand} />
-              ) : (
-                <Feather
-                  name={checkedInToday ? 'check-circle' : 'circle'}
-                  size={18}
-                  color={checkedInToday ? COLORS.success : theme.dim}
-                />
-              )}
-              <Text
+              <PressableSurface
+                accessibilityLabel={checkedInToday ? 'Checked in today' : 'Check in for today'}
+                accessibilityState={{ disabled: checkedInToday || checkingIn, busy: checkingIn }}
+                haptic="impact"
+                onPress={() => { void handleCheckIn(); }}
+                disabled={checkedInToday || checkingIn}
                 style={{
-                  fontFamily: FONTS.sansSemiBold,
-                  fontSize: 15,
-                  color: checkedInToday ? COLORS.success : theme.text,
+                  minHeight: MIN_TOUCH_TARGET,
+                  paddingVertical: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
                 }}
               >
-                {checkedInToday ? 'Checked in today' : 'Check in for today'}
-              </Text>
-            </PressableSurface>
+                {checkingIn ? (
+                  <ActivityIndicator color={theme.brand} />
+                ) : (
+                  <Feather
+                    name={checkedInToday ? 'check-circle' : 'circle'}
+                    size={18}
+                    color={checkedInToday ? COLORS.success : theme.dim}
+                  />
+                )}
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 15,
+                    color: checkedInToday ? COLORS.success : theme.text,
+                  }}
+                >
+                  {checkedInToday ? 'Checked in today' : 'Check in for today'}
+                </Text>
+              </PressableSurface>
+            </View>
 
             <Button
               label="Mark complete"
@@ -646,25 +659,27 @@ export default function SankalpaScreen() {
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {suggestions.map((suggestion, i) => (
-                    <PressableSurface
+                    <View
                       key={`${i}-${suggestion.slice(0, 12)}`}
-                      accessibilityLabel={`Use suggestion: ${suggestion}`}
-                      haptic="selection"
-                      onPress={() => setText(suggestion)}
                       style={{
                         maxWidth: '100%',
                         borderRadius: 14,
                         borderWidth: 1,
                         borderColor: theme.border,
                         backgroundColor: theme.card,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
                       }}
                     >
-                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text }}>
-                        {suggestion}
-                      </Text>
-                    </PressableSurface>
+                      <PressableSurface
+                        accessibilityLabel={`Use suggestion: ${suggestion}`}
+                        haptic="selection"
+                        onPress={() => setText(suggestion)}
+                        style={{ paddingHorizontal: 14, paddingVertical: 10 }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text }}>
+                          {suggestion}
+                        </Text>
+                      </PressableSurface>
+                    </View>
                   ))}
                 </View>
               </View>
@@ -705,35 +720,40 @@ export default function SankalpaScreen() {
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
                 {TARGET_DAY_OPTIONS.map((days) => (
-                  <PressableSurface
+                  <View
                     key={days}
-                    accessibilityLabel={`${days} day Sankalpa`}
-                    accessibilityState={{ selected: days === targetDays }}
-                    haptic="selection"
-                    onPress={() => {
-                      setTargetDays(days);
-                    }}
                     style={{
                       borderRadius: 999,
                       borderWidth: 1.5,
                       borderColor: days === targetDays ? theme.brand : theme.border,
                       backgroundColor: days === targetDays ? theme.brandSoft : theme.card,
-                      minHeight: MIN_TOUCH_TARGET,
-                      paddingHorizontal: 18,
-                      paddingVertical: 10,
-                      justifyContent: 'center',
                     }}
                   >
-                    <Text
+                    <PressableSurface
+                      accessibilityLabel={`${days} day Sankalpa`}
+                      accessibilityState={{ selected: days === targetDays }}
+                      haptic="selection"
+                      onPress={() => {
+                        setTargetDays(days);
+                      }}
                       style={{
-                        fontFamily: FONTS.sansSemiBold,
-                        fontSize: 14,
-                        color: days === targetDays ? theme.brand : theme.text,
+                        minHeight: MIN_TOUCH_TARGET,
+                        paddingHorizontal: 18,
+                        paddingVertical: 10,
+                        justifyContent: 'center',
                       }}
                     >
-                      {days}
-                    </Text>
-                  </PressableSurface>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.sansSemiBold,
+                          fontSize: 14,
+                          color: days === targetDays ? theme.brand : theme.text,
+                        }}
+                      >
+                        {days}
+                      </Text>
+                    </PressableSurface>
+                  </View>
                 ))}
               </View>
             </View>
