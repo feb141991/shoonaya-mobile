@@ -52,6 +52,7 @@ export function QuizSparkCard() {
   const [status, setStatus] = useState<Status>('loading');
   const [quiz, setQuiz] = useState<DailyQuiz | null>(null);
   const [quizStreak, setQuizStreak] = useState(0);
+  const [quizDone, setQuizDone] = useState(false);
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -91,15 +92,18 @@ export function QuizSparkCard() {
       }
 
       const quizData = quizResponse.ok ? ((await quizResponse.json()) as Partial<DailyQuiz>) : null;
+      const completedToday = Boolean(savedResponse.data);
       const previewQuestion =
         quizData?.question ||
         savedResponse.data?.question ||
         "Answer today's dharmic question";
 
       setQuiz({ question: previewQuestion, tradition });
+      setQuizDone(completedToday);
       setStatus('ready');
     } catch {
       setQuiz({ question: "Answer today's dharmic question", tradition: 'hindu' });
+      setQuizDone(false);
       setStatus('ready');
     }
   }, []);
@@ -127,7 +131,7 @@ export function QuizSparkCard() {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}: ${quiz.question}. Tap to play`}
+      accessibilityLabel={`${title}: ${quizDone ? 'completed today' : quiz.question}. Tap to ${quizDone ? 'review' : 'play'}`}
       onPress={() => router.push(resolveNativeRoute('/quiz', '/(tabs)'))}
       style={{
         minHeight: 70,
@@ -139,10 +143,11 @@ export function QuizSparkCard() {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 12,
-        backgroundColor: cardBg,
+        backgroundColor: quizDone ? (isDark ? COLORS.selectionWellDark : COLORS.brandSoftLight) : cardBg,
         borderWidth: 1,
         borderColor: border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        opacity: quizDone ? 0.72 : 1,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
@@ -155,22 +160,26 @@ export function QuizSparkCard() {
             {previewTitle}
           </Text>
           <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
-            Test your dharmic memory
+            {quizDone ? 'Completed today' : 'Test your dharmic memory'}
           </Text>
         </View>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {quizStreak > 1 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Feather name="zap" size={12} color={brand} />
-            <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
-          </View>
-        ) : null}
-        <Text style={{ ...TYPE.chip, color: brand }}>
-          Play
-        </Text>
-        <Feather name="chevron-right" size={18} color={brand} />
-      </View>
+      {quizDone ? (
+        <Feather name="check-circle" size={20} color={brand} />
+      ) : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {quizStreak > 1 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <Feather name="zap" size={12} color={brand} />
+              <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
+            </View>
+          ) : null}
+          <Text style={{ ...TYPE.chip, color: brand }}>
+            Play
+          </Text>
+          <Feather name="chevron-right" size={18} color={brand} />
+        </View>
+      )}
     </Pressable>
   );
 }
