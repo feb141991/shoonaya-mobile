@@ -194,9 +194,19 @@ function CreateSankalpaButton({
   isDark: boolean;
 }) {
   const isInactive = disabled || loading;
+  const pressScale = useRef(new Animated.Value(1)).current;
+
+  function animatePress(toValue: number) {
+    Animated.spring(pressScale, {
+      toValue,
+      speed: 28,
+      bounciness: 4,
+      useNativeDriver: true,
+    }).start();
+  }
 
   return (
-    <View
+    <Animated.View
       style={{
         borderRadius: 22,
         backgroundColor: isInactive ? theme.brandSoft : theme.brand,
@@ -204,12 +214,19 @@ function CreateSankalpaButton({
         borderColor: isInactive ? theme.borderSoft : theme.brand,
         boxShadow: !isInactive ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light) : undefined,
         opacity: isInactive ? 0.68 : 1,
+        transform: [{ scale: pressScale }],
       }}
     >
       <Pressable
         accessibilityLabel="Begin Sankalpa"
         accessibilityState={{ disabled: isInactive, busy: loading }}
         disabled={isInactive}
+        onPressIn={() => {
+          if (!isInactive) animatePress(0.97);
+        }}
+        onPressOut={() => {
+          animatePress(1);
+        }}
         onPress={() => {
           if (!isInactive) {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -243,7 +260,7 @@ function CreateSankalpaButton({
           </>
         )}
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -280,6 +297,9 @@ export default function SankalpaScreen() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const historyChevron = useRef(new Animated.Value(0)).current;
   const historyContentOpacity = useRef(new Animated.Value(0)).current;
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const heroTranslateY = useRef(new Animated.Value(14)).current;
+  const heroIconScale = useRef(new Animated.Value(1)).current;
 
   // Ceremony is purely presentational — see components/home/
   // SankalpaCompletionCeremony.tsx. karmaAwarded comes straight from the
@@ -300,6 +320,50 @@ export default function SankalpaScreen() {
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
     return () => sub.remove();
   }, []);
+
+  useEffect(() => {
+    if (loading || loadError) return;
+
+    if (reducedMotion) {
+      heroOpacity.setValue(1);
+      heroTranslateY.setValue(0);
+      heroIconScale.setValue(1);
+      return;
+    }
+
+    heroOpacity.setValue(0);
+    heroTranslateY.setValue(14);
+    heroIconScale.setValue(1);
+
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(heroOpacity, {
+          toValue: 1,
+          duration: 360,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heroTranslateY, {
+          toValue: 0,
+          duration: 360,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.spring(heroIconScale, {
+          toValue: 1.06,
+          speed: 12,
+          bounciness: 5,
+          useNativeDriver: true,
+        }),
+        Animated.spring(heroIconScale, {
+          toValue: 1,
+          speed: 14,
+          bounciness: 4,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [heroIconScale, heroOpacity, heroTranslateY, loadError, loading, reducedMotion]);
 
   const loadCheckins = useCallback(async (sankalpaId: string) => {
     const response = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(sankalpaId)}`);
@@ -566,13 +630,15 @@ export default function SankalpaScreen() {
           }}
         />
 
-        <View
+        <Animated.View
           style={{
             borderRadius: 28,
             overflow: 'hidden',
             borderWidth: 1,
             borderColor: theme.premiumBorder,
             boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            opacity: heroOpacity,
+            transform: [{ translateY: heroTranslateY }],
           }}
         >
           <LinearGradient
@@ -582,7 +648,9 @@ export default function SankalpaScreen() {
             style={{ padding: 22, gap: 10, minHeight: 168, justifyContent: 'center' }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-              <SankalpaIconWell theme={theme} isDark={isDark} size="lg" icon="sunrise" />
+              <Animated.View style={{ transform: [{ scale: heroIconScale }] }}>
+                <SankalpaIconWell theme={theme} isDark={isDark} size="lg" icon="sunrise" />
+              </Animated.View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <SectionLabel theme={theme}>Sacred intention</SectionLabel>
                 <Text style={{ marginTop: 5, ...TYPE.screenTitle, color: theme.text }}>Sankalpa</Text>
@@ -592,7 +660,7 @@ export default function SankalpaScreen() {
               {sankalpa ? 'Your active vow, held one day at a time.' : 'Set one clear vow and return to it daily.'}
             </Text>
           </LinearGradient>
-        </View>
+        </Animated.View>
 
         {sankalpa ? (
           <>
