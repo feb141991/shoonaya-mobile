@@ -85,7 +85,7 @@ const CONTENT_CARDS: BhaktiCard[] = [
   { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: '/bhakti/katha?view=heroes' as Href },
   { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/japa' },
   { kind: 'feather', id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: '#C5A059', href: '/mantras' as Href },
-  { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: null },
+  { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: '/bhakti/zen' as Href },
   { kind: 'tile', id: 'dharmveer', fallbackGlyph: 'shield', title: 'Dharm Veer', description: 'Stories of dharmic courage', href: '/dharm-veer' },
   { kind: 'tile', id: 'vrat', fallbackGlyph: 'moon', title: 'Vrat', description: 'Observances & fasting days', href: '/vrat' },
 ];
