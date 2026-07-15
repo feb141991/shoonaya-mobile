@@ -123,6 +123,7 @@ export function QuizSparkCard() {
   if (!quiz) return null;
 
   const title = `${TRADITION_LABEL[quiz.tradition] ?? 'Daily'} Quiz`;
+  const previewTitle = "Answer today's dharmic question";
 
   return (
     // Card chrome (bg/border/shadow) lives on a plain View with a flat
@@ -165,14 +166,14 @@ export function QuizSparkCard() {
               {title}
             </Text>
             <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
-              {quiz.question}
+              {previewTitle}
             </Text>
             <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
               Test your dharmic memory
             </Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ width: quizStreak > 1 ? 78 : 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
           {quizStreak > 1 ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
               <Feather name="zap" size={12} color={brand} />
