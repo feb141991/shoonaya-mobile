@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Pressable,
+  StyleSheet,
   Text,
   useColorScheme,
   type PressableProps,
@@ -71,25 +72,27 @@ export function Button({
         }
         onPress?.(event);
       }}
-      style={({ pressed }) => [
-        {
-          minHeight: MIN_TOUCH_TARGET,
-          borderRadius: RADII.lg,
-          borderWidth: variant === 'ghost' ? 0 : 1,
-          borderColor: palette.borderColor,
-          backgroundColor: palette.bg,
-          paddingHorizontal: size === 'sm' ? 16 : 22,
-          paddingVertical: size === 'sm' ? 10 : 15,
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: variant === 'primary'
-            ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
-            : undefined,
-          opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed && !isBusy ? 0.985 : 1 }],
-        },
-        style,
-      ]}
+      style={({ pressed }) =>
+        StyleSheet.flatten([
+          {
+            minHeight: MIN_TOUCH_TARGET,
+            borderRadius: RADII.lg,
+            borderWidth: variant === 'ghost' ? 0 : 1,
+            borderColor: palette.borderColor,
+            backgroundColor: palette.bg,
+            paddingHorizontal: size === 'sm' ? 16 : 22,
+            paddingVertical: size === 'sm' ? 10 : 15,
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: variant === 'primary'
+              ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+              : undefined,
+            opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
+            transform: [{ scale: pressed && !isBusy ? 0.985 : 1 }],
+          },
+          style,
+        ])
+      }
       {...props}
     >
       {loading ? (

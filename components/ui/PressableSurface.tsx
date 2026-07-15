@@ -2,6 +2,7 @@ import { useEffect, useState, type PropsWithChildren } from 'react';
 import {
   AccessibilityInfo,
   Pressable,
+  StyleSheet,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -63,15 +64,17 @@ export function PressableSurface({
         }
         onPress?.(event);
       }}
-      style={({ pressed }) => [
-        {
-          minHeight: MIN_TOUCH_TARGET,
-          opacity: disabled ? 0.55 : pressed ? 0.88 : 1,
-          transform: [{ scale: pressed && !disabled && !reduceMotion ? 0.985 : 1 }],
-        },
-        style,
-        pressed && !disabled ? pressedStyle : null,
-      ]}
+      style={({ pressed }) =>
+        StyleSheet.flatten([
+          {
+            minHeight: MIN_TOUCH_TARGET,
+            opacity: disabled ? 0.55 : pressed ? 0.88 : 1,
+            transform: [{ scale: pressed && !disabled && !reduceMotion ? 0.985 : 1 }],
+          },
+          style,
+          pressed && !disabled ? pressedStyle : null,
+        ])
+      }
       {...props}
     >
       {children}
