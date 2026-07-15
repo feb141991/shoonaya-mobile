@@ -53,24 +53,42 @@ type ContentCard = {
   icon: keyof typeof Feather.glyphMap;
   title: string;
   description: string;
-  tint: string;
+  // Solid hex accent (not rgba) — feeds the same bg/border-tint math as
+  // IconTile's iconWellColor (`${accent}15` fill, `${accent}28` border) so
+  // these wells match PracticeCard's IconTile treatment instead of the old
+  // one-off flat rgba fill with no border.
+  accent: string;
   traditions?: string[];
 };
 
 // Coming-soon content only — every entry with a real destination has moved
 // to PRACTICE_CARDS above.
 const CONTENT_CARDS: ContentCard[] = [
-  { id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', tint: 'rgba(200,160,60,0.10)', traditions: ['hindu'] },
-  { id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', tint: 'rgba(100,160,220,0.10)', traditions: ['sikh'] },
-  { id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: 'Buddha\'s parables & Jataka tales', tint: 'rgba(140,100,200,0.10)', traditions: ['buddhist'] },
-  { id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', tint: 'rgba(50,160,80,0.10)', traditions: ['jain'] },
-  { id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', tint: 'rgba(197,160,89,0.10)', traditions: ['hindu', 'jain'] },
-  { id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', tint: 'rgba(140,100,200,0.10)', traditions: ['buddhist'] },
-  { id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', tint: 'rgba(200,120,80,0.10)' },
-  { id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', tint: 'rgba(180,80,80,0.10)' },
-  { id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', tint: 'rgba(197,160,89,0.10)' },
-  { id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', tint: 'rgba(200,180,120,0.10)' },
+  { id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', traditions: ['hindu'] },
+  { id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', traditions: ['sikh'] },
+  { id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: 'Buddha\'s parables & Jataka tales', accent: '#8C64C8', traditions: ['buddhist'] },
+  { id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', traditions: ['jain'] },
+  { id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: '#C5A059', traditions: ['hindu', 'jain'] },
+  { id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', traditions: ['buddhist'] },
+  { id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850' },
+  { id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050' },
+  { id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: '#C5A059' },
+  { id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478' },
 ];
+
+// Splits a list into fixed-width pairs for an exact 2-column grid (each row
+// is flexDirection:'row' with two flex:1 children), replacing the old
+// flexWrap+width:'48%' approximation that could drift with odd counts or
+// wrapping edge cases. A trailing odd item gets an invisible flex:1 spacer
+// so it keeps the same column width as a paired card instead of stretching
+// full-bleed.
+function chunkPairs<T>(items: T[]): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += 2) {
+    rows.push(items.slice(i, i + 2));
+  }
+  return rows;
+}
 
 function StatPill({ icon, label, brand }: { icon: keyof typeof Feather.glyphMap; label: string; brand: string }) {
   return (
@@ -156,25 +174,36 @@ export default function BhaktiScreen() {
         <View style={{ gap: 12 }}>
           <SectionHeader label="Your Practice" />
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-            {PRACTICE_CARDS.map((card) => (
-              <PressableSurface
-                key={card.id}
-                haptic="none"
-                onPress={() => handlePracticePress(card.href)}
-                accessibilityLabel={`${card.label}, ${card.detail}`}
-                style={{ width: '48%' }}
-              >
-                <Card tone="auto" style={{ gap: 12 }}>
-                  <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
-                  <View style={{ gap: 4 }}>
-                    <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{card.label}</Text>
-                    <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                      {card.detail}
-                    </Text>
-                  </View>
-                </Card>
-              </PressableSurface>
+          <View style={{ gap: 12 }}>
+            {chunkPairs(PRACTICE_CARDS).map((row, rowIndex) => (
+              <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
+                {row.map((card) => (
+                  <PressableSurface
+                    key={card.id}
+                    haptic="selection"
+                    onPress={() => handlePracticePress(card.href)}
+                    accessibilityLabel={`${card.label}, ${card.detail}`}
+                    style={{ flex: 1 }}
+                  >
+                    <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
+                      <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
+                      <View style={{ gap: 4 }}>
+                        <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{card.label}</Text>
+                        <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                          {card.detail}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
+                        <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: theme.brand }}>
+                          Open
+                        </Text>
+                        <Feather name="chevron-right" size={11} color={theme.brand} />
+                      </View>
+                    </Card>
+                  </PressableSurface>
+                ))}
+                {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+              </View>
             ))}
           </View>
         </View>
@@ -183,27 +212,49 @@ export default function BhaktiScreen() {
         <View style={{ gap: 12 }}>
           <SectionHeader label="Explore" />
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-            {activeContentCards.map(card => (
-              <PressableSurface
-                key={card.id}
-                haptic="none"
-                onPress={() => handleContentCardPress(card)}
-                accessibilityLabel={`${card.title}, coming soon`}
-                style={{ width: '48%' }}
-              >
-                <Card tone="auto" style={{ gap: 12 }}>
-                  <View style={{ width: 40, height: 40, borderRadius: RADII.md, backgroundColor: card.tint, alignItems: 'center', justifyContent: 'center' }}>
-                    <Feather name={card.icon} size={20} color={theme.text} />
-                  </View>
-                  <View style={{ gap: 4 }}>
-                    <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
-                    <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                      {card.description}
-                    </Text>
-                  </View>
-                </Card>
-              </PressableSurface>
+          <View style={{ gap: 12 }}>
+            {chunkPairs(activeContentCards).map((row, rowIndex) => (
+              <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
+                {row.map((card) => (
+                  <PressableSurface
+                    key={card.id}
+                    haptic="selection"
+                    onPress={() => handleContentCardPress(card)}
+                    accessibilityLabel={`${card.title}, coming soon`}
+                    style={{ flex: 1 }}
+                  >
+                    <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
+                      <View
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: RADII.md,
+                          backgroundColor: `${card.accent}15`,
+                          borderWidth: 1,
+                          borderColor: `${card.accent}28`,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Feather name={card.icon} size={22} color={card.accent} />
+                      </View>
+                      <View style={{ gap: 4 }}>
+                        <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
+                        <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                          {card.description}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
+                        <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: card.accent }}>
+                          Open
+                        </Text>
+                        <Feather name="chevron-right" size={11} color={card.accent} />
+                      </View>
+                    </Card>
+                  </PressableSurface>
+                ))}
+                {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+              </View>
             ))}
           </View>
         </View>
