@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   Animated,
@@ -699,6 +700,37 @@ function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
   );
 }
 
+function StaticSceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
+  const glowColor = SCENE_GLOW[sceneId];
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <View
+        style={{
+          position: 'absolute',
+          left: -82,
+          top: -70,
+          width: 230,
+          height: 230,
+          borderRadius: 115,
+          backgroundColor: glowColor,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          right: -74,
+          bottom: -62,
+          width: 200,
+          height: 200,
+          borderRadius: 100,
+          backgroundColor: glowColor,
+          opacity: 0.72,
+        }}
+      />
+    </View>
+  );
+}
+
 export default function JapaScreen() {
   const router = useRouter();
   const japaShareCardRef = useRef<View>(null);
@@ -744,6 +776,7 @@ export default function JapaScreen() {
   const [completionInsight, setCompletionInsight] = useState<string | null>(null);
   const [completionInsightLoading, setCompletionInsightLoading] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
   // (close) button on the practice screen, matching JapaClient.tsx exactly
@@ -765,6 +798,27 @@ export default function JapaScreen() {
   const geometryAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (mounted) setReduceMotion(enabled);
+      })
+      .catch(() => {});
+
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (screen !== 'practice' || reduceMotion) {
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(0);
+      return;
+    }
+
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
@@ -773,7 +827,7 @@ export default function JapaScreen() {
     );
     loop.start();
     return () => loop.stop();
-  }, [pulseAnim]);
+  }, [pulseAnim, reduceMotion, screen]);
 
   useEffect(() => {
     Animated.timing(geometryAnim, {
@@ -1298,13 +1352,14 @@ export default function JapaScreen() {
 
                 {japaAlreadyDoneToday ? (
                   <LinearGradient
-                    colors={['#C5A059', '#E8D09A', '#C5A059']}
+                    colors={[theme.brand, COLORS.homeHeroLight, theme.brand]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={{ borderRadius: 999, paddingVertical: 10, alignItems: 'center' }}
+                    style={{ borderRadius: 999, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
                   >
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: '#160F08' }}>
-                      Japa complete for today 🙏
+                    <Feather name="check-circle" size={14} color={COLORS.ink} />
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: COLORS.ink }}>
+                      Japa complete for today
                     </Text>
                   </LinearGradient>
                 ) : null}
@@ -1960,7 +2015,7 @@ export default function JapaScreen() {
             end={{ x: 0.9, y: 1 }}
             style={{ flex: 1 }}
           >
-            <SceneBackdrop sceneId={scene.id} />
+            {reduceMotion ? <StaticSceneBackdrop sceneId={scene.id} /> : <SceneBackdrop sceneId={scene.id} />}
             <Pressable
               onPress={() => { void increment(); }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
