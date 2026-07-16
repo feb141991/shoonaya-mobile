@@ -877,6 +877,8 @@ export default function JapaScreen() {
   const mantra = mantraOptions[mantraIndex] ?? mantraOptions[0];
   const practiceType = getJapaPracticeType(tradition);
   const scene = BG_SCENES.find((item) => item.id === selectedSceneId) ?? BG_SCENES[0];
+  const practiceTextColor = isDark ? COLORS.onMediaWhite : COLORS.ink;
+  const practiceMutedColor = isDark ? `${COLORS.onMediaWhite}a6` : COLORS.textDimLight;
   const traditionLabel = capitalize(tradition);
   const rank = useMemo(() => getNityaRankProgress(tradition, streak), [tradition, streak]);
   const volume = useMemo(() => getMalaVolumeMilestone(lifetime.totalBeads), [lifetime.totalBeads]);
@@ -1105,7 +1107,8 @@ export default function JapaScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('japa-complete-failed');
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error ?? 'japa-complete-failed');
       }
 
       if (goalComplete) {
@@ -1119,8 +1122,11 @@ export default function JapaScreen() {
         setCompletionVisible(true);
         setConfettiVisible(true);
       }
-    } catch {
-      Alert.alert('Could not save japa session', 'Check your connection and try again.');
+    } catch (error) {
+      const message = error instanceof Error && error.message !== 'japa-complete-failed'
+        ? error.message
+        : 'Check your connection and try again.';
+      Alert.alert('Could not save japa session', message);
     }
 
     setSaving(false);
@@ -1200,7 +1206,7 @@ export default function JapaScreen() {
       // /api/japa/complete accepts rounds:0 for exactly this case (see the
       // route's own contract — completionType becomes 'ended_manually').
       if (count > 0) {
-        await apiFetch('/api/japa/complete', {
+        const response = await apiFetch('/api/japa/complete', {
           method: 'POST',
           body: JSON.stringify({
             mantra: mantra.label,
@@ -1210,9 +1216,18 @@ export default function JapaScreen() {
             practiceType,
             activeSymbolId,
           }),
-        }).catch(() => null);
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(data?.error ?? 'japa-partial-save-failed');
+        }
         void updateLifetime(count);
       }
+    } catch (error) {
+      const message = error instanceof Error && error.message !== 'japa-partial-save-failed'
+        ? error.message
+        : 'Check your connection and try again.';
+      Alert.alert('Could not save japa session', message);
     } finally {
       setCount(0);
       setCompletedRounds(0);
@@ -2100,7 +2115,7 @@ export default function JapaScreen() {
                     cy={PRACTICE_CENTER}
                     r={PRACTICE_RADIUS - 26}
                     fill="none"
-                    stroke={COLORS.onMediaWhite}
+                    stroke={practiceTextColor}
                     strokeWidth={1}
                     strokeDasharray="2 8"
                     opacity={geometryOpacity}
@@ -2110,7 +2125,7 @@ export default function JapaScreen() {
                     cy={PRACTICE_CENTER}
                     r={PRACTICE_RADIUS - 46}
                     fill="none"
-                    stroke={COLORS.onMediaWhite}
+                    stroke={practiceTextColor}
                     strokeWidth={1}
                     strokeDasharray="1 10"
                     opacity={geometryOpacity}
@@ -2167,11 +2182,11 @@ export default function JapaScreen() {
                   transform: [{ translateY: tapCountTranslate }, { scale: tapCountScale }],
                 }}
               >
-                <Text style={{ fontFamily: FONTS.serifBold, fontSize: count >= 100 ? 52 : 60, color: COLORS.onMediaWhite }}>
-                  {count} <Text style={{ fontFamily: FONTS.sans, fontSize: 20, color: `${COLORS.onMediaWhite}a6` }}>/ 108</Text>
+                <Text style={{ fontFamily: FONTS.serifBold, fontSize: count >= 100 ? 52 : 60, color: practiceTextColor }}>
+                  {count} <Text style={{ fontFamily: FONTS.sans, fontSize: 20, color: practiceMutedColor }}>/ 108</Text>
                 </Text>
                 {count === 0 ? (
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: `${COLORS.onMediaWhite}80`, marginTop: 6 }}>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: practiceMutedColor, marginTop: 6 }}>
                     tap anywhere to begin
                   </Text>
                 ) : null}
@@ -2238,7 +2253,7 @@ export default function JapaScreen() {
               }}
               pointerEvents="none"
             >
-              <Text style={{ ...TYPE.chip, color: COLORS.onMediaWhite }}>{completedRounds}/{targetRounds} malas</Text>
+              <Text style={{ ...TYPE.chip, color: practiceTextColor }}>{completedRounds}/{targetRounds} malas</Text>
             </View>
           </LinearGradient>
         </View>
