@@ -94,11 +94,11 @@ const EMPTY_LIFETIME: JapaLifetimeData = { totalBeads: 0, totalRounds: 0, lastPr
 
 const HISTORY_LIMIT = 12;
 const SVG_SIZE = 320;
-const PRACTICE_SVG_SIZE = 340;
+const PRACTICE_SVG_SIZE = 356;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
 const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2;
-const PRACTICE_RADIUS = 128;
+const PRACTICE_RADIUS = 142;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
@@ -1268,7 +1268,7 @@ export default function JapaScreen() {
       const isCurrent = index === activeIndex;
       const isSumeru = index === 0;
 
-      const r = isSumeru ? 11 : 8;
+      const r = isSumeru ? 10 : isCurrent ? 8.5 : isDone ? 5.8 : 4.8;
       const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
 
       return (
@@ -1279,8 +1279,8 @@ export default function JapaScreen() {
           r={r}
           fill={`url(#${gradientId})`}
           stroke={isCurrent ? theme.brand : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
-          strokeWidth={isCurrent ? 1.6 : isSumeru ? 1.5 : 0.5}
-          strokeOpacity={isDone ? 0.9 : 1}
+          strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.35 : 0.65}
+          strokeOpacity={isDone || isCurrent ? 0.95 : 0.72}
         />
       );
     });
@@ -1295,6 +1295,7 @@ export default function JapaScreen() {
   const bloomOpacity = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] });
   const geometryOpacity = geometryAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
   const tapScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
+  const tapRotate = tapAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '1.4deg'] });
   const tapCountScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const tapCountTranslate = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
   const tapGlowOpacity = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.16, 0.36] });
@@ -2107,7 +2108,7 @@ export default function JapaScreen() {
               onPress={() => { void increment(); }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Animated.View style={{ transform: [{ scale: tapScale }] }}>
+              <Animated.View style={{ transform: [{ scale: tapScale }, { rotate: tapRotate }] }}>
                 <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE}>
                   {beadGradientDefs}
                   <AnimatedCircle
@@ -2167,9 +2168,9 @@ export default function JapaScreen() {
                 pointerEvents="none"
                 style={{
                   position: 'absolute',
-                  width: 138,
-                  height: 138,
-                  borderRadius: 69,
+                  width: 154,
+                  height: 154,
+                  borderRadius: 77,
                   backgroundColor: theme.brand,
                   opacity: tapGlowOpacity,
                   transform: [{ scale: tapScale }],
