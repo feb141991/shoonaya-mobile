@@ -11,16 +11,15 @@ import { Screen } from '@/components/ui/Screen';
 import type { SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { apiFetch } from '@/lib/api';
 import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import { getTraditionAccent } from '@/lib/traditions';
 
-// Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip,
-// Today's Stotram teaser, and one unified Explore grid. Content-heavy
-// destinations fetch from canonical web API routes instead of duplicating the
-// scripture/story corpus inside the native bundle.
+// Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip
+// and one unified Explore grid. Content-heavy destinations fetch from canonical
+// web API routes instead of duplicating the scripture/story corpus inside the
+// native bundle.
 
 const TRADITION_HERO: Record<string, { greeting: string; sub: string }> = {
   hindu:    { greeting: 'Jai Sri Ram 🙏',           sub: 'Bhakti, Kathas & Sacred Practice' },
@@ -125,7 +124,6 @@ export default function BhaktiScreen() {
   const [tradition, setTradition] = useState('hindu');
   const [japaStreak, setJapaStreak] = useState(0);
   const [sessionCountToday, setSessionCountToday] = useState(0);
-  const [dailyStotram, setDailyStotram] = useState<{ id: string; title: string; deityEmoji?: string } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -152,20 +150,6 @@ export default function BhaktiScreen() {
           // ignore — daily stotram fetch below still runs with the default tradition
         }
 
-        // Today's Stotram — day-of-year rotating pick, matches PWA's
-        // bhakti/page.tsx server-side rotation. Fetched regardless of auth
-        // state (guests see it too), same as the web page.
-        try {
-          const response = await apiFetch(`/api/bhakti/stotram/daily?tradition=${userTradition}`);
-          if (response.ok) {
-            const json = await response.json();
-            if (active && json?.id) {
-              setDailyStotram({ id: json.id, title: json.title, deityEmoji: json.deityEmoji });
-            }
-          }
-        } catch {
-          // ignore — teaser card falls back to the browse screen
-        }
       }
       void loadData();
       return () => { active = false; };
@@ -208,7 +192,32 @@ export default function BhaktiScreen() {
           end={{ x: 0.3, y: 1 }}
           style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Go back"
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.push('/' as Href);
+                }
+              }}
+              hitSlop={12}
+              style={{
+                width: 44,
+                height: 44,
+                minHeight: 44,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.glass,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="chevron-left" size={20} color={theme.text} />
+            </PressableSurface>
             <PressableSurface
               haptic="selection"
               onPress={() => router.push('/bhakti/insights' as Href)}
@@ -236,53 +245,6 @@ export default function BhaktiScreen() {
         </LinearGradient>
 
         <View style={{ paddingHorizontal: 20, gap: 28 }}>
-
-          {/* Today's Stotram teaser — day-of-year rotating pick fetched from
-              GET /api/bhakti/stotram/daily. If the pick is unavailable, open
-              the library browse screen instead of a dead coming-soon state. */}
-          <PressableSurface
-            haptic="selection"
-            onPress={() =>
-              dailyStotram
-                ? router.push(`/bhakti/stotram/${dailyStotram.id}` as Href)
-                : router.push('/bhakti/browse' as Href)
-            }
-            accessibilityLabel="Today's stotram"
-            style={{ borderRadius: 18 }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 14,
-                padding: 16,
-                borderRadius: 18,
-                backgroundColor: `${accent}0d`,
-                borderWidth: 1,
-                borderColor: `${accent}28`,
-              }}
-            >
-              <View style={{ width: 44, height: 44, borderRadius: RADII.md, backgroundColor: `${accent}22`, alignItems: 'center', justifyContent: 'center' }}>
-                {dailyStotram?.deityEmoji ? (
-                  <Text style={{ fontSize: 18 }}>{dailyStotram.deityEmoji}</Text>
-                ) : (
-                  <Feather name="music" size={18} color={accent} />
-                )}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: accent }}>
-                  Today&apos;s Stotram
-                </Text>
-                <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text, marginTop: 2 }} numberOfLines={1}>
-                  {dailyStotram?.title ?? 'Daily Stotram'}
-                </Text>
-              </View>
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}>
-                <Feather name="play" size={14} color={isDark ? COLORS.darkBg : COLORS.ink} />
-              </View>
-            </View>
-          </PressableSurface>
-
           {/* Explore — single unified grid, matches PWA's one-grid
               structure (drops the old split Your Practice/Explore
               sections). */}
