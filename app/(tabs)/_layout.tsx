@@ -2,9 +2,8 @@ import { Tabs } from 'expo-router';
 import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
 import { SacredIcon } from '@/components/ui/SacredIcon';
-import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
+import { COLORS, SHADOWS, themeColor } from '@/lib/constants';
 
 // 5-tab bar matching PWA's BottomNav.tsx member layout: Home / Japa /
 // Bhakti (center, elevated) / Pathshala / Mandali — Profile is not a tab
@@ -13,21 +12,13 @@ import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 // moved in as app/(tabs)/japa.tsx (it previously lived outside the (tabs)
 // route group entirely, which meant it silently had no tab-bar entry
 // despite this file's own comment claiming 5-tab parity). Its Tabs.Screen
-// below is registered with href:null — real navigation to it goes through
-// CollapsibleBottomNav, not the built-in bar (see next paragraph) — but the
-// entry keeps the route inside the tab navigator's swipe/back-stack model
-// and gives it a title for accessibility/headers.
+// below is registered normally so it stays inside the tab navigator's
+// swipe/back-stack model and keeps a title for accessibility/headers.
 //
-// The built-in tab bar is hidden (tabBarStyle: {display:'none'}) and
-// replaced by <CollapsibleBottomNav/>, a custom-rendered floating pill that
-// collapses to a small circular icon on scroll-down / off the Home route,
-// matching PWA's BottomNav.tsx. Expo Router 56's public <Tabs> doesn't
-// expose a `tabBar` or `layout` render prop to wrap the built-in bar in an
-// Animated.View (both are stripped from what TabsClient forwards to the
-// underlying navigator), so rendering our own bar as an absolutely
-// positioned sibling — driven by useRouter()/usePathname() instead of the
-// navigator's own tab state — is the supported way to get custom animated
-// tab-bar behavior here.
+// The built-in tab bar is hidden (tabBarStyle: {display:'none'}). The custom
+// floating bottom nav is rendered once from app/_layout.tsx so it is available
+// on tab screens and standalone feature screens such as Shloka, Quiz, Vrat,
+// Sankalpa and settings.
 export default function TabsLayout() {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
@@ -42,8 +33,8 @@ export default function TabsLayout() {
           headerShown: false,
           tabBarActiveTintColor: brand,
           tabBarInactiveTintColor: inactiveColor,
-          // Built-in bar hidden — CollapsibleBottomNav (rendered below,
-          // absolutely positioned) replaces it entirely.
+          // Built-in bar hidden — the app-level CollapsibleBottomNav replaces
+          // it so standalone feature screens can keep the same nav affordance.
           tabBarStyle: { display: 'none' },
           tabBarLabelStyle: {
             fontSize: 11,
@@ -126,7 +117,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-      <CollapsibleBottomNav />
     </View>
   );
 }

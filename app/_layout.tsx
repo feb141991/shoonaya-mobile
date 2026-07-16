@@ -4,7 +4,7 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useEffect, useState, useCallback } from 'react';
-import { AppState } from 'react-native';
+import { AppState, View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -17,6 +17,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-goog
 import { useFonts } from 'expo-font';
 
 import { AppProviders } from '@/components/providers/AppProviders';
+import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initOneSignal, handleNotificationTap, registerUserId, unregisterUser } from '@/lib/notifications';
@@ -41,6 +42,7 @@ export default function RootLayout() {
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
   const readyToRender = appIsReady && authReady;
+  const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined;
 
   const routeForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
@@ -228,7 +230,10 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <StatusBar style="dark" />
-      <Slot />
+      <View style={{ flex: 1 }}>
+        <Slot />
+        {showBottomNav ? <CollapsibleBottomNav /> : null}
+      </View>
     </AppProviders>
   );
 }

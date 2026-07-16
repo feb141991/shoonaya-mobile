@@ -20,6 +20,8 @@ import { subscribeNavScroll } from '@/lib/navScrollBus';
 
 // Custom-rendered bottom nav replacing Expo Router's built-in tab bar
 // (hidden via tabBarStyle:{display:'none'} in app/(tabs)/_layout.tsx).
+// Rendered once from app/_layout.tsx so standalone feature screens keep the
+// same app navigation affordance as tab screens.
 //
 // Why not a `tabBar` render prop on <Tabs>: Expo Router 56's public `Tabs`
 // component (build/layouts/TabsClient) explicitly omits `layout` from the
@@ -37,8 +39,12 @@ import { subscribeNavScroll } from '@/lib/navScrollBus';
 //   icon; tapping it re-expands.
 // - Collapses whenever the route isn't Home; on Home, expands by default and
 //   then collapses on scroll-down / expands on scroll-up or near-top, via the
-//   navScrollBus each tab screen's ScrollView reports into.
+//   navScrollBus any opted-in screen's ScrollView reports into.
 const HOME_PATHS = new Set(['/', '/index']);
+
+function matchesAny(pathname: string, paths: string[]) {
+  return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
 
 type TabDef = {
   key: string;
@@ -133,14 +139,28 @@ export function CollapsibleBottomNav() {
         key: 'japa',
         href: '/japa',
         label: 'Japa',
-        match: (p) => p === '/japa',
+        match: (p) => matchesAny(p, ['/japa', '/japa-insights']),
         renderIcon: (color, size) => <Feather name="heart" color={color} size={size} />,
       },
       {
         key: 'bhakti',
         href: '/bhakti',
         label: 'Bhakti',
-        match: (p) => p === '/bhakti',
+        match: (p) =>
+          matchesAny(p, [
+            '/bhakti',
+            '/shloka',
+            '/quiz',
+            '/vrat',
+            '/panchang',
+            '/dharm-veer',
+            '/kosh',
+            '/nitya-karma',
+            '/nitya-dincharya',
+            '/nitya-plans',
+            '/nitya-ashrama',
+            '/mantras',
+          ]),
         isCenter: true,
         renderIcon: (color, size) => <Feather name="star" color={color} size={size} />,
       },
@@ -148,14 +168,14 @@ export function CollapsibleBottomNav() {
         key: 'pathshala',
         href: '/pathshala',
         label: 'Pathshala',
-        match: (p) => p === '/pathshala',
+        match: (p) => matchesAny(p, ['/pathshala']),
         renderIcon: (color, size) => <Feather name="book-open" color={color} size={size} />,
       },
       {
         key: 'mandali',
         href: '/mandali',
         label: 'Mandali',
-        match: (p) => p === '/mandali',
+        match: (p) => matchesAny(p, ['/mandali', '/vichaar-sabha']),
         renderIcon: (color, size) => <Feather name="users" color={color} size={size} />,
       },
     ],
