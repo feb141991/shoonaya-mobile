@@ -20,7 +20,7 @@ import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
-import { initOneSignal, handleNotificationTap, registerUserId, unregisterUser } from '@/lib/notifications';
+import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -49,35 +49,30 @@ export default function RootLayout() {
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
-        // Unbind this device from OneSignal's external_id whenever there is
-        // no authenticated session — covers explicit sign-out (all 3 call
+        // Unbind this device's push token whenever there is no
+        // authenticated session — covers explicit sign-out (all 3 call
         // sites: settings.tsx x2, profile.tsx) plus any future one, since
         // supabase.auth.signOut() always fires this listener with a null
         // session rather than requiring each call site to remember to clean
-        // up push identity itself. Previously nothing ever called
-        // unregisterUser(), so a device stayed bound to the prior account's
-        // external_id after logout.
-        unregisterUser();
+        // up push identity itself.
+        void unregisterPushToken();
         if (!inAuthGroup) {
           router.replace('/(auth)/login');
         }
         return;
       }
 
-      // (Re-)bind this device to the signed-in user's OneSignal external_id
+      // (Re-)register this device's push token against the signed-in user
       // on every authenticated session, not just once at the end of
-      // onboarding. Previously `registerUserId` was only called from
-      // app/(auth)/onboarding.tsx's completion step, so any *returning*
-      // user — sign back in after logout, reinstall, second device, token
-      // refresh bringing a fresh session object — never got (re-)registered
-      // here and was silently unreachable by push despite being fully
-      // authenticated. This listener already re-runs on every auth state
+      // onboarding — covers any *returning* user: sign back in after
+      // logout, reinstall, second device, token refresh bringing a fresh
+      // session object. This listener already re-runs on every auth state
       // change, so it's the single correct place for this, rather than
       // duplicating the call at every sign-in entry point (Google/Apple/
       // WhatsApp/OTP in login.tsx and otp.tsx). Cheap/idempotent to call
-      // repeatedly — OneSignal.login() is a no-op if already logged in as
-      // this external_id.
-      registerUserId(session.user.id);
+      // repeatedly — registerPushToken() skips the network round-trip if
+      // the token hasn't changed since the last successful registration.
+      void registerPushToken(session.user.id);
 
       // Onboarding gate — mirrors the web app's src/lib/onboarding-gate.ts /
       // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md fix. `profiles.onboarding_completed`
@@ -138,16 +133,16 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, [readyToRender]);
 
-  // ── Handle OneSignal and Notifications ─────────────────────────────
+  // ── Handle Push Notifications ────────────────────────────────────────
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
 
     try {
-      initOneSignal();
+      initPushNotifications();
       const cleanup = handleNotificationTap(router);
       return cleanup;
     } catch (e) {
-      console.error('OneSignal initialization error:', e);
+      console.error('Push notification initialization error:', e);
     }
   }, [fontsLoaded, fontError, router]);
 

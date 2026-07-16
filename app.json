@@ -62,12 +62,6 @@
           "sounds": []
         }
       ],
-      [
-        "onesignal-expo-plugin",
-        {
-          "mode": "production"
-        }
-      ],
       "expo-system-ui",
       "expo-secure-store",
       "expo-status-bar",
@@ -100,23 +94,6 @@
     "extra": {
       "router": {},
       "eas": {
-        "build": {
-          "experimental": {
-            "ios": {
-              "appExtensions": [
-                {
-                  "targetName": "OneSignalNotificationServiceExtension",
-                  "bundleIdentifier": "com.shoonaya.app.OneSignalNotificationServiceExtension",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.com.shoonaya.app.onesignal"
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        },
         "projectId": "aceb15a9-aa70-4db9-b785-961309a12e3f"
       }
     },

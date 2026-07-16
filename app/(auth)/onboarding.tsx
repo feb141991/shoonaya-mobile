@@ -18,7 +18,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
-import { requestNotificationPermission, registerUserId } from '@/lib/notifications';
+import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
 
 type Step = 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'nameStory' | 'language' | 'notifications' | 'ready';
 
@@ -321,7 +321,7 @@ export default function OnboardingScreen() {
           { onConflict: 'id' }
         );
 
-        registerUserId(user.id);
+        void registerPushToken(user.id);
       }
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);

@@ -19,10 +19,10 @@ import { COLORS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
  *
  * Simplified vs. PWA for native:
  * - No "Remind me" local-notification scheduling. PWA schedules a browser
- *   Notification via a setTimeout; native's push layer is OneSignal
- *   (server-driven), not a local-notification API already wired into this
- *   screen, and bolting one on is out of scope for a below-fold parity pass.
- *   Only the CTA + dismiss remain.
+ *   Notification via a setTimeout; native's push layer is server-driven
+ *   (see lib/notifications.ts), not a local-notification API already wired
+ *   into this screen, and bolting one on is out of scope for a below-fold
+ *   parity pass. Only the CTA + dismiss remain.
  * - Dismiss state persisted via AsyncStorage (native's equivalent of the
  *   PWA's localStorage), keyed per calendar date so it resets daily.
  */

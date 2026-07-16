@@ -1,7 +1,7 @@
 import type { Href } from 'expo-router';
 
 // Maps a web-shaped path — from home-summary's practice/dharmVeer/panchang
-// hrefs, or from a push notification's action_url / OneSignal launchURL —
+// hrefs, or from a push notification's action_url / url data field —
 // to the closest native route. This consolidates what used to be a
 // Home-only local `mapHrefToRoute` (app/(tabs)/index.tsx) and extends it to
 // cover the additional paths the web repo's notification writers use.
