@@ -777,6 +777,9 @@ export default function JapaScreen() {
   const [completionInsightLoading, setCompletionInsightLoading] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [beginPressed, setBeginPressed] = useState(false);
+  const [malaActionPressed, setMalaActionPressed] = useState(false);
+  const [historyActionPressed, setHistoryActionPressed] = useState(false);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
   // (close) button on the practice screen, matching JapaClient.tsx exactly
@@ -1508,28 +1511,47 @@ export default function JapaScreen() {
                     backgroundColor: theme.brand,
                     boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                     overflow: 'hidden',
+                    minHeight: 52,
                   }}
                 >
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      minHeight: 52,
+                      paddingHorizontal: 20,
+                      paddingVertical: 14,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: beginPressed ? 0.88 : 1,
+                      transform: [{ scale: beginPressed && !reduceMotion ? 0.985 : 1 }],
+                    }}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        fontFamily: FONTS.sansSemiBold,
+                        fontSize: 15,
+                        lineHeight: 19,
+                        letterSpacing: 0.2,
+                        color: COLORS.ink,
+                        includeFontPadding: false,
+                        textAlign: 'center',
+                      }}
+                    >
+                      Begin Japa
+                    </Text>
+                  </View>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Begin Japa"
                     onPress={handleStartPractice}
-                    onPressIn={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-                    style={({ pressed }) => ({
-                      width: '100%',
-                      alignSelf: 'stretch',
-                      minHeight: MIN_TOUCH_TARGET,
-                      paddingVertical: 14,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: pressed ? 0.88 : 1,
-                      transform: [{ scale: pressed ? 0.985 : 1 }],
-                    })}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 19, letterSpacing: 0.2, color: COLORS.ink }}>
-                      Begin Japa
-                    </Text>
-                  </Pressable>
+                    onPressIn={() => {
+                      setBeginPressed(true);
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }}
+                    onPressOut={() => setBeginPressed(false)}
+                    style={{ position: 'absolute', inset: 0 }}
+                  />
                 </View>
 
                 <View style={{ flexDirection: 'row', gap: 10, alignItems: 'stretch' }}>
@@ -1542,25 +1564,21 @@ export default function JapaScreen() {
                       borderColor: theme.premiumBorder,
                       backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                       boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                      overflow: 'hidden',
                     }}
                   >
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Change mala, mantra or background"
-                      onPress={openMalaPicker}
-                      onPressIn={() => void Haptics.selectionAsync()}
-                      style={({ pressed }) => ({
-                        width: '100%',
-                        alignSelf: 'stretch',
-                        minHeight: MIN_TOUCH_TARGET,
+                    <View
+                      pointerEvents="none"
+                      style={{
+                        minHeight: 54,
                         paddingHorizontal: 14,
-                        paddingVertical: 10,
+                        paddingVertical: 12,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 10,
-                        opacity: pressed ? 0.82 : 1,
-                      })}
+                        opacity: malaActionPressed ? 0.82 : 1,
+                      }}
                     >
                       <View
                         style={{
@@ -1574,10 +1592,32 @@ export default function JapaScreen() {
                       >
                         <Feather name="sliders" size={14} color={theme.brand} />
                       </View>
-                      <Text numberOfLines={1} style={{ flexShrink: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: text }}>
+                      <Text
+                        numberOfLines={1}
+                        style={{
+                          flexShrink: 1,
+                          minWidth: 0,
+                          fontFamily: FONTS.sansSemiBold,
+                          fontSize: 12.5,
+                          lineHeight: 16,
+                          color: text,
+                          includeFontPadding: false,
+                        }}
+                      >
                         Change mala
                       </Text>
-                    </Pressable>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Change mala, mantra or background"
+                      onPress={openMalaPicker}
+                      onPressIn={() => {
+                        setMalaActionPressed(true);
+                        void Haptics.selectionAsync();
+                      }}
+                      onPressOut={() => setMalaActionPressed(false)}
+                      style={{ position: 'absolute', inset: 0 }}
+                    />
                   </View>
 
                   {history.length > 0 ? (
@@ -1590,25 +1630,21 @@ export default function JapaScreen() {
                         borderColor: theme.premiumBorder,
                         backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                        overflow: 'hidden',
                       }}
                     >
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="View recent sessions"
-                        onPress={() => setHistoryOpen(true)}
-                        onPressIn={() => void Haptics.selectionAsync()}
-                        style={({ pressed }) => ({
-                          width: '100%',
-                          alignSelf: 'stretch',
-                          minHeight: MIN_TOUCH_TARGET,
+                      <View
+                        pointerEvents="none"
+                        style={{
+                          minHeight: 54,
                           paddingHorizontal: 14,
-                          paddingVertical: 10,
+                          paddingVertical: 12,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 10,
-                          opacity: pressed ? 0.82 : 1,
-                        })}
+                          opacity: historyActionPressed ? 0.82 : 1,
+                        }}
                       >
                         <View
                           style={{
@@ -1622,10 +1658,32 @@ export default function JapaScreen() {
                         >
                           <Feather name="clock" size={14} color={theme.brand} />
                         </View>
-                        <Text numberOfLines={1} style={{ flexShrink: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: text }}>
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            flexShrink: 1,
+                            minWidth: 0,
+                            fontFamily: FONTS.sansSemiBold,
+                            fontSize: 12.5,
+                            lineHeight: 16,
+                            color: text,
+                            includeFontPadding: false,
+                          }}
+                        >
                           Recent sessions
                         </Text>
-                      </Pressable>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="View recent sessions"
+                        onPress={() => setHistoryOpen(true)}
+                        onPressIn={() => {
+                          setHistoryActionPressed(true);
+                          void Haptics.selectionAsync();
+                        }}
+                        onPressOut={() => setHistoryActionPressed(false)}
+                        style={{ position: 'absolute', inset: 0 }}
+                      />
                     </View>
                   ) : null}
                 </View>
