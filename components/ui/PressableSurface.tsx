@@ -3,6 +3,7 @@ import {
   AccessibilityInfo,
   Pressable,
   StyleSheet,
+  View,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -30,11 +31,14 @@ export function PressableSurface({
   haptic = 'impact',
   disabled,
   onPress,
+  onPressIn,
+  onPressOut,
   accessibilityRole = 'button',
   accessibilityState,
   ...props
 }: PressableSurfaceProps) {
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -49,35 +53,63 @@ export function PressableSurface({
     };
   }, []);
 
+  const isPressed = pressed && !disabled;
+  const flattenedStyle = StyleSheet.flatten(style) ?? {};
+  const contentLayoutStyle: ViewStyle = {
+    flexDirection: flattenedStyle.flexDirection,
+    alignItems: flattenedStyle.alignItems,
+    justifyContent: flattenedStyle.justifyContent,
+    gap: flattenedStyle.gap,
+    rowGap: flattenedStyle.rowGap,
+    columnGap: flattenedStyle.columnGap,
+    flexWrap: flattenedStyle.flexWrap,
+  };
+
   return (
-    <Pressable
-      accessibilityRole={accessibilityRole}
-      accessibilityState={{ ...accessibilityState, disabled: disabled || accessibilityState?.disabled }}
-      disabled={disabled}
-      onPress={(event) => {
-        if (!disabled) {
-          if (haptic === 'selection') {
-            void Haptics.selectionAsync().catch(() => {});
-          } else if (haptic === 'impact') {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-          }
-        }
-        onPress?.(event);
-      }}
-      style={({ pressed }) =>
-        StyleSheet.flatten([
-          {
-            minHeight: MIN_TOUCH_TARGET,
-            opacity: disabled ? 0.55 : pressed ? 0.88 : 1,
-            transform: [{ scale: pressed && !disabled && !reduceMotion ? 0.985 : 1 }],
-          },
-          style,
-          pressed && !disabled ? pressedStyle : null,
-        ])
-      }
-      {...props}
+    <View
+      style={StyleSheet.flatten([
+        { minHeight: MIN_TOUCH_TARGET },
+        style,
+      ])}
     >
-      {children}
-    </Pressable>
+      <View
+        pointerEvents="none"
+        style={StyleSheet.flatten([
+          contentLayoutStyle,
+          {
+            opacity: disabled ? 0.55 : isPressed ? 0.88 : 1,
+            transform: [{ scale: isPressed && !reduceMotion ? 0.985 : 1 }],
+          },
+          isPressed ? pressedStyle : null,
+        ])}
+      >
+        {children}
+      </View>
+      <Pressable
+        accessibilityRole={accessibilityRole}
+        accessibilityState={{ ...accessibilityState, disabled: disabled || accessibilityState?.disabled }}
+        disabled={disabled}
+        onPressIn={(event) => {
+          setPressed(true);
+          onPressIn?.(event);
+        }}
+        onPressOut={(event) => {
+          setPressed(false);
+          onPressOut?.(event);
+        }}
+        onPress={(event) => {
+          if (!disabled) {
+            if (haptic === 'selection') {
+              void Haptics.selectionAsync().catch(() => {});
+            } else if (haptic === 'impact') {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            }
+          }
+          onPress?.(event);
+        }}
+        style={StyleSheet.absoluteFill}
+        {...props}
+      />
+    </View>
   );
 }

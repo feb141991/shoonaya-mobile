@@ -21,6 +21,8 @@ Files:
 - `components/ui/PressableSurface.tsx`
 - `components/ui/Button.tsx`
 
+Status: fixed in the shared primitives after this audit. Caller styles now stay on a stable outer surface while press feedback is handled separately, so borders/shadows are no longer transformed on the same node as the press animation.
+
 Finding: both components combine structural chrome (`borderColor`, `boxShadow`, `backgroundColor`) and pressed feedback (`opacity`, `transform`) inside a `Pressable` style callback. This is the same pattern that already caused visible border/shadow loss on specific cards. Continuing to work around it per screen will spread inconsistent code.
 
 Best fix:
@@ -195,4 +197,3 @@ Every implementation slice should report:
 - reduced-motion behavior
 - list virtualization status
 - before/after count of `Animated.loop`, `setInterval`, direct `.map()` rows, or API calls, depending on the slice
-

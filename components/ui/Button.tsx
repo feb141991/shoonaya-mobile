@@ -3,11 +3,13 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
   useColorScheme,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 
 import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -46,12 +48,15 @@ export function Button({
   disabled = false,
   accessibilityLabel,
   onPress,
+  onPressIn,
+  onPressOut,
   style,
   ...props
 }: ButtonProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const isBusy = loading || !!disabled;
+  const [pressed, setPressed] = useState(false);
 
   const palette =
     variant === 'primary'
@@ -61,53 +66,68 @@ export function Button({
         : { bg: 'transparent', borderColor: 'transparent', textColor: theme.brand };
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: isBusy, busy: loading }}
-      disabled={isBusy}
-      onPress={(event) => {
-        if (!isBusy) {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        }
-        onPress?.(event);
-      }}
-      style={({ pressed }) =>
-        StyleSheet.flatten([
-          {
-            minHeight: MIN_TOUCH_TARGET,
-            borderRadius: RADII.lg,
-            borderWidth: variant === 'ghost' ? 0 : 1,
-            borderColor: palette.borderColor,
-            backgroundColor: palette.bg,
-            paddingHorizontal: size === 'sm' ? 16 : 22,
-            paddingVertical: size === 'sm' ? 10 : 15,
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: variant === 'primary'
-              ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
-              : undefined,
-            opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
-            transform: [{ scale: pressed && !isBusy ? 0.985 : 1 }],
-          },
-          style,
-        ])
-      }
-      {...props}
+    <View
+      style={StyleSheet.flatten([
+        {
+          minHeight: MIN_TOUCH_TARGET,
+          borderRadius: RADII.lg,
+          borderWidth: variant === 'ghost' ? 0 : 1,
+          borderColor: palette.borderColor,
+          backgroundColor: palette.bg,
+          paddingHorizontal: size === 'sm' ? 16 : 22,
+          paddingVertical: size === 'sm' ? 10 : 15,
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: variant === 'primary'
+            ? (isDark ? SHADOWS.md.dark : SHADOWS.md.light)
+            : undefined,
+        },
+        style,
+      ])}
     >
-      {loading ? (
-        <ActivityIndicator color={palette.textColor} />
-      ) : (
-        <Text
-          style={{
-            ...TYPE.label,
-            fontSize: size === 'sm' ? TYPE.label.fontSize : 14.5,
-            color: palette.textColor,
-          }}
-        >
-          {label}
-        </Text>
-      )}
-    </Pressable>
+      <View
+        pointerEvents="none"
+        style={{
+          opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
+          transform: [{ scale: pressed && !isBusy ? 0.985 : 1 }],
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator color={palette.textColor} />
+        ) : (
+          <Text
+            style={{
+              ...TYPE.label,
+              fontSize: size === 'sm' ? TYPE.label.fontSize : 14.5,
+              color: palette.textColor,
+            }}
+          >
+            {label}
+          </Text>
+        )}
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityState={{ disabled: isBusy, busy: loading }}
+        disabled={isBusy}
+        onPressIn={(event) => {
+          setPressed(true);
+          onPressIn?.(event);
+        }}
+        onPressOut={(event) => {
+          setPressed(false);
+          onPressOut?.(event);
+        }}
+        onPress={(event) => {
+          if (!isBusy) {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          }
+          onPress?.(event);
+        }}
+        style={StyleSheet.absoluteFill}
+        {...props}
+      />
+    </View>
   );
 }
