@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
+  Share,
   ScrollView,
   Text,
   useColorScheme,
   View,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { RASHI_LIST } from '@/lib/jyotish';
 
@@ -40,6 +42,12 @@ type RashiHoroscope = {
   accuracyNote: string;
 };
 
+type LifeGuidanceItem = {
+  icon: keyof typeof Feather.glyphMap;
+  title: string;
+  text: string;
+};
+
 function normalizeRashiKey(value: string | null | undefined): string | null {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
@@ -49,6 +57,16 @@ function normalizeRashiKey(value: string | null | undefined): string | null {
     rashi.sa.toLowerCase() === normalized
   );
   return match?.key ?? null;
+}
+
+function toneStyle(tone: RashiHoroscope['transitHighlights'][number]['tone']) {
+  if (tone === 'support') {
+    return { bg: COLORS.successBg, border: COLORS.successBorder, color: COLORS.success };
+  }
+  if (tone === 'discipline') {
+    return { bg: COLORS.dangerBg, border: COLORS.dangerBorder, color: COLORS.danger };
+  }
+  return { bg: COLORS.homeSoftLight, border: COLORS.homeBorderSoftLight, color: COLORS.brandEarthLight };
 }
 
 
@@ -66,6 +84,27 @@ export default function RashiphalaScreen() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+
+  const dateLabel = useMemo(() => {
+    return new Date().toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }, []);
+
+  const shareReading = useCallback(async () => {
+    if (!data) return;
+    const text =
+      `Daily Rashiphala for ${data.rashiSanskrit} (${data.rashi}) - ${dateLabel}\n\n` +
+      `Sadhana Focus: ${data.sadhanaFocus}\n` +
+      `Karma & Focus: ${data.karma}\n` +
+      `Body & Energy: ${data.health}\n` +
+      `Lucky Color: ${data.luckyColor} | Lucky Number: ${data.luckyNumber}\n\n` +
+      'Shared from Shoonaya';
+    await Share.share({ title: 'Daily Rashiphala', message: text });
+  }, [data, dateLabel]);
 
   // Load initial context (rashi, timezone)
   useEffect(() => {
@@ -127,10 +166,35 @@ export default function RashiphalaScreen() {
   }, [selectedRashi, timezone, initialLoad, reloadToken]);
 
   return (
-    <Screen header={{ title: 'Your Rashiphala', onBack: () => router.back() }} style={{ backgroundColor: theme.bg, paddingHorizontal: 0 }}>
-      <View style={{ paddingTop: 16 }}>
+    <Screen
+      header={{
+        title: 'Your Rashiphala',
+        onBack: () => router.back(),
+        rightElement: data ? (
+          <PressableSurface
+            onPress={shareReading}
+            haptic="selection"
+            accessibilityLabel="Share Rashiphala"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.card,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="share-2" size={16} color={theme.brandStrong} />
+          </PressableSurface>
+        ) : null,
+      }}
+      style={{ backgroundColor: theme.bg, paddingHorizontal: 0 }}
+    >
+      <View style={{ paddingTop: 14 }}>
         {/* Horizontal Rashi Selector */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 16, paddingBottom: 16 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 9, paddingHorizontal: 16, paddingBottom: 14 }}>
           {RASHI_LIST.map((rashi) => {
             const isSelected = selectedRashi === rashi.key;
             return (
@@ -139,18 +203,19 @@ export default function RashiphalaScreen() {
                 onPress={() => setSelectedRashi(rashi.key)}
                 haptic="selection"
                 style={{
-                  width: 80,
+                  width: 76,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  paddingVertical: 12,
+                  paddingVertical: 10,
                   borderRadius: 16,
                   borderWidth: 1,
-                  backgroundColor: isSelected ? theme.brandSoft : theme.card,
-                  borderColor: isSelected ? theme.brand : theme.border,
+                  backgroundColor: isSelected ? theme.card : theme.glass,
+                  borderColor: isSelected ? theme.brand : theme.premiumBorder,
+                  boxShadow: isSelected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                 }}
               >
-                <Text style={{ fontSize: 28 }}>{rashi.symbol}</Text>
-                <Text style={{ marginTop: 8, color: isSelected ? theme.brand : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{rashi.sa}</Text>
+                <Text style={{ fontSize: 24 }}>{rashi.symbol}</Text>
+                <Text style={{ marginTop: 7, color: theme.brandStrong, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{rashi.sa}</Text>
                 <Text style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5 }}>{rashi.en}</Text>
               </PressableSurface>
             );
@@ -192,15 +257,15 @@ export default function RashiphalaScreen() {
           </Card>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48, gap: 16 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48, gap: 14 }}>
           {/* Main Card */}
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+          <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ fontSize: 32 }}>{data.symbol}</Text>
               </View>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 22 }}>
+                <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 20, lineHeight: 24 }}>
                   {data.rashiSanskrit} ({data.rashi})
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 13 }}>
@@ -208,8 +273,8 @@ export default function RashiphalaScreen() {
                 </Text>
               </View>
             </View>
-            <View style={{ backgroundColor: theme.brandSoft, padding: 14, borderRadius: 12, borderColor: theme.premiumBorder, borderWidth: 1, gap: 6 }}>
-              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Summary</Text>
+            <View style={{ backgroundColor: theme.brandSoft, padding: 14, borderRadius: 14, borderColor: theme.premiumBorder, borderWidth: 1, gap: 6 }}>
+              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Summary · {dateLabel}</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{data.panditAiOracle}</Text>
               <View style={{ height: 1, backgroundColor: theme.premiumBorder, marginVertical: 6 }} />
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>{data.accuracyNote}</Text>
@@ -217,9 +282,11 @@ export default function RashiphalaScreen() {
           </Card>
 
           {/* Transit Highlights */}
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
+          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-              <Text style={{ fontSize: 24 }}>🪐</Text>
+              <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="activity" size={18} color={theme.brand} />
+              </View>
               <View style={{ flex: 1, gap: 4 }}>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Facts</Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{data.gocharSummary}</Text>
@@ -228,14 +295,10 @@ export default function RashiphalaScreen() {
             </View>
             <View style={{ gap: 10 }}>
               {data.transitHighlights.slice(0, 4).map((item, idx) => {
-                const isSupport = item.tone === 'support';
-                const isDiscipline = item.tone === 'discipline';
-                const highlightBg = isSupport ? COLORS.successBg : isDiscipline ? COLORS.dangerBg : theme.brandSoft;
-                const highlightBorder = isSupport ? COLORS.successBorder : isDiscipline ? COLORS.dangerBorder : theme.border;
-                const textCol = isSupport ? COLORS.success : isDiscipline ? COLORS.danger : theme.text;
+                const tone = toneStyle(item.tone);
                 return (
-                  <View key={`${item.title}-${idx}`} style={{ backgroundColor: highlightBg, borderColor: highlightBorder, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
-                    <Text style={{ color: textCol, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
+                  <View key={`${item.title}-${idx}`} style={{ backgroundColor: tone.bg, borderColor: tone.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
+                    <Text style={{ color: tone.color, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{item.detail}</Text>
                   </View>
                 );
@@ -245,13 +308,15 @@ export default function RashiphalaScreen() {
 
           {/* Life Guidance Areas */}
           <View style={{ gap: 12 }}>
-            {[
-              { icon: '💼', title: 'Work Guidance', text: data.karma },
-              { icon: '🌿', title: 'Body & Energy', text: data.health },
-              { icon: '💖', title: 'Relationships', text: data.love },
-            ].map((item, index) => (
-              <Card key={index} style={{ backgroundColor: theme.card, borderColor: theme.border, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
-                <Text style={{ fontSize: 24 }}>{item.icon}</Text>
+            {([
+              { icon: 'briefcase', title: 'Work Guidance', text: data.karma },
+              { icon: 'sun', title: 'Body & Energy', text: data.health },
+              { icon: 'heart', title: 'Relationships', text: data.love },
+            ] satisfies LifeGuidanceItem[]).map((item, index) => (
+              <Card key={index} tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name={item.icon} size={17} color={theme.brand} />
+                </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.title}</Text>
                   <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{item.text}</Text>
@@ -261,10 +326,22 @@ export default function RashiphalaScreen() {
           </View>
 
           {/* Practice Guidance */}
-          <Card tone="auto" style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, gap: 16 }}>
+          <LinearGradient
+            colors={isDark ? [COLORS.cardBgDark, COLORS.surfaceSoftDark] : [COLORS.homeRaisedLight, COLORS.cardBgLight]}
+            style={{
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: theme.brand,
+              padding: 18,
+              gap: 16,
+              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            }}
+          >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Text style={{ fontSize: 24 }}>📿</Text>
+                <View style={{ width: 34, height: 34, borderRadius: 13, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="compass" size={16} color={theme.brand} />
+                </View>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Practice Guidance</Text>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 2 }}>
@@ -283,7 +360,7 @@ export default function RashiphalaScreen() {
             </View>
 
             {/* Dhyana Support */}
-            <View style={{ backgroundColor: theme.bg, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 14, gap: 8 }}>
+            <View style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 14, gap: 8 }}>
               <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Dhyana Support</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>{data.shloka}</Text>
               <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 18 }}>{data.shlokaTranslation}</Text>
@@ -291,7 +368,7 @@ export default function RashiphalaScreen() {
                 Mantra Anchor: <Text style={{ fontFamily: FONTS.sansSemiBold, textDecorationLine: 'underline' }}>{data.beejaMantra}</Text>
               </Text>
             </View>
-          </Card>
+          </LinearGradient>
         </ScrollView>
       )}
     </Screen>

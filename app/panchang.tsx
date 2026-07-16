@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Animated,
   Easing,
@@ -148,8 +149,25 @@ function buildDateRange(selectedDate: Date) {
 
 function GlowOrb({ phase }: { phase: SkyPhase }) {
   const pulse = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (mounted) setReduceMotion(enabled);
+    }).catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      pulse.setValue(0.6);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
@@ -158,7 +176,7 @@ function GlowOrb({ phase }: { phase: SkyPhase }) {
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse]);
+  }, [pulse, reduceMotion]);
 
   const orb = SKY_ORB[phase];
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
@@ -183,25 +201,40 @@ function GlowOrb({ phase }: { phase: SkyPhase }) {
   );
 }
 
-function Stars({ count = 24 }: { count?: number }) {
-  const dots = useRef(Array.from({ length: count }, () => new Animated.Value(0.2))).current;
+function Stars({ count = 20 }: { count?: number }) {
+  const opacity = useRef(new Animated.Value(0.35)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
-    const loops = dots.map((value, i) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(value, { toValue: 0.9, duration: 1600 + (i % 4) * 350, delay: i * 110, useNativeDriver: true }),
-          Animated.timing(value, { toValue: 0.2, duration: 1600 + (i % 4) * 350, useNativeDriver: true }),
-        ])
-      )
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (mounted) setReduceMotion(enabled);
+    }).catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      opacity.setValue(0.45);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.8, duration: 2200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 2200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
     );
-    loops.forEach((l) => l.start());
-    return () => loops.forEach((l) => l.stop());
-  }, [dots]);
+    loop.start();
+    return () => loop.stop();
+  }, [opacity, reduceMotion]);
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {dots.map((value, i) => (
+      {Array.from({ length: count }, (_, i) => (
         <Animated.View
           key={i}
           style={{
@@ -209,8 +242,11 @@ function Stars({ count = 24 }: { count?: number }) {
             width: 1 + (i % 3),
             height: 1 + (i % 3),
             borderRadius: 2,
-            backgroundColor: '#fff',
-            opacity: value,
+            backgroundColor: CREAM,
+            opacity: opacity.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.12 + (i % 4) * 0.04, 0.55 + (i % 3) * 0.1],
+            }),
             left: `${(i * 37 + 7) % 97}%`,
             top: `${(i * 23 + 5) % 55}%`,
           }}
@@ -456,7 +492,7 @@ export default function PanchangScreen() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 110, gap: 12 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable accessibilityLabel="Back" onPress={() => router.back()} style={iconBtnStyle}>
+          <Pressable accessibilityLabel="Back" onPress={() => router.back()} hitSlop={8} style={iconBtnStyle}>
             <Feather name="chevron-left" size={18} color={CREAM} />
           </Pressable>
           <View style={{ flex: 1 }}>
@@ -470,7 +506,7 @@ export default function PanchangScreen() {
               {PHASE_LABELS[skyPhase]}{profileState.city ? ` · 📍 ${profileState.city}` : ''}
             </Text>
           </View>
-          <Pressable accessibilityLabel="Share today's Panchang" onPress={share} style={iconBtnStyle}>
+          <Pressable accessibilityLabel="Share today's Panchang" onPress={share} hitSlop={8} style={iconBtnStyle}>
             <Feather name="share-2" size={16} color={CREAM} />
           </Pressable>
         </View>
@@ -479,7 +515,7 @@ export default function PanchangScreen() {
           <Pressable
             onPress={() => setDisplayTz((t) => (t === 'local' ? 'ist' : 'local'))}
             style={{
-              alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
+              alignSelf: 'flex-start', minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6,
               borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5,
               backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
             }}
@@ -500,6 +536,7 @@ export default function PanchangScreen() {
                 onPress={() => setSelectedDate(date)}
                 style={{
                   minWidth: 56, borderRadius: 16, paddingVertical: 9, paddingHorizontal: 12, alignItems: 'center', gap: 2,
+                  minHeight: 44,
                   backgroundColor: active ? GOLD : 'rgba(255,255,255,0.08)',
                   borderWidth: 1, borderColor: active ? GOLD : 'rgba(255,255,255,0.12)',
                 }}
@@ -576,7 +613,7 @@ export default function PanchangScreen() {
               {markError ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.sans, fontSize: 12, flex: 1 }}>{markError}</Text>
-                  <Pressable onPress={markObserved}>
+                  <Pressable onPress={markObserved} hitSlop={8}>
                     <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Retry</Text>
                   </Pressable>
                 </View>
@@ -665,6 +702,7 @@ export default function PanchangScreen() {
                       onPress={() => saveRashi(key)}
                       style={{
                         width: '23%', alignItems: 'center', justifyContent: 'center', paddingVertical: 12,
+                        minHeight: 64,
                         borderRadius: 12, borderWidth: 1,
                         backgroundColor: isSelected ? 'rgba(197,160,89,0.18)' : 'rgba(255,255,255,0.05)',
                         borderColor: isSelected ? GOLD : 'rgba(255,255,255,0.1)',
@@ -680,7 +718,7 @@ export default function PanchangScreen() {
           )}
 
           {profileState.rashi && !showRashiPicker && (
-            <Pressable onPress={() => setShowRashiPicker(true)} style={{ paddingBottom: 16, alignItems: 'center' }}>
+          <Pressable onPress={() => setShowRashiPicker(true)} hitSlop={8} style={{ paddingBottom: 16, alignItems: 'center', minHeight: 44, justifyContent: 'center' }}>
               <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 11, textDecorationLine: 'underline' }}>Change Rashi</Text>
             </Pressable>
           )}

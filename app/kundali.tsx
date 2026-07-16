@@ -10,13 +10,14 @@ import {
   Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
 
 type BirthProfile = {
@@ -155,48 +156,96 @@ export default function KundaliScreen() {
   }
 
   return (
-    <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
-
-        <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Vedic Kundali</Text>
-        <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: -8 }}>
-          Generate your astrological birth chart and explore your dashas.
-        </Text>
+    <Screen
+      header={{
+        title: 'Vedic Kundali',
+        onBack: () => router.back(),
+        rightElement: (
+          <PressableSurface
+            onPress={() => setShowForm(true)}
+            haptic="selection"
+            accessibilityLabel="Create new birth chart"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.card,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="plus" size={18} color={theme.brandStrong} />
+          </PressableSurface>
+        ),
+      }}
+      style={{ backgroundColor: theme.bg, paddingHorizontal: 16 }}
+    >
+      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16, paddingTop: 14 }}>
+        <LinearGradient
+          colors={isDark ? [COLORS.cardBgDark, COLORS.surfaceSoftDark] : [COLORS.homeRaisedLight, COLORS.cardBgLight]}
+          style={{
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            padding: 18,
+            gap: 12,
+            boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <View style={{ width: 56, height: 56, borderRadius: 20, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="map" size={23} color={theme.brand} />
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Birth Chart</Text>
+              <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 22, lineHeight: 26 }}>Generate and explore birth charts</Text>
+              <Text style={{ color: theme.dim, ...TYPE.caption }}>Lagna, Rashi, birth city, and saved profiles.</Text>
+            </View>
+          </View>
+        </LinearGradient>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-          <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 20 }}>Saved Profiles</Text>
-          <PressableSurface onPress={() => setShowForm(true)} haptic="selection" style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
-            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>+ New Chart</Text>
+          <View>
+            <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Saved Charts</Text>
+            <Text style={{ color: theme.dim, ...TYPE.caption }}>{profiles.length} birth {profiles.length === 1 ? 'profile' : 'profiles'}</Text>
+          </View>
+          <PressableSurface onPress={() => setShowForm(true)} haptic="selection" style={{ backgroundColor: theme.brandSoft, borderColor: theme.premiumBorder, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}>
+            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>New Chart</Text>
           </PressableSurface>
         </View>
 
         {profiles.length === 0 ? (
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, alignItems: 'center', padding: 32, gap: 8 }}>
-            <Text style={{ fontSize: 32 }}>🛕</Text>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>No profiles yet</Text>
+          <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, alignItems: 'center', padding: 28, gap: 10 }}>
+            <View style={{ width: 58, height: 58, borderRadius: 22, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="user-plus" size={24} color={theme.brand} />
+            </View>
+            <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 20 }}>No profiles yet</Text>
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
               Add your birth details to calculate your Lagna, Rashi, and planetary positions.
             </Text>
-            <PressableSurface onPress={() => setShowForm(true)} style={{ backgroundColor: theme.brand, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, marginTop: 12 }}>
+            <PressableSurface onPress={() => setShowForm(true)} style={{ backgroundColor: theme.brand, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, marginTop: 10, minWidth: 150, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Create Profile</Text>
             </PressableSurface>
           </Card>
         ) : (
           profiles.map(p => (
-            <Card key={p.id} style={{ backgroundColor: theme.card, borderColor: theme.border }}>
+            <Card key={p.id} tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <View style={{ gap: 4 }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{p.label}</Text>
-                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
-                    {p.date_of_birth} {p.time_of_birth ? `• ${p.time_of_birth}` : ''} • {p.birth_city}
-                  </Text>
+                <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
+                  <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+                    <Feather name={p.is_primary ? 'star' : 'disc'} size={18} color={theme.brand} />
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 18 }} numberOfLines={1}>{p.label}</Text>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }} numberOfLines={2}>
+                      {p.date_of_birth} {p.time_of_birth ? `· ${p.time_of_birth}` : ''} · {p.birth_city}
+                    </Text>
+                  </View>
                 </View>
                 {p.rashi && RASHI_MAP[p.rashi.toLowerCase()] && (
-                  <View style={{ backgroundColor: theme.brandSoft, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ backgroundColor: theme.brandSoft, width: 38, height: 38, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 18 }}>{RASHI_MAP[p.rashi.toLowerCase()].symbol}</Text>
                   </View>
                 )}
@@ -206,8 +255,8 @@ export default function KundaliScreen() {
                   Ascendant (Lagna): {p.lagna}
                 </Text>
               )}
-              <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 12 }} />
-              <PressableSurface style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
+              <View style={{ height: 1, backgroundColor: theme.premiumBorder }} />
+              <PressableSurface style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingRight: 12 }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>View Chart →</Text>
               </PressableSurface>
             </Card>
@@ -218,18 +267,21 @@ export default function KundaliScreen() {
       {/* Birth Details Form Modal */}
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
         <View style={{ flex: 1, backgroundColor: theme.bg }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>New Birth Chart</Text>
-            <PressableSurface haptic="selection" onPress={() => setShowForm(false)} hitSlop={10} style={{ padding: 4, minHeight: 0 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.premiumBorder }}>
+            <View>
+              <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading }}>New Birth Chart</Text>
+              <Text style={{ color: theme.dim, ...TYPE.caption }}>Enter precise birth details</Text>
+            </View>
+            <PressableSurface haptic="selection" onPress={() => setShowForm(false)} hitSlop={10} style={{ width: 40, height: 40, borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center' }}>
               <Feather name="x" size={24} color={theme.text} />
             </PressableSurface>
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
+          <ScrollView contentContainerStyle={{ padding: 20, gap: 18 }}>
             <View style={{ gap: 8 }}>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Full Name</Text>
               <TextInput
-                style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 12, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
                 placeholder="e.g. Rahul Sharma"
                 placeholderTextColor={theme.dim}
                 value={formData.fullName}
@@ -241,7 +293,7 @@ export default function KundaliScreen() {
               <View style={{ flex: 1, gap: 8 }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Date of Birth</Text>
                 <TextInput
-                  style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 12, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                  style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor={theme.dim}
                   value={formData.dateOfBirth}
@@ -251,7 +303,7 @@ export default function KundaliScreen() {
               <View style={{ flex: 1, gap: 8 }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Time (Optional)</Text>
                 <TextInput
-                  style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 12, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                  style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
                   placeholder="HH:MM (24h)"
                   placeholderTextColor={theme.dim}
                   value={formData.timeOfBirth}
@@ -264,7 +316,7 @@ export default function KundaliScreen() {
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Birth City</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TextInput
-                  style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 12, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                  style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
                   placeholder="e.g. Mumbai, Maharashtra"
                   placeholderTextColor={theme.dim}
                   value={formData.cityQuery}
@@ -277,14 +329,14 @@ export default function KundaliScreen() {
                 <PressableSurface
                   onPress={searchCity}
                   disabled={searchingCity || formData.cityQuery.length < 2}
-                  style={{ backgroundColor: theme.brand, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12, opacity: searchingCity || formData.cityQuery.length < 2 ? 0.5 : 1 }}
+                  style={{ backgroundColor: theme.brand, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16, borderRadius: 14, opacity: searchingCity || formData.cityQuery.length < 2 ? 0.5 : 1 }}
                 >
                   {searchingCity ? <ActivityIndicator color={COLORS.ink} size="small" /> : <Feather name="search" size={18} color={COLORS.ink} />}
                 </PressableSurface>
               </View>
               {geocodeResult && (
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
-                  ✓ Resolved: {geocodeResult.city}, {geocodeResult.country} ({geocodeResult.timezone})
+                  Resolved: {geocodeResult.city}, {geocodeResult.country} ({geocodeResult.timezone})
                 </Text>
               )}
             </View>
@@ -297,6 +349,7 @@ export default function KundaliScreen() {
                 paddingVertical: 16,
                 borderRadius: 24,
                 alignItems: 'center',
+                justifyContent: 'center',
                 marginTop: 20,
                 opacity: submitting || !geocodeResult ? 0.5 : 1
               }}
