@@ -2398,7 +2398,9 @@ export default function JapaScreen() {
             </View>
             <View style={{ gap: 4 }}>
               <Text style={{ ...TYPE.screenTitle, color: text }}>Practice atmosphere</Text>
-              <Text style={{ ...TYPE.caption, color: dim }}>Quick, in-session tweaks — mantra and mala live under "Change mala, mantra or background" on the setup screen.</Text>
+              <Text style={{ ...TYPE.caption, color: dim }}>
+                Choose the visual atmosphere for this session. Mantra and mala can be changed from setup.
+              </Text>
             </View>
             <ScrollView contentContainerStyle={{ gap: 18 }} showsVerticalScrollIndicator={false}>
               <View style={{ gap: 10 }}>
@@ -2406,6 +2408,8 @@ export default function JapaScreen() {
                 <View style={{ gap: 10 }}>
                   {BG_SCENES.map((item) => {
                     const selected = selectedSceneId === item.id;
+                    const sceneText = isDark || item.id === 'midnight' ? COLORS.onMediaWhite : text;
+                    const sceneMuted = isDark || item.id === 'midnight' ? COLORS.homePwaPillText : dim;
                     return (
                       <PressableSurface
                         key={item.id}
@@ -2418,21 +2422,56 @@ export default function JapaScreen() {
                         style={{
                           borderRadius: 18,
                           borderWidth: 1,
-                          borderColor: selected ? theme.brand : border,
+                          borderColor: selected ? theme.brand : theme.premiumBorder,
+                          backgroundColor: cardBg,
                           overflow: 'hidden',
+                          boxShadow: selected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                         }}
                       >
                         <LinearGradient
                           colors={isDark ? item.colors : item.lightColors}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
-                          style={{ minHeight: 64, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                          style={{
+                            minHeight: 62,
+                            paddingHorizontal: 14,
+                            paddingVertical: 12,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                            <Feather name={item.icon as keyof typeof Feather.glyphMap} size={17} color={COLORS.onMediaWhite} />
-                            <Text style={{ ...TYPE.label, color: COLORS.onMediaWhite }}>{item.name}</Text>
+                            <View
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: 17,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: selected ? theme.brandSoft : (isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight),
+                                borderWidth: 1,
+                                borderColor: selected ? theme.brand : theme.premiumBorder,
+                              }}
+                            >
+                              <Feather name={item.icon as keyof typeof Feather.glyphMap} size={16} color={selected ? theme.brand : sceneMuted} />
+                            </View>
+                            <Text style={{ ...TYPE.label, color: sceneText }}>{item.name}</Text>
                           </View>
-                          {selected ? <Feather name="check-circle" size={18} color={COLORS.onMediaWhite} /> : null}
+                          {selected ? (
+                            <View
+                              style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: theme.brand,
+                              }}
+                            >
+                              <Feather name="check" size={17} color={COLORS.ink} />
+                            </View>
+                          ) : null}
                         </LinearGradient>
                       </PressableSurface>
                     );
@@ -2448,20 +2487,48 @@ export default function JapaScreen() {
                   style={{
                     borderRadius: 18,
                     borderWidth: 1,
-                    borderColor: mantraAudioEnabled ? theme.brand : border,
-                    backgroundColor: mantraAudioEnabled ? theme.brandSoft : (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight),
-                    padding: 14,
+                    borderColor: mantraAudioEnabled ? theme.brand : theme.premiumBorder,
+                    backgroundColor: cardBg,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     minHeight: MIN_TOUCH_TARGET,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <Feather name={mantraAudioEnabled ? 'volume-2' : 'volume-x'} size={17} color={theme.brand} />
+                    <View
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: mantraAudioEnabled ? theme.brandSoft : (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight),
+                        borderWidth: 1,
+                        borderColor: mantraAudioEnabled ? theme.brand : theme.premiumBorder,
+                      }}
+                    >
+                      <Feather name={mantraAudioEnabled ? 'volume-2' : 'volume-x'} size={16} color={theme.brand} />
+                    </View>
                     <Text style={{ ...TYPE.label, color: text }}>Spoken mantra loop</Text>
                   </View>
-                  <Text style={{ ...TYPE.caption, color: theme.brand }}>{mantraAudioEnabled ? 'On' : 'Off'}</Text>
+                  <View
+                    style={{
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: mantraAudioEnabled ? theme.brand : theme.premiumBorder,
+                      backgroundColor: mantraAudioEnabled ? theme.brandSoft : 'transparent',
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                    }}
+                  >
+                    <Text style={{ ...TYPE.caption, color: mantraAudioEnabled ? theme.brand : dim }}>
+                      {mantraAudioEnabled ? 'On' : 'Off'}
+                    </Text>
+                  </View>
                 </PressableSurface>
               </View>
             </ScrollView>

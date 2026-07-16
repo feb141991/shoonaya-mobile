@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -45,6 +45,11 @@ import {
   type RsvpRow,
   type RsvpStatus,
 } from '@/lib/mandali';
+
+type RealtimePostPayload = {
+  new?: { post_id?: unknown };
+  old?: { post_id?: unknown };
+};
 
 type ProfileContext = {
   userId: string;
@@ -100,6 +105,8 @@ export default function MandaliScreen() {
   const [composeEventDate, setComposeEventDate] = useState('');
   const [composeEventLoc, setComposeEventLoc] = useState('');
   const [activeFilter, setActiveFilter] = useState<MandaliPostType | 'all'>('all');
+  const visiblePostIdsRef = useRef<Set<string>>(new Set());
+  const realtimeReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const theme = useMemo(
     () => ({
@@ -141,6 +148,7 @@ export default function MandaliScreen() {
     setProfile(context);
 
     if (!context.mandaliId) {
+      visiblePostIdsRef.current = new Set();
       setPosts([]);
       setBlendedPosts([]);
       setComments([]);
@@ -176,6 +184,7 @@ export default function MandaliScreen() {
     setMembers(visibleMembers);
 
     const postIds = visiblePosts.map((p) => p.id);
+    const visiblePostIds = new Set(postIds);
     if (postIds.length > 0) {
       const [commentRows, rsvpRows] = await Promise.all([
         supabase
@@ -211,6 +220,7 @@ export default function MandaliScreen() {
         profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
       })) as PostRow[];
       setBlendedPosts(filterAuthoredPosts(normalizedBlend, safetyState));
+      for (const row of normalizedBlend) visiblePostIds.add(row.id);
 
       const { data: upvoteRows } = await supabase
         .from('post_upvotes')
@@ -223,7 +233,25 @@ export default function MandaliScreen() {
       const { data: upvoteRows } = await supabase.from('post_upvotes').select('post_id').eq('user_id', user.id).in('post_id', postIds);
       setUpvotedIds((upvoteRows ?? []).map((row) => row.post_id));
     }
+    visiblePostIdsRef.current = visiblePostIds;
   }, [router]);
+
+  const scheduleRealtimeReload = useCallback(() => {
+    if (realtimeReloadTimerRef.current) clearTimeout(realtimeReloadTimerRef.current);
+    realtimeReloadTimerRef.current = setTimeout(() => {
+      realtimeReloadTimerRef.current = null;
+      void loadMandali();
+    }, 450);
+  }, [loadMandali]);
+
+  const schedulePostScopedRealtimeReload = useCallback((payload: RealtimePostPayload) => {
+    const postId = typeof payload.new?.post_id === 'string' ? payload.new.post_id : typeof payload.old?.post_id === 'string' ? payload.old.post_id : null;
+    if (!postId || visiblePostIdsRef.current.has(postId)) scheduleRealtimeReload();
+  }, [scheduleRealtimeReload]);
+
+  useEffect(() => () => {
+    if (realtimeReloadTimerRef.current) clearTimeout(realtimeReloadTimerRef.current);
+  }, []);
 
   useEffect(() => {
     loadMandali()
@@ -249,29 +277,27 @@ export default function MandaliScreen() {
     };
   }, [profile?.userId, profile?.city, profile?.latitude, profile?.longitude]);
 
-  // Realtime — deliberately broader than PWA. PWA's Mandali page requires
-  // a manual refresh to see new posts, comments, upvotes, or RSVPs from
-  // other members. Native subscribes across all four tables (plus
-  // profiles, for live member seva/role updates) and does a full reload
-  // on any change, so the feed and every open comment thread stay current
-  // without the user doing anything.
+  // Realtime — deliberately broader than PWA, but debounced so a burst of
+  // comment/upvote/RSVP events becomes one refresh instead of a refetch per
+  // row. Child tables are scoped against the currently visible post ids
+  // because Realtime cannot filter them by mandali_id directly.
   useEffect(() => {
     if (!profile?.mandaliId) return;
 
     const channel = supabase
       .channel(`mandali:${profile.mandaliId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `mandali_id=eq.${profile.mandaliId}` }, () => void loadMandali())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_upvotes' }, () => void loadMandali())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, () => void loadMandali())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, () => void loadMandali())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `mandali_id=eq.${profile.mandaliId}` }, () => void loadMandali())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_upvotes' }, schedulePostScopedRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, schedulePostScopedRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, schedulePostScopedRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload)
       .subscribe();
 
     return () => {
       channel.unsubscribe();
       void supabase.removeChannel(channel);
     };
-  }, [loadMandali, profile?.mandaliId]);
+  }, [profile?.mandaliId, schedulePostScopedRealtimeReload, scheduleRealtimeReload]);
 
   const filteredPosts = useMemo(
     () => (activeFilter === 'all' ? posts : posts.filter((p) => p.type === activeFilter)),
