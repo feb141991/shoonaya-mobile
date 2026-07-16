@@ -15,7 +15,7 @@ import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
  * push has no such registry, so this device's token is registered against
  * our own backend instead (POST/DELETE /api/notifications/register-token,
  * backed by the `push_tokens` table — see web repo migration
- * 20260716120000_push_tokens.sql and src/lib/push-server.ts).
+ * 20260716124259_push_tokens.sql and src/lib/push-server.ts).
  *
  * Remote push requires a real dev/internal build, not Expo Go — the same
  * restriction OneSignal already had (`react-native-onesignal` needed a
