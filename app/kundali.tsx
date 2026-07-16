@@ -277,9 +277,34 @@ export default function KundaliScreen() {
             </PressableSurface>
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: 20, gap: 18 }}>
-            <View style={{ gap: 8 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Full Name</Text>
+          <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 34 }}>
+            <LinearGradient
+              colors={isDark ? [COLORS.cardBgDark, COLORS.surfaceSoftDark] : [COLORS.homeRaisedLight, COLORS.cardBgLight]}
+              style={{
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                padding: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              }}
+            >
+              <View style={{ width: 46, height: 46, borderRadius: 17, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="compass" size={20} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Chart details</Text>
+                <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 19, lineHeight: 23 }}>Start with birth time and place</Text>
+                <Text style={{ color: theme.dim, ...TYPE.caption }}>More precise inputs make the chart more useful.</Text>
+              </View>
+            </LinearGradient>
+
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 16 }}>
+              <View style={{ gap: 8 }}>
+                <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Person</Text>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Full Name</Text>
               <TextInput
                 style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
                 placeholder="e.g. Rahul Sharma"
@@ -287,36 +312,42 @@ export default function KundaliScreen() {
                 value={formData.fullName}
                 onChangeText={t => setFormData({ ...formData, fullName: t, label: formData.label || t })}
               />
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1, gap: 8 }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Date of Birth</Text>
-                <TextInput
-                  style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={theme.dim}
-                  value={formData.dateOfBirth}
-                  onChangeText={t => setFormData({ ...formData, dateOfBirth: t })}
-                />
               </View>
-              <View style={{ flex: 1, gap: 8 }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Time (Optional)</Text>
-                <TextInput
-                  style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
-                  placeholder="HH:MM (24h)"
-                  placeholderTextColor={theme.dim}
-                  value={formData.timeOfBirth}
-                  onChangeText={t => setFormData({ ...formData, timeOfBirth: t })}
-                />
-              </View>
-            </View>
+            </Card>
 
-            <View style={{ gap: 8 }}>
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
+              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Birth moment</Text>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1, gap: 8 }}>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Date of Birth</Text>
+                  <TextInput
+                    style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor={theme.dim}
+                    value={formData.dateOfBirth}
+                    onChangeText={t => setFormData({ ...formData, dateOfBirth: t })}
+                  />
+                </View>
+                <View style={{ flex: 1, gap: 8 }}>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Time</Text>
+                  <TextInput
+                    style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                    placeholder="HH:MM"
+                    placeholderTextColor={theme.dim}
+                    value={formData.timeOfBirth}
+                    onChangeText={t => setFormData({ ...formData, timeOfBirth: t })}
+                  />
+                </View>
+              </View>
+              <Text style={{ color: theme.dim, ...TYPE.caption }}>Use 24-hour format. Leave time empty if unknown.</Text>
+            </Card>
+
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
+              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Birth place</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Birth City</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TextInput
-                  style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                  style={{ flex: 1, backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
                   placeholder="e.g. Mumbai, Maharashtra"
                   placeholderTextColor={theme.dim}
                   value={formData.cityQuery}
@@ -335,11 +366,14 @@ export default function KundaliScreen() {
                 </PressableSurface>
               </View>
               {geocodeResult && (
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
-                  Resolved: {geocodeResult.city}, {geocodeResult.country} ({geocodeResult.timezone})
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.brandSoft, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10 }}>
+                  <Feather name="check-circle" size={16} color={theme.brand} />
+                  <Text style={{ color: theme.brandStrong, fontFamily: FONTS.sansMedium, fontSize: 12, flex: 1 }}>
+                    {geocodeResult.city}, {geocodeResult.country} · {geocodeResult.timezone}
+                  </Text>
+                </View>
               )}
-            </View>
+            </Card>
 
             <PressableSurface
               onPress={handleGenerateChart}
