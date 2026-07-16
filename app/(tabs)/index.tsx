@@ -25,7 +25,6 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
-import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { QuizSparkCard } from '@/components/home/QuizSparkCard';
@@ -1176,9 +1175,8 @@ function HomeContent() {
 
           <QuizSparkCard />
 
-          {/* Jyotish & Panchang — these are real native routes already, but
-              were hard to discover. Keep them as contextual Home access
-              rather than adding a sixth bottom tab. */}
+          {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
+              contextual Home access rather than adding a sixth bottom tab. */}
           <View style={{ marginTop: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>
               Jyotish & Panchang
@@ -1188,23 +1186,23 @@ function HomeContent() {
                 {
                   label: 'Panchang',
                   href: '/panchang',
-                  icon: '📅',
                   sacredId: 'panchang' as SacredIconName,
                   fallbackGlyph: 'calendar' as const,
+                  accent: COLORS.tileGold,
                 },
                 {
                   label: 'Rashiphal',
                   href: '/rashiphala',
-                  icon: '🔮',
                   sacredId: null,
-                  fallbackGlyph: 'star' as const,
+                  fallbackGlyph: 'moon' as const,
+                  accent: COLORS.tilePurple,
                 },
                 {
                   label: 'Kundali',
                   href: '/kundali',
-                  icon: '🌌',
                   sacredId: null,
-                  fallbackGlyph: 'circle' as const,
+                  fallbackGlyph: 'aperture' as const,
+                  accent: COLORS.tileBlue,
                 },
               ]).map((item) => (
                 <PressableSurface
@@ -1213,10 +1211,10 @@ function HomeContent() {
                   onPress={() => navigate(item.href as Href)}
                   style={{
                     flex: 1,
-                    minHeight: 136,
-                    borderRadius: 22,
-                    paddingVertical: 16,
-                    paddingHorizontal: 8,
+                    minHeight: 118,
+                    borderRadius: 20,
+                    paddingVertical: 14,
+                    paddingHorizontal: 6,
                     backgroundColor: theme.glass,
                     borderWidth: 1,
                     borderColor: theme.premiumBorder,
@@ -1225,25 +1223,23 @@ function HomeContent() {
                     justifyContent: 'center',
                   }}
                 >
-                  <View style={{ marginBottom: 9 }}>
+                  <View style={{ marginBottom: 10 }}>
                     {item.sacredId && item.fallbackGlyph ? (
-                      <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="xl" color={theme.brand} />
+                      <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
                     ) : (
                       <View
                         style={{
-                          width: ICON_WELL.xl.box,
-                          height: ICON_WELL.xl.box,
-                          borderRadius: ICON_WELL.xl.radius,
+                          width: 56,
+                          height: 56,
+                          borderRadius: 18,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: iconWellColor(isDark).bg,
+                          backgroundColor: `${item.accent}15`,
                           borderWidth: 1,
-                          borderColor: iconWellColor(isDark).border,
+                          borderColor: `${item.accent}28`,
                         }}
                       >
-                        <Text style={{ fontSize: 58, lineHeight: 66 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                          {item.icon}
-                        </Text>
+                        <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
                       </View>
                     )}
                   </View>
@@ -1258,12 +1254,12 @@ function HomeContent() {
           {/* Quick Actions Row */}
           <View style={{ marginTop: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Sadhana</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {([
-                { label: 'Nitya',    href: '/nitya-karma', icon: '🧘', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold,   bg: isDark ? COLORS.tileGoldBgDark   : COLORS.tileGoldBgLight,   border: COLORS.tileGoldBorder },
-                { label: 'Quiz',     href: '/quiz',        icon: '🧠', sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
-                { label: 'AI Guide', href: '/ai-chat',     icon: '✨', sacredId: null,                         fallbackGlyph: null,                   accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
-                { label: 'Progress', href: '/my-progress', icon: '📊', sacredId: null,                         fallbackGlyph: null,                   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
+                { label: 'Nitya',    href: '/nitya-karma', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold,   bg: isDark ? COLORS.tileGoldBgDark   : COLORS.tileGoldBgLight,   border: COLORS.tileGoldBorder },
+                { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
+                { label: 'AI Guide', href: '/ai-chat',     sacredId: null,                         fallbackGlyph: 'message-circle' as const, accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
+                { label: 'Progress', href: '/my-progress', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'trending-up' as const, accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
               ]).map(item => (
                 <PressableSurface
                   key={item.label}
@@ -1274,45 +1270,58 @@ function HomeContent() {
 	                    alignItems: 'center',
 	                    justifyContent: 'center',
 	                    backgroundColor: item.bg,
-	                    borderRadius: 22,
-	                    paddingVertical: 16,
-	                    minWidth: 132,
-	                    minHeight: 138,
+	                    borderRadius: 20,
+	                    paddingVertical: 14,
+	                    width: '48.5%',
+	                    minHeight: 116,
 	                    borderWidth: 1,
 	                    borderColor: item.border,
 	                  }}
 	                >
 	                  {item.sacredId && item.fallbackGlyph ? (
-	                    <View style={{ marginBottom: 10, height: 76, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-	                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={72} color={item.accent} />
-	                    </View>
+                      <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                        <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
+                      </View>
 	                  ) : (
-	                    <Text style={{ fontSize: 68, lineHeight: 76, marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                      <View
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 18,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: `${item.accent}15`,
+                          borderWidth: 1,
+                          borderColor: `${item.accent}28`,
+                          marginBottom: 10,
+                        }}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                      >
+                        <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
+                      </View>
 	                  )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
                     {item.label}
                   </Text>
                 </PressableSurface>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
           {/* Community Row */}
           <View style={{ marginTop: 12, marginBottom: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Community</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {([
-                { label: 'Live Darshan', href: '/live-darshan',    icon: '📡', sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
-                { label: 'Mandali',      href: '/(tabs)/mandali',  icon: '👥', sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
+                { label: 'Live Darshan', href: '/live-darshan',    sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
+                { label: 'Mandali',      href: '/(tabs)/mandali',  sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
                 // hidden tab (href: null in _layout.tsx) with no entry point
-                // anywhere in the app. This card is the fix; the tab stays
-                // hidden (tab bar hierarchy is out of scope here). Not in
-                // this task's required SacredIconName list, so it stays on
-                // its emoji glyph rather than growing the union unasked.
-                { label: 'Tirtha',      href: '/(tabs)/tirtha',    icon: '🛕', sacredId: null,                              fallbackGlyph: null,             accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
-                { label: 'Seva',        href: '/my-progress',      icon: '🤲', sacredId: null,                              fallbackGlyph: null,             accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
+                // anywhere in the app. This card is the fix; the tab stays hidden.
+                { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: null,                              fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
+                { label: 'Seva',        href: '/my-progress',      sacredId: null,                              fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
               ]).map(item => (
                 <PressableSurface
                   key={item.label}
@@ -1323,27 +1332,43 @@ function HomeContent() {
 	                    alignItems: 'center',
 	                    justifyContent: 'center',
 	                    backgroundColor: item.bg,
-	                    borderRadius: 22,
-	                    paddingVertical: 16,
-	                    minWidth: 132,
-	                    minHeight: 138,
+	                    borderRadius: 20,
+	                    paddingVertical: 14,
+	                    width: '48.5%',
+	                    minHeight: 116,
 	                    borderWidth: 1,
 	                    borderColor: item.border,
 	                  }}
 	                >
 	                  {item.sacredId && item.fallbackGlyph ? (
-	                    <View style={{ marginBottom: 10, height: 76, justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-	                      <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={72} color={item.accent} />
-	                    </View>
+                      <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                        <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
+                      </View>
 	                  ) : (
-	                    <Text style={{ fontSize: 68, lineHeight: 76, marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{item.icon}</Text>
+                      <View
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 18,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: `${item.accent}15`,
+                          borderWidth: 1,
+                          borderColor: `${item.accent}28`,
+                          marginBottom: 10,
+                        }}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                      >
+                        <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
+                      </View>
 	                  )}
                   <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
                     {item.label}
                   </Text>
                 </PressableSurface>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
         </View>
