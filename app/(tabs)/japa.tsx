@@ -799,6 +799,7 @@ export default function JapaScreen() {
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const bloomAnim = useRef(new Animated.Value(0)).current;
   const geometryAnim = useRef(new Animated.Value(0)).current;
+  const tapAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let mounted = true;
@@ -848,6 +849,16 @@ export default function JapaScreen() {
       setBloomIndex(null);
     });
   }, [bloomAnim]);
+
+  const triggerTapMotion = useCallback(() => {
+    if (reduceMotion) return;
+    tapAnim.stopAnimation();
+    tapAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(tapAnim, { toValue: 1, duration: 110, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(tapAnim, { toValue: 0, friction: 5, tension: 150, useNativeDriver: true }),
+    ]).start();
+  }, [reduceMotion, tapAnim]);
 
   const malaSkin = useMemo(() => getMalaSkin(selectedMalaId ?? activeSymbolId), [activeSymbolId, selectedMalaId]);
   const mantras = useMemo(() => getJapaMantrasForTradition(tradition), [tradition]);
@@ -1142,9 +1153,10 @@ export default function JapaScreen() {
         void startMantraAudio();
       }
 
+      triggerTapMotion();
       return next;
     });
-  }, [completedRounds, count, mantraAudioEnabled, saving, sessionStartTime, startMantraAudio, triggerBloom]);
+  }, [completedRounds, count, mantraAudioEnabled, saving, sessionStartTime, startMantraAudio, triggerBloom, triggerTapMotion]);
 
   useEffect(() => {
     if (count === 108 && !saving) {
@@ -1267,6 +1279,10 @@ export default function JapaScreen() {
   const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [9, 22] });
   const bloomOpacity = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] });
   const geometryOpacity = geometryAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
+  const tapScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
+  const tapCountScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const tapCountTranslate = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
+  const tapGlowOpacity = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.16, 0.36] });
 
   const beadGradientDefs = (
     <Defs>
@@ -2076,61 +2092,81 @@ export default function JapaScreen() {
               onPress={() => { void increment(); }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE}>
-                {beadGradientDefs}
-                <AnimatedCircle
-                  cx={PRACTICE_CENTER}
-                  cy={PRACTICE_CENTER}
-                  r={PRACTICE_RADIUS - 26}
-                  fill="none"
-                  stroke={COLORS.onMediaWhite}
-                  strokeWidth={1}
-                  strokeDasharray="2 8"
-                  opacity={geometryOpacity}
-                />
-                <AnimatedCircle
-                  cx={PRACTICE_CENTER}
-                  cy={PRACTICE_CENTER}
-                  r={PRACTICE_RADIUS - 46}
-                  fill="none"
-                  stroke={COLORS.onMediaWhite}
-                  strokeWidth={1}
-                  strokeDasharray="1 10"
-                  opacity={geometryOpacity}
-                />
-                <Line
-                  x1={PRACTICE_CENTER}
-                  y1={PRACTICE_CENTER}
-                  x2={PRACTICE_CENTER}
-                  y2={PRACTICE_CENTER - PRACTICE_RADIUS}
-                  stroke={malaSkin.threadColor}
-                  strokeWidth={2}
-                />
-                {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
-                {count < 108 ? (
+              <Animated.View style={{ transform: [{ scale: tapScale }] }}>
+                <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE}>
+                  {beadGradientDefs}
                   <AnimatedCircle
-                    cx={currentBeadPos.x}
-                    cy={currentBeadPos.y}
-                    r={pulseRadius}
+                    cx={PRACTICE_CENTER}
+                    cy={PRACTICE_CENTER}
+                    r={PRACTICE_RADIUS - 26}
                     fill="none"
-                    stroke={theme.brand}
-                    strokeWidth={1.5}
-                    opacity={pulseOpacity}
+                    stroke={COLORS.onMediaWhite}
+                    strokeWidth={1}
+                    strokeDasharray="2 8"
+                    opacity={geometryOpacity}
                   />
-                ) : null}
-                {bloomIndex !== null ? (
                   <AnimatedCircle
-                    cx={bloomBeadPos.x}
-                    cy={bloomBeadPos.y}
-                    r={bloomRadius}
+                    cx={PRACTICE_CENTER}
+                    cy={PRACTICE_CENTER}
+                    r={PRACTICE_RADIUS - 46}
                     fill="none"
-                    stroke={theme.brand}
+                    stroke={COLORS.onMediaWhite}
+                    strokeWidth={1}
+                    strokeDasharray="1 10"
+                    opacity={geometryOpacity}
+                  />
+                  <Line
+                    x1={PRACTICE_CENTER}
+                    y1={PRACTICE_CENTER}
+                    x2={PRACTICE_CENTER}
+                    y2={PRACTICE_CENTER - PRACTICE_RADIUS}
+                    stroke={malaSkin.threadColor}
                     strokeWidth={2}
-                    opacity={bloomOpacity}
                   />
-                ) : null}
-              </Svg>
-              <View style={{ position: 'absolute', alignItems: 'center' }}>
+                  {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
+                  {count < 108 ? (
+                    <AnimatedCircle
+                      cx={currentBeadPos.x}
+                      cy={currentBeadPos.y}
+                      r={pulseRadius}
+                      fill="none"
+                      stroke={theme.brand}
+                      strokeWidth={1.5}
+                      opacity={pulseOpacity}
+                    />
+                  ) : null}
+                  {bloomIndex !== null ? (
+                    <AnimatedCircle
+                      cx={bloomBeadPos.x}
+                      cy={bloomBeadPos.y}
+                      r={bloomRadius}
+                      fill="none"
+                      stroke={theme.brand}
+                      strokeWidth={2}
+                      opacity={bloomOpacity}
+                    />
+                  ) : null}
+                </Svg>
+              </Animated.View>
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  width: 138,
+                  height: 138,
+                  borderRadius: 69,
+                  backgroundColor: theme.brand,
+                  opacity: tapGlowOpacity,
+                  transform: [{ scale: tapScale }],
+                }}
+              />
+              <Animated.View
+                style={{
+                  position: 'absolute',
+                  alignItems: 'center',
+                  transform: [{ translateY: tapCountTranslate }, { scale: tapCountScale }],
+                }}
+              >
                 <Text style={{ fontFamily: FONTS.serifBold, fontSize: count >= 100 ? 52 : 60, color: COLORS.onMediaWhite }}>
                   {count} <Text style={{ fontFamily: FONTS.sans, fontSize: 20, color: `${COLORS.onMediaWhite}a6` }}>/ 108</Text>
                 </Text>
@@ -2139,7 +2175,7 @@ export default function JapaScreen() {
                     tap anywhere to begin
                   </Text>
                 ) : null}
-              </View>
+              </Animated.View>
             </Pressable>
 
             {/* Close (X) — always opens the exit-confirm sheet, matching
