@@ -389,9 +389,9 @@ function PanchangPill({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 3,
-        backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
-        borderWidth: isObservance ? 1 : 0,
-        borderColor: COLORS.homePwaObservanceBorder,
+        backgroundColor: COLORS.homePwaPillBg,
+        borderWidth: 0,
+        borderColor: 'transparent',
         minWidth: 120,
         maxWidth: '100%',
         overflow: 'hidden',
@@ -399,7 +399,7 @@ function PanchangPill({
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
-        <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? COLORS.homePwaObservanceText : COLORS.homePwaPillText }} numberOfLines={1}>
+        <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
           {currentSlide.label}
         </Text>
       </Animated.View>
@@ -759,9 +759,9 @@ function HomeContent() {
               justifyContent: 'center',
               flexDirection: 'row',
               gap: 6,
-              backgroundColor: COLORS.homePwaObservanceBg,
-              borderWidth: 1,
-              borderColor: COLORS.homePwaObservanceBorder,
+              backgroundColor: 'transparent',
+              borderWidth: 0,
+              borderColor: 'transparent',
             }}
           >
             {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
@@ -779,7 +779,7 @@ function HomeContent() {
                   >
                     <MoodGlyph
                       mood={moodStatus.lastMood}
-                      color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaObservanceText}
+                      color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaPillText}
                       size={13}
                     />
                   </View>
@@ -791,7 +791,7 @@ function HomeContent() {
                     ...TYPE.chip,
                     fontSize: 11,
                     lineHeight: 14,
-                    color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaObservanceText,
+                    color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaPillText,
                   }}
                   numberOfLines={1}
                 >
@@ -804,7 +804,7 @@ function HomeContent() {
                   ...TYPE.chip,
                   fontSize: 11,
                   lineHeight: 14,
-                  color: COLORS.homePwaObservanceText,
+                  color: COLORS.homePwaPillText,
                 }}
                 numberOfLines={1}
               >

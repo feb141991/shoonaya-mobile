@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -22,8 +22,8 @@ type CheckinResponse = {
 export function MoodCheckin() {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight;
+  const cardBg = 'transparent';
+  const border = 'transparent';
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
@@ -65,11 +65,11 @@ export function MoodCheckin() {
       <View
         style={{
           borderRadius: 18,
-          padding: 16,
+          paddingHorizontal: 0,
+          paddingVertical: 10,
           backgroundColor: cardBg,
-          borderWidth: 1,
+          borderWidth: 0,
           borderColor: border,
-          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
@@ -98,9 +98,8 @@ export function MoodCheckin() {
         style={{
           borderRadius: 18,
           backgroundColor: cardBg,
-          borderWidth: 1,
+          borderWidth: 0,
           borderColor: border,
-          boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         }}
       >
         <PressableSurface
@@ -148,9 +147,8 @@ export function MoodCheckin() {
       style={{
         borderRadius: 18,
         backgroundColor: cardBg,
-        borderWidth: 1,
+        borderWidth: 0,
         borderColor: border,
-        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
       }}
     >
       <PressableSurface

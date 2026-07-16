@@ -489,28 +489,6 @@ export default function MoodScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <View
-          style={[
-            styles.bgOrb,
-            {
-              top: 92,
-              right: -72,
-              backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
-            },
-          ]}
-        />
-        <View
-          style={[
-            styles.bgOrb,
-            {
-              left: -86,
-              top: 330,
-              backgroundColor: isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight,
-            },
-          ]}
-        />
-      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
           {renderBackButton(() => {
@@ -958,13 +936,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.sansSemiBold,
     textAlign: 'center',
     maxWidth: '100%',
-  },
-  bgOrb: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    opacity: 0.55,
   },
   moodGlow: {
     position: 'absolute',
