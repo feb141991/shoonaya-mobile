@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Line, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Line, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
 import { Screen } from '@/components/ui/Screen';
@@ -655,6 +655,80 @@ const SCENE_GLOW: Record<JapaSceneId, string> = {
   cosmos: 'rgba(180,140,255,0.20)',
 };
 
+function JapaSceneArt({ sceneId, isDark }: { sceneId: JapaSceneId; isDark: boolean }) {
+  const color = isDark ? 'rgba(255,248,230,0.22)' : 'rgba(45,31,14,0.18)';
+  const accent = isDark ? 'rgba(216,138,28,0.28)' : 'rgba(216,138,28,0.18)';
+
+  if (sceneId === 'midnight' || sceneId === 'cosmos') {
+    return (
+      <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+        <Svg width="100%" height="100%" viewBox="0 0 390 760" preserveAspectRatio="none">
+          <Circle cx="292" cy="112" r="34" fill={accent} />
+          <Circle cx="304" cy="102" r="30" fill={isDark ? COLORS.darkBg : COLORS.creamBg} opacity={sceneId === 'midnight' ? 0.78 : 0.38} />
+          {[42, 96, 168, 226, 338].map((x, index) => (
+            <Circle key={x} cx={x} cy={80 + index * 42} r={index % 2 === 0 ? 1.5 : 2.2} fill={COLORS.onMediaWhite} opacity={isDark ? 0.65 : 0.24} />
+          ))}
+          <Path d="M0 650 C68 618 118 632 176 604 C245 572 306 596 390 552 L390 760 L0 760 Z" fill={color} />
+          <Path d="M76 590 L104 540 L132 590 Z M210 576 L238 520 L270 576 Z" fill={accent} />
+        </Svg>
+      </View>
+    );
+  }
+
+  if (sceneId === 'himalayan') {
+    return (
+      <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+        <Svg width="100%" height="100%" viewBox="0 0 390 760" preserveAspectRatio="none">
+          <Circle cx="90" cy="188" r="60" fill={accent} />
+          <Path d="M0 520 L88 350 L150 454 L204 318 L318 522 Z" fill={color} />
+          <Path d="M76 372 L96 420 L112 366 L150 454 Z M188 346 L212 408 L232 342 L318 522 Z" fill={COLORS.onMediaWhite} opacity={isDark ? 0.16 : 0.22} />
+          <Path d="M0 590 C78 562 148 606 222 570 C288 538 338 552 390 530 L390 760 L0 760 Z" fill={accent} />
+        </Svg>
+      </View>
+    );
+  }
+
+  if (sceneId === 'temple') {
+    return (
+      <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+        <Svg width="100%" height="100%" viewBox="0 0 390 760" preserveAspectRatio="none">
+          <Circle cx="195" cy="596" r="182" fill={accent} />
+          <Path d="M120 600 L120 520 L150 520 L150 470 L240 470 L240 520 L270 520 L270 600 Z" fill={color} />
+          <Path d="M178 470 L195 426 L212 470 Z" fill={color} />
+          <Rect x="176" y="532" width="38" height="68" rx="18" fill={isDark ? 'rgba(8,6,4,0.42)' : 'rgba(255,253,248,0.46)'} />
+          <Path d="M195 248 C162 286 164 334 195 370 C226 334 228 286 195 248 Z" fill={accent} />
+        </Svg>
+      </View>
+    );
+  }
+
+  if (sceneId === 'river') {
+    return (
+      <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+        <Svg width="100%" height="100%" viewBox="0 0 390 760" preserveAspectRatio="none">
+          <Path d="M0 560 C72 536 120 582 192 558 C266 534 308 560 390 526 L390 760 L0 760 Z" fill={accent} />
+          {[610, 648, 688].map((y) => (
+            <Path key={y} d={`M24 ${y} C78 ${y - 20} 118 ${y + 20} 174 ${y} C236 ${y - 22} 278 ${y + 22} 360 ${y - 4}`} stroke={color} strokeWidth="2" fill="none" opacity="0.72" />
+          ))}
+          <Path d="M28 532 L162 500 L338 530" stroke={color} strokeWidth="3" fill="none" opacity="0.42" />
+        </Svg>
+      </View>
+    );
+  }
+
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
+      <Svg width="100%" height="100%" viewBox="0 0 390 760" preserveAspectRatio="none">
+        <Circle cx="112" cy="176" r="100" fill={accent} />
+        <Path d="M0 622 C54 574 106 580 148 540 C196 494 260 548 320 494 C346 470 368 456 390 448 L390 760 L0 760 Z" fill={color} />
+        {[86, 142, 248, 306].map((x, index) => (
+          <Path key={x} d={`M${x} ${524 - index * 18} C${x - 24} ${486 - index * 16} ${x + 28} ${460 - index * 16} ${x} ${410 - index * 18} C${x + 42} ${460 - index * 12} ${x + 14} ${494 - index * 12} ${x} ${524 - index * 18} Z`} fill={accent} />
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
 // Distinct, theme-relevant motion per scene, on top of the shared
 // twinkle/drift particle field: Temple flickers like a real flame,
 // Himalayan Dawn gets a slow light sweep, River Ghat gets rippling wave
@@ -766,6 +840,7 @@ export default function JapaScreen() {
   const [toast, setToast] = useState<ToastState>({ visible: false, message: '' });
   const [completionVisible, setCompletionVisible] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
+  const [roundCelebrateVisible, setRoundCelebrateVisible] = useState(false);
   const [mantraAudioEnabled, setMantraAudioEnabled] = useState(false);
   const [mantraAudioLoading, setMantraAudioLoading] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
@@ -800,6 +875,8 @@ export default function JapaScreen() {
   const bloomAnim = useRef(new Animated.Value(0)).current;
   const geometryAnim = useRef(new Animated.Value(0)).current;
   const tapAnim = useRef(new Animated.Value(0)).current;
+  const roundAnim = useRef(new Animated.Value(0)).current;
+  const ceremonyAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let mounted = true;
@@ -859,6 +936,21 @@ export default function JapaScreen() {
       Animated.spring(tapAnim, { toValue: 0, friction: 5, tension: 150, useNativeDriver: true }),
     ]).start();
   }, [reduceMotion, tapAnim]);
+
+  const triggerRoundCelebration = useCallback(() => {
+    setRoundCelebrateVisible(true);
+    roundAnim.stopAnimation();
+    roundAnim.setValue(0);
+    if (reduceMotion) {
+      setTimeout(() => setRoundCelebrateVisible(false), 1400);
+      return;
+    }
+    Animated.sequence([
+      Animated.timing(roundAnim, { toValue: 1, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.delay(900),
+      Animated.timing(roundAnim, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+    ]).start(() => setRoundCelebrateVisible(false));
+  }, [reduceMotion, roundAnim]);
 
   const malaSkin = useMemo(() => getMalaSkin(selectedMalaId ?? activeSymbolId), [activeSymbolId, selectedMalaId]);
   const mantras = useMemo(() => getJapaMantrasForTradition(tradition), [tradition]);
@@ -1082,6 +1174,7 @@ export default function JapaScreen() {
       visible: true,
       message: goalComplete ? `${targetRounds} mala complete` : `Mala ${nextRounds} of ${targetRounds} complete`,
     });
+    triggerRoundCelebration();
 
     // Stop mantra loop on round complete
     await stopMantraAudio();
@@ -1131,7 +1224,22 @@ export default function JapaScreen() {
 
     setSaving(false);
     await loadContext();
-  }, [activeSymbolId, completedRounds, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition, updateLifetime]);
+  }, [activeSymbolId, completedRounds, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
+
+  useEffect(() => {
+    if (!completionVisible) return;
+    ceremonyAnim.setValue(0);
+    if (reduceMotion) {
+      ceremonyAnim.setValue(1);
+      return;
+    }
+    Animated.spring(ceremonyAnim, {
+      toValue: 1,
+      friction: 7,
+      tension: 90,
+      useNativeDriver: true,
+    }).start();
+  }, [ceremonyAnim, completionVisible, reduceMotion]);
 
   const increment = useCallback(async () => {
     if (saving) return;
@@ -1299,6 +1407,10 @@ export default function JapaScreen() {
   const tapCountScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const tapCountTranslate = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
   const tapGlowOpacity = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.16, 0.36] });
+  const roundOpacity = roundAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+  const roundTranslate = roundAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] });
+  const ceremonyScale = ceremonyAnim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
+  const ceremonyTranslate = ceremonyAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] });
 
   const beadGradientDefs = (
     <Defs>
@@ -2104,6 +2216,14 @@ export default function JapaScreen() {
             style={{ flex: 1 }}
           >
             {reduceMotion ? <StaticSceneBackdrop sceneId={scene.id} /> : <SceneBackdrop sceneId={scene.id} />}
+            <JapaSceneArt sceneId={scene.id} isDark={isDark} />
+            <LinearGradient
+              pointerEvents="none"
+              colors={isDark
+                ? ['rgba(0,0,0,0.18)', 'rgba(0,0,0,0.06)', 'rgba(0,0,0,0.26)']
+                : ['rgba(255,253,248,0.34)', 'rgba(255,253,248,0.12)', 'rgba(45,31,14,0.12)']}
+              style={{ position: 'absolute', inset: 0 }}
+            />
             <Pressable
               onPress={() => { void increment(); }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
@@ -2256,6 +2376,40 @@ export default function JapaScreen() {
             >
               <Text style={{ ...TYPE.chip, color: practiceTextColor }}>{completedRounds}/{targetRounds} malas</Text>
             </View>
+
+            {roundCelebrateVisible ? (
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: 42,
+                  right: 42,
+                  bottom: 96,
+                  opacity: roundOpacity,
+                  transform: [{ translateY: roundTranslate }],
+                }}
+              >
+                <View
+                  style={{
+                    borderRadius: 24,
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(216,138,28,0.58)' : 'rgba(216,138,28,0.46)',
+                    backgroundColor: isDark ? 'rgba(8,6,4,0.68)' : 'rgba(255,253,248,0.82)',
+                    paddingHorizontal: 18,
+                    paddingVertical: 14,
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand }}>
+                    Mala complete
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 19, color: practiceTextColor }}>
+                    108 beads offered
+                  </Text>
+                </View>
+              </Animated.View>
+            ) : null}
           </LinearGradient>
         </View>
       )}
@@ -2733,8 +2887,8 @@ export default function JapaScreen() {
             backgroundColor: COLORS.celebrationScrim,
           }}
         >
-          <ConfettiOverlay show={confettiVisible} onComplete={() => setConfettiVisible(false)} />
-          <View
+          <ConfettiOverlay show={confettiVisible} density="burst" onComplete={() => setConfettiVisible(false)} />
+          <Animated.View
             style={{
               width: '85%',
               borderRadius: 28,
@@ -2746,6 +2900,7 @@ export default function JapaScreen() {
               alignItems: 'center',
               gap: 16,
               maxWidth: 420,
+              transform: [{ translateY: ceremonyTranslate }, { scale: ceremonyScale }],
             }}
           >
             <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center' }}>
@@ -2783,6 +2938,20 @@ export default function JapaScreen() {
             <Text style={{ ...TYPE.caption, color: dim, textAlign: 'center' }}>
               {completionStats.beads.toLocaleString('en-IN')} beads of {completionStats.mantraName}
             </Text>
+            <View
+              style={{
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.brandSoft,
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
+                +5 seva · practice saved
+              </Text>
+            </View>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
               <View style={{ flex: 1, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 16, padding: 12, alignItems: 'center' }}>
@@ -2827,14 +2996,13 @@ export default function JapaScreen() {
             </View>
 
             <PressableSurface
+              haptic="impact"
               onPress={() => {
-                setCompletionVisible(false);
-                setConfettiVisible(false);
-                setCompletionInsight(null);
-                setCompletedRounds(0);
-                setCount(0);
-                setDurationSecs(0);
-                setSessionStartTime(Date.now());
+                void shareCapturedShoonayaCard(japaShareCardRef, {
+                  fileName: 'shoonaya-japa-card.png',
+                  dialogTitle: 'Share Japa practice',
+                  fallbackMessage: `I completed ${completionStats.rounds} mala${completionStats.rounds > 1 ? 's' : ''} (${completionStats.beads.toLocaleString('en-IN')} beads) with Shoonaya.`,
+                });
               }}
               style={{
                 marginTop: 12,
@@ -2846,9 +3014,32 @@ export default function JapaScreen() {
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: bg }}>Another mala</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: bg }}>Share Japa card</Text>
             </PressableSurface>
             <View style={{ flexDirection: 'row', gap: 10, alignSelf: 'stretch' }}>
+              <PressableSurface
+                onPress={() => {
+                  setCompletionVisible(false);
+                  setConfettiVisible(false);
+                  setCompletionInsight(null);
+                  setCompletedRounds(0);
+                  setCount(0);
+                  setDurationSecs(0);
+                  setSessionStartTime(Date.now());
+                }}
+                style={{
+                  flex: 1,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                  minHeight: MIN_TOUCH_TARGET,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ ...TYPE.label, color: theme.brand }}>Another mala</Text>
+              </PressableSurface>
               <PressableSurface
                 haptic="selection"
                 onPress={() => {
@@ -2869,30 +3060,8 @@ export default function JapaScreen() {
               >
                 <Text style={{ ...TYPE.label, color: text }}>Done</Text>
               </PressableSurface>
-              <PressableSurface
-                haptic="selection"
-                onPress={() => {
-                  void shareCapturedShoonayaCard(japaShareCardRef, {
-                    fileName: 'shoonaya-japa-card.png',
-                    dialogTitle: 'Share Japa practice',
-                    fallbackMessage: `I completed ${completionStats.rounds} mala${completionStats.rounds > 1 ? 's' : ''} (${completionStats.beads.toLocaleString('en-IN')} beads) with Shoonaya.`,
-                  });
-                }}
-                style={{
-                  flex: 1,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-                  minHeight: MIN_TOUCH_TARGET,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ ...TYPE.label, color: theme.brand }}>Share</Text>
-              </PressableSurface>
             </View>
-          </View>
+          </Animated.View>
         </View>
       ) : null}
     </Screen>

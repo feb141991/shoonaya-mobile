@@ -21,7 +21,7 @@ type ConfettiParticle = {
 type ConfettiOverlayProps = {
   show: boolean;
   onComplete?: () => void;
-  density?: 'soft' | 'full';
+  density?: 'soft' | 'full' | 'burst';
 };
 
 const SACRED_COLORS = [
@@ -104,7 +104,8 @@ export function ConfettiOverlay({ show, onComplete, density = 'full' }: Confetti
   const { height } = useWindowDimensions();
   const progress = useRef(new Animated.Value(0)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
-  const particles = useMemo(() => buildParticles(density === 'full' ? 72 : 36), [density]);
+  const particleCount = density === 'burst' ? 132 : density === 'full' ? 84 : 36;
+  const particles = useMemo(() => buildParticles(particleCount), [particleCount]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
@@ -123,7 +124,7 @@ export function ConfettiOverlay({ show, onComplete, density = 'full' }: Confetti
 
     Animated.timing(progress, {
       toValue: 1,
-      duration: density === 'full' ? 4200 : 3000,
+      duration: density === 'burst' ? 5200 : density === 'full' ? 4400 : 3000,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
