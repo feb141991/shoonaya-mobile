@@ -1,13 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { Animated, useColorScheme, View, type ViewStyle } from 'react-native';
 import { RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { useReducedMotion } from '@/components/ui/Motion';
 
 // ── Shared shimmer animation ──────────────────────────────────────────────────
 
 function useShimmer() {
   const anim = useRef(new Animated.Value(0)).current;
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (reducedMotion) {
+      anim.setValue(0.62);
+      return;
+    }
+
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(anim, { toValue: 1, duration: 900, useNativeDriver: true }),
@@ -16,10 +23,9 @@ function useShimmer() {
     );
     loop.start();
     return () => loop.stop();
-  }, [anim]);
+  }, [anim, reducedMotion]);
 
-  const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.9] });
-  return opacity;
+  return reducedMotion ? 0.62 : anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.9] });
 }
 
 // ── Base shimmer block ────────────────────────────────────────────────────────

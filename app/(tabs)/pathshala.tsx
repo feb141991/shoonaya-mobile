@@ -745,7 +745,7 @@ function PathshalaContent() {
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: dim }}>
                   Also enrolled in
                 </Text>
-                {secondaryPaths.map((path) => {
+                {secondaryPaths.map((path, index) => {
                   const enrollment = progressMap.get(path.id);
                   const progressPct = Math.round(
                     (((enrollment?.completed_lessons ?? []).length || 0) / path.total_lessons) * 100
@@ -756,6 +756,7 @@ function PathshalaContent() {
                       path={path}
                       progressPct={progressPct}
                       onPress={() => openPath(path)}
+                      index={index}
                     />
                   );
                 })}
@@ -954,7 +955,7 @@ function PathshalaContent() {
               ))}
             </View>
 
-            {filteredPaths.map((path) => {
+            {filteredPaths.map((path, index) => {
               const enrollment = progressMap.get(path.id);
               const progressPct = enrollment
                 ? Math.round((((enrollment.completed_lessons ?? []).length || 0) / path.total_lessons) * 100)
@@ -965,6 +966,7 @@ function PathshalaContent() {
                   key={path.id}
                   path={path}
                   progressPct={progressPct}
+                  index={index}
                   onPress={() => {
                     if (enrollment) {
                       openPath(path);
@@ -1067,7 +1069,7 @@ function PathshalaContent() {
               <Text style={{ ...TYPE.section, letterSpacing: 1.1, textTransform: 'uppercase', color: brand }}>
                 Recommended Next
               </Text>
-              {sortedPaths.slice(0, 3).map((path) => {
+              {sortedPaths.slice(0, 3).map((path, index) => {
                 const enrollment = progressMap.get(path.id);
                 const progressPct = enrollment
                   ? Math.round((((enrollment.completed_lessons ?? []).length || 0) / path.total_lessons) * 100)
@@ -1077,6 +1079,7 @@ function PathshalaContent() {
                     key={path.id}
                     path={path}
                     progressPct={progressPct}
+                    index={index}
                     onPress={() => {
                       if (enrollment) {
                         openPath(path);

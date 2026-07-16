@@ -18,6 +18,7 @@ import { useFonts } from 'expo-font';
 
 import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
+import { RouteTransition } from '@/components/ui/Motion';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
@@ -226,7 +227,9 @@ export default function RootLayout() {
     <AppProviders>
       <StatusBar style="dark" />
       <View style={{ flex: 1 }}>
-        <Slot />
+        <RouteTransition>
+          <Slot />
+        </RouteTransition>
         {showBottomNav ? <CollapsibleBottomNav /> : null}
       </View>
     </AppProviders>

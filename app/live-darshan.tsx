@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { MotionView } from '@/components/ui/Motion';
 import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
@@ -158,8 +159,8 @@ function LiveDarshanContent() {
           />
         ) : (
           <View style={{ gap: 12 }}>
-            {filtered.map((stream) => (
-              <View key={stream.id} style={{ gap: 6 }}>
+            {filtered.map((stream, index) => (
+              <MotionView key={stream.id} animationKey={`${filter}-${stream.id}`} delay={Math.min(index, 5) * 32} distance={6} style={{ gap: 6 }}>
                 <PressableSurface
                   accessibilityRole="button"
                   accessibilityLabel={`Watch ${stream.title} on YouTube. ${stream.location}. ${stream.schedule}.`}
@@ -244,7 +245,7 @@ function LiveDarshanContent() {
                     </PressableSurface>
                   </View>
                 ) : null}
-              </View>
+              </MotionView>
             ))}
           </View>
         )}

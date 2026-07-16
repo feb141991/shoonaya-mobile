@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Card } from '@/components/ui/Card';
+import { MotionView } from '@/components/ui/Motion';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import type { SacredIconName } from '@/components/ui/SacredIcon';
@@ -254,54 +255,61 @@ export default function BhaktiScreen() {
             <View style={{ gap: 12 }}>
               {chunkPairs(activeCards).map((row, rowIndex) => (
                 <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-                  {row.map((card) => (
-                    <PressableSurface
+                  {row.map((card, columnIndex) => (
+                    <MotionView
                       key={card.id}
-                      haptic="selection"
-                      onPress={() => handleCardPress(card)}
-                      accessibilityLabel={`${card.title}, ${card.description}`}
+                      animationKey={`${tradition}-${card.id}`}
+                      delay={Math.min(rowIndex * 2 + columnIndex, 5) * 32}
+                      distance={6}
                       style={{ flex: 1 }}
                     >
-                      <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
-                        {card.kind === 'tile' ? (
-                          <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
-                        ) : (
-                          <View
-                            style={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: RADII.md,
-                              backgroundColor: `${card.accent}15`,
-                              borderWidth: 1,
-                              borderColor: `${card.accent}28`,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Feather name={card.icon} size={22} color={card.accent} />
+                      <PressableSurface
+                        haptic="selection"
+                        onPress={() => handleCardPress(card)}
+                        accessibilityLabel={`${card.title}, ${card.description}`}
+                        style={{ flex: 1 }}
+                      >
+                        <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
+                          {card.kind === 'tile' ? (
+                            <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
+                          ) : (
+                            <View
+                              style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: RADII.md,
+                                backgroundColor: `${card.accent}15`,
+                                borderWidth: 1,
+                                borderColor: `${card.accent}28`,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Feather name={card.icon} size={22} color={card.accent} />
+                            </View>
+                          )}
+                          <View style={{ gap: 4 }}>
+                            <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
+                            <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                              {card.description}
+                            </Text>
                           </View>
-                        )}
-                        <View style={{ gap: 4 }}>
-                          <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
-                          <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                            {card.description}
-                          </Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
-                          <Text
-                            style={{
-                              ...TYPE.chip,
-                              letterSpacing: 1.2,
-                              textTransform: 'uppercase',
-                              color: card.kind === 'tile' ? theme.brand : card.accent,
-                            }}
-                          >
-                            Open
-                          </Text>
-                          <Feather name="chevron-right" size={11} color={card.kind === 'tile' ? theme.brand : card.accent} />
-                        </View>
-                      </Card>
-                    </PressableSurface>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
+                            <Text
+                              style={{
+                                ...TYPE.chip,
+                                letterSpacing: 1.2,
+                                textTransform: 'uppercase',
+                                color: card.kind === 'tile' ? theme.brand : card.accent,
+                              }}
+                            >
+                              Open
+                            </Text>
+                            <Feather name="chevron-right" size={11} color={card.kind === 'tile' ? theme.brand : card.accent} />
+                          </View>
+                        </Card>
+                      </PressableSurface>
+                    </MotionView>
                   ))}
                   {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
                 </View>
