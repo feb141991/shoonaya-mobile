@@ -1,11 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
@@ -18,15 +17,10 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import { getTraditionAccent } from '@/lib/traditions';
 
-// ── Bhakti Phase 1 of a multi-phase PWA-parity rebuild (see task list:
-// "Bhakti full PWA parity" #330-338). This screen now mirrors the PWA's
-// src/app/(main)/bhakti/BhaktiClient.tsx structure: a tradition-tinted hero
-// gradient, a "Today's Stotram" teaser, and a single unified content grid —
-// replacing the old split "Your Practice"/"Explore" sections. Content-
-// library destinations (katha reader, browse, zen, insights, stotram
-// detail, mantras) don't exist natively yet; those land in Phases 2-8 as
-// their own data-porting + screen-build passes. Until each phase lands,
-// its card's `href` is null and tapping opens the coming-soon sheet.
+// Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip,
+// Today's Stotram teaser, and one unified Explore grid. Content-heavy
+// destinations fetch from canonical web API routes instead of duplicating the
+// scripture/story corpus inside the native bundle.
 
 const TRADITION_HERO: Record<string, { greeting: string; sub: string }> = {
   hindu:    { greeting: 'Jai Sri Ram 🙏',           sub: 'Bhakti, Kathas & Sacred Practice' },
@@ -61,9 +55,7 @@ type FeatherCard = {
   title: string;
   description: string;
   accent: string;
-  // null = destination screen not yet built natively; opens the coming-
-  // soon sheet until its own phase (Bhakti Phase 3-8) lands.
-  href: Href | null;
+  href: Href;
   traditions?: string[];
 };
 
@@ -79,11 +71,11 @@ const CONTENT_CARDS: BhaktiCard[] = [
   { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', href: '/bhakti/katha?view=bani' as Href, traditions: ['sikh'] },
   { kind: 'feather', id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: "Buddha's parables & Jataka tales", accent: '#8C64C8', href: '/bhakti/katha?view=dhamma' as Href, traditions: ['buddhist'] },
   { kind: 'feather', id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', href: '/bhakti/katha?view=jain' as Href, traditions: ['jain'] },
-  { kind: 'feather', id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: '#C5A059', href: null, traditions: ['hindu', 'jain'] },
-  { kind: 'feather', id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', href: null, traditions: ['buddhist'] },
+  { kind: 'feather', id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: '#C5A059', href: '/bhakti/browse?tradition=hindu' as Href, traditions: ['hindu', 'jain'] },
+  { kind: 'feather', id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', href: '/bhakti/browse?tradition=buddhist' as Href, traditions: ['buddhist'] },
   { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850', href: '/bhakti/katha?view=panchatantra' as Href },
   { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: '/bhakti/katha?view=heroes' as Href },
-  { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/japa' },
+  { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/bhakti/mala' as Href },
   { kind: 'feather', id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: '#C5A059', href: '/mantras' as Href },
   { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: '/bhakti/zen' as Href },
   { kind: 'tile', id: 'dharmveer', fallbackGlyph: 'shield', title: 'Dharm Veer', description: 'Stories of dharmic courage', href: '/dharm-veer' },
@@ -133,8 +125,6 @@ export default function BhaktiScreen() {
   const [tradition, setTradition] = useState('hindu');
   const [japaStreak, setJapaStreak] = useState(0);
   const [sessionCountToday, setSessionCountToday] = useState(0);
-  const [comingSoonVisible, setComingSoonVisible] = useState(false);
-  const [selectedCardTitle, setSelectedCardTitle] = useState('');
   const [dailyStotram, setDailyStotram] = useState<{ id: string; title: string; deityEmoji?: string } | null>(null);
 
   useFocusEffect(
@@ -174,7 +164,7 @@ export default function BhaktiScreen() {
             }
           }
         } catch {
-          // ignore — teaser card falls back to the coming-soon sheet
+          // ignore — teaser card falls back to the browse screen
         }
       }
       void loadData();
@@ -196,20 +186,9 @@ export default function BhaktiScreen() {
     })
     .filter(c => !c.traditions || c.traditions.includes(tradition));
 
-  const openComingSoon = (title: string) => {
-    try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
-    setSelectedCardTitle(title);
-    setComingSoonVisible(true);
-  };
-
   const handleCardPress = (card: BhaktiCard) => {
     try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
-    if (card.href) {
-      router.push(card.href);
-    } else {
-      setSelectedCardTitle(card.title);
-      setComingSoonVisible(true);
-    }
+    router.push(card.href);
   };
 
   return (
@@ -258,16 +237,15 @@ export default function BhaktiScreen() {
 
         <View style={{ paddingHorizontal: 20, gap: 28 }}>
 
-          {/* Today's Stotram teaser — day-of-year rotating pick fetched
-              from GET /api/bhakti/stotram/daily (Phase 2), navigates into
-              the Phase 3 detail screen. Falls back to the coming-soon
-              sheet only if the fetch hasn't resolved yet. */}
+          {/* Today's Stotram teaser — day-of-year rotating pick fetched from
+              GET /api/bhakti/stotram/daily. If the pick is unavailable, open
+              the library browse screen instead of a dead coming-soon state. */}
           <PressableSurface
             haptic="selection"
             onPress={() =>
               dailyStotram
                 ? router.push(`/bhakti/stotram/${dailyStotram.id}` as Href)
-                : openComingSoon("Today's Stotram")
+                : router.push('/bhakti/browse' as Href)
             }
             accessibilityLabel="Today's stotram"
             style={{ borderRadius: 18 }}
@@ -293,7 +271,7 @@ export default function BhaktiScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: accent }}>
-                  Today&apos;s Vani
+                  Today&apos;s Stotram
                 </Text>
                 <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text, marginTop: 2 }} numberOfLines={1}>
                   {dailyStotram?.title ?? 'Daily Stotram'}
@@ -319,7 +297,7 @@ export default function BhaktiScreen() {
                       key={card.id}
                       haptic="selection"
                       onPress={() => handleCardPress(card)}
-                      accessibilityLabel={card.href ? `${card.title}, ${card.description}` : `${card.title}, coming soon`}
+                      accessibilityLabel={`${card.title}, ${card.description}`}
                       style={{ flex: 1 }}
                     >
                       <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
@@ -371,21 +349,6 @@ export default function BhaktiScreen() {
 
         </View>
       </ScrollView>
-
-      {/* Coming Soon Modal */}
-      <Modal visible={comingSoonVisible} transparent animationType="slide" onRequestClose={() => setComingSoonVisible(false)}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: COLORS.celebrationScrim }}>
-          <Pressable style={{ flex: 1 }} onPress={() => setComingSoonVisible(false)} accessibilityRole="button" accessibilityLabel="Dismiss" />
-          <View style={{ backgroundColor: theme.bg, padding: 24, paddingBottom: 48, borderTopLeftRadius: 24, borderTopRightRadius: 24, gap: 16 }}>
-            <View style={{ width: 40, height: 4, backgroundColor: theme.border, borderRadius: 2, alignSelf: 'center', marginBottom: 8 }} />
-            <Text style={{ ...TYPE.title, color: theme.text }}>{selectedCardTitle}</Text>
-            <Text style={{ ...TYPE.body, color: theme.dim, lineHeight: 22 }}>
-              This feature is currently available in the web version of Shoonaya. We are bringing it to the native app very soon!
-            </Text>
-            <Button label="Got it" onPress={() => setComingSoonVisible(false)} style={{ marginTop: 12 }} />
-          </View>
-        </View>
-      </Modal>
 
     </Screen>
   );
