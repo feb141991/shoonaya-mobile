@@ -1519,14 +1519,14 @@ export default function JapaScreen() {
                       width: '100%',
                       alignSelf: 'stretch',
                       minHeight: MIN_TOUCH_TARGET,
-                      paddingVertical: 17,
+                      paddingVertical: 14,
                       alignItems: 'center',
                       justifyContent: 'center',
                       opacity: pressed ? 0.88 : 1,
                       transform: [{ scale: pressed ? 0.985 : 1 }],
                     })}
                   >
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, letterSpacing: 0.2, color: COLORS.ink }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 19, letterSpacing: 0.2, color: COLORS.ink }}>
                       Begin Japa
                     </Text>
                   </Pressable>
@@ -1542,7 +1542,6 @@ export default function JapaScreen() {
                       borderColor: theme.premiumBorder,
                       backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                       boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                      overflow: 'hidden',
                     }}
                   >
                     <Pressable
@@ -1555,10 +1554,10 @@ export default function JapaScreen() {
                         alignSelf: 'stretch',
                         minHeight: MIN_TOUCH_TARGET,
                         paddingHorizontal: 14,
-                        paddingVertical: 12,
+                        paddingVertical: 10,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        justifyContent: 'flex-start',
+                        justifyContent: 'center',
                         gap: 10,
                         opacity: pressed ? 0.82 : 1,
                       })}
@@ -1575,7 +1574,7 @@ export default function JapaScreen() {
                       >
                         <Feather name="sliders" size={14} color={theme.brand} />
                       </View>
-                      <Text numberOfLines={1} style={{ flex: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+                      <Text numberOfLines={1} style={{ flexShrink: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: text }}>
                         Change mala
                       </Text>
                     </Pressable>
@@ -1591,7 +1590,6 @@ export default function JapaScreen() {
                         borderColor: theme.premiumBorder,
                         backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
                         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                        overflow: 'hidden',
                       }}
                     >
                       <Pressable
@@ -1604,10 +1602,10 @@ export default function JapaScreen() {
                           alignSelf: 'stretch',
                           minHeight: MIN_TOUCH_TARGET,
                           paddingHorizontal: 14,
-                          paddingVertical: 12,
+                          paddingVertical: 10,
                           flexDirection: 'row',
                           alignItems: 'center',
-                          justifyContent: 'flex-start',
+                          justifyContent: 'center',
                           gap: 10,
                           opacity: pressed ? 0.82 : 1,
                         })}
@@ -1624,7 +1622,7 @@ export default function JapaScreen() {
                         >
                           <Feather name="clock" size={14} color={theme.brand} />
                         </View>
-                        <Text numberOfLines={1} style={{ flex: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+                        <Text numberOfLines={1} style={{ flexShrink: 1, minWidth: 0, fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: text }}>
                           Recent sessions
                         </Text>
                       </Pressable>
