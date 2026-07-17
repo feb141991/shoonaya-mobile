@@ -83,7 +83,8 @@ export function SacredIcon({ name, fallbackGlyph, size = 20, color }: SacredIcon
     return (
       <Image
         source={asset}
-        style={{ width: size, height: size, tintColor: color }}
+        style={{ width: size, height: size }}
+        tintColor={color as string}
         contentFit="contain"
         accessibilityIgnoresInvertColors
       />
