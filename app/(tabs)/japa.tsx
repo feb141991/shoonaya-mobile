@@ -99,6 +99,7 @@ const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
 const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2;
 const PRACTICE_RADIUS = 162;
+const PRACTICE_DISPLAY_BEADS = 36;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
@@ -1478,9 +1479,14 @@ export default function JapaScreen() {
     setScreen('launcher');
   }, []);
 
-  function beadPosition(index: number, center: number, radius: number) {
-    const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
+  function beadPosition(index: number, center: number, radius: number, total = 108) {
+    const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
     return { x: center + Math.cos(angle) * radius, y: center + Math.sin(angle) * radius };
+  }
+
+  function displayBeadIndex(value: number) {
+    const clamped = Math.max(0, Math.min(107, value));
+    return Math.min(PRACTICE_DISPLAY_BEADS - 1, Math.floor((clamped / 108) * PRACTICE_DISPLAY_BEADS));
   }
 
   // Three-tier bead state (done / current / upcoming) — previously every
@@ -1490,17 +1496,19 @@ export default function JapaScreen() {
   // giving the same at-a-glance progress read as PWA's bead-done/bead-un
   // split.
   function buildBeadElements(center: number, radius: number) {
-    const activeIndex = count >= 108 ? 107 : count;
-    return Array.from({ length: 108 }, (_, index) => {
-      const { x, y } = beadPosition(index, center, radius);
+    const visualProgress = Math.min(PRACTICE_DISPLAY_BEADS, (Math.max(0, Math.min(108, count)) / 108) * PRACTICE_DISPLAY_BEADS);
+    const activeIndex = count >= 108 ? PRACTICE_DISPLAY_BEADS - 1 : displayBeadIndex(count);
+    return Array.from({ length: PRACTICE_DISPLAY_BEADS }, (_, index) => {
+      const { x, y } = beadPosition(index, center, radius, PRACTICE_DISPLAY_BEADS);
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
-      const isSumeru = index === 0;
+      const isSumeru = index === Math.floor(PRACTICE_DISPLAY_BEADS / 2);
+      const isPartiallyDone = index < visualProgress;
 
-      const r = isSumeru ? 13 : isCurrent ? 10.8 : isDone ? 7.2 : 5.8;
-      const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
-      const shadowOpacity = isCurrent ? 0.38 : isDone ? 0.28 : 0.18;
-      const highlightOpacity = isCurrent ? 0.76 : isDone ? 0.48 : 0.32;
+      const r = isSumeru ? 17.5 : isCurrent ? 15.5 : isPartiallyDone ? 12.8 : 11.4;
+      const gradientId = isCurrent ? 'grad-active' : isPartiallyDone ? 'grad-done' : 'grad-inactive';
+      const shadowOpacity = isCurrent ? 0.42 : isPartiallyDone ? 0.3 : 0.2;
+      const highlightOpacity = isCurrent ? 0.82 : isPartiallyDone ? 0.54 : 0.36;
 
       return (
         <Fragment key={`bead-${index}`}>
@@ -1516,9 +1524,9 @@ export default function JapaScreen() {
             cy={y}
             r={r}
             fill={`url(#${gradientId})`}
-            stroke={isCurrent ? theme.brand : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
+            stroke={isCurrent ? theme.brand : isPartiallyDone ? malaSkin.beadColor : malaSkin.beadBorder}
             strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.35 : 0.65}
-            strokeOpacity={isDone || isCurrent ? 0.95 : 0.72}
+            strokeOpacity={isPartiallyDone || isCurrent ? 0.95 : 0.72}
           />
           <Circle
             cx={x - r * 0.34}
@@ -1532,8 +1540,14 @@ export default function JapaScreen() {
     });
   }
 
-  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS), [count]);
-  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS), [bloomIndex]);
+  const currentBeadPos = useMemo(
+    () => beadPosition(displayBeadIndex(count), PRACTICE_CENTER, PRACTICE_RADIUS, PRACTICE_DISPLAY_BEADS),
+    [count],
+  );
+  const bloomBeadPos = useMemo(
+    () => beadPosition(displayBeadIndex(bloomIndex ?? 0), PRACTICE_CENTER, PRACTICE_RADIUS, PRACTICE_DISPLAY_BEADS),
+    [bloomIndex],
+  );
 
   const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 22] });
   const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.58, 0] });
@@ -2403,6 +2417,30 @@ export default function JapaScreen() {
                     stroke={malaSkin.threadColor}
                     strokeWidth={2}
                   />
+                  <Line
+                    x1={PRACTICE_CENTER}
+                    y1={PRACTICE_CENTER + PRACTICE_RADIUS - 6}
+                    x2={PRACTICE_CENTER}
+                    y2={PRACTICE_CENTER + PRACTICE_RADIUS + 18}
+                    stroke={malaSkin.threadColor}
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    opacity={0.7}
+                  />
+                  {[...Array(5)].map((_, tasselIndex) => {
+                    const offset = (tasselIndex - 2) * 5.5;
+                    return (
+                      <Path
+                        key={`tassel-${tasselIndex}`}
+                        d={`M ${PRACTICE_CENTER} ${PRACTICE_CENTER + PRACTICE_RADIUS + 8} C ${PRACTICE_CENTER + offset * 0.4} ${PRACTICE_CENTER + PRACTICE_RADIUS + 16}, ${PRACTICE_CENTER + offset} ${PRACTICE_CENTER + PRACTICE_RADIUS + 22}, ${PRACTICE_CENTER + offset} ${PRACTICE_CENTER + PRACTICE_RADIUS + 27}`}
+                        stroke={malaSkin.beadBorder}
+                        strokeWidth={4}
+                        strokeLinecap="round"
+                        fill="none"
+                        opacity={0.76}
+                      />
+                    );
+                  })}
                   {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
                   {count < 108 ? (
                     <AnimatedCircle
