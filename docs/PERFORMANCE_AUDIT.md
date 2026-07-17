@@ -5,6 +5,29 @@ Scope: source-level audit of `shoonaya-mobile` (Expo SDK 56, React Native, expo-
 
 This is a real audit against the current codebase — every finding below was verified by reading the actual files, not generic advice. Two automated checks (`expo-doctor`, `depcheck`) could not be run reliably from this environment (see "Tooling I couldn't verify" at the bottom) — run those yourself locally for the most trustworthy dead-dependency signal.
 
+## Phase 4 checkpoint — high-risk feeds measured after fixes
+
+Date: 2026-07-17
+
+The two highest-risk growing feeds from this audit have now been addressed and smoke-checked:
+
+- `app/notifications.tsx`: now uses `FlatList`, a memoized `NotificationListRow`, and stable row handlers.
+- `app/(tabs)/mandali.tsx`: now uses `FlatList` for the vertical feed, pre-indexes comments/RSVPs by `post_id`, uses an O(1) upvote lookup set, and stabilizes FlatList render/key/header/footer callbacks.
+
+Validation run after the two fixes:
+
+- `npm run typecheck` passed.
+- `npx expo-doctor` ran successfully but reports SDK patch-version drift only (`expo` 56.0.15 vs expected 56.0.16, plus related Expo package patch mismatches). This is not caused by the feed changes.
+- AVD smoke opened `shoonaya://notifications`; process stayed alive and logcat showed no fatal Android, React Native, `VirtualizedLists`, or `FlatList` error signatures.
+- AVD smoke opened `shoonaya://mandali`; process stayed alive and logcat showed no fatal Android, React Native, `VirtualizedLists`, or `FlatList` error signatures.
+
+Source-level status after Phase 4:
+
+- The original "unbounded + unvirtualized" risk is closed for Notifications and Mandali.
+- Notifications still has small intentional array work for unread counts and optimistic read-state updates.
+- Mandali still has bounded `.map()` usage for normalization, filter chips, compose chips, and the member list inside the members card. The main post/blended-post feed is no longer mounted all at once.
+- Real frame-time proof still requires an instrumented production/dev-client profile on device. These checks prove route health and code-shape improvement, not exact FPS.
+
 ## Priority 1 — likely the actual cause of "pages loading slowly"
 
 ### 1. Long/growing lists are not virtualized
@@ -46,17 +69,17 @@ What I could verify from source alone:
 - No raw `react-native` `Image` imports left over from before the `expo-image` migration.
 - Home's data-fetch path has no leftover direct-Supabase calls bypassing the canonical API.
 
-What needs tooling I couldn't run reliably here (see below) — run these yourself:
+What still needs tooling I couldn't run reliably here (see below) — run these yourself:
 - **Unused npm dependencies**: `npx depcheck` from the repo root.
 - **Unused TypeScript exports** (dead components/functions never imported anywhere): `npx ts-prune`.
-- **Expo config/native-module health check**: `npx expo-doctor`.
+- **Expo config/native-module health check**: `npx expo-doctor` now runs here, but still reports SDK patch-version drift. Run it locally again after any dependency alignment.
 
 ### Tooling I couldn't verify from this sandbox
-`npx expo-doctor` failed here with `Cannot find module 'expo/config-plugins'`, and a raw `node_modules/expo/package.json` read via the shell showed version `46.0.21` even though `package.json`/`package-lock.json` both correctly declare `~56.0.15`, and a direct file read (bypassing the shell) confirmed the on-disk package really is `56.0.15`. That's a stale/desynced `node_modules` artifact specific to this sandboxed session's shell mount, not a real problem in your repository — but it means I can't trust `expo-doctor` or `depcheck` output run from here. Run both yourself locally (`rm -rf node_modules && npm ci` first if you want a guaranteed-clean baseline) for a trustworthy read.
+Earlier in this audit, `npx expo-doctor` failed from a stale shell/node_modules artifact. On the Phase 4 rerun it executed normally and passed 20/21 checks, failing only SDK patch-version alignment. `depcheck` and `ts-prune` were still not run as part of the feed measurement pass. Run them locally (`rm -rf node_modules && npm ci` first if you want a guaranteed-clean baseline) for a trustworthy dead-code/dependency read.
 
 ## Suggested order of work
 
-1. `mandali.tsx` and `notifications.tsx`: `ScrollView`+`.map()` → `FlatList`, plus `React.memo` on their row components. This is the fix most likely to be felt immediately.
+1. Completed: `mandali.tsx` and `notifications.tsx`: `ScrollView`+`.map()` → `FlatList`, plus row/render stability work.
 2. Once EAS Observe access comes through, use the per-route TTR/TTI data to confirm which screens are *actually* slow in production rather than guessing further from source alone — that data will tell you definitively whether the cold-start chain in `_layout.tsx` is worth optimizing.
-3. Run `npx depcheck` + `npx ts-prune` + `npx expo-doctor` locally and clean up whatever they surface.
-4. Broader `FlatList` → `FlashList` migration once the above is stable.
+3. Run `npx depcheck` + `npx ts-prune` locally and clean up whatever they surface. Also align Expo SDK patch versions with `npx expo install --check` when you want to close the current `expo-doctor` warning.
+4. Broader `FlatList` → `FlashList` migration only if real route metrics or large-list behavior justify adding the dependency.
