@@ -5,6 +5,7 @@ import {
   FlatList,
   type ListRenderItemInfo,
   Modal,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -320,6 +321,7 @@ export default function MandaliScreen() {
   const isDark = useColorScheme() === 'dark';
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [posting, setPosting] = useState(false);
   const [commenting, setCommenting] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileContext | null>(null);
@@ -423,29 +425,15 @@ export default function MandaliScreen() {
 
     const postIds = visiblePosts.map((p) => p.id);
     const visiblePostIds = new Set(postIds);
-    if (postIds.length > 0) {
-      const [commentRows, rsvpRows] = await Promise.all([
-        supabase
-          .from('post_comments')
-          .select('id, post_id, author_id, body, parent_id, created_at, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
-          .in('post_id', postIds)
-          .order('created_at', { ascending: true }),
-        supabase.from('event_rsvps').select('id, post_id, user_id, status, created_at, updated_at').in('post_id', postIds),
-      ]);
-      setComments(
-        (commentRows.data ?? []).map((row) => ({
-          ...row,
-          profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
-        })) as CommentRow[]
-      );
-      setRsvps((rsvpRows.data ?? []) as RsvpRow[]);
-    } else {
-      setComments([]);
-      setRsvps([]);
-    }
 
     // Blend Sangam-wide posts when the local Mandali is thin — same
-    // BLEND_THRESHOLD PWA's mandali/page.tsx uses.
+    // BLEND_THRESHOLD PWA's mandali/page.tsx uses. Resolved before the
+    // comments/RSVPs/upvotes fetch below so that fetch can be scoped to the
+    // full visible post set (local + blended), not just local posts.
+    // Previously the comments/RSVPs query only ever used `postIds` (local
+    // posts), so a blended post's comments and RSVPs never loaded even
+    // though its upvote state did — this closes that gap.
+    let blendedPostIds: string[] = [];
     if (visibleMembers.length < BLEND_THRESHOLD) {
       const { data: blendRows } = await supabase
         .from('posts')
@@ -458,21 +446,51 @@ export default function MandaliScreen() {
         profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
       })) as PostRow[];
       setBlendedPosts(filterAuthoredPosts(normalizedBlend, safetyState));
-      for (const row of normalizedBlend) visiblePostIds.add(row.id);
-
-      const { data: upvoteRows } = await supabase
-        .from('post_upvotes')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', [...postIds, ...(blendRows ?? []).map((row) => row.id)]);
-      setUpvotedIds((upvoteRows ?? []).map((row) => row.post_id));
+      blendedPostIds = normalizedBlend.map((row) => row.id);
+      for (const id of blendedPostIds) visiblePostIds.add(id);
     } else {
       setBlendedPosts([]);
-      const { data: upvoteRows } = await supabase.from('post_upvotes').select('post_id').eq('user_id', user.id).in('post_id', postIds);
-      setUpvotedIds((upvoteRows ?? []).map((row) => row.post_id));
     }
+
+    const allPostIds = [...postIds, ...blendedPostIds];
+
+    if (allPostIds.length > 0) {
+      const [commentRows, rsvpRows, upvoteRows] = await Promise.all([
+        supabase
+          .from('post_comments')
+          .select('id, post_id, author_id, body, parent_id, created_at, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
+          .in('post_id', allPostIds)
+          .order('created_at', { ascending: true }),
+        supabase.from('event_rsvps').select('id, post_id, user_id, status, created_at, updated_at').in('post_id', allPostIds),
+        supabase.from('post_upvotes').select('post_id').eq('user_id', user.id).in('post_id', allPostIds),
+      ]);
+      setComments(
+        (commentRows.data ?? []).map((row) => ({
+          ...row,
+          profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
+        })) as CommentRow[]
+      );
+      setRsvps((rsvpRows.data ?? []) as RsvpRow[]);
+      setUpvotedIds((upvoteRows.data ?? []).map((row) => row.post_id));
+    } else {
+      setComments([]);
+      setRsvps([]);
+      setUpvotedIds([]);
+    }
+
     visiblePostIdsRef.current = visiblePostIds;
   }, [router]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadMandali();
+    } catch (error) {
+      console.error('[MandaliScreen] pull-to-refresh failed', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadMandali]);
 
   const scheduleRealtimeReload = useCallback(() => {
     if (realtimeReloadTimerRef.current) clearTimeout(realtimeReloadTimerRef.current);
@@ -996,6 +1014,9 @@ export default function MandaliScreen() {
         initialNumToRender={6}
         maxToRenderPerBatch={6}
         windowSize={7}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} colors={[theme.brand]} />
+        }
       />
 
       <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => setSheetVisible(false)}>
