@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
+  type ListRenderItemInfo,
   Modal,
   ScrollView,
   Text,
@@ -60,6 +62,13 @@ type ProfileContext = {
   latitude: number | null;
   longitude: number | null;
 };
+
+type MandaliFeedItem =
+  | { type: 'empty' }
+  | { type: 'post'; post: PostRow }
+  | { type: 'blendHeader' }
+  | { type: 'blendedPost'; post: PostRow }
+  | { type: 'members' };
 
 function getInitials(name: string): string {
   if (!name) return '?';
@@ -311,6 +320,40 @@ export default function MandaliScreen() {
     () => (activeFilter === 'all' ? blendedPosts : blendedPosts.filter((p) => p.type === activeFilter)),
     [blendedPosts, activeFilter]
   );
+  const commentsByPost = useMemo(() => {
+    const grouped = new Map<string, CommentRow[]>();
+    for (const comment of comments) {
+      const current = grouped.get(comment.post_id);
+      if (current) current.push(comment);
+      else grouped.set(comment.post_id, [comment]);
+    }
+    return grouped;
+  }, [comments]);
+  const rsvpsByPost = useMemo(() => {
+    const grouped = new Map<string, RsvpRow[]>();
+    for (const rsvp of rsvps) {
+      const current = grouped.get(rsvp.post_id);
+      if (current) current.push(rsvp);
+      else grouped.set(rsvp.post_id, [rsvp]);
+    }
+    return grouped;
+  }, [rsvps]);
+  const feedItems = useMemo<MandaliFeedItem[]>(() => {
+    if (!profile?.mandaliId) return [];
+
+    const items: MandaliFeedItem[] =
+      filteredPosts.length === 0
+        ? [{ type: 'empty' }]
+        : filteredPosts.map((post) => ({ type: 'post', post }));
+
+    if (filteredBlendedPosts.length > 0) {
+      items.push({ type: 'blendHeader' });
+      for (const post of filteredBlendedPosts) items.push({ type: 'blendedPost', post });
+    }
+
+    items.push({ type: 'members' });
+    return items;
+  }, [filteredBlendedPosts, filteredPosts, profile?.mandaliId]);
 
   const toggleUpvote = async (postId: string) => {
     if (!profile) return;
@@ -448,8 +491,8 @@ export default function MandaliScreen() {
 
   const renderPost = (post: PostRow) => {
     const isOwnPost = post.author_id === profile?.userId;
-    const postComments = comments.filter((c) => c.post_id === post.id);
-    const postRsvps = rsvps.filter((r) => r.post_id === post.id);
+    const postComments = commentsByPost.get(post.id) ?? [];
+    const postRsvps = rsvpsByPost.get(post.id) ?? [];
     const isUpvoted = upvotedIds.includes(post.id);
 
     return (
@@ -619,6 +662,210 @@ export default function MandaliScreen() {
     );
   };
 
+  const renderMembersCard = () => (
+    <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ width: 38, height: 38, borderRadius: 15, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+          <Feather name="users" size={16} color={theme.brand} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Members</Text>
+          <Text style={{ color: theme.text, ...TYPE.label }}>{members.length} in your circle</Text>
+        </View>
+      </View>
+      {members.length === 0 ? (
+        <EmptyState icon="users" title="No members yet" subtitle="Your local Mandali has not surfaced any members here yet." />
+      ) : (
+        members.map((member, idx) => {
+          const isOwnMember = member.id === profile?.userId;
+          return (
+            <View key={member.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ width: 20, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>{idx + 1}</Text>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14 }}>
+                  {member.full_name}
+                  {isOwnMember ? <Text style={{ color: theme.brand }}> (you)</Text> : null}
+                </Text>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>{member.spiritual_level ?? 'Seeker'}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{member.seva_score} seva</Text>
+                {!isOwnMember && (
+                  <PressableSurface haptic="selection" onPress={() => void reportMember(member.id)} style={{ minHeight: 0, padding: 4 }} hitSlop={10}>
+                    <Feather name="slash" size={14} color={theme.dim} />
+                  </PressableSurface>
+                )}
+              </View>
+            </View>
+          );
+        })
+      )}
+    </Card>
+  );
+
+  const renderFeedItem = ({ item }: ListRenderItemInfo<MandaliFeedItem>) => {
+    if (item.type === 'post' || item.type === 'blendedPost') return renderPost(item.post);
+    if (item.type === 'empty') {
+      return (
+        <EmptyState
+          icon="message-circle"
+          title={posts.length === 0 ? 'No posts yet' : 'No posts in this category'}
+          subtitle={posts.length === 0 ? 'Be the first to share something with your Mandali.' : 'Try a different filter, or clear it to see everything.'}
+        />
+      );
+    }
+    if (item.type === 'blendHeader') {
+      return (
+        <View style={{ gap: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
+            <Text style={{ ...TYPE.section, fontSize: 10.5, color: theme.dim }}>Wider Community</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
+          </View>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: theme.dim, textAlign: 'center' }}>
+            Read from the wider Sanatani community while your local Mandali is set up
+          </Text>
+        </View>
+      );
+    }
+    return renderMembersCard();
+  };
+
+  const keyExtractor = (item: MandaliFeedItem) => {
+    if (item.type === 'post') return `post:${item.post.id}`;
+    if (item.type === 'blendedPost') return `blended:${item.post.id}`;
+    return item.type;
+  };
+
+  const renderFeedHeader = () => (
+    <>
+      <PressableSurface
+        haptic="selection"
+        onPress={() => router.back()}
+        accessibilityLabel="Back"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 16 }}
+      >
+        <Feather name="chevron-left" size={16} color={theme.dim} />
+        <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
+      </PressableSurface>
+
+      <LinearGradient
+        colors={isDark
+          ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+          : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          marginHorizontal: 16,
+          borderRadius: 28,
+          borderWidth: 1,
+          borderColor: theme.premiumBorder,
+          padding: 18,
+          gap: 14,
+          boxShadow: theme.shadow,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <View
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: 22,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.surface,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="users" size={24} color={theme.brand} />
+          </View>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Sacred Circle</Text>
+            <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 25, lineHeight: 31 }} numberOfLines={1}>
+              {profile?.mandaliName ?? 'Mandali'}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+              <Text style={{ color: theme.dim, ...TYPE.caption }}>
+                {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Find your local sangat'}
+              </Text>
+              {profile?.mandaliId && members.length > 0 ? (
+                <>
+                  <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
+                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                    {members.length} member{members.length === 1 ? '' : 's'}
+                  </Text>
+                </>
+              ) : null}
+            </View>
+          </View>
+        </View>
+
+        {profile?.mandaliId ? (
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <PressableSurface
+              onPress={() => setSheetVisible(true)}
+              style={{ flex: 1, minHeight: 46, borderRadius: 18, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+            >
+              <Feather name="edit-3" size={15} color={COLORS.ink} />
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Share with Mandali</Text>
+            </PressableSurface>
+            <PressableSurface haptic="selection" onPress={handleLeave} accessibilityLabel="Leave Mandali" style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="log-out" size={17} color={theme.dim} />
+            </PressableSurface>
+          </View>
+        ) : null}
+      </LinearGradient>
+
+      {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
+          {([
+            { value: 'all', label: 'All' },
+            { value: 'update', label: 'Updates' },
+            { value: 'event', label: 'Events' },
+            { value: 'question', label: 'Questions' },
+            { value: 'announcement', label: 'Announcements' },
+          ] as const).map((opt) => {
+            const active = activeFilter === opt.value;
+            return (
+              <PressableSurface
+                key={opt.value}
+                haptic="selection"
+                accessibilityLabel={`Filter: ${opt.label}`}
+                onPress={() => setActiveFilter(opt.value)}
+                style={{
+                  minHeight: 0,
+                  borderRadius: 999,
+                  paddingHorizontal: 14,
+                  paddingVertical: 9,
+                  backgroundColor: active ? theme.brandSoft : theme.card,
+                  borderWidth: 1,
+                  borderColor: active ? theme.brand : theme.premiumBorder,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? theme.brand : theme.dim }}>{opt.label}</Text>
+              </PressableSurface>
+            );
+          })}
+        </ScrollView>
+      ) : null}
+
+      {!profile?.mandaliId && profile ? (
+        <JoinMandaliPrompt
+          userId={profile.userId}
+          text={theme.text}
+          dim={theme.dim}
+          border={theme.border}
+          surface={theme.surface}
+          brand={theme.brand}
+          cardBg={theme.card}
+          onJoined={loadMandali}
+        />
+      ) : null}
+    </>
+  );
+
   if (loading) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
@@ -631,205 +878,21 @@ export default function MandaliScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView
+      <FlatList
+        data={feedItems}
+        renderItem={renderFeedItem}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={renderFeedHeader}
+        ListFooterComponent={
+          <SeekersNearYou seekers={seekers} loading={loadingSeekers} text={theme.text} dim={theme.dim} brand={theme.brand} cardBg={theme.card} border={theme.border} />
+        }
         contentContainerStyle={{ paddingBottom: 36, gap: 16 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
-      >
-        <PressableSurface
-          haptic="selection"
-          onPress={() => router.back()}
-          accessibilityLabel="Back"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 16 }}
-        >
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
-
-        <LinearGradient
-          colors={isDark
-            ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
-            : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            marginHorizontal: 16,
-            borderRadius: 28,
-            borderWidth: 1,
-            borderColor: theme.premiumBorder,
-            padding: 18,
-            gap: 14,
-            boxShadow: theme.shadow,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <View
-              style={{
-                width: 58,
-                height: 58,
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                backgroundColor: theme.surface,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Feather name="users" size={24} color={theme.brand} />
-            </View>
-            <View style={{ flex: 1, gap: 3 }}>
-              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Sacred Circle</Text>
-              <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 25, lineHeight: 31 }} numberOfLines={1}>
-                {profile?.mandaliName ?? 'Mandali'}
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                <Text style={{ color: theme.dim, ...TYPE.caption }}>
-                  {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Find your local sangat'}
-                </Text>
-                {profile?.mandaliId && members.length > 0 ? (
-                  <>
-                    <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
-                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                      {members.length} member{members.length === 1 ? '' : 's'}
-                    </Text>
-                  </>
-                ) : null}
-              </View>
-            </View>
-          </View>
-
-          {profile?.mandaliId ? (
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <PressableSurface
-                onPress={() => setSheetVisible(true)}
-                style={{ flex: 1, minHeight: 46, borderRadius: 18, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
-              >
-                <Feather name="edit-3" size={15} color={COLORS.ink} />
-                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Share with Mandali</Text>
-              </PressableSurface>
-              <PressableSurface haptic="selection" onPress={handleLeave} accessibilityLabel="Leave Mandali" style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}>
-                <Feather name="log-out" size={17} color={theme.dim} />
-              </PressableSurface>
-            </View>
-          ) : null}
-        </LinearGradient>
-
-        {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
-            {([
-              { value: 'all', label: 'All' },
-              { value: 'update', label: 'Updates' },
-              { value: 'event', label: 'Events' },
-              { value: 'question', label: 'Questions' },
-              { value: 'announcement', label: 'Announcements' },
-            ] as const).map((opt) => {
-              const active = activeFilter === opt.value;
-              return (
-                <PressableSurface
-                  key={opt.value}
-                  haptic="selection"
-                  accessibilityLabel={`Filter: ${opt.label}`}
-                  onPress={() => setActiveFilter(opt.value)}
-                  style={{
-                    minHeight: 0,
-                    borderRadius: 999,
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    backgroundColor: active ? theme.brandSoft : theme.card,
-                    borderWidth: 1,
-                    borderColor: active ? theme.brand : theme.premiumBorder,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? theme.brand : theme.dim }}>{opt.label}</Text>
-                </PressableSurface>
-              );
-            })}
-          </ScrollView>
-        ) : null}
-
-        {!profile?.mandaliId ? (
-          profile ? (
-            <JoinMandaliPrompt
-              userId={profile.userId}
-              text={theme.text}
-              dim={theme.dim}
-              border={theme.border}
-              surface={theme.surface}
-              brand={theme.brand}
-              cardBg={theme.card}
-              onJoined={loadMandali}
-            />
-          ) : null
-        ) : (
-          <>
-            {filteredPosts.length === 0 ? (
-              <EmptyState
-                icon="message-circle"
-                title={posts.length === 0 ? 'No posts yet' : 'No posts in this category'}
-                subtitle={posts.length === 0 ? 'Be the first to share something with your Mandali.' : 'Try a different filter, or clear it to see everything.'}
-              />
-            ) : (
-              filteredPosts.map(renderPost)
-            )}
-
-            {filteredBlendedPosts.length > 0 ? (
-              <View style={{ gap: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
-                  <Text style={{ ...TYPE.section, fontSize: 10.5, color: theme.dim }}>Wider Community</Text>
-                  <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
-                </View>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: theme.dim, textAlign: 'center' }}>
-                  Read from the wider Sanatani community while your local Mandali is set up
-                </Text>
-                {filteredBlendedPosts.map(renderPost)}
-              </View>
-            ) : null}
-
-            <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={{ width: 38, height: 38, borderRadius: 15, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name="users" size={16} color={theme.brand} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Members</Text>
-                  <Text style={{ color: theme.text, ...TYPE.label }}>{members.length} in your circle</Text>
-                </View>
-              </View>
-              {members.length === 0 ? (
-                <EmptyState icon="users" title="No members yet" subtitle="Your local Mandali has not surfaced any members here yet." />
-              ) : (
-                members.map((member, idx) => {
-                  const isOwnMember = member.id === profile?.userId;
-                  return (
-                    <View key={member.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ width: 20, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>{idx + 1}</Text>
-                      <View style={{ flex: 1, marginLeft: 8 }}>
-                        <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14 }}>
-                          {member.full_name}
-                          {isOwnMember ? <Text style={{ color: theme.brand }}> (you)</Text> : null}
-                        </Text>
-                        <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>{member.spiritual_level ?? 'Seeker'}</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{member.seva_score} seva</Text>
-                        {!isOwnMember && (
-                          <PressableSurface haptic="selection" onPress={() => void reportMember(member.id)} style={{ minHeight: 0, padding: 4 }} hitSlop={10}>
-                            <Feather name="slash" size={14} color={theme.dim} />
-                          </PressableSurface>
-                        )}
-                      </View>
-                    </View>
-                  );
-                })
-              )}
-            </Card>
-          </>
-        )}
-
-        <SeekersNearYou seekers={seekers} loading={loadingSeekers} text={theme.text} dim={theme.dim} brand={theme.brand} cardBg={theme.card} border={theme.border} />
-      </ScrollView>
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+      />
 
       <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => setSheetVisible(false)}>
         <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end' }}>
