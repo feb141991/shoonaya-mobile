@@ -22,7 +22,7 @@ import { JoinMandaliPrompt } from '@/components/mandali/JoinMandaliPrompt';
 import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
-import { COLORS, FONTS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import {
@@ -114,9 +114,13 @@ export default function MandaliScreen() {
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       surface: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+      soft: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+      premiumBorder: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
+      brandSoft: isDark ? COLORS.homeSoftDark : COLORS.brandSoftLight,
+      shadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
     }),
     [isDark]
   );
@@ -454,10 +458,10 @@ export default function MandaliScreen() {
         tone="auto"
         style={{
           backgroundColor: theme.card,
-          borderColor: theme.border,
+          borderColor: theme.premiumBorder,
           gap: 12,
           padding: 16,
-          borderRadius: 16, // rounded-2xl
+          borderRadius: 22,
           // Legacy shadowColor/shadowOffset/shadowOpacity/shadowRadius/
           // elevation quintet removed — this repo's own SHADOWS convention
           // (lib/constants.ts) renders shadows via boxShadow strings, which
@@ -477,7 +481,7 @@ export default function MandaliScreen() {
             />
           ) : (
             <LinearGradient
-              colors={[theme.brand, '#D4A646']}
+              colors={[theme.brand, COLORS.brandGoldLight]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -504,7 +508,7 @@ export default function MandaliScreen() {
                 {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
               </Text>
               <View style={{ flex: 1 }} />
-              <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 10.5 }}>
                 {post.type.toUpperCase()}
               </Text>
               {!isOwnPost && (
@@ -522,8 +526,8 @@ export default function MandaliScreen() {
               <View
                 style={{
                   marginTop: 10,
-                  backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
-                  borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+                  backgroundColor: theme.soft,
+                  borderColor: theme.premiumBorder,
                   borderWidth: 1,
                   borderRadius: 12,
                   paddingHorizontal: 12,
@@ -543,7 +547,7 @@ export default function MandaliScreen() {
                     {post.event_location ? ` • 📍 ${post.event_location}` : ''}
                   </Text>
                   {new Date(post.event_date).getTime() < Date.now() ? (
-                    <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.border }}>
+                    <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.surface }}>
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
                     </View>
                   ) : null}
@@ -570,12 +574,12 @@ export default function MandaliScreen() {
                 <Ionicons
                   name={isUpvoted ? 'heart' : 'heart-outline'}
                   size={14}
-                  color={isUpvoted ? '#f43f5e' : theme.dim}
+                  color={isUpvoted ? COLORS.danger : theme.dim}
                 />
                 {post.upvotes > 0 && (
                   <Text
                     style={{
-                      color: isUpvoted ? '#f43f5e' : theme.dim,
+                      color: isUpvoted ? COLORS.danger : theme.dim,
                       fontFamily: FONTS.sansSemiBold,
                       fontSize: 12,
                     }}
@@ -608,7 +612,7 @@ export default function MandaliScreen() {
           onSubmit={(body) => void submitComment(post.id, body)}
           text={theme.text}
           dim={theme.dim}
-          border={theme.border}
+          border={theme.premiumBorder}
           brand={theme.brand}
         />
       </Card>
@@ -628,7 +632,7 @@ export default function MandaliScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 28, gap: 16 }}
+        contentContainerStyle={{ paddingBottom: 36, gap: 16 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >
@@ -643,39 +647,73 @@ export default function MandaliScreen() {
           <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
         </PressableSurface>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: theme.text, ...TYPE.screenTitle }}>{profile?.mandaliName ?? 'Mandali'}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
-                {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Sacred circle'}
+        <LinearGradient
+          colors={isDark
+            ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+            : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            marginHorizontal: 16,
+            borderRadius: 28,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            padding: 18,
+            gap: 14,
+            boxShadow: theme.shadow,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <View
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="users" size={24} color={theme.brand} />
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Sacred Circle</Text>
+              <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 25, lineHeight: 31 }} numberOfLines={1}>
+                {profile?.mandaliName ?? 'Mandali'}
               </Text>
-              {profile?.mandaliId && members.length > 0 ? (
-                <>
-                  <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
-                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                    {members.length} member{members.length === 1 ? '' : 's'}
-                  </Text>
-                </>
-              ) : null}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                <Text style={{ color: theme.dim, ...TYPE.caption }}>
+                  {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Find your local sangat'}
+                </Text>
+                {profile?.mandaliId && members.length > 0 ? (
+                  <>
+                    <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
+                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      {members.length} member{members.length === 1 ? '' : 's'}
+                    </Text>
+                  </>
+                ) : null}
+              </View>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {profile?.mandaliId ? (
-              <>
-                <PressableSurface
-                  onPress={() => setSheetVisible(true)}
-                  style={{ minHeight: 0, borderRadius: 18, backgroundColor: theme.brand, paddingHorizontal: 14, paddingVertical: 10 }}
-                >
-                  <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Post</Text>
-                </PressableSurface>
-                <PressableSurface haptic="selection" onPress={handleLeave} style={{ minHeight: 0, borderRadius: 18, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 12, paddingVertical: 10 }}>
-                  <Feather name="log-out" size={16} color={theme.dim} />
-                </PressableSurface>
-              </>
-            ) : null}
-          </View>
-        </View>
+
+          {profile?.mandaliId ? (
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <PressableSurface
+                onPress={() => setSheetVisible(true)}
+                style={{ flex: 1, minHeight: 46, borderRadius: 18, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+              >
+                <Feather name="edit-3" size={15} color={COLORS.ink} />
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Share with Mandali</Text>
+              </PressableSurface>
+              <PressableSurface haptic="selection" onPress={handleLeave} accessibilityLabel="Leave Mandali" style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="log-out" size={17} color={theme.dim} />
+              </PressableSurface>
+            </View>
+          ) : null}
+        </LinearGradient>
 
         {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
@@ -696,14 +734,14 @@ export default function MandaliScreen() {
                   style={{
                     minHeight: 0,
                     borderRadius: 999,
-                    paddingHorizontal: 13,
-                    paddingVertical: 8,
-                    backgroundColor: active ? theme.brand : theme.card,
+                    paddingHorizontal: 14,
+                    paddingVertical: 9,
+                    backgroundColor: active ? theme.brandSoft : theme.card,
                     borderWidth: 1,
-                    borderColor: active ? theme.brand : theme.border,
+                    borderColor: active ? theme.brand : theme.premiumBorder,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? COLORS.ink : theme.dim }}>{opt.label}</Text>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? theme.brand : theme.dim }}>{opt.label}</Text>
                 </PressableSurface>
               );
             })}
@@ -738,9 +776,9 @@ export default function MandaliScreen() {
             {filteredBlendedPosts.length > 0 ? (
               <View style={{ gap: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>GLOBAL SABHA</Text>
-                  <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
+                  <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
+                  <Text style={{ ...TYPE.section, fontSize: 10.5, color: theme.dim }}>Wider Community</Text>
+                  <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
                 </View>
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: theme.dim, textAlign: 'center' }}>
                   Read from the wider Sanatani community while your local Mandali is set up
@@ -749,8 +787,16 @@ export default function MandaliScreen() {
               </View>
             ) : null}
 
-            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>Members</Text>
+            <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 15, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="users" size={16} color={theme.brand} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Members</Text>
+                  <Text style={{ color: theme.text, ...TYPE.label }}>{members.length} in your circle</Text>
+                </View>
+              </View>
               {members.length === 0 ? (
                 <EmptyState icon="users" title="No members yet" subtitle="Your local Mandali has not surfaced any members here yet." />
               ) : (
@@ -787,8 +833,17 @@ export default function MandaliScreen() {
 
       <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => setSheetVisible(false)}>
         <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, gap: 14 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>Create post</Text>
+          <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, gap: 14, borderWidth: 1, borderColor: theme.premiumBorder }}>
+            <View style={{ alignSelf: 'center', width: 52, height: 4, borderRadius: 999, backgroundColor: theme.premiumBorder, marginBottom: 2 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="edit-3" size={16} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Mandali Post</Text>
+                <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 22, lineHeight: 27 }}>Create post</Text>
+              </View>
+            </View>
 
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
               {(['update', 'question', 'announcement', 'event'] as const).map((type) => {
@@ -802,13 +857,13 @@ export default function MandaliScreen() {
                       minHeight: 0,
                       borderRadius: 999,
                       borderWidth: 1,
-                      borderColor: active ? theme.brand : theme.border,
-                      backgroundColor: active ? theme.brand : theme.bg,
+                      borderColor: active ? theme.brand : theme.premiumBorder,
+                      backgroundColor: active ? theme.brandSoft : theme.bg,
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                     }}
                   >
-                    <Text style={{ color: active ? COLORS.ink : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{type}</Text>
+                    <Text style={{ color: active ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{type}</Text>
                   </PressableSurface>
                 );
               })}
@@ -824,7 +879,7 @@ export default function MandaliScreen() {
                 minHeight: 120,
                 borderRadius: 16,
                 borderWidth: 1,
-                borderColor: theme.border,
+                borderColor: theme.premiumBorder,
                 backgroundColor: theme.bg,
                 paddingHorizontal: 14,
                 paddingVertical: 12,
@@ -842,26 +897,26 @@ export default function MandaliScreen() {
                   onChangeText={setComposeEventLoc}
                   placeholder="Location (optional)"
                   placeholderTextColor={theme.dim}
-                  style={{ borderRadius: 14, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text }}
+                  style={{ borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text }}
                 />
                 <TextInput
                   value={composeEventDate}
                   onChangeText={setComposeEventDate}
                   placeholder="Date & time — e.g. 2026-07-12T18:00"
                   placeholderTextColor={theme.dim}
-                  style={{ borderRadius: 14, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text }}
+                  style={{ borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text }}
                 />
               </>
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <PressableSurface haptic="selection" onPress={() => setSheetVisible(false)} style={{ minHeight: 0, flex: 1, borderRadius: 16, borderWidth: 1, borderColor: theme.border, paddingVertical: 14, alignItems: 'center' }}>
+              <PressableSurface haptic="selection" onPress={() => setSheetVisible(false)} style={{ minHeight: 0, flex: 1, borderRadius: 16, borderWidth: 1, borderColor: theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Cancel</Text>
               </PressableSurface>
               <PressableSurface
                 onPress={() => void submitPost()}
                 disabled={posting || !composeBody.trim()}
-                style={{ minHeight: 0, flex: 1, borderRadius: 16, backgroundColor: composeBody.trim() ? theme.brand : theme.border, paddingVertical: 14, alignItems: 'center' }}
+                style={{ minHeight: 0, flex: 1, borderRadius: 16, backgroundColor: composeBody.trim() ? theme.brand : theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{posting ? 'Posting...' : 'Post'}</Text>
               </PressableSurface>
