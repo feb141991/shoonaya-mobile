@@ -69,7 +69,6 @@ function toneStyle(tone: RashiHoroscope['transitHighlights'][number]['tone']) {
   return { bg: COLORS.homeSoftLight, border: COLORS.homeBorderSoftLight, color: COLORS.brandEarthLight };
 }
 
-
 export default function RashiphalaScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -209,7 +208,9 @@ export default function RashiphalaScreen() {
                   paddingVertical: 10,
                   borderRadius: 16,
                   borderWidth: 1,
-                  backgroundColor: isSelected ? theme.card : theme.glass,
+                  backgroundColor: isSelected
+                    ? theme.brandSoft
+                    : isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
                   borderColor: isSelected ? theme.brand : theme.premiumBorder,
                   boxShadow: isSelected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                 }}
@@ -259,13 +260,38 @@ export default function RashiphalaScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48, gap: 14 }}>
           {/* Main Card */}
-          <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
+          <LinearGradient
+            colors={isDark
+              ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+              : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              padding: 18,
+              gap: 14,
+              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            }}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
+              <View
+                style={{
+                  width: 58,
+                  height: 58,
+                  borderRadius: 21,
+                  backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <Text style={{ fontSize: 32 }}>{data.symbol}</Text>
               </View>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 20, lineHeight: 24 }}>
+                <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 21, lineHeight: 25 }}>
                   {data.rashiSanskrit} ({data.rashi})
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 13 }}>
@@ -279,7 +305,7 @@ export default function RashiphalaScreen() {
               <View style={{ height: 1, backgroundColor: theme.premiumBorder, marginVertical: 6 }} />
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>{data.accuracyNote}</Text>
             </View>
-          </Card>
+          </LinearGradient>
 
           {/* Transit Highlights */}
           <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 16 }}>
@@ -327,11 +353,15 @@ export default function RashiphalaScreen() {
 
           {/* Practice Guidance */}
           <LinearGradient
-            colors={isDark ? [COLORS.cardBgDark, COLORS.surfaceSoftDark] : [COLORS.homeRaisedLight, COLORS.cardBgLight]}
+            colors={isDark
+              ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+              : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: theme.brand,
+              borderColor: theme.premiumBorder,
               padding: 18,
               gap: 16,
               boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
@@ -352,7 +382,7 @@ export default function RashiphalaScreen() {
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 22 }}>{data.sadhanaFocus}</Text>
             <View style={{ gap: 10 }}>
               {data.sadhanaPlan.map((step) => (
-                <View key={step.label} style={{ backgroundColor: theme.bg, borderColor: theme.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
+                <View key={step.label} style={{ backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
                   <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{step.label}</Text>
                   <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{step.action}</Text>
                 </View>
