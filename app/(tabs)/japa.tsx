@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
@@ -1497,20 +1497,37 @@ export default function JapaScreen() {
       const isCurrent = index === activeIndex;
       const isSumeru = index === 0;
 
-      const r = isSumeru ? 11.5 : isCurrent ? 9.5 : isDone ? 6.4 : 5.2;
+      const r = isSumeru ? 13 : isCurrent ? 10.8 : isDone ? 7.2 : 5.8;
       const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
+      const shadowOpacity = isCurrent ? 0.38 : isDone ? 0.28 : 0.18;
+      const highlightOpacity = isCurrent ? 0.76 : isDone ? 0.48 : 0.32;
 
       return (
-        <Circle
-          key={`bead-${index}`}
-          cx={x}
-          cy={y}
-          r={r}
-          fill={`url(#${gradientId})`}
-          stroke={isCurrent ? theme.brand : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
-          strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.35 : 0.65}
-          strokeOpacity={isDone || isCurrent ? 0.95 : 0.72}
-        />
+        <Fragment key={`bead-${index}`}>
+          <Circle
+            cx={x + r * 0.18}
+            cy={y + r * 0.22}
+            r={r}
+            fill={malaSkin.beadBorder}
+            opacity={shadowOpacity}
+          />
+          <Circle
+            cx={x}
+            cy={y}
+            r={r}
+            fill={`url(#${gradientId})`}
+            stroke={isCurrent ? theme.brand : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
+            strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.35 : 0.65}
+            strokeOpacity={isDone || isCurrent ? 0.95 : 0.72}
+          />
+          <Circle
+            cx={x - r * 0.34}
+            cy={y - r * 0.38}
+            r={Math.max(1.1, r * 0.24)}
+            fill={COLORS.onMediaWhite}
+            opacity={highlightOpacity}
+          />
+        </Fragment>
       );
     });
   }
@@ -1535,19 +1552,20 @@ export default function JapaScreen() {
 
   const beadGradientDefs = (
     <Defs>
-      <RadialGradient id="grad-inactive" cx="30%" cy="30%" r="70%">
-        <Stop offset="0%" stopColor={malaSkin.beadColor} stopOpacity="0.55" />
-        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="0.55" />
+      <RadialGradient id="grad-inactive" cx="28%" cy="24%" r="78%">
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.42" />
+        <Stop offset="42%" stopColor={malaSkin.beadColor} stopOpacity="0.5" />
+        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="0.58" />
       </RadialGradient>
-      <RadialGradient id="grad-done" cx="30%" cy="30%" r="70%">
+      <RadialGradient id="grad-done" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
-        <Stop offset="35%" stopColor={malaSkin.beadColor} stopOpacity="1" />
-        <Stop offset="100%" stopColor={theme.brand} stopOpacity="1" />
+        <Stop offset="38%" stopColor={malaSkin.beadColor} stopOpacity="1" />
+        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
       </RadialGradient>
-      <RadialGradient id="grad-active" cx="30%" cy="30%" r="70%">
+      <RadialGradient id="grad-active" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
-        <Stop offset="30%" stopColor={theme.brand} stopOpacity="1" />
-        <Stop offset="100%" stopColor={COLORS.brandEarthLight} stopOpacity="1" />
+        <Stop offset="32%" stopColor={theme.brand} stopOpacity="1" />
+        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
       </RadialGradient>
     </Defs>
   );
@@ -2027,9 +2045,9 @@ export default function JapaScreen() {
                   >
                     <Svg width={56} height={56}>
                       <Defs>
-                        <RadialGradient id={`mala-bead-${id}`} cx="30%" cy="30%" r="70%">
-                          <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.85" />
-                          <Stop offset="45%" stopColor={skin.beadColor} stopOpacity="1" />
+                        <RadialGradient id={`mala-bead-${id}`} cx="28%" cy="24%" r="78%">
+                          <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
+                          <Stop offset="42%" stopColor={skin.beadColor} stopOpacity="1" />
                           <Stop offset="100%" stopColor={skin.beadBorder} stopOpacity="1" />
                         </RadialGradient>
                       </Defs>
@@ -2038,17 +2056,22 @@ export default function JapaScreen() {
                       {Array.from({ length: 18 }, (_, index) => {
                         const angle = (Math.PI * 2 * index) / 18 - Math.PI / 2;
                         const isGuru = index === 0;
-                        const r = isGuru ? 4 : 2.6;
+                        const r = isGuru ? 4.8 : 3.1;
+                        const cx = 28 + Math.cos(angle) * 22;
+                        const cy = 28 + Math.sin(angle) * 22;
                         return (
-                          <Circle
-                            key={index}
-                            cx={28 + Math.cos(angle) * 22}
-                            cy={28 + Math.sin(angle) * 22}
-                            r={r}
-                            fill={`url(#mala-bead-${id})`}
-                            stroke={skin.beadBorder}
-                            strokeWidth={0.6}
-                          />
+                          <Fragment key={index}>
+                            <Circle cx={cx + r * 0.18} cy={cy + r * 0.24} r={r} fill={skin.beadBorder} opacity={0.28} />
+                            <Circle
+                              cx={cx}
+                              cy={cy}
+                              r={r}
+                              fill={`url(#mala-bead-${id})`}
+                              stroke={skin.beadBorder}
+                              strokeWidth={0.55}
+                            />
+                            <Circle cx={cx - r * 0.35} cy={cy - r * 0.38} r={Math.max(0.8, r * 0.25)} fill={COLORS.onMediaWhite} opacity={0.58} />
+                          </Fragment>
                         );
                       })}
                     </Svg>
