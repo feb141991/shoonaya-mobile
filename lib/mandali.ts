@@ -133,6 +133,12 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ city: 
   return { city: json.city as string, country: (json.country as string) ?? '' };
 }
 
+function parseErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  return fallback;
+}
+
 export async function fetchNearbyMandalis(lat: number, lon: number): Promise<NearbyMandali[]> {
   const LAT_DELTA = NEARBY_MANDALI_RADIUS_KM / 111;
   const LON_DELTA = NEARBY_MANDALI_RADIUS_KM / 85;
@@ -214,14 +220,23 @@ export async function joinMandaliForLocation(userId: string, city: string, count
 // a server-side ban check (assertNotBanned via an admin client) before the
 // write — native reuses the same route rather than duplicating that check
 // client-side without admin access.
-export async function joinExistingMandali(mandaliId: string): Promise<void> {
+export async function joinExistingMandali(
+  mandaliId: string,
+  location?: { city?: string; country?: string; lat?: number; lon?: number } | null
+): Promise<void> {
   const res = await apiFetch('/api/mandali/join', {
     method: 'POST',
-    body: JSON.stringify({ mandali_id: mandaliId }),
+    body: JSON.stringify({
+      mandali_id: mandaliId,
+      city: location?.city,
+      country: location?.country,
+      latitude: location?.lat,
+      longitude: location?.lon,
+    }),
   });
   if (!res.ok) {
     const json = await res.json().catch(() => ({}));
-    throw new Error(json.error || 'Join failed');
+    throw new Error(parseErrorMessage(json.error, 'Join failed'));
   }
 }
 

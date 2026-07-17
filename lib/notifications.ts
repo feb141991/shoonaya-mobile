@@ -99,6 +99,11 @@ function getExpoProjectId(): string | null {
   return fromExtra ?? fromEasConfig ?? null;
 }
 
+function hasNotificationPermission(permission: Notifications.NotificationPermissionsStatus) {
+  const normalized = permission as { granted?: boolean; status?: string };
+  return normalized.granted === true || normalized.status === 'granted';
+}
+
 /**
  * OS-level permission prompt only — no token fetch/registration. Used by
  * the two call sites that want to trigger the prompt at a specific moment
@@ -114,10 +119,10 @@ function getExpoProjectId(): string | null {
 export async function requestNotificationPermission(): Promise<boolean> {
   if (isExpoGo) return false;
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    if (existingStatus === 'granted') return true;
-    const { status } = await Notifications.requestPermissionsAsync();
-    return status === 'granted';
+    const existing = await Notifications.getPermissionsAsync();
+    if (hasNotificationPermission(existing)) return true;
+    const requested = await Notifications.requestPermissionsAsync();
+    return hasNotificationPermission(requested);
   } catch {
     return false;
   }
@@ -135,13 +140,9 @@ export async function registerPushToken(userId: string) {
   if (isExpoGo || !userId) return;
 
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') return;
+    const existing = await Notifications.getPermissionsAsync();
+    const finalPermission = hasNotificationPermission(existing) ? existing : await Notifications.requestPermissionsAsync();
+    if (!hasNotificationPermission(finalPermission)) return;
 
     const projectId = getExpoProjectId();
     if (!projectId) {

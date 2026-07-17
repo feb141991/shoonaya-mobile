@@ -7,6 +7,26 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { fetchNearbyMandalis, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
 
+const LOCATION_TIMEOUT_MS = 10000;
+
+async function getPositionWithFallback() {
+  try {
+    return await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      new Promise<Location.LocationObject>((_, reject) => {
+        setTimeout(() => reject(new Error('Location lookup timed out')), LOCATION_TIMEOUT_MS);
+      }),
+    ]);
+  } catch (error) {
+    const lastKnown = await Location.getLastKnownPositionAsync({
+      maxAge: 10 * 60 * 1000,
+      requiredAccuracy: 5000,
+    });
+    if (lastKnown) return lastKnown;
+    throw error;
+  }
+}
+
 // Port of PWA's NoMandaliPrompt (src/app/(main)/mandali/MandaliClient.tsx
 // lines ~453-830): GPS-detect city → reverse-geocode via the shared web
 // proxy → show nearby existing Mandalis (join by id) alongside a "find/
@@ -46,6 +66,9 @@ export function JoinMandaliPrompt({
     setLoadingNearby(true);
     try {
       setNearby(await fetchNearbyMandalis(lat, lon));
+    } catch (error) {
+      console.error('[JoinMandaliPrompt] fetchNearbyMandalis failed', error);
+      setNearby([]);
     } finally {
       setLoadingNearby(false);
     }
@@ -60,7 +83,7 @@ export function JoinMandaliPrompt({
         setGeoError('Location permission denied. Enter your city below instead.');
         return;
       }
-      const current = await Location.getCurrentPositionAsync({});
+      const current = await getPositionWithFallback();
       const { latitude: lat, longitude: lon } = current.coords;
       const geocoded = await reverseGeocode(lat, lon);
       if (!geocoded?.city) {
@@ -82,6 +105,10 @@ export function JoinMandaliPrompt({
       setGeoError('Enter a city first.');
       return;
     }
+    if (!manualCountry.trim()) {
+      setGeoError('Enter a country too, so we can create the right Mandali.');
+      return;
+    }
     setGeoError('');
     setDetected({ city: manualCity.trim(), country: manualCountry.trim() });
     setNearby([]);
@@ -89,6 +116,10 @@ export function JoinMandaliPrompt({
 
   const joinMine = async () => {
     if (!detected?.city) return;
+    if (!detected.country.trim()) {
+      setGeoError('Country is required to join your Mandali. Add it below and try again.');
+      return;
+    }
     setJoiningMine(true);
     try {
       await joinMandaliForLocation(userId, detected.city, detected.country, detected.lat, detected.lon);
@@ -104,7 +135,7 @@ export function JoinMandaliPrompt({
   const joinById = async (mandaliId: string) => {
     setJoiningId(mandaliId);
     try {
-      await joinExistingMandali(mandaliId);
+      await joinExistingMandali(mandaliId, detected);
       await onJoined();
     } catch (error) {
       console.error('[JoinMandaliPrompt] joinExistingMandali failed', error);
