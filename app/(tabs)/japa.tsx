@@ -100,6 +100,7 @@ const RADIUS = 120;
 const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2;
 const PRACTICE_RADIUS = 142;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
+const MAX_TARGET_ROUNDS = 108;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
 const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
@@ -161,11 +162,28 @@ function TargetRoundSelector({
   theme,
   isDark,
 }: {
-  value: (typeof TARGET_OPTIONS)[number];
-  onChange: (value: (typeof TARGET_OPTIONS)[number]) => void;
+  value: number;
+  onChange: (value: number) => void;
   theme: Theme;
   isDark: boolean;
 }) {
+  const [customValue, setCustomValue] = useState(TARGET_OPTIONS.includes(value as (typeof TARGET_OPTIONS)[number]) ? '' : String(value));
+  const customNumber = Number(customValue);
+  const customSelected = !TARGET_OPTIONS.includes(value as (typeof TARGET_OPTIONS)[number]);
+  const customValid = Number.isInteger(customNumber) && customNumber >= 1 && customNumber <= MAX_TARGET_ROUNDS;
+
+  useEffect(() => {
+    if (!TARGET_OPTIONS.includes(value as (typeof TARGET_OPTIONS)[number])) {
+      setCustomValue(String(value));
+    }
+  }, [value]);
+
+  const commitCustomValue = () => {
+    if (!customValid) return;
+    void Haptics.selectionAsync().catch(() => {});
+    onChange(customNumber);
+  };
+
   return (
     <View style={{ gap: 10 }}>
       <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: theme.dim }}>
@@ -217,6 +235,72 @@ function TargetRoundSelector({
             </View>
           );
         })}
+      </View>
+      <View
+        style={{
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: customSelected ? theme.brand : theme.premiumBorder,
+          backgroundColor: customSelected
+            ? theme.brandSoft
+            : isDark
+              ? COLORS.selectionWellDark
+              : COLORS.selectionWellLight,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          gap: 8,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: customSelected ? theme.brand : theme.text }}>
+              Custom target
+            </Text>
+            <Text style={{ ...TYPE.caption, color: theme.dim }}>
+              1-{MAX_TARGET_ROUNDS} malas
+            </Text>
+          </View>
+          <TextInput
+            accessibilityLabel="Custom target rounds"
+            keyboardType="number-pad"
+            value={customValue}
+            onChangeText={(text) => setCustomValue(text.replace(/[^0-9]/g, '').slice(0, 3))}
+            onSubmitEditing={commitCustomValue}
+            onBlur={commitCustomValue}
+            placeholder="e.g. 7"
+            placeholderTextColor={theme.dim}
+            style={{
+              width: 82,
+              minHeight: MIN_TOUCH_TARGET,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: customSelected ? theme.brand : theme.premiumBorder,
+              backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.cardBgLight,
+              color: theme.text,
+              textAlign: 'center',
+              fontFamily: FONTS.sansSemiBold,
+              fontSize: 16,
+              paddingHorizontal: 10,
+            }}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Apply custom target rounds"
+            disabled={!customValid}
+            onPress={commitCustomValue}
+            style={{
+              minWidth: MIN_TOUCH_TARGET,
+              minHeight: MIN_TOUCH_TARGET,
+              borderRadius: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: customValid ? theme.brand : theme.premiumBorder,
+              opacity: customValid ? 1 : 0.55,
+            }}
+          >
+            <Feather name="check" size={18} color={customValid ? COLORS.ink : theme.dim} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -863,7 +947,7 @@ export default function JapaScreen() {
   const [showStopSheet, setShowStopSheet] = useState(false);
   const [stopSaving, setStopSaving] = useState(false);
 
-  const [targetRounds, setTargetRounds] = useState<(typeof TARGET_OPTIONS)[number]>(1);
+  const [targetRounds, setTargetRounds] = useState(1);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [durationSecs, setDurationSecs] = useState(0);
 
@@ -996,8 +1080,8 @@ export default function JapaScreen() {
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
         const parsedRounds = rounds ? Number(rounds) : 1;
-        if (TARGET_OPTIONS.includes(parsedRounds as (typeof TARGET_OPTIONS)[number])) {
-          setTargetRounds(parsedRounds as (typeof TARGET_OPTIONS)[number]);
+        if (Number.isInteger(parsedRounds) && parsedRounds >= 1 && parsedRounds <= MAX_TARGET_ROUNDS) {
+          setTargetRounds(parsedRounds);
         }
         if (lifetimeRaw) {
           try {
