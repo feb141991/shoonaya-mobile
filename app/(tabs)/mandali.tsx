@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -83,6 +83,224 @@ function getInitials(name: string): string {
   if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
+
+type MandaliTheme = {
+  bg: string;
+  card: string;
+  border: string;
+  surface: string;
+  soft: string;
+  premiumBorder: string;
+  text: string;
+  dim: string;
+  brand: string;
+  brandSoft: string;
+  shadow: string;
+};
+
+type MandaliPostCardProps = {
+  post: PostRow;
+  userId: string | null;
+  comments: CommentRow[];
+  rsvps: RsvpRow[];
+  isUpvoted: boolean;
+  expanded: boolean;
+  postingComment: boolean;
+  theme: MandaliTheme;
+  onRsvp: (postId: string, status: RsvpStatus) => void;
+  onShowOptions: (post: PostRow) => void;
+  onSubmitComment: (postId: string, body: string) => void;
+  onToggleComments: (postId: string) => void;
+  onToggleUpvote: (postId: string) => void;
+};
+
+const MandaliPostCard = memo(function MandaliPostCard({
+  post,
+  userId,
+  comments,
+  rsvps,
+  isUpvoted,
+  expanded,
+  postingComment,
+  theme,
+  onRsvp,
+  onShowOptions,
+  onSubmitComment,
+  onToggleComments,
+  onToggleUpvote,
+}: MandaliPostCardProps) {
+  const isOwnPost = post.author_id === userId;
+  const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
+  const eventDateLabel = post.event_date
+    ? new Date(post.event_date).toLocaleDateString('en-IN', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
+
+  return (
+    <Card
+      tone="auto"
+      style={{
+        backgroundColor: theme.card,
+        borderColor: theme.premiumBorder,
+        gap: 12,
+        padding: 16,
+        borderRadius: 22,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+        {post.profiles?.avatar_url ? (
+          <Image source={{ uri: post.profiles.avatar_url }} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
+        ) : (
+          <LinearGradient
+            colors={[theme.brand, COLORS.brandGoldLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+              {getInitials(post.profiles?.full_name ?? post.profiles?.username ?? '?')}
+            </Text>
+          </LinearGradient>
+        )}
+
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
+            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+              {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
+            </Text>
+            <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
+              {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+            </Text>
+            <View style={{ flex: 1 }} />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: theme.surface,
+                paddingHorizontal: 9,
+                paddingVertical: 4,
+              }}
+            >
+              <Feather name={postTypeMeta.icon} size={10} color={theme.brand} />
+              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9.5 }}>{postTypeMeta.label}</Text>
+            </View>
+            {!isOwnPost && (
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel={`More options for ${post.profiles?.full_name ?? post.profiles?.username ?? 'this post'}`}
+                onPress={() => onShowOptions(post)}
+                style={{ minHeight: 0, paddingLeft: 4 }}
+                hitSlop={10}
+              >
+                <Feather name="more-horizontal" size={16} color={theme.dim} />
+              </PressableSurface>
+            )}
+          </View>
+
+          <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{post.content}</Text>
+
+          {post.type === 'event' && post.event_date ? (
+            <View
+              style={{
+                marginTop: 10,
+                backgroundColor: theme.soft,
+                borderColor: theme.premiumBorder,
+                borderWidth: 1,
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                gap: 4,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ flex: 1, gap: 5 }}>
+                  {eventDateLabel ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name="calendar" size={13} color={theme.brand} />
+                      <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>{eventDateLabel}</Text>
+                    </View>
+                  ) : null}
+                  {post.event_location ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name="map-pin" size={13} color={theme.brand} />
+                      <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{post.event_location}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {new Date(post.event_date).getTime() < Date.now() ? (
+                  <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.surface }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
+                  </View>
+                ) : null}
+              </View>
+              <EventRsvpBar
+                postId={post.id}
+                rsvps={rsvps}
+                userId={userId ?? ''}
+                brand={theme.brand}
+                border={theme.border}
+                surface={theme.surface}
+                dim={theme.dim}
+                onRsvp={onRsvp}
+              />
+            </View>
+          ) : null}
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 12 }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={isUpvoted ? 'Remove upvote' : 'Upvote post'}
+              onPress={() => onToggleUpvote(post.id)}
+              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              hitSlop={10}
+            >
+              <Ionicons name={isUpvoted ? 'heart' : 'heart-outline'} size={14} color={isUpvoted ? COLORS.danger : theme.dim} />
+              {post.upvotes > 0 ? (
+                <Text style={{ color: isUpvoted ? COLORS.danger : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{post.upvotes}</Text>
+              ) : null}
+            </PressableSurface>
+
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={expanded ? 'Hide comments' : 'Show comments'}
+              onPress={() => onToggleComments(post.id)}
+              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              hitSlop={10}
+            >
+              <Feather name="message-square" size={13} color={theme.dim} />
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
+                {post.comment_count > 0 ? post.comment_count : 'Comment'}
+              </Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </View>
+
+      <PostComments
+        comments={comments}
+        expanded={expanded}
+        onToggleExpand={() => onToggleComments(post.id)}
+        userId={userId ?? ''}
+        posting={postingComment}
+        onSubmit={(body) => onSubmitComment(post.id, body)}
+        text={theme.text}
+        dim={theme.dim}
+        border={theme.premiumBorder}
+        brand={theme.brand}
+      />
+    </Card>
+  );
+});
 
 // Native Mandali screen — full parity pass against PWA's real
 // implementation (src/app/(main)/mandali/*, src/lib/api/mandali.ts,
@@ -504,217 +722,30 @@ export default function MandaliScreen() {
     ]);
   }, [loadMandali, profile]);
 
+  const toggleComments = useCallback((postId: string) => {
+    setExpandedPostId((current) => (current === postId ? null : postId));
+  }, []);
+
   const renderPost = useCallback((post: PostRow) => {
-    const isOwnPost = post.author_id === profile?.userId;
-    const postComments = commentsByPost.get(post.id) ?? [];
-    const postRsvps = rsvpsByPost.get(post.id) ?? [];
-    const isUpvoted = upvotedIdSet.has(post.id);
-    const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
-    const eventDateLabel = post.event_date
-      ? new Date(post.event_date).toLocaleDateString('en-IN', {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      : null;
-
     return (
-      <Card
+      <MandaliPostCard
         key={post.id}
-        tone="auto"
-        style={{
-          backgroundColor: theme.card,
-          borderColor: theme.premiumBorder,
-          gap: 12,
-          padding: 16,
-          borderRadius: 22,
-          // Legacy shadowColor/shadowOffset/shadowOpacity/shadowRadius/
-          // elevation quintet removed — this repo's own SHADOWS convention
-          // (lib/constants.ts) renders shadows via boxShadow strings, which
-          // it documents as already supported cross-platform (RN 0.85.3,
-          // newArchEnabled: true), so the manual quintet was redundant with
-          // Card's own boxShadow (applied via Surface/tone="auto" above),
-          // not a required Android-only effect.
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-          {/* Avatar rendering */}
-          {post.profiles?.avatar_url ? (
-            <Image
-              source={{ uri: post.profiles.avatar_url }}
-              style={{ width: 36, height: 36, borderRadius: 18 }}
-              contentFit="cover"
-            />
-          ) : (
-            <LinearGradient
-              colors={[theme.brand, COLORS.brandGoldLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                {getInitials(post.profiles?.full_name ?? post.profiles?.username ?? '?')}
-              </Text>
-            </LinearGradient>
-          )}
-
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
-                {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
-              </Text>
-              <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
-                {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-              </Text>
-              <View style={{ flex: 1 }} />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: theme.surface,
-                  paddingHorizontal: 9,
-                  paddingVertical: 4,
-                }}
-              >
-                <Feather name={postTypeMeta.icon} size={10} color={theme.brand} />
-                <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9.5 }}>
-                  {postTypeMeta.label}
-                </Text>
-              </View>
-              {!isOwnPost && (
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityLabel={`More options for ${post.profiles?.full_name ?? post.profiles?.username ?? 'this post'}`}
-                  onPress={() => showPostOptions(post)}
-                  style={{ minHeight: 0, paddingLeft: 4 }}
-                  hitSlop={10}
-                >
-                  <Feather name="more-horizontal" size={16} color={theme.dim} />
-                </PressableSurface>
-              )}
-            </View>
-
-            <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>
-              {post.content}
-            </Text>
-
-            {post.type === 'event' && post.event_date ? (
-              <View
-                style={{
-                  marginTop: 10,
-                  backgroundColor: theme.soft,
-                  borderColor: theme.premiumBorder,
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  gap: 4,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ flex: 1, gap: 5 }}>
-                    {eventDateLabel ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Feather name="calendar" size={13} color={theme.brand} />
-                        <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>{eventDateLabel}</Text>
-                      </View>
-                    ) : null}
-                    {post.event_location ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Feather name="map-pin" size={13} color={theme.brand} />
-                        <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{post.event_location}</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  {new Date(post.event_date).getTime() < Date.now() ? (
-                    <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.surface }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
-                    </View>
-                  ) : null}
-                </View>
-                <EventRsvpBar
-                  postId={post.id}
-                  rsvps={postRsvps}
-                  userId={profile?.userId ?? ''}
-                  brand={theme.brand}
-                  border={theme.border}
-                  surface={theme.surface}
-                  dim={theme.dim}
-                  onRsvp={handleRsvp}
-                />
-              </View>
-            ) : null}
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 12 }}>
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel={isUpvoted ? 'Remove upvote' : 'Upvote post'}
-                onPress={() => void toggleUpvote(post.id)}
-                style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                hitSlop={10}
-              >
-                <Ionicons
-                  name={isUpvoted ? 'heart' : 'heart-outline'}
-                  size={14}
-                  color={isUpvoted ? COLORS.danger : theme.dim}
-                />
-                {post.upvotes > 0 && (
-                  <Text
-                    style={{
-                      color: isUpvoted ? COLORS.danger : theme.dim,
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 12,
-                    }}
-                  >
-                    {post.upvotes}
-                  </Text>
-                )}
-              </PressableSurface>
-
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel={expandedPostId === post.id ? 'Hide comments' : 'Show comments'}
-                onPress={() => setExpandedPostId((current) => (current === post.id ? null : post.id))}
-                style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                hitSlop={10}
-              >
-                <Feather name="message-square" size={13} color={theme.dim} />
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
-                  {post.comment_count > 0 ? post.comment_count : 'Comment'}
-                </Text>
-              </PressableSurface>
-            </View>
-          </View>
-        </View>
-
-        <PostComments
-          comments={postComments}
-          expanded={expandedPostId === post.id}
-          onToggleExpand={() => setExpandedPostId((current) => (current === post.id ? null : post.id))}
-          userId={profile?.userId ?? ''}
-          posting={commenting === post.id}
-          onSubmit={(body) => void submitComment(post.id, body)}
-          text={theme.text}
-          dim={theme.dim}
-          border={theme.premiumBorder}
-          brand={theme.brand}
-        />
-      </Card>
+        post={post}
+        userId={profile?.userId ?? null}
+        comments={commentsByPost.get(post.id) ?? []}
+        rsvps={rsvpsByPost.get(post.id) ?? []}
+        isUpvoted={upvotedIdSet.has(post.id)}
+        expanded={expandedPostId === post.id}
+        postingComment={commenting === post.id}
+        theme={theme}
+        onRsvp={handleRsvp}
+        onShowOptions={showPostOptions}
+        onSubmitComment={submitComment}
+        onToggleComments={toggleComments}
+        onToggleUpvote={toggleUpvote}
+      />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, profile?.userId, rsvpsByPost, showPostOptions, submitComment, theme, toggleUpvote, upvotedIdSet]);
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, profile?.userId, rsvpsByPost, showPostOptions, submitComment, theme, toggleComments, toggleUpvote, upvotedIdSet]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
