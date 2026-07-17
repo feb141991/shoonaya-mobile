@@ -94,11 +94,11 @@ const EMPTY_LIFETIME: JapaLifetimeData = { totalBeads: 0, totalRounds: 0, lastPr
 
 const HISTORY_LIMIT = 12;
 const SVG_SIZE = 320;
-const PRACTICE_SVG_SIZE = 356;
+const PRACTICE_SVG_SIZE = 382;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
 const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2;
-const PRACTICE_RADIUS = 142;
+const PRACTICE_RADIUS = 162;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
@@ -558,6 +558,42 @@ function AmbientGlow({
   );
 }
 
+function SceneBreath({ color }: { color: string }) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(progress, { toValue: 1, duration: 6200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(progress, { toValue: 0, duration: 6200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [progress]);
+
+  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [0.14, 0.32] });
+  const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.08] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: '22%',
+        left: '50%',
+        marginLeft: -150,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: color,
+        opacity,
+        transform: [{ scale }],
+      }}
+    />
+  );
+}
+
 // Temple Lamp — an irregularly flickering warm glow near the top, mimicking
 // a diya flame (random-duration opacity/scale jitter rather than a smooth
 // loop, since a real flame never pulses evenly).
@@ -722,21 +758,21 @@ const SCENE_PARTICLES: Record<
   JapaSceneId,
   { count: number; color: string; minSize: number; maxSize: number; motion: ParticleMotion; minDuration: number; maxDuration: number }
 > = {
-  midnight: { count: 16, color: 'rgba(255,255,255,0.85)', minSize: 1.4, maxSize: 3, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
-  himalayan: { count: 10, color: 'rgba(255,222,175,0.85)', minSize: 1.8, maxSize: 3.4, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
-  temple: { count: 9, color: 'rgba(255,176,102,0.9)', minSize: 2, maxSize: 3.6, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
-  river: { count: 12, color: 'rgba(190,225,255,0.75)', minSize: 1.6, maxSize: 3, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
-  forest: { count: 12, color: 'rgba(198,230,180,0.85)', minSize: 1.8, maxSize: 3.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
-  cosmos: { count: 26, color: 'rgba(255,255,255,0.9)', minSize: 1, maxSize: 2.6, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
+  midnight: { count: 20, color: 'rgba(255,255,255,0.9)', minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
+  himalayan: { count: 14, color: 'rgba(255,222,175,0.9)', minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
+  temple: { count: 13, color: 'rgba(255,176,102,0.95)', minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
+  river: { count: 14, color: 'rgba(190,225,255,0.82)', minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
+  forest: { count: 16, color: 'rgba(198,230,180,0.9)', minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
+  cosmos: { count: 30, color: 'rgba(255,255,255,0.95)', minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
 };
 
 const SCENE_GLOW: Record<JapaSceneId, string> = {
-  midnight: 'rgba(150,170,255,0.16)',
-  himalayan: 'rgba(255,196,120,0.20)',
-  temple: 'rgba(255,140,60,0.20)',
-  river: 'rgba(120,200,255,0.16)',
-  forest: 'rgba(130,210,140,0.18)',
-  cosmos: 'rgba(180,140,255,0.20)',
+  midnight: 'rgba(150,170,255,0.24)',
+  himalayan: 'rgba(255,196,120,0.28)',
+  temple: 'rgba(255,140,60,0.30)',
+  river: 'rgba(120,200,255,0.24)',
+  forest: 'rgba(130,210,140,0.26)',
+  cosmos: 'rgba(180,140,255,0.30)',
 };
 
 function JapaSceneArt({ sceneId, isDark }: { sceneId: JapaSceneId; isDark: boolean }) {
@@ -834,6 +870,7 @@ function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
 
   return (
     <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <SceneBreath color={glowColor} />
       <AmbientGlow color={glowColor} size={230} cornerX="left" cornerY="top" seed={11} />
       <AmbientGlow color={glowColor} size={200} cornerX="right" cornerY="bottom" seed={23} />
       {particles.map((p) => (
@@ -1460,7 +1497,7 @@ export default function JapaScreen() {
       const isCurrent = index === activeIndex;
       const isSumeru = index === 0;
 
-      const r = isSumeru ? 10 : isCurrent ? 8.5 : isDone ? 5.8 : 4.8;
+      const r = isSumeru ? 11.5 : isCurrent ? 9.5 : isDone ? 6.4 : 5.2;
       const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
 
       return (
@@ -1481,9 +1518,9 @@ export default function JapaScreen() {
   const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS), [count]);
   const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS), [bloomIndex]);
 
-  const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 18] });
-  const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] });
-  const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [9, 22] });
+  const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 22] });
+  const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.58, 0] });
+  const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [11, 26] });
   const bloomOpacity = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] });
   const geometryOpacity = geometryAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
   const tapScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
