@@ -8,34 +8,51 @@ import {
   View,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { getAshramaMeta, getAshramaDuties, type LifeStage, type GenderContext, type AshramaDuty } from '@/lib/ashrama';
 
 function getFeatherIcon(name: string): keyof typeof Feather.glyphMap {
   const map: Record<string, keyof typeof Feather.glyphMap> = {
-    kul: 'users',
-    mandali: 'users',
-    landmark: 'map-pin',
-    sparkles: 'star',
     activity: 'activity',
+    book: 'book-open',
+    compass: 'compass',
+    flame: 'sun',
+    flower: 'aperture',
+    heart: 'heart',
+    kul: 'users',
+    landmark: 'map-pin',
+    mandali: 'users',
+    moon: 'moon',
+    mountain: 'triangle',
+    music: 'music',
+    scroll: 'file-text',
+    shield: 'shield',
+    sparkles: 'star',
+    star: 'star',
+    sun: 'sun',
+    sunrise: 'sunrise',
+    tree: 'git-branch',
+    water: 'droplet',
+    wind: 'wind',
   };
   const resolved = map[name] || name;
   return resolved as keyof typeof Feather.glyphMap;
 }
 
-const ASHRAMA_OPTIONS: { key: LifeStage; emoji: string; title: string; desc: string }[] = [
-  { key: 'brahmacharya', emoji: '⭐', title: 'Vidhyarthi / Student', desc: 'A stage for study, discipline, learning, and self-purification.' },
-  { key: 'grihastha', emoji: '🛕', title: 'Grihasthi / Householder', desc: 'A stage for career, family duty, social charity, and work.' },
-  { key: 'vanaprastha', emoji: '🌳', title: 'Bujurg / Forest Dweller', desc: 'A stage for gradual withdrawal, mentoring, and simple living.' },
-  { key: 'sannyasa', emoji: '💨', title: 'Seva-Mukt / Renunciate', desc: 'A stage for deep contemplation, service, and complete surrender.' },
+const ASHRAMA_OPTIONS: { key: LifeStage; icon: keyof typeof Feather.glyphMap; title: string; desc: string }[] = [
+  { key: 'brahmacharya', icon: 'book-open', title: 'Vidhyarthi / Student', desc: 'A stage for study, discipline, learning, and self-purification.' },
+  { key: 'grihastha', icon: 'home', title: 'Grihasthi / Householder', desc: 'A stage for career, family duty, social charity, and work.' },
+  { key: 'vanaprastha', icon: 'sunrise', title: 'Bujurg / Forest Dweller', desc: 'A stage for gradual withdrawal, mentoring, and simple living.' },
+  { key: 'sannyasa', icon: 'wind', title: 'Seva-Mukt / Renunciate', desc: 'A stage for deep contemplation, service, and complete surrender.' },
 ];
 
 export default function NityaAshramaScreen() {
@@ -183,14 +200,49 @@ export default function NityaAshramaScreen() {
             <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
           </PressableSurface>
 
-          <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Ashrama Dharma</Text>
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: -8 }}>
-            Select the life stage that best matches where you are. Your daily dharma duties will be personalised.
-          </Text>
+          <LinearGradient
+            colors={isDark
+              ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+              : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 26,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              padding: 20,
+              gap: 12,
+              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 22,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="sun" size={24} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Life-stage Dharma</Text>
+                <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 24, lineHeight: 29 }}>Ashrama Dharma</Text>
+                <Text style={{ color: theme.dim, ...TYPE.caption }}>
+                  Select the life stage that best matches where you are. Your duties will be personalised.
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
 
           {/* Gender Context Selection */}
-          <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Practice Context</Text>
+          <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10 }}>
+            <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Practice Context</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {(['general', 'female'] as const).map((g) => {
                 const active = selectedGender === g;
@@ -204,8 +256,8 @@ export default function NityaAshramaScreen() {
                       paddingVertical: 10,
                       borderRadius: 12,
                       borderWidth: 1,
-                      borderColor: active ? theme.brand : theme.border,
-                      backgroundColor: active ? theme.brandSoft : theme.bg,
+                      borderColor: active ? theme.brand : theme.premiumBorder,
+                      backgroundColor: active ? theme.brandSoft : (isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight),
                       alignItems: 'center',
                     }}
                   >
@@ -229,16 +281,30 @@ export default function NityaAshramaScreen() {
                   onPress={() => setSelectedStage(opt.key)}
                   style={{
                     backgroundColor: active ? theme.brandSoft : theme.card,
-                    borderColor: active ? theme.brand : theme.border,
+                    borderColor: active ? theme.brand : theme.premiumBorder,
                     borderWidth: active ? 1.5 : 1,
-                    borderRadius: 16,
+                    borderRadius: 20,
                     padding: 16,
                     flexDirection: 'row',
                     gap: 14,
                     alignItems: 'center',
+                    boxShadow: active ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                   }}
                 >
-                  <Text style={{ fontSize: 28 }}>{opt.emoji}</Text>
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: active ? theme.brand : theme.premiumBorder,
+                      backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Feather name={opt.icon} size={20} color={active ? theme.brand : theme.text} />
+                  </View>
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{opt.title}</Text>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16 }}>{opt.desc}</Text>
@@ -286,22 +352,50 @@ export default function NityaAshramaScreen() {
           </PressableSurface>
         </View>
 
-        <View style={{ gap: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ color: meta.accent, fontFamily: FONTS.sansSemiBold, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 }}>
-              {meta.label} Stage ({meta.ageRange} years)
-            </Text>
+        <LinearGradient
+          colors={isDark
+            ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+            : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            borderRadius: 26,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            padding: 20,
+            gap: 12,
+            boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <View
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name={getFeatherIcon(meta.icon)} size={24} color={theme.brand} />
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>
+                {meta.label} Stage ({meta.ageRange} years)
+              </Text>
+              <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 24, lineHeight: 29 }}>
+                Ashrama Dharma
+              </Text>
+              <Text style={{ color: theme.dim, ...TYPE.caption }}>{meta.subtitle}</Text>
+            </View>
           </View>
-          <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>
-            Ashrama Dharma
-          </Text>
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
-            {meta.subtitle}
-          </Text>
-        </View>
+        </LinearGradient>
 
         {/* Progress Card */}
-        <Card style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+        <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10 }}>
           <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
             {completedCount} of {duties.length} reflected today
           </Text>
@@ -321,7 +415,7 @@ export default function NityaAshramaScreen() {
                 onPress={() => toggleDuty(duty.id)}
                 style={{
                   backgroundColor: isChecked ? COLORS.successBg : theme.card,
-                  borderColor: isChecked ? COLORS.successBorder : theme.border,
+                  borderColor: isChecked ? COLORS.successBorder : theme.premiumBorder,
                   borderWidth: 1,
                   borderRadius: 20,
                   padding: 14,
@@ -331,8 +425,8 @@ export default function NityaAshramaScreen() {
                 }}
               >
                 {/* Custom icon mapping if SacredIcon has it, else generic */}
-                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name={getFeatherIcon(duty.icon)} size={18} color={theme.text} />
+                <View style={{ width: 42, height: 42, borderRadius: 16, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name={getFeatherIcon(duty.icon)} size={18} color={isChecked ? COLORS.success : theme.brand} />
                 </View>
 
                 <View style={{ flex: 1 }}>
