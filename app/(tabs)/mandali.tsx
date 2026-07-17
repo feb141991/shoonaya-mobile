@@ -70,6 +70,13 @@ type MandaliFeedItem =
   | { type: 'blendedPost'; post: PostRow }
   | { type: 'members' };
 
+const POST_TYPE_META: Record<MandaliPostType, { label: string; icon: keyof typeof Feather.glyphMap }> = {
+  update: { label: 'Update', icon: 'message-circle' },
+  question: { label: 'Question', icon: 'help-circle' },
+  announcement: { label: 'Announcement', icon: 'volume-2' },
+  event: { label: 'Event', icon: 'calendar' },
+};
+
 function getInitials(name: string): string {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -456,6 +463,13 @@ export default function MandaliScreen() {
     }
   }, [profile]);
 
+  const showMemberOptions = useCallback((member: MemberRow) => {
+    Alert.alert(member.full_name ?? 'Mandali member', 'Choose an action for this member.', [
+      { text: 'Report member', onPress: () => void reportMember(member.id) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, [reportMember]);
+
   const submitPost = useCallback(async () => {
     if (!profile?.mandaliId || !composeBody.trim()) return;
     setPosting(true);
@@ -495,6 +509,16 @@ export default function MandaliScreen() {
     const postComments = commentsByPost.get(post.id) ?? [];
     const postRsvps = rsvpsByPost.get(post.id) ?? [];
     const isUpvoted = upvotedIdSet.has(post.id);
+    const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
+    const eventDateLabel = post.event_date
+      ? new Date(post.event_date).toLocaleDateString('en-IN', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : null;
 
     return (
       <Card
@@ -552,11 +576,32 @@ export default function MandaliScreen() {
                 {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
               </Text>
               <View style={{ flex: 1 }} />
-              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 10.5 }}>
-                {post.type.toUpperCase()}
-              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: theme.surface,
+                  paddingHorizontal: 9,
+                  paddingVertical: 4,
+                }}
+              >
+                <Feather name={postTypeMeta.icon} size={10} color={theme.brand} />
+                <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9.5 }}>
+                  {postTypeMeta.label}
+                </Text>
+              </View>
               {!isOwnPost && (
-                <PressableSurface haptic="selection" onPress={() => showPostOptions(post)} style={{ minHeight: 0, paddingLeft: 4 }} hitSlop={10}>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityLabel={`More options for ${post.profiles?.full_name ?? post.profiles?.username ?? 'this post'}`}
+                  onPress={() => showPostOptions(post)}
+                  style={{ minHeight: 0, paddingLeft: 4 }}
+                  hitSlop={10}
+                >
                   <Feather name="more-horizontal" size={16} color={theme.dim} />
                 </PressableSurface>
               )}
@@ -580,16 +625,20 @@ export default function MandaliScreen() {
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>
-                    📅 {new Date(post.event_date).toLocaleDateString('en-IN', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                    {post.event_location ? ` • 📍 ${post.event_location}` : ''}
-                  </Text>
+                  <View style={{ flex: 1, gap: 5 }}>
+                    {eventDateLabel ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Feather name="calendar" size={13} color={theme.brand} />
+                        <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>{eventDateLabel}</Text>
+                      </View>
+                    ) : null}
+                    {post.event_location ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Feather name="map-pin" size={13} color={theme.brand} />
+                        <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{post.event_location}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                   {new Date(post.event_date).getTime() < Date.now() ? (
                     <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.surface }}>
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
@@ -612,8 +661,10 @@ export default function MandaliScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 12 }}>
               <PressableSurface
                 haptic="selection"
+                accessibilityLabel={isUpvoted ? 'Remove upvote' : 'Upvote post'}
                 onPress={() => void toggleUpvote(post.id)}
                 style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                hitSlop={10}
               >
                 <Ionicons
                   name={isUpvoted ? 'heart' : 'heart-outline'}
@@ -635,8 +686,10 @@ export default function MandaliScreen() {
 
               <PressableSurface
                 haptic="selection"
+                accessibilityLabel={expandedPostId === post.id ? 'Hide comments' : 'Show comments'}
                 onPress={() => setExpandedPostId((current) => (current === post.id ? null : post.id))}
                 style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                hitSlop={10}
               >
                 <Feather name="message-square" size={13} color={theme.dim} />
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
@@ -692,8 +745,14 @@ export default function MandaliScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{member.seva_score} seva</Text>
                 {!isOwnMember && (
-                  <PressableSurface haptic="selection" onPress={() => void reportMember(member.id)} style={{ minHeight: 0, padding: 4 }} hitSlop={10}>
-                    <Feather name="slash" size={14} color={theme.dim} />
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityLabel={`More options for ${member.full_name ?? 'member'}`}
+                    onPress={() => showMemberOptions(member)}
+                    style={{ minHeight: 0, padding: 4 }}
+                    hitSlop={10}
+                  >
+                    <Feather name="more-horizontal" size={15} color={theme.dim} />
                   </PressableSurface>
                 )}
               </View>
@@ -702,7 +761,7 @@ export default function MandaliScreen() {
         })
       )}
     </Card>
-  ), [members, profile?.userId, reportMember, theme]);
+  ), [members, profile?.userId, showMemberOptions, theme]);
 
   const renderFeedItem = useCallback(({ item }: ListRenderItemInfo<MandaliFeedItem>) => {
     if (item.type === 'post' || item.type === 'blendedPost') return renderPost(item.post);
@@ -843,9 +902,10 @@ export default function MandaliScreen() {
                   backgroundColor: active ? theme.brandSoft : theme.card,
                   borderWidth: 1,
                   borderColor: active ? theme.brand : theme.premiumBorder,
+                  boxShadow: active ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: active ? theme.brand : theme.dim }}>{opt.label}</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: active ? theme.brand : theme.dim }}>{opt.label}</Text>
               </PressableSurface>
             );
           })}
