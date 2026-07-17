@@ -60,6 +60,14 @@ const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   progress: require('@/assets/icons/progress.png'),
 };
 
+const FULL_COLOR_ASSETS = new Set<SacredIconName>([
+  'japa',
+  'mandali',
+  'nitya',
+  'panchang',
+  'pathshala',
+]);
+
 type SacredIconProps = {
   name: SacredIconName;
   // Required, not optional: this is what every call site already rendered
@@ -78,13 +86,15 @@ type SacredIconProps = {
 
 export function SacredIcon({ name, fallbackGlyph, size = 20, color }: SacredIconProps) {
   const asset = ICON_ASSETS[name];
+  const renderFullColor = FULL_COLOR_ASSETS.has(name);
+  const renderedSize = renderFullColor ? Math.round(size * 1.35) : size;
 
   if (asset) {
     return (
       <Image
         source={asset}
-        style={{ width: size, height: size }}
-        tintColor={color as string}
+        style={{ width: renderedSize, height: renderedSize }}
+        tintColor={renderFullColor ? undefined : (color as string)}
         contentFit="contain"
         accessibilityIgnoresInvertColors
       />
