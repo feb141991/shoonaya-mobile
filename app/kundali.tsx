@@ -184,23 +184,38 @@ export default function KundaliScreen() {
     >
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16, paddingTop: 14 }}>
         <LinearGradient
-          colors={isDark ? [COLORS.cardBgDark, COLORS.surfaceSoftDark] : [COLORS.homeRaisedLight, COLORS.cardBgLight]}
+          colors={isDark
+            ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+            : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{
             borderRadius: 24,
             borderWidth: 1,
             borderColor: theme.premiumBorder,
-            padding: 18,
+            padding: 20,
             gap: 12,
             boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <View style={{ width: 56, height: 56, borderRadius: 20, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="map" size={23} color={theme.brand} />
+            <View
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="aperture" size={24} color={theme.brand} />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Birth Chart</Text>
-              <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 22, lineHeight: 26 }}>Generate and explore birth charts</Text>
+              <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 23, lineHeight: 28 }}>Generate and explore birth charts</Text>
               <Text style={{ color: theme.dim, ...TYPE.caption }}>Lagna, Rashi, birth city, and saved profiles.</Text>
             </View>
           </View>
@@ -218,8 +233,19 @@ export default function KundaliScreen() {
 
         {profiles.length === 0 ? (
           <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, alignItems: 'center', padding: 28, gap: 10 }}>
-            <View style={{ width: 58, height: 58, borderRadius: 22, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="user-plus" size={24} color={theme.brand} />
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 24,
+                backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="star" size={25} color={theme.brand} />
             </View>
             <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 20 }}>No profiles yet</Text>
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
@@ -235,7 +261,7 @@ export default function KundaliScreen() {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
                   <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
-                    <Feather name={p.is_primary ? 'star' : 'disc'} size={18} color={theme.brand} />
+                    <Feather name={p.is_primary ? 'star' : 'aperture'} size={18} color={theme.brand} />
                   </View>
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 18 }} numberOfLines={1}>{p.label}</Text>
@@ -279,7 +305,11 @@ export default function KundaliScreen() {
 
           <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 34 }}>
             <LinearGradient
-              colors={isDark ? [COLORS.cardBgDark, COLORS.surfaceSoftDark] : [COLORS.homeRaisedLight, COLORS.cardBgLight]}
+              colors={isDark
+                ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+                : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
                 borderRadius: 24,
                 borderWidth: 1,
@@ -292,7 +322,7 @@ export default function KundaliScreen() {
               }}
             >
               <View style={{ width: 46, height: 46, borderRadius: 17, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-                <Feather name="compass" size={20} color={theme.brand} />
+                <Feather name="aperture" size={20} color={theme.brand} />
               </View>
               <View style={{ flex: 1, gap: 3 }}>
                 <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Chart details</Text>

@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
-import { FONTS } from '@/lib/constants';
+import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
@@ -63,14 +63,14 @@ const INITIAL_STATE: PanchangState = {
   city: '',
 };
 
-const CREAM = '#F2EAD6';
-const GOLD = '#C5A059';
+const CREAM = COLORS.creamBg;
+const GOLD = COLORS.brandGoldDark;
 
 const TRADITION_META: Record<string, { badge: string; accent: string }> = {
-  hindu: { badge: '🕉️ Vedic', accent: '#B8541B' },
-  sikh: { badge: '☬ Nanakshahi', accent: '#1a4d7b' },
-  buddhist: { badge: '☸️ Buddhist', accent: '#5c6b1a' },
-  jain: { badge: '🤲 Jain', accent: '#7b5a1a' },
+  hindu: { badge: 'Vedic', accent: COLORS.brandPrimaryStrongLight },
+  sikh: { badge: 'Nanakshahi', accent: COLORS.navy },
+  buddhist: { badge: 'Buddhist', accent: COLORS.brandEarthLight },
+  jain: { badge: 'Jain', accent: COLORS.sage },
 };
 
 type SkyPhase = 'night' | 'predawn' | 'dawn' | 'morning' | 'afternoon' | 'dusk' | 'evening';
@@ -95,16 +95,17 @@ function getSkyPhase(nowMin: number, sunriseMin: number, sunsetMin: number): Sky
   return 'night';
 }
 
-// Ported 1:1 from PWA's SKY_GRADIENTS — expo-linear-gradient wants a plain
-// color-stop array rather than a CSS string.
+// Adapted from the PWA living-sky idea, but warmed into the native
+// Shoonaya ivory/sandalwood/gold palette so Panchang matches the rest of
+// the app instead of reading as a separate blue-purple feature.
 const SKY_GRADIENTS: Record<SkyPhase, [string, string, string]> = {
-  night: ['#050508', '#0a0a1a', '#080812'],
-  predawn: ['#080812', '#0f0a20', '#1a0830'],
-  dawn: ['#1a0a28', '#5c1f3a', '#c45c2a'],
-  morning: ['#1e4a8a', '#3a7ab8', '#d4885a'],
-  afternoon: ['#1a3a6e', '#2d5a9e', '#4a7ac0'],
-  dusk: ['#1a1030', '#5c1a1a', '#c44820'],
-  evening: ['#080512', '#1a0828', '#2a0a1a'],
+  night: [COLORS.darkBg, '#17100B', '#24170D'],
+  predawn: ['#100B08', '#26170D', '#5F3A16'],
+  dawn: ['#2A170D', '#9F6314', '#F6E8CF'],
+  morning: ['#744817', COLORS.brandGoldLight, '#F6E8CF'],
+  afternoon: ['#5F3A16', '#B97924', '#F5E8D4'],
+  dusk: ['#2A170D', '#7A2F18', '#D4784A'],
+  evening: ['#120C08', '#2C1C11', '#5F3A16'],
 };
 
 const SKY_ORB: Record<SkyPhase, { color: string; size: number; opacity: number }> = {
