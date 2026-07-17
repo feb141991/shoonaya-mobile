@@ -320,6 +320,7 @@ export default function MandaliScreen() {
     () => (activeFilter === 'all' ? blendedPosts : blendedPosts.filter((p) => p.type === activeFilter)),
     [blendedPosts, activeFilter]
   );
+  const upvotedIdSet = useMemo(() => new Set(upvotedIds), [upvotedIds]);
   const commentsByPost = useMemo(() => {
     const grouped = new Map<string, CommentRow[]>();
     for (const comment of comments) {
@@ -355,9 +356,9 @@ export default function MandaliScreen() {
     return items;
   }, [filteredBlendedPosts, filteredPosts, profile?.mandaliId]);
 
-  const toggleUpvote = async (postId: string) => {
+  const toggleUpvote = useCallback(async (postId: string) => {
     if (!profile) return;
-    const alreadyUpvoted = upvotedIds.includes(postId);
+    const alreadyUpvoted = upvotedIdSet.has(postId);
     const targetList = posts.some((p) => p.id === postId) ? setPosts : setBlendedPosts;
 
     setUpvotedIds((current) => (alreadyUpvoted ? current.filter((id) => id !== postId) : [...current, postId]));
@@ -367,9 +368,9 @@ export default function MandaliScreen() {
       ? await supabase.from('post_upvotes').delete().match({ post_id: postId, user_id: profile.userId })
       : await supabase.from('post_upvotes').insert({ post_id: postId, user_id: profile.userId });
     if (result.error) void loadMandali();
-  };
+  }, [loadMandali, posts, profile, upvotedIdSet]);
 
-  const submitComment = async (postId: string, body: string) => {
+  const submitComment = useCallback(async (postId: string, body: string) => {
     if (!profile) return;
     setCommenting(postId);
     try {
@@ -380,9 +381,9 @@ export default function MandaliScreen() {
     } finally {
       setCommenting(null);
     }
-  };
+  }, [loadMandali, profile]);
 
-  const handleRsvp = async (postId: string, status: RsvpStatus) => {
+  const handleRsvp = useCallback(async (postId: string, status: RsvpStatus) => {
     if (!profile) return;
     try {
       await updateMandaliRsvp({ postId, userId: profile.userId, status });
@@ -390,21 +391,13 @@ export default function MandaliScreen() {
     } catch {
       Alert.alert('Could not RSVP', 'Check your connection and try again.');
     }
-  };
-
-  const showPostOptions = (post: PostRow) => {
-    Alert.alert('Options', 'Choose an action for this post or user.', [
-      { text: 'Report Post', onPress: () => void handleReportPost(post) },
-      { text: 'Block User', style: 'destructive', onPress: () => handleBlockUser(post.author_id, post.profiles?.full_name ?? 'this user') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  };
+  }, [loadMandali, profile]);
 
   // Each of these now actually awaits the write and only shows a success
   // alert once it has genuinely succeeded — lib/mandali.ts's report/block
   // functions previously swallowed errors, so these chains would show
   // "Reported"/"Blocked" even on a failed network call or DB rejection.
-  const submitPostReport = async (post: PostRow, reason: string) => {
+  const submitPostReport = useCallback(async (post: PostRow, reason: string) => {
     if (!profile) return;
     try {
       await reportMandaliPost(profile.userId, post, reason);
@@ -412,9 +405,9 @@ export default function MandaliScreen() {
     } catch {
       Alert.alert('Could not submit report', 'Check your connection and try again.');
     }
-  };
+  }, [profile]);
 
-  const handleReportPost = (post: PostRow) => {
+  const handleReportPost = useCallback((post: PostRow) => {
     if (!profile) return;
     Alert.alert('Report Post', 'Why are you reporting this post?', [
       { text: 'Spam / Commercial', onPress: () => void submitPostReport(post, 'Spam/Commercial') },
@@ -422,9 +415,9 @@ export default function MandaliScreen() {
       { text: 'Inappropriate / Offensive', onPress: () => void submitPostReport(post, 'Inappropriate/Offensive') },
       { text: 'Cancel', style: 'cancel' },
     ]);
-  };
+  }, [profile, submitPostReport]);
 
-  const handleBlockUser = (authorId: string, userName: string) => {
+  const handleBlockUser = useCallback((authorId: string, userName: string) => {
     if (!profile) return;
     Alert.alert('Block User', `Block ${userName}? You will no longer see their posts or members list entries — on any device.`, [
       { text: 'Cancel', style: 'cancel' },
@@ -443,9 +436,17 @@ export default function MandaliScreen() {
           })(),
       },
     ]);
-  };
+  }, [loadMandali, profile]);
 
-  const reportMember = async (memberId: string) => {
+  const showPostOptions = useCallback((post: PostRow) => {
+    Alert.alert('Options', 'Choose an action for this post or user.', [
+      { text: 'Report Post', onPress: () => void handleReportPost(post) },
+      { text: 'Block User', style: 'destructive', onPress: () => handleBlockUser(post.author_id, post.profiles?.full_name ?? 'this user') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, [handleBlockUser, handleReportPost]);
+
+  const reportMember = useCallback(async (memberId: string) => {
     if (!profile) return;
     try {
       await reportMandaliMember(profile.userId, memberId);
@@ -453,9 +454,9 @@ export default function MandaliScreen() {
     } catch {
       Alert.alert('Could not submit report', 'Check your connection and try again.');
     }
-  };
+  }, [profile]);
 
-  const submitPost = async () => {
+  const submitPost = useCallback(async () => {
     if (!profile?.mandaliId || !composeBody.trim()) return;
     setPosting(true);
     try {
@@ -479,21 +480,21 @@ export default function MandaliScreen() {
     } finally {
       setPosting(false);
     }
-  };
+  }, [composeBody, composeEventDate, composeEventLoc, composeType, loadMandali, profile]);
 
-  const handleLeave = () => {
+  const handleLeave = useCallback(() => {
     if (!profile) return;
     Alert.alert('Leave Mandali', `Leave ${profile.mandaliName ?? 'your Mandali'}? You can rejoin any time.`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Leave', style: 'destructive', onPress: () => void leaveMandali(profile.userId).then(() => loadMandali()) },
     ]);
-  };
+  }, [loadMandali, profile]);
 
-  const renderPost = (post: PostRow) => {
+  const renderPost = useCallback((post: PostRow) => {
     const isOwnPost = post.author_id === profile?.userId;
     const postComments = commentsByPost.get(post.id) ?? [];
     const postRsvps = rsvpsByPost.get(post.id) ?? [];
-    const isUpvoted = upvotedIds.includes(post.id);
+    const isUpvoted = upvotedIdSet.has(post.id);
 
     return (
       <Card
@@ -660,9 +661,9 @@ export default function MandaliScreen() {
         />
       </Card>
     );
-  };
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, profile?.userId, rsvpsByPost, showPostOptions, submitComment, theme, toggleUpvote, upvotedIdSet]);
 
-  const renderMembersCard = () => (
+  const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 38, height: 38, borderRadius: 15, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
@@ -701,9 +702,9 @@ export default function MandaliScreen() {
         })
       )}
     </Card>
-  );
+  ), [members, profile?.userId, reportMember, theme]);
 
-  const renderFeedItem = ({ item }: ListRenderItemInfo<MandaliFeedItem>) => {
+  const renderFeedItem = useCallback(({ item }: ListRenderItemInfo<MandaliFeedItem>) => {
     if (item.type === 'post' || item.type === 'blendedPost') return renderPost(item.post);
     if (item.type === 'empty') {
       return (
@@ -729,15 +730,15 @@ export default function MandaliScreen() {
       );
     }
     return renderMembersCard();
-  };
+  }, [posts.length, renderMembersCard, renderPost, theme.dim, theme.premiumBorder]);
 
-  const keyExtractor = (item: MandaliFeedItem) => {
+  const keyExtractor = useCallback((item: MandaliFeedItem) => {
     if (item.type === 'post') return `post:${item.post.id}`;
     if (item.type === 'blendedPost') return `blended:${item.post.id}`;
     return item.type;
-  };
+  }, []);
 
-  const renderFeedHeader = () => (
+  const renderFeedHeader = useCallback(() => (
     <>
       <PressableSurface
         haptic="selection"
@@ -864,6 +865,20 @@ export default function MandaliScreen() {
         />
       ) : null}
     </>
+  ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, posts.length, profile, router, theme]);
+  const feedFooter = useMemo(
+    () => (
+      <SeekersNearYou
+        seekers={seekers}
+        loading={loadingSeekers}
+        text={theme.text}
+        dim={theme.dim}
+        brand={theme.brand}
+        cardBg={theme.card}
+        border={theme.border}
+      />
+    ),
+    [loadingSeekers, seekers, theme]
   );
 
   if (loading) {
@@ -883,9 +898,7 @@ export default function MandaliScreen() {
         renderItem={renderFeedItem}
         keyExtractor={keyExtractor}
         ListHeaderComponent={renderFeedHeader}
-        ListFooterComponent={
-          <SeekersNearYou seekers={seekers} loading={loadingSeekers} text={theme.text} dim={theme.dim} brand={theme.brand} cardBg={theme.card} border={theme.border} />
-        }
+        ListFooterComponent={feedFooter}
         contentContainerStyle={{ paddingBottom: 36, gap: 16 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
