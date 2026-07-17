@@ -24,6 +24,7 @@ import { Screen } from '@/components/ui/Screen';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
@@ -324,13 +325,6 @@ type CompletionStats = {
   durationSecs: number;
   mantraName: string;
 };
-
-function getSacredSymbol(tradition: string | null) {
-  if (tradition === 'sikh') return 'ੴ';
-  if (tradition === 'buddhist') return '☸';
-  if (tradition === 'jain') return '☮';
-  return '🪷';
-}
 
 function getCompletionTitle(tradition: string | null) {
   if (tradition === 'sikh') return 'Simran Complete';
@@ -2043,38 +2037,7 @@ export default function JapaScreen() {
                         : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light),
                     }}
                   >
-                    <Svg width={56} height={56}>
-                      <Defs>
-                        <RadialGradient id={`mala-bead-${id}`} cx="28%" cy="24%" r="78%">
-                          <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
-                          <Stop offset="42%" stopColor={skin.beadColor} stopOpacity="1" />
-                          <Stop offset="100%" stopColor={skin.beadBorder} stopOpacity="1" />
-                        </RadialGradient>
-                      </Defs>
-                      <Circle cx={28} cy={28} r={24} fill={skin.glowColor} opacity={selected ? 0.22 : 0} />
-                      <Line x1={28} y1={28} x2={28} y2={7} stroke={skin.threadColor} strokeWidth={1.3} />
-                      {Array.from({ length: 18 }, (_, index) => {
-                        const angle = (Math.PI * 2 * index) / 18 - Math.PI / 2;
-                        const isGuru = index === 0;
-                        const r = isGuru ? 4.8 : 3.1;
-                        const cx = 28 + Math.cos(angle) * 22;
-                        const cy = 28 + Math.sin(angle) * 22;
-                        return (
-                          <Fragment key={index}>
-                            <Circle cx={cx + r * 0.18} cy={cy + r * 0.24} r={r} fill={skin.beadBorder} opacity={0.28} />
-                            <Circle
-                              cx={cx}
-                              cy={cy}
-                              r={r}
-                              fill={`url(#mala-bead-${id})`}
-                              stroke={skin.beadBorder}
-                              strokeWidth={0.55}
-                            />
-                            <Circle cx={cx - r * 0.35} cy={cy - r * 0.38} r={Math.max(0.8, r * 0.25)} fill={COLORS.onMediaWhite} opacity={0.58} />
-                          </Fragment>
-                        );
-                      })}
-                    </Svg>
+                    <JapaMalaArtwork skin={skin} size={60} glow={selected} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>{skin.label}</Text>
                       <Text style={{ ...TYPE.caption, color: dim, marginTop: 2 }}>
@@ -3037,6 +3000,8 @@ export default function JapaScreen() {
               subtitle: completionStats.mantraName,
               caption: `${completionStats.beads.toLocaleString('en-IN')} beads completed in ${formatDuration(completionStats.durationSecs)}. ${completionInsight ?? 'A steady practice, carried back into the day.'}`,
               date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+              artwork: 'japa-mala',
+              malaSkin,
             }}
           />
         </View>
@@ -3071,29 +3036,27 @@ export default function JapaScreen() {
               transform: [{ translateY: ceremonyTranslate }, { scale: ceremonyScale }],
             }}
           >
-            <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 116, height: 116, alignItems: 'center', justifyContent: 'center' }}>
               <View
                 pointerEvents="none"
                 style={{
                   position: 'absolute',
-                  width: 130,
-                  height: 130,
-                  borderRadius: 65,
+                  width: 138,
+                  height: 138,
+                  borderRadius: 69,
                   backgroundColor: theme.brand,
                   opacity: 0.14,
                 }}
               />
               <View
                 pointerEvents="none"
-                style={{ position: 'absolute', width: 96, height: 96, borderRadius: 48, borderWidth: 1, borderColor: `${theme.brand}55` }}
+                style={{ position: 'absolute', width: 108, height: 108, borderRadius: 54, borderWidth: 1, borderColor: `${theme.brand}55` }}
               />
               <View
                 pointerEvents="none"
-                style={{ position: 'absolute', width: 78, height: 78, borderRadius: 39, borderWidth: 1, borderColor: `${theme.brand}30` }}
+                style={{ position: 'absolute', width: 88, height: 88, borderRadius: 44, borderWidth: 1, borderColor: `${theme.brand}30` }}
               />
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 58, color: theme.brand }}>
-                {getSacredSymbol(tradition)}
-              </Text>
+              <JapaMalaArtwork skin={malaSkin} size={104} />
             </View>
             {tradition === 'sikh' ? (
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 19, color: theme.brand, marginTop: -8 }}>

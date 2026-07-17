@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Ellipse, Line, Path, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 
 import { COLORS, FONTS } from '@/lib/constants';
+import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
+import type { MalaSkin } from '@/lib/mala-skins';
 
 const GRAIN_DOTS = Array.from({ length: 150 }).map((_, i) => {
   const x = (((Math.sin(i * 91.7) * 6271.27) % 1) + 1) % 1 * 360;
@@ -48,6 +50,8 @@ export type ShoonayaShareCardData = {
   userName?: string;
   date?: string;
   footer?: string;
+  artwork?: 'japa-mala';
+  malaSkin?: MalaSkin;
 };
 
 export const SHARE_CARD_WIDTH = 360;
@@ -384,13 +388,18 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
         ) : null}
 
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 10 }}>
+          {data.artwork === 'japa-mala' && data.malaSkin ? (
+            <View style={{ marginBottom: 12 }}>
+              <JapaMalaArtwork skin={data.malaSkin} size={118} />
+            </View>
+          ) : null}
           <Text
             numberOfLines={2}
             adjustsFontSizeToFit
             style={{
               fontFamily: FONTS.serifBold,
-              fontSize: typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 150 : 62,
-              lineHeight: typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 156 : 70,
+              fontSize: data.artwork === 'japa-mala' ? 82 : typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 150 : 62,
+              lineHeight: data.artwork === 'japa-mala' ? 88 : typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 156 : 70,
               color: theme.number,
               textAlign: 'center',
               includeFontPadding: false,
