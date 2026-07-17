@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -44,6 +44,89 @@ function formatNotificationDate(iso: string) {
     minute: '2-digit',
   }).format(date);
 }
+
+type NotificationTheme = {
+  bg: string;
+  card: string;
+  border: string;
+  text: string;
+  dim: string;
+  iconWell: string;
+  unreadBg: string;
+  brand: string;
+};
+
+type NotificationListRowProps = {
+  row: NotificationRow;
+  theme: NotificationTheme;
+  onPress: (row: NotificationRow) => void;
+};
+
+const NotificationListRow = memo(function NotificationListRow({ row, theme, onPress }: NotificationListRowProps) {
+  return (
+    <PressableSurface
+      haptic="none"
+      onPress={() => {
+        onPress(row);
+      }}
+      accessibilityLabel={`${row.title}${row.read ? '' : ', unread'}`}
+      style={{
+        borderRadius: 18,
+        padding: 14,
+        flexDirection: 'row',
+        gap: 12,
+        backgroundColor: row.read ? theme.card : theme.unreadBg,
+        borderWidth: 1,
+        borderColor: theme.border,
+      }}
+    >
+      <View
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 16,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.iconWell,
+        }}
+      >
+        <Text style={{ fontSize: 20 }}>{row.emoji ?? '🔔'}</Text>
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text
+            style={{
+              flex: 1,
+              color: theme.text,
+              fontFamily: row.read ? FONTS.sansMedium : FONTS.sansSemiBold,
+              fontSize: 14,
+            }}
+            numberOfLines={2}
+          >
+            {row.title}
+          </Text>
+          {!row.read ? (
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.brand }} />
+          ) : null}
+        </View>
+
+        {row.body ? (
+          <Text
+            style={{ marginTop: 3, color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}
+            numberOfLines={2}
+          >
+            {row.body}
+          </Text>
+        ) : null}
+
+        <Text style={{ marginTop: 6, color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
+          {formatNotificationDate(row.created_at)}
+        </Text>
+      </View>
+    </PressableSurface>
+  );
+});
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -199,12 +282,15 @@ export default function NotificationsScreen() {
     }
   }, [load]);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <ScrollView
-        contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
-      >
+  const renderNotification = useCallback(
+    ({ item }: { item: NotificationRow }) => (
+      <NotificationListRow row={item} theme={theme} onPress={handleRowPress} />
+    ),
+    [handleRowPress, theme]
+  );
+
+  const listHeader = (
+    <View style={{ gap: 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <PressableSurface
             haptic="selection"
@@ -265,106 +351,43 @@ export default function NotificationsScreen() {
             </PressableSurface>
           ) : null}
         </View>
+    </View>
+  );
 
-        {loading ? (
-          <View style={{ gap: 10 }}>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-          </View>
-        ) : loadError ? (
-          <EmptyState
-            icon="wifi-off"
-            title="Could not load notifications"
-            subtitle="Check your connection and try again."
-            ctaLabel="Retry"
-            onCta={() => {
-              setLoading(true);
-              load()
-                .catch(() => setLoadError(true))
-                .finally(() => setLoading(false));
-            }}
-          />
-        ) : notifications.length === 0 ? (
-          <EmptyState
-            icon="bell"
-            title="All quiet"
-            subtitle="Festival alerts & practice milestones show up here."
-            ctaLabel={sendingTest ? 'Sending...' : 'Send test notification'}
-            onCta={() => {
-              if (!sendingTest) void handleSendTest();
-            }}
-          />
-        ) : (
-          <View style={{ gap: 10 }}>
-            {notifications.map((row) => (
-              <PressableSurface
-                key={row.id}
-                haptic="none"
-                onPress={() => {
-                  void handleRowPress(row);
-                }}
-                accessibilityLabel={`${row.title}${row.read ? '' : ', unread'}`}
-                style={{
-                  borderRadius: 18,
-                  padding: 14,
-                  flexDirection: 'row',
-                  gap: 12,
-                  backgroundColor: row.read ? theme.card : theme.unreadBg,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 16,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: theme.iconWell,
-                  }}
-                >
-                  <Text style={{ fontSize: 20 }}>{row.emoji ?? '🔔'}</Text>
-                </View>
+  const listEmpty = loading ? (
+    <View style={{ gap: 10 }}>
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+    </View>
+  ) : loadError ? (
+    <EmptyState
+      icon="wifi-off"
+      title="Could not load notifications"
+      subtitle="Check your connection and try again."
+      ctaLabel="Retry"
+      onCta={() => {
+        setLoading(true);
+        load()
+          .catch(() => setLoadError(true))
+          .finally(() => setLoading(false));
+      }}
+    />
+  ) : (
+    <EmptyState
+      icon="bell"
+      title="All quiet"
+      subtitle="Festival alerts & practice milestones show up here."
+      ctaLabel={sendingTest ? 'Sending...' : 'Send test notification'}
+      onCta={() => {
+        if (!sendingTest) void handleSendTest();
+      }}
+    />
+  );
 
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text
-                      style={{
-                        flex: 1,
-                        color: theme.text,
-                        fontFamily: row.read ? FONTS.sansMedium : FONTS.sansSemiBold,
-                        fontSize: 14,
-                      }}
-                      numberOfLines={2}
-                    >
-                      {row.title}
-                    </Text>
-                    {!row.read ? (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.brand }} />
-                    ) : null}
-                  </View>
-
-                  {row.body ? (
-                    <Text
-                      style={{ marginTop: 3, color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}
-                      numberOfLines={2}
-                    >
-                      {row.body}
-                    </Text>
-                  ) : null}
-
-                  <Text style={{ marginTop: 6, color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
-                    {formatNotificationDate(row.created_at)}
-                  </Text>
-                </View>
-              </PressableSurface>
-            ))}
-          </View>
-        )}
-
+  const listFooter = (
+    <View style={{ gap: 12 }}>
         <PressableSurface
           haptic="selection"
           accessibilityRole="link"
@@ -378,7 +401,27 @@ export default function NotificationsScreen() {
         </PressableSurface>
 
         {refreshing ? <ActivityIndicator color={theme.brand} /> : null}
-      </ScrollView>
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      <FlatList
+        data={loading || loadError ? [] : notifications}
+        keyExtractor={(item) => item.id}
+        renderItem={renderNotification}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={listFooter}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        removeClippedSubviews
+      />
     </View>
   );
 }
