@@ -15,6 +15,7 @@ import {
 } from '@expo-google-fonts/cormorant-garamond';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
+import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
 import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
@@ -26,8 +27,20 @@ import { initPushNotifications, handleNotificationTap, registerPushToken, unregi
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function RootLayout() {
+// EAS Observe — production startup/render metrics (cold/warm launch, time
+// to first render, time to interactive). Private Preview; sends nothing
+// until the account has been granted access, so this is safe to ship ahead
+// of that. The expo-router integration must be enabled here at module
+// scope, before any screen mounts — enabling it later or toggling it at
+// runtime throws. It tags every markInteractive() call (see useObserve()
+// below) with the actual route pattern instead of one app-wide number.
+Observe.configure({
+  integrations: { 'expo-router': true },
+});
+
+function RootLayout() {
   const router = useRouter();
+  const { markInteractive } = useObserve();
   const segments = useSegments();
   const rootSegment = segments[0];
   const childSegment = segments[1];
@@ -216,8 +229,16 @@ export default function RootLayout() {
   useEffect(() => {
     if (readyToRender) {
       SplashScreen.hideAsync().catch(() => {});
+      // Marks Time to Interactive for EAS Observe — this is the moment
+      // fonts are loaded, the initial auth/onboarding route decision has
+      // been made, and the splash screen is gone, i.e. the app is
+      // genuinely usable, not just mounted. Root layout is the one place
+      // every cold start and every deep link passes through, so this
+      // single call covers every entry point (the per-route TTI/TTR
+      // metrics still come from the expo-router integration itself).
+      markInteractive();
     }
-  }, [readyToRender]);
+  }, [readyToRender, markInteractive]);
 
   if (!readyToRender) {
     return null;
@@ -235,3 +256,5 @@ export default function RootLayout() {
     </AppProviders>
   );
 }
+
+export default ObserveRoot.wrap(RootLayout);
