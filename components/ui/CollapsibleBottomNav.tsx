@@ -175,7 +175,7 @@ export function CollapsibleBottomNav() {
         key: 'mandali',
         href: '/mandali',
         label: 'Mandali',
-        match: (p) => matchesAny(p, ['/mandali', '/vichaar-sabha']),
+        match: (p) => matchesAny(p, ['/mandali']),
         renderIcon: (color, size) => <Feather name="users" color={color} size={size} />,
       },
     ],

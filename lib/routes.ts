@@ -61,11 +61,9 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // Profile/My Progress already expose the user's Seva score honestly).
   if (pathname.startsWith('/live-darshan')) return '/live-darshan' as Href;
   if (pathname.startsWith('/seva')) return '/my-progress' as Href;
-  // Vichaar Sabha thread ids (e.g. a shared-thread deep link, or a future
-  // "someone replied to your thread" push) — /vichaar-sabha/[id] mirrors
-  // the dharm-veer/[id] pattern above. Bare /vichaar-sabha is the list.
-  if (pathname.startsWith('/vichaar-sabha/')) return path as Href;
-  if (pathname.startsWith('/vichaar-sabha')) return '/vichaar-sabha';
+  // Vichaar Sabha (native) is deprecated/removed for now — deliberately no
+  // longer dispatched here, so any deep link or push targeting it falls
+  // through to the caller-supplied fallback instead of a dead route.
   if (pathname.startsWith('/profile')) return '/(tabs)/profile';
   if (pathname.startsWith('/notifications')) return '/notifications';
 
