@@ -217,9 +217,7 @@ function TrailingArrow({ color }: { color: string }) {
         justifyContent: 'center',
       }}
     >
-      <Text style={{ color, fontFamily: FONTS.sansSemiBold, fontSize: 17, lineHeight: 19 }}>
-        &gt;
-      </Text>
+      <Feather name="chevron-right" size={18} color={color} strokeWidth={2.2} />
     </View>
   );
 }
@@ -569,7 +567,7 @@ export default function LoginScreen() {
                   textAlign: 'center',
                 }}
               >
-                Continue your journey
+                Begin your journey
               </Text>
               <Text
                 style={{
@@ -578,7 +576,7 @@ export default function LoginScreen() {
                   textAlign: 'center',
                 }}
               >
-                Sign in or create your account in one step.
+                Sign in or create your account securely.
               </Text>
             </View>
             <Text
@@ -591,7 +589,7 @@ export default function LoginScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              Choose a method
+              Choose how to enter
             </Text>
 
             <View style={{ gap: 9 }}>
@@ -621,7 +619,7 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            <AuthDivider label="or continue with email" />
+            <AuthDivider label="or use email" />
 
             <View style={{ gap: 8 }}>
               <TextInput
@@ -684,7 +682,7 @@ export default function LoginScreen() {
                   textAlign: 'center',
                 }}
               >
-                By continuing, you agree to our
+                By continuing, you agree to
               </Text>
               <View
                 style={{
