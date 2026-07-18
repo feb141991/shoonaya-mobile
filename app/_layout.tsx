@@ -20,6 +20,7 @@ import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
 import { RouteTransition } from '@/components/ui/Motion';
+import { setApiAccessTokenFromSession } from '@/lib/api';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
@@ -60,6 +61,8 @@ function RootLayout() {
 
   const routeForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
+      setApiAccessTokenFromSession(session);
+
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
@@ -173,16 +176,24 @@ function RootLayout() {
 
     const prepare = async () => {
       try {
-        // 1. Handle Initial URL (Auth Redirects — cold start only; see the
-        // live Linking listener below for the app-already-running case)
-        await exchangeUrlIfPresent(await Linking.getInitialURL());
+        // Initial URL lookup and session restore are independent; run them
+        // together so cold start does not pay both async waits serially.
+        const [initialUrl, sessionResult] = await Promise.all([
+          Linking.getInitialURL(),
+          supabase.auth.getSession(),
+        ]);
 
-        // 2. Sync Session
-        const { data: { session } } = await supabase.auth.getSession();
+        // Handle Auth Redirects — cold start only; see the live Linking
+        // listener below for the app-already-running case.
+        await exchangeUrlIfPresent(initialUrl);
+
+        const { session } = initialUrl
+          ? (await supabase.auth.getSession()).data
+          : sessionResult.data;
+        setApiAccessTokenFromSession(session);
 
         if (!mounted) return;
 
-        // 3. Navigation Guard
         await routeForSession(session);
 
         setAuthReady(true);
@@ -212,6 +223,7 @@ function RootLayout() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
       try {
+        setApiAccessTokenFromSession(session);
         await routeForSession(session);
       } catch (e) {
         console.error('Auth state routing error:', e);

@@ -1,13 +1,29 @@
 import { API_BASE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
-export async function apiFetch(path: string, options: RequestInit = {}) {
+let cachedAccessToken: string | null | undefined;
+
+export function setApiAccessTokenFromSession(session: Session | null) {
+  cachedAccessToken = session?.access_token ?? null;
+}
+
+async function getApiAccessToken() {
+  if (cachedAccessToken !== undefined) {
+    return cachedAccessToken;
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
+  setApiAccessTokenFromSession(session);
+  return cachedAccessToken;
+}
+
+export async function apiFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers ?? {});
-  const accessToken = session?.access_token;
+  const accessToken = await getApiAccessToken();
 
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
