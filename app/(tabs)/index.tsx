@@ -76,6 +76,16 @@ type PracticeRow = {
   streak?: number;
 };
 
+type ObservanceEntry = {
+  name: string;
+  emoji: string | null;
+  daysLeft: number;
+  routeKind: string;
+  routeSlug: string;
+  href: string;
+  label: string;
+};
+
 type HomeSummary = {
   profile: {
     name: string;
@@ -115,15 +125,12 @@ type HomeSummary = {
     festivalLabel: string | null;
     vratLabel: string | null;
     viewedToday: boolean;
-    observance: {
-      name: string;
-      emoji: string | null;
-      daysLeft: number;
-      routeKind: string;
-      routeSlug: string;
-      href: string;
-      label: string;
-    } | null;
+    observance: ObservanceEntry | null;
+    // Remaining upcoming observances (next Ekadashi, next Amavasya, next
+    // festival...) from the same fetch window as `observance`, so the hero
+    // pill can rotate through genuinely different items instead of just
+    // re-labeling the same nearest one.
+    upcomingObservances: ObservanceEntry[];
   };
   nextPractice: {
     id: PracticeId;
@@ -203,6 +210,7 @@ const INITIAL_STATE: HomeSummary = {
     vratLabel: null,
     viewedToday: false,
     observance: null,
+    upcomingObservances: [],
   },
   nextPractice: {
     id: 'pathshala',
@@ -321,8 +329,19 @@ function PanchangPill({
         label: summary.observance.label,
         dedupeKey: summary.observance.name.trim().toLowerCase(),
       } : null);
-      add(summary.vratLabel ? { key: 'vrat', icon: '🪔', label: summary.vratLabel } : null);
-      add(summary.festivalLabel ? { key: 'festival', icon: '🚩', label: summary.festivalLabel } : null);
+      // Genuinely different upcoming observances (next Ekadashi, next
+      // Amavasya, next festival...) from the same DB-backed window, rather
+      // than re-labeling summary.observance via vratLabel/festivalLabel —
+      // those are derived from the exact same source as summary.observance
+      // and were previously deduped away as near-duplicates anyway.
+      (summary.upcomingObservances ?? []).forEach((entry, i) => {
+        add({
+          key: `upcoming-${i}`,
+          icon: entry.emoji ?? '🪔',
+          label: entry.label,
+          dedupeKey: entry.name.trim().toLowerCase(),
+        });
+      });
       return rows;
     }
 
@@ -330,7 +349,7 @@ function PanchangPill({
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
 
     return rows;
-  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.festivalLabel, summary.observance, summary.vratLabel]);
+  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.observance, summary.upcomingObservances]);
   const total = slides.length;
 
   useEffect(() => {
