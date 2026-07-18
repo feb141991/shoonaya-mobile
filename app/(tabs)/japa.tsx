@@ -1692,111 +1692,89 @@ export default function JapaScreen() {
                   }}
                 />
 
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityRole="button"
-                  accessibilityLabel={`Change mala. Current mala is ${malaSkin.label}`}
-                  onPress={() => setScreen('chooseMala')}
-                  style={{
-                    minHeight: 64,
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    borderColor: theme.premiumBorder,
-                    backgroundColor: cardBg,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                    paddingHorizontal: 16,
-                    paddingVertical: 13,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <View
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Change mala. Current mala is ${malaSkin.label}`}
+                    onPress={() => setScreen('chooseMala')}
                     style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 19,
-                      alignItems: 'center',
+                      flex: 1,
+                      minHeight: 84,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: cardBg,
+                      boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                      paddingHorizontal: 14,
+                      paddingVertical: 14,
                       justifyContent: 'center',
-                      backgroundColor: theme.brandSoft,
+                      gap: 9,
                     }}
                   >
-                    <Feather name="sliders" size={17} color={theme.brand} />
-                  </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: text }} numberOfLines={1}>
-                      Change mala
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim, marginTop: 2 }} numberOfLines={1}>
-                      {malaSkin.label} · {scene.name}
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={17} color={theme.brand} />
-                </PressableSurface>
+                    <View
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: theme.brandSoft,
+                      }}
+                    >
+                      <Feather name="sliders" size={16} color={theme.brand} />
+                    </View>
+                    <View style={{ minWidth: 0 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }} numberOfLines={1}>
+                        Change mala
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim, marginTop: 2 }} numberOfLines={1}>
+                        {malaSkin.label}
+                      </Text>
+                    </View>
+                  </PressableSurface>
 
-                {/* Dharma Reflection */}
-                <View
-                  style={{
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    borderColor: theme.premiumBorder,
-                    backgroundColor: cardBg,
-                    padding: 16,
-                    gap: 6,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand }}>
-                    Dharma reflection
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.serif, fontSize: 13.5, lineHeight: 22, color: text }}>
-                    {fact.text}
-                  </Text>
-                  {fact.source ? (
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim }}>— {fact.source}</Text>
-                  ) : null}
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="button"
+                    accessibilityLabel="View recent Japa sessions"
+                    onPress={() => router.push('/japa-insights' as Href)}
+                    style={{
+                      flex: 1,
+                      minHeight: 84,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: cardBg,
+                      boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                      paddingHorizontal: 14,
+                      paddingVertical: 14,
+                      justifyContent: 'center',
+                      gap: 9,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: theme.brandSoft,
+                      }}
+                    >
+                      <Feather name="clock" size={16} color={theme.brand} />
+                    </View>
+                    <View style={{ minWidth: 0 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }} numberOfLines={1}>
+                        Recent sessions
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim, marginTop: 2 }} numberOfLines={1}>
+                        Beads and rounds
+                      </Text>
+                    </View>
+                  </PressableSurface>
                 </View>
-
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityRole="button"
-                  accessibilityLabel="View recent Japa sessions"
-                  onPress={() => router.push('/japa-insights' as Href)}
-                  style={{
-                    minHeight: 64,
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    borderColor: theme.premiumBorder,
-                    backgroundColor: cardBg,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                    paddingHorizontal: 16,
-                    paddingVertical: 13,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 19,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: theme.brandSoft,
-                    }}
-                  >
-                    <Feather name="clock" size={17} color={theme.brand} />
-                  </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: text }} numberOfLines={1}>
-                      Recent sessions
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim, marginTop: 2 }} numberOfLines={1}>
-                      Review your beads, rounds, and streak
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={17} color={theme.brand} />
-                </PressableSurface>
 
                 {/* Your Path + Lifetime Japa */}
                 <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -1894,6 +1872,28 @@ export default function JapaScreen() {
                     </Text>
                   </View>
                 </Pressable>
+
+                {/* Dharma Reflection */}
+                <View
+                  style={{
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: cardBg,
+                    padding: 16,
+                    gap: 6,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand }}>
+                    Dharma reflection
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serif, fontSize: 13.5, lineHeight: 22, color: text }}>
+                    {fact.text}
+                  </Text>
+                  {fact.source ? (
+                    <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim }}>— {fact.source}</Text>
+                  ) : null}
+                </View>
               </>
             )}
           </ScrollView>
