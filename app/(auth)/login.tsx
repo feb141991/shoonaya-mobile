@@ -9,9 +9,9 @@ import {
   Platform,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
-import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
@@ -30,7 +30,7 @@ WebBrowser.maybeCompleteAuthSession();
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
-type AuthAction = 'google' | 'apple' | 'whatsapp' | null;
+type AuthAction = 'google' | 'apple' | 'email' | null;
 
 function BrandGlow() {
   const size = 360;
@@ -123,7 +123,7 @@ function AuthButton({
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       style={{
-        minHeight: 58,
+        minHeight: 56,
         borderRadius: 20,
         borderWidth: 1,
         borderColor: COLORS.premiumBorderLight,
@@ -142,9 +142,9 @@ function AuthButton({
         {icon ? (
           <View
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 14,
+              width: 34,
+              height: 34,
+              borderRadius: 13,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: COLORS.homeSoftLight,
@@ -172,19 +172,19 @@ function TrustChip({ icon, label }: { icon: keyof typeof Feather.glyphMap; label
   return (
     <View
       style={{
-        minHeight: 34,
+        minHeight: 30,
         borderRadius: 999,
         borderWidth: 1,
         borderColor: COLORS.homeBorderSoftLight,
-        backgroundColor: COLORS.homeShlokaSurfaceLight,
-        paddingHorizontal: 10,
+        backgroundColor: COLORS.premiumGlassLight,
+        paddingHorizontal: 9,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 5,
       }}
     >
-      <Feather name={icon} size={13} color={COLORS.brandGoldLight} />
-      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: COLORS.brandEarthLight }}>
+      <Feather name={icon} size={12} color={COLORS.brandGoldLight} />
+      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.brandEarthLight }}>
         {label}
       </Text>
     </View>
@@ -210,14 +210,14 @@ function TrailingArrow({ color }: { color: string }) {
     <View
       pointerEvents="none"
       style={{
-        width: 28,
-        height: 28,
+        width: 22,
+        height: 22,
         marginLeft: 10,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <Text style={{ color, fontFamily: FONTS.sansSemiBold, fontSize: 22, lineHeight: 24 }}>
+      <Text style={{ color, fontFamily: FONTS.sansSemiBold, fontSize: 17, lineHeight: 19 }}>
         &gt;
       </Text>
     </View>
@@ -227,8 +227,12 @@ function TrailingArrow({ color }: { color: string }) {
 export default function LoginScreen() {
   const [activeAction, setActiveAction] = useState<AuthAction>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [reduceMotion, setReduceMotion] = useState(false);
   const brandScale = useRef(new Animated.Value(1)).current;
+  const cardEntrance = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let mounted = true;
@@ -274,9 +278,24 @@ export default function LoginScreen() {
     };
   }, [brandScale, reduceMotion]);
 
+  useEffect(() => {
+    if (reduceMotion) {
+      cardEntrance.setValue(1);
+      return;
+    }
+
+    Animated.timing(cardEntrance, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [cardEntrance, reduceMotion]);
+
   const handleGoogle = async () => {
     setActiveAction('google');
     setErrorMessage(null);
+    setNoticeMessage(null);
 
     try {
       const redirectUri = getOAuthRedirectUri();
@@ -349,6 +368,7 @@ export default function LoginScreen() {
   const handleApple = async () => {
     setActiveAction('apple');
     setErrorMessage(null);
+    setNoticeMessage(null);
 
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -386,17 +406,76 @@ export default function LoginScreen() {
     }
   };
 
+  const handleEmail = async () => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setErrorMessage('Enter your email and password to continue.');
+      return;
+    }
+
+    if (trimmedPassword.length < 6) {
+      setErrorMessage('Password must be at least 6 characters.');
+      return;
+    }
+
+    setActiveAction('email');
+    setErrorMessage(null);
+    setNoticeMessage(null);
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: trimmedPassword,
+      });
+
+      if (!signInError) {
+        return;
+      }
+
+      const canCreate =
+        signInError.message.toLowerCase().includes('invalid login') ||
+        signInError.message.toLowerCase().includes('invalid credentials');
+
+      if (!canCreate) {
+        throw signInError;
+      }
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password: trimmedPassword,
+        options: {
+          emailRedirectTo: getOAuthRedirectUri(),
+        },
+      });
+
+      if (signUpError) {
+        throw signUpError;
+      }
+
+      if (!signUpData.session) {
+        setNoticeMessage('Account created. Check your email to confirm and continue.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Email sign-in failed.';
+      setErrorMessage(message);
+    } finally {
+      setActiveAction(null);
+    }
+  };
+
   const busy = activeAction !== null;
 
   return (
     <Screen style={{ paddingHorizontal: 18, paddingTop: 10, backgroundColor: COLORS.creamBg }}>
       <AmbientField />
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 16 }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 12 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ alignItems: 'center', marginBottom: 22 }}>
+        <View style={{ alignItems: 'center', marginBottom: 16 }}>
           <BrandGlow />
           <Animated.View
             style={{
@@ -438,14 +517,14 @@ export default function LoginScreen() {
               color: COLORS.ink,
               textAlign: 'center',
               maxWidth: 320,
-              marginTop: 8,
+              marginTop: 6,
             }}
           >
             Ancient wisdom. Daily practice. One dharmic home in your hand.
           </Text>
           <View
             style={{
-              marginTop: 14,
+              marginTop: 10,
               flexDirection: 'row',
               flexWrap: 'wrap',
               justifyContent: 'center',
@@ -459,15 +538,28 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        <Card
-          elevated
+        <Animated.View
           style={{
-            padding: 20,
-            borderColor: COLORS.premiumBorderLight,
-            backgroundColor: COLORS.premiumGlassLight,
-            boxShadow: SHADOWS.lg.light,
+            opacity: cardEntrance,
+            transform: [
+              {
+                translateY: cardEntrance.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [14, 0],
+                }),
+              },
+            ],
           }}
         >
+          <Card
+            elevated
+            style={{
+              padding: 18,
+              borderColor: COLORS.premiumBorderLight,
+              backgroundColor: COLORS.premiumGlassLight,
+              boxShadow: SHADOWS.lg.light,
+            }}
+          >
           <View style={{ gap: 15 }}>
             <View style={{ alignItems: 'center', gap: 5 }}>
               <Text
@@ -502,7 +594,7 @@ export default function LoginScreen() {
               Choose a method
             </Text>
 
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 9 }}>
               <AuthButton
                 label={activeAction === 'google' ? 'Connecting to Google...' : 'Continue with Google'}
                 onPress={handleGoogle}
@@ -529,59 +621,66 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            <AuthDivider label="or continue with phone" />
+            <AuthDivider label="or continue with email" />
 
-            <Link href="/(auth)/whatsapp" asChild>
-              <PressableSurface
-                haptic="selection"
-                disabled={busy}
-                accessibilityLabel="Continue with WhatsApp"
-                accessibilityState={{ disabled: busy }}
+            <View style={{ gap: 8 }}>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Email address"
+                placeholderTextColor={COLORS.textDimLight}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="emailAddress"
+                editable={!busy}
                 style={{
-                  minHeight: 56,
+                  minHeight: 50,
                   borderRadius: 18,
-                  borderWidth: 1.5,
-                  borderColor: COLORS.brandGold,
-                  backgroundColor: COLORS.authGoldWellBg,
-                  boxShadow: SHADOWS.sm.light,
-                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: COLORS.premiumBorderLight,
+                  backgroundColor: COLORS.cardBgLight,
                   paddingHorizontal: 14,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  alignSelf: 'stretch',
-                  width: '100%',
+                  color: COLORS.ink,
+                  fontFamily: FONTS.sans,
+                  fontSize: 14,
                 }}
-              >
-                <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 14,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: COLORS.cardBgLight,
-                      borderWidth: 1,
-                      borderColor: COLORS.homeBorderSoftLight,
-                    }}
-                  >
-                    <FontAwesome name="whatsapp" size={17} color={COLORS.brandGold} />
-                  </View>
-                  <Text style={{ flex: 1, color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                    Continue with WhatsApp
-                  </Text>
-                </View>
-                <TrailingArrow color={COLORS.brandGold} />
-              </PressableSurface>
-            </Link>
+              />
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                placeholderTextColor={COLORS.textDimLight}
+                secureTextEntry
+                textContentType="password"
+                editable={!busy}
+                style={{
+                  minHeight: 50,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: COLORS.premiumBorderLight,
+                  backgroundColor: COLORS.cardBgLight,
+                  paddingHorizontal: 14,
+                  color: COLORS.ink,
+                  fontFamily: FONTS.sans,
+                  fontSize: 14,
+                }}
+              />
+              <AuthButton
+                label={activeAction === 'email' ? 'Continuing with email...' : 'Continue with email'}
+                onPress={handleEmail}
+                disabled={busy}
+                loading={activeAction === 'email'}
+                icon={<Feather name="mail" size={16} color={COLORS.brandGoldLight} />}
+              />
+            </View>
 
-            <View style={{ marginTop: 4, gap: 6 }}>
+            <View style={{ marginTop: 2, gap: 4 }}>
               <Text
                 style={{
                   color: COLORS.textDimLight,
                   fontFamily: FONTS.sans,
-                  fontSize: 13,
+                  fontSize: 12,
                   textAlign: 'center',
                 }}
               >
@@ -609,15 +708,15 @@ export default function LoginScreen() {
                   <Text
                     style={{
                       color: COLORS.brandGold,
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 13,
-                      textDecorationLine: 'underline',
+                      fontFamily: FONTS.sans,
+                      fontSize: 12.5,
+                      textDecorationLine: 'none',
                     }}
                   >
                     Terms of Service
                   </Text>
                 </PressableSurface>
-                <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 13 }}>
+                <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 12 }}>
                   &
                 </Text>
                 <PressableSurface
@@ -634,9 +733,9 @@ export default function LoginScreen() {
                   <Text
                     style={{
                       color: COLORS.brandGold,
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 13,
-                      textDecorationLine: 'underline',
+                      fontFamily: FONTS.sans,
+                      fontSize: 12.5,
+                      textDecorationLine: 'none',
                     }}
                   >
                     Privacy Policy
@@ -675,8 +774,38 @@ export default function LoginScreen() {
                 </Text>
               </View>
             ) : null}
+            {noticeMessage ? (
+              <View
+                accessible
+                style={{
+                  marginTop: 2,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: COLORS.successBorder,
+                  backgroundColor: COLORS.successBg,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Feather name="check-circle" size={15} color={COLORS.success} />
+                <Text
+                  style={{
+                    flex: 1,
+                    color: COLORS.success,
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                  }}
+                >
+                  {noticeMessage}
+                </Text>
+              </View>
+            ) : null}
           </View>
-        </Card>
+          </Card>
+        </Animated.View>
       </ScrollView>
     </Screen>
   );
