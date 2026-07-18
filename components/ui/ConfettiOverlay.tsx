@@ -119,7 +119,7 @@ export function ConfettiOverlay({ show, onComplete, density = 'full' }: Confetti
   const { height, width } = useWindowDimensions();
   const progress = useRef(new Animated.Value(0)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
-  const particleCount = density === 'burst' ? 190 : density === 'full' ? 118 : 48;
+  const particleCount = density === 'burst' ? 260 : density === 'full' ? 150 : 72;
   const particles = useMemo(() => buildParticles(particleCount, density), [density, particleCount]);
   const glowScale = progress.interpolate({
     inputRange: [0, 0.16, 0.72, 1],
@@ -127,7 +127,7 @@ export function ConfettiOverlay({ show, onComplete, density = 'full' }: Confetti
   });
   const glowOpacity = progress.interpolate({
     inputRange: [0, 0.16, 0.58, 1],
-    outputRange: [0, density === 'burst' ? 0.42 : 0.22, 0.12, 0],
+    outputRange: [0, density === 'burst' ? 0.56 : density === 'full' ? 0.32 : 0.24, 0.16, 0],
   });
 
   useEffect(() => {
@@ -163,7 +163,14 @@ export function ConfettiOverlay({ show, onComplete, density = 'full' }: Confetti
         pointerEvents="none"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          elevation: 9999,
+        }}
       >
         <View
           style={{
@@ -184,7 +191,13 @@ export function ConfettiOverlay({ show, onComplete, density = 'full' }: Confetti
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        zIndex: 9999,
+        elevation: 9999,
+      }}
     >
       <Animated.View
         style={{
