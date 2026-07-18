@@ -27,6 +27,26 @@ async function getPositionWithFallback() {
   }
 }
 
+async function reverseGeocodeWithNativeFallback(lat: number, lon: number): Promise<{ city: string; country: string } | null> {
+  try {
+    const geocoded = await reverseGeocode(lat, lon);
+    if (geocoded?.city) return geocoded;
+  } catch (error) {
+    console.error('[JoinMandaliPrompt] reverseGeocode proxy failed', error);
+  }
+
+  try {
+    const [place] = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lon });
+    const city = place?.city || place?.district || place?.subregion || place?.region || '';
+    const country = place?.country || '';
+    if (city) return { city, country };
+  } catch (error) {
+    console.error('[JoinMandaliPrompt] native reverseGeocode failed', error);
+  }
+
+  return null;
+}
+
 // Port of PWA's NoMandaliPrompt (src/app/(main)/mandali/MandaliClient.tsx
 // lines ~453-830): GPS-detect city → reverse-geocode via the shared web
 // proxy → show nearby existing Mandalis (join by id) alongside a "find/
@@ -86,7 +106,7 @@ export function JoinMandaliPrompt({
       }
       const current = await getPositionWithFallback();
       const { latitude: lat, longitude: lon } = current.coords;
-      const geocoded = await reverseGeocode(lat, lon);
+      const geocoded = await reverseGeocodeWithNativeFallback(lat, lon);
       if (!geocoded?.city) {
         setGeoError('Could not detect your city. Please try again or enter it below.');
         return;
