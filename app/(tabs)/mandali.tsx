@@ -519,11 +519,20 @@ export default function MandaliScreen() {
 
   useEffect(() => {
     if (!profile?.userId) return;
+    if (profile.latitude == null || profile.longitude == null) {
+      setSeekers([]);
+      setLoadingSeekers(false);
+      return;
+    }
     let cancelled = false;
     setLoadingSeekers(true);
-    fetchNearbySeekers(profile.userId, profile.city, profile.latitude, profile.longitude)
+    fetchNearbySeekers(profile.userId, null, profile.latitude, profile.longitude)
       .then((rows) => {
         if (!cancelled) setSeekers(rows);
+      })
+      .catch((error) => {
+        console.error('[MandaliScreen] fetchNearbySeekers failed', error);
+        if (!cancelled) setSeekers([]);
       })
       .finally(() => {
         if (!cancelled) setLoadingSeekers(false);
@@ -975,8 +984,11 @@ export default function MandaliScreen() {
       ) : null}
     </>
   ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, posts.length, profile, router, theme]);
-  const feedFooter = useMemo(
-    () => (
+  const feedFooter = useMemo(() => {
+    const hasCapturedLocation = profile?.latitude != null && profile.longitude != null;
+    if (!profile?.mandaliId || !hasCapturedLocation) return null;
+
+    return (
       <SeekersNearYou
         seekers={seekers}
         loading={loadingSeekers}
@@ -986,9 +998,8 @@ export default function MandaliScreen() {
         cardBg={theme.card}
         border={theme.border}
       />
-    ),
-    [loadingSeekers, seekers, theme]
-  );
+    );
+  }, [loadingSeekers, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
 
   if (loading) {
     return (
