@@ -26,13 +26,13 @@ async function getFreshPositionWithTimeout(): Promise<Location.LocationObject> {
       finish(() => reject(new Error('Location lookup timed out')));
     }, LOCATION_TIMEOUT_MS);
 
-    void Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest })
+    void Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
       .then((location) => finish(() => resolve(location)))
       .catch(() => {});
 
     void Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.High,
         timeInterval: 1000,
         distanceInterval: 0,
       },
