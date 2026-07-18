@@ -107,64 +107,117 @@ function AuthButton({
   disabled,
   loading,
   icon,
+  tone = 'light',
 }: {
   label: string;
   onPress: () => void | Promise<void>;
   disabled?: boolean;
   loading?: boolean;
   icon?: ReactNode;
+  tone?: 'light' | 'gold';
 }) {
+  const isGold = tone === 'gold';
+
   return (
-    <PressableSurface
-      disabled={disabled}
-      onPress={() => {
-        void onPress();
-      }}
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+    <View
       style={{
         minHeight: 56,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: COLORS.premiumBorderLight,
-        backgroundColor: COLORS.cardBgLight,
-        boxShadow: SHADOWS.sm.light,
-        paddingVertical: 12,
-        paddingHorizontal: 14,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        borderRadius: 22,
+        boxShadow: isGold ? SHADOWS.md.light : SHADOWS.sm.light,
         alignSelf: 'stretch',
         width: '100%',
+        opacity: disabled ? 0.68 : 1,
       }}
     >
-      <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        {icon ? (
-          <View
+      <View
+        style={{
+          minHeight: 56,
+          borderRadius: 22,
+          borderWidth: isGold ? 0 : 1,
+          borderColor: COLORS.homeBorderSoftLight,
+          backgroundColor: isGold ? COLORS.brandGold : COLORS.cardBgLight,
+          overflow: 'hidden',
+        }}
+      >
+        <LinearGradient
+          pointerEvents="none"
+          colors={
+            isGold
+              ? [COLORS.brandGoldLight, COLORS.brandGold, COLORS.brandGoldDark]
+              : [COLORS.cardBgLight, COLORS.homeShlokaSurfaceLight, COLORS.homeSoftLight]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ position: 'absolute', inset: 0 }}
+        />
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: -34,
+            right: -22,
+            width: 110,
+            height: 110,
+            borderRadius: 55,
+            backgroundColor: isGold ? COLORS.cardBgLight : COLORS.brandAccentLight,
+            opacity: isGold ? 0.18 : 0.62,
+          }}
+        />
+      <PressableSurface
+        disabled={disabled}
+        onPress={() => {
+          void onPress();
+        }}
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+        style={{
+          minHeight: 56,
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          alignSelf: 'stretch',
+          width: '100%',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {icon ? (
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isGold ? COLORS.premiumGlassLight : COLORS.homeSoftLight,
+                borderWidth: 1,
+                borderColor: isGold ? COLORS.cardBgLight : COLORS.homeBorderSoftLight,
+              }}
+            >
+              {icon}
+            </View>
+          ) : null}
+          <Text
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 13,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: COLORS.homeSoftLight,
-              borderWidth: 1,
-              borderColor: COLORS.homeBorderSoftLight,
+              flex: 1,
+              color: isGold ? COLORS.cardBgLight : COLORS.ink,
+              fontFamily: FONTS.sansSemiBold,
+              fontSize: 15.5,
             }}
           >
-            {icon}
-          </View>
-        ) : null}
-        <Text style={{ flex: 1, color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15.5 }}>
-          {label}
-        </Text>
+            {label}
+          </Text>
+        </View>
+        {loading ? (
+          <ActivityIndicator size="small" color={isGold ? COLORS.cardBgLight : COLORS.ink} />
+        ) : (
+          <TrailingArrow color={isGold ? COLORS.cardBgLight : COLORS.textDimLight} />
+        )}
+      </PressableSurface>
       </View>
-      {loading ? (
-        <ActivityIndicator size="small" color={COLORS.ink} />
-      ) : (
-        <TrailingArrow color={COLORS.textDimLight} />
-      )}
-    </PressableSurface>
+    </View>
   );
 }
 
@@ -669,7 +722,8 @@ export default function LoginScreen() {
                 onPress={handleEmail}
                 disabled={busy}
                 loading={activeAction === 'email'}
-                icon={<Feather name="mail" size={16} color={COLORS.brandGoldLight} />}
+                tone="gold"
+                icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
               />
             </View>
 
