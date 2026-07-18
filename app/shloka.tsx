@@ -508,6 +508,32 @@ export default function ShlokaScreen() {
             </LinearGradient>
           )}
         </PressableSurface>
+
+        {readToday ? (
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Share today's shloka"
+            disabled={sharing}
+            onPress={() => { void shareVerse(); }}
+            style={{
+              minHeight: MIN_TOUCH_TARGET + 6,
+              borderRadius: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 8,
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: border,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            }}
+          >
+            {sharing ? <ActivityIndicator color={brand} /> : <Feather name="share-2" size={17} color={brand} />}
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>
+              Share today's shloka
+            </Text>
+          </PressableSurface>
+        ) : null}
       </ScrollView>
 
       <View
@@ -525,13 +551,15 @@ export default function ShlokaScreen() {
             ref={shareCardRef}
             data={{
               tradition: profile?.tradition ?? 'universal',
-              headlineValue: profile?.shlokaStreak ?? 1,
-              title: 'Sacred Text Streak',
-              subtitle: sacredText.source || sacredText.label,
-              caption: sacredText.meaning || sacredText.original,
+              layout: 'sacredText',
+              headlineValue: sacredText.original,
+              title: "Today's Shloka",
+              subtitle: sacredText.label,
+              source: sacredText.source,
+              caption: sacredText.meaning,
               userName: profile?.userName,
               date: today ?? undefined,
-              footer: 'Shared from Shoonaya',
+              footer: `${profile?.shlokaStreak ?? 1}-day sacred text streak`,
             }}
           />
         </View>
@@ -589,8 +617,19 @@ export default function ShlokaScreen() {
             ) : null}
             <PressableSurface
               haptic="selection"
+              disabled={sharing}
+              onPress={() => { void shareVerse(); }}
+              style={{ marginTop: 12, borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10, backgroundColor: theme.card, borderWidth: 1, borderColor: border }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {sharing ? <ActivityIndicator color={brand} /> : <Feather name="share-2" size={15} color={brand} />}
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>Share shloka</Text>
+              </View>
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
               onPress={dismissCelebration}
-              style={{ marginTop: 12, borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10, backgroundColor: brand }}
+              style={{ marginTop: 4, borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10, backgroundColor: brand }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.ink }}>Continue</Text>
             </PressableSurface>

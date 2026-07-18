@@ -43,10 +43,12 @@ export type ShoonayaShareVariant = 'sanatan' | 'sikh' | 'jain' | 'buddhist' | 'u
 
 export type ShoonayaShareCardData = {
   tradition: string | null | undefined;
+  layout?: 'metric' | 'sacredText';
   headlineValue?: string | number;
   title?: string;
   subtitle?: string;
   caption?: string;
+  source?: string;
   userName?: string;
   date?: string;
   footer?: string;
@@ -349,6 +351,7 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
   const theme = THEMES[variant];
   const headline = data.headlineValue ?? 0;
   const identity = [data.userName?.trim(), data.date?.trim()].filter(Boolean).join('  ·  ');
+  const isSacredText = data.layout === 'sacredText';
 
   return (
     <View ref={ref} collapsable={false} style={{ width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT, overflow: 'hidden', borderRadius: 28 }}>
@@ -388,33 +391,58 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
         ) : null}
 
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 10 }}>
-          {data.artwork === 'japa-mala' && data.malaSkin ? (
-            <View style={{ marginBottom: 12 }}>
-              <JapaMalaArtwork skin={data.malaSkin} size={118} />
-            </View>
-          ) : null}
-          <Text
-            numberOfLines={2}
-            adjustsFontSizeToFit
-            style={{
-              fontFamily: FONTS.serifBold,
-              fontSize: data.artwork === 'japa-mala' ? 82 : typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 150 : 62,
-              lineHeight: data.artwork === 'japa-mala' ? 88 : typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 156 : 70,
-              color: theme.number,
-              textAlign: 'center',
-              includeFontPadding: false,
-            }}
-          >
-            {headline}
-          </Text>
-          <Text style={{ marginTop: 16, fontFamily: FONTS.serifBold, fontSize: 30, lineHeight: 34, color: theme.ink, textAlign: 'center' }}>
-            {data.title ?? theme.defaultTitle}
-          </Text>
-          {data.caption ? (
-            <Text style={{ marginTop: 18, fontFamily: FONTS.serif, fontSize: 17, lineHeight: 24, color: theme.soft, textAlign: 'center' }} numberOfLines={4}>
-              {data.caption}
-            </Text>
-          ) : null}
+          {isSacredText ? (
+            <>
+              {data.source ? (
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, color: theme.gold, textAlign: 'center', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                  {data.source}
+                </Text>
+              ) : null}
+              <Text style={{ marginTop: 14, fontFamily: FONTS.serifBold, fontSize: 30, lineHeight: 34, color: theme.ink, textAlign: 'center' }}>
+                {data.title ?? "Today's Shloka"}
+              </Text>
+              {data.headlineValue ? (
+                <Text style={{ marginTop: 18, fontFamily: FONTS.serif, fontSize: 20, lineHeight: 28, color: theme.ink, textAlign: 'center' }} numberOfLines={5} adjustsFontSizeToFit>
+                  {String(data.headlineValue)}
+                </Text>
+              ) : null}
+              {data.caption ? (
+                <Text style={{ marginTop: 18, fontFamily: FONTS.serif, fontSize: 15, lineHeight: 22, color: theme.soft, textAlign: 'center' }} numberOfLines={4}>
+                  {data.caption}
+                </Text>
+              ) : null}
+            </>
+          ) : (
+            <>
+              {data.artwork === 'japa-mala' && data.malaSkin ? (
+                <View style={{ marginBottom: 12 }}>
+                  <JapaMalaArtwork skin={data.malaSkin} size={118} />
+                </View>
+              ) : null}
+              <Text
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                style={{
+                  fontFamily: FONTS.serifBold,
+                  fontSize: data.artwork === 'japa-mala' ? 82 : typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 150 : 62,
+                  lineHeight: data.artwork === 'japa-mala' ? 88 : typeof headline === 'number' || /^\d+$/.test(String(headline)) ? 156 : 70,
+                  color: theme.number,
+                  textAlign: 'center',
+                  includeFontPadding: false,
+                }}
+              >
+                {headline}
+              </Text>
+              <Text style={{ marginTop: 16, fontFamily: FONTS.serifBold, fontSize: 30, lineHeight: 34, color: theme.ink, textAlign: 'center' }}>
+                {data.title ?? theme.defaultTitle}
+              </Text>
+              {data.caption ? (
+                <Text style={{ marginTop: 18, fontFamily: FONTS.serif, fontSize: 17, lineHeight: 24, color: theme.soft, textAlign: 'center' }} numberOfLines={4}>
+                  {data.caption}
+                </Text>
+              ) : null}
+            </>
+          )}
         </View>
 
         {identity ? (
