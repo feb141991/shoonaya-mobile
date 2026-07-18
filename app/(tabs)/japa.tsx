@@ -98,7 +98,7 @@ const SVG_SIZE = 320;
 const PRACTICE_SVG_SIZE = 382;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
-const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2;
+const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2 - 12;
 const PRACTICE_RADIUS = 162;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
@@ -1526,6 +1526,81 @@ export default function JapaScreen() {
     });
   }
 
+  function buildGuruPendant(center: number, radius: number) {
+    const beadY = center + radius;
+    const pendantY = beadY + 13;
+
+    return (
+      <Fragment>
+        <Line
+          x1={center}
+          y1={beadY - 5}
+          x2={center}
+          y2={pendantY - 13}
+          stroke={malaSkin.threadColor}
+          strokeWidth={3.2}
+          strokeLinecap="round"
+          opacity={0.82}
+        />
+        <Circle
+          cx={center + 3}
+          cy={pendantY + 3}
+          r={19}
+          fill={malaSkin.beadBorder}
+          opacity={0.32}
+        />
+        <Circle
+          cx={center}
+          cy={pendantY}
+          r={18}
+          fill="url(#grad-guru)"
+          stroke={malaSkin.threadColor}
+          strokeWidth={1.4}
+          opacity={0.98}
+        />
+        <Circle cx={center - 5.6} cy={pendantY - 3.2} r={1.3} fill={COLORS.ink} opacity={0.54} />
+        <Circle cx={center + 5.6} cy={pendantY - 3.2} r={1.3} fill={COLORS.ink} opacity={0.54} />
+        <Path
+          d={`M ${center - 5.5} ${pendantY + 2.5} Q ${center} ${pendantY + 5.4} ${center + 5.5} ${pendantY + 2.5}`}
+          stroke={COLORS.ink}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          fill="none"
+          opacity={0.38}
+        />
+        <Path
+          d={`M ${center - 10} ${pendantY + 7} Q ${center} ${pendantY + 15} ${center + 10} ${pendantY + 7}`}
+          stroke={malaSkin.beadBorder}
+          strokeWidth={3}
+          strokeLinecap="round"
+          fill="none"
+          opacity={0.9}
+        />
+        <Line
+          x1={center}
+          y1={pendantY + 16}
+          x2={center}
+          y2={pendantY + 21}
+          stroke={malaSkin.threadColor}
+          strokeWidth={4}
+          strokeLinecap="round"
+          opacity={0.78}
+        />
+        {[-13, -7, 0, 7, 13].map((offset) => (
+          <Path
+            key={`guru-tassel-${offset}`}
+            d={`M ${center} ${pendantY + 20} C ${center + offset * 0.25} ${pendantY + 24}, ${center + offset} ${pendantY + 28}, ${center + offset} ${pendantY + 31}`}
+            stroke={malaSkin.threadColor}
+            strokeWidth={3.8}
+            strokeLinecap="round"
+            fill="none"
+            opacity={0.76}
+          />
+        ))}
+      </Fragment>
+    );
+  }
+
   const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS), [count]);
   const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS), [bloomIndex]);
 
@@ -2360,30 +2435,7 @@ export default function JapaScreen() {
                     strokeDasharray="1 10"
                     opacity={geometryOpacity}
                   />
-                  <Line
-                    x1={PRACTICE_CENTER}
-                    y1={PRACTICE_CENTER + PRACTICE_RADIUS - 6}
-                    x2={PRACTICE_CENTER}
-                    y2={PRACTICE_CENTER + PRACTICE_RADIUS + 18}
-                    stroke={malaSkin.threadColor}
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                    opacity={0.7}
-                  />
-                  {[...Array(5)].map((_, tasselIndex) => {
-                    const offset = (tasselIndex - 2) * 5.5;
-                    return (
-                      <Path
-                        key={`tassel-${tasselIndex}`}
-                        d={`M ${PRACTICE_CENTER} ${PRACTICE_CENTER + PRACTICE_RADIUS + 8} C ${PRACTICE_CENTER + offset * 0.4} ${PRACTICE_CENTER + PRACTICE_RADIUS + 16}, ${PRACTICE_CENTER + offset} ${PRACTICE_CENTER + PRACTICE_RADIUS + 22}, ${PRACTICE_CENTER + offset} ${PRACTICE_CENTER + PRACTICE_RADIUS + 27}`}
-                        stroke={malaSkin.beadBorder}
-                        strokeWidth={4}
-                        strokeLinecap="round"
-                        fill="none"
-                        opacity={0.76}
-                      />
-                    );
-                  })}
+                  {buildGuruPendant(PRACTICE_CENTER, PRACTICE_RADIUS)}
                   {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
                   {count < 108 ? (
                     <AnimatedCircle
