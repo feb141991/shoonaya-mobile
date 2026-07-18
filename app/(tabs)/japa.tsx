@@ -51,8 +51,8 @@ import { spiritualDate } from '@/lib/spiritualDate';
 //     practice / Discard and leave (or "Leave setup" with zero progress),
 //     matching JapaClient.tsx's StopPracticeSheet copy and branching exactly.
 // Phase 2 adds the dedicated ChooseMala/ChooseMantra screens (opened from
-// the launcher's "Change mala, mantra or background" link, chaining
-// mala→mantra→practice exactly as JapaClient.tsx does) and richens the
+// the in-practice setup flow, chaining mala→mantra→practice exactly as
+// JapaClient.tsx does) and richens the
 // completion celebration (ripple rings, glow, tradition subtitle line).
 // The in-practice "settings" icon still opens the lighter "Customize" sheet,
 // now trimmed to just Scene + Mantra audio (quick, non-interrupting tweaks)
@@ -67,13 +67,6 @@ type ProfileRow = {
   active_symbol_id: string | null;
   tradition: string | null;
   timezone: string | null;
-};
-
-type MalaSessionRow = {
-  id: string;
-  mantra: string | null;
-  count: number | null;
-  completed_at: string | null;
 };
 
 type SadhanaTodayRow = {
@@ -94,7 +87,6 @@ type JapaLifetimeData = {
 
 const EMPTY_LIFETIME: JapaLifetimeData = { totalBeads: 0, totalRounds: 0, lastPracticed: null };
 
-const HISTORY_LIMIT = 12;
 const SVG_SIZE = 320;
 const PRACTICE_SVG_SIZE = 382;
 const CENTER = SVG_SIZE / 2;
@@ -935,8 +927,8 @@ export default function JapaScreen() {
 
   // 'launcher' = PWA's "Choose your practice" config screen; 'chooseMala' /
   // 'chooseMantra' = PWA's dedicated ChooseMalaScreen/ChooseMantraScreen
-  // (opened from the launcher's "Change mala, mantra or background" link,
-  // chained mala→mantra→practice exactly as JapaClient.tsx does); 'practice'
+  // (opened from the in-practice setup flow, chained mala→mantra→practice
+  // exactly as JapaClient.tsx does); 'practice'
   // = PWA's full-screen bead-ring counting screen. Internal state switch,
   // not a route change — matches JapaClient.tsx's own single-page model.
   const [screen, setScreen] = useState<'launcher' | 'chooseMala' | 'chooseMantra' | 'practice'>('launcher');
@@ -950,8 +942,6 @@ export default function JapaScreen() {
   const [streak, setStreak] = useState(0);
   const [japaAlreadyDoneToday, setJapaAlreadyDoneToday] = useState(false);
   const [lifetime, setLifetime] = useState<JapaLifetimeData>(EMPTY_LIFETIME);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [history, setHistory] = useState<MalaSessionRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastState>({ visible: false, message: '' });
   const [completionVisible, setCompletionVisible] = useState(false);
@@ -969,8 +959,7 @@ export default function JapaScreen() {
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [beginPressed, setBeginPressed] = useState(false);
-  const [malaActionPressed, setMalaActionPressed] = useState(false);
-  const [historyActionPressed, setHistoryActionPressed] = useState(false);
+  const [reflectionActionPressed, setReflectionActionPressed] = useState(false);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
   // (close) button on the practice screen, matching JapaClient.tsx exactly
@@ -1156,21 +1145,12 @@ export default function JapaScreen() {
       return;
     }
 
-    const [profileResult, historyResult] = await Promise.all([
-      supabase.from('profiles').select('active_symbol_id, tradition, timezone').eq('id', user.id).single(),
-      supabase
-        .from('mala_sessions')
-        .select('id, mantra, count, completed_at')
-        .eq('user_id', user.id)
-        .order('completed_at', { ascending: false })
-        .limit(HISTORY_LIMIT),
-    ]);
+    const profileResult = await supabase.from('profiles').select('active_symbol_id, tradition, timezone').eq('id', user.id).single();
 
     const profile = profileResult.data as ProfileRow | null;
     setActiveSymbolId(profile?.active_symbol_id ?? null);
     setTradition(profile?.tradition ?? 'hindu');
     setMantraIndex(0);
-    setHistory((historyResult.data as MalaSessionRow[] | null) ?? []);
 
     const today = spiritualDate(profile?.timezone ?? 'UTC');
     const { data: sadhanaData } = await supabase
@@ -1401,10 +1381,8 @@ export default function JapaScreen() {
     setScreen('practice');
   }, [sessionStartTime]);
 
-  // "Change mala, mantra or background" — chains launcher → ChooseMala →
-  // ChooseMantra → practice, mirroring JapaClient.tsx's own
-  // handleConfirmMala/handleConfirmMantra chain exactly.
-  const openMalaPicker = useCallback(() => setScreen('chooseMala'), []);
+  // Setup flow — chains ChooseMala → ChooseMantra → practice, mirroring
+  // JapaClient.tsx's own handleConfirmMala/handleConfirmMantra sequence.
   const confirmMalaAndChooseMantra = useCallback(() => setScreen('chooseMantra'), []);
   const backToLauncher = useCallback(() => setScreen('launcher'), []);
   const backToChooseMala = useCallback(() => setScreen('chooseMala'), []);
@@ -1834,138 +1812,69 @@ export default function JapaScreen() {
                   </View>
                 </Pressable>
 
-                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'stretch' }}>
+                <View
+                  style={{
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                    overflow: 'hidden',
+                  }}
+                >
                   <View
+                    pointerEvents="none"
                     style={{
-                      flex: 1,
-                      minWidth: 0,
-                      borderRadius: 18,
-                      borderWidth: 1,
-                      borderColor: theme.premiumBorder,
-                      backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-                      boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                      overflow: 'hidden',
+                      minHeight: 60,
+                      paddingHorizontal: 16,
+                      paddingVertical: 13,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 12,
+                      opacity: reflectionActionPressed ? 0.84 : 1,
+                      transform: [{ scale: reflectionActionPressed && !reduceMotion ? 0.992 : 1 }],
                     }}
                   >
                     <View
-                      pointerEvents="none"
                       style={{
-                        minHeight: 54,
-                        paddingHorizontal: 14,
-                        paddingVertical: 12,
-                        flexDirection: 'row',
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 10,
-                        opacity: malaActionPressed ? 0.82 : 1,
+                        backgroundColor: theme.brandSoft,
                       }}
                     >
-                      <View
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 14,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: theme.brandSoft,
-                        }}
-                      >
-                        <Feather name="sliders" size={14} color={theme.brand} />
-                      </View>
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          flexShrink: 1,
-                          minWidth: 0,
-                          fontFamily: FONTS.sansSemiBold,
-                          fontSize: 12.5,
-                          lineHeight: 16,
-                          color: text,
-                          includeFontPadding: false,
-                        }}
-                      >
-                        Change mala
+                      <Feather name="message-circle" size={16} color={theme.brand} />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: text }} numberOfLines={1}>
+                        Reflect before Japa
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim, marginTop: 2 }} numberOfLines={1}>
+                        Ask Dharma Mitra about this mantra
                       </Text>
                     </View>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Change mala, mantra or background"
-                      onPress={openMalaPicker}
-                      onPressIn={() => {
-                        setMalaActionPressed(true);
-                        void Haptics.selectionAsync();
-                      }}
-                      onPressOut={() => setMalaActionPressed(false)}
-                      style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
-                    />
+                    <Feather name="arrow-up-right" size={17} color={theme.brand} />
                   </View>
-
-                  {history.length > 0 ? (
-                    <View
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        borderRadius: 18,
-                        borderWidth: 1,
-                        borderColor: theme.premiumBorder,
-                        backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-                        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <View
-                        pointerEvents="none"
-                        style={{
-                          minHeight: 54,
-                          paddingHorizontal: 14,
-                          paddingVertical: 12,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 10,
-                          opacity: historyActionPressed ? 0.82 : 1,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 14,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: theme.brandSoft,
-                          }}
-                        >
-                          <Feather name="clock" size={14} color={theme.brand} />
-                        </View>
-                        <Text
-                          numberOfLines={1}
-                          style={{
-                            flexShrink: 1,
-                            minWidth: 0,
-                            fontFamily: FONTS.sansSemiBold,
-                            fontSize: 12.5,
-                            lineHeight: 16,
-                            color: text,
-                            includeFontPadding: false,
-                          }}
-                        >
-                          Recent sessions
-                        </Text>
-                      </View>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="View recent sessions"
-                        onPress={() => setHistoryOpen(true)}
-                        onPressIn={() => {
-                          setHistoryActionPressed(true);
-                          void Haptics.selectionAsync();
-                        }}
-                        onPressOut={() => setHistoryActionPressed(false)}
-                        style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
-                      />
-                    </View>
-                  ) : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Reflect with Dharma Mitra before Japa"
+                    onPress={() => {
+                      router.push({
+                        pathname: '/ai-chat',
+                        params: {
+                          initialMessage: `Before I begin japa with "${mantra.label}", help me reflect on this practice. Today's reflection says: "${fact.text}"${fact.source ? ` — ${fact.source}` : ''}`,
+                        },
+                      });
+                    }}
+                    onPressIn={() => {
+                      setReflectionActionPressed(true);
+                      void Haptics.selectionAsync();
+                    }}
+                    onPressOut={() => setReflectionActionPressed(false)}
+                    style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
+                  />
                 </View>
               </>
             )}
@@ -2632,74 +2541,6 @@ export default function JapaScreen() {
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)' }}>
                 {hasProgress ? 'Discard and leave' : 'Leave setup'}
               </Text>
-            </PressableSurface>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal transparent visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
-          <View
-            style={{
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              backgroundColor: cardBg,
-              borderWidth: 1,
-              borderColor: border,
-              padding: 22,
-              gap: 14,
-              maxHeight: '68%',
-            }}
-          >
-            <View style={{ alignItems: 'center' }}>
-              <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
-            </View>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>Recent sessions</Text>
-            <ScrollView contentContainerStyle={{ gap: 12 }}>
-              {history.length === 0 ? (
-                <View style={{ alignItems: 'center', paddingVertical: 32, gap: 10 }}>
-                  <Text style={{ fontSize: 32 }}>📿</Text>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
-                    No sessions yet
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
-                    Complete your first mala and your practice history will appear here.
-                  </Text>
-                </View>
-              ) : (
-                history.map((item) => (
-                  <View
-                    key={item.id}
-                    style={{
-                      borderRadius: 18,
-                      borderWidth: 1,
-                      borderColor: border,
-                      backgroundColor: cardBg,
-                      padding: 14,
-                      gap: 4,
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
-                      {item.mantra ?? 'Mantra'}
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
-                      {item.count ?? 0} beads · {item.completed_at ? new Date(item.completed_at).toLocaleString('en-GB') : 'Unknown'}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </ScrollView>
-            <PressableSurface
-              haptic="selection"
-              onPress={() => setHistoryOpen(false)}
-              style={{
-                borderRadius: 18,
-                backgroundColor: theme.brand,
-                paddingVertical: 14,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>Close</Text>
             </PressableSurface>
           </View>
         </View>
