@@ -8,11 +8,9 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
 
 const LOCATION_TIMEOUT_MS = 10000;
+const CACHED_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
 
 async function getPositionWithFallback() {
-  const cached = await Location.getLastKnownPositionAsync();
-  if (cached) return cached;
-
   try {
     return await Promise.race([
       Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest }),
@@ -21,7 +19,9 @@ async function getPositionWithFallback() {
       }),
     ]);
   } catch (error) {
-    const lastKnown = await Location.getLastKnownPositionAsync();
+    const lastKnown = await Location.getLastKnownPositionAsync({
+      maxAge: CACHED_LOCATION_MAX_AGE_MS,
+    });
     if (lastKnown) return lastKnown;
     throw error;
   }
