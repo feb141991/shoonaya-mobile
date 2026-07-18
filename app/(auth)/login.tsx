@@ -99,8 +99,8 @@ function AmbientField() {
 }
 
 // Local to this screen (not promoted to components/ui) — the left icon-well
-// + trailing chevron/spinner layout is specific to the two SSO buttons
-// here, not a pattern repeated across other screens yet.
+// layout is specific to the auth buttons here, not a pattern repeated across
+// other screens yet.
 function AuthButton({
   label,
   onPress,
@@ -212,9 +212,7 @@ function AuthButton({
         </View>
         {loading ? (
           <ActivityIndicator size="small" color={isGold ? COLORS.cardBgLight : COLORS.ink} />
-        ) : (
-          <TrailingArrow color={isGold ? COLORS.cardBgLight : COLORS.textDimLight} />
-        )}
+        ) : null}
       </PressableSurface>
       </View>
     </View>
@@ -254,23 +252,6 @@ function AuthDivider({ label }: { label: string }) {
       <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
       <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.textDimLight }}>{label}</Text>
       <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
-    </View>
-  );
-}
-
-function TrailingArrow({ color }: { color: string }) {
-  return (
-    <View
-      pointerEvents="none"
-      style={{
-        width: 22,
-        height: 22,
-        marginLeft: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Feather name="chevron-right" size={18} color={color} strokeWidth={2.2} />
     </View>
   );
 }
