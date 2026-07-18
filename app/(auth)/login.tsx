@@ -400,17 +400,21 @@ export default function LoginScreen() {
           <BrandGlow />
           <Animated.View
             style={{
-              width: 154,
-              height: 154,
-              borderRadius: 42,
+              width: 168,
+              height: 168,
+              borderRadius: 84,
               alignItems: 'center',
               justifyContent: 'center',
+              backgroundColor: COLORS.homeShlokaSurfaceLight,
+              borderWidth: 1,
+              borderColor: COLORS.homeBorderSoftLight,
+              boxShadow: SHADOWS.sm.light,
               transform: [{ scale: brandScale }],
             }}
           >
             <Image
-              source={require('../../assets/icon.png')}
-              style={{ width: 142, height: 142 }}
+              source={require('../../assets/brand/shoonaya-logo-transparent.png')}
+              style={{ width: 148, height: 148 }}
               resizeMode="contain"
               accessibilityLabel="Shoonaya"
             />
