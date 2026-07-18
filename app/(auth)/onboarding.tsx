@@ -20,7 +20,12 @@ import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
 
-type Step = 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'nameStory' | 'language' | 'notifications' | 'ready';
+// 'founderNote' is a preface, not a counted step — it sits before the
+// tracked STEPS array on purpose (see below) so the "Step X of Y" progress
+// dots still start counting at Tradition, the first real question. This is
+// a brief, honest note from the founder shown once, before Shoonaya asks
+// anything of the user — the "why" before the "what."
+type Step = 'founderNote' | 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'nameStory' | 'language' | 'notifications' | 'ready';
 
 const TRADITIONS = [
   { key: 'hindu', label: 'Hindu', icon: 'sun' as const, emoji: '🪔', description: 'Mantras, panchang and daily sadhana' },
@@ -125,6 +130,7 @@ const READY_FEATURES = [
 const STEPS: Step[] = ['tradition', 'personal', 'nakshatra', 'goals', 'name', 'nameStory', 'language', 'notifications', 'ready'];
 
 const STEP_TITLES: Record<Step, string> = {
+  founderNote: 'A note from our founder',
   tradition: 'Your tradition',
   personal: 'Personal details',
   nakshatra: 'Your Birth Nakshatra',
@@ -204,7 +210,7 @@ export default function OnboardingScreen() {
   const wellBgSelected = COLORS.selectionWellSelected;
   const cardShadow = isDark ? SHADOWS.sm.dark : SHADOWS.sm.light;
 
-  const [step, setStep] = useState<Step>('tradition');
+  const [step, setStep] = useState<Step>('founderNote');
   const [tradition, setTradition] = useState<TraditionKey>('hindu');
   const [language, setLanguage] = useState<LanguageKey>('en');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -395,26 +401,28 @@ export default function OnboardingScreen() {
 
   return (
     <Screen style={{ backgroundColor: bg }}>
-      <View accessible accessibilityLabel={stepEyebrow(step)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-        {STEPS.map((s, i) => (
-          <View
-            key={s}
-            style={{
-              height: 4,
-              flex: 1,
-              borderRadius: 999,
-              backgroundColor: i <= stepIndex ? COLORS.brandGold : border,
-            }}
-          />
-        ))}
-      </View>
+      {step !== 'founderNote' ? (
+        <View accessible accessibilityLabel={stepEyebrow(step)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+          {STEPS.map((s, i) => (
+            <View
+              key={s}
+              style={{
+                height: 4,
+                flex: 1,
+                borderRadius: 999,
+                backgroundColor: i <= stepIndex ? COLORS.brandGold : border,
+              }}
+            />
+          ))}
+        </View>
+      ) : null}
 
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ gap: 24, paddingBottom: 32 }}
+        contentContainerStyle={{ gap: 24, paddingBottom: 32, flexGrow: step === 'founderNote' ? 1 : undefined }}
       >
-        {step !== 'ready' ? (
+        {step !== 'ready' && step !== 'founderNote' ? (
           <View style={{ gap: 10 }}>
             <SectionHeader label={stepEyebrow(step)} />
             <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
@@ -422,6 +430,68 @@ export default function OnboardingScreen() {
             </Text>
           </View>
         ) : null}
+
+        {step === 'founderNote' && (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 28, paddingVertical: 24 }}>
+            <View
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: 27,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: wellBgSelected,
+                borderWidth: 1.5,
+                borderColor: COLORS.brandGold,
+              }}
+            >
+              <Feather name="feather" size={22} color={COLORS.brandGold} />
+            </View>
+
+            <View style={{ gap: 4, alignItems: 'center' }}>
+              <Text
+                style={{
+                  fontFamily: FONTS.sansSemiBold,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  color: COLORS.brandGold,
+                }}
+              >
+                Before we begin
+              </Text>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: text, textAlign: 'center' }}>
+                A note from our founder
+              </Text>
+            </View>
+
+            <View style={{ gap: 16, maxWidth: 360 }}>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 17, lineHeight: 27, color: text, textAlign: 'center' }}>
+                I didn&apos;t set out to build an app. I noticed I&apos;d quietly stopped doing the
+                things that once grounded me — a few minutes of japa, a shloka before sleep — not
+                all at once, just the way most things drift over busy years.
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 17, lineHeight: 27, color: text, textAlign: 'center' }}>
+                Shoonaya isn&apos;t meant to be one more app competing for your attention. It&apos;s
+                the one I wished existed when I noticed — small enough to fit into a real day,
+                honest enough to know some days you&apos;ll miss.
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 17, lineHeight: 27, color: text, textAlign: 'center' }}>
+                If it helps you come back to something you thought you&apos;d lost, it&apos;s done
+                its job.
+              </Text>
+            </View>
+
+            <View style={{ alignItems: 'center', gap: 2, marginTop: 4 }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 19, letterSpacing: 0.4, color: text }}>
+                Prince
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                Founder, Shoonaya
+              </Text>
+            </View>
+          </View>
+        )}
 
         {step === 'tradition' && (
           <>
@@ -829,7 +899,13 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      {step !== 'notifications' && step !== 'ready' && step !== 'nameStory' ? (
+      {step === 'founderNote' ? (
+        <View style={{ marginTop: 16 }}>
+          <Button label="Begin your journey" onPress={() => { void goToStep('tradition'); }} />
+        </View>
+      ) : null}
+
+      {step !== 'notifications' && step !== 'ready' && step !== 'nameStory' && step !== 'founderNote' ? (
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
           {stepIndex > 0 ? <Button label="Back" variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
           <Button label={step === 'nakshatra' || step === 'name' ? 'Continue / Skip' : 'Continue'} onPress={() => { void goNext(); }} style={{ flex: 1 }} />
