@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import Svg, { Circle, Line, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
@@ -1526,81 +1527,6 @@ export default function JapaScreen() {
     });
   }
 
-  function buildGuruPendant(center: number, radius: number) {
-    const beadY = center + radius;
-    const pendantY = beadY + 13;
-
-    return (
-      <Fragment>
-        <Line
-          x1={center}
-          y1={beadY - 5}
-          x2={center}
-          y2={pendantY - 13}
-          stroke={malaSkin.threadColor}
-          strokeWidth={3.2}
-          strokeLinecap="round"
-          opacity={0.82}
-        />
-        <Circle
-          cx={center + 3}
-          cy={pendantY + 3}
-          r={19}
-          fill={malaSkin.beadBorder}
-          opacity={0.32}
-        />
-        <Circle
-          cx={center}
-          cy={pendantY}
-          r={18}
-          fill="url(#grad-guru)"
-          stroke={malaSkin.threadColor}
-          strokeWidth={1.4}
-          opacity={0.98}
-        />
-        <Circle cx={center - 5.6} cy={pendantY - 3.2} r={1.3} fill={COLORS.ink} opacity={0.54} />
-        <Circle cx={center + 5.6} cy={pendantY - 3.2} r={1.3} fill={COLORS.ink} opacity={0.54} />
-        <Path
-          d={`M ${center - 5.5} ${pendantY + 2.5} Q ${center} ${pendantY + 5.4} ${center + 5.5} ${pendantY + 2.5}`}
-          stroke={COLORS.ink}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          fill="none"
-          opacity={0.38}
-        />
-        <Path
-          d={`M ${center - 10} ${pendantY + 7} Q ${center} ${pendantY + 15} ${center + 10} ${pendantY + 7}`}
-          stroke={malaSkin.beadBorder}
-          strokeWidth={3}
-          strokeLinecap="round"
-          fill="none"
-          opacity={0.9}
-        />
-        <Line
-          x1={center}
-          y1={pendantY + 16}
-          x2={center}
-          y2={pendantY + 21}
-          stroke={malaSkin.threadColor}
-          strokeWidth={4}
-          strokeLinecap="round"
-          opacity={0.78}
-        />
-        {[-13, -7, 0, 7, 13].map((offset) => (
-          <Path
-            key={`guru-tassel-${offset}`}
-            d={`M ${center} ${pendantY + 20} C ${center + offset * 0.25} ${pendantY + 24}, ${center + offset} ${pendantY + 28}, ${center + offset} ${pendantY + 31}`}
-            stroke={malaSkin.threadColor}
-            strokeWidth={3.8}
-            strokeLinecap="round"
-            fill="none"
-            opacity={0.76}
-          />
-        ))}
-      </Fragment>
-    );
-  }
-
   const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS), [count]);
   const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS), [bloomIndex]);
 
@@ -2412,8 +2338,15 @@ export default function JapaScreen() {
               onPress={() => { void increment(); }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Animated.View style={{ transform: [{ scale: tapScale }, { rotate: tapRotate }] }}>
-                <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE}>
+              <Animated.View
+                style={{
+                  width: PRACTICE_SVG_SIZE,
+                  height: PRACTICE_SVG_SIZE + 86,
+                  alignItems: 'center',
+                  transform: [{ scale: tapScale }, { rotate: tapRotate }],
+                }}
+              >
+                <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE} style={{ position: 'absolute', top: 0 }}>
                   {beadGradientDefs}
                   <AnimatedCircle
                     cx={PRACTICE_CENTER}
@@ -2435,7 +2368,6 @@ export default function JapaScreen() {
                     strokeDasharray="1 10"
                     opacity={geometryOpacity}
                   />
-                  {buildGuruPendant(PRACTICE_CENTER, PRACTICE_RADIUS)}
                   {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
                   {count < 108 ? (
                     <AnimatedCircle
@@ -2460,6 +2392,17 @@ export default function JapaScreen() {
                     />
                   ) : null}
                 </Svg>
+                <Image
+                  source={require('../../assets/japa/guru-pendant.png')}
+                  contentFit="contain"
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    top: PRACTICE_CENTER + PRACTICE_RADIUS - 17,
+                    width: 74,
+                    height: 160,
+                  }}
+                />
               </Animated.View>
               <Animated.View
                 pointerEvents="none"
