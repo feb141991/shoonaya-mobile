@@ -133,6 +133,29 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ city: 
   return { city: json.city as string, country: (json.country as string) ?? '' };
 }
 
+// Forward geocode a free-text "city, country" query into approximate
+// coordinates — reuses the existing /api/tirtha/geocode proxy (Geoapify
+// primary, Nominatim fallback; same route Tirtha's temple search already
+// depends on) rather than standing up a second geocoding route. Used by
+// JoinMandaliPrompt's manual-city fallback so a user who types their city
+// instead of using GPS still ends up with real latitude/longitude on their
+// profile, instead of it staying permanently null (which previously left
+// "Seekers Near You" and any other distance-based Mandali feature broken
+// for anyone who ever used the manual path). Returns null on a 404 ("could
+// not find that place") or network failure — callers should proceed with
+// just city/country in that case, exactly as before this existed.
+export async function forwardGeocode(query: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const res = await apiFetch(`/api/tirtha/geocode?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (typeof json.lat !== 'number' || typeof json.lon !== 'number') return null;
+    return { lat: json.lat, lon: json.lon };
+  } catch {
+    return null;
+  }
+}
+
 function parseErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === 'string' && error.trim()) return error;

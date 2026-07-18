@@ -5,7 +5,7 @@ import * as Location from 'expo-location';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
-import { fetchNearbyMandalis, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
+import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
 
 const LOCATION_TIMEOUT_MS = 10000;
 
@@ -56,6 +56,7 @@ export function JoinMandaliPrompt({
   const [detected, setDetected] = useState<{ city: string; country: string; lat?: number; lon?: number } | null>(null);
   const [manualCity, setManualCity] = useState('');
   const [manualCountry, setManualCountry] = useState('');
+  const [resolvingManualLocation, setResolvingManualLocation] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [nearby, setNearby] = useState<NearbyMandali[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
@@ -100,7 +101,7 @@ export function JoinMandaliPrompt({
     }
   };
 
-  const useManualCity = () => {
+  const useManualCity = async () => {
     if (!manualCity.trim()) {
       setGeoError('Enter a city first.');
       return;
@@ -110,8 +111,28 @@ export function JoinMandaliPrompt({
       return;
     }
     setGeoError('');
-    setDetected({ city: manualCity.trim(), country: manualCountry.trim() });
-    setNearby([]);
+    const city = manualCity.trim();
+    const country = manualCountry.trim();
+
+    // Resolve approximate coordinates for the typed city too — previously
+    // manual entry only ever saved city/country text, leaving
+    // latitude/longitude permanently null on the profile (breaking Seekers
+    // Near You and any other distance-based Mandali feature for anyone who
+    // used this path instead of GPS detection). A failed lookup here isn't
+    // fatal — city/country alone is still enough to join a Mandali, exactly
+    // as before this existed.
+    setResolvingManualLocation(true);
+    try {
+      const coords = await forwardGeocode(`${city}, ${country}`);
+      setDetected({ city, country, lat: coords?.lat, lon: coords?.lon });
+      if (coords) {
+        await loadNearby(coords.lat, coords.lon);
+      } else {
+        setNearby([]);
+      }
+    } finally {
+      setResolvingManualLocation(false);
+    }
   };
 
   const joinMine = async () => {
@@ -223,10 +244,27 @@ export function JoinMandaliPrompt({
           />
           <PressableSurface
             haptic="selection"
-            onPress={useManualCity}
-            style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: surface, borderWidth: 1, borderColor: border, minHeight: 0 }}
+            onPress={() => void useManualCity()}
+            disabled={resolvingManualLocation}
+            style={{
+              alignSelf: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              borderRadius: 999,
+              paddingHorizontal: 16,
+              paddingVertical: 9,
+              backgroundColor: surface,
+              borderWidth: 1,
+              borderColor: border,
+              minHeight: 0,
+              opacity: resolvingManualLocation ? 0.7 : 1,
+            }}
           >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>Use this city</Text>
+            {resolvingManualLocation ? <ActivityIndicator size="small" color={brand} /> : null}
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+              {resolvingManualLocation ? 'Finding your city…' : 'Use this city'}
+            </Text>
           </PressableSurface>
         </View>
       ) : null}
