@@ -10,14 +10,50 @@ import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliFo
 const LOCATION_TIMEOUT_MS = 10000;
 const CACHED_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
 
+async function getFreshPositionWithTimeout(): Promise<Location.LocationObject> {
+  let settled = false;
+  let subscription: Location.LocationSubscription | null = null;
+  return new Promise<Location.LocationObject>((resolve, reject) => {
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      subscription?.remove();
+      clearTimeout(timeout);
+      callback();
+    };
+
+    const timeout = setTimeout(() => {
+      finish(() => reject(new Error('Location lookup timed out')));
+    }, LOCATION_TIMEOUT_MS);
+
+    void Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest })
+      .then((location) => finish(() => resolve(location)))
+      .catch(() => {});
+
+    void Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 1000,
+        distanceInterval: 0,
+      },
+      (location) => {
+        finish(() => resolve(location));
+      }
+    )
+      .then((sub) => {
+        if (settled) {
+          sub.remove();
+          return;
+        }
+        subscription = sub;
+      })
+      .catch((error) => finish(() => reject(error)));
+  });
+}
+
 async function getPositionWithFallback() {
   try {
-    return await Promise.race([
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest }),
-      new Promise<Location.LocationObject>((_, reject) => {
-        setTimeout(() => reject(new Error('Location lookup timed out')), LOCATION_TIMEOUT_MS);
-      }),
-    ]);
+    return await getFreshPositionWithTimeout();
   } catch (error) {
     const lastKnown = await Location.getLastKnownPositionAsync({
       maxAge: CACHED_LOCATION_MAX_AGE_MS,
