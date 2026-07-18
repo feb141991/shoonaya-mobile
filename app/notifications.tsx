@@ -5,6 +5,7 @@ import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
@@ -292,16 +293,7 @@ export default function NotificationsScreen() {
   const listHeader = (
     <View style={{ gap: 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <PressableSurface
-            haptic="selection"
-            onPress={() => router.back()}
-            accessibilityLabel="Back"
-            hitSlop={10}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MIN_TOUCH_TARGET }}
-          >
-            <Feather name="chevron-left" size={16} color={theme.dim} />
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton variant="glass" />
 
           <PressableSurface
             haptic="selection"

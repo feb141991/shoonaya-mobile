@@ -18,6 +18,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Card } from '@/components/ui/Card';
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -857,16 +858,7 @@ export default function MandaliScreen() {
 
   const renderFeedHeader = useCallback(() => (
     <>
-      <PressableSurface
-        haptic="selection"
-        onPress={() => router.back()}
-        accessibilityLabel="Back"
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 16 }}
-      >
-        <Feather name="chevron-left" size={16} color={theme.dim} />
-        <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-      </PressableSurface>
+      <BackButton variant="glass" style={{ marginHorizontal: 16, marginTop: 16 }} />
 
       <LinearGradient
         colors={isDark

@@ -23,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Card } from '@/components/ui/Card';
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
@@ -314,10 +315,7 @@ export default function DharmVeerScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-            <Feather name="chevron-left" size={16} color={textDim} />
-            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton variant="glass" />
 
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
@@ -352,10 +350,7 @@ export default function DharmVeerScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-            <Feather name="chevron-left" size={16} color={textDim} />
-            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton variant="glass" />
 
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
@@ -395,10 +390,7 @@ export default function DharmVeerScreen() {
         </View>
       ) : null}
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={textDim} />
-          <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        <BackButton variant="glass" />
 
         <View style={{ gap: 4 }}>
           <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>

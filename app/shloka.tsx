@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
@@ -296,10 +297,7 @@ export default function ShlokaScreen() {
       <Screen style={{ backgroundColor: background }}>
         <AmbientBackdrop isDark={isDark} brand={brand} />
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-            <Feather name="chevron-left" size={16} color={dim} />
-            <Text style={{ color: dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton variant="glass" />
           <View style={{ borderRadius: 26, padding: 22, backgroundColor: glass, borderWidth: 1, borderColor: border }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>
               {"Could not load today's verse"}

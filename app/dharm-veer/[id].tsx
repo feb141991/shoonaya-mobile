@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
@@ -150,10 +151,7 @@ export default function DharmVeerDetailScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-            <Feather name="chevron-left" size={16} color={textDim} />
-            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton variant="glass" />
 
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 26 }}>
@@ -230,10 +228,7 @@ export default function DharmVeerDetailScreen() {
         />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={textDim} />
-          <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        <BackButton variant="glass" />
 
         <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 16 }}>
           <DharmVeerPoster hero={hero} />

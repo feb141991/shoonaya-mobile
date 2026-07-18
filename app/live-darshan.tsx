@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { BackButton } from '@/components/ui/BackButton';
 import { MotionView } from '@/components/ui/Motion';
 import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -54,7 +54,6 @@ const TRADITION_FILTERS: Array<{ key: TraditionFilter; label: string }> = [
 type ScreenStatus = 'loading' | 'ready' | 'error';
 
 function LiveDarshanContent() {
-  const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
@@ -106,15 +105,7 @@ function LiveDarshanContent() {
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: 56, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}>
-        <PressableSurface
-          haptic="selection"
-          accessibilityLabel="Back"
-          onPress={() => router.back()}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}
-        >
-          <Feather name="chevron-left" size={16} color={dim} />
-          <Text style={{ color: dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        <BackButton variant="glass" />
 
         <View>
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Live Darshan</Text>
