@@ -110,7 +110,7 @@ type MandaliPostCardProps = {
   theme: MandaliTheme;
   onRsvp: (postId: string, status: RsvpStatus) => void;
   onShowOptions: (post: PostRow) => void;
-  onSubmitComment: (postId: string, body: string) => void;
+  onSubmitComment: (postId: string, body: string, parentId?: string | null) => void;
   onToggleComments: (postId: string) => void;
   onToggleUpvote: (postId: string) => void;
 };
@@ -293,7 +293,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
         onToggleExpand={() => onToggleComments(post.id)}
         userId={userId ?? ''}
         posting={postingComment}
-        onSubmit={(body) => onSubmitComment(post.id, body)}
+        onSubmit={(body, parentId) => onSubmitComment(post.id, body, parentId)}
         text={theme.text}
         dim={theme.dim}
         border={theme.premiumBorder}
@@ -613,11 +613,11 @@ export default function MandaliScreen() {
     if (result.error) void loadMandali();
   }, [loadMandali, posts, profile, upvotedIdSet]);
 
-  const submitComment = useCallback(async (postId: string, body: string) => {
+  const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null) => {
     if (!profile) return;
     setCommenting(postId);
     try {
-      await createMandaliComment({ postId, userId: profile.userId, body });
+      await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
       await loadMandali();
     } catch {
       Alert.alert('Could not post comment', 'Check your connection and try again.');

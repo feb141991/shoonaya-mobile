@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
@@ -13,6 +13,17 @@ import type { CommentRow } from '@/lib/mandali';
 // this list updates live without a manual refresh — the behavior the user
 // specifically asked to be better than PWA (which needs a refresh to see
 // new comments).
+//
+// Threading: matches PWA's MandaliClient.tsx one-level reply model — root
+// comments (parent_id null) can each have direct replies grouped under
+// them via parent_id, with a "Reply" button per root comment opening an
+// inline reply composer. `onSubmit`'s second argument mirrors PWA's
+// onAddComment(postId, body, parentId) — omitted/undefined for a top-level
+// comment, set to the root comment's id for a reply. Previously this
+// component only ever posted flat top-level comments (no grouping, no
+// Reply affordance) even though the data layer (CommentRow.parent_id,
+// createMandaliComment's parentId param) already fully supported replies —
+// this rebuild is what actually wires that up.
 export function PostComments({
   comments,
   expanded,
@@ -30,19 +41,41 @@ export function PostComments({
   onToggleExpand: () => void;
   userId: string;
   posting: boolean;
-  onSubmit: (body: string) => void;
+  onSubmit: (body: string, parentId?: string | null) => void;
   text: string;
   dim: string;
   border: string;
   brand: string;
 }) {
   const [draft, setDraft] = useState('');
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState('');
+
+  const rootComments = useMemo(() => comments.filter((comment) => !comment.parent_id), [comments]);
+  const repliesByParent = useMemo(() => {
+    const grouped = new Map<string, CommentRow[]>();
+    for (const comment of comments) {
+      if (!comment.parent_id) continue;
+      const current = grouped.get(comment.parent_id);
+      if (current) current.push(comment);
+      else grouped.set(comment.parent_id, [comment]);
+    }
+    return grouped;
+  }, [comments]);
 
   const submit = () => {
     const trimmed = draft.trim();
     if (!trimmed || posting) return;
     onSubmit(trimmed);
     setDraft('');
+  };
+
+  const submitReply = (parentId: string) => {
+    const trimmed = replyDraft.trim();
+    if (!trimmed || posting) return;
+    onSubmit(trimmed, parentId);
+    setReplyDraft('');
+    setReplyTo(null);
   };
 
   return (
@@ -60,23 +93,112 @@ export function PostComments({
       </PressableSurface>
 
       {expanded ? (
-        <View style={{ marginTop: 10, gap: 10 }}>
-          {comments.map((comment) => (
-            <View key={comment.id} style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: text }}>
-                  {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
-                </Text>
+        <View style={{ marginTop: 10, gap: 12 }}>
+          {rootComments.map((comment) => {
+            const replies = repliesByParent.get(comment.id) ?? [];
+            const isReplying = replyTo === comment.id;
+            return (
+              <View key={comment.id} style={{ gap: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: text }}>
+                      {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1, gap: 1 }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+                      {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
+                      {comment.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
+                    </Text>
+                    <Text style={{ fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 19, color: text }}>{comment.body}</Text>
+                    <PressableSurface
+                      haptic="selection"
+                      onPress={() => {
+                        setReplyTo((current) => (current === comment.id ? null : comment.id));
+                        setReplyDraft('');
+                      }}
+                      style={{ minHeight: 0, alignSelf: 'flex-start', marginTop: 2 }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: dim }}>Reply</Text>
+                    </PressableSurface>
+                  </View>
+                </View>
+
+                {replies.length > 0 ? (
+                  <View style={{ marginLeft: 34, gap: 8 }}>
+                    {replies.map((reply) => (
+                      <View key={reply.id} style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: text }}>
+                            {(reply.profiles?.full_name ?? reply.profiles?.username ?? '?').charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                        <View style={{ flex: 1, gap: 1 }}>
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>
+                            {reply.profiles?.full_name ?? reply.profiles?.username ?? 'Seeker'}
+                            {reply.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
+                          </Text>
+                          <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18, color: text }}>{reply.body}</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {isReplying ? (
+                  <View style={{ marginLeft: 34, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <TextInput
+                      value={replyDraft}
+                      onChangeText={setReplyDraft}
+                      placeholder={`Reply to ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'this comment'}…`}
+                      placeholderTextColor={dim}
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: border,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        fontFamily: FONTS.sans,
+                        fontSize: 13,
+                        color: text,
+                      }}
+                      onSubmitEditing={() => submitReply(comment.id)}
+                      returnKeyType="send"
+                    />
+                    <PressableSurface
+                      accessibilityLabel="Cancel reply"
+                      onPress={() => {
+                        setReplyTo(null);
+                        setReplyDraft('');
+                      }}
+                      style={{ minHeight: 0, padding: 6 }}
+                    >
+                      <Feather name="x" size={14} color={dim} />
+                    </PressableSurface>
+                    <PressableSurface
+                      accessibilityLabel="Send reply"
+                      disabled={posting || !replyDraft.trim()}
+                      onPress={() => submitReply(comment.id)}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 15,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: replyDraft.trim() ? brand : border,
+                        opacity: posting ? 0.6 : 1,
+                        minHeight: 0,
+                      }}
+                    >
+                      {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={12} color={COLORS.ink} />}
+                    </PressableSurface>
+                  </View>
+                ) : null}
               </View>
-              <View style={{ flex: 1, gap: 1 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
-                  {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
-                  {comment.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
-                </Text>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 19, color: text }}>{comment.body}</Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
             <TextInput
