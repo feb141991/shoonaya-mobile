@@ -10,18 +10,18 @@ import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliFo
 const LOCATION_TIMEOUT_MS = 10000;
 
 async function getPositionWithFallback() {
+  const cached = await Location.getLastKnownPositionAsync();
+  if (cached) return cached;
+
   try {
     return await Promise.race([
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest }),
       new Promise<Location.LocationObject>((_, reject) => {
         setTimeout(() => reject(new Error('Location lookup timed out')), LOCATION_TIMEOUT_MS);
       }),
     ]);
   } catch (error) {
-    const lastKnown = await Location.getLastKnownPositionAsync({
-      maxAge: 10 * 60 * 1000,
-      requiredAccuracy: 5000,
-    });
+    const lastKnown = await Location.getLastKnownPositionAsync();
     if (lastKnown) return lastKnown;
     throw error;
   }
