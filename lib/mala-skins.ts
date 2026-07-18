@@ -9,10 +9,10 @@ export type MalaSkin = {
 
 export const MALA_SKINS: Record<string, MalaSkin> = {
   default: {
-    beadColor: '#6B4226',
-    beadBorder: 'rgba(139,90,60,0.6)',
-    threadColor: '#8B6914',
-    glowColor: 'rgba(197,160,89,0.6)',
+    beadColor: '#EFD7A8',
+    beadBorder: 'rgba(176,118,55,0.78)',
+    threadColor: '#C9831F',
+    glowColor: 'rgba(216,138,28,0.52)',
     label: 'Sandalwood',
     pendant: 'rishi',
   },

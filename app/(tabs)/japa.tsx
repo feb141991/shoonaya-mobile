@@ -1489,12 +1489,12 @@ export default function JapaScreen() {
       const { x, y } = beadPosition(index, center, radius);
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
-      const isSumeru = index === 0;
+      const isSumeru = index === 54;
 
-      const r = isSumeru ? 13 : isCurrent ? 10.8 : isDone ? 7.2 : 5.8;
-      const gradientId = isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
-      const shadowOpacity = isCurrent ? 0.38 : isDone ? 0.28 : 0.18;
-      const highlightOpacity = isCurrent ? 0.76 : isDone ? 0.48 : 0.32;
+      const r = isSumeru ? 16.5 : isCurrent ? 13.4 : isDone ? 9 : 8;
+      const gradientId = isSumeru ? 'grad-guru' : isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
+      const shadowOpacity = isCurrent || isSumeru ? 0.4 : isDone ? 0.3 : 0.22;
+      const highlightOpacity = isCurrent || isSumeru ? 0.78 : isDone ? 0.54 : 0.38;
 
       return (
         <Fragment key={`bead-${index}`}>
@@ -1510,9 +1510,9 @@ export default function JapaScreen() {
             cy={y}
             r={r}
             fill={`url(#${gradientId})`}
-            stroke={isCurrent ? theme.brand : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
-            strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.35 : 0.65}
-            strokeOpacity={isDone || isCurrent ? 0.95 : 0.72}
+            stroke={isCurrent ? theme.brand : isSumeru ? malaSkin.threadColor : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
+            strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.6 : 0.8}
+            strokeOpacity={isDone || isCurrent || isSumeru ? 0.95 : 0.72}
           />
           <Circle
             cx={x - r * 0.34}
@@ -1559,6 +1559,11 @@ export default function JapaScreen() {
       <RadialGradient id="grad-active" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
         <Stop offset="32%" stopColor={theme.brand} stopOpacity="1" />
+        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+      </RadialGradient>
+      <RadialGradient id="grad-guru" cx="28%" cy="24%" r="80%">
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
+        <Stop offset="36%" stopColor={malaSkin.threadColor} stopOpacity="1" />
         <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
       </RadialGradient>
     </Defs>
@@ -1782,25 +1787,33 @@ export default function JapaScreen() {
                   </View>
                 </View>
 
-                <View
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Begin Japa"
+                  onPress={handleStartPractice}
+                  onPressIn={() => {
+                    setBeginPressed(true);
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  }}
+                  onPressOut={() => setBeginPressed(false)}
                   style={{
                     borderRadius: 999,
                     backgroundColor: theme.brand,
                     boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-                    overflow: 'hidden',
                     minHeight: 52,
+                    paddingHorizontal: 20,
+                    paddingVertical: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: beginPressed ? 0.88 : 1,
+                    transform: [{ scale: beginPressed && !reduceMotion ? 0.985 : 1 }],
                   }}
                 >
                   <View
                     pointerEvents="none"
                     style={{
-                      minHeight: 52,
-                      paddingHorizontal: 20,
-                      paddingVertical: 14,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      opacity: beginPressed ? 0.88 : 1,
-                      transform: [{ scale: beginPressed && !reduceMotion ? 0.985 : 1 }],
                     }}
                   >
                     <Text
@@ -1818,18 +1831,7 @@ export default function JapaScreen() {
                       Begin Japa
                     </Text>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Begin Japa"
-                    onPress={handleStartPractice}
-                    onPressIn={() => {
-                      setBeginPressed(true);
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    }}
-                    onPressOut={() => setBeginPressed(false)}
-                    style={{ position: 'absolute', inset: 0 }}
-                  />
-                </View>
+                </Pressable>
 
                 <View style={{ flexDirection: 'row', gap: 10, alignItems: 'stretch' }}>
                   <View
@@ -1893,7 +1895,7 @@ export default function JapaScreen() {
                         void Haptics.selectionAsync();
                       }}
                       onPressOut={() => setMalaActionPressed(false)}
-                      style={{ position: 'absolute', inset: 0 }}
+                      style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
                     />
                   </View>
 
@@ -1959,7 +1961,7 @@ export default function JapaScreen() {
                           void Haptics.selectionAsync();
                         }}
                         onPressOut={() => setHistoryActionPressed(false)}
-                        style={{ position: 'absolute', inset: 0 }}
+                        style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
                       />
                     </View>
                   ) : null}
@@ -2357,14 +2359,6 @@ export default function JapaScreen() {
                     strokeWidth={1}
                     strokeDasharray="1 10"
                     opacity={geometryOpacity}
-                  />
-                  <Line
-                    x1={PRACTICE_CENTER}
-                    y1={PRACTICE_CENTER}
-                    x2={PRACTICE_CENTER}
-                    y2={PRACTICE_CENTER - PRACTICE_RADIUS}
-                    stroke={malaSkin.threadColor}
-                    strokeWidth={2}
                   />
                   <Line
                     x1={PRACTICE_CENTER}
