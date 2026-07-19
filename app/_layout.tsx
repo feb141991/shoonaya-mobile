@@ -145,6 +145,7 @@ function RootLayout() {
     if (readyToRender) return;
 
     const timer = setTimeout(() => {
+      setAuthReady(true);
       setAppIsReady(true);
     }, 6000);
 
