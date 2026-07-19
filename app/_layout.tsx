@@ -20,6 +20,7 @@ import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
 import { RouteTransition } from '@/components/ui/Motion';
+import { trackScreenView } from '@/lib/analytics';
 import { setApiAccessTokenFromSession } from '@/lib/api';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
@@ -162,6 +163,16 @@ function RootLayout() {
       console.error('Push notification initialization error:', e);
     }
   }, [fontsLoaded, fontError, router]);
+
+  // ── Privacy-safe app analytics ────────────────────────────────────────
+  useEffect(() => {
+    if (!readyToRender) return;
+
+    const routeName = segments.filter(Boolean).join('/') || 'home';
+    trackScreenView(routeName).catch(() => {
+      // Analytics must never interrupt app navigation.
+    });
+  }, [readyToRender, segments]);
 
   // ── Handle Auth and App State ─────────────────────────────────────
   useEffect(() => {

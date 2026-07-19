@@ -75,6 +75,7 @@
         }
       ],
       "expo-web-browser",
+      "./plugins/with-firebase-analytics-android",
       [
         "expo-image-picker",
         {

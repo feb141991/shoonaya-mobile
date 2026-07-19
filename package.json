@@ -7,6 +7,8 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-firebase/analytics": "^25.1.0",
+    "@react-native-firebase/app": "^25.1.0",
     "@sangam/panchang-engine": "file:vendor/sangam-panchang-engine-0.1.0.tgz",
     "@sangam/pathshala-engine": "file:vendor/sangam-pathshala-engine-1.0.0.tgz",
     "@supabase/supabase-js": "^2.106.2",
