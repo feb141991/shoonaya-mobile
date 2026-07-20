@@ -86,6 +86,89 @@ type ObservanceEntry = {
   label: string;
 };
 
+type HomeMenuTileItem = {
+  label: string;
+  href: string;
+  sacredId: SacredIconName | null;
+  fallbackGlyph: keyof typeof Feather.glyphMap;
+  accent: string;
+  bg?: string;
+  border?: string;
+};
+
+type HomeMenuTheme = {
+  glass: string;
+  premiumBorder: string;
+  text: string;
+};
+
+function HomeMenuTile({
+  item,
+  columns,
+  isDark,
+  theme,
+  onPress,
+}: {
+  item: HomeMenuTileItem;
+  columns: 2 | 3;
+  isDark: boolean;
+  theme: HomeMenuTheme;
+  onPress: () => void;
+}) {
+  const isThreeColumn = columns === 3;
+
+  return (
+    <PressableSurface
+      accessibilityLabel={item.label}
+      onPress={onPress}
+      pressedStyle={{ transform: [{ scale: 0.96 }] }}
+      style={{
+        flex: isThreeColumn ? 1 : undefined,
+        width: isThreeColumn ? undefined : '48.5%',
+        minHeight: isThreeColumn ? 118 : 112,
+        borderRadius: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 6,
+        backgroundColor: item.bg ?? theme.glass,
+        borderWidth: 1,
+        borderColor: item.border ?? theme.premiumBorder,
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {item.sacredId ? (
+          <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
+        ) : (
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 18,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: `${item.accent}15`,
+              borderWidth: 1,
+              borderColor: `${item.accent}28`,
+            }}
+          >
+            <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
+          </View>
+        )}
+      </View>
+      <Text
+        style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.82}
+      >
+        {item.label}
+      </Text>
+    </PressableSurface>
+  );
+}
+
 type HomeSummary = {
   profile: {
     name: string;
@@ -1223,49 +1306,15 @@ function HomeContent() {
                   fallbackGlyph: 'aperture' as const,
                   accent: COLORS.tileBlue,
                 },
-              ]).map((item) => (
-                <PressableSurface
+              ] satisfies HomeMenuTileItem[]).map((item) => (
+                <HomeMenuTile
                   key={item.label}
-                  accessibilityLabel={item.label}
+                  item={item}
+                  columns={3}
+                  isDark={isDark}
+                  theme={theme}
                   onPress={() => navigate(item.href as Href)}
-                  style={{
-                    flex: 1,
-                    minHeight: 118,
-                    borderRadius: 20,
-                    paddingVertical: 14,
-                    paddingHorizontal: 6,
-                    backgroundColor: theme.glass,
-                    borderWidth: 1,
-                    borderColor: theme.premiumBorder,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <View style={{ marginBottom: 10 }}>
-                    {item.sacredId && item.fallbackGlyph ? (
-                      <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
-                    ) : (
-                      <View
-                        style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 18,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: `${item.accent}15`,
-                          borderWidth: 1,
-                          borderColor: `${item.accent}28`,
-                        }}
-                      >
-                        <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
-                      </View>
-                    )}
-                  </View>
-                  <Text style={{ ...TYPE.label, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-                    {item.label}
-                  </Text>
-                </PressableSurface>
+                />
               ))}
             </View>
           </View>
@@ -1279,51 +1328,15 @@ function HomeContent() {
                 { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
                 { label: 'AI Guide', href: '/ai-chat',     sacredId: null,                         fallbackGlyph: 'message-circle' as const, accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
                 { label: 'Progress', href: '/my-progress', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'trending-up' as const, accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
-              ]).map(item => (
-                <PressableSurface
+              ] satisfies HomeMenuTileItem[]).map((item) => (
+                <HomeMenuTile
                   key={item.label}
-                  accessibilityLabel={item.label}
+                  item={item}
+                  columns={2}
+                  isDark={isDark}
+                  theme={theme}
                   onPress={() => navigate(item.href as Href)}
-                  pressedStyle={{ transform: [{ scale: 0.94 }] }}
-	                  style={{
-	                    alignItems: 'center',
-	                    justifyContent: 'center',
-	                    backgroundColor: item.bg,
-	                    borderRadius: 20,
-	                    paddingVertical: 14,
-	                    width: '48.5%',
-	                    minHeight: 116,
-	                    borderWidth: 1,
-	                    borderColor: item.border,
-	                  }}
-	                >
-	                  {item.sacredId && item.fallbackGlyph ? (
-                      <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                        <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
-                      </View>
-	                  ) : (
-                      <View
-                        style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 18,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: `${item.accent}15`,
-                          borderWidth: 1,
-                          borderColor: `${item.accent}28`,
-                          marginBottom: 10,
-                        }}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                      >
-                        <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
-                      </View>
-	                  )}
-                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
-                    {item.label}
-                  </Text>
-                </PressableSurface>
+                />
               ))}
             </View>
           </View>
@@ -1341,51 +1354,15 @@ function HomeContent() {
                 // anywhere in the app. This card is the fix; the tab stays hidden.
                 { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: null,                              fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
                 { label: 'Seva',        href: '/my-progress',      sacredId: null,                              fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
-              ]).map(item => (
-                <PressableSurface
+              ] satisfies HomeMenuTileItem[]).map((item) => (
+                <HomeMenuTile
                   key={item.label}
-                  accessibilityLabel={item.label}
+                  item={item}
+                  columns={2}
+                  isDark={isDark}
+                  theme={theme}
                   onPress={() => navigate(item.href as Href)}
-                  pressedStyle={{ transform: [{ scale: 0.94 }] }}
-	                  style={{
-	                    alignItems: 'center',
-	                    justifyContent: 'center',
-	                    backgroundColor: item.bg,
-	                    borderRadius: 20,
-	                    paddingVertical: 14,
-	                    width: '48.5%',
-	                    minHeight: 116,
-	                    borderWidth: 1,
-	                    borderColor: item.border,
-	                  }}
-	                >
-	                  {item.sacredId && item.fallbackGlyph ? (
-                      <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                        <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
-                      </View>
-	                  ) : (
-                      <View
-                        style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 18,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: `${item.accent}15`,
-                          borderWidth: 1,
-                          borderColor: `${item.accent}28`,
-                          marginBottom: 10,
-                        }}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                      >
-                        <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
-                      </View>
-	                  )}
-                  <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
-                    {item.label}
-                  </Text>
-                </PressableSurface>
+                />
               ))}
             </View>
           </View>
