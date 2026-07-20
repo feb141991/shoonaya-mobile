@@ -93,7 +93,8 @@ const PRACTICE_SVG_SIZE = 382;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
 const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2 - 12;
-const PRACTICE_RADIUS = 162;
+const PRACTICE_RADIUS_X = 154;
+const PRACTICE_RADIUS_Y = 178;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
@@ -792,13 +793,13 @@ function SceneReadabilityWash({ isDark }: { isDark: boolean }) {
       <View
         style={{
           position: 'absolute',
-          top: '26%',
+          top: '36%',
           left: '50%',
-          width: 390,
-          height: 390,
-          marginLeft: -195,
-          borderRadius: 195,
-          backgroundColor: isDark ? 'rgba(8,6,4,0.22)' : 'rgba(255,253,248,0.54)',
+          width: 258,
+          height: 258,
+          marginLeft: -129,
+          borderRadius: 129,
+          backgroundColor: isDark ? 'rgba(8,6,4,0.12)' : 'rgba(255,253,248,0.22)',
         }}
       />
       <View
@@ -957,12 +958,10 @@ export default function JapaScreen() {
   const [durationSecs, setDurationSecs] = useState(0);
 
   // ── Bead-ring motion — matches PWA's "current-pulse" breathing ring and
-  // per-tap "flash ripple" (JapaClient.tsx), plus a sacred-geometry accent
-  // that reveals itself as completedRounds grows (PWA's <SacredGeometry/>).
+  // per-tap "flash ripple" (JapaClient.tsx).
   const [bloomIndex, setBloomIndex] = useState<number | null>(null);
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const bloomAnim = useRef(new Animated.Value(0)).current;
-  const geometryAnim = useRef(new Animated.Value(0)).current;
   const tapAnim = useRef(new Animated.Value(0)).current;
   const roundAnim = useRef(new Animated.Value(0)).current;
   const ceremonyAnim = useRef(new Animated.Value(0)).current;
@@ -998,15 +997,6 @@ export default function JapaScreen() {
     loop.start();
     return () => loop.stop();
   }, [pulseAnim, reduceMotion, screen]);
-
-  useEffect(() => {
-    Animated.timing(geometryAnim, {
-      toValue: Math.min(completedRounds / 3, 1),
-      duration: 650,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, [completedRounds, geometryAnim]);
 
   const triggerBloom = useCallback((index: number) => {
     setBloomIndex(index);
@@ -1435,9 +1425,9 @@ export default function JapaScreen() {
     setScreen('launcher');
   }, []);
 
-  function beadPosition(index: number, center: number, radius: number) {
+  function beadPosition(index: number, center: number, radiusX: number, radiusY = radiusX) {
     const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
-    return { x: center + Math.cos(angle) * radius, y: center + Math.sin(angle) * radius };
+    return { x: center + Math.cos(angle) * radiusX, y: center + Math.sin(angle) * radiusY };
   }
 
   // Three-tier bead state (done / current / upcoming) — previously every
@@ -1446,15 +1436,16 @@ export default function JapaScreen() {
   // lit with the richer `grad-done` gradient as the current bead moves on,
   // giving the same at-a-glance progress read as PWA's bead-done/bead-un
   // split.
-  function buildBeadElements(center: number, radius: number) {
+  function buildBeadElements(center: number, radiusX: number, radiusY = radiusX) {
     const activeIndex = count >= 108 ? 107 : count;
+    const sumeru = beadPosition(54, center, radiusX, radiusY);
     return Array.from({ length: 108 }, (_, index) => {
-      const { x, y } = beadPosition(index, center, radius);
+      const { x, y } = beadPosition(index, center, radiusX, radiusY);
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
       const isSumeru = index === 54;
 
-      const r = isSumeru ? 16.5 : isCurrent ? 13.4 : isDone ? 9 : 8;
+      const r = isSumeru ? 17.5 : isCurrent ? 13.8 : isDone ? 9.4 : 8.4;
       const gradientId = isSumeru ? 'grad-guru' : isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
       const shadowOpacity = isCurrent || isSumeru ? 0.4 : isDone ? 0.3 : 0.22;
       const highlightOpacity = isCurrent || isSumeru ? 0.78 : isDone ? 0.54 : 0.38;
@@ -1486,17 +1477,30 @@ export default function JapaScreen() {
           />
         </Fragment>
       );
-    });
+    }).concat([
+      <Fragment key="pendant-connector">
+        <Line
+          x1={sumeru.x}
+          y1={sumeru.y + 14}
+          x2={sumeru.x}
+          y2={sumeru.y + 45}
+          stroke={malaSkin.threadColor}
+          strokeWidth={2.2}
+          strokeLinecap="round"
+          opacity={0.78}
+        />
+        <Circle cx={sumeru.x} cy={sumeru.y + 34} r={5.5} fill="url(#grad-guru)" stroke={malaSkin.threadColor} strokeWidth={1} opacity={0.96} />
+      </Fragment>,
+    ]);
   }
 
-  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS), [count]);
-  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS), [bloomIndex]);
+  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [count]);
+  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [bloomIndex]);
 
   const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 22] });
   const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.58, 0] });
   const bloomRadius = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [11, 26] });
   const bloomOpacity = bloomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] });
-  const geometryOpacity = geometryAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
   const tapScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
   const tapRotate = tapAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '1.4deg'] });
   const tapCountScale = tapAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
@@ -2261,27 +2265,7 @@ export default function JapaScreen() {
               >
                 <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE} style={{ position: 'absolute', top: 0 }}>
                   {beadGradientDefs}
-                  <AnimatedCircle
-                    cx={PRACTICE_CENTER}
-                    cy={PRACTICE_CENTER}
-                    r={PRACTICE_RADIUS - 26}
-                    fill="none"
-                    stroke={practiceTextColor}
-                    strokeWidth={1}
-                    strokeDasharray="2 8"
-                    opacity={geometryOpacity}
-                  />
-                  <AnimatedCircle
-                    cx={PRACTICE_CENTER}
-                    cy={PRACTICE_CENTER}
-                    r={PRACTICE_RADIUS - 46}
-                    fill="none"
-                    stroke={practiceTextColor}
-                    strokeWidth={1}
-                    strokeDasharray="1 10"
-                    opacity={geometryOpacity}
-                  />
-                  {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS)}
+                  {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y)}
                   {count < 108 ? (
                     <AnimatedCircle
                       cx={currentBeadPos.x}
@@ -2311,9 +2295,9 @@ export default function JapaScreen() {
                   pointerEvents="none"
                   style={{
                     position: 'absolute',
-                    top: PRACTICE_CENTER + PRACTICE_RADIUS - 17,
-                    width: 74,
-                    height: 160,
+                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y + 12,
+                    width: 82,
+                    height: 176,
                   }}
                 />
               </Animated.View>
