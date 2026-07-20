@@ -11,9 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.shoonaya.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby.",
-        "NSCameraUsageDescription": "Shoonaya uses your camera so you can take a profile picture."
+        "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby."
       }
     },
     "android": {
@@ -21,7 +19,6 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "CAMERA",
         "INTERNET",
         "RECEIVE_BOOT_COMPLETED",
         "MODIFY_AUDIO_SETTINGS"
@@ -77,7 +74,6 @@
         "expo-image-picker",
         {
           "photosPermission": "Shoonaya uses your photo library so you can update your profile picture.",
-          "cameraPermission": "Shoonaya uses your camera so you can take a profile picture.",
           "microphonePermission": false
         }
       ],
