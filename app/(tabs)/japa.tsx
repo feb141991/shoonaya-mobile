@@ -2146,6 +2146,15 @@ export default function JapaScreen() {
                     />
                   ) : null}
                 </Svg>
+                {/* guru-pendant.png already renders its own connector loop,
+                    ball, and full tassel with proper shading — this used to
+                    be followed by a flat, unshaded theme.brand ring View and
+                    a 5-bar flat tassel View layered right on top of/next to
+                    that same art. Two mismatched rendering styles stacked at
+                    the exact join is what made the connection look pasted
+                    on rather than part of the mala; removed rather than
+                    fixed in place, since the PNG's own art already covers
+                    both. */}
                 <Image
                   source={require('../../assets/japa/guru-pendant.png')}
                   contentFit="contain"
@@ -2157,47 +2166,6 @@ export default function JapaScreen() {
                     height: 198,
                   }}
                 />
-                <View
-                  pointerEvents="none"
-                  style={{
-                    position: 'absolute',
-                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y + 15,
-                    width: 24,
-                    height: 24,
-                    borderRadius: 12,
-                    borderWidth: 4,
-                    borderColor: theme.brand,
-                    backgroundColor: theme.brandSoft,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                  }}
-                />
-                <View
-                  pointerEvents="none"
-                  style={{
-                    position: 'absolute',
-                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y + 168,
-                    width: 54,
-                    height: 34,
-                    alignItems: 'center',
-                  }}
-                >
-                  {[-18, -9, 0, 9, 18].map((offset) => (
-                    <View
-                      key={offset}
-                      style={{
-                        position: 'absolute',
-                        left: 27 + offset,
-                        top: offset === 0 ? 0 : 3,
-                        width: 5,
-                        height: offset === 0 ? 34 : 28,
-                        borderRadius: 999,
-                        backgroundColor: theme.brand,
-                        transform: [{ rotate: `${offset / 2}deg` }],
-                        opacity: 0.72,
-                      }}
-                    />
-                  ))}
-                </View>
               </Animated.View>
               <Animated.View
                 pointerEvents="none"
