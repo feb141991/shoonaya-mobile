@@ -19,7 +19,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import Svg, { Circle, Line, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
 import { Screen } from '@/components/ui/Screen';
@@ -1348,21 +1348,7 @@ export default function JapaScreen() {
           />
         </Fragment>
       );
-    }).concat([
-      <Fragment key="pendant-connector">
-        <Line
-          x1={sumeru.x}
-          y1={sumeru.y + 14}
-          x2={sumeru.x}
-          y2={sumeru.y + 45}
-          stroke={malaSkin.threadColor}
-          strokeWidth={2.2}
-          strokeLinecap="round"
-          opacity={0.78}
-        />
-        <Circle cx={sumeru.x} cy={sumeru.y + 34} r={5.5} fill="url(#grad-guru)" stroke={malaSkin.threadColor} strokeWidth={1} opacity={0.96} />
-      </Fragment>,
-    ]);
+    });
   }
 
   const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [count]);
@@ -2166,11 +2152,52 @@ export default function JapaScreen() {
                   pointerEvents="none"
                   style={{
                     position: 'absolute',
-                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y + 12,
-                    width: 82,
-                    height: 176,
+                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y - 8,
+                    width: 92,
+                    height: 198,
                   }}
                 />
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y + 15,
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    borderWidth: 4,
+                    borderColor: theme.brand,
+                    backgroundColor: theme.brandSoft,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                  }}
+                />
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y + 168,
+                    width: 54,
+                    height: 34,
+                    alignItems: 'center',
+                  }}
+                >
+                  {[-18, -9, 0, 9, 18].map((offset) => (
+                    <View
+                      key={offset}
+                      style={{
+                        position: 'absolute',
+                        left: 27 + offset,
+                        top: offset === 0 ? 0 : 3,
+                        width: 5,
+                        height: offset === 0 ? 34 : 28,
+                        borderRadius: 999,
+                        backgroundColor: theme.brand,
+                        transform: [{ rotate: `${offset / 2}deg` }],
+                        opacity: 0.72,
+                      }}
+                    />
+                  ))}
+                </View>
               </Animated.View>
               <Animated.View
                 pointerEvents="none"
@@ -2434,8 +2461,6 @@ export default function JapaScreen() {
                 <View style={{ gap: 10 }}>
                   {BG_SCENES.map((item) => {
                     const selected = selectedSceneId === item.id;
-                    const sceneText = isDark || item.id === 'midnight' ? COLORS.onMediaWhite : text;
-                    const sceneMuted = isDark || item.id === 'midnight' ? COLORS.homePwaPillText : dim;
                     return (
                       <PressableSurface
                         key={item.id}
@@ -2449,15 +2474,12 @@ export default function JapaScreen() {
                           borderRadius: 18,
                           borderWidth: 1,
                           borderColor: selected ? theme.brand : theme.premiumBorder,
-                          backgroundColor: cardBg,
+                          backgroundColor: selected ? theme.brandSoft : cardBg,
                           overflow: 'hidden',
                           boxShadow: selected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                         }}
                       >
-                        <LinearGradient
-                          colors={isDark ? item.colors : item.lightColors}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
+                        <View
                           style={{
                             minHeight: 62,
                             paddingHorizontal: 14,
@@ -2468,21 +2490,44 @@ export default function JapaScreen() {
                           }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                            <View
+                            <LinearGradient
+                              colors={isDark ? item.colors : item.lightColors}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
                               style={{
-                                width: 34,
-                                height: 34,
-                                borderRadius: 17,
+                                width: 38,
+                                height: 38,
+                                borderRadius: 19,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: selected ? theme.brandSoft : (isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight),
                                 borderWidth: 1,
                                 borderColor: selected ? theme.brand : theme.premiumBorder,
                               }}
                             >
-                              <Feather name={item.icon as keyof typeof Feather.glyphMap} size={16} color={selected ? theme.brand : sceneMuted} />
+                              <View
+                                style={{
+                                  width: 30,
+                                  height: 30,
+                                  borderRadius: 15,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
+                                }}
+                              >
+                                <Feather name={item.icon as keyof typeof Feather.glyphMap} size={16} color={selected ? theme.brand : text} />
+                              </View>
+                            </LinearGradient>
+                            <View style={{ gap: 2 }}>
+                              <Text style={{ ...TYPE.label, color: text }}>{item.name}</Text>
+                              <Text style={{ ...TYPE.caption, color: dim }}>
+                                {item.id === 'midnight' ? 'Quiet night focus' :
+                                  item.id === 'himalayan' ? 'Soft dawn clarity' :
+                                  item.id === 'temple' ? 'Warm altar glow' :
+                                  item.id === 'river' ? 'Muted ghat calm' :
+                                  item.id === 'forest' ? 'Sage ashram stillness' :
+                                  'Deep cosmic sky'}
+                              </Text>
                             </View>
-                            <Text style={{ ...TYPE.label, color: sceneText }}>{item.name}</Text>
                           </View>
                           {selected ? (
                             <View
@@ -2498,7 +2543,7 @@ export default function JapaScreen() {
                               <Feather name="check" size={17} color={COLORS.ink} />
                             </View>
                           ) : null}
-                        </LinearGradient>
+                        </View>
                       </PressableSurface>
                     );
                   })}
