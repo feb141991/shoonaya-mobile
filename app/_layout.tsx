@@ -25,6 +25,7 @@ import { setApiAccessTokenFromSession } from '@/lib/api';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
+import { syncDeviceTimezone } from '@/lib/timezoneSync';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -91,6 +92,10 @@ function RootLayout() {
       // repeatedly — registerPushToken() skips the network round-trip if
       // the token hasn't changed since the last successful registration.
       void registerPushToken(session.user.id);
+
+      // Keep profiles.timezone honest — see lib/timezoneSync.ts for why this
+      // matters (every "today" calculation on the backend depends on it).
+      void syncDeviceTimezone(session.user.id);
 
       // Onboarding gate — mirrors the web app's src/lib/onboarding-gate.ts /
       // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md fix. `profiles.onboarding_completed`
