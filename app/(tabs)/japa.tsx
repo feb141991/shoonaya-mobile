@@ -698,7 +698,7 @@ function WaveBand({ topPct, color, seed }: { topPct: number; color: string; seed
         height: 2,
         borderRadius: 1,
         backgroundColor: color,
-        opacity: 0.35,
+        opacity: 0.16,
         transform: [{ translateX }],
       }}
     />
@@ -755,12 +755,12 @@ const SCENE_PARTICLES: Record<
   JapaSceneId,
   { count: number; color: string; minSize: number; maxSize: number; motion: ParticleMotion; minDuration: number; maxDuration: number }
 > = {
-  midnight: { count: 20, color: 'rgba(255,255,255,0.9)', minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
-  himalayan: { count: 14, color: 'rgba(255,222,175,0.9)', minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
-  temple: { count: 13, color: 'rgba(255,176,102,0.95)', minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
-  river: { count: 14, color: 'rgba(190,225,255,0.82)', minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
-  forest: { count: 16, color: 'rgba(198,230,180,0.9)', minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
-  cosmos: { count: 30, color: 'rgba(255,255,255,0.95)', minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
+  midnight: { count: 3, color: 'rgba(255,255,255,0.52)', minSize: 1.8, maxSize: 3.2, motion: 'twinkle', minDuration: 5200, maxDuration: 8800 },
+  himalayan: { count: 3, color: 'rgba(255,222,175,0.48)', minSize: 2, maxSize: 3.6, motion: 'twinkle', minDuration: 5600, maxDuration: 9200 },
+  temple: { count: 2, color: 'rgba(255,176,102,0.42)', minSize: 2.2, maxSize: 3.8, motion: 'drift-up', minDuration: 7200, maxDuration: 11000 },
+  river: { count: 2, color: 'rgba(190,225,255,0.42)', minSize: 2, maxSize: 3.4, motion: 'wave', minDuration: 6200, maxDuration: 9800 },
+  forest: { count: 3, color: 'rgba(198,230,180,0.44)', minSize: 2, maxSize: 4, motion: 'drift-up', minDuration: 8200, maxDuration: 12400 },
+  cosmos: { count: 3, color: 'rgba(255,255,255,0.55)', minSize: 1.4, maxSize: 2.8, motion: 'twinkle', minDuration: 4800, maxDuration: 8400 },
 };
 
 const SCENE_GLOW: Record<JapaSceneId, string> = {
@@ -783,6 +783,41 @@ function SceneImagePlate({ sceneId }: { sceneId: JapaSceneId }) {
       priority="high"
       accessibilityIgnoresInvertColors
     />
+  );
+}
+
+function SceneReadabilityWash({ isDark }: { isDark: boolean }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: '26%',
+          left: '50%',
+          width: 390,
+          height: 390,
+          marginLeft: -195,
+          borderRadius: 195,
+          backgroundColor: isDark ? 'rgba(8,6,4,0.22)' : 'rgba(255,253,248,0.54)',
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: -60,
+          left: -30,
+          right: -30,
+          height: 260,
+          backgroundColor: isDark ? 'rgba(0,0,0,0.22)' : 'rgba(45,31,14,0.12)',
+        }}
+      />
+      <LinearGradient
+        colors={isDark
+          ? ['rgba(0,0,0,0.22)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.30)']
+          : ['rgba(255,253,248,0.40)', 'rgba(255,253,248,0)', 'rgba(45,31,14,0.16)']}
+        style={{ position: 'absolute', inset: 0 }}
+      />
+    </View>
   );
 }
 
@@ -2203,6 +2238,7 @@ export default function JapaScreen() {
             style={{ flex: 1 }}
           >
             <SceneImagePlate sceneId={scene.id} />
+            <SceneReadabilityWash isDark={isDark} />
             {reduceMotion ? <StaticSceneBackdrop sceneId={scene.id} /> : <SceneBackdrop sceneId={scene.id} />}
             <LinearGradient
               pointerEvents="none"
