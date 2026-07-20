@@ -1160,23 +1160,23 @@ function HomeContent() {
           </View>
 
           {practicesOpen ? (
-            <View style={{ gap: 8 }}>
+            // Compact 3-column grid — was a 5-row vertical stack (~362px
+            // expanded). Same data, same tap targets, roughly half the
+            // height: 5 items wrap to 2 rows instead of 5.
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {state.practices.map((row) => (
                 <PressableSurface
                   key={row.id}
                   accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                   onPress={() => navigate(resolveNativeRoute(row.href))}
                   style={{
-                    width: '100%',
-                    alignSelf: 'stretch',
-                    minHeight: 66,
-                    borderRadius: 22,
-                    paddingLeft: 16,
-                    paddingRight: 84,
-                    paddingVertical: 11,
-                    flexDirection: 'row',
+                    width: '31.5%',
+                    minHeight: 82,
+                    borderRadius: 18,
+                    paddingVertical: 12,
+                    paddingHorizontal: 6,
                     alignItems: 'center',
-                    justifyContent: 'flex-start',
+                    justifyContent: 'center',
                     position: 'relative',
                     backgroundColor: theme.card,
                     borderWidth: 1,
@@ -1184,31 +1184,18 @@ function HomeContent() {
                     boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
-                    <View
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 14,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: theme.card,
-                        borderWidth: 1,
-                        borderColor: theme.border,
-                      }}
-                    >
-                      <Text style={{ fontSize: 20, lineHeight: 24 }}>{PRACTICE_EMOJI[row.id]}</Text>
-                    </View>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text, flex: 1 }} numberOfLines={1}>
-                      {row.label}
-                    </Text>
+                  <View style={{ position: 'absolute', top: 8, right: 8 }}>
+                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} size={18} />
                   </View>
-                  <View style={{ position: 'absolute', right: 16, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, color: row.done ? PRACTICE_COLOR[row.id] : theme.dim }}>
-                      {row.done ? 'Done' : 'Start'}
-                    </Text>
-                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} size={26} />
-                  </View>
+                  <Text style={{ fontSize: 22, lineHeight: 26, marginBottom: 6 }}>{PRACTICE_EMOJI[row.id]}</Text>
+                  <Text
+                    style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, lineHeight: 14, color: theme.text, textAlign: 'center' }}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
+                  >
+                    {row.label}
+                  </Text>
                 </PressableSurface>
               ))}
             </View>
