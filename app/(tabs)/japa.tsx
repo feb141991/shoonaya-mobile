@@ -503,95 +503,6 @@ function BackgroundParticle({
   );
 }
 
-function AmbientGlow({
-  color,
-  size,
-  cornerX,
-  cornerY,
-  seed,
-}: {
-  color: string;
-  size: number;
-  cornerX: 'left' | 'right';
-  cornerY: 'top' | 'bottom';
-  seed: number;
-}) {
-  const translate = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(translate, { toValue: 1, duration: 9000 + seededRandom(seed) * 6000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(translate, { toValue: 0, duration: 9000 + seededRandom(seed * 1.4) * 6000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [seed, translate]);
-
-  const dx = translate.interpolate({ inputRange: [0, 1], outputRange: [0, cornerX === 'left' ? 30 : -30] });
-  const dy = translate.interpolate({ inputRange: [0, 1], outputRange: [0, cornerY === 'top' ? 22 : -22] });
-
-  const positionStyle: { left?: number; right?: number; top?: number; bottom?: number } = {};
-  if (cornerX === 'left') positionStyle.left = -size * 0.35;
-  else positionStyle.right = -size * 0.35;
-  if (cornerY === 'top') positionStyle.top = -size * 0.3;
-  else positionStyle.bottom = -size * 0.3;
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        positionStyle,
-        {
-          position: 'absolute',
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-          transform: [{ translateX: dx }, { translateY: dy }],
-        },
-      ]}
-    />
-  );
-}
-
-function SceneBreath({ color }: { color: string }) {
-  const progress = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(progress, { toValue: 1, duration: 6200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(progress, { toValue: 0, duration: 6200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [progress]);
-
-  const opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [0.14, 0.32] });
-  const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.08] });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: '22%',
-        left: '50%',
-        marginLeft: -150,
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: color,
-        opacity,
-        transform: [{ scale }],
-      }}
-    />
-  );
-}
-
 // Temple Lamp — an irregularly flickering warm glow near the top, mimicking
 // a diya flame (random-duration opacity/scale jitter rather than a smooth
 // loop, since a real flame never pulses evenly).
@@ -764,15 +675,6 @@ const SCENE_PARTICLES: Record<
   cosmos: { count: 30, color: 'rgba(255,255,255,0.95)', minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
 };
 
-const SCENE_GLOW: Record<JapaSceneId, string> = {
-  midnight: 'rgba(150,170,255,0.24)',
-  himalayan: 'rgba(255,196,120,0.28)',
-  temple: 'rgba(255,140,60,0.30)',
-  river: 'rgba(120,200,255,0.24)',
-  forest: 'rgba(130,210,140,0.26)',
-  cosmos: 'rgba(180,140,255,0.30)',
-};
-
 function SceneImagePlate({ sceneId }: { sceneId: JapaSceneId }) {
   return (
     <Image
@@ -799,7 +701,7 @@ function SceneReadabilityWash({ isDark }: { isDark: boolean }) {
           height: 258,
           marginLeft: -129,
           borderRadius: 129,
-          backgroundColor: isDark ? 'rgba(8,6,4,0.12)' : 'rgba(255,253,248,0.22)',
+          backgroundColor: isDark ? 'rgba(8,6,4,0.08)' : 'rgba(255,253,248,0.12)',
         }}
       />
       <View
@@ -828,7 +730,6 @@ function SceneReadabilityWash({ isDark }: { isDark: boolean }) {
 // bands, Cosmos gets occasional shooting stars.
 function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
   const particleConfig = SCENE_PARTICLES[sceneId];
-  const glowColor = SCENE_GLOW[sceneId];
 
   const particles = useMemo(
     () =>
@@ -843,9 +744,6 @@ function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
 
   return (
     <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      <SceneBreath color={glowColor} />
-      <AmbientGlow color={glowColor} size={230} cornerX="left" cornerY="top" seed={11} />
-      <AmbientGlow color={glowColor} size={200} cornerX="right" cornerY="bottom" seed={23} />
       {particles.map((p) => (
         <BackgroundParticle key={p.seed} seed={p.seed} color={particleConfig.color} size={p.size} motion={particleConfig.motion} duration={p.duration} />
       ))}
@@ -868,35 +766,8 @@ function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
   );
 }
 
-function StaticSceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
-  const glowColor = SCENE_GLOW[sceneId];
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      <View
-        style={{
-          position: 'absolute',
-          left: -82,
-          top: -70,
-          width: 230,
-          height: 230,
-          borderRadius: 115,
-          backgroundColor: glowColor,
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          right: -74,
-          bottom: -62,
-          width: 200,
-          height: 200,
-          borderRadius: 100,
-          backgroundColor: glowColor,
-          opacity: 0.72,
-        }}
-      />
-    </View>
-  );
+function StaticSceneBackdrop() {
+  return null;
 }
 
 export default function JapaScreen() {
@@ -2243,7 +2114,7 @@ export default function JapaScreen() {
           >
             <SceneImagePlate sceneId={scene.id} />
             <SceneReadabilityWash isDark={isDark} />
-            {reduceMotion ? <StaticSceneBackdrop sceneId={scene.id} /> : <SceneBackdrop sceneId={scene.id} />}
+            {reduceMotion ? <StaticSceneBackdrop /> : <SceneBackdrop sceneId={scene.id} />}
             <LinearGradient
               pointerEvents="none"
               colors={isDark
