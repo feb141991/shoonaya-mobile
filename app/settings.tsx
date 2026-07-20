@@ -26,7 +26,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { requestNotificationPermission } from '@/lib/notifications';
+import { registerPushToken, requestNotificationPermission } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 
 type AppLanguage = 'en' | 'hi' | 'pa';
@@ -314,6 +314,21 @@ export default function SettingsScreen() {
     }
   };
 
+  const enableNotificationReminder = async (nextState: SettingsState) => {
+    void persistSettings(nextState);
+
+    const allowed = await requestNotificationPermission();
+    if (!allowed) return;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.user.id) {
+      void registerPushToken(session.user.id);
+    }
+  };
+
   const persistTheme = async (nextTheme: ThemePref) => {
     setThemePref(nextTheme);
     await AsyncStorage.setItem(THEME_STORAGE_KEY, nextTheme);
@@ -480,10 +495,12 @@ export default function SettingsScreen() {
                       // rather than re-showing the OS dialog — so this never
                       // nags, it just gives a path back in for anyone who
                       // can still be prompted.
+                      const nextState = { ...settings, [item.key]: value };
                       if (value) {
-                        void requestNotificationPermission();
+                        void enableNotificationReminder(nextState);
+                        return;
                       }
-                      void persistSettings({ ...settings, [item.key]: value });
+                      void persistSettings(nextState);
                     }}
                     theme={theme}
                   />
