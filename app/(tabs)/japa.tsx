@@ -755,12 +755,12 @@ const SCENE_PARTICLES: Record<
   JapaSceneId,
   { count: number; color: string; minSize: number; maxSize: number; motion: ParticleMotion; minDuration: number; maxDuration: number }
 > = {
-  midnight: { count: 3, color: 'rgba(255,255,255,0.52)', minSize: 1.8, maxSize: 3.2, motion: 'twinkle', minDuration: 5200, maxDuration: 8800 },
-  himalayan: { count: 3, color: 'rgba(255,222,175,0.48)', minSize: 2, maxSize: 3.6, motion: 'twinkle', minDuration: 5600, maxDuration: 9200 },
-  temple: { count: 2, color: 'rgba(255,176,102,0.42)', minSize: 2.2, maxSize: 3.8, motion: 'drift-up', minDuration: 7200, maxDuration: 11000 },
-  river: { count: 2, color: 'rgba(190,225,255,0.42)', minSize: 2, maxSize: 3.4, motion: 'wave', minDuration: 6200, maxDuration: 9800 },
-  forest: { count: 3, color: 'rgba(198,230,180,0.44)', minSize: 2, maxSize: 4, motion: 'drift-up', minDuration: 8200, maxDuration: 12400 },
-  cosmos: { count: 3, color: 'rgba(255,255,255,0.55)', minSize: 1.4, maxSize: 2.8, motion: 'twinkle', minDuration: 4800, maxDuration: 8400 },
+  midnight: { count: 20, color: 'rgba(255,255,255,0.9)', minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
+  himalayan: { count: 14, color: 'rgba(255,222,175,0.9)', minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
+  temple: { count: 13, color: 'rgba(255,176,102,0.95)', minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
+  river: { count: 14, color: 'rgba(190,225,255,0.82)', minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
+  forest: { count: 16, color: 'rgba(198,230,180,0.9)', minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
+  cosmos: { count: 30, color: 'rgba(255,255,255,0.95)', minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
 };
 
 const SCENE_GLOW: Record<JapaSceneId, string> = {
