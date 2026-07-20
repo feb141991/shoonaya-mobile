@@ -233,13 +233,25 @@ export default function LessonReaderScreen() {
 
   const swipeGesture = useMemo(
     () =>
-      Gesture.Pan().onEnd((event) => {
-        if (event.translationX < -60) {
-          goToLesson(lessonIndex + 1);
-        } else if (event.translationX > 60) {
-          goToLesson(lessonIndex - 1);
-        }
-      }),
+      Gesture.Pan()
+        // Unconstrained, this claimed every touch on the screen — including
+        // vertical drags meant for the ScrollView below — because Pan()
+        // recognizes movement in any direction by default and only checked
+        // translationX at onEnd, by which point it had already blocked the
+        // ScrollView's own pan responder from ever engaging. That's why
+        // scrolling didn't work: this gesture, not the ScrollView, was the
+        // bug. activeOffsetX requires 20px of horizontal movement before
+        // this gesture activates at all; failOffsetY releases it to the
+        // ScrollView immediately if the drag turns out to be vertical.
+        .activeOffsetX([-20, 20])
+        .failOffsetY([-20, 20])
+        .onEnd((event) => {
+          if (event.translationX < -60) {
+            goToLesson(lessonIndex + 1);
+          } else if (event.translationX > 60) {
+            goToLesson(lessonIndex - 1);
+          }
+        }),
     [goToLesson, lessonIndex]
   );
 
