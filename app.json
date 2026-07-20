@@ -13,9 +13,7 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby.",
-        "NSMicrophoneUsageDescription": "Shoonaya uses your microphone for Sanskrit recitation practice.",
-        "NSCameraUsageDescription": "Shoonaya uses your camera to scan sacred QR codes and relics.",
-        "NSSpeechRecognitionUsageDescription": "Shoonaya uses speech recognition to evaluate your Sanskrit pronunciation."
+        "NSCameraUsageDescription": "Shoonaya uses your camera so you can take a profile picture."
       }
     },
     "android": {
@@ -24,7 +22,6 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
-        "RECORD_AUDIO",
         "INTERNET",
         "RECEIVE_BOOT_COMPLETED",
         "MODIFY_AUDIO_SETTINGS"
