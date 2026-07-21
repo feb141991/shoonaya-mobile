@@ -24,6 +24,7 @@ import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
  */
 
 const isExpoGo = Constants.appOwnership === 'expo';
+const skipsRemotePushRegistration = __DEV__ && Platform.OS === 'ios';
 
 // Real `data.type` values the web repo's push senders actually use —
 // confirmed by a full-repo grep of src/lib/push-server.ts call sites
@@ -143,7 +144,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * registerUserId used) doesn't spam the backend.
  */
 export async function registerPushToken(userId: string) {
-  if (isExpoGo || !userId) return;
+  if (isExpoGo || skipsRemotePushRegistration || !userId) return;
 
   try {
     const existing = await Notifications.getPermissionsAsync();
