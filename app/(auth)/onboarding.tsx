@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -355,12 +356,13 @@ export default function OnboardingScreen() {
     emoji?: string;
     onPress: () => void;
   }) => (
-    <PressableSurface
-      haptic="none"
+    <Pressable
       onPress={() => { void selectWithHaptic(onPress); }}
       accessibilityState={{ selected }}
       accessibilityLabel={description ? `${label}, ${description}` : label}
+      accessibilityRole="button"
       style={{
+        minHeight: 44,
         borderRadius: RADII.lg,
         borderWidth: 1.5,
         borderColor: selected ? COLORS.brandGold : border,
@@ -396,7 +398,7 @@ export default function OnboardingScreen() {
         ) : null}
       </View>
       {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
-    </PressableSurface>
+    </Pressable>
   );
 
   return (
