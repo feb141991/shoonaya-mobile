@@ -224,6 +224,7 @@ export default function OnboardingScreen() {
   const [nameStory, setNameStory] = useState<NameStory | null>(null);
   const [nameStoryLoading, setNameStoryLoading] = useState(false);
   const [nameStoryError, setNameStoryError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const stepIndex = STEPS.indexOf(step);
@@ -300,6 +301,7 @@ export default function OnboardingScreen() {
   const complete = async () => {
     if (saving) return;
     setSaving(true);
+    setSaveError('');
     try {
       const {
         data: { user },
@@ -307,32 +309,48 @@ export default function OnboardingScreen() {
 
       if (user) {
         const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
-        await supabase.from('profiles').upsert(
-          {
-            id: user.id,
-            tradition,
-            app_language: language,
-            meaning_language: language,
-            full_name: displayName,
-            date_of_birth: dateOfBirth || null,
-            gender_context: genderContext(gender),
-            life_stage: lifeStage,
-            nakshatra: nakshatra || null,
-            rashi: rashi || null,
-            onboarding_goal: goals.join(','),
-            wants_shloka_reminders: notificationsRequested,
-            wants_community_notifications: notificationsRequested,
-            onboarding_completed: true,
-          },
-          { onConflict: 'id' }
-        );
+        const profilePayload = {
+          tradition,
+          app_language: language,
+          meaning_language: language,
+          full_name: displayName,
+          date_of_birth: dateOfBirth || null,
+          gender_context: genderContext(gender),
+          life_stage: lifeStage,
+          onboarding_goal: goals.join(','),
+          wants_shloka_reminders: notificationsRequested,
+          wants_community_notifications: notificationsRequested,
+          onboarding_completed: true,
+        };
+
+        const { data: updatedProfile, error } = await supabase
+          .from('profiles')
+          .update(profilePayload)
+          .eq('id', user.id)
+          .select('id')
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!updatedProfile) {
+          const fallbackUsername = `user_${user.id.replace(/-/g, '').slice(0, 12)}`;
+          const { error: insertError } = await supabase.from('profiles').upsert(
+            {
+              id: user.id,
+              username: fallbackUsername,
+              ...profilePayload,
+            },
+            { onConflict: 'id' }
+          );
+          if (insertError) throw insertError;
+        }
 
         void registerPushToken(user.id);
       }
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);
-      // Non-fatal — let the user into the app anyway, matching the existing
-      // native behavior while preserving the logged failure for diagnosis.
+      setSaveError(error instanceof Error ? error.message : 'Unable to save onboarding. Please try again.');
+      setSaving(false);
+      return;
     }
 
     setSaving(false);
@@ -894,6 +912,11 @@ export default function OnboardingScreen() {
             <View style={{ width: '100%', gap: 10 }}>
               <Button label="Begin my Sadhana" onPress={() => { void complete(); }} disabled={saving} loading={saving} />
               <Button label="Explore Shoonaya" variant="ghost" onPress={() => { void complete(); }} disabled={saving} />
+              {saveError ? (
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger, textAlign: 'center' }}>
+                  {saveError}
+                </Text>
+              ) : null}
             </View>
           </View>
         )}
