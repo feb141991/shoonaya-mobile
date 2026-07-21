@@ -13,7 +13,8 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby."
-      }
+      },
+      "buildNumber": "2"
     },
     "android": {
       "package": "com.shoonaya.app",
@@ -47,6 +48,14 @@
             "kotlinVersion": "2.1.20",
             "newArchEnabled": true,
             "extraProguardRules": "-keep class expo.modules.** { *; } -keep class com.facebook.react.turbomodule.** { *; } -keep class com.swmansion.gesturehandler.** { *; } -keep class com.swmansion.reanimated.** { *; } -keep class com.facebook.react.** { *; } -keep class kotlin.reflect.** { *; }"
+          },
+          "ios": {
+            "extraPods": [
+              {
+                "name": "GoogleUtilities",
+                "modular_headers": true
+              }
+            ]
           }
         }
       ],
