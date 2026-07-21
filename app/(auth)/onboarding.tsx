@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
+import { COLORS, FONTS, RADII } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
@@ -209,7 +209,6 @@ export default function OnboardingScreen() {
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const wellBg = isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight;
   const wellBgSelected = COLORS.selectionWellSelected;
-  const cardShadow = isDark ? SHADOWS.sm.dark : SHADOWS.sm.light;
 
   const [step, setStep] = useState<Step>('founderNote');
   const [tradition, setTradition] = useState<TraditionKey>('hindu');
@@ -371,7 +370,6 @@ export default function OnboardingScreen() {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 14,
-        boxShadow: selected ? cardShadow : undefined,
       }}
     >
       <View
