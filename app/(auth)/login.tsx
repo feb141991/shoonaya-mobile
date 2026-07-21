@@ -32,6 +32,15 @@ const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
 type AuthAction = 'google' | 'apple' | 'email' | null;
 
+function getNativeErrorCode(error: unknown): string | number | null {
+  if (typeof error !== 'object' || error === null || !('code' in error)) {
+    return null;
+  }
+
+  const code = (error as { code?: unknown }).code;
+  return typeof code === 'string' || typeof code === 'number' ? code : null;
+}
+
 function BrandGlow() {
   const size = 360;
   return (
@@ -263,6 +272,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(Platform.OS === 'ios');
   const brandScale = useRef(new Animated.Value(1)).current;
   const cardEntrance = useRef(new Animated.Value(0)).current;
 
@@ -323,6 +333,31 @@ export default function LoginScreen() {
       useNativeDriver: true,
     }).start();
   }, [cardEntrance, reduceMotion]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+
+    let mounted = true;
+    void AppleAuthentication.isAvailableAsync()
+      .then((available) => {
+        if (__DEV__) {
+          console.log('[auth] AppleAuthentication.isAvailableAsync:', available);
+        }
+        if (mounted) setAppleAvailable(available);
+      })
+      .catch((error) => {
+        if (__DEV__) {
+          console.log('[auth] AppleAuthentication.isAvailableAsync failed:', error);
+        }
+        if (mounted) setAppleAvailable(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleGoogle = async () => {
     setActiveAction('google');
@@ -398,11 +433,20 @@ export default function LoginScreen() {
   };
 
   const handleApple = async () => {
+    if (!appleAvailable) {
+      setErrorMessage('Apple sign-in is not available on this device. Use email or Google here, or test Apple on a signed-in iPhone build.');
+      return;
+    }
+
     setActiveAction('apple');
     setErrorMessage(null);
     setNoticeMessage(null);
 
     try {
+      if (__DEV__) {
+        console.log('[auth] Starting native Apple sign-in');
+      }
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -420,19 +464,40 @@ export default function LoginScreen() {
       });
 
       if (error) {
+        if (__DEV__) {
+          console.log('[auth] Supabase Apple signInWithIdToken failed:', error.message);
+        }
         throw error;
       }
+
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        await waitForStoredSession(2800);
+      }
     } catch (error) {
+      const code = getNativeErrorCode(error);
+      const message = error instanceof Error ? error.message : 'Apple sign-in failed.';
+
+      if (__DEV__) {
+        console.log('[auth] Apple sign-in failed:', { code, message });
+      }
+
       if (
-        error instanceof Error &&
-        error.message === 'The authorization attempt was canceled.'
+        code === 'ERR_REQUEST_CANCELED' ||
+        message === 'The authorization attempt was canceled.'
       ) {
         setActiveAction(null);
         return;
       }
 
-      const message = error instanceof Error ? error.message : 'Apple sign-in failed.';
-      setErrorMessage(message);
+      if (
+        message.includes('AuthenticationServices.AuthorizationError') ||
+        message.includes('Apple authorization failed')
+      ) {
+        setErrorMessage('Apple sign-in could not start on this simulator. Confirm the simulator is signed into an Apple ID and the Apple App ID com.shoonaya.app has Sign in with Apple enabled, then rebuild.');
+      } else {
+        setErrorMessage(message);
+      }
     } finally {
       setActiveAction(null);
     }
@@ -635,7 +700,7 @@ export default function LoginScreen() {
                 icon={<FontAwesome name="google" size={16} color={COLORS.brandGoldLight} />}
               />
 
-              {Platform.OS === 'ios' ? (
+              {Platform.OS === 'ios' && appleAvailable ? (
                 <View
                   pointerEvents={busy ? 'none' : 'auto'}
                   style={{ opacity: busy && activeAction !== 'apple' ? 0.6 : 1 }}
