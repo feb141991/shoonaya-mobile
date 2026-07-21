@@ -5,6 +5,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  Platform,
   useColorScheme,
   View,
 } from 'react-native';
@@ -12,7 +13,8 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 const isExpoGo = Constants.appOwnership === 'expo';
-const Notifications = isExpoGo ? null : (() => { try { return require('expo-notifications'); } catch { return null; } })();
+const shouldSkipLocalNotifications = isExpoGo || (__DEV__ && Platform.OS === 'ios');
+const Notifications = shouldSkipLocalNotifications ? null : (() => { try { return require('expo-notifications'); } catch { return null; } })();
 
 import { calculatePanchang, getTithiReminder, type TithiReminder } from '@sangam/panchang-engine';
 
@@ -271,7 +273,7 @@ export default function VratScreen() {
 
   const setReminder = async (vrat: VratData) => {
     if (!Notifications) {
-      Alert.alert('Reminders not available in Expo Go. Use the full app.');
+      Alert.alert('Reminders are not available in this local simulator build. Use a full device build.');
       return;
     }
     const permission = await Notifications.requestPermissionsAsync();
