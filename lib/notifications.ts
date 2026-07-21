@@ -77,6 +77,12 @@ Notifications.setNotificationHandler({
 let cachedToken: string | null = null;
 let cachedAccessToken: string | null = null;
 
+function logPushWarning(label: string, error: unknown) {
+  if (__DEV__) {
+    console.warn(label, error);
+  }
+}
+
 /**
  * One-time setup: Android requires an explicit notification channel for
  * pushes to display correctly (OneSignal configured this invisibly).
@@ -168,7 +174,11 @@ export async function registerPushToken(userId: string) {
       console.warn('registerPushToken: server rejected token registration', response.status);
     }
   } catch (error) {
-    console.error('registerPushToken failed:', error);
+    // Token registration is best-effort. iOS simulator/dev builds can throw
+    // ERR_NOTIFICATIONS_KEYCHAIN_ACCESS while reading Expo's persisted server
+    // registration; surfacing that as console.error blocks the app behind
+    // LogBox even though auth and normal navigation can continue.
+    logPushWarning('registerPushToken skipped:', error);
   }
 }
 

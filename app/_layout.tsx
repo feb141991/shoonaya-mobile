@@ -166,7 +166,9 @@ function RootLayout() {
       const cleanup = handleNotificationTap(router);
       return cleanup;
     } catch (e) {
-      console.error('Push notification initialization error:', e);
+      if (__DEV__) {
+        console.warn('Push notification initialization skipped:', e);
+      }
     }
   }, [fontsLoaded, fontError, router]);
 
