@@ -491,6 +491,7 @@ export default function LoginScreen() {
       }
 
       if (
+        code === 'ERR_REQUEST_UNKNOWN' ||
         message.includes('AuthenticationServices.AuthorizationError') ||
         message.includes('Apple authorization failed')
       ) {
