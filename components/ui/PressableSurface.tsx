@@ -77,6 +77,7 @@ export function PressableSurface({
         style={StyleSheet.flatten([
           contentLayoutStyle,
           {
+            flex: 1,
             opacity: disabled ? 0.55 : isPressed ? 0.88 : 1,
             transform: [{ scale: isPressed && !reduceMotion ? 0.985 : 1 }],
           },
