@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
+import type { NotificationPermissionsStatus } from 'expo-notifications';
 import type { Href, useRouter } from 'expo-router';
 
 import { apiFetch } from '@/lib/api';
@@ -25,6 +25,10 @@ import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 const skipsRemotePushRegistration = __DEV__ && Platform.OS === 'ios';
+type NotificationsModule = typeof import('expo-notifications');
+const Notifications: NotificationsModule | null = isExpoGo || skipsRemotePushRegistration
+  ? null
+  : require('expo-notifications');
 
 // Real `data.type` values the web repo's push senders actually use —
 // confirmed by a full-repo grep of src/lib/push-server.ts call sites
@@ -60,7 +64,7 @@ type Router = ReturnType<typeof useRouter>;
 // unrelated to this remote-push path) — not consolidated into one call
 // site since vrat.tsx's usage is self-contained and out of scope here, but
 // worth knowing both exist so they're never edited to diverge silently.
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
@@ -90,7 +94,7 @@ function logPushWarning(label: string, error: unknown) {
  * Safe/no-op in Expo Go and on iOS.
  */
 export function initPushNotifications() {
-  if (isExpoGo) return;
+  if (!Notifications) return;
   if (Platform.OS === 'android') {
     void Notifications.setNotificationChannelAsync('default', {
       name: 'Default',
@@ -106,7 +110,7 @@ function getExpoProjectId(): string | null {
   return fromExtra ?? fromEasConfig ?? null;
 }
 
-function hasNotificationPermission(permission: Notifications.NotificationPermissionsStatus) {
+function hasNotificationPermission(permission: NotificationPermissionsStatus) {
   const normalized = permission as { granted?: boolean; status?: string };
   return normalized.granted === true || normalized.status === 'granted';
 }
@@ -124,7 +128,7 @@ function hasNotificationPermission(permission: Notifications.NotificationPermiss
  * dialog, so this never nags.
  */
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (isExpoGo) return false;
+  if (!Notifications) return false;
   try {
     const existing = await Notifications.getPermissionsAsync();
     if (hasNotificationPermission(existing)) return true;
@@ -144,7 +148,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * registerUserId used) doesn't spam the backend.
  */
 export async function registerPushToken(userId: string) {
-  if (isExpoGo || skipsRemotePushRegistration || !userId) return;
+  if (!Notifications || !userId) return;
 
   try {
     const existing = await Notifications.getPermissionsAsync();
@@ -238,6 +242,8 @@ function routeForNotificationTap(data: NotificationAdditionalData): Href {
 }
 
 export function handleNotificationTap(router: Router): () => void {
+  if (!Notifications) return () => {};
+
   const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
     const data = (response.notification.request.content.data ?? {}) as NotificationAdditionalData;
     router.push(routeForNotificationTap(data));
