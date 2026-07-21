@@ -14,6 +14,19 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o"
       }
     },
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o"
+      }
+    },
     "preview": {
       "developmentClient": false,
       "distribution": "internal",
