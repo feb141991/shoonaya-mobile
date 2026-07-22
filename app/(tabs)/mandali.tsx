@@ -29,6 +29,7 @@ import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import {
   BLEND_THRESHOLD,
   blockUser,
@@ -335,6 +336,7 @@ export default function MandaliScreen() {
   const [seekers, setSeekers] = useState<NearbySeeker[]>([]);
   const [loadingSeekers, setLoadingSeekers] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [composeBody, setComposeBody] = useState('');
@@ -363,6 +365,15 @@ export default function MandaliScreen() {
   );
 
   const loadMandali = useCallback(async () => {
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -998,6 +1009,25 @@ export default function MandaliScreen() {
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <Screen style={{ backgroundColor: theme.bg }}>
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
+          <EmptyState
+            icon="users"
+            title="Join Mandali"
+            subtitle="Mandali is a sacred community space for registered seekers. Sign in to join Mandali, share posts, and connect with other seekers."
+            ctaLabel="Sign In"
+            onCta={async () => {
+              await setGuestMode(false);
+              router.replace('/(auth)/login');
+            }}
+          />
         </View>
       </Screen>
     );

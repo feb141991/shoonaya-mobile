@@ -37,6 +37,8 @@ import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
 
@@ -541,6 +543,8 @@ function HomeContent() {
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [moodStatus, setMoodStatus] = useState<MoodStatus | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
 
   const scrollRef = useScrollToTop();
 
@@ -620,6 +624,94 @@ function HomeContent() {
 
   const loadHome = useCallback(async () => {
     setLoadError(false);
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      setState({
+        ...INITIAL_STATE,
+        profile: {
+          name: 'Atithi',
+          firstName: 'Atithi',
+          tradition: 'hindu',
+          city: '',
+          country: '',
+          karmaPoints: 0,
+          relicImageUrl: null,
+          avatarUrl: null,
+        },
+        practices: [
+          {
+            id: 'japa',
+            icon: 'circle',
+            label: 'Japa Mala',
+            detail: 'Begin your daily mala',
+            href: '/bhakti/mala',
+            done: false,
+            progress: 0,
+            color: PRACTICE_COLOR.japa,
+          },
+          {
+            id: 'nitya',
+            icon: 'check-circle',
+            label: 'Nitya Karma',
+            detail: 'Open your daily sequence',
+            href: '/nitya-karma',
+            done: false,
+            progress: 0,
+            color: PRACTICE_COLOR.nitya,
+          },
+          {
+            id: 'pathshala',
+            icon: 'book-open',
+            label: 'Pathshala',
+            detail: 'Study scripture',
+            href: '/pathshala',
+            done: false,
+            progress: 0,
+            color: PRACTICE_COLOR.pathshala,
+          },
+          {
+            id: 'quiz',
+            icon: 'help-circle',
+            label: 'Daily Quiz',
+            detail: 'Test your dharmic memory',
+            href: '/quiz',
+            done: false,
+            progress: 0,
+            color: PRACTICE_COLOR.quiz,
+          },
+          {
+            id: 'dharmveer',
+            icon: 'shield',
+            label: 'Dharm Veer',
+            detail: 'Remember a life of courage',
+            href: '/dharm-veer',
+            done: false,
+            progress: 0,
+            color: PRACTICE_COLOR.dharmveer,
+          },
+        ],
+        nextPractice: {
+          id: 'pathshala',
+          contextLabel: 'Next Practice',
+          title: 'Pathshala',
+          suggestion: 'Study scripture to quiet the mind.',
+          nudge: 'Consistency builds the strongest foundation.',
+          actionLabel: 'Go to Pathshala',
+          actionHref: '/pathshala',
+          progress: 0,
+        },
+        dharmVeer: {
+          id: 'sri-krishna',
+          name: 'Sri Krishna',
+          tagline: 'Ancient wisdom. Daily practice.',
+          href: '/dharm-veer',
+        },
+      });
+      return;
+    }
+
     const response = await apiFetch('/api/native/home-summary');
 
     if (response.status === 401) {
@@ -678,11 +770,22 @@ function HomeContent() {
   // flip Home into its error state, it just means the bell shows no badge.
   useFocusEffect(
     useCallback(() => {
-      void getMyUnreadNotificationCount().then(setUnreadNotifications);
-      void fetchMoodStatus().then(setMoodStatus);
-      return subscribeToMyNotifications(() => {
+      let unsubscribe: (() => void) | undefined;
+      isGuestMode().then((guest) => {
+        if (guest) {
+          setUnreadNotifications(0);
+          setMoodStatus(null);
+          return;
+        }
         void getMyUnreadNotificationCount().then(setUnreadNotifications);
+        void fetchMoodStatus().then(setMoodStatus);
+        unsubscribe = subscribeToMyNotifications(() => {
+          void getMyUnreadNotificationCount().then(setUnreadNotifications);
+        });
       });
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
     }, [])
   );
 
@@ -693,8 +796,14 @@ function HomeContent() {
     } finally {
       setRefreshing(false);
     }
-    void getMyUnreadNotificationCount().then(setUnreadNotifications);
-    void fetchMoodStatus().then(setMoodStatus);
+    const guest = await isGuestMode();
+    if (!guest) {
+      void getMyUnreadNotificationCount().then(setUnreadNotifications);
+      void fetchMoodStatus().then(setMoodStatus);
+    } else {
+      setUnreadNotifications(0);
+      setMoodStatus(null);
+    }
   }, [loadHome]);
 
   // Match the PWA Home hero: show only the first verse line in the
@@ -842,6 +951,10 @@ function HomeContent() {
             accessibilityLabel="Check in with your mood"
             onPress={() => {
               void Haptics.selectionAsync().catch(() => {});
+              if (isGuest) {
+                setAuthGateVisible(true);
+                return;
+              }
               navigate('/mood');
             }}
             hitSlop={4}
@@ -937,7 +1050,19 @@ function HomeContent() {
               overflow: 'hidden',
             }}
           >
-            {avatarImageUrl ? (
+            {isGuest ? (
+              <View
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: COLORS.brandGold,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="user" size={20} color={COLORS.ink} />
+              </View>
+            ) : avatarImageUrl ? (
               <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             ) : relicImageUrl ? (
               <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
@@ -1365,6 +1490,13 @@ function HomeContent() {
 
         </View>
       </ScrollView>
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Check in with your mood"
+        message="Sign in to save your sadhana and track your mood patterns."
+      />
     </SafeAreaView>
   );
 }

@@ -26,6 +26,7 @@ import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -75,11 +76,24 @@ function RootLayout() {
         // session rather than requiring each call site to remember to clean
         // up push identity itself.
         void unregisterPushToken();
+
+        // If guest mode is active, allow tabs and bypass login
+        const guest = await isGuestMode();
+        if (guest) {
+          if (inAuthGroup) {
+            router.replace('/(tabs)');
+          }
+          return;
+        }
+
         if (!inAuthGroup) {
           router.replace('/(auth)/login');
         }
         return;
       }
+
+      // Real sign-in should clear guest mode after session is established.
+      await setGuestMode(false);
 
       // (Re-)register this device's push token against the signed-in user
       // on every authenticated session, not just once at the end of

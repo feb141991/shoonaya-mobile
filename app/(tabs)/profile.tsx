@@ -33,6 +33,8 @@ import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/consta
 import { apiFetch } from '@/lib/api';
 import { getUnlockedRelics, SACRED_RELICS } from '@/lib/relics';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 import {
   getIshtaDevataLabel,
   getSampradayaLabel,
@@ -321,12 +323,87 @@ export default function ProfileScreen() {
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
   const [email, setEmail] = useState('');
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   const profileShareCardRef = useRef<View>(null);
 
   const loadProfile = useCallback(async () => {
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      setEmail('');
+      setProfile({
+        id: 'guest',
+        full_name: 'Atithi Seeker',
+        username: 'atithi',
+        avatar_url: null,
+        tradition: 'hindu',
+        sampradaya: '',
+        ishta_devata: '',
+        city: '',
+        country: '',
+        life_stage: '',
+        app_language: 'en',
+        active_symbol_id: null,
+        seva_score: 0,
+        is_pro: false,
+        subscription_status: 'free',
+        kul_id: null,
+        kul_name: null,
+      });
+      setSummary({
+        profile: {
+          id: 'guest',
+          fullName: 'Atithi Seeker',
+          username: 'atithi',
+          avatarUrl: null,
+          tradition: 'hindu',
+          sampradaya: '',
+          ishtaDevata: '',
+          city: '',
+          country: '',
+          lifeStage: '',
+          appLanguage: 'en',
+          activeSymbolId: null,
+          sevaScore: 0,
+          isPro: false,
+          subscriptionStatus: 'free',
+        },
+        completion: {
+          pct: 0,
+          missing: [],
+        },
+        progress: {
+          practices: { completed: 0, total: 5 },
+          streaks: { shloka: 0, bestShloka: 0, nitya: 0, bestNitya: 0 },
+          pathshala: { completedLessons: 0 },
+          quiz: { doneToday: false },
+          highlights: {
+            totalBeads: 0,
+            totalRounds: 0,
+            totalMinutes: 0,
+            totalSessions: 0,
+            topMantra: null,
+            nityaDays: 0,
+            pathshalaEntriesOpened: 0,
+            bookmarkedVerses: 0,
+          },
+        },
+      });
+      setAvatarFailed(false);
+      setEditState({
+        fullName: 'Atithi Seeker',
+        sampradaya: '',
+        ishtaDevata: '',
+        appLanguage: 'en',
+      });
+      return;
+    }
+
     const response = await apiFetch('/api/native/progress-summary');
 
     if (response.status === 401) {
@@ -863,7 +940,13 @@ export default function ProfileScreen() {
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Change profile picture"
-              onPress={openAvatarActions}
+              onPress={() => {
+                if (isGuest) {
+                  setAuthGateVisible(true);
+                  return;
+                }
+                void openAvatarActions();
+              }}
               disabled={avatarUploading}
               style={{
                 position: 'absolute',
@@ -896,7 +979,13 @@ export default function ProfileScreen() {
               <PressableSurface
                 haptic="selection"
                 accessibilityLabel="Edit profile"
-                onPress={() => setEditVisible(true)}
+                onPress={() => {
+                  if (isGuest) {
+                    setAuthGateVisible(true);
+                    return;
+                  }
+                  setEditVisible(true);
+                }}
                 style={{
                   width: 44,
                   height: 44,
@@ -959,6 +1048,51 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {isGuest ? (
+          <Card
+            elevated
+            tone="auto"
+            style={{
+              backgroundColor: theme.card,
+              borderColor: COLORS.brandGoldLight,
+              borderWidth: 1,
+              padding: 20,
+              gap: 12,
+              borderRadius: 24,
+              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Feather name="shield" size={24} color={COLORS.brandGold} />
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: theme.text }}>
+                Join Shoonaya
+              </Text>
+            </View>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: theme.dim, lineHeight: 20 }}>
+              Sign in to save your sadhana, join Mandali, earn Seva awards, and unlock sacred relics.
+            </Text>
+            <PressableSurface
+              haptic="selection"
+              onPress={async () => {
+                await setGuestMode(false);
+                router.replace('/(auth)/login');
+              }}
+              style={{
+                borderRadius: 16,
+                backgroundColor: theme.brand,
+                paddingVertical: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 6,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14.5, color: COLORS.ink }}>
+                Sign In / Sign Up
+              </Text>
+            </PressableSurface>
+          </Card>
+        ) : null}
+
         <Card
           elevated
           tone="auto"
@@ -987,7 +1121,13 @@ export default function ProfileScreen() {
                 key={item.label}
                 haptic="selection"
                 accessibilityLabel={`${item.label}: ${item.value}`}
-                onPress={() => router.push(item.route)}
+                onPress={() => {
+                  if (isGuest) {
+                    setAuthGateVisible(true);
+                    return;
+                  }
+                  router.push(item.route);
+                }}
                 style={{
                   width: '47.8%',
                   minHeight: 92,
@@ -1701,6 +1841,13 @@ export default function ProfileScreen() {
           />
         </View>
       ) : null}
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Join Shoonaya"
+        message="Sign in to save your sadhana."
+      />
     </Screen>
   );
 }

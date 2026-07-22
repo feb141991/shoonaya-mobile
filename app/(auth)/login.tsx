@@ -18,19 +18,22 @@ import * as WebBrowser from 'expo-web-browser';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
+import { useRouter } from 'expo-router';
+
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { setGuestMode } from '@/lib/guestSession';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
-type AuthAction = 'google' | 'apple' | 'email' | null;
+type AuthAction = 'google' | 'apple' | 'email' | 'atithi' | null;
 
 function getNativeErrorCode(error: unknown): string | number | null {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
@@ -266,6 +269,7 @@ function AuthDivider({ label }: { label: string }) {
 }
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [activeAction, setActiveAction] = useState<AuthAction>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
@@ -275,6 +279,18 @@ export default function LoginScreen() {
   const [appleAvailable, setAppleAvailable] = useState(Platform.OS === 'ios');
   const brandScale = useRef(new Animated.Value(1)).current;
   const cardEntrance = useRef(new Animated.Value(0)).current;
+
+  const handleAtithiMode = async () => {
+    setActiveAction('atithi');
+    try {
+      await setGuestMode(true);
+      router.replace('/(tabs)');
+    } catch {
+      setErrorMessage('Could not activate Atithi Mode.');
+    } finally {
+      setActiveAction(null);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -772,6 +788,35 @@ export default function LoginScreen() {
                 tone="gold"
                 icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
               />
+            </View>
+
+            <AuthDivider label="or" />
+
+            <View style={{ gap: 6, alignItems: 'center' }}>
+              <PressableSurface
+                haptic="selection"
+                disabled={busy}
+                onPress={handleAtithiMode}
+                style={{
+                  minHeight: 52,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: COLORS.brandGoldLight,
+                  backgroundColor: 'transparent',
+                  paddingHorizontal: 14,
+                  alignSelf: 'stretch',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: busy ? 0.68 : 1,
+                }}
+              >
+                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
+                  Continue as Atithi
+                </Text>
+              </PressableSurface>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: COLORS.textDimLight, textAlign: 'center' }}>
+                Explore Shoonaya without saving progress.
+              </Text>
             </View>
 
             <View style={{ marginTop: 2, gap: 4 }}>

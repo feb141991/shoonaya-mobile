@@ -25,6 +25,8 @@ import { COLORS, FONTS } from '@/lib/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 
 // Native Nitya Karma — the first native destination for Home's "Nitya Karma"
 // practice row (previously silently fell back to /panchang, see
@@ -76,6 +78,8 @@ export default function NityaKarmaScreen() {
   const [busyStepId, setBusyStepId] = useState<string | null>(null);
   const [localKey, setLocalKey] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
 
   const theme = useMemo(
     () => ({
@@ -91,6 +95,33 @@ export default function NityaKarmaScreen() {
 
   const loadNitya = useCallback(async () => {
     setLoadError(false);
+
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      const tradition = 'hindu';
+      const userName = 'Atithi Seeker';
+      setLocalKey(null);
+      setState({
+        greeting: 'Suprabhat 🌅',
+        allDoneMessage: 'Your morning sadhana is complete.',
+        steps: [
+          { id: 'brahma', label: 'Brahma Muhurta waking', icon: 'clock', description: 'Rise during the quiet hours of creator, 1.5 hours before sunrise.', minutes: 20, done: false },
+          { id: 'reflection', label: 'Pratah Smaran', icon: 'heart', description: 'Rest in gratitude and set a pure intention for the day.', minutes: 5, done: false },
+          { id: 'bath', label: 'Purifying Bath', icon: 'droplet', description: 'Cleanse the body to refresh the mind and prepare for sadhana.', minutes: 15, done: false },
+          { id: 'meditation', label: 'Japa & Dhyana', icon: 'circle', description: 'Quiet the mind with your daily mantra recitation.', minutes: 20, done: false },
+          { id: 'arghya', label: 'Surya Arghya', icon: 'sun', description: 'Offer water to the rising sun, connecting to the source of life.', minutes: 5, done: false },
+        ],
+        completedCount: 0,
+        total: 5,
+        allDone: false,
+        streak: { current: 0, longest: 0 },
+        tradition,
+        userName,
+      });
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -159,6 +190,10 @@ export default function NityaKarmaScreen() {
 
   const markStep = useCallback(
     async (step: NityaStep) => {
+      if (isGuest) {
+        setAuthGateVisible(true);
+        return;
+      }
       if (step.done || busyStepId) return;
 
       setBusyStepId(step.id);
@@ -532,6 +567,12 @@ export default function NityaKarmaScreen() {
           />
         </View>
       ) : null}
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Nitya Dincharya"
+        message="Sign in to save your morning sadhana progress and build your streak."
+      />
     </Screen>
   );
 }

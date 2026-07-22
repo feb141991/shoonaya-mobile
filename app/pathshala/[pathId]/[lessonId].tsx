@@ -21,6 +21,8 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
@@ -100,6 +102,8 @@ export default function LessonReaderScreen() {
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
 
   // ── Audio state ───────────────────────────────────────────────────
   const [audioState, setAudioState] = useState<AudioState>('idle');
@@ -162,6 +166,17 @@ export default function LessonReaderScreen() {
   useEffect(() => {
     const loadContext = async () => {
       if (!pathId) {
+        setLoadingState(false);
+        return;
+      }
+
+      const guest = await isGuestMode();
+      setIsGuest(guest);
+
+      if (guest) {
+        setUserId('guest');
+        setCompletedLessons([]);
+        setLanguage('en');
         setLoadingState(false);
         return;
       }
@@ -315,6 +330,10 @@ export default function LessonReaderScreen() {
   );
 
   const handleDone = useCallback(async () => {
+    if (isGuest) {
+      setAuthGateVisible(true);
+      return;
+    }
     if (!pathId || !userId || saving) {
       return;
     }
@@ -742,6 +761,13 @@ export default function LessonReaderScreen() {
           </PressableSurface>
         </ScrollView>
       </View>
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Complete Lesson"
+        message="Sign in to save your Pathshala study progress and earn Seva."
+      />
     </GestureDetector>
   );
 }

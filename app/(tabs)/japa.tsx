@@ -17,6 +17,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
@@ -33,6 +34,8 @@ import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from '@/lib/traditions';
 import { getNityaRankProgress } from '@/lib/nitya-rank';
@@ -89,12 +92,13 @@ type JapaLifetimeData = {
 const EMPTY_LIFETIME: JapaLifetimeData = { totalBeads: 0, totalRounds: 0, lastPracticed: null };
 
 const SVG_SIZE = 320;
-const PRACTICE_SVG_SIZE = 382;
+const PRACTICE_SVG_SIZE = 410;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = 120;
-const PRACTICE_CENTER = PRACTICE_SVG_SIZE / 2 - 12;
-const PRACTICE_RADIUS_X = 154;
-const PRACTICE_RADIUS_Y = 178;
+const PRACTICE_CENTER_X = PRACTICE_SVG_SIZE / 2;
+const PRACTICE_CENTER_Y = 195;
+const PRACTICE_RADIUS_X = 152;
+const PRACTICE_RADIUS_Y = 172;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
 const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
@@ -774,6 +778,7 @@ export default function JapaScreen() {
   const router = useRouter();
   const japaShareCardRef = useRef<View>(null);
   const scheme = useColorScheme();
+  const insets = useSafeAreaInsets();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
@@ -816,6 +821,8 @@ export default function JapaScreen() {
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [beginPressed, setBeginPressed] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
   // (close) button on the practice screen, matching JapaClient.tsx exactly
@@ -981,34 +988,52 @@ export default function JapaScreen() {
 
   const loadContext = useCallback(async () => {
     setLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const guest = await isGuestMode();
+      setIsGuest(guest);
 
-    if (!user) {
+      if (guest) {
+        setTradition('hindu');
+        setActiveSymbolId(null);
+        setMantraIndex(0);
+        setJapaAlreadyDoneToday(false);
+        setStreak(0);
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
+      if (!user) return;
+
+      const profileResult = await supabase.from('profiles').select('active_symbol_id, tradition, timezone').eq('id', user.id).single();
+
+      const profile = profileResult.data as ProfileRow | null;
+      setActiveSymbolId(profile?.active_symbol_id ?? null);
+      setTradition(profile?.tradition ?? 'hindu');
+      setMantraIndex(0);
+
+      const today = spiritualDate(profile?.timezone ?? 'UTC');
+      const { data: sadhanaData } = await supabase
+        .from('daily_sadhana')
+        .select('japa_done, streak_count')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .maybeSingle();
+      const sadhana = sadhanaData as SadhanaTodayRow | null;
+      setJapaAlreadyDoneToday(Boolean(sadhana?.japa_done));
+      setStreak(sadhana?.streak_count ?? 0);
+    } catch {
+      setActiveSymbolId(null);
+      setTradition('hindu');
+      setMantraIndex(0);
+      setJapaAlreadyDoneToday(false);
+      setStreak(0);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const profileResult = await supabase.from('profiles').select('active_symbol_id, tradition, timezone').eq('id', user.id).single();
-
-    const profile = profileResult.data as ProfileRow | null;
-    setActiveSymbolId(profile?.active_symbol_id ?? null);
-    setTradition(profile?.tradition ?? 'hindu');
-    setMantraIndex(0);
-
-    const today = spiritualDate(profile?.timezone ?? 'UTC');
-    const { data: sadhanaData } = await supabase
-      .from('daily_sadhana')
-      .select('japa_done, streak_count')
-      .eq('user_id', user.id)
-      .eq('date', today)
-      .maybeSingle();
-    const sadhana = sadhanaData as SadhanaTodayRow | null;
-    setJapaAlreadyDoneToday(Boolean(sadhana?.japa_done));
-    setStreak(sadhana?.streak_count ?? 0);
-
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -1127,6 +1152,22 @@ export default function JapaScreen() {
     // /api/japa/complete owns the mala_sessions insert, daily_sadhana
     // (japa_done/streak_count) upsert, and karma award — see the route's own
     // file header for the full mutation contract.
+    if (isGuest) {
+      setSaving(false);
+      if (goalComplete) {
+        const stats = {
+          rounds: nextRounds,
+          beads: nextRounds * 108,
+          durationSecs: elapsed,
+          mantraName: mantra.label,
+        };
+        setCompletionStats(stats);
+        setCompletionVisible(true);
+        setConfettiVisible(true);
+      }
+      return;
+    }
+
     try {
       const response = await apiFetch('/api/japa/complete', {
         method: 'POST',
@@ -1165,7 +1206,7 @@ export default function JapaScreen() {
 
     setSaving(false);
     await loadContext();
-  }, [activeSymbolId, completedRounds, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
+  }, [activeSymbolId, completedRounds, isGuest, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
 
   useEffect(() => {
     if (!completionVisible) return;
@@ -1245,13 +1286,13 @@ export default function JapaScreen() {
   const hasProgress = completedRounds > 0 || count > 0;
 
   const handleSaveAndStop = useCallback(async () => {
+    if (isGuest) {
+      setAuthGateVisible(true);
+      setShowStopSheet(false);
+      return;
+    }
     setStopSaving(true);
     try {
-      // Each finished round already saved itself via completeRound() the
-      // moment it hit 108 beads — the only thing that can still be
-      // unsaved here is a partial, in-progress round (1-107 beads).
-      // /api/japa/complete accepts rounds:0 for exactly this case (see the
-      // route's own contract — completionType becomes 'ended_manually').
       if (count > 0) {
         const response = await apiFetch('/api/japa/complete', {
           method: 'POST',
@@ -1285,7 +1326,7 @@ export default function JapaScreen() {
       setScreen('launcher');
       await loadContext();
     }
-  }, [activeSymbolId, count, loadContext, mantra.label, practiceType, tradition, updateLifetime]);
+  }, [activeSymbolId, count, isGuest, loadContext, mantra.label, practiceType, tradition, updateLifetime]);
 
   const handleDiscardAndStop = useCallback(() => {
     setCount(0);
@@ -1296,9 +1337,9 @@ export default function JapaScreen() {
     setScreen('launcher');
   }, []);
 
-  function beadPosition(index: number, center: number, radiusX: number, radiusY = radiusX) {
+  function beadPosition(index: number, centerX: number, centerY: number, radiusX: number, radiusY: number) {
     const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
-    return { x: center + Math.cos(angle) * radiusX, y: center + Math.sin(angle) * radiusY };
+    return { x: centerX + Math.cos(angle) * radiusX, y: centerY + Math.sin(angle) * radiusY };
   }
 
   // Three-tier bead state (done / current / upcoming) — previously every
@@ -1307,11 +1348,10 @@ export default function JapaScreen() {
   // lit with the richer `grad-done` gradient as the current bead moves on,
   // giving the same at-a-glance progress read as PWA's bead-done/bead-un
   // split.
-  function buildBeadElements(center: number, radiusX: number, radiusY = radiusX) {
+  function buildBeadElements(centerX: number, centerY: number, radiusX: number, radiusY: number) {
     const activeIndex = count >= 108 ? 107 : count;
-    const sumeru = beadPosition(54, center, radiusX, radiusY);
     return Array.from({ length: 108 }, (_, index) => {
-      const { x, y } = beadPosition(index, center, radiusX, radiusY);
+      const { x, y } = beadPosition(index, centerX, centerY, radiusX, radiusY);
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
       const isSumeru = index === 54;
@@ -1351,8 +1391,8 @@ export default function JapaScreen() {
     });
   }
 
-  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [count]);
-  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [bloomIndex]);
+  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER_X, PRACTICE_CENTER_Y, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [count]);
+  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER_X, PRACTICE_CENTER_Y, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [bloomIndex]);
 
   const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 22] });
   const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.58, 0] });
@@ -1394,7 +1434,7 @@ export default function JapaScreen() {
   );
 
   return (
-    <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
+    <Screen fullscreen={screen === 'practice'} style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       {screen === 'launcher' ? (
         <>
           <View pointerEvents="none" style={{ position: 'absolute', top: 90, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
@@ -2091,7 +2131,7 @@ export default function JapaScreen() {
         </>
       ) : (
         // ── Full-screen bead-ring practice screen ──────────────────────
-        <View style={{ flex: 1 }}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           <LinearGradient
             colors={isDark ? scene.colors : scene.lightColors}
             start={{ x: 0.12, y: 0 }}
@@ -2106,7 +2146,7 @@ export default function JapaScreen() {
               colors={isDark
                 ? ['rgba(0,0,0,0.18)', 'rgba(0,0,0,0.06)', 'rgba(0,0,0,0.26)']
                 : ['rgba(255,253,248,0.34)', 'rgba(255,253,248,0.12)', 'rgba(45,31,14,0.12)']}
-              style={{ position: 'absolute', inset: 0 }}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
             />
             <Pressable
               onPress={() => { void increment(); }}
@@ -2115,14 +2155,26 @@ export default function JapaScreen() {
               <Animated.View
                 style={{
                   width: PRACTICE_SVG_SIZE,
-                  height: PRACTICE_SVG_SIZE + 86,
+                  height: PRACTICE_SVG_SIZE + 180,
                   alignItems: 'center',
                   transform: [{ scale: tapScale }, { rotate: tapRotate }],
                 }}
               >
                 <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE} style={{ position: 'absolute', top: 0 }}>
                   {beadGradientDefs}
-                  {buildBeadElements(PRACTICE_CENTER, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y)}
+                  <Circle
+                    cx={PRACTICE_CENTER_X}
+                    cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 16}
+                    r={6.2}
+                    fill={malaSkin.threadColor}
+                  />
+                  <Circle
+                    cx={PRACTICE_CENTER_X}
+                    cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 24}
+                    r={4.2}
+                    fill={theme.brand}
+                  />
+                  {buildBeadElements(PRACTICE_CENTER_X, PRACTICE_CENTER_Y, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y)}
                   {count < 108 ? (
                     <AnimatedCircle
                       cx={currentBeadPos.x}
@@ -2161,7 +2213,8 @@ export default function JapaScreen() {
                   pointerEvents="none"
                   style={{
                     position: 'absolute',
-                    top: PRACTICE_CENTER + PRACTICE_RADIUS_Y - 8,
+                    top: PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 14,
+                    left: PRACTICE_CENTER_X - 46,
                     width: 92,
                     height: 198,
                   }}
@@ -2206,7 +2259,7 @@ export default function JapaScreen() {
               hitSlop={10}
               style={{
                 position: 'absolute',
-                top: 56,
+                top: Math.max(16, insets.top + 8),
                 left: 20,
                 width: 40,
                 height: 40,
@@ -2231,7 +2284,7 @@ export default function JapaScreen() {
               hitSlop={10}
               style={{
                 position: 'absolute',
-                top: 56,
+                top: Math.max(16, insets.top + 8),
                 right: 20,
                 width: 40,
                 height: 40,
@@ -2250,7 +2303,7 @@ export default function JapaScreen() {
             <View
               style={{
                 position: 'absolute',
-                top: 56,
+                top: Math.max(16, insets.top + 8),
                 left: 72,
                 right: 72,
                 alignItems: 'center',
@@ -2306,13 +2359,11 @@ export default function JapaScreen() {
             style={{
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
-              backgroundColor: isDark ? 'rgba(10,8,14,0.97)' : 'rgba(248,244,236,0.97)',
+              backgroundColor: cardBg,
               borderWidth: 1,
-              borderColor: isDark ? 'rgba(197,160,89,0.14)' : 'rgba(0,0,0,0.07)',
-              paddingHorizontal: 20,
-              paddingTop: 12,
-              paddingBottom: 40,
-              gap: 14,
+              borderColor: border,
+              padding: 24,
+              gap: 20,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -2323,12 +2374,12 @@ export default function JapaScreen() {
                     fontSize: 10,
                     letterSpacing: 1.6,
                     textTransform: 'uppercase',
-                    color: isDark ? '#C5A059' : '#7A4A1E',
+                    color: theme.brand,
                   }}
                 >
                   Focused mala
                 </Text>
-                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: isDark ? 'rgba(245,225,185,0.95)' : '#2D1F0E' }}>
+                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
                   Stop this session?
                 </Text>
               </View>
@@ -2337,13 +2388,13 @@ export default function JapaScreen() {
                 accessibilityLabel="Continue practice"
                 onPress={() => setShowStopSheet(false)}
                 hitSlop={10}
-                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}
               >
-                <Feather name="x" size={16} color={isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)'} />
+                <Feather name="x" size={16} color={dim} />
               </PressableSurface>
             </View>
 
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 19, color: isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)' }}>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20, color: dim }}>
               {hasProgress
                 ? 'Save your current beads before leaving, or discard this unfinished session.'
                 : 'No beads have been counted yet. You can leave setup or continue practice.'}
@@ -2354,18 +2405,19 @@ export default function JapaScreen() {
                 haptic="selection"
                 disabled={stopSaving}
                 onPress={() => { void handleSaveAndStop(); }}
-                style={{ borderRadius: 18, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', opacity: stopSaving ? 0.6 : 1 }}
+                style={{
+                  borderRadius: 999,
+                  minHeight: MIN_TOUCH_TARGET,
+                  backgroundColor: theme.brand,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+                  opacity: stopSaving ? 0.6 : 1,
+                }}
               >
-                <LinearGradient
-                  colors={isDark ? ['#C5A059', '#8a5818'] : ['#8B5E3C', '#5a3010']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ width: '100%', borderRadius: 18, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? '#fde8c8' : '#fff8f0' }}>
-                    {stopSaving ? 'Saving...' : 'End & save'}
-                  </Text>
-                </LinearGradient>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                  {stopSaving ? 'Saving...' : 'End & save'}
+                </Text>
               </PressableSurface>
             ) : null}
 
@@ -2373,16 +2425,16 @@ export default function JapaScreen() {
               haptic="selection"
               onPress={() => setShowStopSheet(false)}
               style={{
-                borderRadius: 18,
+                borderRadius: 999,
                 minHeight: MIN_TOUCH_TARGET,
                 borderWidth: 1,
-                borderColor: isDark ? 'rgba(197,160,89,0.14)' : 'rgba(0,0,0,0.07)',
+                borderColor: theme.premiumBorder,
                 backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? 'rgba(245,225,185,0.95)' : '#2D1F0E' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.brand }}>
                 Continue practice
               </Text>
             </PressableSurface>
@@ -2392,7 +2444,7 @@ export default function JapaScreen() {
               onPress={handleDiscardAndStop}
               style={{ minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? 'rgba(197,160,89,0.60)' : 'rgba(100,65,25,0.60)' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>
                 {hasProgress ? 'Discard and leave' : 'Leave setup'}
               </Text>
             </PressableSurface>
@@ -2852,6 +2904,10 @@ export default function JapaScreen() {
             <View style={{ flexDirection: 'row', gap: 10, alignSelf: 'stretch' }}>
               <PressableSurface
                 onPress={() => {
+                  if (isGuest) {
+                    setAuthGateVisible(true);
+                    return;
+                  }
                   setCompletionVisible(false);
                   setConfettiVisible(false);
                   setCompletionInsight(null);
@@ -2876,6 +2932,10 @@ export default function JapaScreen() {
               <PressableSurface
                 haptic="selection"
                 onPress={() => {
+                  if (isGuest) {
+                    setAuthGateVisible(true);
+                    return;
+                  }
                   setCompletionVisible(false);
                   setConfettiVisible(false);
                   setCompletionInsight(null);
@@ -2897,6 +2957,13 @@ export default function JapaScreen() {
           </Animated.View>
         </View>
       ) : null}
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Save your Sadhana"
+        message="Sign in to save your sadhana rounds and streaks."
+      />
     </Screen>
   );
 }

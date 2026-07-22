@@ -20,6 +20,7 @@ type ScreenProps = PropsWithChildren<ViewProps> & {
     rightElement?: React.ReactNode;
   };
   entrance?: 'none' | 'fade-up';
+  fullscreen?: boolean;
 };
 
 // Default background stays COLORS.creamBg unconditionally (not system-theme
@@ -32,7 +33,7 @@ type ScreenProps = PropsWithChildren<ViewProps> & {
 // resolve left-to-right), so this default only matters for screens that
 // haven't opted into their own theming, and changing it would have altered
 // Login's appearance without being asked to touch it.
-export function Screen({ children, style, header, entrance = 'fade-up', ...props }: ScreenProps) {
+export function Screen({ children, style, header, entrance = 'fade-up', fullscreen = false, ...props }: ScreenProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const contentOpacity = useRef(new Animated.Value(entrance === 'none' ? 1 : 0)).current;
@@ -79,7 +80,7 @@ export function Screen({ children, style, header, entrance = 'fade-up', ...props
   }, [contentOpacity, contentTranslate, entrance, reduceMotion]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={fullscreen ? [] : ['top']}>
       {header && (
         <View
           style={{
@@ -126,7 +127,7 @@ export function Screen({ children, style, header, entrance = 'fade-up', ...props
             paddingHorizontal: SPACING.xl,
             paddingBottom: SPACING.lg,
             // Only add default top padding if there's no header. Otherwise, the header provides the breathing room.
-            paddingTop: header ? 0 : 16,
+            paddingTop: fullscreen || header ? 0 : 16,
             opacity: contentOpacity,
             transform: [{ translateY: contentTranslate }],
           },

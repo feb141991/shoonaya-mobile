@@ -10,6 +10,7 @@ import { COLORS, FONTS } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
 
 type LessonEntry = {
   id: string;
@@ -57,6 +58,7 @@ export default function PathLessonListScreen() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [currentLesson, setCurrentLesson] = useState(0);
+  const [isGuest, setIsGuest] = useState(false);
 
   const loadPath = useCallback(async () => {
     if (!pathId) {
@@ -90,6 +92,15 @@ export default function PathLessonListScreen() {
 
   const loadProgress = useCallback(async () => {
     if (!pathId) {
+      return;
+    }
+
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      setCompletedLessons([]);
+      setCurrentLesson(0);
       return;
     }
 
@@ -192,7 +203,7 @@ export default function PathLessonListScreen() {
         contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
         renderItem={({ item, index }) => {
           const isComplete = completedLessons.includes(index);
-          const isLocked = index > currentLesson && !isComplete;
+          const isLocked = !isGuest && index > currentLesson && !isComplete;
 
           return (
             <PressableSurface

@@ -30,10 +30,12 @@ import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { selectDharmVeerOfTheDayFromRoster, type DharmVeer } from '@/lib/dharm-veer';
+import { selectDharmVeerOfTheDayFromRoster, DHARM_VEERS, type DharmVeer } from '@/lib/dharm-veer';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
 type SwipeDecision = 'inspired' | 'skip' | 'share';
@@ -80,6 +82,8 @@ export default function DharmVeerScreen() {
   const dharmVeerShareCardRef = useRef<View>(null);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
   const [profile, setProfile] = useState<ProfileContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [roster, setRoster] = useState<DharmVeer[]>([]);
@@ -120,6 +124,28 @@ export default function DharmVeerScreen() {
   }));
 
   const loadState = useCallback(async () => {
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      const tradition: Tradition = 'hindu';
+      const timezone = 'UTC';
+      const resolvedToday = spiritualDate(timezone);
+      const localKey = `shoonaya-dharm-veer-mobile-${resolvedToday}`;
+      const storedValue = await AsyncStorage.getItem(localKey);
+      const parsed = storedValue ? (JSON.parse(storedValue) as ProgressSnapshot) : null;
+
+      setProfile({ userId: 'guest', tradition, timezone });
+      setDayProgress({
+        done: Boolean(parsed?.done),
+        seenIds: parsed?.seenIds ?? [],
+      });
+      setRoster(DHARM_VEERS);
+      setRosterError(false);
+      setCurrentIndex(0);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -223,6 +249,16 @@ export default function DharmVeerScreen() {
       setDayProgress({ done: nextDone, seenIds: nextSeen });
       setCurrentIndex(0);
       await AsyncStorage.setItem(storageKey, JSON.stringify({ done: nextDone, seenIds: nextSeen }));
+
+      if (isGuest) {
+        if (decision === 'share') {
+          await shareHero(hero);
+        }
+        if (nextDone) {
+          setAuthGateVisible(true);
+        }
+        return;
+      }
 
       await apiFetch('/api/dharm-veer/submit', {
         method: 'POST',
@@ -485,6 +521,13 @@ export default function DharmVeerScreen() {
         </View>
         <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>Swipe up to share</Text>
       </ScrollView>
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Dharm Veer"
+        message="Sign in to save your responses and streaks for daily heroes."
+      />
     </Screen>
   );
 }

@@ -28,6 +28,7 @@ import { API_BASE, COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } 
 import { apiFetch } from '@/lib/api';
 import { registerPushToken, requestNotificationPermission } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 type AppLanguage = 'en' | 'hi' | 'pa';
 type ThemePref = 'light' | 'dark' | 'system';
@@ -221,8 +222,26 @@ export default function SettingsScreen() {
   } | null>(null);
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [themePref, setThemePref] = useState<ThemePref>('system');
+  const [isGuest, setIsGuest] = useState(false);
 
   const loadSettings = useCallback(async () => {
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      const [localSettings, localTheme] = await Promise.all([
+        AsyncStorage.getItem(SETTINGS_STORAGE_KEY),
+        AsyncStorage.getItem(THEME_STORAGE_KEY),
+      ]);
+      const local = localSettings ? toSettingsState(JSON.parse(localSettings) as Partial<SettingsState>) : {};
+      const merged = toSettingsState({ ...INITIAL_SETTINGS, ...local });
+      setSettings(merged);
+      if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
+        setThemePref(localTheme);
+      }
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -301,6 +320,10 @@ export default function SettingsScreen() {
     setSaving(true);
     try {
       await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(nextState));
+      if (isGuest) {
+        setSaving(false);
+        return;
+      }
       const response = await apiFetch('/api/native/profile', {
         method: 'PATCH',
         body: JSON.stringify(toSettingsState(nextState)),
@@ -319,6 +342,8 @@ export default function SettingsScreen() {
 
     const allowed = await requestNotificationPermission();
     if (!allowed) return;
+
+    if (isGuest) return;
 
     const {
       data: { session },
@@ -458,14 +483,25 @@ export default function SettingsScreen() {
             {/* ── Account ─────────────────────────────────────────────── */}
             <SettingsSection label="Account" theme={theme}>
               <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                Manage your name and spiritual tradition from Profile.
+                {isGuest ? 'Join Shoonaya to save your sadhana and progress.' : 'Manage your name and spiritual tradition from Profile.'}
               </Text>
-              <Button
-                label={signingOut ? 'Signing out...' : 'Sign out'}
-                variant="secondary"
-                loading={signingOut}
-                onPress={() => { void handleSignOut(); }}
-              />
+              {isGuest ? (
+                <Button
+                  label="Sign in / Sign up"
+                  variant="primary"
+                  onPress={async () => {
+                    await setGuestMode(false);
+                    router.replace('/(auth)/login');
+                  }}
+                />
+              ) : (
+                <Button
+                  label={signingOut ? 'Signing out...' : 'Sign out'}
+                  variant="secondary"
+                  loading={signingOut}
+                  onPress={() => { void handleSignOut(); }}
+                />
+              )}
             </SettingsSection>
 
             {/* ── Notifications ───────────────────────────────────────── */}
@@ -554,62 +590,68 @@ export default function SettingsScreen() {
                 onChange={(value) => { void persistSettings({ ...settings, consent_religious_data: value }); }}
                 theme={theme}
               />
-              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
-              <Button
-                label={downloading ? 'Preparing export...' : 'Download your data'}
-                variant="secondary"
-                loading={downloading}
-                onPress={() => { void handleDownloadData(); }}
-              />
+              {!isGuest ? (
+                <>
+                  <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+                  <Button
+                    label={downloading ? 'Preparing export...' : 'Download your data'}
+                    variant="secondary"
+                    loading={downloading}
+                    onPress={() => { void handleDownloadData(); }}
+                  />
+                </>
+              ) : null}
             </SettingsSection>
 
             {/* ── Danger zone ──────────────────────────────────────────── */}
-            <View style={{ gap: 12 }}>
-              <SectionHeader label="Danger Zone" />
-              <Card
-                tone="auto"
-                style={{ backgroundColor: theme.card, borderColor: COLORS.dangerBorder, gap: 10 }}
-              >
-                {deletionStatus?.isDeleting ? (
-                  <>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                      <Feather name="clock" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
-                      <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
-                        Account scheduled for deletion
-                        {deletionStatus.purgeAfter
-                          ? ` on ${new Date(deletionStatus.purgeAfter).toLocaleDateString()}`
-                          : ''}
-                        .{deletionStatus.deletionRequestedAt
-                          ? ` Requested ${new Date(deletionStatus.deletionRequestedAt).toLocaleDateString()}.`
-                          : ''}{' '}
-                        Cancel anytime before then to keep your account.
-                      </Text>
-                    </View>
-                    <Button
-                      label={cancelingDeletion ? 'Cancelling...' : 'Cancel deletion request'}
-                      variant="secondary"
-                      loading={cancelingDeletion}
-                      onPress={() => { void handleCancelDeletion(); }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                      <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
-                      <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
-                        Deleting starts a 30-day cancellable cool-off. Your account and data are permanently removed after 30 days unless you cancel first.
-                      </Text>
-                    </View>
-                    <DangerButton
-                      label="Delete account"
-                      loading={deleting}
-                      onPress={handleDeletePress}
-                      isDark={isDark}
-                    />
-                  </>
-                )}
-              </Card>
-            </View>
+            {!isGuest ? (
+              <View style={{ gap: 12 }}>
+                <SectionHeader label="Danger Zone" />
+                <Card
+                  tone="auto"
+                  style={{ backgroundColor: theme.card, borderColor: COLORS.dangerBorder, gap: 10 }}
+                >
+                  {deletionStatus?.isDeleting ? (
+                    <>
+                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                        <Feather name="clock" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
+                        <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
+                          Account scheduled for deletion
+                          {deletionStatus.purgeAfter
+                            ? ` on ${new Date(deletionStatus.purgeAfter).toLocaleDateString()}`
+                            : ''}
+                          .{deletionStatus.deletionRequestedAt
+                            ? ` Requested ${new Date(deletionStatus.deletionRequestedAt).toLocaleDateString()}.`
+                            : ''}{' '}
+                          Cancel anytime before then to keep your account.
+                        </Text>
+                      </View>
+                      <Button
+                        label={cancelingDeletion ? 'Cancelling...' : 'Cancel deletion request'}
+                        variant="secondary"
+                        loading={cancelingDeletion}
+                        onPress={() => { void handleCancelDeletion(); }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                        <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
+                        <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
+                          Deleting starts a 30-day cancellable cool-off. Your account and data are permanently removed after 30 days unless you cancel first.
+                        </Text>
+                      </View>
+                      <DangerButton
+                        label="Delete account"
+                        loading={deleting}
+                        onPress={handleDeletePress}
+                        isDark={isDark}
+                      />
+                    </>
+                  )}
+                </Card>
+              </View>
+            ) : null}
 
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 }}>
               <PressableSurface

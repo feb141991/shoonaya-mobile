@@ -19,6 +19,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
+import { isGuestMode } from '@/lib/guestSession';
 import { getAshramaDuties, getAshramaMeta, type GenderContext, type LifeStage } from '@/lib/ashrama';
 
 type Phase = 'night' | 'brahma' | 'sunrise' | 'morning' | 'afternoon' | 'evening' | 'dusk';
@@ -196,6 +197,24 @@ export default function NityaKarmaHubScreen() {
   const loadHubData = useCallback(async () => {
     setLoading(true);
     try {
+      const guest = await isGuestMode();
+      if (guest) {
+        setDincharyaStats({
+          completed: 0,
+          total: 5,
+          greeting: 'Suprabhat',
+          streak: 0,
+        });
+        setAshramaStats({
+          stage: 'student',
+          tradition: 'hindu',
+          genderCtx: 'general',
+          dutiesCount: 0,
+          completedDuties: 0,
+        });
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.replace('/(auth)/login');

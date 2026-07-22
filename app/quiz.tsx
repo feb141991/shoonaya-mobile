@@ -23,6 +23,8 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
@@ -82,6 +84,8 @@ export default function QuizScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
 
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
@@ -95,6 +99,27 @@ export default function QuizScreen() {
   const spiritualToday = useMemo(() => spiritualDate(state.timezone), [state.timezone]);
 
   const loadQuiz = useCallback(async () => {
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      const tradition: Tradition = 'hindu';
+      const timezone = 'UTC';
+      const userName = 'Atithi Seeker';
+      const today = spiritualDate(timezone);
+      const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`);
+      const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
+
+      setState({
+        timezone,
+        userName,
+        tradition,
+        quiz: quizData,
+        todayResponse: null,
+      });
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -177,6 +202,10 @@ export default function QuizScreen() {
   const traditionLabel = state.tradition.charAt(0).toUpperCase() + state.tradition.slice(1);
 
   const handleAnswer = async (index: number) => {
+    if (isGuest) {
+      setAuthGateVisible(true);
+      return;
+    }
     if (!activeQuiz || answeredToday || saving) {
       return;
     }
@@ -599,6 +628,13 @@ export default function QuizScreen() {
           />
         </View>
       ) : null}
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Submit Quiz Answer"
+        message="Sign in to save your sadhana quiz responses, streaks and earn Seva."
+      />
     </Screen>
   );
 }

@@ -26,6 +26,43 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/li
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
+
+const GUEST_SHLOKAS: Record<string, SacredText> = {
+  hindu: {
+    label: "Gita 2.47",
+    icon: "📖",
+    original: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥",
+    transliteration: "karmaṇy-evādhikāras te mā phaleṣu kadācena\nmā karma-phala-hetur bhūr mā te saṅgo ’stv akarmaṇi",
+    meaning: "You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions. Never consider yourself to be the cause of the results of your activities, nor be attached to inactive duty.",
+    source: "Bhagavad Gita",
+  },
+  sikh: {
+    label: "Guru Nanak",
+    icon: "📖",
+    original: "ੴ सतिनामु करता पुरखु निरभउ निरवैरु\nअकाल मूरति अजूनी सैभं गुर प्रसादि ॥",
+    transliteration: "ik-ōankār satinām karatā purakh nirabhau niravair\nakāl mūrat ajūnī saibhan gur prasād",
+    meaning: "There is only one God, His name is Truth. He is the Creator, without fear, without enmity. He is immortal, unborn, self-existent, realized by the Guru's grace.",
+    source: "Guru Granth Sahib",
+  },
+  buddhist: {
+    label: "Dhammapada 1",
+    icon: "📖",
+    original: "मनोपुब्बङ्गमा धम्मा मनोसेट्ठा मनोमया।\nमनसा चे पदुट्ठेन भासति वा करोति वा।\nततो नं दुक्खमन्वेति चक्कं व वहतो पदं॥",
+    transliteration: "manopubbaṅgamā dhammā manoseṭṭhā manomayā\nmanasā ce paduṭṭhena bhāsati vā karoti vā\ntato naṁ dukkhamanveti cakkaṁ va vahato padaṁ",
+    meaning: "Mind precedes all mental states. Mind is their chief; they are mind-made. If with an impure mind a person speaks or acts, suffering follows him like the wheel that follows the foot of the ox.",
+    source: "Dhammapada",
+  },
+  jain: {
+    label: "Namokar Mantra",
+    icon: "📖",
+    original: "णमो अरिहंताणं णमो सिद्धाणं णमो आयरियाणं।\nणमो उवज्झायाणं णमो लोए सव्वसाहूणं॥",
+    transliteration: "ṇamō arihantāṇaṁ ṇamō siddhāṇaṁ ṇamō āyariyāṇaṁ\nṇamō uvajjhāyāṇaṁ ṇamō lōē savvasāhūṇaṁ",
+    meaning: "Obeisance to the Arihants, Obeisance to the Siddhas, Obeisance to the Acharyas. Obeisance to the Upadhyayas, Obeisance to all the Sadhus in the world.",
+    source: "Sacred Mantra",
+  },
+};
 
 type SacredText = {
   label: string;
@@ -107,6 +144,8 @@ export default function ShlokaScreen() {
   // shloka modal (motion.div fade/slide/scale entrance, SacredGlowIcon
   // pulse on the icon wells), which this screen previously had none of.
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
   const verseOpacity = useRef(new Animated.Value(0)).current;
   const verseTranslate = useRef(new Animated.Value(14)).current;
   const iconPulse = useRef(new Animated.Value(0)).current;
@@ -119,6 +158,24 @@ export default function ShlokaScreen() {
 
   const load = useCallback(async () => {
     setLoadError(false);
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+
+    if (guest) {
+      const tradition = 'hindu';
+      const fallback = GUEST_SHLOKAS[tradition] || GUEST_SHLOKAS.hindu;
+      setSacredText(fallback);
+      setProfile({
+        userId: 'guest',
+        timezone: 'UTC',
+        shlokaStreak: 0,
+        lastShlokaDate: null,
+        tradition,
+        userName: 'Atithi Seeker',
+      });
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -211,6 +268,10 @@ export default function ShlokaScreen() {
   const readToday = Boolean(profile && today && profile.lastShlokaDate === today);
 
   const markRead = useCallback(async () => {
+    if (isGuest) {
+      setAuthGateVisible(true);
+      return;
+    }
     if (!profile || !today || readToday || marking) return;
 
     setMarking(true);
@@ -636,6 +697,13 @@ export default function ShlokaScreen() {
           </Animated.View>
         </Animated.View>
       ) : null}
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Mark as Read"
+        message="Sign in to save your sadhana read streak and earn Seva."
+      />
     </Screen>
   );
 }
