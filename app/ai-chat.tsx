@@ -64,6 +64,23 @@ export default function AiChatScreen() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [usageLabel, setUsageLabel] = useState<string | null>(null);
 
+  // Real used/limit, fetched from the same route the PWA's AIChatClient
+  // reads (/api/ai/chat/usage) — replaces a previously hardcoded, incorrect
+  // "5/200" label that didn't reflect the actual tiered (seva-score-aware)
+  // daily limit the backend enforces.
+  const refreshUsage = useCallback(async () => {
+    try {
+      const response = await apiFetch('/api/ai/chat/usage');
+      if (!response.ok) return;
+      const data = (await response.json()) as { used?: number; limit?: number; isPro?: boolean };
+      if (typeof data.used === 'number' && typeof data.limit === 'number') {
+        setUsageLabel(`${data.used} / ${data.limit} today`);
+      }
+    } catch {
+      // Non-blocking — fall back to the static label below.
+    }
+  }, []);
+
   const theme = useMemo(
     () => ({
       bg: isDark ? COLORS.darkBg : COLORS.creamBg,
@@ -109,7 +126,8 @@ export default function AiChatScreen() {
     loadProfile()
       .catch(() => {})
       .finally(() => setLoadingProfile(false));
-  }, [loadProfile]);
+    void refreshUsage();
+  }, [loadProfile, refreshUsage]);
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
@@ -192,7 +210,7 @@ export default function AiChatScreen() {
         }
       }
 
-      setUsageLabel(`Free tier · ${profile.isPro ? DAILY_LIMITS.pro : DAILY_LIMITS.free} messages/day`);
+      void refreshUsage();
     } catch {
       setMessages((current) =>
         current.map((message) =>
@@ -204,7 +222,7 @@ export default function AiChatScreen() {
     } finally {
       setStreaming(false);
     }
-  }, [input, messages, profile, streaming]);
+  }, [input, messages, profile, streaming, refreshUsage]);
 
   useEffect(() => {
     if (profile && initialPrompt && !initialSent) {

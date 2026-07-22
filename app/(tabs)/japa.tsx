@@ -1075,14 +1075,17 @@ export default function JapaScreen() {
     if (mantraAudioLoading || mantraAudioActive.current) return;
     setMantraAudioLoading(true);
     try {
-      const response = await apiFetch('/api/tts/generate', {
+      // Real route is POST /api/tts (there is no /api/tts/generate), and it
+      // returns base64 audio bytes in `audioContent`, not a URL — wrap it in
+      // a data URI for the audio player instead of looking for url/audioUrl.
+      const response = await apiFetch('/api/tts', {
         method: 'POST',
         body: JSON.stringify({ text: mantra.label }),
       });
       if (!response.ok) throw new Error('tts-failed');
-      const data = (await response.json()) as { url?: string; audioUrl?: string };
-      const audioUrl = data.url ?? data.audioUrl;
-      if (!audioUrl) throw new Error('tts-no-url');
+      const data = (await response.json()) as { audioContent?: string };
+      if (!data.audioContent) throw new Error('tts-no-audio');
+      const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
       await audioPlayer.loadAndPlay(audioUrl, true); // loop = true
       mantraAudioActive.current = true;
     } catch {

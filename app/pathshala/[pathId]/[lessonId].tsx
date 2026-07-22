@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -63,6 +64,19 @@ type PathDetailResponse = {
 
 type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
 
+// Structured explanation shape returned by POST /api/pathshala/explain —
+// mirrors the PWA's contract exactly (src/app/api/pathshala/explain/route.ts).
+type ExplainResult = {
+  word_by_word: string;
+  meaning: string;
+  commentary: string;
+  daily_application: string;
+  contemplation: string;
+  related_text: string;
+};
+
+type ExplainStatus = 'idle' | 'loading' | 'ready' | 'upgrade_required' | 'error';
+
 const FONT_SIZE_KEY = 'shoonaya.pathshala.fontSize';
 
 const FONT_SCALE: Record<ReaderFontSize, { original: number; meaning: number }> = {
@@ -104,6 +118,12 @@ export default function LessonReaderScreen() {
   const [loadingState, setLoadingState] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
+
+  // ── AI verse explanation (real /api/pathshala/explain wiring) ──────────
+  const [explainStatus, setExplainStatus] = useState<ExplainStatus>('idle');
+  const [explainVisible, setExplainVisible] = useState(false);
+  const [explainResult, setExplainResult] = useState<ExplainResult | null>(null);
+  const [explainMeta, setExplainMeta] = useState<{ tradition?: string; teacher?: string } | null>(null);
 
   // ── Audio state ───────────────────────────────────────────────────
   const [audioState, setAudioState] = useState<AudioState>('idle');
@@ -232,6 +252,65 @@ export default function LessonReaderScreen() {
     void AsyncStorage.setItem(FONT_SIZE_KEY, value);
   }, []);
 
+  // Calls the real, structured, RAG-backed explain endpoint the PWA reader
+  // uses — replaces the previous behaviour of deep-linking to the generic
+  // /ai-chat screen with a canned prompt string.
+  const runExplain = useCallback(async () => {
+    if (!entry || !path) return;
+    if (isGuest) {
+      setAuthGateVisible(true);
+      return;
+    }
+
+    setExplainVisible(true);
+    setExplainStatus('loading');
+    setExplainResult(null);
+    setExplainMeta(null);
+
+    try {
+      const response = await apiFetch('/api/pathshala/explain', {
+        method: 'POST',
+        body: JSON.stringify({
+          originalText: entry.original,
+          transliteration: entry.transliteration,
+          translation: localizedMeaning.meaning || entry.meaning,
+          source: entry.source,
+          title: path.title,
+          tradition: path.tradition,
+          language,
+        }),
+      });
+
+      if (response.status === 403) {
+        // Zenith/Pro gate — matches the PWA's upgrade_required contract.
+        setExplainStatus('upgrade_required');
+        return;
+      }
+
+      if (!response.ok) {
+        setExplainStatus('error');
+        return;
+      }
+
+      const body = (await response.json()) as {
+        explanation?: ExplainResult;
+        tradition?: string;
+        teacher?: string;
+      };
+
+      if (!body.explanation) {
+        setExplainStatus('error');
+        return;
+      }
+
+      setExplainResult(body.explanation);
+      setExplainMeta({ tradition: body.tradition, teacher: body.teacher });
+      setExplainStatus('ready');
+    } catch {
+      setExplainStatus('error');
+    }
+  }, [entry, path, isGuest, localizedMeaning.meaning, language]);
+
   const goToLesson = useCallback(
     (nextLessonIndex: number) => {
       if (!pathId || nextLessonIndex < 0 || nextLessonIndex >= lessons.length) {
@@ -293,7 +372,10 @@ export default function LessonReaderScreen() {
     // Fresh load
     setAudioState('loading');
     try {
-      const response = await apiFetch('/api/tts/generate', {
+      // Real route is POST /api/tts (there is no /api/tts/generate), and it
+      // returns base64 audio bytes in `audioContent`, not a URL — wrap it in
+      // a data URI for the audio player instead of looking for url/audioUrl.
+      const response = await apiFetch('/api/tts', {
         method: 'POST',
         body: JSON.stringify({ text: entry.original }),
       });
@@ -302,12 +384,13 @@ export default function LessonReaderScreen() {
         throw new Error('tts-failed');
       }
 
-      const data = (await response.json()) as { url?: string; audioUrl?: string };
-      const audioUrl = data.url ?? data.audioUrl;
+      const data = (await response.json()) as { audioContent?: string };
 
-      if (!audioUrl) {
-        throw new Error('tts-no-url');
+      if (!data.audioContent) {
+        throw new Error('tts-no-audio');
       }
+
+      const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
 
       currentAudioUrl.current = audioUrl;
       await audioPlayer.loadAndPlay(audioUrl, false);
@@ -671,17 +754,13 @@ export default function LessonReaderScreen() {
             {localizedMeaning.isLoading ? <ActivityIndicator color={brand} /> : null}
           </View>
 
-          {/* Dharma Mitra Ask AI Link */}
+          {/* AI verse explanation — calls the real, RAG-backed, structured
+              /api/pathshala/explain endpoint the PWA reader uses. */}
           <PressableSurface
             accessibilityRole="button"
-            accessibilityLabel="Ask Dharma Mitra about this verse"
+            accessibilityLabel="Explain this verse"
             onPress={() => {
-              router.push({
-                pathname: '/ai-chat',
-                params: {
-                  initialMessage: `I am reading Pathshala lesson on "${entry.original}". Can you explain the meaning, pronunciation, and significance of this verse?`,
-                },
-              });
+              void runExplain();
             }}
             style={{
               flexDirection: 'row',
@@ -698,7 +777,7 @@ export default function LessonReaderScreen() {
           >
             <Feather name="zap" size={16} color={brand} />
             <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
-              Ask Dharma Mitra about this verse
+              Explain this verse
             </Text>
             <Feather name="chevron-right" size={16} color={dim} />
           </PressableSurface>
@@ -768,6 +847,113 @@ export default function LessonReaderScreen() {
         title="Complete Lesson"
         message="Sign in to save your Pathshala study progress and earn Seva."
       />
+
+      {/* Structured AI verse explanation — bottom sheet, matching the
+          existing Modal convention used elsewhere in the app (e.g. kosh.tsx). */}
+      <Modal
+        transparent
+        visible={explainVisible}
+        animationType="slide"
+        onRequestClose={() => setExplainVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              backgroundColor: cardBg,
+              maxHeight: '82%',
+              paddingTop: 20,
+              paddingHorizontal: 20,
+              paddingBottom: 28,
+            }}
+          >
+            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: text, marginBottom: 4 }}>
+              Explain this verse
+            </Text>
+            {explainStatus === 'ready' && (explainMeta?.teacher || explainMeta?.tradition) ? (
+              <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: dim, marginBottom: 12 }}>
+                {[explainMeta?.teacher, explainMeta?.tradition].filter(Boolean).join(' · ')}
+              </Text>
+            ) : (
+              <View style={{ marginBottom: 12 }} />
+            )}
+
+            {explainStatus === 'loading' ? (
+              <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                <ActivityIndicator color={brand} />
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, marginTop: 12 }}>
+                  Dharma Mitra is reflecting on this verse…
+                </Text>
+              </View>
+            ) : explainStatus === 'upgrade_required' ? (
+              <View style={{ paddingVertical: 24, gap: 8 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
+                  Zenith feature
+                </Text>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, lineHeight: 20 }}>
+                  Upgrade to Zenith to unlock AI verse explanations — word-by-word meaning, commentary, and daily application.
+                </Text>
+              </View>
+            ) : explainStatus === 'error' ? (
+              <View style={{ paddingVertical: 24, gap: 12 }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, lineHeight: 20 }}>
+                  Dharma Mitra could not explain this verse right now. Please try again.
+                </Text>
+                <PressableSurface
+                  onPress={() => { void runExplain(); }}
+                  style={{
+                    alignSelf: 'flex-start',
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: border,
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>Retry</Text>
+                </PressableSurface>
+              </View>
+            ) : explainResult ? (
+              <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                {[
+                  { label: 'Word by word', value: explainResult.word_by_word },
+                  { label: 'Meaning', value: explainResult.meaning },
+                  { label: 'Commentary', value: explainResult.commentary },
+                  { label: 'Daily application', value: explainResult.daily_application },
+                  { label: 'Contemplation', value: explainResult.contemplation },
+                  { label: 'Related text', value: explainResult.related_text },
+                ]
+                  .filter((section) => section.value?.trim())
+                  .map((section) => (
+                    <View key={section.label} style={{ marginBottom: 16 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand, marginBottom: 4 }}>
+                        {section.label}
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 22, color: text }}>
+                        {section.value}
+                      </Text>
+                    </View>
+                  ))}
+              </ScrollView>
+            ) : null}
+
+            <PressableSurface
+              haptic="selection"
+              onPress={() => setExplainVisible(false)}
+              style={{
+                marginTop: 16,
+                borderRadius: 20,
+                paddingVertical: 14,
+                alignItems: 'center',
+                backgroundColor: brand,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>Close</Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </Modal>
     </GestureDetector>
   );
 }
