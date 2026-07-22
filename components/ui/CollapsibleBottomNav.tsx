@@ -67,6 +67,7 @@ export function CollapsibleBottomNav() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const collapseProgress = useRef(new Animated.Value(HOME_PATHS.has(pathname) ? 0 : 1)).current;
   const lastYRef = useRef(0);
+  const lastToggleAtRef = useRef(0);
   const readyRef = useRef(false);
 
   useEffect(() => {
@@ -101,13 +102,19 @@ export function CollapsibleBottomNav() {
     return subscribeNavScroll((y) => {
       if (!readyRef.current) return;
       const diff = y - lastYRef.current;
-      if (Math.abs(diff) < 8) return;
-      if (diff > 0 && y > 80) {
+      if (Math.abs(diff) < 14) return;
+
+      const now = Date.now();
+      const canToggle = now - lastToggleAtRef.current > 220;
+      if (y < 36) {
+        setCollapsed(false);
+        lastToggleAtRef.current = now;
+      } else if (canToggle && diff > 0 && y > 140) {
         setCollapsed(true);
-      } else if (diff < -24) {
+        lastToggleAtRef.current = now;
+      } else if (canToggle && diff < -40) {
         setCollapsed(false);
-      } else if (y < 30) {
-        setCollapsed(false);
+        lastToggleAtRef.current = now;
       }
       lastYRef.current = y;
     });

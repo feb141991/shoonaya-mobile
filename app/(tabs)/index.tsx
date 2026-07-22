@@ -41,17 +41,17 @@ import { useScrollToTop } from '@/lib/useScrollToTop';
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
 
 // /api/native/home-summary currently sends Nitya Karma and Pathshala with
-// the same green (#5aaa38), so the two rows read as indistinguishable in
+// the same success green, so the two rows read as indistinguishable in
 // "View all practices" — PWA's own NextPracticeCard ITEM_PALETTE (the
 // source of truth this list should match) gives every practice a distinct
 // colour. Overriding client-side here rather than in the API route, since
 // this is the one place in the app that renders per-practice colour.
 const PRACTICE_COLOR: Record<PracticeId, string> = {
-  japa: '#F59E4A',
-  nitya: '#C5A059',
-  pathshala: '#6BC47E',
-  quiz: '#A594E0',
-  dharmveer: '#FF8A65',
+  japa: COLORS.brandGoldLight,
+  nitya: COLORS.tileGold,
+  pathshala: COLORS.tileGreen,
+  quiz: COLORS.tilePurple,
+  dharmveer: COLORS.tileCoral,
 };
 
 // "View all practices" row glyphs — plain emoji on a white/cream well,
@@ -345,7 +345,7 @@ function resolveAssetUrl(url: string | null | undefined) {
 // "View all practices" status badge — a filled colour disc with a white
 // checkmark when done, or a hollow ring in the practice's own colour when
 // not, matching the reference screenshot exactly (not a progress arc).
-function PracticeStatusBadge({ done, color, size = 34 }: { done: boolean; color: string; size?: number }) {
+function PracticeStatusBadge({ done, color, size = 28 }: { done: boolean; color: string; size?: number }) {
   return (
     <View
       accessibilityElementsHidden
@@ -357,11 +357,11 @@ function PracticeStatusBadge({ done, color, size = 34 }: { done: boolean; color:
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: done ? color : 'transparent',
-        borderWidth: done ? 0 : 2,
+        borderWidth: done ? 0 : 1.5,
         borderColor: color,
       }}
     >
-      {done ? <Feather name="check" size={size <= 30 ? 14 : 16} color="#fff" /> : null}
+      {done ? <Feather name="check" size={13} color={COLORS.cardBgLight} /> : null}
     </View>
   );
 }
@@ -1139,63 +1139,72 @@ function HomeContent() {
               accessibilityLabel={practicesOpen ? 'Hide all practices' : 'View all practices'}
               onPress={() => setPracticesOpen((value) => !value)}
               style={{
-                minHeight: 56,
-                paddingHorizontal: 18,
+                minHeight: 44,
+                paddingHorizontal: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 12,
+                gap: 10,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 20, flex: 1, color: theme.dim }} numberOfLines={1}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 17, flex: 1, color: theme.dim }} numberOfLines={1}>
                 {practicesOpen ? 'Hide all practices' : 'View all practices'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 20, color: theme.dim }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, color: theme.dim }}>
                   {completedCount} / {state.practices.length}
                 </Text>
-                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={16} color={theme.dim} />
+                <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={15} color={theme.dim} />
               </View>
             </Pressable>
           </View>
 
           {practicesOpen ? (
-            // Compact 3-column grid — was a 5-row vertical stack (~362px
-            // expanded). Same data, same tap targets, roughly half the
-            // height: 5 items wrap to 2 rows instead of 5.
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            // Match PWA NextPracticeCard: compact 44dp rows with the status
+            // text and ring locked to the right edge, not below the label.
+            <View style={{ gap: 6, paddingTop: 8 }}>
               {state.practices.map((row) => (
                 <PressableSurface
                   key={row.id}
                   accessibilityLabel={`${row.label}, ${row.done ? 'done' : 'start'}`}
                   onPress={() => navigate(resolveNativeRoute(row.href))}
                   style={{
-                    width: '31.5%',
-                    minHeight: 82,
-                    borderRadius: 18,
-                    paddingVertical: 12,
-                    paddingHorizontal: 6,
+                    minHeight: 44,
+                    borderRadius: 14,
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
+                    justifyContent: 'space-between',
+                    gap: 10,
                     backgroundColor: theme.card,
                     borderWidth: 1,
                     borderColor: theme.premiumBorder,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                   }}
                 >
-                  <View style={{ position: 'absolute', top: 8, right: 8 }}>
-                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} size={18} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                    <Text style={{ width: 22, fontSize: 18, lineHeight: 22, textAlign: 'center' }}>{PRACTICE_EMOJI[row.id]}</Text>
+                    <Text
+                      style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, lineHeight: 17, color: theme.text, flex: 1 }}
+                      numberOfLines={1}
+                    >
+                      {row.label}
+                    </Text>
                   </View>
-                  <Text style={{ fontSize: 22, lineHeight: 26, marginBottom: 6 }}>{PRACTICE_EMOJI[row.id]}</Text>
-                  <Text
-                    style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, lineHeight: 14, color: theme.text, textAlign: 'center' }}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.8}
-                  >
-                    {row.label}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.sansSemiBold,
+                        fontSize: 12,
+                        lineHeight: 16,
+                        color: row.done ? PRACTICE_COLOR[row.id] : theme.dim,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {row.done ? 'Done' : row.progress > 0 ? `${Math.round(row.progress * 100)}%` : 'Start'}
+                    </Text>
+                    <PracticeStatusBadge done={row.done} color={PRACTICE_COLOR[row.id]} />
+                  </View>
                 </PressableSurface>
               ))}
             </View>
