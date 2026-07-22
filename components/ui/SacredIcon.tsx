@@ -13,18 +13,9 @@ import type { OpaqueColorValue } from 'react-native';
 // language on its own; it swaps what each icon well renders, from directly
 // calling <Feather> to going through this seam instead.
 //
-// Icon art: static app-owned PNG assets now live at assets/icons/ (source
-// SVGs at assets/icons/src/), one per SacredIconName, hand-drawn as flat
-// single-color silhouettes with transparent negative-space cutouts (e.g.
-// mood's eyes/mouth, dharmveer's flame emblem) rather than true 3D/rendered
-// art — no 3D icon library or pre-rendered 3D asset exists in either repo
-// (see NATIVE_VISUAL_DEBT_MATRIX.md's "3D icon approach" section), and
-// fabricating fake-3D placeholder art would look worse than a clean flat
-// set. Rendered via expo-image with `tintColor` so the same asset still
-// recolors per call site exactly like the Feather fallback did — several
-// call sites render the same SacredIconName in different accent colors
-// depending on context (e.g. Home's Sadhana/Community tile rows pass
-// tileGold/tilePurple/etc. per practice, not always brand gold).
+// Icon art: static app-owned PNG assets now live at assets/icons/. Newer
+// route-identity assets are full-color clay-style renders; older monochrome
+// assets still tint per call site exactly like the Feather fallback did.
 export type SacredIconName =
   | 'japa'
   | 'bhakti'
@@ -40,7 +31,10 @@ export type SacredIconName =
   | 'profile'
   | 'kosh'
   | 'live-darshan'
-  | 'progress';
+  | 'progress'
+  | 'ai-guide'
+  | 'tirtha'
+  | 'seva';
 
 const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   japa: require('@/assets/icons/japa.png'),
@@ -58,6 +52,9 @@ const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   kosh: require('@/assets/icons/kosh.png'),
   'live-darshan': require('@/assets/icons/live-darshan.png'),
   progress: require('@/assets/icons/progress.png'),
+  'ai-guide': require('@/assets/icons/ai-guide.png'),
+  tirtha: require('@/assets/icons/tirtha.png'),
+  seva: require('@/assets/icons/seva.png'),
 };
 
 const FULL_COLOR_ASSETS = new Set<SacredIconName>([
@@ -66,6 +63,12 @@ const FULL_COLOR_ASSETS = new Set<SacredIconName>([
   'nitya',
   'panchang',
   'pathshala',
+  'quiz',
+  'ai-guide',
+  'progress',
+  'live-darshan',
+  'tirtha',
+  'seva',
 ]);
 
 type SacredIconProps = {

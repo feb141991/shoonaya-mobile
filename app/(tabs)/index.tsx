@@ -1447,7 +1447,7 @@ function HomeContent() {
               {([
                 { label: 'Nitya',    href: '/nitya-karma', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold,   bg: isDark ? COLORS.tileGoldBgDark   : COLORS.tileGoldBgLight,   border: COLORS.tileGoldBorder },
                 { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
-                { label: 'AI Guide', href: '/ai-chat',     sacredId: null,                         fallbackGlyph: 'message-circle' as const, accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
+                { label: 'AI Guide', href: '/ai-chat',     sacredId: 'ai-guide' as SacredIconName, fallbackGlyph: 'message-circle' as const, accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
                 { label: 'Progress', href: '/my-progress', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'trending-up' as const, accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
               ] satisfies HomeMenuTileItem[]).map((item) => (
                 <HomeMenuTile
@@ -1473,8 +1473,8 @@ function HomeContent() {
                 // nearby-temple map, save/check-in, passport — that was a
                 // hidden tab (href: null in _layout.tsx) with no entry point
                 // anywhere in the app. This card is the fix; the tab stays hidden.
-                { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: null,                              fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
-                { label: 'Seva',        href: '/my-progress',      sacredId: null,                              fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
+                { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: 'tirtha' as SacredIconName,        fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
+                { label: 'Seva',        href: '/my-progress',      sacredId: 'seva' as SacredIconName,          fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
               ] satisfies HomeMenuTileItem[]).map((item) => (
                 <HomeMenuTile
                   key={item.label}
