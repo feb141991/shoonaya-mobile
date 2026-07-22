@@ -31,6 +31,7 @@ import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
+import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
@@ -1497,6 +1498,7 @@ function HomeContent() {
         title="Check in with your mood"
         message="Sign in to save your sadhana and track your mood patterns."
       />
+      <FloatingDharmaScroll onOpenChat={() => navigate('/ai-chat')} />
     </SafeAreaView>
   );
 }

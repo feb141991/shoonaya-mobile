@@ -52,7 +52,7 @@ const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   kosh: require('@/assets/icons/kosh.png'),
   'live-darshan': require('@/assets/icons/live-darshan.png'),
   progress: require('@/assets/icons/progress.png'),
-  'ai-guide': require('@/assets/icons/ai-guide.png'),
+  'ai-guide': require('@/assets/icons/ai-guide-scroll.png'),
   tirtha: require('@/assets/icons/tirtha.png'),
   seva: require('@/assets/icons/seva.png'),
 };
