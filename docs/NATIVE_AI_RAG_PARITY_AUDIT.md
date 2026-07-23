@@ -1,6 +1,7 @@
 # Native AI / RAG Parity Audit
 
 Audit date: 2026-07-22
+Cleanup review: 2026-07-23
 Scope: `/Users/Business(C)/Sanatan Sangam/Shoonaya` (PWA/web) vs `/Users/Business(C)/shoonaya-mobile` (native/Expo)
 
 This document is the source of truth for which AI features exist in Shoonaya, how each is wired on the backend, and whether native reaches parity with the PWA. It should be updated whenever an AI route, prompt, or retrieval path changes.
@@ -18,7 +19,7 @@ App-level seam (temporary, per `PRAMANA_MODULE_MAP.md`): `src/lib/ai/{contracts,
 
 **Provider chain** (`src/lib/ai/providers/inference.ts`): `PRAMANA_INFERENCE_PROVIDER` env var selects the primary provider, default `sarvam-hosted`. Falls through a circuit-breaker (5 failures / 60s cooldown) to any configured self-hosted endpoint, and finally to `google-gemini` as a last resort. `/api/ai/chat` additionally has its own **inline** Sarvam→Gemini fallback (older code path, not yet migrated onto the shared `generateWithProvider` circuit breaker for its top-level flow, only for the `dharam_veer_reflection` sub-mode).
 
-**RAG / retrieval**: there is **no pgvector or Postgres vector table** anywhere in this stack. Retrieval is TF‑IDF sparse-vector search (`src/lib/ai/retrieval.ts`) over static JSON indexes built offline by `python/ai_pipeline/` and shipped in the repo at `python/ai_pipeline/corpus/*.json` (`gita_index.json`, `upanishads_index.json`, `gurbani_index.json`, `buddhist_dhamma_index.json`, `jain_dharma_index.json`, `valmiki_ramayana_index.json`, `dharam_veer_index.json`). Each corpus has a registered `PramanaRetriever` (`PramanaRetrieverSelector.register(corpusId, retriever)`); if the embedding index file is missing, retrievers fall back to an exact-reference manifest lookup (`PramanaManifestRetriever`), and if manifests are also missing, to synthetic mock content (guarded by `fs.existsSync`, should never trigger in production — flagged as a content-integrity risk if the corpus files are ever missing from a deploy).
+**RAG / retrieval**: current live Pramana routes use TF-IDF sparse-vector search (`src/lib/ai/retrieval.ts`) over static JSON indexes built offline by `python/ai_pipeline/` and shipped in the repo at `python/ai_pipeline/corpus/*.json`, with manifest-backed exact-reference retrieval for smaller corpora. Legacy pgvector/Postgres-vector objects exist elsewhere in historical schema/sadhana-engine work, but they are not the active retrieval path for the AI routes reviewed here. Current retrieval fails closed when required corpus files are missing; it must not fabricate scripture/story content.
 
 **Reasoning cache**: `src/lib/ai/reasoning-cache.ts` persists stable AI outputs (verse explanations, meaning translations, path recommendations/bridges) to a Supabase Storage bucket `shoonaya-reasoning-cache`, keyed by SHA-256 of normalized input. This is a cost control, not a RAG store. The live conversational `/api/ai/chat` route is deliberately **not** cached (each turn is fresh).
 
@@ -52,7 +53,7 @@ Several AI routes still use the cookie-only pattern. That is the single biggest 
 | Digest generation | Admin/internal (cron-triggered) | `POST /api/digest/generate` |
 | Hindi content generator | Admin/internal | `/admin/hindi-generator` |
 | Sarvam translation provider | Internal helper, not a route | `src/lib/ai/providers/sarvam-translate.ts` |
-| Mock retrieval fallback in `PramanaManifestRetriever` | Experimental/dev-only safety net | n/a — only fires if corpus JSON is missing |
+| Missing-corpus retrieval failure | Production safety behavior | n/a — routes should fail closed rather than serve fabricated content |
 
 ## 2. Live, user-facing features — full detail
 
@@ -192,8 +193,8 @@ All fixes below are wiring/contract/auth fixes only. No new model provider, no n
 
 1. **`/api/i18n/meaning` has no rate limit.** Two caching layers blunt repeat-request cost, but a burst of unique `(entryId, targetLanguage)` pairs from an unauthenticated caller is not throttled. Low severity (translation-only, no free-form user input reaches the model), but worth a `rateLimitByIp` pass similar to what was just added to `completion-insight`.
 2. **`/api/japa/completion-insight` has no user auth**, only the new IP rate limit. Anyone who can reach the endpoint can generate text, not just signed-in users. Left as-is intentionally (see §3.4) since gating it behind auth is a product decision (Japa currently works for guests), not a pure wiring fix.
-3. **`PramanaManifestRetriever` synthetic mock-data fallback** (`retrieval.ts`) will silently return fabricated placeholder verse content (clearly labeled as mock in the code, but not necessarily to the end user) if the corpus JSON files are ever missing from a deployment. This should never happen in a correctly deployed environment, but there is no runtime alarm if it does — worth a startup healthcheck that asserts the expected corpus files exist before the app starts serving explain/chat traffic.
-4. **No pgvector / DB-backed vector store exists.** All retrieval is static-file TF-IDF. This is not a bug, just worth stating plainly since the audit brief asked specifically about "vector tables" — there are none; the closest analog is the JSON index files under `python/ai_pipeline/corpus/`.
+3. **Corpus healthcheck still needed.** Retrieval now fails closed when required corpus files are missing, which protects content integrity. A startup or CI healthcheck should still assert the expected corpus manifests/indexes exist so deployment mistakes are caught before user requests fail.
+4. **Active retrieval is static-file TF-IDF/manifest-backed, not DB-vector-backed.** This is not a bug. Be precise in future docs: legacy pgvector/Postgres-vector objects may exist in schema history, but current Pramana user-facing routes do not depend on them.
 
 4a. **Per-corpus RAG completeness (verified 2026-07-22, content-level, not just file-existence)**:
 
@@ -206,11 +207,11 @@ All fixes below are wiring/contract/auth fixes only. No new model provider, no n
    | Buddhist Dhamma | 109 | Base corpus only. `mahayana_bodhicharyavatara` manifest exists but is a 1-verse scaffold stub with no `rights_status` set — matches its own tracking in `pramana_corpus_status.md` (🟡 Scaffolded, not integrated). **Do not wire in** without a real source/rights pass; there's barely any content there yet regardless. |
    | Sikh Dasam Granth | 0 (not wired) | 1-verse stub, no `rights_status`. `PRAMANA_CORPUS_ROADMAP.md` explicitly marks this **"Sensitive — needs authority/source review"** — intentionally gated, not a wiring gap. |
    | Valmiki Ramayana | 15 (live) | **A near-miss was caught here.** A second, orphaned `ramayana_index.json` (140 docs, all 7 kandas) looked more complete by document count, but its content is fabricated, template-generated pseudo-Sanskrit per `RAMAYANA_CANONICAL_SOURCE_PLAN.md` (verified directly — repetitive templated verses, bare sequential refs, not real shlokas). **That file and its manifests have been deleted from the repo** (commit `36d2844`). The live 15-doc index is real, verified Valmiki text but intentionally narrow (self-labeled `needs_source_audit`) and missing Uttara Kanda entirely — closing that gap requires real translation sourcing (Griffith, per the existing plan doc), not a wiring fix. |
-   | Bhakti Katha (devotional stories) | 0 (no index) | Confirmed **currently falls back to synthetic mock content** for anything beyond chapter 1 — `pramana_rollout_dashboard.md` itself labels this corpus `mock-only`. Only 1/5 configured chapters exist. Needs real source content, not wiring. |
-   | Panchatantra (moral stories) | 0 (no index) | Same situation as Bhakti Katha — `mock-only` per the project's own dashboard, 1/5 chapters. |
-   | Dharam Veer | 6 | Only 2 figures have source material (Guru Gobind Singh, Shivaji) out of however many the daily rotation surfaces. Most "ask about this figure" queries will hit the safe "not enough approved source material" fallback rather than mock content (this retriever returns empty rather than fabricating, which is the correct behavior). |
+   | Bhakti Katha (devotional stories) | Manifest-backed | Current chapter contains the four cataloged stories with corrected source metadata. Prahlada/Dhruva are source-backed; Sudama/Gajendra are Shoonaya curated lessons and should remain labeled as such unless a verified verbatim public-domain source is ingested. |
+   | Panchatantra (moral stories) | Manifest-backed | Current chapter contains the four cataloged stories with source-backed/approved metadata. TF-IDF indexing can improve retrieval quality later, but this is no longer a mock-only content gap. |
+   | Dharam Veer | Expanded source index | Coverage now includes the earlier figures plus newly verified source-backed heroes from the latest Dharam Veer expansion batch. Unsupported heroes should continue to return the safe "not enough approved source material" fallback rather than borrowing unrelated content. |
 
-   **Takeaway**: there is no further safe "wiring" work left in this list — Sikh and Jain are already done, Buddhist/Dasam Granth are correctly gated by the project's own governance docs pending a rights/authority review, and Ramayana/Bhakti Katha/Panchatantra/Dharam Veer all need genuine content sourcing (finding and verifying real public-domain or rights-cleared source text) rather than a mechanical fix. That's a different kind of work than this audit's scope, and should follow the same rigor as `RAMAYANA_CANONICAL_SOURCE_PLAN.md` — real named sources, verified rights, no generated/templated "filler" text ever marked as canonical.
+   **Takeaway**: do not treat older "mock-only" dashboard labels as current truth. Remaining content work is source expansion and index quality, not permission to serve synthetic filler. Buddhist/Dasam Granth remain gated by authority/source review; Ramayana still needs its dedicated public-domain translation ingestion path; Dharam Veer should expand only with named, verified sources.
 5. **Gemini fallback shares full user profile context** (tradition, sampradaya, city, country, seeking) with Google's API when Sarvam fails or is unconfigured, same as the primary path. Not new behavior introduced by this audit, just noting it's an existing third-party data-sharing surface worth knowing about.
 
 ## 5. Intentionally deferred (proven live on PWA, but not implemented here)
