@@ -18,6 +18,9 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants'
 import { useReducedMotion } from '@/components/ui/Motion';
 
 const SCROLL_ASSET = require('@/assets/icons/ai-guide-scroll.png');
+const ANCHOR_SIZE = 74;
+const PANEL_WIDTH = 248;
+const PANEL_HEIGHT = 112;
 
 type FloatingDharmaScrollProps = {
   onOpenChat: () => void;
@@ -96,8 +99,8 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
           pan.setValue(next);
         },
         onPanResponderRelease: (_, gesture) => {
-          const maxX = Math.max(18, width - 112);
-          const maxY = Math.max(140, height - 238);
+          const maxX = Math.max(18, width - ANCHOR_SIZE - 18);
+          const maxY = Math.max(140, height - ANCHOR_SIZE - 112);
           const next = {
             x: Math.min(Math.max(18, lastPosition.current.x + gesture.dx), maxX),
             y: Math.min(Math.max(120, lastPosition.current.y + gesture.dy), maxY),
@@ -128,10 +131,10 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         outputRange: [0, -5],
       });
   const panelOpacity = openProgress;
-  const panelScaleX = openProgress.interpolate({ inputRange: [0, 1], outputRange: [0.32, 1] });
-  const panelScaleY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1] });
+  const panelScaleY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [0.18, 1] });
   const opensLeft = position.x > width / 2;
-  const panelTranslateX = openProgress.interpolate({ inputRange: [0, 1], outputRange: [opensLeft ? 28 : -24, opensLeft ? -210 : 0] });
+  const rootTranslateX = Animated.add(pan.x, opensLeft ? -(PANEL_WIDTH - ANCHOR_SIZE) : 0);
+  const panelTranslateY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [28, 0] });
   const iconScale = dragging ? 1.04 : openProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.92] });
 
   return (
@@ -140,10 +143,9 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
       style={[
         styles.root,
         {
-          transform: [{ translateX: pan.x }, { translateY: pan.y }, { translateY }],
+          transform: [{ translateX: rootTranslateX }, { translateY: pan.y }, { translateY }],
         },
       ]}
-      {...panResponder.panHandlers}
     >
       <Animated.View
         pointerEvents={open ? 'auto' : 'none'}
@@ -151,15 +153,14 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
           styles.panel,
           {
             opacity: panelOpacity,
-            left: opensLeft ? undefined : 62,
-            right: opensLeft ? 12 : undefined,
             backgroundColor: theme.panel,
             borderColor: theme.border,
             boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-            transform: [{ translateX: panelTranslateX }, { scaleX: panelScaleX }, { scaleY: panelScaleY }],
+            transform: [{ translateY: panelTranslateY }, { scaleY: panelScaleY }],
           },
         ]}
       >
+        <View style={[styles.rollCap, styles.rollTop, { backgroundColor: theme.soft, borderColor: theme.border }]} />
         <View style={styles.panelCopy}>
           <Text style={[styles.eyebrow, { color: theme.brand }]}>Dharma Mitra</Text>
           <Text style={[styles.title, { color: theme.text }]}>Ask gently</Text>
@@ -178,9 +179,11 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         >
           <Feather name="message-circle" size={17} color={COLORS.onMediaWhite} />
         </Pressable>
+        <View style={[styles.rollCap, styles.rollBottom, { backgroundColor: theme.soft, borderColor: theme.border }]} />
       </Animated.View>
 
       <Pressable
+        {...panResponder.panHandlers}
         accessibilityRole="button"
         accessibilityLabel={open ? 'Close Dharma Mitra scroll' : 'Open Dharma Mitra scroll'}
         accessibilityHint="Drag to move it around the Home screen."
@@ -195,6 +198,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
             backgroundColor: theme.soft,
             borderColor: theme.border,
             boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            left: opensLeft ? PANEL_WIDTH - ANCHOR_SIZE : 0,
           },
         ]}
       >
@@ -211,11 +215,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
+    width: PANEL_WIDTH,
+    height: PANEL_HEIGHT + ANCHOR_SIZE + 8,
     zIndex: 30,
   },
   anchor: {
-    width: 74,
-    height: 74,
+    position: 'absolute',
+    bottom: 0,
+    width: ANCHOR_SIZE,
+    height: ANCHOR_SIZE,
     minWidth: MIN_TOUCH_TARGET,
     minHeight: MIN_TOUCH_TARGET,
     borderRadius: 26,
@@ -229,17 +237,34 @@ const styles = StyleSheet.create({
   },
   panel: {
     position: 'absolute',
-    top: 6,
-    width: 236,
-    minHeight: 92,
+    bottom: ANCHOR_SIZE + 8,
+    width: PANEL_WIDTH,
+    minHeight: PANEL_HEIGHT,
     borderRadius: 24,
     borderWidth: 1,
-    padding: 13,
-    paddingRight: 58,
+    paddingVertical: 17,
+    paddingHorizontal: 15,
+    paddingRight: 62,
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   panelCopy: {
     gap: 2,
+  },
+  rollCap: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    height: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  rollTop: {
+    top: 8,
+  },
+  rollBottom: {
+    bottom: 8,
   },
   eyebrow: {
     ...TYPE.micro,
@@ -257,7 +282,7 @@ const styles = StyleSheet.create({
   chatButton: {
     position: 'absolute',
     right: 13,
-    top: 24,
+    top: 35,
     width: 42,
     height: 42,
     borderRadius: 21,
