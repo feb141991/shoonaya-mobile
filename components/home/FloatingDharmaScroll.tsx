@@ -20,7 +20,7 @@ import { useReducedMotion } from '@/components/ui/Motion';
 const SCROLL_ASSET = require('@/assets/icons/ai-guide-scroll.png');
 const ANCHOR_SIZE = 74;
 const PANEL_WIDTH = 310;
-const PANEL_HEIGHT = 168;
+const PANEL_HEIGHT = 260;
 
 type FloatingDharmaScrollProps = {
   onOpenChat: () => void;
@@ -136,8 +136,8 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
   // If opensLeft, root expands left so we translate it left by the extra width.
   const rootTranslateX = Animated.add(pan.x, opensLeft ? -(PANEL_WIDTH - ANCHOR_SIZE) : 0);
   
-  // Transform origin bottom approximation: (1 - 0.55) / 2 * PANEL_HEIGHT = 0.225 * 168 = 37.8
-  const panelTranslateY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [38, 0] });
+  // Transform origin bottom approximation: (1 - 0.55) / 2 * PANEL_HEIGHT = 0.225 * 260 = 58.5
+  const panelTranslateY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [59, 0] });
   const iconScale = dragging ? 1.04 : openProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.92] });
 
   return (
@@ -189,30 +189,33 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         <View style={[styles.rollCap, styles.rollBottom, { backgroundColor: theme.soft, borderColor: theme.border }]} />
       </Animated.View>
 
-      <Pressable
+      <View
         {...panResponder.panHandlers}
-        accessibilityRole="button"
-        accessibilityLabel={open ? 'Close Dharma Mitra scroll' : 'Open Dharma Mitra scroll'}
-        accessibilityHint="Drag to move it around the Home screen."
-        onPress={() => {
-          void Haptics.selectionAsync().catch(() => {});
-          setOpen((value) => !value);
-        }}
-        style={({ pressed }) => [
-          styles.anchor,
-          {
-            opacity: pressed ? 0.84 : 0.88,
-            backgroundColor: theme.soft,
-            borderColor: theme.border,
-            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            left: opensLeft ? PANEL_WIDTH - ANCHOR_SIZE : 0,
-          },
-        ]}
+        style={[styles.anchor, { left: opensLeft ? PANEL_WIDTH - ANCHOR_SIZE : 0 }]}
       >
-        <Animated.View style={{ transform: [{ scale: iconScale }] }}>
-          <Image source={SCROLL_ASSET} style={styles.scrollIcon} contentFit="contain" accessibilityIgnoresInvertColors />
-        </Animated.View>
-      </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={open ? 'Close Dharma Mitra scroll' : 'Open Dharma Mitra scroll'}
+          accessibilityHint="Drag to move it around the Home screen."
+          onPress={() => {
+            void Haptics.selectionAsync().catch(() => {});
+            setOpen((value) => !value);
+          }}
+          style={({ pressed }) => [
+            styles.anchorInner,
+            {
+              opacity: pressed ? 0.84 : 0.88,
+              backgroundColor: theme.soft,
+              borderColor: theme.border,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            },
+          ]}
+        >
+          <Animated.View style={{ transform: [{ scale: iconScale }] }}>
+            <Image source={SCROLL_ASSET} style={styles.scrollIcon} contentFit="contain" accessibilityIgnoresInvertColors />
+          </Animated.View>
+        </Pressable>
+      </View>
     </Animated.View>
   );
 }
@@ -233,6 +236,9 @@ const styles = StyleSheet.create({
     height: ANCHOR_SIZE,
     minWidth: MIN_TOUCH_TARGET,
     minHeight: MIN_TOUCH_TARGET,
+  },
+  anchorInner: {
+    flex: 1,
     borderRadius: 26,
     borderWidth: 1,
     alignItems: 'center',
