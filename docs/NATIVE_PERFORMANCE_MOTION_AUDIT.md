@@ -120,7 +120,7 @@ Status legend:
 | `/mantras` | Later | List cards can adopt shared motion. |
 | `/bhakti/*` detail routes | Later | Katha/stotram/zen need route-specific review. |
 | `/pathshala/*` detail routes | Later | Lesson reader should prioritize readability, not motion. |
-| `/vichaar-sabha*` | Watch | Feed/detail should avoid animating realtime changes. |
+
 | Auth routes | Watch | Root transition applies after render; do not animate auth logic. |
 
 ## Before / After Checklist For This Pass

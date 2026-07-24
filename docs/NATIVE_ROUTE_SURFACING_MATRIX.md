@@ -53,7 +53,7 @@ release blocker.
 | Pathshala `(tabs)/pathshala.tsx` | `/pathshala` | Tab bar, Home | API routes (Slice 4C/4D migration) | 🟢 green |
 | Pathshala lesson `pathshala/[pathId]/[lessonId].tsx` | `/pathshala/...` | Pathshala hub | API routes | 🟢 green |
 | Mandali `(tabs)/mandali.tsx` | `/mandali` | Tab bar, Home | direct Supabase, RLS-audited task #181 this session | 🟢 green — audited, not AVD-verified |
-| Vichaar Sabha `vichaar-sabha.tsx` + `[id].tsx` | `/vichaar-sabha` | Mandali (Global Sabha tab) | direct Supabase + `/api/vichaar/react`, RLS-audited task #181 | 🟢 green — audited, not AVD-verified |
+| Vichaar Sabha `vichaar-sabha.tsx` | (Removed/Deferred) | - | - | 🟢 green |
 | Profile `(tabs)/profile.tsx` | `/profile` | Home avatar | `/api/native/progress-summary` (reads) + `/api/native/profile` (editable profile fields) | 🟢 green |
 | Settings `settings.tsx` | `/settings` | Profile | `/api/native/profile` for preferences + `/api/user/delete/{status,request,cancel}` for 30-day account deletion | 🟢 green |
 | Nitya Karma `nitya-karma.tsx` + 3 sub-screens | `/nitya-karma` | Home, Bhakti | `/api/native/nitya-karma` for sequence and step completion; direct Supabase read for ashrama profile context | 🟢 green for primary Nitya completion |

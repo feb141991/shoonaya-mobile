@@ -38,7 +38,7 @@ The screens most at risk are the ones whose list length is genuinely unbounded a
 - `app/(tabs)/mandali.tsx` — 13 separate `.map()` calls, zero `FlatList`. This is the community feed (posts, comments, events) — the single screen most likely to visibly slow down as content accumulates.
 - `app/notifications.tsx` — notification inbox, unbounded by design, unvirtualized.
 - `app/bhakti/katha.tsx`, `app/bhakti/browse.tsx` — content browse lists.
-- `app/panchang.tsx`, `app/vichaar-sabha.tsx`, `app/mantras.tsx`, `app/rashiphala.tsx`, `app/(tabs)/tirtha.tsx`, `app/(tabs)/profile.tsx`, `app/vrat.tsx`, `app/my-progress.tsx` and its `shields.tsx`/`mood.tsx` subpages, `app/(tabs)/japa.tsx`, `app/live-darshan.tsx`, `app/mood.tsx`, `app/bhakti/zen.tsx`, `app/bhakti/insights.tsx` — lower risk if their lists stay short (a handful of festivals, timing rows, etc.), but worth a pass if any of these grow.
+- `app/panchang.tsx`, `app/mantras.tsx`, `app/rashiphala.tsx`, `app/(tabs)/tirtha.tsx`, `app/(tabs)/profile.tsx`, `app/vrat.tsx`, `app/my-progress.tsx` and its `shields.tsx`/`mood.tsx` subpages, `app/(tabs)/japa.tsx`, `app/live-darshan.tsx`, `app/mood.tsx`, `app/bhakti/zen.tsx`, `app/bhakti/insights.tsx` — lower risk if their lists stay short (a handful of festivals, timing rows, etc.), but worth a pass if any of these grow.
 
 **Fix**: swap `ScrollView`+`.map()` for `FlatList` (already in React Native, zero new deps) on `mandali.tsx` and `notifications.tsx` first — those are the two with genuinely unbounded, frequently-updated content. `@shopify/flash-list` is a drop-in upgrade from `FlatList` worth adding once the `FlatList` migration is done everywhere it matters.
 

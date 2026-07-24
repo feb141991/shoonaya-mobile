@@ -145,7 +145,7 @@ Files:
 - `app/live-darshan.tsx`
 - `app/(tabs)/tirtha.tsx`
 - `app/notifications.tsx`
-- `app/vichaar-sabha.tsx`
+- `app/vichaar-sabha.tsx` (removed/deferred)
 
 Finding: these screens use `ScrollView` + `.map()` over route/API data. Some are bounded and acceptable today. They need a rule: when a section can exceed roughly 20-30 cards/rows, switch to `FlatList` or cap with a "View all" route.
 
@@ -153,7 +153,7 @@ Recommended priority:
 
 1. Notifications: already caps but should use `FlatList` for inbox feel.
 2. Tirtha: temple map/list/passport can grow; virtualize list sections.
-3. Vichaar Sabha: thread lists should be `FlatList` as community usage grows.
+3. Vichaar Sabha (removed/deferred)
 4. Bhakti browse/katha: if API returns large scripture/story sets, virtualize.
 
 ## Animation Policy
