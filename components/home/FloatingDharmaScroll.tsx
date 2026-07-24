@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   },
   anchor: {
     position: 'absolute',
-    bottom: 0,
+    top: PANEL_HEIGHT + 8,
     width: ANCHOR_SIZE,
     height: ANCHOR_SIZE,
     minWidth: MIN_TOUCH_TARGET,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   panel: {
     position: 'absolute',
-    bottom: ANCHOR_SIZE + 8,
+    top: 0,
     width: PANEL_WIDTH,
     minHeight: PANEL_HEIGHT,
     borderRadius: 24,
