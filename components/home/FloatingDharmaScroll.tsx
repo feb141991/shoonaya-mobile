@@ -110,7 +110,10 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
           pan.setValue(next);
           setDragging(false);
         },
-        onPanResponderTerminate: () => setDragging(false),
+        onPanResponderTerminate: () => {
+          pan.setValue(lastPosition.current);
+          setDragging(false);
+        },
       }),
     [height, pan, width]
   );
@@ -132,10 +135,18 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
       });
   const panelOpacity = openProgress;
   const panelScaleY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
-  const opensLeft = position.x > width / 2;
-  // If opensLeft, root expands left so we translate it left by the extra width.
-  const rootTranslateX = Animated.add(pan.x, opensLeft ? -(PANEL_WIDTH - ANCHOR_SIZE) : 0);
-  
+  // The anchor always renders at its true drag position (pan.x, below), but
+  // a 310px panel attached rigidly to a 74px anchor can't fit on either
+  // side for many middle-of-screen positions. Instead, clamp the panel's
+  // own left edge to the screen margins (independent of which side it
+  // "attaches" to) and correct for the difference with a local translateX —
+  // the anchor stays exactly where dragged; only the panel slides to hug
+  // whichever margin it would otherwise overflow.
+  const panelMargin = 18;
+  const panelLeftMax = Math.max(panelMargin, width - PANEL_WIDTH - panelMargin);
+  const clampedPanelLeft = Math.min(Math.max(position.x, panelMargin), panelLeftMax);
+  const panelOffsetX = clampedPanelLeft - position.x;
+
   // Transform origin bottom approximation: (1 - 0.55) / 2 * PANEL_HEIGHT = 0.225 * 260 = 58.5
   const panelTranslateY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [59, 0] });
   const iconScale = dragging ? 1.04 : openProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.92] });
@@ -146,7 +157,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
       style={[
         styles.root,
         {
-          transform: [{ translateX: rootTranslateX }, { translateY: pan.y }, { translateY }],
+          transform: [{ translateX: pan.x }, { translateY: pan.y }, { translateY }],
         },
       ]}
     >
@@ -159,7 +170,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
             backgroundColor: theme.panel,
             borderColor: theme.border,
             boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-            transform: [{ translateY: panelTranslateY }, { scaleY: panelScaleY }],
+            transform: [{ translateX: panelOffsetX }, { translateY: panelTranslateY }, { scaleY: panelScaleY }],
           },
         ]}
       >
@@ -189,10 +200,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         <View style={[styles.rollCap, styles.rollBottom, { backgroundColor: theme.soft, borderColor: theme.border }]} />
       </Animated.View>
 
-      <View
-        {...panResponder.panHandlers}
-        style={[styles.anchor, { left: opensLeft ? PANEL_WIDTH - ANCHOR_SIZE : 0 }]}
-      >
+      <View {...panResponder.panHandlers} style={styles.anchor}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={open ? 'Close Dharma Mitra scroll' : 'Open Dharma Mitra scroll'}
