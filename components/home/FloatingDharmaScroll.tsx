@@ -14,13 +14,13 @@ import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
 import { useReducedMotion } from '@/components/ui/Motion';
 
 const SCROLL_ASSET = require('@/assets/icons/ai-guide-scroll.png');
 const ANCHOR_SIZE = 74;
-const PANEL_WIDTH = 248;
-const PANEL_HEIGHT = 112;
+const PANEL_WIDTH = 310;
+const PANEL_HEIGHT = 168;
 
 type FloatingDharmaScrollProps = {
   onOpenChat: () => void;
@@ -32,16 +32,16 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
   const { width, height } = useWindowDimensions();
   const [open, setOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [position, setPosition] = useState({ x: Math.max(18, width - 112), y: Math.max(170, height - 280) });
+  const [position, setPosition] = useState({ x: Math.max(18, width - 112), y: Math.max(170, height - 320) });
   const openProgress = useRef(new Animated.Value(0)).current;
   const float = useRef(new Animated.Value(0)).current;
-  const pan = useRef(new Animated.ValueXY({ x: Math.max(18, width - 112), y: Math.max(170, height - 280) })).current;
-  const lastPosition = useRef({ x: Math.max(18, width - 112), y: Math.max(170, height - 280) });
+  const pan = useRef(new Animated.ValueXY({ x: Math.max(18, width - 112), y: Math.max(170, height - 320) })).current;
+  const lastPosition = useRef({ x: Math.max(18, width - 112), y: Math.max(170, height - 320) });
 
   useEffect(() => {
     const next = {
       x: Math.min(lastPosition.current.x, Math.max(18, width - 112)),
-      y: Math.min(lastPosition.current.y, Math.max(150, height - 244)),
+      y: Math.min(lastPosition.current.y, Math.max(150, height - ANCHOR_SIZE - PANEL_HEIGHT - 8)),
     };
     lastPosition.current = next;
     setPosition(next);
@@ -100,7 +100,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         },
         onPanResponderRelease: (_, gesture) => {
           const maxX = Math.max(18, width - ANCHOR_SIZE - 18);
-          const maxY = Math.max(140, height - ANCHOR_SIZE - 112);
+          const maxY = Math.max(140, height - ANCHOR_SIZE - PANEL_HEIGHT - 8);
           const next = {
             x: Math.min(Math.max(18, lastPosition.current.x + gesture.dx), maxX),
             y: Math.min(Math.max(120, lastPosition.current.y + gesture.dy), maxY),
@@ -131,10 +131,13 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         outputRange: [0, -5],
       });
   const panelOpacity = openProgress;
-  const panelScaleY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [0.18, 1] });
+  const panelScaleY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
   const opensLeft = position.x > width / 2;
+  // If opensLeft, root expands left so we translate it left by the extra width.
   const rootTranslateX = Animated.add(pan.x, opensLeft ? -(PANEL_WIDTH - ANCHOR_SIZE) : 0);
-  const panelTranslateY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [28, 0] });
+  
+  // Transform origin bottom approximation: (1 - 0.55) / 2 * PANEL_HEIGHT = 0.225 * 168 = 37.8
+  const panelTranslateY = openProgress.interpolate({ inputRange: [0, 1], outputRange: [38, 0] });
   const iconScale = dragging ? 1.04 : openProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.92] });
 
   return (
@@ -164,7 +167,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         <View style={styles.panelCopy}>
           <Text style={[styles.eyebrow, { color: theme.brand }]}>Dharma Mitra</Text>
           <Text style={[styles.title, { color: theme.text }]}>Ask gently</Text>
-          <Text style={[styles.body, { color: theme.dim }]} numberOfLines={2}>
+          <Text style={[styles.body, { color: theme.dim }]}>
             Unroll a question, verse, or next step.
           </Text>
         </View>
@@ -175,9 +178,13 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
             void Haptics.selectionAsync().catch(() => {});
             onOpenChat();
           }}
-          style={[styles.chatButton, { backgroundColor: theme.brand }]}
+          style={({ pressed }) => [
+            styles.chatButton,
+            { backgroundColor: theme.brand, opacity: pressed ? 0.8 : 1 },
+          ]}
         >
-          <Feather name="message-circle" size={17} color={COLORS.onMediaWhite} />
+          <Text style={styles.chatButtonText}>Open Dharma Mitra</Text>
+          <Feather name="arrow-right" size={16} color={COLORS.onMediaWhite} style={{ marginLeft: 4 }} />
         </Pressable>
         <View style={[styles.rollCap, styles.rollBottom, { backgroundColor: theme.soft, borderColor: theme.border }]} />
       </Animated.View>
@@ -217,7 +224,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: PANEL_WIDTH,
     height: PANEL_HEIGHT + ANCHOR_SIZE + 8,
-    zIndex: 30,
+    zIndex: 99,
   },
   anchor: {
     position: 'absolute',
@@ -242,19 +249,18 @@ const styles = StyleSheet.create({
     minHeight: PANEL_HEIGHT,
     borderRadius: 24,
     borderWidth: 1,
-    paddingVertical: 17,
-    paddingHorizontal: 15,
-    paddingRight: 62,
-    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    justifyContent: 'space-between',
     overflow: 'hidden',
   },
   panelCopy: {
-    gap: 2,
+    gap: 4,
   },
   rollCap: {
     position: 'absolute',
-    left: 18,
-    right: 18,
+    left: 20,
+    right: 20,
     height: 7,
     borderRadius: 999,
     borderWidth: 1,
@@ -267,26 +273,31 @@ const styles = StyleSheet.create({
     bottom: 8,
   },
   eyebrow: {
-    ...TYPE.micro,
+    fontSize: 11,
     fontFamily: FONTS.sansSemiBold,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
   },
   title: {
-    ...TYPE.cardHeading,
+    fontSize: 19,
     fontFamily: FONTS.serifBold,
   },
   body: {
-    ...TYPE.caption,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 2,
   },
   chatButton: {
-    position: 'absolute',
-    right: 13,
-    top: 35,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    height: 44,
+    borderRadius: 22,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 12,
+  },
+  chatButtonText: {
+    color: COLORS.onMediaWhite,
+    fontSize: 14,
+    fontFamily: FONTS.sansSemiBold,
   },
 });
