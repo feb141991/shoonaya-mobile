@@ -31,6 +31,7 @@ import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
+import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
 import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
@@ -546,6 +547,8 @@ function HomeContent() {
   const [moodStatus, setMoodStatus] = useState<MoodStatus | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
+  const [chatSheetVisible, setChatSheetVisible] = useState(false);
+  const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
 
   const scrollRef = useScrollToTop();
 
@@ -1498,7 +1501,18 @@ function HomeContent() {
         title="Check in with your mood"
         message="Sign in to save your sadhana and track your mood patterns."
       />
-      <FloatingDharmaScroll onOpenChat={() => navigate('/ai-chat')} />
+      <FloatingDharmaScroll
+        onOpenChat={(origin) => {
+          setChatOrigin(origin);
+          setChatSheetVisible(true);
+        }}
+      />
+      <DharmaMitraChatSheet
+        visible={chatSheetVisible}
+        origin={chatOrigin}
+        onClose={() => setChatSheetVisible(false)}
+        tradition={state.profile.tradition}
+      />
     </SafeAreaView>
   );
 }
