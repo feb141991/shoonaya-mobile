@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   ScrollView,
   Switch,
   Text,
@@ -95,6 +96,12 @@ export default function DharmVeerScreen() {
   const [intention, setIntention] = useState('');
   const [mood, setMood] = useState<'gratitude' | 'devotion' | 'peace' | 'courage'>('gratitude');
   const [shareHeroData, setShareHeroData] = useState<DharmVeer | null>(null);
+  const [journeyExpanded, setJourneyExpanded] = useState(false);
+  // Check-in (mood/intention/privacy) is only asked after an "inspired"
+  // swipe — no point prompting for a written reflection on a hero the user
+  // is about to skip. Holds the hero+decision so the modal keeps working
+  // with the right card even after dayProgress advances past it.
+  const [pendingCheckIn, setPendingCheckIn] = useState<{ hero: DharmVeer; decision: SwipeDecision } | null>(null);
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -113,6 +120,10 @@ export default function DharmVeerScreen() {
   const deck = useMemo(() => buildDailyDeck(profile?.tradition ?? 'hindu', roster), [profile?.tradition, roster]);
   const visibleCards = deck.filter((hero) => !dayProgress.seenIds.includes(hero.id));
   const currentHero = visibleCards[currentIndex] ?? null;
+
+  useEffect(() => {
+    setJourneyExpanded(false);
+  }, [currentHero?.id]);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [
@@ -238,7 +249,11 @@ export default function DharmVeerScreen() {
   }, [profile]);
 
   const submitSwipe = useCallback(
-    async (hero: DharmVeer, decision: SwipeDecision) => {
+    async (
+      hero: DharmVeer,
+      decision: SwipeDecision,
+      checkIn: { mood: typeof mood; intention: string; privacyCommunity: boolean }
+    ) => {
       if (!profile) {
         return;
       }
@@ -265,9 +280,9 @@ export default function DharmVeerScreen() {
         body: JSON.stringify({
           heroId: hero.id,
           decision,
-          mood,
-          intention,
-          privacy: privacyCommunity ? 'community' : 'private',
+          mood: checkIn.mood,
+          intention: checkIn.intention,
+          privacy: checkIn.privacyCommunity ? 'community' : 'private',
         }),
       }).catch(() => null);
 
@@ -279,17 +294,29 @@ export default function DharmVeerScreen() {
         await persistCompletion();
       }
     },
-    [dayProgress.seenIds, intention, mood, persistCompletion, privacyCommunity, profile, shareHero, storageKey]
+    [dayProgress.seenIds, persistCompletion, isGuest, profile, shareHero, storageKey]
   );
 
+  // Skip/share commit immediately with no check-in — only an "inspired"
+  // swipe opens the reflection modal (see the Modal below), since that's
+  // the only decision worth interrupting the swipe flow for.
   const finalizeGesture = useCallback(
     (decision: SwipeDecision) => {
       if (!currentHero || submitting) {
         return;
       }
 
+      if (decision === 'inspired') {
+        setPendingCheckIn({ hero: currentHero, decision });
+        translateX.value = 0;
+        translateY.value = 0;
+        rotate.value = 0;
+        opacity.value = 1;
+        return;
+      }
+
       setSubmitting(true);
-      submitSwipe(currentHero, decision)
+      submitSwipe(currentHero, decision, { mood: 'gratitude', intention: '', privacyCommunity: false })
         .catch(() => {
           Alert.alert("Could not save today's response");
         })
@@ -303,6 +330,42 @@ export default function DharmVeerScreen() {
     },
     [currentHero, rotate, submitSwipe, submitting, translateX, translateY, opacity]
   );
+
+  const confirmCheckIn = useCallback(() => {
+    if (!pendingCheckIn) {
+      return;
+    }
+    setSubmitting(true);
+    submitSwipe(pendingCheckIn.hero, pendingCheckIn.decision, { mood, intention, privacyCommunity })
+      .catch(() => {
+        Alert.alert("Could not save today's response");
+      })
+      .finally(() => {
+        setSubmitting(false);
+        setPendingCheckIn(null);
+        setMood('gratitude');
+        setIntention('');
+        setPrivacyCommunity(false);
+      });
+  }, [intention, mood, pendingCheckIn, privacyCommunity, submitSwipe]);
+
+  const skipCheckInNote = useCallback(() => {
+    if (!pendingCheckIn) {
+      return;
+    }
+    setSubmitting(true);
+    submitSwipe(pendingCheckIn.hero, pendingCheckIn.decision, { mood: 'gratitude', intention: '', privacyCommunity: false })
+      .catch(() => {
+        Alert.alert("Could not save today's response");
+      })
+      .finally(() => {
+        setSubmitting(false);
+        setPendingCheckIn(null);
+        setMood('gratitude');
+        setIntention('');
+        setPrivacyCommunity(false);
+      });
+  }, [pendingCheckIn, submitSwipe]);
 
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -447,73 +510,33 @@ export default function DharmVeerScreen() {
                 </Text>
               </View>
 
-              <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
-                <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{currentHero.journey}</Text>
-              </ScrollView>
-
-              <Card style={{ backgroundColor: surface, borderColor: border, padding: 14 }}>
-                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 6 }}>
-                  Teaching
+              <View>
+                <Text
+                  numberOfLines={journeyExpanded ? undefined : 6}
+                  style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}
+                >
+                  {currentHero.journey}
                 </Text>
+                {currentHero.journey.length > 300 ? (
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => setJourneyExpanded((value) => !value)}
+                    style={{ marginTop: 6, minHeight: 0, alignSelf: 'flex-start' }}
+                  >
+                    <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                      {journeyExpanded ? 'Read less' : 'Read more'}
+                    </Text>
+                  </PressableSurface>
+                ) : null}
+              </View>
+
+              <View style={{ borderTopWidth: 1, borderTopColor: border, paddingTop: 14, gap: 6 }}>
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Teaching</Text>
                 <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{currentHero.teaching}</Text>
-              </Card>
+              </View>
             </Card>
           </Animated.View>
         </GestureDetector>
-
-        <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
-          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Check-in before you swipe</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {(['gratitude', 'devotion', 'peace', 'courage'] as const).map((option) => {
-              const active = mood === option;
-              return (
-                <PressableSurface
-                  key={option}
-                  haptic="selection"
-                  onPress={() => setMood(option)}
-                  style={{
-                    borderRadius: 999,
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderWidth: 1,
-                    borderColor: active ? brand : border,
-                    backgroundColor: active ? brand : cardBg,
-                  }}
-                >
-                  <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                    {option}
-                  </Text>
-                </PressableSurface>
-              );
-            })}
-          </View>
-
-          <TextInput
-            value={intention}
-            onChangeText={setIntention}
-            placeholder="What are you taking from this hero?"
-            placeholderTextColor={textDim}
-            multiline
-            style={{
-              minHeight: 96,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: surface,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              color: text,
-              fontFamily: FONTS.sans,
-              fontSize: 14,
-              textAlignVertical: 'top',
-            }}
-          />
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Share with community</Text>
-            <Switch value={privacyCommunity} onValueChange={setPrivacyCommunity} trackColor={{ true: brand }} />
-          </View>
-        </Card>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Swipe left to skip</Text>
@@ -528,6 +551,104 @@ export default function DharmVeerScreen() {
         title="Dharm Veer"
         message="Sign in to save your responses and streaks for daily heroes."
       />
+
+      <Modal transparent visible={!!pendingCheckIn} animationType="slide" onRequestClose={skipCheckInNote}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: border,
+              padding: 22,
+              paddingBottom: 34,
+              gap: 16,
+            }}
+          >
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
+            </View>
+
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 20 }}>
+              {pendingCheckIn ? `What are you taking from ${pendingCheckIn.hero.name}?` : ''}
+            </Text>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {(['gratitude', 'devotion', 'peace', 'courage'] as const).map((option) => {
+                const active = mood === option;
+                return (
+                  <PressableSurface
+                    key={option}
+                    haptic="selection"
+                    onPress={() => setMood(option)}
+                    style={{
+                      borderRadius: 999,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderWidth: 1,
+                      borderColor: active ? brand : border,
+                      backgroundColor: active ? brand : cardBg,
+                    }}
+                  >
+                    <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      {option}
+                    </Text>
+                  </PressableSurface>
+                );
+              })}
+            </View>
+
+            <TextInput
+              value={intention}
+              onChangeText={setIntention}
+              placeholder="A word or two (optional)"
+              placeholderTextColor={textDim}
+              multiline
+              style={{
+                minHeight: 80,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: border,
+                backgroundColor: surface,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: text,
+                fontFamily: FONTS.sans,
+                fontSize: 14,
+                textAlignVertical: 'top',
+              }}
+            />
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Share with community</Text>
+              <Switch value={privacyCommunity} onValueChange={setPrivacyCommunity} trackColor={{ true: brand }} />
+            </View>
+
+            <PressableSurface
+              haptic="selection"
+              onPress={confirmCheckIn}
+              disabled={submitting}
+              style={{
+                borderRadius: 999,
+                paddingVertical: 14,
+                alignItems: 'center',
+                backgroundColor: brand,
+              }}
+            >
+              {submitting ? (
+                <ActivityIndicator color={COLORS.ink} />
+              ) : (
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Save & continue</Text>
+              )}
+            </PressableSurface>
+
+            <PressableSurface haptic="selection" onPress={skipCheckInNote} disabled={submitting} style={{ alignItems: 'center', minHeight: 0 }}>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Skip note</Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }

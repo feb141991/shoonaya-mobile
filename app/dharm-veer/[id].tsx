@@ -51,6 +51,8 @@ export default function DharmVeerDetailScreen() {
   const [loadError, setLoadError] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [hero, setHero] = useState<DharmVeer | null>(null);
+  const [journeyExpanded, setJourneyExpanded] = useState(false);
+  const [trialExpanded, setTrialExpanded] = useState(false);
   const [askMoreQuery, setAskMoreQuery] = useState('');
   const [askMoreResponse, setAskMoreResponse] = useState('');
   const [askMoreLoading, setAskMoreLoading] = useState(false);
@@ -249,20 +251,42 @@ export default function DharmVeerDetailScreen() {
 
           <View style={{ gap: 6 }}>
             <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Journey</Text>
-            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.journey}</Text>
+            <Text
+              numberOfLines={journeyExpanded ? undefined : 5}
+              style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}
+            >
+              {hero.journey}
+            </Text>
+            {hero.journey.length > 260 ? (
+              <PressableSurface haptic="selection" onPress={() => setJourneyExpanded((value) => !value)} style={{ minHeight: 0, alignSelf: 'flex-start' }}>
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                  {journeyExpanded ? 'Read less' : 'Read more'}
+                </Text>
+              </PressableSurface>
+            ) : null}
           </View>
 
           <View style={{ gap: 6 }}>
             <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>The Trial</Text>
-            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.trial}</Text>
+            <Text
+              numberOfLines={trialExpanded ? undefined : 5}
+              style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}
+            >
+              {hero.trial}
+            </Text>
+            {hero.trial.length > 260 ? (
+              <PressableSurface haptic="selection" onPress={() => setTrialExpanded((value) => !value)} style={{ minHeight: 0, alignSelf: 'flex-start' }}>
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                  {trialExpanded ? 'Read less' : 'Read more'}
+                </Text>
+              </PressableSurface>
+            ) : null}
           </View>
 
-          <Card style={{ backgroundColor: surface, borderColor: border, padding: 14 }}>
-            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 6 }}>
-              Teaching
-            </Text>
+          <View style={{ borderTopWidth: 1, borderTopColor: border, paddingTop: 14, gap: 6 }}>
+            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Teaching</Text>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{hero.teaching}</Text>
-          </Card>
+          </View>
 
           <View style={{ gap: 6 }}>
             <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
