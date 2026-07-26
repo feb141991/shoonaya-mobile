@@ -103,6 +103,7 @@ export default function VratScreen() {
   const [geo, setGeo] = useState<ProfileGeoState>(DEFAULT_GEO);
   const [upcomingVrats, setUpcomingVrats] = useState<UpcomingVrat[]>([]);
   const [upcomingError, setUpcomingError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   // ── Vrat observation tracker — mirrors web's VratClient.tsx (same
   // GET/POST /api/vrat/observe contract, same karma-award behavior). ────────
@@ -129,6 +130,7 @@ export default function VratScreen() {
       // same as a signed-in user with no saved location yet. Only the
       // personal "Mark as Observed" action (handleObserve) actually needs
       // an account, not viewing the calendar itself.
+      setIsGuest(true);
       return;
     }
 
@@ -251,6 +253,11 @@ export default function VratScreen() {
 
   const handleObserve = async () => {
     if (!selectedVrat || observedToday || observeLoading) {
+      return;
+    }
+
+    if (isGuest) {
+      Alert.alert('Sign in required', 'Sign in to track your Vrat observances.');
       return;
     }
 

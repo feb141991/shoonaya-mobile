@@ -2357,7 +2357,7 @@ export default function JapaScreen() {
       {/* ── Exit-confirm sheet — mirrors JapaClient.tsx's StopPracticeSheet
           copy, branching, and button styles exactly. ───────────────────── */}
       <Modal transparent visible={showStopSheet} animationType="slide" onRequestClose={() => setShowStopSheet(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.62)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
           <Pressable style={{ flex: 1 }} onPress={() => setShowStopSheet(false)} />
           <View
             style={{

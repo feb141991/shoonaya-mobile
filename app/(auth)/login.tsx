@@ -841,7 +841,7 @@ export default function LoginScreen() {
                   opacity: busy ? 0.68 : 1,
                 }}
               >
-                <Text style={{ color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
                   Continue as Atithi
                 </Text>
               </PressableSurface>
@@ -882,7 +882,7 @@ export default function LoginScreen() {
                 >
                   <Text
                     style={{
-                      color: COLORS.brandGold,
+                      color: theme.brand,
                       fontFamily: FONTS.sans,
                       fontSize: 12.5,
                       textDecorationLine: 'none',
@@ -907,7 +907,7 @@ export default function LoginScreen() {
                 >
                   <Text
                     style={{
-                      color: COLORS.brandGold,
+                      color: theme.brand,
                       fontFamily: FONTS.sans,
                       fontSize: 12.5,
                       textDecorationLine: 'none',
