@@ -150,34 +150,34 @@ const MandaliPostCard = memo(function MandaliPostCard({
       style={{
         backgroundColor: theme.card,
         borderColor: theme.premiumBorder,
-        gap: 12,
-        padding: 16,
-        borderRadius: 22,
+        gap: 9,
+        padding: 13,
+        borderRadius: 18,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
         {post.profiles?.avatar_url ? (
-          <Image source={{ uri: post.profiles.avatar_url }} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
+          <Image source={{ uri: post.profiles.avatar_url }} style={{ width: 30, height: 30, borderRadius: 15 }} contentFit="cover" />
         ) : (
           <LinearGradient
             colors={[theme.brand, COLORS.brandGoldLight]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+            <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
               {getInitials(post.profiles?.full_name ?? post.profiles?.username ?? '?')}
             </Text>
           </LinearGradient>
         )}
 
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5, marginBottom: 3 }}>
+            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
               {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
             </Text>
-            <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
+            <Text style={{ color: theme.dim, fontSize: 9, opacity: 0.5 }}>•</Text>
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
               {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
             </Text>
             <View style={{ flex: 1 }} />
@@ -185,17 +185,17 @@ const MandaliPostCard = memo(function MandaliPostCard({
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 5,
+                gap: 4,
                 borderRadius: 999,
                 borderWidth: 1,
                 borderColor: theme.premiumBorder,
                 backgroundColor: theme.surface,
-                paddingHorizontal: 9,
-                paddingVertical: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 3,
               }}
             >
-              <Feather name={postTypeMeta.icon} size={10} color={theme.brand} />
-              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9.5 }}>{postTypeMeta.label}</Text>
+              <Feather name={postTypeMeta.icon} size={9} color={theme.brand} />
+              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9 }}>{postTypeMeta.label}</Text>
             </View>
             {!isOwnPost && (
               <PressableSurface
@@ -210,19 +210,19 @@ const MandaliPostCard = memo(function MandaliPostCard({
             )}
           </View>
 
-          <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{post.content}</Text>
+          <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 20 }}>{post.content}</Text>
 
           {post.type === 'event' && post.event_date ? (
             <View
               style={{
-                marginTop: 10,
+                marginTop: 8,
                 backgroundColor: theme.soft,
                 borderColor: theme.premiumBorder,
                 borderWidth: 1,
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                gap: 4,
+                borderRadius: 10,
+                paddingHorizontal: 10,
+                paddingVertical: 7,
+                gap: 3,
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -259,17 +259,17 @@ const MandaliPostCard = memo(function MandaliPostCard({
             </View>
           ) : null}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 9 }}>
             <PressableSurface
               haptic="selection"
               accessibilityLabel={isUpvoted ? 'Remove upvote' : 'Upvote post'}
               onPress={() => onToggleUpvote(post.id)}
-              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 5 }}
               hitSlop={10}
             >
-              <Ionicons name={isUpvoted ? 'heart' : 'heart-outline'} size={14} color={isUpvoted ? COLORS.danger : theme.dim} />
+              <Ionicons name={isUpvoted ? 'heart' : 'heart-outline'} size={13} color={isUpvoted ? COLORS.danger : theme.dim} />
               {post.upvotes > 0 ? (
-                <Text style={{ color: isUpvoted ? COLORS.danger : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{post.upvotes}</Text>
+                <Text style={{ color: isUpvoted ? COLORS.danger : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>{post.upvotes}</Text>
               ) : null}
             </PressableSurface>
 
@@ -277,11 +277,11 @@ const MandaliPostCard = memo(function MandaliPostCard({
               haptic="selection"
               accessibilityLabel={expanded ? 'Hide comments' : 'Show comments'}
               onPress={() => onToggleComments(post.id)}
-              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 5 }}
               hitSlop={10}
             >
-              <Feather name="message-square" size={13} color={theme.dim} />
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
+              <Feather name="message-square" size={12} color={theme.dim} />
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11.5 }}>
                 {post.comment_count > 0 ? post.comment_count : 'Comment'}
               </Text>
             </PressableSurface>
@@ -873,8 +873,8 @@ export default function MandaliScreen() {
 
       <LinearGradient
         colors={isDark
-          ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
-          : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+          ? [COLORS.homeHeroDark, COLORS.cardBgDark, theme.bg]
+          : [COLORS.homeRaisedLight, COLORS.brandSoftLight, theme.bg]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{

@@ -79,66 +79,66 @@ export function PostComments({
   };
 
   return (
-    <View style={{ marginTop: 10 }}>
+    <View style={{ marginTop: 8 }}>
       <PressableSurface
         haptic="selection"
         onPress={onToggleExpand}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 0 }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 0 }}
       >
-        <Feather name="message-circle" size={14} color={dim} />
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim }}>
+        <Feather name="message-circle" size={13} color={dim} />
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: dim }}>
           {comments.length > 0 ? `${comments.length} comment${comments.length === 1 ? '' : 's'}` : 'Comment'}
         </Text>
-        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={dim} />
+        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={13} color={dim} />
       </PressableSurface>
 
       {expanded ? (
-        <View style={{ marginTop: 10, gap: 12 }}>
+        <View style={{ marginTop: 8, gap: 9 }}>
           {rootComments.map((comment) => {
             const replies = repliesByParent.get(comment.id) ?? [];
             const isReplying = replyTo === comment.id;
             return (
-              <View key={comment.id} style={{ gap: 8 }}>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: text }}>
+              <View key={comment.id} style={{ gap: 6 }}>
+                <View style={{ flexDirection: 'row', gap: 7 }}>
+                  <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: text }}>
                       {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
                     </Text>
                   </View>
                   <View style={{ flex: 1, gap: 1 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: text }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>
                       {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
                       {comment.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
                     </Text>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 19, color: text }}>{comment.body}</Text>
+                    <Text style={{ fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 17, color: text }}>{comment.body}</Text>
                     <PressableSurface
                       haptic="selection"
                       onPress={() => {
                         setReplyTo((current) => (current === comment.id ? null : comment.id));
                         setReplyDraft('');
                       }}
-                      style={{ minHeight: 0, alignSelf: 'flex-start', marginTop: 2 }}
+                      style={{ minHeight: 0, alignSelf: 'flex-start', marginTop: 1 }}
                     >
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: dim }}>Reply</Text>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Reply</Text>
                     </PressableSurface>
                   </View>
                 </View>
 
                 {replies.length > 0 ? (
-                  <View style={{ marginLeft: 34, gap: 8 }}>
+                  <View style={{ marginLeft: 29, gap: 6 }}>
                     {replies.map((reply) => (
-                      <View key={reply.id} style={{ flexDirection: 'row', gap: 8 }}>
-                        <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: text }}>
+                      <View key={reply.id} style={{ flexDirection: 'row', gap: 7 }}>
+                        <View style={{ width: 19, height: 19, borderRadius: 10, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: text }}>
                             {(reply.profiles?.full_name ?? reply.profiles?.username ?? '?').charAt(0).toUpperCase()}
                           </Text>
                         </View>
                         <View style={{ flex: 1, gap: 1 }}>
-                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: text }}>
                             {reply.profiles?.full_name ?? reply.profiles?.username ?? 'Seeker'}
                             {reply.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
                           </Text>
-                          <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18, color: text }}>{reply.body}</Text>
+                          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16, color: text }}>{reply.body}</Text>
                         </View>
                       </View>
                     ))}
@@ -146,7 +146,7 @@ export function PostComments({
                 ) : null}
 
                 {isReplying ? (
-                  <View style={{ marginLeft: 34, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ marginLeft: 29, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
                     <TextInput
                       value={replyDraft}
                       onChangeText={setReplyDraft}
@@ -155,13 +155,13 @@ export function PostComments({
                       autoFocus
                       style={{
                         flex: 1,
-                        borderRadius: 14,
+                        borderRadius: 12,
                         borderWidth: 1,
                         borderColor: border,
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
                         fontFamily: FONTS.sans,
-                        fontSize: 13,
+                        fontSize: 12,
                         color: text,
                       }}
                       onSubmitEditing={() => submitReply(comment.id)}
@@ -173,18 +173,18 @@ export function PostComments({
                         setReplyTo(null);
                         setReplyDraft('');
                       }}
-                      style={{ minHeight: 0, padding: 6 }}
+                      style={{ minHeight: 0, padding: 5 }}
                     >
-                      <Feather name="x" size={14} color={dim} />
+                      <Feather name="x" size={13} color={dim} />
                     </PressableSurface>
                     <PressableSurface
                       accessibilityLabel="Send reply"
                       disabled={posting || !replyDraft.trim()}
                       onPress={() => submitReply(comment.id)}
                       style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 15,
+                        width: 27,
+                        height: 27,
+                        borderRadius: 14,
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: replyDraft.trim() ? brand : border,
@@ -192,7 +192,7 @@ export function PostComments({
                         minHeight: 0,
                       }}
                     >
-                      {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={12} color={COLORS.ink} />}
+                      {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={11} color={COLORS.ink} />}
                     </PressableSurface>
                   </View>
                 ) : null}
@@ -200,7 +200,7 @@ export function PostComments({
             );
           })}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 1 }}>
             <TextInput
               value={draft}
               onChangeText={setDraft}
@@ -208,13 +208,13 @@ export function PostComments({
               placeholderTextColor={dim}
               style={{
                 flex: 1,
-                borderRadius: 14,
+                borderRadius: 12,
                 borderWidth: 1,
                 borderColor: border,
-                paddingHorizontal: 12,
-                paddingVertical: 9,
+                paddingHorizontal: 10,
+                paddingVertical: 7,
                 fontFamily: FONTS.sans,
-                fontSize: 13.5,
+                fontSize: 12.5,
                 color: text,
               }}
               onSubmitEditing={submit}
@@ -225,9 +225,9 @@ export function PostComments({
               disabled={posting || !draft.trim()}
               onPress={submit}
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 17,
+                width: 30,
+                height: 30,
+                borderRadius: 15,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: draft.trim() ? brand : border,
@@ -235,7 +235,7 @@ export function PostComments({
                 minHeight: 0,
               }}
             >
-              {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={14} color={COLORS.ink} />}
+              {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={13} color={COLORS.ink} />}
             </PressableSurface>
           </View>
         </View>
