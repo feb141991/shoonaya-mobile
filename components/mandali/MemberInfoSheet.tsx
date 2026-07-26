@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Modal, Text, useColorScheme, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
@@ -47,31 +48,43 @@ export function MemberInfoSheet({ visible, subject, onClose, onReport }: MemberI
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
 
-  if (!subject) return null;
+  // The caller nulls `subject` in the same state update that flips
+  // `visible` to false (see mandali.tsx's onClose), so relying on
+  // `subject` directly would unmount the Modal outright instead of
+  // letting it play its own slide-down close animation with
+  // visible={false}. Caching the last non-null subject keeps the Modal
+  // (and its content) mounted through that transition.
+  const [cachedSubject, setCachedSubject] = useState(subject);
+  useEffect(() => {
+    if (subject) setCachedSubject(subject);
+  }, [subject]);
 
-  const displayName = subject.fullName ?? subject.username ?? 'Seeker';
+  const displaySubject = subject ?? cachedSubject;
+  if (!displaySubject) return null;
+
+  const displayName = displaySubject.fullName ?? displaySubject.username ?? 'Seeker';
   const rows: Array<{ icon: keyof typeof Feather.glyphMap; label: string }> = [];
 
-  if (subject.city || subject.country) {
+  if (displaySubject.city || displaySubject.country) {
     rows.push({
       icon: 'map-pin',
-      label: [subject.city, subject.country].filter(Boolean).join(', '),
+      label: [displaySubject.city, displaySubject.country].filter(Boolean).join(', '),
     });
   }
-  if (subject.distanceKm != null) {
-    rows.push({ icon: 'navigation', label: subject.distanceKm < 1 ? 'Less than 1 km away' : `${Math.round(subject.distanceKm)} km away` });
+  if (displaySubject.distanceKm != null) {
+    rows.push({ icon: 'navigation', label: displaySubject.distanceKm < 1 ? 'Less than 1 km away' : `${Math.round(displaySubject.distanceKm)} km away` });
   }
-  if (subject.sampradaya || subject.ishtaDevata) {
+  if (displaySubject.sampradaya || displaySubject.ishtaDevata) {
     rows.push({
       icon: 'sun',
-      label: [subject.sampradaya, subject.ishtaDevata].filter(Boolean).join(' · '),
+      label: [displaySubject.sampradaya, displaySubject.ishtaDevata].filter(Boolean).join(' · '),
     });
   }
-  if (subject.spiritualLevel) {
-    rows.push({ icon: 'star', label: subject.spiritualLevel });
+  if (displaySubject.spiritualLevel) {
+    rows.push({ icon: 'star', label: displaySubject.spiritualLevel });
   }
-  if (subject.sevaScore != null) {
-    rows.push({ icon: 'award', label: `${subject.sevaScore} seva` });
+  if (displaySubject.sevaScore != null) {
+    rows.push({ icon: 'award', label: `${displaySubject.sevaScore} seva` });
   }
 
   return (
@@ -94,8 +107,8 @@ export function MemberInfoSheet({ visible, subject, onClose, onReport }: MemberI
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            {subject.avatarUrl ? (
-              <Image source={{ uri: subject.avatarUrl }} style={{ width: 56, height: 56, borderRadius: 28 }} contentFit="cover" />
+            {displaySubject.avatarUrl ? (
+              <Image source={{ uri: displaySubject.avatarUrl }} style={{ width: 56, height: 56, borderRadius: 28 }} contentFit="cover" />
             ) : (
               <LinearGradient
                 colors={[theme.brand, COLORS.brandGoldLight]}
@@ -112,9 +125,9 @@ export function MemberInfoSheet({ visible, subject, onClose, onReport }: MemberI
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 19, color: theme.text }} numberOfLines={1}>
                 {displayName}
               </Text>
-              {subject.username ? (
+              {displaySubject.username ? (
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }} numberOfLines={1}>
-                  @{subject.username}
+                  @{displaySubject.username}
                 </Text>
               ) : null}
             </View>
@@ -157,7 +170,7 @@ export function MemberInfoSheet({ visible, subject, onClose, onReport }: MemberI
           {onReport ? (
             <PressableSurface
               haptic="selection"
-              onPress={() => onReport(subject)}
+              onPress={() => onReport(displaySubject)}
               style={{
                 minHeight: 44,
                 borderRadius: 14,
