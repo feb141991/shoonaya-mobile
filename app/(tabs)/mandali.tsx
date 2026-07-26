@@ -879,8 +879,6 @@ export default function MandaliScreen() {
         end={{ x: 1, y: 1 }}
         style={{
           borderRadius: 28,
-          borderWidth: 1,
-          borderColor: theme.premiumBorder,
           padding: 18,
           gap: 14,
           boxShadow: theme.shadow,
