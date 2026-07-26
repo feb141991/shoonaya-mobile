@@ -26,6 +26,7 @@ import { JoinMandaliPrompt } from '@/components/mandali/JoinMandaliPrompt';
 import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
+import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/MemberInfoSheet';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
@@ -337,6 +338,7 @@ export default function MandaliScreen() {
   const [loadingSeekers, setLoadingSeekers] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<MemberInfoSubject | null>(null);
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [composeBody, setComposeBody] = useState('');
@@ -727,6 +729,38 @@ export default function MandaliScreen() {
     ]);
   }, [reportMember]);
 
+  // Members and nearby seekers were previously dead ends -- tapping either
+  // did nothing (seekers had zero interactivity; members only had the
+  // "..." Report action). Both open the same lightweight MemberInfoSheet,
+  // normalized from their different source shapes (MemberRow vs
+  // NearbySeeker) since neither app has a full "view another user's
+  // profile" screen to link to yet.
+  const openMemberInfo = useCallback((member: MemberRow) => {
+    setSelectedMember({
+      id: member.id,
+      fullName: member.full_name,
+      username: member.username,
+      avatarUrl: member.avatar_url,
+      city: member.city,
+      country: member.country,
+      sampradaya: member.sampradaya,
+      ishtaDevata: member.ishta_devata,
+      spiritualLevel: member.spiritual_level,
+      sevaScore: member.seva_score,
+    });
+  }, []);
+
+  const openSeekerInfo = useCallback((seeker: NearbySeeker) => {
+    setSelectedMember({
+      id: seeker.id,
+      fullName: seeker.full_name,
+      username: seeker.username,
+      avatarUrl: seeker.avatar_url,
+      city: seeker.city,
+      distanceKm: seeker.distanceKm ?? null,
+    });
+  }, []);
+
   const submitPost = useCallback(async () => {
     if (!profile?.mandaliId || !composeBody.trim()) return;
     setPosting(true);
@@ -804,14 +838,35 @@ export default function MandaliScreen() {
           const isOwnMember = member.id === profile?.userId;
           return (
             <View key={member.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ width: 20, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>{idx + 1}</Text>
-              <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14 }}>
-                  {member.full_name}
-                  {isOwnMember ? <Text style={{ color: theme.brand }}> (you)</Text> : null}
-                </Text>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>{member.spiritual_level ?? 'Seeker'}</Text>
-              </View>
+              <Text style={{ width: 16, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>{idx + 1}</Text>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel={`View ${member.full_name ?? 'member'}`}
+                onPress={() => openMemberInfo(member)}
+                style={{ minHeight: 0, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: 8 }}
+              >
+                {member.avatar_url ? (
+                  <Image source={{ uri: member.avatar_url }} style={{ width: 32, height: 32, borderRadius: 16 }} contentFit="cover" />
+                ) : (
+                  <LinearGradient
+                    colors={[theme.brand, COLORS.brandGoldLight]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+                      {getInitials(member.full_name ?? '?')}
+                    </Text>
+                  </LinearGradient>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14 }}>
+                    {member.full_name}
+                    {isOwnMember ? <Text style={{ color: theme.brand }}> (you)</Text> : null}
+                  </Text>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>{member.spiritual_level ?? 'Seeker'}</Text>
+                </View>
+              </PressableSurface>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{member.seva_score} seva</Text>
                 {!isOwnMember && (
@@ -831,7 +886,7 @@ export default function MandaliScreen() {
         })
       )}
     </Card>
-  ), [members, profile?.userId, showMemberOptions, theme]);
+  ), [members, openMemberInfo, profile?.userId, showMemberOptions, theme]);
 
   const renderFeedItem = useCallback(({ item }: ListRenderItemInfo<MandaliFeedItem>) => {
     if (item.type === 'post' || item.type === 'blendedPost') return renderPost(item.post);
@@ -997,9 +1052,10 @@ export default function MandaliScreen() {
         brand={theme.brand}
         cardBg={theme.card}
         border={theme.border}
+        onSelectSeeker={openSeekerInfo}
       />
     );
-  }, [loadingSeekers, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
+  }, [loadingSeekers, openSeekerInfo, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
 
   if (loading) {
     return (
@@ -1142,6 +1198,20 @@ export default function MandaliScreen() {
           </View>
         </View>
       </Modal>
+
+      <MemberInfoSheet
+        visible={!!selectedMember}
+        subject={selectedMember}
+        onClose={() => setSelectedMember(null)}
+        onReport={
+          selectedMember && members.some((m) => m.id === selectedMember.id)
+            ? (subject) => {
+                setSelectedMember(null);
+                void reportMember(subject.id);
+              }
+            : undefined
+        }
+      />
     </Screen>
   );
 }

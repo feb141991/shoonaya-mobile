@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 
+import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { NearbySeeker } from '@/lib/mandali';
 
@@ -7,6 +8,9 @@ import type { NearbySeeker } from '@/lib/mandali';
 // separate from the Mandali feed itself (haversine within 80km, or a city
 // ILIKE fallback — same two-strategy approach, computed in lib/mandali.ts's
 // fetchNearbySeekers to match src/app/(main)/mandali/SeekersNearYou.tsx).
+// Rows were previously non-interactive (tapping a seeker did nothing) —
+// onSelectSeeker opens the shared MemberInfoSheet, the same lightweight
+// "who is this" surface Mandali's members list now uses.
 export function SeekersNearYou({
   seekers,
   loading,
@@ -15,6 +19,7 @@ export function SeekersNearYou({
   brand,
   cardBg,
   border,
+  onSelectSeeker,
 }: {
   seekers: NearbySeeker[];
   loading: boolean;
@@ -23,6 +28,7 @@ export function SeekersNearYou({
   brand: string;
   cardBg: string;
   border: string;
+  onSelectSeeker?: (seeker: NearbySeeker) => void;
 }) {
   return (
     <View style={{ backgroundColor: cardBg, borderColor: border, borderWidth: 1, borderRadius: 20, padding: 16, gap: 12 }}>
@@ -37,7 +43,14 @@ export function SeekersNearYou({
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
           {seekers.map((p) => (
-            <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, width: '46%' }}>
+            <PressableSurface
+              key={p.id}
+              haptic="selection"
+              disabled={!onSelectSeeker}
+              onPress={() => onSelectSeeker?.(p)}
+              accessibilityLabel={`View ${p.full_name ?? p.username ?? 'seeker'}`}
+              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 8, width: '46%' }}
+            >
               <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: brand, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.ink }}>
                   {(p.full_name ?? p.username ?? '?').charAt(0).toUpperCase()}
@@ -53,7 +66,7 @@ export function SeekersNearYou({
                   </Text>
                 ) : null}
               </View>
-            </View>
+            </PressableSurface>
           ))}
         </View>
       )}
