@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 
@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { TYPE, themeColor } from '@/lib/constants';
+import { COLORS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 
 // ── Bhakti Phase 7 — native equivalent of the PWA's
@@ -31,7 +31,7 @@ type Mantra = {
 
 type TabType = 'all' | 'tradition' | 'others';
 
-const AMBER = '#C5A059';
+const AMBER = COLORS.brandGold;
 
 export default function MantrasScreen() {
   const router = useRouter();
@@ -124,72 +124,75 @@ export default function MantrasScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 60, gap: 16 }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, gap: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <BackButton showLabel={false} />
-            <Text style={{ ...TYPE.title, color: theme.text }}>Mantras</Text>
-          </View>
+      <FlatList
+        data={chunkPairs(filtered)}
+        keyExtractor={(row, rowIndex) => row[0]?.id ?? String(rowIndex)}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View style={{ paddingHorizontal: 20, paddingTop: 16, gap: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <BackButton showLabel={false} />
+              <Text style={{ ...TYPE.title, color: theme.text }}>Mantras</Text>
+            </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {(['all', 'tradition', 'others'] as TabType[]).map((tab) => {
-              const isActive = activeTab === tab;
-              const label = tab === 'all' ? 'All' : tab === 'tradition' ? displayTradition : 'Others';
-              return (
-                <PressableSurface key={tab} haptic="selection" onPress={() => setActiveTab(tab)} style={{ borderRadius: 999 }}>
-                  <View
-                    style={{
-                      borderRadius: 999,
-                      paddingHorizontal: 16,
-                      paddingVertical: 8,
-                      backgroundColor: isActive ? AMBER : theme.card,
-                      borderWidth: 1,
-                      borderColor: isActive ? AMBER : theme.border,
-                    }}
-                  >
-                    <Text style={{ ...TYPE.caption, fontWeight: '700', color: isActive ? '#0E0E0F' : theme.dim }}>{label}</Text>
-                  </View>
-                </PressableSurface>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View style={{ paddingHorizontal: 20, gap: 12 }}>
-          {chunkPairs(filtered).map((row, rowIndex) => (
-            <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-              {row.map((mantra) => {
-                const isLocked = mantra.isPremium && !isPro;
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {(['all', 'tradition', 'others'] as TabType[]).map((tab) => {
+                const isActive = activeTab === tab;
+                const label = tab === 'all' ? 'All' : tab === 'tradition' ? displayTradition : 'Others';
                 return (
-                  <PressableSurface key={mantra.id} haptic="selection" onPress={() => handleCardPress(mantra)} style={{ flex: 1 }}>
-                    <Card tone="auto" style={{ gap: 10, borderColor: theme.premiumBorder, opacity: isLocked ? 0.7 : 1 }}>
-                      <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{mantra.nameEn}</Text>
-                      <Text style={{ ...TYPE.caption, color: AMBER }}>{mantra.nameLocal}</Text>
-                      {mantra.deity ? (
-                        <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim }}>{mantra.deity}</Text>
-                      ) : null}
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                        {mantra.tags.slice(0, 3).map((tag) => (
-                          <Text
-                            key={tag}
-                            style={{ ...TYPE.micro, letterSpacing: 0.6, textTransform: 'uppercase', color: AMBER, backgroundColor: `${AMBER}18`, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}
-                          >
-                            {tag}
-                          </Text>
-                        ))}
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Feather name={isLocked ? 'lock' : 'chevron-right'} size={16} color={isLocked ? AMBER : theme.dim} />
-                      </View>
-                    </Card>
+                  <PressableSurface key={tab} haptic="selection" onPress={() => setActiveTab(tab)} style={{ borderRadius: 999 }}>
+                    <View
+                      style={{
+                        borderRadius: 999,
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                        backgroundColor: isActive ? AMBER : theme.card,
+                        borderWidth: 1,
+                        borderColor: isActive ? AMBER : theme.border,
+                      }}
+                    >
+                      <Text style={{ ...TYPE.caption, fontWeight: '700', color: isActive ? COLORS.ink : theme.dim }}>{label}</Text>
+                    </View>
                   </PressableSurface>
                 );
               })}
-              {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+            </ScrollView>
+          </View>
+        }
+        renderItem={({ item: row, index: rowIndex }) => (
+          <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginTop: rowIndex === 0 ? 16 : 12 }}>
+            {row.map((mantra) => {
+              const isLocked = mantra.isPremium && !isPro;
+              return (
+                <PressableSurface key={mantra.id} haptic="selection" onPress={() => handleCardPress(mantra)} style={{ flex: 1 }}>
+                  <Card tone="auto" style={{ gap: 10, borderColor: theme.premiumBorder, opacity: isLocked ? 0.7 : 1 }}>
+                    <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{mantra.nameEn}</Text>
+                    <Text style={{ ...TYPE.caption, color: AMBER }}>{mantra.nameLocal}</Text>
+                    {mantra.deity ? (
+                      <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim }}>{mantra.deity}</Text>
+                    ) : null}
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                      {mantra.tags.slice(0, 3).map((tag) => (
+                        <Text
+                          key={tag}
+                          style={{ ...TYPE.micro, letterSpacing: 0.6, textTransform: 'uppercase', color: AMBER, backgroundColor: `${AMBER}18`, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}
+                        >
+                          {tag}
+                        </Text>
+                      ))}
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Feather name={isLocked ? 'lock' : 'chevron-right'} size={16} color={isLocked ? AMBER : theme.dim} />
+                    </View>
+                  </Card>
+                </PressableSurface>
+              );
+            })}
+            {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+          </View>
+        )}
+      />
     </Screen>
   );
 }

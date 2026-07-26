@@ -26,6 +26,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
 
 type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
@@ -123,6 +124,14 @@ export default function VratScreen() {
   );
 
   const loadProfileGeo = useCallback(async () => {
+    if (await isGuestMode()) {
+      // Guests browse Vrat with DEFAULT_GEO's fallback location/timezone —
+      // same as a signed-in user with no saved location yet. Only the
+      // personal "Mark as Observed" action (handleObserve) actually needs
+      // an account, not viewing the calendar itself.
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();

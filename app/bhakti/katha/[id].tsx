@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { RADII, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 
@@ -37,13 +37,16 @@ type FullKatha = {
   relatedJapaMantra?: string;
 };
 
-const TRADITION_COLOR: Record<string, string> = {
-  hindu: '#FF6B35', sikh: '#1B7FD4', buddhist: '#7C5CBF', jain: '#2D9E4A', all: '#8B9E6E',
-};
+const TRADITION_COLOR: Record<string, string> = TRADITION_ACCENT;
 
 const TRADITION_LABEL: Record<string, string> = {
   hindu: 'Katha', sikh: 'Sakhi', buddhist: 'Dhamma Story', jain: 'Katha',
 };
+
+// "Liked" accent — not sourced from a shared token since it's specific to
+// this one reader-screen affordance, not repeated anywhere else. Named
+// once here instead of repeating the raw hex 3x inline.
+const LIKE_ACCENT = '#F47888';
 
 const OCCASION_LABEL: Record<string, string> = {
   ekadashi: 'Ekadashi', purnima: 'Purnima', amavasya: 'Amavasya',
@@ -140,7 +143,7 @@ export default function KathaReaderScreen() {
 
   const isPanchatantra = katha.tags.includes('panchatantra');
   const isHero = katha.tradition !== 'sikh' && katha.tags.some((t) => ['warriors', 'saints', 'heroes', 'martyrdom', 'seva', 'sacrifice'].includes(t)) && !isPanchatantra;
-  const accent = isPanchatantra ? '#8B9E6E' : isHero ? '#D4643A' : (TRADITION_COLOR[katha.tradition] ?? '#C5A059');
+  const accent = isPanchatantra ? KATHA_VIEW_ACCENT.panchatantra : isHero ? KATHA_VIEW_ACCENT.heroes : (TRADITION_COLOR[katha.tradition] ?? COLORS.brandGold);
   const badge = isPanchatantra ? 'Wisdom Tale' : isHero ? 'Hero Legend' : (TRADITION_LABEL[katha.tradition] ?? 'Katha');
 
   return (
@@ -234,12 +237,12 @@ export default function KathaReaderScreen() {
                 paddingVertical: 10,
                 borderRadius: 999,
                 borderWidth: 1,
-                borderColor: liked ? '#F4788850' : theme.border,
-                backgroundColor: liked ? '#F4788818' : theme.card,
+                borderColor: liked ? `${LIKE_ACCENT}50` : theme.border,
+                backgroundColor: liked ? `${LIKE_ACCENT}18` : theme.card,
               }}
             >
-              <Feather name="heart" size={14} color={liked ? '#F47888' : theme.dim} />
-              <Text style={{ ...TYPE.caption, color: liked ? '#F47888' : theme.dim, fontWeight: '600' }}>
+              <Feather name="heart" size={14} color={liked ? LIKE_ACCENT : theme.dim} />
+              <Text style={{ ...TYPE.caption, color: liked ? LIKE_ACCENT : theme.dim, fontWeight: '600' }}>
                 {liked ? 'Jai Shri Hari' : 'Appreciate this Katha'}
               </Text>
             </View>

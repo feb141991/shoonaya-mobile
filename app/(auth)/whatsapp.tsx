@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ActivityIndicator, Linking, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Text, TextInput, useColorScheme, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { API_BASE } from '@/lib/constants';
 
 const TERMS_URL = 'https://shoonaya.com/terms';
@@ -13,6 +13,8 @@ const PRIVACY_URL = 'https://shoonaya.com/privacy';
 const MIN_TOUCH_TARGET = 44;
 
 export default function WhatsAppScreen() {
+  const isDark = useColorScheme() === 'dark';
+  const theme = themeColor(isDark);
   const router = useRouter();
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -52,10 +54,10 @@ export default function WhatsAppScreen() {
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, color: COLORS.ink, marginBottom: 12 }}>
+        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, color: theme.text, marginBottom: 12 }}>
           WhatsApp login
         </Text>
-        <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: COLORS.textDimLight, marginBottom: 20 }}>
+        <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: theme.dim, marginBottom: 20 }}>
           Enter your phone number in international format to receive a WhatsApp verification code.
         </Text>
         <Card>
@@ -68,16 +70,16 @@ export default function WhatsAppScreen() {
             keyboardType="phone-pad"
             style={{
               borderWidth: 1,
-              borderColor: COLORS.borderLight,
-              backgroundColor: COLORS.creamBg,
+              borderColor: theme.border,
+              backgroundColor: theme.cardSoft,
               borderRadius: 18,
               paddingHorizontal: 14,
               paddingVertical: 14,
-              color: COLORS.ink,
+              color: theme.text,
               fontFamily: FONTS.sans,
               fontSize: 15,
             }}
-            placeholderTextColor={COLORS.textDimLight}
+            placeholderTextColor={theme.dim}
           />
 
           <PressableSurface
@@ -101,7 +103,7 @@ export default function WhatsAppScreen() {
           <View style={{ paddingTop: 14, gap: 6 }}>
             <Text
               style={{
-                color: COLORS.textDimLight,
+                color: theme.dim,
                 fontFamily: FONTS.sans,
                 fontSize: 13,
                 textAlign: 'center',
@@ -130,7 +132,7 @@ export default function WhatsAppScreen() {
               >
                 <Text
                   style={{
-                    color: COLORS.brandGold,
+                    color: theme.brand,
                     fontFamily: FONTS.sansSemiBold,
                     fontSize: 13,
                     textDecorationLine: 'underline',
@@ -139,7 +141,7 @@ export default function WhatsAppScreen() {
                   Terms of Service
                 </Text>
               </PressableSurface>
-              <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 13 }}>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
                 &
               </Text>
               <PressableSurface
@@ -155,7 +157,7 @@ export default function WhatsAppScreen() {
               >
                 <Text
                   style={{
-                    color: COLORS.brandGold,
+                    color: theme.brand,
                     fontFamily: FONTS.sansSemiBold,
                     fontSize: 13,
                     textDecorationLine: 'underline',
@@ -177,7 +179,7 @@ export default function WhatsAppScreen() {
             <Text
               style={{
                 marginTop: 12,
-                color: COLORS.textDimLight,
+                color: theme.dim,
                 fontFamily: FONTS.sans,
                 fontSize: 13,
                 textAlign: 'center',

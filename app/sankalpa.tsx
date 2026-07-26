@@ -27,6 +27,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/li
 import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 import { ProgressRing } from '@/components/ui/ProgressRing';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 // Native Sankalpa — Home's Sankalpa card was previously display-only
 // (Alert.alert "coming soon" on tap, see app/(tabs)/index.tsx). This screen
@@ -270,6 +271,7 @@ export default function SankalpaScreen() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(null);
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkins, setCheckins] = useState<string[]>([]);
@@ -377,6 +379,16 @@ export default function SankalpaScreen() {
 
   const loadSankalpa = useCallback(async () => {
     setLoadError(false);
+
+    if (await isGuestMode()) {
+      // A Sankalpa is inherently personal (a vow tied to an account) — there
+      // is no generic content to show a guest, so land on the "sign in to
+      // continue" state below instead of hitting the API and following its
+      // 401 straight to the login screen with no explanation.
+      setIsGuest(true);
+      return;
+    }
+
     const response = await apiFetch('/api/sankalpa');
 
     if (response.status === 401) {
@@ -428,7 +440,7 @@ export default function SankalpaScreen() {
   // Fetch suggestions once the active-vow check resolves to "none" — never
   // on the active-vow path, and never more than once per empty-state visit.
   useEffect(() => {
-    if (!loading && !sankalpa && suggestions.length === 0 && !loadingSuggestions) {
+    if (!loading && !isGuest && !sankalpa && suggestions.length === 0 && !loadingSuggestions) {
       void loadSuggestions();
     }
   }, [loading, sankalpa, suggestions.length, loadingSuggestions, loadSuggestions]);
@@ -566,6 +578,25 @@ export default function SankalpaScreen() {
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <Screen style={{ backgroundColor: theme.bg }}>
+        <BackButton style={{ marginBottom: 8 }} />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            icon="sun"
+            title="Sign in to set your Sankalpa"
+            subtitle="Your intention and daily check-ins are saved to your account."
+            ctaLabel="Sign in"
+            onCta={() => {
+              void setGuestMode(false).then(() => router.replace('/(auth)/login'));
+            }}
+          />
         </View>
       </Screen>
     );

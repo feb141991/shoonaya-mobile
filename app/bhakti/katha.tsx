@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   ScrollView,
   Text,
   TextInput,
@@ -17,7 +18,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { apiFetch } from '@/lib/api';
-import { RADII, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
 
 // ── Bhakti Phase 4 — native equivalent of the PWA's
 // src/app/(main)/bhakti/katha/KathaClient.tsx. Every katha-card in the
@@ -45,20 +46,20 @@ type KathaListItem = {
 type ViewKey = 'puranic' | 'bani' | 'dhamma' | 'jain' | 'panchatantra' | 'heroes';
 
 const VIEW_META: Record<ViewKey, { heading: string; sub: string; accent: string }> = {
-  puranic: { heading: 'Puranic Tales', sub: 'Ramayana, Mahabharata & the Puranas', accent: '#FF6B35' },
-  bani: { heading: 'Bani & Sakhis', sub: 'Guru stories, sakhis and kirtan wisdom', accent: '#1B7FD4' },
-  dhamma: { heading: 'Dhamma Stories', sub: "Buddha's parables & Jataka tales", accent: '#7C5CBF' },
-  jain: { heading: 'Jain Kathas', sub: 'Tirthankara stories & moral tales', accent: '#2D9E4A' },
-  panchatantra: { heading: 'Panchatantra', sub: 'Ancient animal fables & wisdom tales', accent: '#8B9E6E' },
-  heroes: { heading: 'Heroes of Bharat', sub: 'Warriors, saints & unsung legends', accent: '#D4643A' },
+  puranic: { heading: 'Puranic Tales', sub: 'Ramayana, Mahabharata & the Puranas', accent: KATHA_VIEW_ACCENT.puranic },
+  bani: { heading: 'Bani & Sakhis', sub: 'Guru stories, sakhis and kirtan wisdom', accent: KATHA_VIEW_ACCENT.bani },
+  dhamma: { heading: 'Dhamma Stories', sub: "Buddha's parables & Jataka tales", accent: KATHA_VIEW_ACCENT.dhamma },
+  jain: { heading: 'Jain Kathas', sub: 'Tirthankara stories & moral tales', accent: KATHA_VIEW_ACCENT.jain },
+  panchatantra: { heading: 'Panchatantra', sub: 'Ancient animal fables & wisdom tales', accent: KATHA_VIEW_ACCENT.panchatantra },
+  heroes: { heading: 'Heroes of Bharat', sub: 'Warriors, saints & unsung legends', accent: KATHA_VIEW_ACCENT.heroes },
 };
 
 const TRADITION_LABEL: Record<string, { label: string; color: string }> = {
-  hindu: { label: 'Hindu', color: '#FF6B35' },
-  sikh: { label: 'Sikh', color: '#1B7FD4' },
-  buddhist: { label: 'Buddhist', color: '#7C5CBF' },
-  jain: { label: 'Jain', color: '#2D9E4A' },
-  all: { label: 'Universal', color: '#8B9E6E' },
+  hindu: { label: 'Hindu', color: TRADITION_ACCENT.hindu },
+  sikh: { label: 'Sikh', color: TRADITION_ACCENT.sikh },
+  buddhist: { label: 'Buddhist', color: TRADITION_ACCENT.buddhist },
+  jain: { label: 'Jain', color: TRADITION_ACCENT.jain },
+  all: { label: 'Universal', color: TRADITION_ACCENT.all },
 };
 
 const OCCASION_LABEL: Record<string, string> = {
@@ -160,166 +161,166 @@ export default function KathaListScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 60, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <BackButton />
-            <PressableSurface
-              haptic="selection"
-              onPress={() => setShowSearch((s) => !s)}
-              accessibilityLabel="Search kathas"
-              style={{ borderRadius: 999 }}
-            >
-              <View style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.card }}>
-                <Feather name="search" size={16} color={showSearch ? meta.accent : theme.dim} />
-              </View>
-            </PressableSurface>
-          </View>
-
-          <View style={{ alignItems: 'center', marginTop: 12 }}>
-            <Text style={{ ...TYPE.chip, letterSpacing: 1.6, textTransform: 'uppercase', color: meta.accent }}>
-              {meta.sub}
-            </Text>
-            <Text style={{ ...TYPE.title, color: theme.text, marginTop: 2 }}>{meta.heading}</Text>
-          </View>
-
-          {showSearch && (
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search by deity, occasion, title…"
-              placeholderTextColor={theme.dim}
-              autoFocus
-              style={{
-                marginTop: 14,
-                borderRadius: RADII.md,
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.card,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                color: theme.text,
-                ...TYPE.body,
-              }}
-            />
-          )}
-        </View>
-
-        <View style={{ paddingHorizontal: 20, gap: 20 }}>
-          {!searchQuery && todayKatha && (
-            <PressableSurface
-              haptic="selection"
-              onPress={() => router.push(`/bhakti/katha/${todayKatha.id}` as Href)}
-              accessibilityLabel={`Today's pick, ${todayKatha.title}`}
-              style={{ borderRadius: 22 }}
-            >
-              <View
-                style={{
-                  borderRadius: 22,
-                  padding: 18,
-                  backgroundColor: `${meta.accent}12`,
-                  borderWidth: 1,
-                  borderColor: `${meta.accent}28`,
-                  gap: 12,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, backgroundColor: `${meta.accent}18`, paddingHorizontal: 10, paddingVertical: 5 }}>
-                    <Feather name="star" size={11} color={meta.accent} />
-                    <Text style={{ ...TYPE.micro, letterSpacing: 1.4, textTransform: 'uppercase', color: meta.accent }}>Today&apos;s Pick</Text>
+      <FlatList
+        data={chunkPairs(filtered)}
+        keyExtractor={(row, rowIndex) => row[0]?.id ?? String(rowIndex)}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <>
+            <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <BackButton />
+                <PressableSurface
+                  haptic="selection"
+                  onPress={() => setShowSearch((s) => !s)}
+                  accessibilityLabel="Search kathas"
+                  style={{ borderRadius: 999 }}
+                >
+                  <View style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.card }}>
+                    <Feather name="search" size={16} color={showSearch ? meta.accent : theme.dim} />
                   </View>
-                  <Text style={{ ...TYPE.micro, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>{todayKatha.durationMin} min</Text>
-                </View>
-                <Text style={{ ...TYPE.cardHeading, fontSize: 19, color: theme.text }}>{todayKatha.title}</Text>
-                <Text style={{ ...TYPE.body, color: theme.dim, fontStyle: 'italic' }} numberOfLines={2}>
-                  &ldquo;{todayKatha.preview}&rdquo;
+                </PressableSurface>
+              </View>
+
+              <View style={{ alignItems: 'center', marginTop: 12 }}>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.6, textTransform: 'uppercase', color: meta.accent }}>
+                  {meta.sub}
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim, borderWidth: 1, borderColor: theme.border, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}>
-                      {badgeLabel(todayKatha)}
-                    </Text>
-                    <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim, borderWidth: 1, borderColor: theme.border, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}>
-                      {OCCASION_LABEL[todayKatha.occasion] ?? todayKatha.occasion}
-                    </Text>
-                  </View>
-                  <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: meta.accent, alignItems: 'center', justifyContent: 'center' }}>
-                    <Feather name="book-open" size={15} color="#fff" />
-                  </View>
-                </View>
+                <Text style={{ ...TYPE.title, color: theme.text, marginTop: 2 }}>{meta.heading}</Text>
               </View>
-            </PressableSurface>
-          )}
 
-          {!searchQuery && weekKathas.length > 0 && (
-            <View style={{ gap: 10 }}>
-              <SectionHeader label="Weekly Sadhana" />
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-                {weekKathas.map((k) => (
-                  <PressableSurface
-                    key={k.id}
-                    haptic="selection"
-                    onPress={() => router.push(`/bhakti/katha/${k.id}` as Href)}
-                    accessibilityLabel={k.title}
-                    style={{ borderRadius: RADII.lg }}
+              {showSearch && (
+                <TextInput
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search by deity, occasion, title…"
+                  placeholderTextColor={theme.dim}
+                  autoFocus
+                  style={{
+                    marginTop: 14,
+                    borderRadius: RADII.md,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    backgroundColor: theme.card,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    color: theme.text,
+                    ...TYPE.body,
+                  }}
+                />
+              )}
+            </View>
+
+            <View style={{ paddingHorizontal: 20, gap: 20, marginTop: 20 }}>
+              {!searchQuery && todayKatha && (
+                <PressableSurface
+                  haptic="selection"
+                  onPress={() => router.push(`/bhakti/katha/${todayKatha.id}` as Href)}
+                  accessibilityLabel={`Today's pick, ${todayKatha.title}`}
+                  style={{ borderRadius: 22 }}
+                >
+                  <View
+                    style={{
+                      borderRadius: 22,
+                      padding: 18,
+                      backgroundColor: `${meta.accent}12`,
+                      borderWidth: 1,
+                      borderColor: `${meta.accent}28`,
+                      gap: 12,
+                    }}
                   >
-                    <Card tone="auto" style={{ width: 190, height: 150, justifyContent: 'space-between', gap: 8, borderColor: theme.premiumBorder }}>
-                      <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: TRADITION_LABEL[k.tradition]?.color ?? meta.accent }}>
-                        {badgeLabel(k)}
-                      </Text>
-                      <Text style={{ ...TYPE.cardHeading, fontSize: 13, color: theme.text, flex: 1 }} numberOfLines={3}>
-                        {k.title}
-                      </Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                        <Feather name="clock" size={11} color={meta.accent} />
-                        <Text style={{ ...TYPE.micro, color: theme.dim }}>{k.durationMin} min</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, backgroundColor: `${meta.accent}18`, paddingHorizontal: 10, paddingVertical: 5 }}>
+                        <Feather name="star" size={11} color={meta.accent} />
+                        <Text style={{ ...TYPE.micro, letterSpacing: 1.4, textTransform: 'uppercase', color: meta.accent }}>Today&apos;s Pick</Text>
                       </View>
-                    </Card>
-                  </PressableSurface>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          <View style={{ gap: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <SectionHeader label={searchQuery ? 'Results' : 'All Stories'} />
-              {!searchQuery && <Text style={{ ...TYPE.caption, color: theme.dim }}>{filtered.length} stories</Text>}
-            </View>
-
-            {filtered.length === 0 ? (
-              <View style={{ paddingVertical: 48, alignItems: 'center', gap: 10 }}>
-                <Feather name="book-open" size={30} color={theme.dim} />
-                <Text style={{ ...TYPE.body, color: theme.dim }}>
-                  {searchQuery ? 'The archive is silent. Try another keyword.' : 'No stories found.'}
-                </Text>
-              </View>
-            ) : view === 'heroes' ? (
-              <View style={{ gap: 12 }}>
-                {chunkPairs(filtered).map((row, rowIndex) => (
-                  <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-                    {row.map((k) => (
-                      <HeroCard key={k.id} katha={k} onPress={() => router.push(`/bhakti/katha/${k.id}` as Href)} theme={theme} />
-                    ))}
-                    {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+                      <Text style={{ ...TYPE.micro, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>{todayKatha.durationMin} min</Text>
+                    </View>
+                    <Text style={{ ...TYPE.cardHeading, fontSize: 19, color: theme.text }}>{todayKatha.title}</Text>
+                    <Text style={{ ...TYPE.body, color: theme.dim, fontStyle: 'italic' }} numberOfLines={2}>
+                      &ldquo;{todayKatha.preview}&rdquo;
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim, borderWidth: 1, borderColor: theme.border, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}>
+                          {badgeLabel(todayKatha)}
+                        </Text>
+                        <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim, borderWidth: 1, borderColor: theme.border, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}>
+                          {OCCASION_LABEL[todayKatha.occasion] ?? todayKatha.occasion}
+                        </Text>
+                      </View>
+                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: meta.accent, alignItems: 'center', justifyContent: 'center' }}>
+                        <Feather name="book-open" size={15} color={COLORS.onMediaWhite} />
+                      </View>
+                    </View>
                   </View>
-                ))}
-              </View>
-            ) : (
-              <View style={{ gap: 12 }}>
-                {chunkPairs(filtered).map((row, rowIndex) => (
-                  <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-                    {row.map((k) => (
-                      <KathaCard key={k.id} katha={k} accent={TRADITION_LABEL[k.tradition]?.color ?? meta.accent} onPress={() => router.push(`/bhakti/katha/${k.id}` as Href)} theme={theme} />
+                </PressableSurface>
+              )}
+
+              {!searchQuery && weekKathas.length > 0 && (
+                <View style={{ gap: 10 }}>
+                  <SectionHeader label="Weekly Sadhana" />
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                    {weekKathas.map((k) => (
+                      <PressableSurface
+                        key={k.id}
+                        haptic="selection"
+                        onPress={() => router.push(`/bhakti/katha/${k.id}` as Href)}
+                        accessibilityLabel={k.title}
+                        style={{ borderRadius: RADII.lg }}
+                      >
+                        <Card tone="auto" style={{ width: 190, height: 150, justifyContent: 'space-between', gap: 8, borderColor: theme.premiumBorder }}>
+                          <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: TRADITION_LABEL[k.tradition]?.color ?? meta.accent }}>
+                            {badgeLabel(k)}
+                          </Text>
+                          <Text style={{ ...TYPE.cardHeading, fontSize: 13, color: theme.text, flex: 1 }} numberOfLines={3}>
+                            {k.title}
+                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Feather name="clock" size={11} color={meta.accent} />
+                            <Text style={{ ...TYPE.micro, color: theme.dim }}>{k.durationMin} min</Text>
+                          </View>
+                        </Card>
+                      </PressableSurface>
                     ))}
-                    {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
-                  </View>
-                ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <SectionHeader label={searchQuery ? 'Results' : 'All Stories'} />
+                {!searchQuery && <Text style={{ ...TYPE.caption, color: theme.dim }}>{filtered.length} stories</Text>}
               </View>
-            )}
+            </View>
+          </>
+        }
+        ListEmptyComponent={
+          <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 48, alignItems: 'center', gap: 10 }}>
+            <Feather name="book-open" size={30} color={theme.dim} />
+            <Text style={{ ...TYPE.body, color: theme.dim }}>
+              {searchQuery ? 'The archive is silent. Try another keyword.' : 'No stories found.'}
+            </Text>
           </View>
-        </View>
-      </ScrollView>
+        }
+        renderItem={({ item: row, index: rowIndex }) =>
+          view === 'heroes' ? (
+            <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginTop: rowIndex === 0 ? 10 : 12 }}>
+              {row.map((k) => (
+                <HeroCard key={k.id} katha={k} onPress={() => router.push(`/bhakti/katha/${k.id}` as Href)} theme={theme} />
+              ))}
+              {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginTop: rowIndex === 0 ? 10 : 12 }}>
+              {row.map((k) => (
+                <KathaCard key={k.id} katha={k} accent={TRADITION_LABEL[k.tradition]?.color ?? meta.accent} onPress={() => router.push(`/bhakti/katha/${k.id}` as Href)} theme={theme} />
+              ))}
+              {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+            </View>
+          )
+        }
+      />
     </Screen>
   );
 }

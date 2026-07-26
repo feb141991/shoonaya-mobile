@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, useColorScheme, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
-import { API_BASE, COLORS, FONTS } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, themeColor } from '@/lib/constants';
 
 type VerifyPayload = {
   success?: boolean;
@@ -26,6 +26,8 @@ function rewriteRedirectTarget(rawUrl: string, redirectUri: string) {
 }
 
 export default function OtpScreen() {
+  const isDark = useColorScheme() === 'dark';
+  const theme = themeColor(isDark);
   const { phone } = useLocalSearchParams<{ phone?: string }>();
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -86,10 +88,10 @@ export default function OtpScreen() {
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, color: COLORS.ink, marginBottom: 12 }}>
+        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 34, color: theme.text, marginBottom: 12 }}>
           Enter code
         </Text>
-        <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: COLORS.textDimLight, marginBottom: 20 }}>
+        <Text style={{ fontFamily: FONTS.sans, fontSize: 15, color: theme.dim, marginBottom: 20 }}>
           Enter the verification code sent to {phone ?? 'your phone'} on WhatsApp.
         </Text>
         <Card>
@@ -102,18 +104,18 @@ export default function OtpScreen() {
             keyboardType="number-pad"
             style={{
               borderWidth: 1,
-              borderColor: COLORS.borderLight,
-              backgroundColor: COLORS.creamBg,
+              borderColor: theme.border,
+              backgroundColor: theme.cardSoft,
               borderRadius: 18,
               paddingHorizontal: 14,
               paddingVertical: 14,
-              color: COLORS.ink,
+              color: theme.text,
               fontFamily: FONTS.sans,
               fontSize: 18,
               letterSpacing: 4,
               textAlign: 'center',
             }}
-            placeholderTextColor={COLORS.textDimLight}
+            placeholderTextColor={theme.dim}
           />
 
           <PressableSurface
@@ -144,7 +146,7 @@ export default function OtpScreen() {
             <Text
               style={{
                 marginTop: 12,
-                color: COLORS.textDimLight,
+                color: theme.dim,
                 fontFamily: FONTS.sans,
                 fontSize: 13,
                 textAlign: 'center',

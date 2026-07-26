@@ -10,6 +10,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useColorScheme,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,7 +25,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
 
@@ -44,8 +45,9 @@ function getNativeErrorCode(error: unknown): string | number | null {
   return typeof code === 'string' || typeof code === 'number' ? code : null;
 }
 
-function BrandGlow() {
+function BrandGlow({ isDark }: { isDark: boolean }) {
   const size = 360;
+  const brandEdge = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   return (
     <View
       pointerEvents="none"
@@ -54,7 +56,7 @@ function BrandGlow() {
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Defs>
           <RadialGradient id="brandGlow" cx="50%" cy="42%" r="55%">
-            <Stop offset="0%" stopColor={COLORS.brandGoldLight} stopOpacity={0.26} />
+            <Stop offset="0%" stopColor={brandEdge} stopOpacity={0.26} />
             <Stop offset="48%" stopColor={COLORS.brandGold} stopOpacity={0.12} />
             <Stop offset="100%" stopColor={COLORS.brandGold} stopOpacity={0} />
           </RadialGradient>
@@ -65,11 +67,15 @@ function BrandGlow() {
   );
 }
 
-function AmbientField() {
+function AmbientField({ isDark }: { isDark: boolean }) {
   return (
     <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
       <LinearGradient
-        colors={[COLORS.brandAccentLight, COLORS.creamBg, COLORS.homeHeroLight]}
+        colors={
+          isDark
+            ? [COLORS.brandAccentDark, COLORS.darkBg, COLORS.homeHeroDark]
+            : [COLORS.brandAccentLight, COLORS.creamBg, COLORS.homeHeroLight]
+        }
         locations={[0, 0.58, 1]}
         style={{ position: 'absolute', inset: 0 }}
       />
@@ -81,7 +87,7 @@ function AmbientField() {
           width: 250,
           height: 250,
           borderRadius: 125,
-          backgroundColor: COLORS.homeSoftLight,
+          backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
         }}
       />
       <View
@@ -92,6 +98,10 @@ function AmbientField() {
           width: 260,
           height: 260,
           borderRadius: 130,
+          // Theme-independent by design elsewhere in the app (see
+          // app/(auth)/onboarding.tsx's wellBgSelected, notifications.tsx's
+          // unreadBg) — not paired with selectionWellDark, which is
+          // selectionWellLight's own dark counterpart, a different token.
           backgroundColor: COLORS.selectionWellSelected,
         }}
       />
@@ -102,7 +112,7 @@ function AmbientField() {
           left: 28,
           right: 28,
           height: 1,
-          backgroundColor: COLORS.homeBorderSoftLight,
+          backgroundColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
           opacity: 0.7,
         }}
       />
@@ -120,6 +130,7 @@ function AuthButton({
   loading,
   icon,
   tone = 'light',
+  isDark,
 }: {
   label: string;
   onPress: () => void | Promise<void>;
@@ -127,15 +138,22 @@ function AuthButton({
   loading?: boolean;
   icon?: ReactNode;
   tone?: 'light' | 'gold';
+  isDark: boolean;
 }) {
   const isGold = tone === 'gold';
+  const theme = themeColor(isDark);
+  const shadow = isGold ? SHADOWS.md : SHADOWS.sm;
+  const borderSoft = isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight;
+  const shlokaSurface = isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight;
+  const homeSoft = isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight;
+  const brandAccent = isDark ? COLORS.brandAccentDark : COLORS.brandAccentLight;
 
   return (
     <View
       style={{
         minHeight: 56,
         borderRadius: 22,
-        boxShadow: isGold ? SHADOWS.md.light : SHADOWS.sm.light,
+        boxShadow: isDark ? shadow.dark : shadow.light,
         alignSelf: 'stretch',
         width: '100%',
         opacity: disabled ? 0.68 : 1,
@@ -146,8 +164,8 @@ function AuthButton({
           minHeight: 56,
           borderRadius: 22,
           borderWidth: isGold ? 0 : 1,
-          borderColor: COLORS.homeBorderSoftLight,
-          backgroundColor: isGold ? COLORS.brandGold : COLORS.cardBgLight,
+          borderColor: borderSoft,
+          backgroundColor: isGold ? COLORS.brandGold : theme.card,
           overflow: 'hidden',
         }}
       >
@@ -156,7 +174,7 @@ function AuthButton({
           colors={
             isGold
               ? [COLORS.brandGoldLight, COLORS.brandGold, COLORS.brandGoldDark]
-              : [COLORS.cardBgLight, COLORS.homeShlokaSurfaceLight, COLORS.homeSoftLight]
+              : [theme.card, shlokaSurface, homeSoft]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -171,7 +189,13 @@ function AuthButton({
             width: 110,
             height: 110,
             borderRadius: 55,
-            backgroundColor: isGold ? COLORS.cardBgLight : COLORS.brandAccentLight,
+            // The gold fill itself (COLORS.brandGold, just above) is a fixed
+            // value regardless of theme, so content rendered on top of it —
+            // this blob, the icon well, and the label below — stays pinned
+            // to its original light-mode value too rather than following
+            // `theme`, which would otherwise flip a white-on-gold button
+            // into a near-black-on-gold one in dark mode.
+            backgroundColor: isGold ? COLORS.cardBgLight : brandAccent,
             opacity: isGold ? 0.18 : 0.62,
           }}
         />
@@ -203,9 +227,9 @@ function AuthButton({
                 borderRadius: 14,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isGold ? COLORS.premiumGlassLight : COLORS.homeSoftLight,
+                backgroundColor: isGold ? COLORS.premiumGlassLight : homeSoft,
                 borderWidth: 1,
-                borderColor: isGold ? COLORS.cardBgLight : COLORS.homeBorderSoftLight,
+                borderColor: isGold ? COLORS.cardBgLight : borderSoft,
               }}
             >
               {icon}
@@ -214,7 +238,7 @@ function AuthButton({
           <Text
             style={{
               flex: 1,
-              color: isGold ? COLORS.cardBgLight : COLORS.ink,
+              color: isGold ? COLORS.cardBgLight : theme.text,
               fontFamily: FONTS.sansSemiBold,
               fontSize: 15.5,
             }}
@@ -223,7 +247,7 @@ function AuthButton({
           </Text>
         </View>
         {loading ? (
-          <ActivityIndicator size="small" color={isGold ? COLORS.cardBgLight : COLORS.ink} />
+          <ActivityIndicator size="small" color={isGold ? COLORS.cardBgLight : theme.text} />
         ) : null}
       </PressableSurface>
       </View>
@@ -231,44 +255,48 @@ function AuthButton({
   );
 }
 
-function TrustChip({ icon, label }: { icon: keyof typeof Feather.glyphMap; label: string }) {
+function TrustChip({ icon, label, isDark }: { icon: keyof typeof Feather.glyphMap; label: string; isDark: boolean }) {
+  const theme = themeColor(isDark);
   return (
     <View
       style={{
         minHeight: 30,
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: COLORS.homeBorderSoftLight,
-        backgroundColor: COLORS.premiumGlassLight,
+        borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+        backgroundColor: theme.glass,
         paddingHorizontal: 9,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
       }}
     >
-      <Feather name={icon} size={12} color={COLORS.brandGoldLight} />
-      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.brandEarthLight }}>
+      <Feather name={icon} size={12} color={theme.brand} />
+      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.earth }}>
         {label}
       </Text>
     </View>
   );
 }
 
-function AuthDivider({ label }: { label: string }) {
+function AuthDivider({ label, isDark }: { label: string; isDark: boolean }) {
+  const theme = themeColor(isDark);
   return (
     <View
       style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
-      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.textDimLight }}>{label}</Text>
-      <View style={{ flex: 1, height: 1, backgroundColor: COLORS.borderLight }} />
+      <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
+      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim }}>{label}</Text>
+      <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
     </View>
   );
 }
 
 export default function LoginScreen() {
+  const isDark = useColorScheme() === 'dark';
+  const theme = themeColor(isDark);
   const router = useRouter();
   const [activeAction, setActiveAction] = useState<AuthAction>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -582,15 +610,15 @@ export default function LoginScreen() {
   const busy = activeAction !== null;
 
   return (
-    <Screen style={{ paddingHorizontal: 18, paddingTop: 10, backgroundColor: COLORS.creamBg }}>
-      <AmbientField />
+    <Screen style={{ paddingHorizontal: 18, paddingTop: 10, backgroundColor: theme.bg }}>
+      <AmbientField isDark={isDark} />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 12 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ alignItems: 'center', marginBottom: 16 }}>
-          <BrandGlow />
+          <BrandGlow isDark={isDark} />
           <Animated.View
             style={{
               width: 168,
@@ -598,10 +626,10 @@ export default function LoginScreen() {
               borderRadius: 84,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: COLORS.homeShlokaSurfaceLight,
+              backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight,
               borderWidth: 1,
-              borderColor: COLORS.homeBorderSoftLight,
-              boxShadow: SHADOWS.sm.light,
+              borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               transform: [{ scale: brandScale }],
             }}
           >
@@ -616,7 +644,7 @@ export default function LoginScreen() {
             style={{
               ...TYPE.chip,
               marginTop: -2,
-              color: COLORS.brandGoldLight,
+              color: theme.brand,
               letterSpacing: 2.2,
               textTransform: 'uppercase',
             }}
@@ -628,7 +656,7 @@ export default function LoginScreen() {
               fontFamily: FONTS.serifBold,
               fontSize: 21,
               lineHeight: 26,
-              color: COLORS.ink,
+              color: theme.text,
               textAlign: 'center',
               maxWidth: 320,
               marginTop: 6,
@@ -646,9 +674,9 @@ export default function LoginScreen() {
               maxWidth: 340,
             }}
           >
-            <TrustChip icon="sunrise" label="Daily rhythm" />
-            <TrustChip icon="book-open" label="Sacred learning" />
-            <TrustChip icon="users" label="Mandali" />
+            <TrustChip icon="sunrise" label="Daily rhythm" isDark={isDark} />
+            <TrustChip icon="book-open" label="Sacred learning" isDark={isDark} />
+            <TrustChip icon="users" label="Mandali" isDark={isDark} />
           </View>
         </View>
 
@@ -667,11 +695,12 @@ export default function LoginScreen() {
         >
           <Card
             elevated
+            tone={isDark ? 'dark' : 'light'}
             style={{
               padding: 18,
-              borderColor: COLORS.premiumBorderLight,
-              backgroundColor: COLORS.premiumGlassLight,
-              boxShadow: SHADOWS.lg.light,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.glass,
+              boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
             }}
           >
           <View style={{ gap: 15 }}>
@@ -679,7 +708,7 @@ export default function LoginScreen() {
               <Text
                 style={{
                   ...TYPE.cardHeading,
-                  color: COLORS.ink,
+                  color: theme.text,
                   textAlign: 'center',
                 }}
               >
@@ -688,7 +717,7 @@ export default function LoginScreen() {
               <Text
                 style={{
                   ...TYPE.caption,
-                  color: COLORS.textDimLight,
+                  color: theme.dim,
                   textAlign: 'center',
                 }}
               >
@@ -700,7 +729,7 @@ export default function LoginScreen() {
                 fontFamily: FONTS.sansSemiBold,
                 fontSize: 11,
                 letterSpacing: 1.6,
-                color: COLORS.brandGoldLight,
+                color: theme.brand,
                 textAlign: 'center',
                 textTransform: 'uppercase',
               }}
@@ -714,7 +743,8 @@ export default function LoginScreen() {
                 onPress={handleGoogle}
                 disabled={busy}
                 loading={activeAction === 'google'}
-                icon={<FontAwesome name="google" size={16} color={COLORS.brandGoldLight} />}
+                icon={<FontAwesome name="google" size={16} color={theme.brand} />}
+                isDark={isDark}
               />
 
               {Platform.OS === 'ios' && appleAvailable ? (
@@ -735,14 +765,14 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            <AuthDivider label="or use email" />
+            <AuthDivider label="or use email" isDark={isDark} />
 
             <View style={{ gap: 8 }}>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Email address"
-                placeholderTextColor={COLORS.textDimLight}
+                placeholderTextColor={theme.dim}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -752,10 +782,10 @@ export default function LoginScreen() {
                   minHeight: 50,
                   borderRadius: 18,
                   borderWidth: 1,
-                  borderColor: COLORS.premiumBorderLight,
-                  backgroundColor: COLORS.cardBgLight,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: theme.card,
                   paddingHorizontal: 14,
-                  color: COLORS.ink,
+                  color: theme.text,
                   fontFamily: FONTS.sans,
                   fontSize: 14,
                 }}
@@ -764,7 +794,7 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Password"
-                placeholderTextColor={COLORS.textDimLight}
+                placeholderTextColor={theme.dim}
                 secureTextEntry
                 textContentType="password"
                 editable={!busy}
@@ -772,10 +802,10 @@ export default function LoginScreen() {
                   minHeight: 50,
                   borderRadius: 18,
                   borderWidth: 1,
-                  borderColor: COLORS.premiumBorderLight,
-                  backgroundColor: COLORS.cardBgLight,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: theme.card,
                   paddingHorizontal: 14,
-                  color: COLORS.ink,
+                  color: theme.text,
                   fontFamily: FONTS.sans,
                   fontSize: 14,
                 }}
@@ -787,10 +817,11 @@ export default function LoginScreen() {
                 loading={activeAction === 'email'}
                 tone="gold"
                 icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
+                isDark={isDark}
               />
             </View>
 
-            <AuthDivider label="or" />
+            <AuthDivider label="or" isDark={isDark} />
 
             <View style={{ gap: 6, alignItems: 'center' }}>
               <PressableSurface
@@ -801,7 +832,7 @@ export default function LoginScreen() {
                   minHeight: 52,
                   borderRadius: 18,
                   borderWidth: 1,
-                  borderColor: COLORS.brandGoldLight,
+                  borderColor: theme.brand,
                   backgroundColor: 'transparent',
                   paddingHorizontal: 14,
                   alignSelf: 'stretch',
@@ -814,7 +845,7 @@ export default function LoginScreen() {
                   Continue as Atithi
                 </Text>
               </PressableSurface>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: COLORS.textDimLight, textAlign: 'center' }}>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, textAlign: 'center' }}>
                 Explore Shoonaya without saving progress.
               </Text>
             </View>
@@ -822,7 +853,7 @@ export default function LoginScreen() {
             <View style={{ marginTop: 2, gap: 4 }}>
               <Text
                 style={{
-                  color: COLORS.textDimLight,
+                  color: theme.dim,
                   fontFamily: FONTS.sans,
                   fontSize: 12,
                   textAlign: 'center',
@@ -860,7 +891,7 @@ export default function LoginScreen() {
                     Terms of Service
                   </Text>
                 </PressableSurface>
-                <Text style={{ color: COLORS.textDimLight, fontFamily: FONTS.sans, fontSize: 12 }}>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
                   &
                 </Text>
                 <PressableSurface

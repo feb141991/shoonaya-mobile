@@ -14,6 +14,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 // Reuses GET /api/native/progress (also used by ../my-progress.tsx) rather
 // than a dedicated route — this screen only needs 2 of the fields it
@@ -56,12 +57,18 @@ export default function ShieldsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [activeTab, setActiveTab] = useState<'streak' | 'sessions'>('streak');
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
 
   const loadData = useCallback(async () => {
     setLoadError(false);
+
+    if (await isGuestMode()) {
+      setIsGuest(true);
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -99,6 +106,25 @@ export default function ShieldsScreen() {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="award"
+          title="Sign in to see your shields"
+          subtitle="Streak and session milestones are saved to your account."
+          ctaLabel="Sign in"
+          onCta={() => {
+            void setGuestMode(false).then(() => router.replace('/(auth)/login'));
+          }}
+        />
       </Screen>
     );
   }

@@ -22,6 +22,7 @@ import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
+import { isGuestMode } from '@/lib/guestSession';
 
 // ── Panchang — rebuilt to match PWA's src/app/(main)/panchang/today/
 // PanchangDetail.tsx living-sky design (sky-phase gradient, glow orb,
@@ -352,12 +353,31 @@ export default function PanchangScreen() {
   const [markingViewed, setMarkingViewed] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [showRashiPicker, setShowRashiPicker] = useState(false);
   const [savingRashi, setSavingRashi] = useState(false);
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const [displayTz, setDisplayTz] = useState<'local' | 'ist'>('local');
 
   const loadPanchangContext = useCallback(async () => {
+    if (await isGuestMode()) {
+      // Guests browse Panchang with INITIAL_STATE's fallback location —
+      // same defaults a signed-in user with no saved location gets. Only
+      // the personal Rashi-save (guarded by `!userId` in saveRashi) and
+      // "mark viewed" actions need an account; isGuest below gates the
+      // latter with a real explanation instead of a misleading "check your
+      // connection" error.
+      setIsGuest(true);
+      const festivalsResponse = await apiFetch(
+        `/api/calendar/upcoming?days=14&tradition=${INITIAL_STATE.tradition}&tz=${encodeURIComponent(INITIAL_STATE.timezone)}`
+      );
+      if (festivalsResponse.ok) {
+        const payload = (await festivalsResponse.json()) as { observances?: UpcomingFestival[] };
+        setFestivals(payload.observances ?? []);
+      }
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -423,6 +443,12 @@ export default function PanchangScreen() {
 
   const markObserved = useCallback(async () => {
     if (viewedToday || markingViewed) return;
+
+    if (isGuest) {
+      setMarkError('Sign in to track your Panchang observances.');
+      return;
+    }
+
     setMarkingViewed(true);
     setMarkError(null);
     try {
@@ -436,7 +462,7 @@ export default function PanchangScreen() {
     } finally {
       setMarkingViewed(false);
     }
-  }, [viewedToday, markingViewed]);
+  }, [viewedToday, markingViewed, isGuest]);
 
   const effectiveTimezone = displayTz === 'ist' ? 'Asia/Kolkata' : profileState.timezone;
 

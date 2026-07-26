@@ -166,32 +166,37 @@ export default function TirthaScreen() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (user) {
-      await refreshPassport(user.id);
-    }
+    // refreshPassport doesn't feed into (and isn't fed by) the location
+    // permission → GPS fix → nearby-temple-search chain below, so the two
+    // run concurrently instead of passport fully finishing first — this was
+    // the most sequential-heavy screen-open path in the app (auth → passport
+    // → GPS → Overpass, each awaited in turn).
+    const locationChain = async () => {
+      const permission = await Location.getForegroundPermissionsAsync();
+      const granted = permission.status === 'granted';
+      setPermissionGranted(granted);
 
-    const permission = await Location.getForegroundPermissionsAsync();
-    const granted = permission.status === 'granted';
-    setPermissionGranted(granted);
+      if (granted) {
+        const current = await Location.getCurrentPositionAsync({});
+        const nextRegion = {
+          latitude: current.coords.latitude,
+          longitude: current.coords.longitude,
+          latitudeDelta: 0.18,
+          longitudeDelta: 0.18,
+        };
+        setUserCoords({ lat: current.coords.latitude, lon: current.coords.longitude });
+        setRegion(nextRegion);
+        await loadNearby(current.coords.latitude, current.coords.longitude);
+        mapRef.current?.animateToRegion(nextRegion);
+      } else {
+        const fallbackLat = DEFAULT_REGION.latitude;
+        const fallbackLon = DEFAULT_REGION.longitude;
+        setUserCoords({ lat: fallbackLat, lon: fallbackLon });
+        await loadNearby(fallbackLat, fallbackLon);
+      }
+    };
 
-    if (granted) {
-      const current = await Location.getCurrentPositionAsync({});
-      const nextRegion = {
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        latitudeDelta: 0.18,
-        longitudeDelta: 0.18,
-      };
-      setUserCoords({ lat: current.coords.latitude, lon: current.coords.longitude });
-      setRegion(nextRegion);
-      await loadNearby(current.coords.latitude, current.coords.longitude);
-      mapRef.current?.animateToRegion(nextRegion);
-    } else {
-      const fallbackLat = DEFAULT_REGION.latitude;
-      const fallbackLon = DEFAULT_REGION.longitude;
-      setUserCoords({ lat: fallbackLat, lon: fallbackLon });
-      await loadNearby(fallbackLat, fallbackLon);
-    }
+    await Promise.all([user ? refreshPassport(user.id) : Promise.resolve(), locationChain()]);
 
     setLoading(false);
     setRefreshing(false);

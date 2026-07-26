@@ -7,7 +7,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { FONTS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import {
   malaSessionBeads,
   malaSessionDate,
@@ -35,8 +35,8 @@ const FILTERS: { key: FilterKey; label: string; days: number }[] = [
   { key: '90d', label: '90 Days', days: 90 },
 ];
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const ROSE = '#C4789A';
-const AMBER = '#C5A059';
+const ROSE = COLORS.deityRose;
+const AMBER = COLORS.brandGold;
 
 function fmtTime(secs: number) {
   const h = Math.floor(secs / 3600);
@@ -218,7 +218,7 @@ export default function BhaktiInsightsScreen() {
             return (
               <PressableSurface key={f.key} haptic="selection" onPress={() => setFilter(f.key)} style={{ borderRadius: 999 }}>
                 <View style={{ borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: active ? ROSE : theme.card, borderWidth: 1, borderColor: active ? ROSE : theme.border }}>
-                  <Text style={{ ...TYPE.caption, fontWeight: '700', color: active ? '#fff' : theme.dim }}>{f.label}</Text>
+                  <Text style={{ ...TYPE.caption, fontWeight: '700', color: active ? COLORS.onMediaWhite : theme.dim }}>{f.label}</Text>
                 </View>
               </PressableSurface>
             );
@@ -357,7 +357,7 @@ export default function BhaktiInsightsScreen() {
                             borderColor: ROSE,
                           }}
                         >
-                          <Text style={{ ...TYPE.caption, fontWeight: '700', color: isSel ? '#fff' : sess ? ROSE : theme.dim }}>
+                          <Text style={{ ...TYPE.caption, fontWeight: '700', color: isSel ? COLORS.onMediaWhite : sess ? ROSE : theme.dim }}>
                             {Number(iso.slice(-2))}
                           </Text>
                         </View>

@@ -63,7 +63,7 @@ const DEITY_COLOR: Record<string, string> = {
   ganesha: '#e07b3a',
   shiva: '#8b7de0',
   vishnu: '#3a8bcd',
-  devi: '#c4789a',
+  devi: COLORS.deityRose,
   hanuman: '#d4643a',
   surya: '#f0a020',
   universal: '#8b9e6e',

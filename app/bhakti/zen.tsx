@@ -7,7 +7,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { FONTS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { DEVOTIONAL_STARTER_TRACKS } from '@/lib/devotional-audio';
 import { supabase } from '@/lib/supabase';
 
@@ -37,7 +37,7 @@ const BREATH_PATTERNS: { id: PatternId; label: string; inhale: number; hold: num
 ];
 
 const PHASE_META: Record<Phase, { label: string; color: string }> = {
-  inhale: { label: 'Inhale', color: '#C5A059' },
+  inhale: { label: 'Inhale', color: COLORS.brandGold },
   hold: { label: 'Hold', color: '#A89880' },
   exhale: { label: 'Exhale', color: '#D4B483' },
   holdAfter: { label: 'Hold', color: '#A89880' },
@@ -297,7 +297,7 @@ export default function SattvicModeScreen() {
   }
 
   const modeLabel = tradition === 'sikh' ? 'Simran Breath' : tradition === 'buddhist' ? 'Ānāpāna' : tradition === 'jain' ? 'Samayika Breath' : 'Prāṇāyāma';
-  const gold = '#C5A059';
+  const gold = COLORS.brandGold;
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>

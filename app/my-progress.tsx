@@ -18,6 +18,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import {
   malaSessionDurationSeconds,
   malaSessionRounds,
@@ -406,10 +407,19 @@ export default function MyProgressScreen() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [data, setData] = useState<ProgressData | null>(null);
 
   const loadData = useCallback(async () => {
     setLoadError(false);
+
+    if (await isGuestMode()) {
+      // Progress history is inherently tied to a real account — there is no
+      // generic content to show, so land on a "sign in to continue" state
+      // instead of hitting the API and following its 401 straight to login.
+      setIsGuest(true);
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -533,6 +543,25 @@ export default function MyProgressScreen() {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'My Progress', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="trending-up"
+          title="Sign in to see your progress"
+          subtitle="Your sadhana history, karma, and streaks are saved to your account."
+          ctaLabel="Sign in"
+          onCta={() => {
+            void setGuestMode(false).then(() => router.replace('/(auth)/login'));
+          }}
+        />
       </Screen>
     );
   }

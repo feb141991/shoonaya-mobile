@@ -9,6 +9,7 @@ import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { ProgressRing } from '@/components/ui/ProgressRing';
+import { supabase } from '@/lib/supabase';
 
 /**
  * SankalpaCard — self-contained Home row for the active Sankalpa.
@@ -40,7 +41,7 @@ type SankalpaRow = {
   target_days: number | null;
 };
 
-type Status = 'loading' | 'ready' | 'error';
+type Status = 'loading' | 'ready' | 'hidden' | 'error';
 
 function todayUtcString(): string {
   return new Date().toISOString().slice(0, 10);
@@ -81,6 +82,18 @@ export function SankalpaCard() {
   const load = useCallback(async () => {
     setStatus('loading');
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        // Guests (and any other no-session state) have no Sankalpa to
+        // fetch — render nothing instead of hitting the API, getting a
+        // 401, and landing in a permanent "Couldn't load — Retry" state
+        // that can never succeed. Matches QuizSparkCard's sibling pattern.
+        setStatus('hidden');
+        return;
+      }
+
       const response = await apiFetch('/api/sankalpa');
       if (!response.ok) throw new Error(`Request failed (${response.status})`);
       const payload = (await response.json()) as { sankalpa: SankalpaRow | null };
@@ -134,6 +147,10 @@ export function SankalpaCard() {
       setCheckingIn(false);
     }
   }, [checkedToday, checkingIn, sankalpa]);
+
+  if (status === 'hidden') {
+    return null;
+  }
 
   if (status === 'loading') {
     return <SkeletonRow style={{ marginTop: 0 }} />;

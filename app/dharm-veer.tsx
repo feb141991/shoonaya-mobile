@@ -118,7 +118,10 @@ export default function DharmVeerScreen() {
   const today = useMemo(() => spiritualDate(profile?.timezone ?? 'UTC'), [profile?.timezone]);
   const storageKey = useMemo(() => `shoonaya-dharm-veer-mobile-${today}`, [today]);
   const deck = useMemo(() => buildDailyDeck(profile?.tradition ?? 'hindu', roster), [profile?.tradition, roster]);
-  const visibleCards = deck.filter((hero) => !dayProgress.seenIds.includes(hero.id));
+  const visibleCards = useMemo(
+    () => deck.filter((hero) => !dayProgress.seenIds.includes(hero.id)),
+    [deck, dayProgress.seenIds]
+  );
   const currentHero = visibleCards[currentIndex] ?? null;
 
   useEffect(() => {
@@ -553,7 +556,7 @@ export default function DharmVeerScreen() {
       />
 
       <Modal transparent visible={!!pendingCheckIn} animationType="slide" onRequestClose={skipCheckInNote}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
           <View
             style={{
               borderTopLeftRadius: 28,

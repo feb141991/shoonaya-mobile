@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 type LedgerRow = {
   id: string;
@@ -33,10 +34,16 @@ export default function LedgerScreen() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
 
   const loadData = useCallback(async () => {
     setLoadError(false);
+
+    if (await isGuestMode()) {
+      setIsGuest(true);
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -70,6 +77,25 @@ export default function LedgerScreen() {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'Karma Ledger', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="list"
+          title="Sign in to see your ledger"
+          subtitle="Your karma history is saved to your account."
+          ctaLabel="Sign in"
+          onCta={() => {
+            void setGuestMode(false).then(() => router.replace('/(auth)/login'));
+          }}
+        />
       </Screen>
     );
   }

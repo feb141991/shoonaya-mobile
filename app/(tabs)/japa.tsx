@@ -31,6 +31,7 @@ import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
@@ -2323,7 +2324,7 @@ export default function JapaScreen() {
                   position: 'absolute',
                   left: 42,
                   right: 42,
-                  bottom: 96,
+                  bottom: insets.bottom + NAV_BAR_CLEARANCE,
                   opacity: roundOpacity,
                   transform: [{ translateY: roundTranslate }],
                 }}
@@ -2722,7 +2723,7 @@ export default function JapaScreen() {
         <View
           style={{
             position: 'absolute',
-            bottom: 24,
+            bottom: insets.bottom + NAV_BAR_CLEARANCE,
             left: 20,
             right: 20,
             borderRadius: 16,

@@ -201,10 +201,15 @@ function PathshalaContent() {
     }
 
     try {
-      const [pathsRes, profileResult, summaryRes] = await Promise.all([
+      const [pathsRes, profileResult, summaryRes, progressRes] = await Promise.all([
         apiFetch('/api/pathshala/paths'),
         supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle(),
         apiFetch('/api/native/home-summary'),
+        // Doesn't actually depend on the paths list — it's the user's own
+        // enrollment rows, not derived from `pathsRes` — so it can join the
+        // same round trip instead of waiting on `fetchedPaths.length > 0`
+        // below and firing a full extra sequential request afterward.
+        apiFetch('/api/pathshala/progress'),
       ]);
 
       setTradition(profileResult.data?.tradition ?? 'hindu');
@@ -234,13 +239,8 @@ function PathshalaContent() {
       const fetchedPaths = parsePathsResponse(await pathsRes.json());
       setPaths(fetchedPaths);
 
-      if (fetchedPaths.length > 0) {
-        const progressRes = await apiFetch('/api/pathshala/progress');
-        if (progressRes.ok) {
-          setEnrollments(parseEnrollmentsResponse(await progressRes.json()));
-        } else {
-          setEnrollments([]);
-        }
+      if (fetchedPaths.length > 0 && progressRes.ok) {
+        setEnrollments(parseEnrollmentsResponse(await progressRes.json()));
       } else {
         setEnrollments([]);
       }

@@ -19,6 +19,7 @@ import {
 } from '@/lib/notificationsData';
 import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 // Native's notification inbox — previously a "coming soon" alert on Home's
 // bell (app/(tabs)/index.tsx). Matches the PWA's notification panel UX
@@ -138,6 +139,7 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
 
@@ -157,6 +159,15 @@ export default function NotificationsScreen() {
 
   const load = useCallback(async () => {
     setLoadError(false);
+
+    if (await isGuestMode()) {
+      // A notification inbox is inherently tied to an account — nothing
+      // generic to show, so land on a "sign in to continue" empty state
+      // instead of hitting Supabase and hard-redirecting to login.
+      setIsGuest(true);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -353,6 +364,16 @@ export default function NotificationsScreen() {
       <SkeletonRow />
       <SkeletonRow />
     </View>
+  ) : isGuest ? (
+    <EmptyState
+      icon="bell"
+      title="Sign in to see your notifications"
+      subtitle="Festival alerts & practice milestones are saved to your account."
+      ctaLabel="Sign in"
+      onCta={() => {
+        void setGuestMode(false).then(() => router.replace('/(auth)/login'));
+      }}
+    />
   ) : loadError ? (
     <EmptyState
       icon="wifi-off"

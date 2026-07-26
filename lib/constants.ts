@@ -236,6 +236,40 @@ export const COLORS = {
   tileBlueBgDark: 'rgba(100,181,246,0.14)',
   tileBlueBgLight: 'rgba(100,181,246,0.12)',
   tileBlueBorder: 'rgba(100,181,246,0.3)',
+
+  // Deity-accent rose — was independently redeclared as a raw hex in both
+  // app/bhakti/insights.tsx ('#C4789A') and app/bhakti/stotram/[id].tsx
+  // ('#c4789a', for the Devi accent), with no shared source. Named here so
+  // both stay in sync instead of drifting if one is ever tuned.
+  deityRose: '#C4789A',
+} as const;
+
+// Tradition accent colors — was independently redeclared twice in the same
+// file (app/bhakti/katha.tsx's VIEW_META and TRADITION_LABEL) and a third
+// time in app/bhakti/katha/[id].tsx's TRADITION_COLOR, all three copies
+// carrying the identical five values with no shared source (a drift risk
+// if any one copy were ever tuned without the others). Named here so all
+// three call sites read from one place. Not used by app/(tabs)/bhakti.tsx's
+// quick-access grid, which deliberately uses its own softer/muted tile
+// palette (a different visual intent for that hub screen, not a duplicate).
+export const TRADITION_ACCENT = {
+  hindu: '#FF6B35',
+  sikh: '#1B7FD4',
+  buddhist: '#7C5CBF',
+  jain: '#2D9E4A',
+  all: '#8B9E6E',
+} as const;
+
+// Katha-specific view-key accents — puranic/bani/dhamma/jain/panchatantra
+// map 1:1 onto a TRADITION_ACCENT entry; 'heroes' has no tradition
+// equivalent (Heroes of Bharat spans traditions) so it keeps its own value.
+export const KATHA_VIEW_ACCENT = {
+  puranic: TRADITION_ACCENT.hindu,
+  bani: TRADITION_ACCENT.sikh,
+  dhamma: TRADITION_ACCENT.buddhist,
+  jain: TRADITION_ACCENT.jain,
+  panchatantra: TRADITION_ACCENT.all,
+  heroes: '#D4643A',
 } as const;
 
 export const themeColor = (isDark: boolean) => ({

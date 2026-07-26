@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -874,7 +874,7 @@ function HomeContent() {
               source={{ uri: heroImageUrl }}
               accessibilityIgnoresInvertColors
               style={[StyleSheet.absoluteFill, { zIndex: 0 }]}
-              resizeMode="cover"
+              contentFit="cover"
             />
           ) : null}
 
@@ -1067,9 +1067,9 @@ function HomeContent() {
                 <Feather name="user" size={20} color={COLORS.ink} />
               </View>
             ) : avatarImageUrl ? (
-              <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              <Image source={{ uri: avatarImageUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
             ) : relicImageUrl ? (
-              <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
+              <Image source={{ uri: relicImageUrl }} style={{ width: 34, height: 34 }} contentFit="contain" />
             ) : (
               <Text style={{ fontFamily: FONTS.serif, fontSize: 20, lineHeight: 24, fontWeight: '700', color: theme.text }}>
                 {state.profile.firstName.charAt(0)}

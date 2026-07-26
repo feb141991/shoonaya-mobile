@@ -23,6 +23,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import {
   malaSessionBeads,
   malaSessionCreatedAt,
@@ -162,12 +163,19 @@ export default function JapaInsightsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [sessions, setSessions] = useState<MalaSessionRow[]>([]);
   const [range, setRange] = useState<RangeKey>('30d');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoadError(false);
+
+    if (await isGuestMode()) {
+      setIsGuest(true);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -297,6 +305,25 @@ export default function JapaInsightsScreen() {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={theme.brand} />
         </View>
+      </Screen>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <Screen
+        style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
+        header={{ title: 'Japa Insights', onBack: () => router.back() }}
+      >
+        <EmptyState
+          icon="bar-chart-2"
+          title="Sign in to see your insights"
+          subtitle="Your japa session history is saved to your account."
+          ctaLabel="Sign in"
+          onCta={() => {
+            void setGuestMode(false).then(() => router.replace('/(auth)/login'));
+          }}
+        />
       </Screen>
     );
   }

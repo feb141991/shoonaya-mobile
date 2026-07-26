@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Linking,
   Modal,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
@@ -404,7 +404,13 @@ export default function ProfileScreen() {
       return;
     }
 
-    const response = await apiFetch('/api/native/progress-summary');
+    // authData doesn't depend on the progress-summary response (or vice
+    // versa) — only the profileRow query below genuinely needs
+    // payload.profile.id, so that's the only leg that stays sequential.
+    const [response, { data: authData }] = await Promise.all([
+      apiFetch('/api/native/progress-summary'),
+      supabase.auth.getUser(),
+    ]);
 
     if (response.status === 401) {
       router.replace('/(auth)/login');
@@ -417,8 +423,6 @@ export default function ProfileScreen() {
 
     const payload = (await response.json()) as ProgressSummary;
     setSummary(payload);
-
-    const { data: authData } = await supabase.auth.getUser();
     setEmail(authData.user?.email ?? '');
 
     const { data: profileRow } = await supabase
@@ -930,7 +934,7 @@ export default function ProfileScreen() {
                 <Image
                   source={displayAvatarSource}
                   style={{ width: 124, height: 124 }}
-                  resizeMode="cover"
+                  contentFit="cover"
                   onError={() => setAvatarFailed(true)}
                 />
               ) : (
