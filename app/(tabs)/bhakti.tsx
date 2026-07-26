@@ -15,7 +15,6 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
-import { getTraditionAccent } from '@/lib/traditions';
 
 // Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip
 // and one unified Explore grid. Content-heavy destinations fetch from canonical
@@ -158,7 +157,6 @@ export default function BhaktiScreen() {
   );
 
   const hero = TRADITION_HERO[tradition] ?? TRADITION_HERO.hindu;
-  const accent = getTraditionAccent(tradition);
   // Stotrams & Hymns / Sacred Chants route to the Phase 5 Sacred Library
   // pre-filtered by tradition, matching PWA's BhaktiClient.tsx `cards.map`
   // transform (jain gets the Hindu/Jain shared stotram set; buddhist gets
@@ -184,13 +182,16 @@ export default function BhaktiScreen() {
         scrollEventThrottle={16}
       >
 
-        {/* Hero — tradition-tinted gradient strip, mirrors PWA's
-            linear-gradient(160deg, accent1a 0%, accent08 55%, transparent) */}
+        {/* Hero — same warm golden hero-card gradient as Home/Mandali
+            (theme.brand family), not the tradition accent: this is the
+            app's own identity chrome, matching every other screen's hero
+            treatment rather than reading as a flat tradition-tinted wash. */}
         <LinearGradient
-          colors={[`${accent}1a`, `${accent}08`, `${accent}00`]}
-          locations={[0, 0.55, 1]}
+          colors={isDark
+            ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+            : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0.3, y: 1 }}
+          end={{ x: 1, y: 1 }}
           style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -225,13 +226,13 @@ export default function BhaktiScreen() {
               accessibilityLabel="Bhakti insights"
               style={{ borderRadius: 999 }}
             >
-              <View style={{ borderRadius: 999, backgroundColor: `${accent}18`, paddingHorizontal: 12, paddingVertical: 6 }}>
-                <Text style={{ ...TYPE.chip, color: accent }}>Insights</Text>
+              <View style={{ borderRadius: 999, backgroundColor: theme.brandSoft, paddingHorizontal: 12, paddingVertical: 6 }}>
+                <Text style={{ ...TYPE.chip, color: theme.brand }}>Insights</Text>
               </View>
             </PressableSurface>
           </View>
 
-          <Text style={{ ...TYPE.chip, letterSpacing: 1.6, textTransform: 'uppercase', color: accent, marginTop: 12 }}>
+          <Text style={{ ...TYPE.chip, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand, marginTop: 12 }}>
             {hero.sub}
           </Text>
           <Text style={{ ...TYPE.hero, color: theme.text, marginTop: 2 }}>Bhakti</Text>
@@ -239,8 +240,8 @@ export default function BhaktiScreen() {
 
           {(japaStreak > 0 || sessionCountToday > 0) && (
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-              {japaStreak > 0 ? <StatPill icon="zap" label={`${japaStreak}-day streak`} accent={accent} /> : null}
-              {sessionCountToday > 0 ? <StatPill icon="heart" label={`${sessionCountToday} today`} accent={accent} /> : null}
+              {japaStreak > 0 ? <StatPill icon="zap" label={`${japaStreak}-day streak`} accent={theme.brand} /> : null}
+              {sessionCountToday > 0 ? <StatPill icon="heart" label={`${sessionCountToday} today`} accent={theme.brand} /> : null}
             </View>
           )}
         </LinearGradient>
