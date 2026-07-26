@@ -33,9 +33,12 @@ import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
 import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
+import { GreetingPicker } from '@/components/home/GreetingPicker';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { getGreetingPick } from '@/lib/greetingPreference';
+import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
 import { HERO_MIN_HEIGHT } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
@@ -322,25 +325,6 @@ const INITIAL_STATE: HomeSummary = {
   firstWeek: false,
 };
 
-const GREETING_POOLS: Record<string, string[]> = {
-  hindu: ['Jai Shri Ram', 'Hari Om', 'Om Namah Shivaya', 'Radhe Radhe'],
-  sikh: ['Sat Sri Akal', 'Waheguru Ji Ka Khalsa'],
-  buddhist: ['Namo Buddhaya', 'Om Mani Padme Hum'],
-  jain: ['Jai Jinendra', 'Namo Arihantanam'],
-  default: ['Jai Shri Ram', 'Om Namah Shivaya', 'Hari Om', 'Pranam'],
-};
-
-function getTraditionGreeting(tradition: string | null, seed: number) {
-  const pool = (tradition && GREETING_POOLS[tradition]) || GREETING_POOLS.default;
-  return pool[seed % pool.length];
-}
-
-function getTimeGreeting(hour: number): string | null {
-  if (hour >= 5 && hour < 12) return 'Suprabhat';
-  if (hour >= 17 && hour < 20) return 'Shubh Sandhya';
-  if (hour >= 20 || hour < 5) return 'Shubh Ratri';
-  return null;
-}
 
 function resolveAssetUrl(url: string | null | undefined) {
   if (!url) return null;
@@ -563,9 +547,12 @@ function HomeContent() {
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
   const [heroPickerVisible, setHeroPickerVisible] = useState(false);
   const [heroOverride, setHeroOverride] = useState<HeroPick | null>(null);
+  const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
+  const [greetingOverride, setGreetingOverride] = useState<string | null>(null);
 
   useEffect(() => {
     getHeroPick().then(setHeroOverride).catch(() => {});
+    getGreetingPick().then(setGreetingOverride).catch(() => {});
   }, []);
 
   const scrollRef = useScrollToTop();
@@ -618,10 +605,18 @@ function HomeContent() {
   const completedCount = state.practices.filter((row) => row.done).length;
   const actionRoute = resolveNativeRoute(state.nextPractice.actionHref);
 
-  const greeting = useMemo(
-    () => getTimeGreeting(new Date().getHours()) ?? getTraditionGreeting(state.profile.tradition, new Date(`${state.date.iso}T12:00:00`).getDate()),
-    [state.profile.tradition, state.date.iso]
-  );
+  // A device-local greeting pick (lib/greetingPreference.ts) replaces the
+  // daily-rotating tradition greeting, but the time-of-day word still
+  // takes priority in front of it when one applies (e.g. "Suprabhat, Jai
+  // Shri Ram" in the morning) — only at midday, when there's no
+  // time-of-day word, does the pick stand alone.
+  const greeting = useMemo(() => {
+    const timeGreeting = getTimeGreeting(new Date().getHours());
+    if (greetingOverride) {
+      return timeGreeting ? `${timeGreeting}, ${greetingOverride}` : greetingOverride;
+    }
+    return timeGreeting ?? getTraditionGreeting(state.profile.tradition, new Date(`${state.date.iso}T12:00:00`).getDate());
+  }, [state.profile.tradition, state.date.iso, greetingOverride]);
 
   const nextPracticeRow = state.practices.find((row) => row.id === state.nextPractice.id);
   const nextPracticeIcon = nextPracticeRow?.icon ?? 'compass';
@@ -1119,9 +1114,32 @@ function HomeContent() {
               </View>
             ) : null}
 
-            <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text }}>
-              {greeting}, {state.profile.firstName}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
+              <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text, flexShrink: 1 }} numberOfLines={2}>
+                {greeting}, {state.profile.firstName}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Choose your greeting"
+                onPress={() => {
+                  void Haptics.selectionAsync().catch(() => {});
+                  setGreetingPickerVisible(true);
+                }}
+                hitSlop={8}
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.heroOverlay,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                }}
+              >
+                <Feather name="chevron-down" size={14} color={theme.dim} />
+              </Pressable>
+            </View>
 
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
@@ -1572,6 +1590,12 @@ function HomeContent() {
         onClose={() => setHeroPickerVisible(false)}
         tradition={state.profile.tradition}
         onPickChange={setHeroOverride}
+      />
+      <GreetingPicker
+        visible={greetingPickerVisible}
+        onClose={() => setGreetingPickerVisible(false)}
+        tradition={state.profile.tradition}
+        onPickChange={setGreetingOverride}
       />
     </SafeAreaView>
   );
