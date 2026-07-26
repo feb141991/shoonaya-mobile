@@ -869,7 +869,7 @@ export default function MandaliScreen() {
 
   const renderFeedHeader = useCallback(() => (
     <>
-      <BackButton variant="glass" style={{ marginHorizontal: 16, marginTop: 16 }} />
+      <BackButton variant="glass" style={{ marginTop: 16 }} />
 
       <LinearGradient
         colors={isDark
@@ -878,7 +878,6 @@ export default function MandaliScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          marginHorizontal: 16,
           borderRadius: 28,
           borderWidth: 1,
           borderColor: theme.premiumBorder,
@@ -940,7 +939,7 @@ export default function MandaliScreen() {
       </LinearGradient>
 
       {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {([
             { value: 'all', label: 'All' },
             { value: 'update', label: 'Updates' },
