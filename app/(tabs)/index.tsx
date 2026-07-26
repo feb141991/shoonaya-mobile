@@ -255,7 +255,7 @@ type HomeSummary = {
 };
 
 const HERO_MIN_HEIGHT = 420;
-const HERO_READABILITY_HEIGHT = 210;
+const HERO_READABILITY_HEIGHT = 242;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -1103,7 +1103,7 @@ function HomeContent() {
           </View>
         </View>
 
-        <View style={{ marginTop: -46, marginBottom: 8, paddingHorizontal: 16 }}>
+        <View style={{ marginTop: -18, marginBottom: 8, paddingHorizontal: 16 }}>
           <PressableSurface
             haptic="selection"
             accessibilityLabel={`${state.sacredText.label}: ${state.sacredText.original}. ${state.sacredText.meaning}. Tap to open, mark as read, and earn seva points`}
@@ -1181,13 +1181,13 @@ function HomeContent() {
               navigate(actionRoute);
             }}
             style={{
-              borderRadius: 24,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
+              borderRadius: 22,
+              paddingHorizontal: 14,
+              paddingVertical: 11,
               borderWidth: 1,
               borderColor: 'rgba(205,166,92,0.28)',
               boxShadow: '0 12px 28px rgba(105,75,35,0.10), inset 0 1px 0 rgba(255,255,255,0.75)',
-              gap: 12,
+              gap: 9,
               overflow: 'hidden',
             }}
           >
@@ -1197,12 +1197,12 @@ function HomeContent() {
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <View
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 16,
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
                   backgroundColor: 'rgba(217,178,105,0.18)',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1211,7 +1211,7 @@ function HomeContent() {
                 <SacredIcon
                   name={nextPracticeRow?.id ?? 'japa'}
                   fallbackGlyph={sadhanaComplete ? 'star' : nextPracticeIcon}
-                  size={23}
+                  size={20}
                   color="#a97725"
                 />
               </View>
@@ -1219,36 +1219,36 @@ function HomeContent() {
                 <Text style={{ ...TYPE.cardHeading, color: '#3f2b1f' }} numberOfLines={1}>
                   {sadhanaTitle}
                 </Text>
-                <Text style={{ marginTop: 3, ...TYPE.caption, color: 'rgba(63,43,31,0.66)' }} numberOfLines={1}>
+                <Text style={{ marginTop: 2, ...TYPE.caption, color: 'rgba(63,43,31,0.66)' }} numberOfLines={1}>
                   {sadhanaSubtitle}
                 </Text>
               </View>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <Text style={{ ...TYPE.chip, letterSpacing: 1.1, textTransform: 'uppercase', color: 'rgba(63,43,31,0.58)' }} numberOfLines={1}>
                 {completedCount} of {state.practices.length} practices
               </Text>
               <View
                 style={{
-                  minHeight: 38,
+                  minHeight: 33,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 5,
+                  gap: 4,
                   flexShrink: 0,
                   borderRadius: 999,
-                  paddingLeft: 15,
-                  paddingRight: 12,
-                  paddingVertical: 9,
+                  paddingLeft: 13,
+                  paddingRight: 10,
+                  paddingVertical: 7,
                   backgroundColor: '#b6842f',
                   boxShadow: '0 8px 18px rgba(160,112,39,0.22), inset 0 1px 0 rgba(255,255,255,0.35)',
                 }}
               >
-                <Ionicons name="sparkles" size={14} color="#fff8e8" />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, lineHeight: 17, color: '#fff8e8' }}>
+                <Ionicons name="sparkles" size={12.5} color="#fff8e8" />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: '#fff8e8' }}>
                   {sadhanaButtonLabel}
                 </Text>
-                <Feather name="chevron-right" size={14} color="#fff8e8" style={{ opacity: 0.72, marginLeft: -2 }} />
+                <Feather name="chevron-right" size={12.5} color="#fff8e8" style={{ opacity: 0.72, marginLeft: -2 }} />
               </View>
             </View>
           </PressableSurface>
