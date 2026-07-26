@@ -869,7 +869,7 @@ export default function MandaliScreen() {
 
   const renderFeedHeader = useCallback(() => (
     <>
-      <BackButton variant="glass" style={{ marginTop: 6 }} />
+      <BackButton variant="glass" />
 
       <LinearGradient
         colors={isDark
