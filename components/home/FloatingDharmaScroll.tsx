@@ -5,13 +5,27 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
-import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { useReducedMotion } from '@/components/ui/Motion';
 
 const SCROLL_ASSET = require('@/assets/icons/ai-guide-scroll.png');
 const ANCHOR_SIZE = 74;
-function defaultAnchorY(height: number, insetBottom: number) {
-  return Math.max(170, height - ANCHOR_SIZE - insetBottom - NAV_BAR_CLEARANCE);
+// Default resting spot: on the hero image, right side, just below the
+// hero's top icon row (bell/mood/avatar, which end around y=66) and above
+// where the Today's Verse card begins to overlap the hero's bottom edge.
+// Fixed (not screen-size-derived) since it's anchored to the hero, which
+// is itself a fixed height.
+const HERO_ANCHOR_Y = HERO_MIN_HEIGHT - ANCHOR_SIZE - 30;
+function defaultAnchorY() {
+  return HERO_ANCHOR_Y;
+}
+// The furthest down (and still fully on-screen, clear of the bottom nav)
+// the icon is ever allowed to sit — used both to clamp an in-progress
+// drag on release and to re-validate the current position after a screen
+// resize (e.g. rotation). Distinct from defaultAnchorY: that's where the
+// icon starts at rest; this is just the outer bound it can never cross.
+function maxAnchorY(height: number, insetBottom: number) {
+  return Math.max(140, height - ANCHOR_SIZE - insetBottom - NAV_BAR_CLEARANCE);
 }
 
 type FloatingDharmaScrollProps = {
@@ -24,15 +38,15 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [dragging, setDragging] = useState(false);
-  const [position, setPosition] = useState({ x: Math.max(18, width - 112), y: defaultAnchorY(height, insets.bottom) });
+  const [position, setPosition] = useState({ x: Math.max(18, width - 112), y: defaultAnchorY() });
   const float = useRef(new Animated.Value(0)).current;
-  const pan = useRef(new Animated.ValueXY({ x: Math.max(18, width - 112), y: defaultAnchorY(height, insets.bottom) })).current;
-  const lastPosition = useRef({ x: Math.max(18, width - 112), y: defaultAnchorY(height, insets.bottom) });
+  const pan = useRef(new Animated.ValueXY({ x: Math.max(18, width - 112), y: defaultAnchorY() })).current;
+  const lastPosition = useRef({ x: Math.max(18, width - 112), y: defaultAnchorY() });
 
   useEffect(() => {
     const next = {
       x: Math.min(lastPosition.current.x, Math.max(18, width - 112)),
-      y: Math.min(lastPosition.current.y, defaultAnchorY(height, insets.bottom)),
+      y: Math.min(lastPosition.current.y, maxAnchorY(height, insets.bottom)),
     };
     lastPosition.current = next;
     setPosition(next);
@@ -81,7 +95,7 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
         },
         onPanResponderRelease: (_, gesture) => {
           const maxX = Math.max(18, width - ANCHOR_SIZE - 18);
-          const maxY = Math.max(140, height - ANCHOR_SIZE - insets.bottom - NAV_BAR_CLEARANCE);
+          const maxY = maxAnchorY(height, insets.bottom);
           const next = {
             x: Math.min(Math.max(18, lastPosition.current.x + gesture.dx), maxX),
             y: Math.min(Math.max(120, lastPosition.current.y + gesture.dy), maxY),

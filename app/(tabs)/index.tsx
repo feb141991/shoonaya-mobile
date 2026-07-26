@@ -33,13 +33,16 @@ import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
 import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
+import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
+import { HERO_MIN_HEIGHT } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { isGuestMode } from '@/lib/guestSession';
+import { getHeroPick, type HeroPick } from '@/lib/heroPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -254,7 +257,6 @@ type HomeSummary = {
   firstWeek: boolean;
 };
 
-const HERO_MIN_HEIGHT = 420;
 const HERO_READABILITY_HEIGHT = 242;
 
 const INITIAL_STATE: HomeSummary = {
@@ -344,6 +346,16 @@ function resolveAssetUrl(url: string | null | undefined) {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
   return `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
+// The backend/PWA share a CSS-style `"58% 25%"` (horizontal% vertical%)
+// object-position string per hero theme; expo-image's contentPosition
+// prop wants `{ left, top }` instead.
+function parseObjectPosition(value: string | null | undefined): { left: string; top: string } | undefined {
+  if (!value) return undefined;
+  const parts = value.trim().split(/\s+/);
+  if (parts.length !== 2) return undefined;
+  return { left: parts[0], top: parts[1] };
 }
 
 // "View all practices" status badge — a filled colour disc with a white
@@ -549,6 +561,12 @@ function HomeContent() {
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
+  const [heroPickerVisible, setHeroPickerVisible] = useState(false);
+  const [heroOverride, setHeroOverride] = useState<HeroPick | null>(null);
+
+  useEffect(() => {
+    getHeroPick().then(setHeroOverride).catch(() => {});
+  }, []);
 
   const scrollRef = useScrollToTop();
 
@@ -575,7 +593,15 @@ function HomeContent() {
     [isDark]
   );
 
-  const heroImageUrl = resolveAssetUrl(state.hero.imageUrl);
+  // A device-local backdrop pick (lib/heroPreference.ts) overrides the
+  // server-resolved tradition/festival hero — same precedence PWA's own
+  // localStorage-only pick has over its auto-resolved theme.
+  const heroImageUrl = heroOverride?.imageUrl ?? resolveAssetUrl(state.hero.imageUrl);
+  // Pre-existing gap found in review: `objectPosition` (e.g. "58% 25%",
+  // tuned per hero image so a face/detail stays in frame) was fetched from
+  // the backend but never actually applied to the <Image> below — fixed
+  // here for both the server-resolved default and the new local override.
+  const heroObjectPosition = parseObjectPosition(heroOverride?.objectPosition ?? state.hero.objectPosition);
   const avatarImageUrl = resolveAssetUrl(state.profile.avatarUrl);
   const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
 
@@ -875,6 +901,7 @@ function HomeContent() {
               accessibilityIgnoresInvertColors
               style={[StyleSheet.absoluteFill, { zIndex: 0 }]}
               contentFit="cover"
+              contentPosition={heroObjectPosition}
             />
           ) : null}
 
@@ -1101,6 +1128,33 @@ function HomeContent() {
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" />
             </View>
           </View>
+
+          {/* Matches PWA's "Choose Sanctuary Backdrop" entry point — same
+              bottom-right corner of the hero image. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Choose sanctuary backdrop"
+            onPress={() => {
+              void Haptics.selectionAsync().catch(() => {});
+              setHeroPickerVisible(true);
+            }}
+            style={{
+              position: 'absolute',
+              zIndex: 3,
+              bottom: 16,
+              right: 20,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.heroOverlay,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+            }}
+          >
+            <Feather name="image" size={16} color={theme.text} />
+          </Pressable>
         </View>
 
         <View style={{ marginTop: -18, marginBottom: 8, paddingHorizontal: 16 }}>
@@ -1512,6 +1566,12 @@ function HomeContent() {
         origin={chatOrigin}
         onClose={() => setChatSheetVisible(false)}
         tradition={state.profile.tradition}
+      />
+      <HeroBackdropPicker
+        visible={heroPickerVisible}
+        onClose={() => setHeroPickerVisible(false)}
+        tradition={state.profile.tradition}
+        onPickChange={setHeroOverride}
       />
     </SafeAreaView>
   );
