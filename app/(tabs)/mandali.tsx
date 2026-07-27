@@ -924,8 +924,6 @@ export default function MandaliScreen() {
 
   const renderFeedHeader = useCallback(() => (
     <>
-      <BackButton variant="glass" />
-
       <LinearGradient
         colors={isDark
           ? [COLORS.homeHeroDark, COLORS.cardBgDark, theme.bg]
@@ -939,6 +937,8 @@ export default function MandaliScreen() {
           boxShadow: theme.shadow,
         }}
       >
+        <BackButton variant="hero" style={{ alignSelf: 'flex-start' }} />
+
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <View
             style={{
