@@ -126,6 +126,7 @@ type MandaliPostCardProps = {
   theme: MandaliTheme;
   onRsvp: (postId: string, status: RsvpStatus) => void;
   onShowOptions: (post: PostRow) => void;
+  onShowOwnOptions: (post: PostRow) => void;
   onSubmitComment: (postId: string, body: string, parentId?: string | null) => void;
   onToggleComments: (postId: string) => void;
   onToggleUpvote: (postId: string) => void;
@@ -142,6 +143,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   theme,
   onRsvp,
   onShowOptions,
+  onShowOwnOptions,
   onSubmitComment,
   onToggleComments,
   onToggleUpvote,
@@ -211,17 +213,15 @@ const MandaliPostCard = memo(function MandaliPostCard({
               <Feather name={postTypeMeta.icon} size={9} color={theme.brand} />
               <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9 }}>{postTypeMeta.label}</Text>
             </View>
-            {!isOwnPost && (
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel={`More options for ${post.profiles?.full_name ?? post.profiles?.username ?? 'this post'}`}
-                onPress={() => onShowOptions(post)}
-                style={{ minHeight: 0, paddingLeft: 4 }}
-                hitSlop={10}
-              >
-                <Feather name="more-horizontal" size={16} color={theme.dim} />
-              </PressableSurface>
-            )}
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={`More options for ${isOwnPost ? 'your post' : (post.profiles?.full_name ?? post.profiles?.username ?? 'this post')}`}
+              onPress={() => (isOwnPost ? onShowOwnOptions(post) : onShowOptions(post))}
+              style={{ minHeight: 0, paddingLeft: 4 }}
+              hitSlop={10}
+            >
+              <Feather name="more-horizontal" size={16} color={theme.dim} />
+            </PressableSurface>
           </View>
 
           <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 20 }}>{post.content}</Text>
@@ -358,6 +358,7 @@ export default function MandaliScreen() {
   const [composeType, setComposeType] = useState<MandaliPostType>('update');
   const [composeEventDate, setComposeEventDate] = useState('');
   const [composeEventLoc, setComposeEventLoc] = useState('');
+  const [editingPost, setEditingPost] = useState<PostRow | null>(null);
   const [activeFilter, setActiveFilter] = useState<MandaliPostType | 'all'>('all');
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
   const realtimeReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -823,6 +824,49 @@ export default function MandaliScreen() {
     ]);
   }, [handleBlockUser, handleReportPost]);
 
+  const resetComposeState = useCallback(() => {
+    setComposeBody('');
+    setComposeType('update');
+    setComposeEventDate('');
+    setComposeEventLoc('');
+    setEditingPost(null);
+  }, []);
+
+  const startEditPost = useCallback((post: PostRow) => {
+    setEditingPost(post);
+    setComposeBody(post.content);
+    setComposeType(post.type);
+    setComposeEventDate(post.event_date ?? '');
+    setComposeEventLoc(post.event_location ?? '');
+    setSheetVisible(true);
+  }, []);
+
+  const deletePost = useCallback(async (post: PostRow) => {
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', post.id);
+      if (error) throw error;
+      setPosts((current) => current.filter((p) => p.id !== post.id));
+      setBlendedPosts((current) => current.filter((p) => p.id !== post.id));
+    } catch {
+      Alert.alert('Could not delete post', 'Check your connection and try again.');
+    }
+  }, []);
+
+  const confirmDeletePost = useCallback((post: PostRow) => {
+    Alert.alert('Delete Post', 'This cannot be undone. Delete this post?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => void deletePost(post) },
+    ]);
+  }, [deletePost]);
+
+  const showOwnPostOptions = useCallback((post: PostRow) => {
+    Alert.alert('Your Post', 'Choose an action for this post.', [
+      { text: 'Edit', onPress: () => startEditPost(post) },
+      { text: 'Delete', style: 'destructive', onPress: () => confirmDeletePost(post) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, [confirmDeletePost, startEditPost]);
+
   const reportMember = useCallback(async (memberId: string) => {
     if (!profile) return;
     try {
@@ -873,30 +917,44 @@ export default function MandaliScreen() {
   }, []);
 
   const submitPost = useCallback(async () => {
-    if (!profile?.mandaliId || !composeBody.trim()) return;
+    if (!composeBody.trim()) return;
     setPosting(true);
     try {
-      const { error } = await supabase.from('posts').insert({
-        author_id: profile.userId,
-        mandali_id: profile.mandaliId,
-        content: composeBody.trim(),
-        type: composeType,
-        event_date: composeType === 'event' && composeEventDate ? composeEventDate : null,
-        event_location: composeType === 'event' && composeEventLoc ? composeEventLoc : null,
-      });
-      if (error) throw error;
-      setComposeBody('');
-      setComposeType('update');
-      setComposeEventDate('');
-      setComposeEventLoc('');
+      const content = composeBody.trim();
+      const eventDate = composeType === 'event' && composeEventDate ? composeEventDate : null;
+      const eventLocation = composeType === 'event' && composeEventLoc ? composeEventLoc : null;
+
+      if (editingPost) {
+        const { error } = await supabase
+          .from('posts')
+          .update({ content, type: composeType, event_date: eventDate, event_location: eventLocation })
+          .eq('id', editingPost.id);
+        if (error) throw error;
+        const patch = (list: PostRow[]) =>
+          list.map((p) => (p.id === editingPost.id ? { ...p, content, type: composeType, event_date: eventDate, event_location: eventLocation } : p));
+        setPosts(patch);
+        setBlendedPosts(patch);
+      } else {
+        if (!profile?.mandaliId) return;
+        const { error } = await supabase.from('posts').insert({
+          author_id: profile.userId,
+          mandali_id: profile.mandaliId,
+          content,
+          type: composeType,
+          event_date: eventDate,
+          event_location: eventLocation,
+        });
+        if (error) throw error;
+        await loadMandali();
+      }
+      resetComposeState();
       setSheetVisible(false);
-      await loadMandali();
     } catch {
-      Alert.alert('Could not post', 'Check your connection and try again.');
+      Alert.alert(editingPost ? 'Could not save changes' : 'Could not post', 'Check your connection and try again.');
     } finally {
       setPosting(false);
     }
-  }, [composeBody, composeEventDate, composeEventLoc, composeType, loadMandali, profile]);
+  }, [composeBody, composeEventDate, composeEventLoc, composeType, editingPost, loadMandali, profile, resetComposeState]);
 
   const handleLeave = useCallback(() => {
     if (!profile) return;
@@ -924,12 +982,13 @@ export default function MandaliScreen() {
         theme={theme}
         onRsvp={handleRsvp}
         onShowOptions={showPostOptions}
+        onShowOwnOptions={showOwnPostOptions}
         onSubmitComment={submitComment}
         onToggleComments={toggleComments}
         onToggleUpvote={toggleUpvote}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, profile?.userId, rsvpsByPost, showPostOptions, submitComment, theme, toggleComments, toggleUpvote, upvotedIdSet]);
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments, toggleUpvote, upvotedIdSet]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
@@ -1089,7 +1148,7 @@ export default function MandaliScreen() {
         {profile?.mandaliId ? (
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <PressableSurface
-              onPress={() => setSheetVisible(true)}
+              onPress={() => { resetComposeState(); setSheetVisible(true); }}
               style={{ flex: 1, minHeight: 46, borderRadius: 18, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
             >
               <Feather name="edit-3" size={15} color={COLORS.ink} />
@@ -1149,7 +1208,7 @@ export default function MandaliScreen() {
         />
       ) : null}
     </>
-  ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, posts.length, profile, router, theme]);
+  ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, posts.length, profile, resetComposeState, router, theme]);
   const feedFooter = useMemo(() => {
     const hasCapturedLocation = profile?.latitude != null && profile.longitude != null;
     if (!profile?.mandaliId || !hasCapturedLocation) return null;
@@ -1216,7 +1275,7 @@ export default function MandaliScreen() {
         }
       />
 
-      <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => setSheetVisible(false)}>
+      <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => { setSheetVisible(false); resetComposeState(); }}>
         <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, gap: 14, borderWidth: 1, borderColor: theme.premiumBorder }}>
             <View style={{ alignSelf: 'center', width: 52, height: 4, borderRadius: 999, backgroundColor: theme.premiumBorder, marginBottom: 2 }} />
@@ -1226,7 +1285,7 @@ export default function MandaliScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Mandali Post</Text>
-                <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 22, lineHeight: 27 }}>Create post</Text>
+                <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 22, lineHeight: 27 }}>{editingPost ? 'Edit post' : 'Create post'}</Text>
               </View>
             </View>
 
@@ -1295,7 +1354,7 @@ export default function MandaliScreen() {
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <PressableSurface haptic="selection" onPress={() => setSheetVisible(false)} style={{ minHeight: 0, flex: 1, borderRadius: 16, borderWidth: 1, borderColor: theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}>
+              <PressableSurface haptic="selection" onPress={() => { setSheetVisible(false); resetComposeState(); }} style={{ minHeight: 0, flex: 1, borderRadius: 16, borderWidth: 1, borderColor: theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Cancel</Text>
               </PressableSurface>
               <PressableSurface
@@ -1303,7 +1362,9 @@ export default function MandaliScreen() {
                 disabled={posting || !composeBody.trim()}
                 style={{ minHeight: 0, flex: 1, borderRadius: 16, backgroundColor: composeBody.trim() ? theme.brand : theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}
               >
-                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{posting ? 'Posting...' : 'Post'}</Text>
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+                  {posting ? (editingPost ? 'Saving...' : 'Posting...') : (editingPost ? 'Save' : 'Post')}
+                </Text>
               </PressableSurface>
             </View>
           </View>
