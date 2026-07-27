@@ -6,7 +6,6 @@ import {
   type ListRenderItemInfo,
   Modal,
   RefreshControl,
-  ScrollView,
   Text,
   TextInput,
   useColorScheme,
@@ -27,6 +26,7 @@ import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/MemberInfoSheet';
+import { FilterPicker } from '@/components/mandali/FilterPicker';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
@@ -87,12 +87,23 @@ type MandaliFeedItem =
   | { type: 'blendedPost'; post: PostRow }
   | { type: 'members' };
 
-const POST_TYPE_META: Record<MandaliPostType, { label: string; icon: keyof typeof Feather.glyphMap }> = {
-  update: { label: 'Update', icon: 'message-circle' },
-  question: { label: 'Question', icon: 'help-circle' },
-  announcement: { label: 'Announcement', icon: 'volume-2' },
-  event: { label: 'Event', icon: 'calendar' },
+const POST_TYPE_META: Record<MandaliPostType, { label: string; icon: keyof typeof Feather.glyphMap; color: string }> = {
+  update: { label: 'Update', icon: 'message-circle', color: '#4C8BF5' },
+  question: { label: 'Question', icon: 'help-circle', color: '#8C64C8' },
+  announcement: { label: 'Announcement', icon: 'volume-2', color: '#E0684C' },
+  event: { label: 'Event', icon: 'calendar', color: '#34A853' },
 };
+
+// Filter picker options — mirrors POST_TYPE_META plus the "All" case, each
+// with its own color so the Facebook-reaction-style popup reads as a set of
+// distinct choices rather than a single-tone list.
+const FILTER_OPTIONS: Array<{ value: MandaliPostType | 'all'; label: string; icon: keyof typeof Feather.glyphMap; color: string }> = [
+  { value: 'all', label: 'All', icon: 'grid', color: '#C5A059' },
+  { value: 'update', label: 'Updates', icon: POST_TYPE_META.update.icon, color: POST_TYPE_META.update.color },
+  { value: 'event', label: 'Events', icon: POST_TYPE_META.event.icon, color: POST_TYPE_META.event.color },
+  { value: 'question', label: 'Questions', icon: POST_TYPE_META.question.icon, color: POST_TYPE_META.question.color },
+  { value: 'announcement', label: 'Announcements', icon: POST_TYPE_META.announcement.icon, color: POST_TYPE_META.announcement.color },
+];
 
 function getInitials(name: string): string {
   if (!name) return '?';
@@ -1162,37 +1173,14 @@ export default function MandaliScreen() {
       </LinearGradient>
 
       {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
-          {([
-            { value: 'all', label: 'All' },
-            { value: 'update', label: 'Updates' },
-            { value: 'event', label: 'Events' },
-            { value: 'question', label: 'Questions' },
-            { value: 'announcement', label: 'Announcements' },
-          ] as const).map((opt) => {
-            const active = activeFilter === opt.value;
-            return (
-              <PressableSurface
-                key={opt.value}
-                haptic="selection"
-                accessibilityLabel={`Filter: ${opt.label}`}
-                onPress={() => setActiveFilter(opt.value)}
-                style={{
-                  minHeight: 0,
-                  borderRadius: 999,
-                  paddingHorizontal: 14,
-                  paddingVertical: 9,
-                  backgroundColor: active ? theme.brandSoft : theme.card,
-                  borderWidth: 1,
-                  borderColor: active ? theme.brand : theme.premiumBorder,
-                  boxShadow: active ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
-                }}
-              >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: active ? theme.brand : theme.dim }}>{opt.label}</Text>
-              </PressableSurface>
-            );
-          })}
-        </ScrollView>
+        <FilterPicker
+          options={FILTER_OPTIONS}
+          value={activeFilter}
+          onChange={setActiveFilter}
+          cardBg={theme.card}
+          border={theme.premiumBorder}
+          scrimColor={COLORS.bottomSheetScrim}
+        />
       ) : null}
 
       {!profile?.mandaliId && profile ? (
