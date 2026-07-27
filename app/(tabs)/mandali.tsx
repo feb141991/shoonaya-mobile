@@ -1546,8 +1546,8 @@ export default function MandaliScreen() {
         visible={requestsSheetVisible}
         requests={pendingRequests}
         onClose={() => setRequestsSheetVisible(false)}
-        onAccept={(request) => void handleAcceptRequest(request)}
-        onReject={(request) => void handleRejectRequest(request)}
+        onAccept={handleAcceptRequest}
+        onReject={handleRejectRequest}
       />
     </Screen>
   );

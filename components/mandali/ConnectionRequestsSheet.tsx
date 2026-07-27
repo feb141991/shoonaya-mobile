@@ -20,8 +20,8 @@ type ConnectionRequestsSheetProps = {
   visible: boolean;
   requests: ConnectionRequestRow[];
   onClose: () => void;
-  onAccept: (request: ConnectionRequestRow) => void;
-  onReject: (request: ConnectionRequestRow) => void;
+  onAccept: (request: ConnectionRequestRow) => Promise<void>;
+  onReject: (request: ConnectionRequestRow) => Promise<void>;
 };
 
 // Dedicated management surface for incoming connection requests (paired
@@ -34,13 +34,25 @@ export function ConnectionRequestsSheet({ visible, requests, onClose, onAccept, 
   const theme = themeColor(isDark);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const handleAccept = (request: ConnectionRequestRow) => {
+  // Always clears busyId via finally, regardless of whether the write
+  // succeeded -- onAccept/onReject already swallow their own errors (they
+  // show an Alert), so a rejected promise here would only ever come from
+  // an unexpected bug, not the handled failure path.
+  const handleAccept = async (request: ConnectionRequestRow) => {
     setBusyId(request.id);
-    onAccept(request);
+    try {
+      await onAccept(request);
+    } finally {
+      setBusyId(null);
+    }
   };
-  const handleReject = (request: ConnectionRequestRow) => {
+  const handleReject = async (request: ConnectionRequestRow) => {
     setBusyId(request.id);
-    onReject(request);
+    try {
+      await onReject(request);
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
