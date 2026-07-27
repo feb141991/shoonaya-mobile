@@ -52,9 +52,22 @@ import {
   type RsvpStatus,
 } from '@/lib/mandali';
 
-type RealtimePostPayload = {
-  new?: { post_id?: unknown };
-  old?: { post_id?: unknown };
+type RealtimeUpvotePayload = {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new?: { post_id?: unknown; user_id?: unknown };
+  old?: { post_id?: unknown; user_id?: unknown };
+};
+
+type RealtimeCommentPayload = {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new?: { id?: unknown; post_id?: unknown; author_id?: unknown };
+  old?: { id?: unknown; post_id?: unknown; author_id?: unknown };
+};
+
+type RealtimeRsvpPayload = {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new?: { id?: unknown; post_id?: unknown; user_id?: unknown; status?: unknown; created_at?: unknown; updated_at?: unknown };
+  old?: { id?: unknown; post_id?: unknown; user_id?: unknown };
 };
 
 type ProfileContext = {
@@ -514,14 +527,102 @@ export default function MandaliScreen() {
     }, 450);
   }, [loadMandali]);
 
-  const schedulePostScopedRealtimeReload = useCallback((payload: RealtimePostPayload) => {
-    const postId = typeof payload.new?.post_id === 'string' ? payload.new.post_id : typeof payload.old?.post_id === 'string' ? payload.old.post_id : null;
-    if (!postId || visiblePostIdsRef.current.has(postId)) scheduleRealtimeReload();
-  }, [scheduleRealtimeReload]);
-
   useEffect(() => () => {
     if (realtimeReloadTimerRef.current) clearTimeout(realtimeReloadTimerRef.current);
   }, []);
+
+  // Patches a post's upvote count in whichever list (local or blended)
+  // actually contains it, without touching anything else.
+  const patchPostUpvotes = useCallback((postId: string, delta: number) => {
+    const bump = (list: PostRow[]) => list.map((p) => (p.id === postId ? { ...p, upvotes: Math.max(0, p.upvotes + delta) } : p));
+    setPosts((current) => (current.some((p) => p.id === postId) ? bump(current) : current));
+    setBlendedPosts((current) => (current.some((p) => p.id === postId) ? bump(current) : current));
+  }, []);
+
+  // A new comment's realtime row has no joined profile data (Postgres
+  // changes only carry the raw row), so a single targeted re-fetch with
+  // the same join loadMandali uses is the cheapest way to get a
+  // display-ready CommentRow -- still far cheaper than reloading the
+  // whole screen for one comment.
+  const patchNewComment = useCallback(async (commentId: string) => {
+    const { data } = await supabase
+      .from('post_comments')
+      .select('id, post_id, author_id, body, parent_id, created_at, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
+      .eq('id', commentId)
+      .maybeSingle();
+    if (!data) return;
+    const normalized = {
+      ...data,
+      profiles: Array.isArray(data.profiles) ? data.profiles[0] ?? null : data.profiles ?? null,
+    } as CommentRow;
+    setComments((current) => (current.some((c) => c.id === normalized.id) ? current : [...current, normalized]));
+  }, []);
+
+  // Upvotes, comments, and RSVPs used to all funnel into one debounced
+  // full loadMandali() -- meaning a single upvote from a stranger on a
+  // blended post refetched the entire screen (profile, posts, blended
+  // posts, members, comments, RSVPs, upvotes). These three handlers patch
+  // just the affected slice of state instead. Each skips changes authored
+  // by the current user, since toggleUpvote/submitComment/handleRsvp
+  // already apply their own optimistic update locally -- reapplying the
+  // realtime echo of your own write would double-count it.
+  const handleUpvoteRealtimeChange = useCallback((payload: RealtimeUpvotePayload) => {
+    const row = payload.new ?? payload.old;
+    const postId = typeof row?.post_id === 'string' ? row.post_id : null;
+    const userId = typeof row?.user_id === 'string' ? row.user_id : null;
+    if (!postId || !userId || userId === profile?.userId) return;
+    if (!visiblePostIdsRef.current.has(postId)) return;
+    patchPostUpvotes(postId, payload.eventType === 'DELETE' ? -1 : 1);
+  }, [patchPostUpvotes, profile?.userId]);
+
+  const handleCommentRealtimeChange = useCallback((payload: RealtimeCommentPayload) => {
+    const row = payload.new ?? payload.old;
+    const postId = typeof row?.post_id === 'string' ? row.post_id : null;
+    const commentId = typeof row?.id === 'string' ? row.id : null;
+    const authorId = typeof row?.author_id === 'string' ? row.author_id : null;
+    if (!postId || !commentId || !visiblePostIdsRef.current.has(postId)) return;
+
+    if (payload.eventType === 'DELETE') {
+      setComments((current) => current.filter((c) => c.id !== commentId));
+      return;
+    }
+    if (payload.eventType === 'INSERT' && authorId !== profile?.userId) {
+      void patchNewComment(commentId);
+    }
+    // UPDATE: no comment-edit feature exists today, nothing to patch.
+  }, [patchNewComment, profile?.userId]);
+
+  const handleRsvpRealtimeChange = useCallback((payload: RealtimeRsvpPayload) => {
+    const row = payload.new ?? payload.old;
+    const postId = typeof row?.post_id === 'string' ? row.post_id : null;
+    const userId = typeof row?.user_id === 'string' ? row.user_id : null;
+    const rowId = typeof row?.id === 'string' ? row.id : null;
+    if (!postId || !userId || !rowId || userId === profile?.userId) return;
+    if (!visiblePostIdsRef.current.has(postId)) return;
+
+    if (payload.eventType === 'DELETE') {
+      setRsvps((current) => current.filter((r) => r.id !== rowId));
+      return;
+    }
+    const status = payload.new?.status;
+    if (typeof status !== 'string') return;
+    const nowIso = new Date().toISOString();
+    const nextRow: RsvpRow = {
+      id: rowId,
+      post_id: postId,
+      user_id: userId,
+      status: status as RsvpStatus,
+      created_at: typeof payload.new?.created_at === 'string' ? payload.new.created_at : nowIso,
+      updated_at: typeof payload.new?.updated_at === 'string' ? payload.new.updated_at : nowIso,
+    };
+    setRsvps((current) => {
+      const idx = current.findIndex((r) => r.id === rowId);
+      if (idx === -1) return [...current, nextRow];
+      const next = [...current];
+      next[idx] = nextRow;
+      return next;
+    });
+  }, [profile?.userId]);
 
   useEffect(() => {
     loadMandali()
@@ -556,19 +657,20 @@ export default function MandaliScreen() {
     };
   }, [profile?.userId, profile?.city, profile?.latitude, profile?.longitude]);
 
-  // Realtime — deliberately broader than PWA, but debounced so a burst of
-  // comment/upvote/RSVP events becomes one refresh instead of a refetch per
-  // row. Child tables are scoped against the currently visible post ids
-  // because Realtime cannot filter them by mandali_id directly.
+  // Realtime — posts/profiles changes (new post, membership change) stay
+  // full, debounced reloads since they change the feed's actual structure
+  // (ordering, blend-threshold, visible-post-id set). Upvotes/comments/
+  // RSVPs are patched incrementally (see the three handlers above) since
+  // they're both far more frequent and structurally trivial.
   useEffect(() => {
     if (!profile?.mandaliId) return;
 
     const channel = supabase
       .channel(`mandali:${profile.mandaliId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_upvotes' }, schedulePostScopedRealtimeReload)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, schedulePostScopedRealtimeReload)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, schedulePostScopedRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_upvotes' }, handleUpvoteRealtimeChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, handleCommentRealtimeChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, handleRsvpRealtimeChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload)
       .subscribe();
 
@@ -576,7 +678,7 @@ export default function MandaliScreen() {
       channel.unsubscribe();
       void supabase.removeChannel(channel);
     };
-  }, [profile?.mandaliId, schedulePostScopedRealtimeReload, scheduleRealtimeReload]);
+  }, [profile?.mandaliId, handleCommentRealtimeChange, handleRsvpRealtimeChange, handleUpvoteRealtimeChange, scheduleRealtimeReload]);
 
   const filteredPosts = useMemo(
     () => (activeFilter === 'all' ? posts : posts.filter((p) => p.type === activeFilter)),
@@ -640,24 +742,33 @@ export default function MandaliScreen() {
     if (!profile) return;
     setCommenting(postId);
     try {
-      await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
-      await loadMandali();
+      const newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
+      await patchNewComment(newId);
     } catch {
       Alert.alert('Could not post comment', 'Check your connection and try again.');
     } finally {
       setCommenting(null);
     }
-  }, [loadMandali, profile]);
+  }, [patchNewComment, profile]);
 
   const handleRsvp = useCallback(async (postId: string, status: RsvpStatus) => {
     if (!profile) return;
+    const previousRsvps = rsvps;
+    const nowIso = new Date().toISOString();
+    setRsvps((current) => {
+      const idx = current.findIndex((r) => r.post_id === postId && r.user_id === profile.userId);
+      if (idx === -1) return [...current, { id: `optimistic:${postId}`, post_id: postId, user_id: profile.userId, status, created_at: nowIso, updated_at: nowIso }];
+      const next = [...current];
+      next[idx] = { ...next[idx], status, updated_at: nowIso };
+      return next;
+    });
     try {
       await updateMandaliRsvp({ postId, userId: profile.userId, status });
-      await loadMandali();
     } catch {
+      setRsvps(previousRsvps);
       Alert.alert('Could not RSVP', 'Check your connection and try again.');
     }
-  }, [loadMandali, profile]);
+  }, [profile, rsvps]);
 
   // Each of these now actually awaits the write and only shows a success
   // alert once it has genuinely succeeded — lib/mandali.ts's report/block

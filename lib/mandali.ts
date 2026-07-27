@@ -268,14 +268,22 @@ export async function leaveMandali(userId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function createMandaliComment(payload: { postId: string; userId: string; body: string; parentId?: string | null }): Promise<void> {
-  const { error } = await supabase.from('post_comments').insert({
-    post_id: payload.postId,
-    author_id: payload.userId,
-    body: payload.body.trim(),
-    parent_id: payload.parentId ?? null,
-  });
+// Returns the new row's id so the caller can patch it into local state
+// directly (a single targeted re-fetch with the profile join) instead of
+// reloading the entire screen for one new comment.
+export async function createMandaliComment(payload: { postId: string; userId: string; body: string; parentId?: string | null }): Promise<string> {
+  const { data, error } = await supabase
+    .from('post_comments')
+    .insert({
+      post_id: payload.postId,
+      author_id: payload.userId,
+      body: payload.body.trim(),
+      parent_id: payload.parentId ?? null,
+    })
+    .select('id')
+    .single();
   if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateMandaliRsvp(payload: { postId: string; userId: string; status: RsvpStatus }): Promise<void> {
