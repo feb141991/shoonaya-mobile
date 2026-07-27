@@ -69,7 +69,7 @@ const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle:
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
   { key: 'wants_festival_reminders', label: 'Festival reminders', subtitle: 'Vrat, tithi & observance alerts' },
-  { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts & mentions' },
+  { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
   { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity' },
 ];
 
