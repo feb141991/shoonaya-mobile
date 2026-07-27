@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Modal, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Modal, Text, useColorScheme, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
+import type { ConnectionStatus } from '@/lib/mandali';
 
 export type MemberInfoSubject = {
   id: string;
@@ -26,6 +27,12 @@ type MemberInfoSheetProps = {
   subject: MemberInfoSubject | null;
   onClose: () => void;
   onReport?: (subject: MemberInfoSubject) => void;
+  connectionStatus?: ConnectionStatus;
+  connectionBusy?: boolean;
+  onConnect?: (subject: MemberInfoSubject) => void;
+  onCancelConnection?: (subject: MemberInfoSubject) => void;
+  onAcceptConnection?: (subject: MemberInfoSubject) => void;
+  onRejectConnection?: (subject: MemberInfoSubject) => void;
 };
 
 function getInitials(name: string): string {
@@ -44,7 +51,18 @@ function getInitials(name: string): string {
 // This sheet only surfaces fields already fetched for the members/seekers
 // lists today (lib/mandali.ts's MemberRow/NearbySeeker) — no new backend
 // call.
-export function MemberInfoSheet({ visible, subject, onClose, onReport }: MemberInfoSheetProps) {
+export function MemberInfoSheet({
+  visible,
+  subject,
+  onClose,
+  onReport,
+  connectionStatus,
+  connectionBusy,
+  onConnect,
+  onCancelConnection,
+  onAcceptConnection,
+  onRejectConnection,
+}: MemberInfoSheetProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
 
@@ -165,6 +183,53 @@ export function MemberInfoSheet({ visible, subject, onClose, onReport }: MemberI
                 </View>
               ))}
             </View>
+          ) : null}
+
+          {connectionStatus === 'pending_received' && (onAcceptConnection || onRejectConnection) ? (
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <PressableSurface
+                haptic="selection"
+                disabled={connectionBusy}
+                onPress={() => onAcceptConnection?.(displaySubject)}
+                style={{ flex: 1, minHeight: 44, borderRadius: 14, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, opacity: connectionBusy ? 0.6 : 1 }}
+              >
+                {connectionBusy ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="check" size={14} color={COLORS.ink} />}
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.ink }}>Accept</Text>
+              </PressableSurface>
+              <PressableSurface
+                haptic="selection"
+                disabled={connectionBusy}
+                onPress={() => onRejectConnection?.(displaySubject)}
+                style={{ flex: 1, minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center', opacity: connectionBusy ? 0.6 : 1 }}
+              >
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Decline</Text>
+              </PressableSurface>
+            </View>
+          ) : connectionStatus === 'connected' ? (
+            <View style={{ minHeight: 44, borderRadius: 14, backgroundColor: theme.cardSoft, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
+              <Feather name="check-circle" size={14} color={theme.brand} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>Connected</Text>
+            </View>
+          ) : connectionStatus === 'pending_sent' && onCancelConnection ? (
+            <PressableSurface
+              haptic="selection"
+              disabled={connectionBusy}
+              onPress={() => onCancelConnection(displaySubject)}
+              style={{ minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, opacity: connectionBusy ? 0.6 : 1 }}
+            >
+              {connectionBusy ? <ActivityIndicator size="small" color={theme.dim} /> : <Feather name="clock" size={14} color={theme.dim} />}
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Request sent · Cancel</Text>
+            </PressableSurface>
+          ) : connectionStatus === 'none' && onConnect ? (
+            <PressableSurface
+              haptic="selection"
+              disabled={connectionBusy}
+              onPress={() => onConnect(displaySubject)}
+              style={{ minHeight: 44, borderRadius: 14, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, opacity: connectionBusy ? 0.6 : 1 }}
+            >
+              {connectionBusy ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="user-plus" size={14} color={COLORS.ink} />}
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.ink }}>Connect</Text>
+            </PressableSurface>
           ) : null}
 
           {onReport ? (

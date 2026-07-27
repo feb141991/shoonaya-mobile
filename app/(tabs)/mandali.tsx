@@ -11,7 +11,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,7 +26,9 @@ import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/MemberInfoSheet';
+import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { FilterPicker } from '@/components/mandali/FilterPicker';
+import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
@@ -34,20 +36,30 @@ import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import {
   BLEND_THRESHOLD,
   blockUser,
+  cancelConnectionRequest,
   createMandaliComment,
+  fetchConnectionStatus,
   fetchNearbySeekers,
+  fetchPendingConnectionRequests,
   fetchSafetyState,
   filterAuthoredPosts,
   filterMemberRows,
   leaveMandali,
   reportMandaliMember,
   reportMandaliPost,
+  removePostReaction,
+  respondToConnectionRequest,
+  sendConnectionRequest,
+  setPostReaction,
   updateMandaliRsvp,
   type CommentRow,
+  type ConnectionRequestRow,
+  type ConnectionStatus,
   type MandaliPostType,
   type MemberRow,
   type NearbySeeker,
   type PostRow,
+  type ReactionType,
   type RsvpRow,
   type RsvpStatus,
 } from '@/lib/mandali';
@@ -131,7 +143,7 @@ type MandaliPostCardProps = {
   userId: string | null;
   comments: CommentRow[];
   rsvps: RsvpRow[];
-  isUpvoted: boolean;
+  myReaction: ReactionType | null;
   expanded: boolean;
   postingComment: boolean;
   theme: MandaliTheme;
@@ -140,7 +152,8 @@ type MandaliPostCardProps = {
   onShowOwnOptions: (post: PostRow) => void;
   onSubmitComment: (postId: string, body: string, parentId?: string | null) => void;
   onToggleComments: (postId: string) => void;
-  onToggleUpvote: (postId: string) => void;
+  onSelectReaction: (postId: string, reaction: ReactionType) => void;
+  onRemoveReaction: (postId: string) => void;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -148,7 +161,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   userId,
   comments,
   rsvps,
-  isUpvoted,
+  myReaction,
   expanded,
   postingComment,
   theme,
@@ -157,7 +170,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onShowOwnOptions,
   onSubmitComment,
   onToggleComments,
-  onToggleUpvote,
+  onSelectReaction,
+  onRemoveReaction,
 }: MandaliPostCardProps) {
   const isOwnPost = post.author_id === userId;
   const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
@@ -285,18 +299,16 @@ const MandaliPostCard = memo(function MandaliPostCard({
           ) : null}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 9 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel={isUpvoted ? 'Remove upvote' : 'Upvote post'}
-              onPress={() => onToggleUpvote(post.id)}
-              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 5 }}
-              hitSlop={10}
-            >
-              <Ionicons name={isUpvoted ? 'heart' : 'heart-outline'} size={13} color={isUpvoted ? COLORS.danger : theme.dim} />
-              {post.upvotes > 0 ? (
-                <Text style={{ color: isUpvoted ? COLORS.danger : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>{post.upvotes}</Text>
-              ) : null}
-            </PressableSurface>
+            <PostReactionButton
+              reaction={myReaction}
+              count={post.upvotes}
+              onSelect={(reaction) => onSelectReaction(post.id, reaction)}
+              onRemove={() => onRemoveReaction(post.id)}
+              dim={theme.dim}
+              cardBg={theme.card}
+              border={theme.premiumBorder}
+              scrimColor={COLORS.bottomSheetScrim}
+            />
 
             <PressableSurface
               haptic="selection"
@@ -357,12 +369,16 @@ export default function MandaliScreen() {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [rsvps, setRsvps] = useState<RsvpRow[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
-  const [upvotedIds, setUpvotedIds] = useState<string[]>([]);
+  const [myReactions, setMyReactions] = useState<Record<string, ReactionType>>({});
   const [seekers, setSeekers] = useState<NearbySeeker[]>([]);
   const [loadingSeekers, setLoadingSeekers] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberInfoSubject | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('none');
+  const [connectionBusy, setConnectionBusy] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<ConnectionRequestRow[]>([]);
+  const [requestsSheetVisible, setRequestsSheetVisible] = useState(false);
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [composeBody, setComposeBody] = useState('');
@@ -433,7 +449,7 @@ export default function MandaliScreen() {
       setComments([]);
       setRsvps([]);
       setMembers([]);
-      setUpvotedIds([]);
+      setMyReactions({});
       return;
     }
 
@@ -501,7 +517,7 @@ export default function MandaliScreen() {
           .in('post_id', allPostIds)
           .order('created_at', { ascending: true }),
         supabase.from('event_rsvps').select('id, post_id, user_id, status, created_at, updated_at').in('post_id', allPostIds),
-        supabase.from('post_upvotes').select('post_id').eq('user_id', user.id).in('post_id', allPostIds),
+        supabase.from('post_upvotes').select('post_id, reaction_type').eq('user_id', user.id).in('post_id', allPostIds),
       ]);
       setComments(
         (commentRows.data ?? []).map((row) => ({
@@ -510,11 +526,15 @@ export default function MandaliScreen() {
         })) as CommentRow[]
       );
       setRsvps((rsvpRows.data ?? []) as RsvpRow[]);
-      setUpvotedIds((upvoteRows.data ?? []).map((row) => row.post_id));
+      setMyReactions(
+        Object.fromEntries(
+          (upvoteRows.data ?? []).map((row) => [row.post_id, (row.reaction_type ?? 'pranam') as ReactionType])
+        )
+      );
     } else {
       setComments([]);
       setRsvps([]);
-      setUpvotedIds([]);
+      setMyReactions({});
     }
 
     visiblePostIdsRef.current = visiblePostIds;
@@ -575,7 +595,7 @@ export default function MandaliScreen() {
   // blended post refetched the entire screen (profile, posts, blended
   // posts, members, comments, RSVPs, upvotes). These three handlers patch
   // just the affected slice of state instead. Each skips changes authored
-  // by the current user, since toggleUpvote/submitComment/handleRsvp
+  // by the current user, since handleSelectReaction/submitComment/handleRsvp
   // already apply their own optimistic update locally -- reapplying the
   // realtime echo of your own write would double-count it.
   const handleUpvoteRealtimeChange = useCallback((payload: RealtimeUpvotePayload) => {
@@ -669,6 +689,20 @@ export default function MandaliScreen() {
     };
   }, [profile?.userId, profile?.city, profile?.latitude, profile?.longitude]);
 
+  const loadPendingRequests = useCallback(() => {
+    if (!profile?.userId) return;
+    fetchPendingConnectionRequests(profile.userId)
+      .then((rows) => setPendingRequests(rows))
+      .catch((error) => {
+        console.error('[MandaliScreen] fetchPendingConnectionRequests failed', error);
+        setPendingRequests([]);
+      });
+  }, [profile?.userId]);
+
+  useEffect(() => {
+    loadPendingRequests();
+  }, [loadPendingRequests]);
+
   // Realtime — posts/profiles changes (new post, membership change) stay
   // full, debounced reloads since they change the feed's actual structure
   // (ordering, blend-threshold, visible-post-id set). Upvotes/comments/
@@ -700,7 +734,6 @@ export default function MandaliScreen() {
     () => (activeFilter === 'all' ? blendedPosts : blendedPosts.filter((p) => p.type === activeFilter)),
     [blendedPosts, activeFilter]
   );
-  const upvotedIdSet = useMemo(() => new Set(upvotedIds), [upvotedIds]);
   const commentsByPost = useMemo(() => {
     const grouped = new Map<string, CommentRow[]>();
     for (const comment of comments) {
@@ -736,19 +769,52 @@ export default function MandaliScreen() {
     return items;
   }, [filteredBlendedPosts, filteredPosts, profile?.mandaliId]);
 
-  const toggleUpvote = useCallback(async (postId: string) => {
+  const handleSelectReaction = useCallback(async (postId: string, reaction: ReactionType) => {
     if (!profile) return;
-    const alreadyUpvoted = upvotedIdSet.has(postId);
+    const hadReaction = myReactions[postId] != null;
+    const targetList = posts.some((p) => p.id === postId) ? setPosts : setBlendedPosts;
+    const previous = myReactions[postId];
+
+    setMyReactions((current) => ({ ...current, [postId]: reaction }));
+    if (!hadReaction) {
+      targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
+    }
+
+    try {
+      await setPostReaction(postId, profile.userId, reaction);
+    } catch {
+      setMyReactions((current) => {
+        if (previous == null) {
+          const { [postId]: _removed, ...rest } = current;
+          return rest;
+        }
+        return { ...current, [postId]: previous };
+      });
+      if (!hadReaction) {
+        targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes - 1 } : p)));
+      }
+    }
+  }, [posts, profile, myReactions]);
+
+  const handleRemoveReaction = useCallback(async (postId: string) => {
+    if (!profile) return;
+    const previous = myReactions[postId];
+    if (previous == null) return;
     const targetList = posts.some((p) => p.id === postId) ? setPosts : setBlendedPosts;
 
-    setUpvotedIds((current) => (alreadyUpvoted ? current.filter((id) => id !== postId) : [...current, postId]));
-    targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + (alreadyUpvoted ? -1 : 1) } : p)));
+    setMyReactions((current) => {
+      const { [postId]: _removed, ...rest } = current;
+      return rest;
+    });
+    targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: Math.max(0, p.upvotes - 1) } : p)));
 
-    const result = alreadyUpvoted
-      ? await supabase.from('post_upvotes').delete().match({ post_id: postId, user_id: profile.userId })
-      : await supabase.from('post_upvotes').insert({ post_id: postId, user_id: profile.userId });
-    if (result.error) void loadMandali();
-  }, [loadMandali, posts, profile, upvotedIdSet]);
+    try {
+      await removePostReaction(postId, profile.userId);
+    } catch {
+      setMyReactions((current) => ({ ...current, [postId]: previous }));
+      targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
+    }
+  }, [posts, profile, myReactions]);
 
   const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null) => {
     if (!profile) return;
@@ -901,6 +967,17 @@ export default function MandaliScreen() {
   // normalized from their different source shapes (MemberRow vs
   // NearbySeeker) since neither app has a full "view another user's
   // profile" screen to link to yet.
+  // Connection status is fetched fresh every time the sheet opens (not
+  // cached alongside members/seekers) since it's a two-party relationship
+  // that can change independently of the members/seekers lists themselves.
+  const loadConnectionStatus = useCallback((otherId: string) => {
+    if (!profile) return;
+    setConnectionStatus('none');
+    fetchConnectionStatus(profile.userId, otherId)
+      .then((status) => setConnectionStatus(status))
+      .catch(() => setConnectionStatus('none'));
+  }, [profile]);
+
   const openMemberInfo = useCallback((member: MemberRow) => {
     setSelectedMember({
       id: member.id,
@@ -914,7 +991,8 @@ export default function MandaliScreen() {
       spiritualLevel: member.spiritual_level,
       sevaScore: member.seva_score,
     });
-  }, []);
+    loadConnectionStatus(member.id);
+  }, [loadConnectionStatus]);
 
   const openSeekerInfo = useCallback((seeker: NearbySeeker) => {
     setSelectedMember({
@@ -925,6 +1003,77 @@ export default function MandaliScreen() {
       city: seeker.city,
       distanceKm: seeker.distanceKm ?? null,
     });
+    loadConnectionStatus(seeker.id);
+  }, [loadConnectionStatus]);
+
+  const handleConnect = useCallback(async (otherId: string) => {
+    if (!profile) return;
+    setConnectionBusy(true);
+    try {
+      await sendConnectionRequest(profile.userId, otherId);
+      setConnectionStatus('pending_sent');
+    } catch {
+      Alert.alert('Could not send request', 'Check your connection and try again.');
+    } finally {
+      setConnectionBusy(false);
+    }
+  }, [profile]);
+
+  const handleCancelConnection = useCallback(async (otherId: string) => {
+    if (!profile) return;
+    setConnectionBusy(true);
+    try {
+      await cancelConnectionRequest(profile.userId, otherId);
+      setConnectionStatus('none');
+    } catch {
+      Alert.alert('Could not cancel request', 'Check your connection and try again.');
+    } finally {
+      setConnectionBusy(false);
+    }
+  }, [profile]);
+
+  const handleRespondToConnection = useCallback(async (otherId: string, status: 'accepted' | 'rejected') => {
+    if (!profile) return;
+    setConnectionBusy(true);
+    try {
+      const { data } = await supabase
+        .from('mandali_connections')
+        .select('id')
+        .eq('requester_id', otherId)
+        .eq('recipient_id', profile.userId)
+        .eq('status', 'pending')
+        .maybeSingle();
+      if (!data) throw new Error('Request no longer pending');
+      await respondToConnectionRequest(data.id, status);
+      setConnectionStatus(status === 'accepted' ? 'connected' : 'none');
+      setPendingRequests((current) => current.filter((r) => r.requester_id !== otherId));
+    } catch {
+      Alert.alert('Could not respond to request', 'Check your connection and try again.');
+    } finally {
+      setConnectionBusy(false);
+    }
+  }, [profile]);
+
+  // Same accept/reject action as handleRespondToConnection above, but for
+  // the dedicated requests sheet -- it already has the connection row's own
+  // id (no need to look it up), and doesn't touch connectionStatus/
+  // connectionBusy since MemberInfoSheet isn't necessarily open here.
+  const handleAcceptRequest = useCallback(async (request: ConnectionRequestRow) => {
+    try {
+      await respondToConnectionRequest(request.id, 'accepted');
+      setPendingRequests((current) => current.filter((r) => r.id !== request.id));
+    } catch {
+      Alert.alert('Could not accept request', 'Check your connection and try again.');
+    }
+  }, []);
+
+  const handleRejectRequest = useCallback(async (request: ConnectionRequestRow) => {
+    try {
+      await respondToConnectionRequest(request.id, 'rejected');
+      setPendingRequests((current) => current.filter((r) => r.id !== request.id));
+    } catch {
+      Alert.alert('Could not decline request', 'Check your connection and try again.');
+    }
   }, []);
 
   const submitPost = useCallback(async () => {
@@ -987,7 +1136,7 @@ export default function MandaliScreen() {
         userId={profile?.userId ?? null}
         comments={commentsByPost.get(post.id) ?? []}
         rsvps={rsvpsByPost.get(post.id) ?? []}
-        isUpvoted={upvotedIdSet.has(post.id)}
+        myReaction={myReactions[post.id] ?? null}
         expanded={expandedPostId === post.id}
         postingComment={commenting === post.id}
         theme={theme}
@@ -996,10 +1145,11 @@ export default function MandaliScreen() {
         onShowOwnOptions={showOwnPostOptions}
         onSubmitComment={submitComment}
         onToggleComments={toggleComments}
-        onToggleUpvote={toggleUpvote}
+        onSelectReaction={handleSelectReaction}
+        onRemoveReaction={handleRemoveReaction}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments, toggleUpvote, upvotedIdSet]);
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
@@ -1165,6 +1315,19 @@ export default function MandaliScreen() {
               <Feather name="edit-3" size={15} color={COLORS.ink} />
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Share with Mandali</Text>
             </PressableSurface>
+            <PressableSurface
+              haptic="selection"
+              onPress={() => setRequestsSheetVisible(true)}
+              accessibilityLabel={`Connection requests${pendingRequests.length > 0 ? ` (${pendingRequests.length} pending)` : ''}`}
+              style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Feather name="user-plus" size={17} color={theme.dim} />
+              {pendingRequests.length > 0 ? (
+                <View style={{ position: 'absolute', top: 6, right: 6, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
+                  <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 9.5 }}>{pendingRequests.length}</Text>
+                </View>
+              ) : null}
+            </PressableSurface>
             <PressableSurface haptic="selection" onPress={handleLeave} accessibilityLabel="Leave Mandali" style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Feather name="log-out" size={17} color={theme.dim} />
             </PressableSurface>
@@ -1196,7 +1359,7 @@ export default function MandaliScreen() {
         />
       ) : null}
     </>
-  ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, posts.length, profile, resetComposeState, router, theme]);
+  ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, pendingRequests.length, posts.length, profile, resetComposeState, router, theme]);
   const feedFooter = useMemo(() => {
     const hasCapturedLocation = profile?.latitude != null && profile.longitude != null;
     if (!profile?.mandaliId || !hasCapturedLocation) return null;
@@ -1371,6 +1534,20 @@ export default function MandaliScreen() {
               }
             : undefined
         }
+        connectionStatus={connectionStatus}
+        connectionBusy={connectionBusy}
+        onConnect={(subject) => void handleConnect(subject.id)}
+        onCancelConnection={(subject) => void handleCancelConnection(subject.id)}
+        onAcceptConnection={(subject) => void handleRespondToConnection(subject.id, 'accepted')}
+        onRejectConnection={(subject) => void handleRespondToConnection(subject.id, 'rejected')}
+      />
+
+      <ConnectionRequestsSheet
+        visible={requestsSheetVisible}
+        requests={pendingRequests}
+        onClose={() => setRequestsSheetVisible(false)}
+        onAccept={(request) => void handleAcceptRequest(request)}
+        onReject={(request) => void handleRejectRequest(request)}
       />
     </Screen>
   );

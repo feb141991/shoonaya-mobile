@@ -27,6 +27,20 @@ import { apiFetch } from '@/lib/api';
 export type MandaliPostType = 'update' | 'event' | 'question' | 'announcement';
 export type RsvpStatus = 'going' | 'interested' | 'not_going';
 
+// Devotional reaction set replacing the single upvote heart — deliberately
+// no negative/"dislike" option (tonally wrong for a feed people share vrat
+// updates, losses, and scripture questions on).
+export type ReactionType = 'pranam' | 'love' | 'insightful';
+
+export type ConnectionStatus = 'none' | 'pending_sent' | 'pending_received' | 'connected';
+
+export type ConnectionRequestRow = {
+  id: string;
+  requester_id: string;
+  created_at: string;
+  requester: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+};
+
 export type PostAuthor = {
   full_name: string;
   username: string;
@@ -376,4 +390,87 @@ export function filterAuthoredPosts(posts: PostRow[], state: SafetyState): PostR
 
 export function filterMemberRows(members: MemberRow[], state: SafetyState): MemberRow[] {
   return members.filter((member) => !state.excludedAuthorIds.has(member.id));
+}
+
+// ── Connections (request / accept / reject between two seekers) ────────────
+// App-wide, not scoped to a single Mandali — Seekers Near You already
+// crosses Mandali boundaries, so connections do too. Backed by
+// mandali_connections; every state change is logged server-side
+// (user_activity_log) and notified via DB trigger, not from here.
+
+export async function fetchConnectionStatus(userId: string, otherId: string): Promise<ConnectionStatus> {
+  const { data } = await supabase
+    .from('mandali_connections')
+    .select('requester_id, status')
+    .or(`and(requester_id.eq.${userId},recipient_id.eq.${otherId}),and(requester_id.eq.${otherId},recipient_id.eq.${userId})`)
+    .maybeSingle();
+  if (!data || data.status === 'rejected') return 'none';
+  if (data.status === 'accepted') return 'connected';
+  return data.requester_id === userId ? 'pending_sent' : 'pending_received';
+}
+
+// Plain insert, falling back to reopening an existing row (most likely a
+// previously rejected request — the unique (requester_id, recipient_id)
+// constraint means a fresh insert can't coexist with it) rather than
+// failing outright. Note: reopening this way doesn't re-fire the "wants to
+// connect" notification (the trigger only notifies on a genuinely new
+// INSERT or a transition to accepted/rejected) — an accepted gap for now.
+export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<void> {
+  const { error } = await supabase.from('mandali_connections').insert({ requester_id: requesterId, recipient_id: recipientId });
+  if (error) {
+    if (error.code === '23505') {
+      const { error: reopenError } = await supabase
+        .from('mandali_connections')
+        .update({ status: 'pending', updated_at: new Date().toISOString() })
+        .eq('requester_id', requesterId)
+        .eq('recipient_id', recipientId);
+      if (reopenError) throw reopenError;
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function cancelConnectionRequest(requesterId: string, recipientId: string): Promise<void> {
+  const { error } = await supabase
+    .from('mandali_connections')
+    .delete()
+    .eq('requester_id', requesterId)
+    .eq('recipient_id', recipientId);
+  if (error) throw error;
+}
+
+export async function respondToConnectionRequest(requestId: string, status: 'accepted' | 'rejected'): Promise<void> {
+  const { error } = await supabase.from('mandali_connections').update({ status }).eq('id', requestId);
+  if (error) throw error;
+}
+
+export async function fetchPendingConnectionRequests(userId: string): Promise<ConnectionRequestRow[]> {
+  const { data } = await supabase
+    .from('mandali_connections')
+    .select('id, requester_id, created_at, requester:profiles!mandali_connections_requester_id_fkey(full_name, username, avatar_url)')
+    .eq('recipient_id', userId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    ...row,
+    requester: Array.isArray(row.requester) ? row.requester[0] ?? null : row.requester ?? null,
+  })) as ConnectionRequestRow[];
+}
+
+// ── Reactions (devotional set replacing the single upvote heart) ───────────
+// post_upvotes has PRIMARY KEY (post_id, user_id) — one row per user per
+// post, so switching reactions updates the existing row's reaction_type
+// rather than inserting a second one.
+
+export async function setPostReaction(postId: string, userId: string, reaction: ReactionType): Promise<void> {
+  const { error } = await supabase
+    .from('post_upvotes')
+    .upsert({ post_id: postId, user_id: userId, reaction_type: reaction }, { onConflict: 'post_id,user_id' });
+  if (error) throw error;
+}
+
+export async function removePostReaction(postId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('post_upvotes').delete().match({ post_id: postId, user_id: userId });
+  if (error) throw error;
 }
