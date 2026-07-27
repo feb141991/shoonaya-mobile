@@ -48,7 +48,14 @@ type NotificationType =
   | 'sanskar_milestone'
   | 'guided-plan'
   | 'mandali_mention'
-  | 'broadcast';
+  | 'broadcast'
+  | 'connection_request'
+  | 'connection_accepted'
+  | 'connection_rejected'
+  | 'connection_cancelled'
+  | 'user_blocked'
+  | 'content_reported'
+  | 'post_reaction';
 
 type NotificationAdditionalData = {
   type?: NotificationType;
@@ -232,7 +239,14 @@ function routeForNotificationTap(data: NotificationAdditionalData): Href {
     case 'brahma_muhurta': return '/nitya-karma';
     case 'japa': return '/japa';
     case 'streak': return '/(tabs)';
-    case 'mandali_mention': return '/mandali';
+    case 'mandali_mention':
+    case 'connection_request':
+    case 'connection_accepted':
+    case 'connection_rejected':
+    case 'connection_cancelled':
+    case 'user_blocked':
+    case 'content_reported':
+    case 'post_reaction': return '/mandali';
     // general/test/milestone/sanskar_milestone/guided-plan/broadcast and
     // anything unrecognized: land in the inbox itself rather than
     // guessing — the notification that was tapped is right there, in

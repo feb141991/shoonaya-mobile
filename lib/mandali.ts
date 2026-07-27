@@ -24,6 +24,23 @@
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 
+// Fires-and-forgets a request to the PWA's push bridge
+// (POST /api/native/mandali/notify-push) for a notification_key one of the
+// DB triggers below may have just written into public.notifications. The
+// bridge itself decides whether anything actually gets pushed (the row
+// only exists if the trigger's own gating -- preference, block-state,
+// self-action -- passed), so this call is safe to make unconditionally
+// after every write that has a matching trigger, without duplicating any
+// of that gating here. Best-effort: push is a nice-to-have on top of the
+// in-app notification row that already landed, not something worth
+// blocking or erroring the calling action over.
+function triggerPush(notificationKey: string): void {
+  void apiFetch('/api/native/mandali/notify-push', {
+    method: 'POST',
+    body: JSON.stringify({ notificationKey }),
+  }).catch(() => {});
+}
+
 export type MandaliPostType = 'update' | 'event' | 'question' | 'announcement';
 export type RsvpStatus = 'going' | 'interested' | 'not_going';
 
@@ -314,25 +331,35 @@ export async function updateMandaliRsvp(payload: { postId: string; userId: strin
 // showed a false "success" message. Now surfaces the real error so the
 // screen can show a genuine failure alert instead.
 export async function reportMandaliPost(reportedBy: string, post: PostRow, reason: string): Promise<void> {
-  const { error } = await supabase.from('content_reports').insert({
-    reported_by: reportedBy,
-    content_author_id: post.author_id,
-    content_type: 'mandali_post',
-    content_id: post.id,
-    reason,
-    metadata: { source: 'native_mandali' },
-  });
+  const { data, error } = await supabase
+    .from('content_reports')
+    .insert({
+      reported_by: reportedBy,
+      content_author_id: post.author_id,
+      content_type: 'mandali_post',
+      content_id: post.id,
+      reason,
+      metadata: { source: 'native_mandali' },
+    })
+    .select('id')
+    .single();
   if (error) throw error;
+  triggerPush(`content_reported:${data.id}`);
 }
 
 export async function reportMandaliMember(reportedBy: string, memberId: string): Promise<void> {
-  const { error } = await supabase.from('content_reports').insert({
-    reported_by: reportedBy,
-    content_type: 'user_profile',
-    content_id: memberId,
-    reason: 'inappropriate_behaviour',
-  });
+  const { data, error } = await supabase
+    .from('content_reports')
+    .insert({
+      reported_by: reportedBy,
+      content_type: 'user_profile',
+      content_id: memberId,
+      reason: 'inappropriate_behaviour',
+    })
+    .select('id')
+    .single();
   if (error) throw error;
+  triggerPush(`content_reported:${data.id}`);
 }
 
 // Matches PWA's ContentSafetyMenu.tsx exactly: upsert with
@@ -343,10 +370,15 @@ export async function reportMandaliMember(reportedBy: string, memberId: string):
 // this function silently swallowed (no error check), which also fed into
 // the false-success-alert bug above.
 export async function blockUser(blockerId: string, blockedUserId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('user_blocked_profiles')
-    .upsert({ blocker_id: blockerId, blocked_user_id: blockedUserId }, { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true });
+    .upsert({ blocker_id: blockerId, blocked_user_id: blockedUserId }, { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true })
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  // ignoreDuplicates means an already-existing block returns no row here --
+  // nothing new happened, so no fresh notification/push to trigger.
+  if (data) triggerPush(`user_blocked:${data.id}`);
 }
 
 // ── Safety state (matches PWA's src/lib/user-safety.ts getUserSafetyState) ──
@@ -416,7 +448,11 @@ export async function fetchConnectionStatus(userId: string, otherId: string): Pr
 // connect" notification (the trigger only notifies on a genuinely new
 // INSERT or a transition to accepted/rejected) — an accepted gap for now.
 export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<void> {
-  const { error } = await supabase.from('mandali_connections').insert({ requester_id: requesterId, recipient_id: recipientId });
+  const { data, error } = await supabase
+    .from('mandali_connections')
+    .insert({ requester_id: requesterId, recipient_id: recipientId })
+    .select('id')
+    .single();
   if (error) {
     if (error.code === '23505') {
       const { error: reopenError } = await supabase
@@ -429,20 +465,25 @@ export async function sendConnectionRequest(requesterId: string, recipientId: st
     }
     throw error;
   }
+  triggerPush(`connection_request:${data.id}`);
 }
 
 export async function cancelConnectionRequest(requesterId: string, recipientId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('mandali_connections')
     .delete()
     .eq('requester_id', requesterId)
-    .eq('recipient_id', recipientId);
+    .eq('recipient_id', recipientId)
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  if (data) triggerPush(`connection_cancelled:${data.id}`);
 }
 
 export async function respondToConnectionRequest(requestId: string, status: 'accepted' | 'rejected'): Promise<void> {
   const { error } = await supabase.from('mandali_connections').update({ status }).eq('id', requestId);
   if (error) throw error;
+  triggerPush(`connection_${status}:${requestId}`);
 }
 
 export async function fetchPendingConnectionRequests(userId: string): Promise<ConnectionRequestRow[]> {
@@ -468,6 +509,12 @@ export async function setPostReaction(postId: string, userId: string, reaction: 
     .from('post_upvotes')
     .upsert({ post_id: postId, user_id: userId, reaction_type: reaction }, { onConflict: 'post_id,user_id' });
   if (error) throw error;
+  // Deterministic key, no row id needed. Only resolves to an actual push
+  // if this was a genuinely new reaction (see log_post_reaction()'s trigger
+  // registration -- AFTER INSERT OR DELETE only, not UPDATE -- so switching
+  // an existing reaction never creates a second notifications row here;
+  // the bridge finds nothing to claim and no-ops).
+  triggerPush(`post_reaction:${postId}:${userId}`);
 }
 
 export async function removePostReaction(postId: string, userId: string): Promise<void> {
