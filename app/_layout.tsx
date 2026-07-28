@@ -3,7 +3,7 @@ import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { AppState, View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -62,10 +62,28 @@ function RootLayout() {
   const readyToRender = appIsReady && authReady;
   const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined;
 
+  // routeForSession only actually needs to know the CURRENT segments at the
+  // moment it's called (cold start, or a real auth-state event) — it
+  // doesn't need to be recreated every time the user navigates. Closing
+  // over rootSegment/childSegment directly would do exactly that (segments
+  // change on nearly every in-app navigation), which in turn churns the
+  // big "Handle Auth and App State" effect below (it depends on
+  // routeForSession's identity): unsubscribing and resubscribing the
+  // Supabase auth listener and the deep-link listener, and re-running the
+  // whole cold-start prepare() sequence, on every tab switch. Reading
+  // through a ref that's kept in sync via its own tiny effect gives
+  // routeForSession a stable identity (only `router` remains a real dep)
+  // without losing access to the latest segments.
+  const segmentsRef = useRef({ rootSegment, childSegment });
+  useEffect(() => {
+    segmentsRef.current = { rootSegment, childSegment };
+  }, [rootSegment, childSegment]);
+
   const routeForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
       setApiAccessTokenFromSession(session);
 
+      const { rootSegment, childSegment } = segmentsRef.current;
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
@@ -136,7 +154,7 @@ function RootLayout() {
         router.replace('/(tabs)');
       }
     },
-    [router, rootSegment, childSegment]
+    [router]
   );
 
   // ── Keep Supabase session refresh alive across backgrounding ─────────
