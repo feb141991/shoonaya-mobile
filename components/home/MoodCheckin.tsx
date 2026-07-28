@@ -3,10 +3,11 @@ import { Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { apiFetch } from '@/lib/api';
+import { apiFetch, isFetchCancelled } from '@/lib/api';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { findMoodConfig } from '@/lib/mood-registry';
 import { resolveNativeRoute } from '@/lib/routes';
+import { isGuestMode } from '@/lib/guestSession';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { IconTile } from '@/components/ui/IconTile';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
@@ -19,7 +20,16 @@ type CheckinResponse = {
   lastMood?: string | null;
 };
 
-export function MoodCheckin() {
+type MoodCheckinProps = {
+  // Guests get the same card (so the touchpoint is still visible/inviting),
+  // but tapping it should open the app's shared sign-in prompt instead of
+  // navigating to a page that 401s — mirrors Home's own hero "How are you
+  // feeling?" pill, which already does the same isGuest -> setAuthGateVisible
+  // check before navigating.
+  onGuestTap?: () => void;
+};
+
+export function MoodCheckin({ onGuestTap }: MoodCheckinProps) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const cardBg = 'transparent';
@@ -29,11 +39,22 @@ export function MoodCheckin() {
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const [status, setStatus] = useState<CheckinStatus>('loading');
+  const [isGuest, setIsGuest] = useState(false);
   const [hasLoggedMoodToday, setHasLoggedMoodToday] = useState(false);
   const [lastMood, setLastMood] = useState<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     setStatus('loading');
+    const guest = await isGuestMode();
+    setIsGuest(guest);
+    if (guest) {
+      // Skip the fetch entirely -- there's no session to check in with,
+      // and hitting the API just to get a 401 would show the wrong
+      // ("Couldn't load") error state for what's actually an expected,
+      // unauthenticated visitor.
+      setStatus('ready');
+      return;
+    }
     try {
       const response = await apiFetch('/api/mood/checkin');
       if (!response.ok) throw new Error(`Request failed (${response.status})`);
@@ -41,8 +62,8 @@ export function MoodCheckin() {
       setHasLoggedMoodToday(Boolean(payload.hasLoggedMoodToday));
       setLastMood(payload.lastMood ?? null);
       setStatus('ready');
-    } catch {
-      setStatus('error');
+    } catch (err) {
+      if (!isFetchCancelled(err)) setStatus('error');
     }
   }, []);
 
@@ -51,6 +72,10 @@ export function MoodCheckin() {
   }, [loadStatus]);
 
   const navigateToMood = () => {
+    if (isGuest && onGuestTap) {
+      onGuestTap();
+      return;
+    }
     router.push(resolveNativeRoute('/mood', '/(tabs)'));
   };
 

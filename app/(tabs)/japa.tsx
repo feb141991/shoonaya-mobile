@@ -26,6 +26,7 @@ import * as Haptics from 'expo-haptics';
 import { Screen } from '@/components/ui/Screen';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/components/ui/BackgroundParticles';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
@@ -417,94 +418,11 @@ function SelectableCard({
 
 // ── Practice-screen background animation — one distinct, theme-relevant
 // motion per scene (Midnight/Himalayan Dawn/Temple Lamp/River Ghat/Forest
-// Ashram/Cosmos), layered over the existing static LinearGradient. Pure RN
-// Animated (no new dependency), useNativeDriver throughout. Deterministic
-// per-particle placement/timing via a seeded pseudo-random helper, so
-// layout doesn't reshuffle on every re-render.
-function seededRandom(seed: number) {
-  const x = Math.sin(seed * 9973.1) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-type ParticleMotion = 'twinkle' | 'drift-up' | 'wave';
-
-function BackgroundParticle({
-  seed,
-  color,
-  size,
-  motion,
-  duration,
-}: {
-  seed: number;
-  color: string;
-  size: number;
-  motion: ParticleMotion;
-  duration: number;
-}) {
-  const opacity = useRef(new Animated.Value(seededRandom(seed) * 0.5 + 0.2)).current;
-  const translateY = useRef(new Animated.Value(motion === 'drift-up' ? 46 : 0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const left = `${(seededRandom(seed * 1.7) * 92 + 3).toFixed(1)}%` as `${number}%`;
-  const top = `${(seededRandom(seed * 2.3) * 88 + 4).toFixed(1)}%` as `${number}%`;
-
-  useEffect(() => {
-    const delay = seededRandom(seed * 3.1) * duration;
-    let loop: Animated.CompositeAnimation;
-
-    if (motion === 'twinkle') {
-      loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(opacity, { toValue: 0.9, duration: duration * 0.5, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 0.12, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        ])
-      );
-    } else if (motion === 'drift-up') {
-      loop = Animated.loop(
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(translateY, { toValue: -70, duration, delay, easing: Easing.linear, useNativeDriver: true }),
-            Animated.timing(translateY, { toValue: 46, duration: 0, useNativeDriver: true }),
-          ]),
-          Animated.sequence([
-            Animated.timing(translateX, { toValue: seededRandom(seed * 4.4) > 0.5 ? 8 : -8, duration: duration / 2, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-            Animated.timing(translateX, { toValue: 0, duration: duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          ]),
-          Animated.sequence([
-            Animated.timing(opacity, { toValue: 0.8, duration: duration * 0.25, delay, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(opacity, { toValue: 0, duration: duration * 0.75, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          ]),
-        ])
-      );
-    } else {
-      loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(translateX, { toValue: 14, duration: duration / 2, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(translateX, { toValue: -14, duration: duration / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        ])
-      );
-    }
-
-    loop.start();
-    return () => loop.stop();
-  }, [duration, motion, opacity, seed, translateX, translateY]);
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        left,
-        top,
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: color,
-        opacity,
-        transform: [{ translateY }, { translateX }],
-      }}
-    />
-  );
-}
+// Ashram/Cosmos), layered over the existing static LinearGradient.
+// seededRandom/BackgroundParticle now live in components/ui/BackgroundParticles.tsx
+// (imported above) so other screens can reuse the same atmospheric-bubble
+// primitive without duplicating this animation logic — app/mood.tsx's gold
+// particle field is the first other consumer.
 
 // Temple Lamp — an irregularly flickering warm glow near the top, mimicking
 // a diya flame (random-duration opacity/scale jitter rather than a smooth
