@@ -31,7 +31,12 @@ export type IconWellSize = keyof typeof ICON_WELL;
 // suffixes (15%/28%) are fixed so no call site invents its own opacity.
 export function iconWellColor(isDark: boolean, accent?: string) {
   if (accent) {
-    return { bg: `${accent}15`, border: `${accent}28` };
+    // Hex alpha suffixes are hex BYTES (00-ff), not literal percentages --
+    // "15"/"28" were meant to read as 15%/28% opacity (see the comment above)
+    // but actually only produced ~8%/~16%, faint enough that every accent
+    // color read as a plain white well instead of a tinted one. "26"/"47" are
+    // the correct hex bytes for 15%/28%.
+    return { bg: `${accent}26`, border: `${accent}47` };
   }
   return {
     bg: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,

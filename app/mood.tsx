@@ -599,7 +599,7 @@ export default function MoodScreen() {
                   styles.moodCard,
                   {
                     width: moodCardWidth,
-                    backgroundColor: theme.card,
+                    backgroundColor: theme.glass,
                     borderColor: `${mood.colour}30`,
                     boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                   },
@@ -764,7 +764,7 @@ export default function MoodScreen() {
                         styles.moodCard,
                         {
                           width: moodCardWidth,
-                          backgroundColor: theme.card,
+                          backgroundColor: theme.glass,
                           borderColor: theme.border,
                           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                         },
