@@ -15,10 +15,12 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { FloatingParticleField } from '@/components/ui/BackgroundParticles';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
@@ -100,6 +102,35 @@ const FEATURED_ITEMS = [
   { title: 'Sacred Kosh', desc: 'Look up a dharmic idea', href: '/kosh', icon: 'book-open' },
   { title: 'Pathshala', desc: 'Study with a calm lesson', href: '/(tabs)/pathshala', icon: 'layers' },
 ] as const;
+
+// Gold gradient wash + drifting gold bubbles — the same atmospheric-particle
+// language as Japa's practice screen (components/ui/BackgroundParticles.tsx,
+// extracted from japa.tsx's "Temple Lamp" scene), tuned calmer/sparser for a
+// reflective check-in screen rather than an active practice one. Rendered as
+// an absolutely-positioned layer behind each of this screen's states (loading/
+// error/done/main) so it reads as one consistent "app DNA" background rather
+// than a one-off treatment.
+function MoodBackground({ isDark }: { isDark: boolean }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <LinearGradient
+        colors={isDark
+          ? [COLORS.darkBg, 'rgba(197,160,89,0.10)', COLORS.darkBg]
+          : [COLORS.creamBg, 'rgba(216,138,28,0.08)', COLORS.creamBg]}
+        style={{ position: 'absolute', inset: 0 }}
+      />
+      <FloatingParticleField
+        count={14}
+        color={isDark ? 'rgba(197,160,89,0.8)' : 'rgba(216,138,28,0.75)'}
+        minSize={3}
+        maxSize={6.5}
+        motion="drift-up"
+        minDuration={4600}
+        maxDuration={8200}
+      />
+    </View>
+  );
+}
 
 export default function MoodScreen() {
   const router = useRouter();
@@ -394,6 +425,7 @@ export default function MoodScreen() {
   if (loading && step === 1) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
+        <MoodBackground isDark={isDark} />
         <View style={styles.headerRow}>
           {renderBackButton()}
         </View>
@@ -407,6 +439,7 @@ export default function MoodScreen() {
   if (initError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
+        <MoodBackground isDark={isDark} />
         <View style={styles.headerRow}>
           {renderBackButton()}
         </View>
@@ -437,6 +470,7 @@ export default function MoodScreen() {
   if (step === 4) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
+        <MoodBackground isDark={isDark} />
         <View style={styles.headerRow}>
           {renderBackButton()}
         </View>
@@ -489,6 +523,7 @@ export default function MoodScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
+      <MoodBackground isDark={isDark} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
           {renderBackButton(() => {
