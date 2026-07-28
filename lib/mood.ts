@@ -1,4 +1,4 @@
-import { apiFetch } from './api';
+import { apiFetch, isFetchCancelled } from './api';
 
 export interface MoodStatus {
   hasCompletedToday: boolean;
@@ -37,7 +37,7 @@ export async function fetchMoodStatus(): Promise<MoodStatus | null> {
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
-    console.error('Failed to fetch mood status', err);
+    if (!isFetchCancelled(err)) console.error('Failed to fetch mood status', err);
     return null;
   }
 }
@@ -65,7 +65,7 @@ export async function startMoodCheckin(
     const data = await res.json();
     return data.checkin_id;
   } catch (err) {
-    console.error('Failed to start mood checkin', err);
+    if (!isFetchCancelled(err)) console.error('Failed to start mood checkin', err);
     return null;
   }
 }
@@ -88,7 +88,7 @@ export async function fetchRecommendations(
     if (Array.isArray(data)) return data;
     return Array.isArray(data.recommendations) ? data.recommendations : [];
   } catch (err) {
-    console.error('Failed to fetch recommendations', err);
+    if (!isFetchCancelled(err)) console.error('Failed to fetch recommendations', err);
     return [];
   }
 }
@@ -105,7 +105,7 @@ export async function trackDiscoverAction(
     });
     return res.ok;
   } catch (err) {
-    console.error('Failed to track discover action', err);
+    if (!isFetchCancelled(err)) console.error('Failed to track discover action', err);
     return false;
   }
 }
@@ -128,7 +128,7 @@ export async function completeMoodSession(
     });
     return res.ok;
   } catch (err) {
-    console.error('Failed to complete mood session', err);
+    if (!isFetchCancelled(err)) console.error('Failed to complete mood session', err);
     return false;
   }
 }

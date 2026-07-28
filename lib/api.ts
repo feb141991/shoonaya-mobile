@@ -21,6 +21,21 @@ async function getApiAccessToken() {
   return cachedAccessToken;
 }
 
+// A cancelled request isn't a failure worth logging as an error — it's the
+// expected outcome of the screen that started it losing focus, backgrounding,
+// or unmounting before the native layer finished the round trip (iOS surfaces
+// this as `FetchRequestCanceledException` from Expo's own fetch module,
+// distinct from apiFetch's own 15s-timeout AbortError). Callers that catch
+// around apiFetch and log on failure should check this first and skip the
+// log for a cancellation, since it's a completely benign race, not a real
+// backend/network problem — logging it as an ERROR just creates noise (and,
+// in production, false alarms in whatever's watching console.error).
+export function isFetchCancelled(err: unknown): boolean {
+  if (err instanceof Error && err.name === 'AbortError') return true;
+  const message = err instanceof Error ? err.message : String(err);
+  return /cancel/i.test(message);
+}
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers ?? {});
   const accessToken = await getApiAccessToken();
