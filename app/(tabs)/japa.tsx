@@ -37,7 +37,6 @@ import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from '@/lib/traditions';
 import { getNityaRankProgress } from '@/lib/nitya-rank';
 import { getMalaVolumeMilestone } from '@/lib/mala-milestones';
@@ -60,8 +59,8 @@ import { spiritualDate } from '@/lib/spiritualDate';
 // JapaClient.tsx does) and richens the
 // completion celebration (ripple rings, glow, tradition subtitle line).
 // The in-practice "settings" icon still opens the lighter "Customize" sheet,
-// now trimmed to just Scene + Mantra audio (quick, non-interrupting tweaks)
-// since mala/mantra selection now has its own dedicated flow.
+// now trimmed to just Scene (a quick, non-interrupting tweak) since
+// mala/mantra selection now has its own dedicated flow.
 // Deliberately out of scope for this phase (tracked as follow-ups): the
 // ambient-sound "Sacred Sounds" sheet, and the ✨-gradient tradition accent
 // colour (native uses the app's one consistent `theme.brand` gold everywhere
@@ -102,7 +101,6 @@ const PRACTICE_RADIUS_X = 152;
 const PRACTICE_RADIUS_Y = 172;
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
-const MANTRA_AUDIO_KEY = 'shoonaya.japa.mantraAudio';
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
 const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
 const JAPA_CUSTOM_MANTRA_KEY = 'shoonaya.japa.customMantra';
@@ -810,8 +808,6 @@ export default function JapaScreen() {
   const [completionVisible, setCompletionVisible] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
   const [roundCelebrateVisible, setRoundCelebrateVisible] = useState(false);
-  const [mantraAudioEnabled, setMantraAudioEnabled] = useState(false);
-  const [mantraAudioLoading, setMantraAudioLoading] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [customMantraOpen, setCustomMantraOpen] = useState(false);
   const [selectedMalaId, setSelectedMalaId] = useState<string | null>(null);
@@ -934,22 +930,17 @@ export default function JapaScreen() {
   const volume = useMemo(() => getMalaVolumeMilestone(lifetime.totalBeads), [lifetime.totalBeads]);
   const fact = useMemo(() => pickDharmaFact(tradition), [tradition]);
 
-  const audioPlayer = useAudioPlayer();
-  const mantraAudioActive = useRef(false);
-
-  // Load saved local preferences (audio/mala/scene/custom mantra/target
-  // rounds/lifetime totals).
+  // Load saved local preferences (mala/scene/custom mantra/target rounds/
+  // lifetime totals).
   useEffect(() => {
     Promise.all([
-      AsyncStorage.getItem(MANTRA_AUDIO_KEY),
       AsyncStorage.getItem(JAPA_MALA_KEY),
       AsyncStorage.getItem(JAPA_SCENE_KEY),
       AsyncStorage.getItem(JAPA_CUSTOM_MANTRA_KEY),
       AsyncStorage.getItem(JAPA_TARGET_ROUNDS_KEY),
       AsyncStorage.getItem(JAPA_LIFETIME_KEY),
     ])
-      .then(([audio, malaId, sceneId, customText, rounds, lifetimeRaw]) => {
-        if (audio === 'true') setMantraAudioEnabled(true);
+      .then(([malaId, sceneId, customText, rounds, lifetimeRaw]) => {
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
@@ -1071,62 +1062,6 @@ export default function JapaScreen() {
       .finally(() => setCompletionInsightLoading(false));
   }, [completionStats, completionVisible, tradition]);
 
-  // ── Mantra background audio ───────────────────────────────────────
-  const startMantraAudio = useCallback(async () => {
-    if (mantraAudioLoading || mantraAudioActive.current) return;
-    setMantraAudioLoading(true);
-    try {
-      // Real route is POST /api/tts (there is no /api/tts/generate), and it
-      // returns base64 audio bytes in `audioContent`, not a URL — wrap it in
-      // a data URI for the audio player instead of looking for url/audioUrl.
-      const response = await apiFetch('/api/tts', {
-        method: 'POST',
-        body: JSON.stringify({ text: mantra.label }),
-      });
-      if (!response.ok) throw new Error('tts-failed');
-      const data = (await response.json()) as { audioContent?: string };
-      if (!data.audioContent) throw new Error('tts-no-audio');
-      const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
-      await audioPlayer.loadAndPlay(audioUrl, true); // loop = true
-      mantraAudioActive.current = true;
-    } catch {
-      // Graceful offline fallback — audio unavailable, continue counting silently
-    } finally {
-      setMantraAudioLoading(false);
-    }
-  }, [audioPlayer, mantra.label, mantraAudioLoading]);
-
-  const stopMantraAudio = useCallback(async () => {
-    mantraAudioActive.current = false;
-    await audioPlayer.stop();
-  }, [audioPlayer]);
-
-  // Toggle mantra audio preference
-  const toggleMantraAudio = useCallback(async () => {
-    const next = !mantraAudioEnabled;
-    setMantraAudioEnabled(next);
-    void AsyncStorage.setItem(MANTRA_AUDIO_KEY, String(next));
-
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
-
-    if (next && count > 0 && count < 108) {
-      await startMantraAudio();
-    } else if (!next) {
-      await stopMantraAudio();
-    }
-  }, [count, mantraAudioEnabled, startMantraAudio, stopMantraAudio]);
-
-  // Start/stop audio when mantra changes and audio is enabled
-  useEffect(() => {
-    if (mantraAudioEnabled && mantraAudioActive.current) {
-      mantraAudioActive.current = false;
-      void audioPlayer.stop().then(() => { void startMantraAudio(); });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mantraIndex]);
-
   const completeRound = useCallback(async () => {
     setSaving(true);
     const nextRounds = completedRounds + 1;
@@ -1145,9 +1080,6 @@ export default function JapaScreen() {
       message: goalComplete ? `${targetRounds} mala complete` : `Mala ${nextRounds} of ${targetRounds} complete`,
     });
     triggerRoundCelebration();
-
-    // Stop mantra loop on round complete
-    await stopMantraAudio();
 
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -1210,7 +1142,7 @@ export default function JapaScreen() {
 
     setSaving(false);
     await loadContext();
-  }, [activeSymbolId, completedRounds, isGuest, loadContext, mantra.label, practiceType, sessionStartTime, stopMantraAudio, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
+  }, [activeSymbolId, completedRounds, isGuest, loadContext, mantra.label, practiceType, sessionStartTime, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
 
   useEffect(() => {
     if (!completionVisible) return;
@@ -1248,15 +1180,10 @@ export default function JapaScreen() {
       // used precisely to stay stable across renders).
       triggerBloom(current >= 108 ? 107 : current);
 
-      // Start audio on first bead if enabled
-      if (next === 1 && mantraAudioEnabled && !mantraAudioActive.current) {
-        void startMantraAudio();
-      }
-
       triggerTapMotion();
       return next;
     });
-  }, [completedRounds, count, mantraAudioEnabled, saving, sessionStartTime, startMantraAudio, triggerBloom, triggerTapMotion]);
+  }, [completedRounds, count, saving, sessionStartTime, triggerBloom, triggerTapMotion]);
 
   useEffect(() => {
     if (count === 108 && !saving) {
@@ -2572,59 +2499,6 @@ export default function JapaScreen() {
                     );
                   })}
                 </View>
-              </View>
-
-              <View style={{ gap: 10 }}>
-                <Text style={{ ...TYPE.section, color: theme.brand }}>Mantra audio</Text>
-                <PressableSurface
-                  haptic="selection"
-                  onPress={() => { void toggleMantraAudio(); }}
-                  style={{
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: mantraAudioEnabled ? theme.brand : theme.premiumBorder,
-                    backgroundColor: cardBg,
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    minHeight: MIN_TOUCH_TARGET,
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                  }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 17,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: mantraAudioEnabled ? theme.brandSoft : (isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight),
-                        borderWidth: 1,
-                        borderColor: mantraAudioEnabled ? theme.brand : theme.premiumBorder,
-                      }}
-                    >
-                      <Feather name={mantraAudioEnabled ? 'volume-2' : 'volume-x'} size={16} color={theme.brand} />
-                    </View>
-                    <Text style={{ ...TYPE.label, color: text }}>Spoken mantra loop</Text>
-                  </View>
-                  <View
-                    style={{
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: mantraAudioEnabled ? theme.brand : theme.premiumBorder,
-                      backgroundColor: mantraAudioEnabled ? theme.brandSoft : 'transparent',
-                      paddingHorizontal: 10,
-                      paddingVertical: 5,
-                    }}
-                  >
-                    <Text style={{ ...TYPE.caption, color: mantraAudioEnabled ? theme.brand : dim }}>
-                      {mantraAudioEnabled ? 'On' : 'Off'}
-                    </Text>
-                  </View>
-                </PressableSurface>
               </View>
             </ScrollView>
             <PressableSurface
