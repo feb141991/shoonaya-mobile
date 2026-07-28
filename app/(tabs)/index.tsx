@@ -31,6 +31,7 @@ import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { MoodCheckin } from '@/components/home/MoodCheckin';
+import { MoodPulseSheet } from '@/components/home/MoodPulseSheet';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
 import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { GreetingPicker } from '@/components/home/GreetingPicker';
@@ -46,6 +47,7 @@ import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { isGuestMode } from '@/lib/guestSession';
 import { getHeroPick, type HeroPick } from '@/lib/heroPreference';
+import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -572,6 +574,7 @@ function HomeContent() {
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [moodStatus, setMoodStatus] = useState<HomeLiveMoodStatus | null>(null);
+  const [moodPulseVisible, setMoodPulseVisible] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
@@ -846,6 +849,25 @@ function HomeContent() {
       };
     }, [])
   );
+
+  // Native port of the PWA's auto-popping mood check-in (MoodPulse.tsx):
+  // once per spiritual day, the first time Home has real mood status to
+  // show, pop the sheet open unprompted rather than waiting for a tap on
+  // the passive MoodCheckin card below. Re-checks the AsyncStorage
+  // dismissed-date on every fire (not just once) so it stays correctly
+  // closed after Done/dismiss even though those actions replace
+  // `moodStatus` with a new object and re-trigger this effect -- same
+  // re-entrancy the PWA's own effect relies on.
+  useEffect(() => {
+    if (isGuest || !moodStatus) return;
+    let cancelled = false;
+    getMoodPulseDismissedDate().then((dismissedOn) => {
+      if (!cancelled && dismissedOn !== getMoodSpiritualDate()) setMoodPulseVisible(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [moodStatus, isGuest]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -1614,6 +1636,13 @@ function HomeContent() {
         onClose={() => setAuthGateVisible(false)}
         title="Check in with your mood"
         message="Sign in to save your sadhana and track your mood patterns."
+      />
+      <MoodPulseSheet
+        visible={moodPulseVisible}
+        moodStatus={moodStatus}
+        firstName={state.profile.firstName}
+        onClose={() => setMoodPulseVisible(false)}
+        onLogged={(mood) => setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood })}
       />
       <FloatingDharmaScroll
         onOpenChat={(origin) => {
