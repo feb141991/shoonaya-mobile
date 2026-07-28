@@ -430,42 +430,89 @@ export function filterMemberRows(members: MemberRow[], state: SafetyState): Memb
 // mandali_connections; every state change is logged server-side
 // (user_activity_log) and notified via DB trigger, not from here.
 
-export async function fetchConnectionStatus(userId: string, otherId: string): Promise<ConnectionStatus> {
-  const { data } = await supabase
+// Shared by fetchConnectionStatus and sendConnectionRequest's conflict
+// resolution below — both need the one row (if any) linking these two
+// users, regardless of which direction it was created in. Since
+// mandali_connections_unique_pair_symmetric guarantees at most one row can
+// ever exist for a given pair, .maybeSingle() genuinely can't see more
+// than one row going forward; a "multiple rows" error here would mean the
+// DB constraint itself is missing, not a normal runtime condition, so it's
+// left to throw and surface loudly rather than being papered over.
+async function fetchConnectionRow(
+  userId: string,
+  otherId: string
+): Promise<{ id: string; requester_id: string; recipient_id: string; status: 'pending' | 'accepted' | 'rejected' } | null> {
+  const { data, error } = await supabase
     .from('mandali_connections')
-    .select('requester_id, status')
+    .select('id, requester_id, recipient_id, status')
     .or(`and(requester_id.eq.${userId},recipient_id.eq.${otherId}),and(requester_id.eq.${otherId},recipient_id.eq.${userId})`)
     .maybeSingle();
-  if (!data || data.status === 'rejected') return 'none';
-  if (data.status === 'accepted') return 'connected';
-  return data.requester_id === userId ? 'pending_sent' : 'pending_received';
+  if (error) throw error;
+  return data;
 }
 
-// Plain insert, falling back to reopening an existing row (most likely a
-// previously rejected request — the unique (requester_id, recipient_id)
-// constraint means a fresh insert can't coexist with it) rather than
-// failing outright. Note: reopening this way doesn't re-fire the "wants to
-// connect" notification (the trigger only notifies on a genuinely new
-// INSERT or a transition to accepted/rejected) — an accepted gap for now.
+export async function fetchConnectionStatus(userId: string, otherId: string): Promise<ConnectionStatus> {
+  const row = await fetchConnectionRow(userId, otherId);
+  if (!row || row.status === 'rejected') return 'none';
+  if (row.status === 'accepted') return 'connected';
+  return row.requester_id === userId ? 'pending_sent' : 'pending_received';
+}
+
+// Plain insert first (the common case: no row exists yet for this pair).
+// On a unique-violation, the symmetric constraint means exactly one row
+// already links these two users — in either direction — so look it up and
+// decide what a "Connect" tap should do given its actual state, instead of
+// blindly reopening (which only ever matched the exact same direction and
+// silently no-op'd whenever the conflict was actually caused by the other
+// direction's row):
+//   - already accepted/pending in either direction → nothing to do, the
+//     two are already connected or a request is already outstanding.
+//   - the OTHER party already has a pending request in to this requester
+//     → both people tried to connect at the same time; auto-accept theirs
+//     rather than erroring or silently dropping the tap.
+//   - previously rejected → reopen as a fresh pending request in the
+//     *current* direction (requesterId/recipientId here), giving the
+//     other party another chance to decide. Note: reopening this way
+//     doesn't re-fire the "wants to connect" push (the trigger only
+//     notifies on a genuinely new INSERT or a transition to
+//     accepted/rejected) — an accepted gap for now.
 export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<void> {
   const { data, error } = await supabase
     .from('mandali_connections')
     .insert({ requester_id: requesterId, recipient_id: recipientId })
     .select('id')
     .single();
-  if (error) {
-    if (error.code === '23505') {
-      const { error: reopenError } = await supabase
-        .from('mandali_connections')
-        .update({ status: 'pending', updated_at: new Date().toISOString() })
-        .eq('requester_id', requesterId)
-        .eq('recipient_id', recipientId);
-      if (reopenError) throw reopenError;
-      return;
-    }
-    throw error;
+  if (!error) {
+    triggerPush(`connection_request:${data.id}`);
+    return;
   }
-  triggerPush(`connection_request:${data.id}`);
+  if (error.code !== '23505') throw error;
+
+  const existing = await fetchConnectionRow(requesterId, recipientId);
+  if (!existing) throw error; // conflict raced with a delete — surface the original error
+
+  if (existing.status === 'accepted') return; // already connected, nothing to do
+
+  if (existing.status === 'pending') {
+    if (existing.requester_id === recipientId) {
+      // The other party already asked to connect first — both sides want
+      // this, so accept their request instead of leaving it hanging.
+      await respondToConnectionRequest(existing.id, 'accepted');
+    }
+    // else: this requester's own request is already pending — nothing to do.
+    return;
+  }
+
+  // existing.status === 'rejected' — reopen as a fresh pending request in
+  // *this* direction, which may differ from the row's original direction
+  // (e.g. the other party asked first and was rejected by this user; this
+  // user now asking them back should read as a new request from them, not
+  // a resurrection of the one they declined).
+  const { error: reopenError } = await supabase
+    .from('mandali_connections')
+    .update({ requester_id: requesterId, recipient_id: recipientId, status: 'pending', updated_at: new Date().toISOString() })
+    .eq('id', existing.id);
+  if (reopenError) throw reopenError;
 }
 
 export async function cancelConnectionRequest(requesterId: string, recipientId: string): Promise<void> {
@@ -474,6 +521,7 @@ export async function cancelConnectionRequest(requesterId: string, recipientId: 
     .delete()
     .eq('requester_id', requesterId)
     .eq('recipient_id', recipientId)
+    .eq('status', 'pending')
     .select('id')
     .maybeSingle();
   if (error) throw error;
@@ -481,9 +529,18 @@ export async function cancelConnectionRequest(requesterId: string, recipientId: 
 }
 
 export async function respondToConnectionRequest(requestId: string, status: 'accepted' | 'rejected'): Promise<void> {
-  const { error } = await supabase.from('mandali_connections').update({ status }).eq('id', requestId);
+  // Guarded on the row still being pending so a double-tap, or responding
+  // to a request that was already accepted/rejected/cancelled elsewhere in
+  // the meantime, can't silently flip an already-decided connection.
+  const { data, error } = await supabase
+    .from('mandali_connections')
+    .update({ status })
+    .eq('id', requestId)
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
-  triggerPush(`connection_${status}:${requestId}`);
+  if (data) triggerPush(`connection_${status}:${requestId}`);
 }
 
 export async function fetchPendingConnectionRequests(userId: string): Promise<ConnectionRequestRow[]> {
