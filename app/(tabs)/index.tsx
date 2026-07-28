@@ -17,7 +17,6 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
-import { fetchMoodStatus, type MoodStatus } from '@/lib/mood';
 import { findMoodConfig } from '@/lib/mood-registry';
 
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -260,6 +259,37 @@ type HomeSummary = {
   // rather than re-derived from a second, native-only heuristic.
   firstWeek: boolean;
 };
+
+// The subset of lib/mood.ts's MoodStatus that Home's own "Feeling X" pill
+// actually reads (hasLoggedMoodToday/lastMood) -- Home never needed the
+// full check-in shape (openSession, hasDismissedToday, ...), only mood.tsx
+// does, so this stays local rather than importing the wider type.
+type HomeLiveMoodStatus = {
+  hasLoggedMoodToday: boolean;
+  lastMood: string | null;
+};
+
+type HomeLiveResponse = {
+  unreadNotifications?: number;
+  moodStatus?: HomeLiveMoodStatus;
+};
+
+// Batches the bell badge count and mood check-in status into one round
+// trip via /api/native/home-live instead of two independent fetches (one
+// hitting Supabase directly for the count, one hitting /api/mood/checkin) --
+// both get polled on every Home focus and after pull-to-refresh, so there's
+// no reason for them to be separate requests. Best-effort: a failed fetch
+// just means the badge/pill don't update this round, matching the
+// individual calls' own best-effort behavior.
+async function fetchHomeLive(): Promise<HomeLiveResponse> {
+  try {
+    const response = await apiFetch('/api/native/home-live?fields=unreadNotifications,moodStatus');
+    if (!response.ok) return {};
+    return (await response.json()) as HomeLiveResponse;
+  } catch {
+    return {};
+  }
+}
 
 const HERO_READABILITY_HEIGHT = 242;
 
@@ -541,7 +571,7 @@ function HomeContent() {
   const [loadError, setLoadError] = useState(false);
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [moodStatus, setMoodStatus] = useState<MoodStatus | null>(null);
+  const [moodStatus, setMoodStatus] = useState<HomeLiveMoodStatus | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
@@ -803,8 +833,10 @@ function HomeContent() {
           setMoodStatus(null);
           return;
         }
-        void getMyUnreadNotificationCount().then(setUnreadNotifications);
-        void fetchMoodStatus().then(setMoodStatus);
+        void fetchHomeLive().then((live) => {
+          if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
+          if (live.moodStatus) setMoodStatus(live.moodStatus);
+        });
         unsubscribe = subscribeToMyNotifications(() => {
           void getMyUnreadNotificationCount().then(setUnreadNotifications);
         });
@@ -824,8 +856,10 @@ function HomeContent() {
     }
     const guest = await isGuestMode();
     if (!guest) {
-      void getMyUnreadNotificationCount().then(setUnreadNotifications);
-      void fetchMoodStatus().then(setMoodStatus);
+      void fetchHomeLive().then((live) => {
+        if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
+        if (live.moodStatus) setMoodStatus(live.moodStatus);
+      });
     } else {
       setUnreadNotifications(0);
       setMoodStatus(null);
