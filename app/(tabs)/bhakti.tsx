@@ -196,7 +196,7 @@ export default function BhaktiScreen() {
         <LinearGradient
           colors={isDark
             ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
-            : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+            : [COLORS.homeRaisedLight, COLORS.homeHeroLight, COLORS.cardBgLight]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}

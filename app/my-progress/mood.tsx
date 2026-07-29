@@ -10,7 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 
 // Mirrors MoodInsightMetrics returned by GET /api/mood/insights/{weekly,monthly}
@@ -73,20 +73,22 @@ export default function MoodInsightsScreen() {
   function StatBox({ icon, label, value, color }: { icon: React.ComponentProps<typeof Feather>['name']; label: string; value: string | number; color: string }) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 16, padding: 16 }}>
-        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}1A`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}33`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
           <Feather name={icon} size={16} color={color} />
         </View>
-        <Text style={{ fontSize: 24, fontFamily: FONTS.serifBold, color: theme.text, marginBottom: 4 }}>{value}</Text>
-        <Text style={{ fontSize: 11, fontFamily: FONTS.sans, color: theme.dim }}>{label}</Text>
+        <Text style={{ ...TYPE.metric, color: theme.text, marginBottom: 4 }}>{value}</Text>
+        <Text style={{ ...TYPE.caption, color: theme.dim }}>{label}</Text>
       </View>
     );
   }
 
   return (
-    <Screen 
+    <Screen
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
       header={{ title: 'Mood Insights', onBack: () => router.back() }}
     >
+      <View pointerEvents="none" style={{ position: 'absolute', top: 70, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
+      <View pointerEvents="none" style={{ position: 'absolute', top: 360, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         {/* Toggle */}
@@ -129,7 +131,7 @@ export default function MoodInsightsScreen() {
             }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
                 <Feather name="moon" size={16} color={theme.brand} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1 }}>Divine Reflection</Text>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: theme.brand }}>Divine Reflection</Text>
               </View>
               <Text style={{ fontFamily: FONTS.serif, fontSize: 15, color: theme.text, lineHeight: 24 }}>
                 {aiReflection || "Your journey is unique. Keep logging your daily moods to unlock deeper spiritual reflections."}
@@ -149,7 +151,7 @@ export default function MoodInsightsScreen() {
             {/* Preferred Actions */}
             {metrics?.preferredActions && metrics.preferredActions.length > 0 && (
               <View style={{ backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 24, padding: 20, marginTop: 12 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Top Actions</Text>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: theme.dim, marginBottom: 16 }}>Top Actions</Text>
                 <View style={{ gap: 12 }}>
                   {metrics.preferredActions.map((item, idx: number) => (
                     <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
