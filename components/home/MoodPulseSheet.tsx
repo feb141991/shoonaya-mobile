@@ -30,10 +30,11 @@ type MoodPulseSheetProps = {
 // app/(tabs)/index.tsx), this component owns the picker UI and the actual
 // /api/mood/checkin calls once a mood is picked.
 //
-// Presented as a bottom sheet (RN Modal + slide, matching every other sheet
-// in this app -- japa.tsx's Customize sheet, nitya-plans.tsx's Plan Details
-// modal) rather than PWA's centered dialog -- same "interrupt once a day"
-// behavior, more native-feeling presentation.
+// Presented as a centered dialog (RN Modal + fade, backdrop scrim, fully
+// rounded card) matching the PWA's actual layout (fixed inset-0 flex
+// items-center justify-center, rounded-3xl card) rather than this app's
+// usual bottom-sheet idiom -- explicit PWA-parity request, not the
+// bottom-sheet alternative this component started out as.
 //
 // One deliberate deviation from the PWA source: PWA only renders its close
 // (X) button when `!hasCompleted`, and its "already logged today" pill only
@@ -118,24 +119,35 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
   };
 
   return (
-    <Modal transparent visible={visible} animationType={reducedMotion ? 'none' : 'slide'} onRequestClose={handleDismiss}>
-      <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
-        <View
+    <Modal transparent visible={visible} animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={handleDismiss}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: COLORS.bottomSheetScrim,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+          paddingVertical: 32,
+        }}
+      >
+        <Animated.View
           style={{
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
+            width: '100%',
+            maxWidth: 420,
+            borderRadius: 28,
             backgroundColor: theme.card,
             borderWidth: 1,
             borderColor: theme.border,
             padding: 22,
             gap: 16,
             boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
+            opacity: contentAnim,
+            transform: [
+              { translateY: contentAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) },
+              { scale: contentAnim.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
+            ],
           }}
         >
-          <View style={{ alignItems: 'center' }}>
-            <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: theme.border }} />
-          </View>
-
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={{ ...TYPE.chip, letterSpacing: 1.3, textTransform: 'uppercase', color: theme.brand }}>
@@ -163,12 +175,7 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
             </Pressable>
           </View>
 
-          <Animated.View
-            style={{
-              opacity: contentAnim,
-              transform: [{ translateY: contentAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
-            }}
-          >
+          <View>
             {showAlreadyLogged && alreadyLoggedMood ? (
               <Pressable
                 onPress={handleExploreCompleted}
@@ -229,9 +236,9 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 10,
+                            gap: 8,
                             minHeight: MIN_TOUCH_TARGET,
-                            paddingHorizontal: 12,
+                            paddingHorizontal: 10,
                             borderRadius: 16,
                             backgroundColor: isSelected ? mood.bg : theme.cardSoft,
                             borderWidth: isSelected ? 1.5 : 1,
@@ -254,13 +261,13 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
                           </View>
                           <Text
                             style={{
-                              ...TYPE.label,
+                              fontFamily: FONTS.sansSemiBold,
+                              fontSize: 12,
+                              lineHeight: 15,
                               color: isSelected ? mood.colour : theme.text,
                               flexShrink: 1,
                             }}
                             numberOfLines={1}
-                            adjustsFontSizeToFit
-                            minimumFontScale={0.85}
                           >
                             {mood.label}
                           </Text>
@@ -316,8 +323,8 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
                 ) : null}
               </>
             )}
-          </Animated.View>
-        </View>
+          </View>
+        </Animated.View>
       </View>
     </Modal>
   );

@@ -30,7 +30,6 @@ import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
-import { MoodCheckin } from '@/components/home/MoodCheckin';
 import { MoodPulseSheet } from '@/components/home/MoodPulseSheet';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
 import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
@@ -1474,13 +1473,6 @@ function HomeContent() {
               so a check-in made on the full /sankalpa screen shows up here
               without an app restart. See components/home/SankalpaCard.tsx. */}
           <SankalpaCard />
-
-          {/* Self-contained: fetches its own today's-mood status via
-              /api/mood/checkin and shows either the "How are you feeling?"
-              prompt or today's logged mood. Built in an earlier session but
-              never actually rendered anywhere -- this is the fix for that.
-              See components/home/MoodCheckin.tsx. */}
-          <MoodCheckin onGuestTap={() => setAuthGateVisible(true)} />
 
           <Pressable
             accessibilityRole="button"

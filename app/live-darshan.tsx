@@ -10,7 +10,7 @@ import { MotionView } from '@/components/ui/Motion';
 import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
-import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
 import {
   fetchLiveDarshanStreams,
   youtubeThumbnailUrl,
@@ -108,7 +108,7 @@ function LiveDarshanContent() {
         <BackButton variant="glass" />
 
         <View>
-          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Live Darshan</Text>
+          <Text style={{ ...TYPE.screenTitle, color: text }}>Live Darshan</Text>
           <Text style={{ marginTop: 4, fontFamily: FONTS.sans, fontSize: 14, color: dim }}>
             Watch from sacred places, live on YouTube
           </Text>
@@ -200,7 +200,7 @@ function LiveDarshanContent() {
                         width: 34,
                         height: 34,
                         borderRadius: 17,
-                        backgroundColor: 'rgba(0,0,0,0.55)',
+                        backgroundColor: brand,
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
