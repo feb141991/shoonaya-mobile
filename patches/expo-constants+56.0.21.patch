@@ -1,0 +1,23 @@
+diff --git a/node_modules/expo-constants/ios/EXConstants.podspec b/node_modules/expo-constants/ios/EXConstants.podspec
+index c4f3b6b..4baaedd 100644
+--- a/node_modules/expo-constants/ios/EXConstants.podspec
++++ b/node_modules/expo-constants/ios/EXConstants.podspec
+@@ -35,9 +35,17 @@ Pod::Spec.new do |s|
+   end
+ 
+   env_vars = ENV['PROJECT_ROOT'] ? "PROJECT_ROOT=#{ENV['PROJECT_ROOT']} " : ""
++  # `bash -l -c "$PATH"` makes bash *parse* $PATH as shell source, so a
++  # project path containing shell-special characters (parentheses, etc.)
++  # fails with "syntax error near unexpected token" instead of just running
++  # the script. `bash -l "$PATH"` runs $PATH as a script file directly --
++  # no re-parsing of the path string itself -- which is what was actually
++  # intended here. The env-var prefix still works the same way as a plain
++  # POSIX `VAR=val command` prefix, just ahead of `bash` instead of inside
++  # the (removed) -c string.
+   script_phase = {
+     :name => 'Generate app.config for prebuilt Constants.manifest',
+-    :script => "bash -l -c \"#{env_vars}$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\"",
++    :script => "#{env_vars}bash -l \"$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\"",
+     :execution_position => :before_compile
+   }
+   # :always_out_of_date is only available in CocoaPods 1.13.0 and later
