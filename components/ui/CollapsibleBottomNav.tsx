@@ -165,7 +165,6 @@ export function CollapsibleBottomNav() {
             '/nitya-dincharya',
             '/nitya-plans',
             '/nitya-ashrama',
-            '/mantras',
           ]),
         isCenter: true,
         renderIcon: (color, size) => <Feather name="star" color={color} size={size} />,

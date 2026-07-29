@@ -61,10 +61,16 @@ type FeatherCard = {
 type BhaktiCard = TileCard | FeatherCard;
 
 // Order mirrors PWA's CONTENT_CARDS exactly (tradition-specific kathas →
-// hymns/chants → universal katha content → Japa Mala → Mantras → Sattvic
-// Mode), with Dharm Veer and Vrat appended at the end — native-only
-// additions not present in PWA's Bhakti grid, kept per explicit product
-// instruction rather than dropped for strict parity.
+// hymns/chants → universal katha content → Japa Mala → Sattvic Mode), with
+// Dharm Veer and Vrat appended at the end — native-only additions not
+// present in PWA's Bhakti grid, kept per explicit product instruction
+// rather than dropped for strict parity.
+//
+// The standalone "Mantras" card (a browsable mantra library at /mantras,
+// distinct from Japa Mala's own mantra-selection step below) is paused,
+// not shipped in current plans — its entry point was removed here and
+// from CollapsibleBottomNav's /bhakti tab-match list. app/mantras.tsx
+// itself is left in place, unlinked, in case this gets picked back up.
 const CONTENT_CARDS: BhaktiCard[] = [
   { kind: 'feather', id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', href: '/bhakti/katha?view=puranic' as Href, traditions: ['hindu'] },
   { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', href: '/bhakti/katha?view=bani' as Href, traditions: ['sikh'] },
@@ -75,7 +81,6 @@ const CONTENT_CARDS: BhaktiCard[] = [
   { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850', href: '/bhakti/katha?view=panchatantra' as Href },
   { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: '/bhakti/katha?view=heroes' as Href },
   { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/bhakti/mala' as Href },
-  { kind: 'feather', id: 'mantras', icon: 'mic', title: 'Mantras', description: 'Chants & sacred recitations', accent: COLORS.brandGold, href: '/mantras' as Href },
   { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: '/bhakti/zen' as Href },
   { kind: 'tile', id: 'dharmveer', fallbackGlyph: 'shield', title: 'Dharm Veer', description: 'Stories of dharmic courage', href: '/dharm-veer' },
   { kind: 'tile', id: 'vrat', fallbackGlyph: 'moon', title: 'Vrat', description: 'Observances & fasting days', href: '/vrat' },
