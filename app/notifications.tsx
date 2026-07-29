@@ -11,6 +11,7 @@ import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import {
+  clearNotifications,
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -142,6 +143,7 @@ export default function NotificationsScreen() {
   const [isGuest, setIsGuest] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
 
   const theme = useMemo(
     () => ({
@@ -259,6 +261,42 @@ export default function NotificationsScreen() {
     }
   }, [load, notifications]);
 
+  const handleClearAll = useCallback(() => {
+    if (notifications.length === 0 || clearingAll) return;
+
+    Alert.alert(
+      'Clear notifications?',
+      'This removes all messages from your notification bell. New reminders will still appear here.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            setClearingAll(true);
+            const previous = notifications;
+            setNotifications([]);
+            clearNotifications()
+              .then(async () => {
+                try {
+                  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                } catch {}
+              })
+              .catch((err) => {
+                setNotifications(previous);
+                Alert.alert(
+                  'Could not clear notifications',
+                  err instanceof Error ? err.message : 'Check your connection and try again.'
+                );
+              })
+              .finally(() => setClearingAll(false));
+          },
+        },
+      ]
+    );
+  }, [clearingAll, notifications]);
+
+
   const handleSendTest = useCallback(async () => {
     setSendingTest(true);
     try {
@@ -337,22 +375,39 @@ export default function NotificationsScreen() {
             ) : null}
           </View>
 
-          {unreadCount > 0 ? (
-            <PressableSurface
-              haptic="selection"
-              onPress={() => {
-                void handleMarkAllRead();
-              }}
-              disabled={markingAll}
-              accessibilityLabel="Mark all read"
-              hitSlop={8}
-              style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
-            >
-              <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-                Mark all read
-              </Text>
-            </PressableSurface>
-          ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {unreadCount > 0 ? (
+              <PressableSurface
+                haptic="selection"
+                onPress={() => {
+                  void handleMarkAllRead();
+                }}
+                disabled={markingAll}
+                accessibilityLabel="Mark all read"
+                hitSlop={8}
+                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+              >
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                  Mark read
+                </Text>
+              </PressableSurface>
+            ) : null}
+
+            {notifications.length > 0 ? (
+              <PressableSurface
+                haptic="selection"
+                onPress={handleClearAll}
+                disabled={clearingAll}
+                accessibilityLabel="Clear notifications"
+                hitSlop={8}
+                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+              >
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                  {clearingAll ? 'Clearing...' : 'Clear'}
+                </Text>
+              </PressableSurface>
+            ) : null}
+          </View>
         </View>
     </View>
   );

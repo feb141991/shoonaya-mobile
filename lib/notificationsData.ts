@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api';
 
 // Native's in-app notification data layer — ported to match the web app's
 // own contract exactly (confirmed by direct read of
@@ -80,6 +81,22 @@ export async function markAllNotificationsRead(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
   const { error } = await supabase.from('notifications').update({ read: true }).in('id', ids);
   if (error) throw error;
+}
+
+export async function clearNotifications(): Promise<number> {
+  const response = await apiFetch('/api/notifications/clear', { method: 'POST' });
+  let payload: { cleared?: number; error?: string } | null = null;
+  try {
+    payload = (await response.json()) as { cleared?: number; error?: string };
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? `Clear notifications failed (${response.status})`);
+  }
+
+  return payload?.cleared ?? 0;
 }
 
 // Realtime subscription for live inbox updates while the notifications
