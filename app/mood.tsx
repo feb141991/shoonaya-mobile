@@ -373,6 +373,41 @@ export default function MoodScreen() {
     );
   };
 
+  // Full-width row variant for the main step-3 recommendations list — gold
+  // led (theme.brand), not mood-tinted, so this page reads as the same
+  // "app DNA" gold used across Home (Begin Japa, Begin Today's Sadhana,
+  // IconTile wells) rather than turning purple/blue/etc. depending on which
+  // mood was picked. The compact horizontal-rail card above (used only by
+  // the separate "how do you feel now?" return flow) is left as-is.
+  const renderRecommendationRow = (rec: Recommendation, index: number) => {
+    const icon = RECOMMENDATION_ICON[rec.type] ?? 'sparkles';
+    const time = rec.duration ?? RECOMMENDATION_TIME[rec.type] ?? '5 min';
+
+    return (
+      <MotionView key={`${rec.id}-${index}`} animationKey={`rec-${rec.id}`} delay={80 + index * 60} distance={10}>
+        <PressableSurface haptic="selection" accessibilityLabel={`Open ${rec.title}`} onPress={() => handleRecClick(rec)}>
+          <Card tone="auto" style={styles.timeCard}>
+            <View style={[styles.pathIcon, { width: 40, height: 40, borderRadius: 20, marginBottom: 0, marginRight: SPACING.lg, backgroundColor: `${theme.brand}26`, borderColor: `${theme.brand}47` }]}>
+              <Feather name={icon} size={18} color={theme.brand} />
+            </View>
+            <View style={styles.timeTextContainer}>
+              <Text style={[styles.timeTitle, { color: theme.text }]} numberOfLines={1}>
+                {rec.title}
+              </Text>
+              <Text style={[styles.timeDesc, { color: theme.dim }]} numberOfLines={1}>
+                {rec.description}
+              </Text>
+            </View>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, textTransform: 'uppercase', letterSpacing: 0.6, marginRight: SPACING.md }}>
+              {time}
+            </Text>
+            <Feather name="chevron-right" size={17} color={theme.dim} />
+          </Card>
+        </PressableSurface>
+      </MotionView>
+    );
+  };
+
   const renderBackButton = (onPress?: () => void) => (
     <Pressable
       accessibilityLabel="Go back"
@@ -824,29 +859,33 @@ export default function MoodScreen() {
               </Text>
             ) : (
               <>
-                <View style={styles.pathIntro}>
-                  {selectedMood ? (
-                    <View style={[styles.glyphContainer, { backgroundColor: selectedMood.bg, width: 46, height: 46, borderRadius: 23, marginBottom: 0 }]}>
-                      <MoodGlyph mood={selectedMood.key} color={selectedMood.colour} size={23} />
+                <MotionView animationKey="path-intro" distance={10}>
+                  <View style={styles.pathIntro}>
+                    {selectedMood ? (
+                      <View style={[styles.glyphContainer, { backgroundColor: selectedMood.bg, width: 46, height: 46, borderRadius: 23, marginBottom: 0 }]}>
+                        <MoodGlyph mood={selectedMood.key} color={selectedMood.colour} size={23} />
+                      </View>
+                    ) : null}
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.pathIntroTitle, { color: theme.text }]}>A small path for this mood</Text>
+                      <Text style={[styles.pathIntroDesc, { color: theme.dim }]}>Choose one practice, or finish after simply naming the mood.</Text>
                     </View>
-                  ) : null}
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.pathIntroTitle, { color: theme.text }]}>A small path for this mood</Text>
-                    <Text style={[styles.pathIntroDesc, { color: theme.dim }]}>Choose one practice, or finish after simply naming the mood.</Text>
                   </View>
+                </MotionView>
+                <View style={{ gap: SPACING.md, marginTop: SPACING.sm }}>
+                  {[...recommendationItems.slice(0, 4), ...FIXED_RECOMMENDATIONS].map((rec, index) => renderRecommendationRow(rec, index))}
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pathRail}>
-                  {[...recommendationItems.slice(0, 4), ...FIXED_RECOMMENDATIONS].map((rec, index) => renderRecommendationCard(rec, index))}
-                </ScrollView>
               </>
             )}
 
             {!fetchingRecs && (
-              <View style={{ borderRadius: 12, backgroundColor: theme.brand, marginTop: SPACING.xxl }}>
-                <PressableSurface style={{ padding: SPACING.lg, alignItems: 'center' }} onPress={finishFlow}>
-                  <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Finish Check-in</Text>
-                </PressableSurface>
-              </View>
+              <MotionView animationKey="finish-checkin" delay={80 + ([...recommendationItems.slice(0, 4), ...FIXED_RECOMMENDATIONS].length) * 60} distance={10}>
+                <View style={{ borderRadius: 12, backgroundColor: theme.brand, marginTop: SPACING.xxl }}>
+                  <PressableSurface style={{ padding: SPACING.lg, alignItems: 'center' }} onPress={finishFlow}>
+                    <Text style={[styles.finishBtnText, { color: isDark ? COLORS.darkBg : COLORS.ink }]}>Finish Check-in</Text>
+                  </PressableSurface>
+                </View>
+              </MotionView>
             )}
           </View>
         )}
