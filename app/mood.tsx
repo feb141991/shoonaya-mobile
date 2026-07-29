@@ -98,7 +98,6 @@ const QUICK_CHIPS = [
 ] as const;
 
 const FEATURED_ITEMS = [
-  { title: 'Sacred Kosh', desc: 'Look up a dharmic idea', href: '/kosh', icon: 'book-open' },
   { title: 'Pathshala', desc: 'Study with a calm lesson', href: '/(tabs)/pathshala', icon: 'layers' },
 ] as const;
 

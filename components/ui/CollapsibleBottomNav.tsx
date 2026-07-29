@@ -161,7 +161,6 @@ export function CollapsibleBottomNav() {
             '/vrat',
             '/panchang',
             '/dharm-veer',
-            '/kosh',
             '/nitya-karma',
             '/nitya-dincharya',
             '/nitya-plans',

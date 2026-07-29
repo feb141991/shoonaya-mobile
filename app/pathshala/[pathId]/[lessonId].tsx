@@ -848,8 +848,7 @@ export default function LessonReaderScreen() {
         message="Sign in to save your Pathshala study progress and earn Seva."
       />
 
-      {/* Structured AI verse explanation — bottom sheet, matching the
-          existing Modal convention used elsewhere in the app (e.g. kosh.tsx). */}
+      {/* Structured AI verse explanation, rendered as a bottom sheet. */}
       <Modal
         transparent
         visible={explainVisible}

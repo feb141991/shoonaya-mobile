@@ -29,7 +29,6 @@ export type SacredIconName =
   | 'quiz'
   | 'mood'
   | 'profile'
-  | 'kosh'
   | 'live-darshan'
   | 'progress'
   | 'ai-guide'
@@ -49,7 +48,6 @@ const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   quiz: require('@/assets/icons/quiz.png'),
   mood: require('@/assets/icons/mood.png'),
   profile: require('@/assets/icons/profile.png'),
-  kosh: require('@/assets/icons/kosh.png'),
   'live-darshan': require('@/assets/icons/live-darshan.png'),
   progress: require('@/assets/icons/progress.png'),
   'ai-guide': require('@/assets/icons/ai-guide-scroll.png'),

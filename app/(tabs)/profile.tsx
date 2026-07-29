@@ -31,7 +31,6 @@ import { SacredIcon } from '@/components/ui/SacredIcon';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { getUnlockedRelics, SACRED_RELICS } from '@/lib/relics';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -476,15 +475,6 @@ export default function ProfileScreen() {
   }, [loadProfile]);
 
   const streak = summary?.progress?.streaks?.shloka ?? 0;
-  const unlockedRelics = useMemo(() => {
-    if (!profile) return [];
-    return getUnlockedRelics(streak, profile.seva_score, profile.tradition);
-  }, [profile, streak]);
-  const activeRelic = useMemo(
-    () => SACRED_RELICS.find((relic) => relic.id === profile?.active_symbol_id) ?? null,
-    [profile?.active_symbol_id]
-  );
-
   const progressData = summary?.progress;
   const profileCompletion = summary?.completion;
   const sampradayaLabel = profile ? getSampradayaLabel(profile.tradition) : 'Sampradaya';
@@ -816,10 +806,6 @@ export default function ProfileScreen() {
   }
 
   const traditionMeta = TRADITION_META[profile.tradition];
-  const relicImage = activeRelic ? `${API_BASE}${activeRelic.imageUrl}` : null;
-  const unlockedCount = unlockedRelics.length;
-  const visibleRelics = SACRED_RELICS.slice(0, 8);
-  const totalVisibleRelics = SACRED_RELICS.length;
   const practicesPct = progressData?.practices.total
     ? Math.round((progressData.practices.completed / progressData.practices.total) * 100)
     : 0;
@@ -835,10 +821,8 @@ export default function ProfileScreen() {
   const highlights = progressData?.highlights;
   const avatarSource = profile.avatar_url
     ? { uri: profile.avatar_url.startsWith('http') ? profile.avatar_url : `${API_BASE}${profile.avatar_url}` }
-    : relicImage
-      ? { uri: relicImage }
-      : null;
-  const displayAvatarSource = avatarFailed ? (relicImage ? { uri: relicImage } : null) : avatarSource;
+    : null;
+  const displayAvatarSource = avatarFailed ? null : avatarSource;
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
@@ -1073,7 +1057,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: theme.dim, lineHeight: 20 }}>
-              Sign in to save your sadhana, join Mandali, earn Seva awards, and unlock sacred relics.
+              Sign in to save your sadhana, join Mandali, and earn Seva awards.
             </Text>
             <PressableSurface
               haptic="selection"
@@ -1119,7 +1103,6 @@ export default function ProfileScreen() {
               { label: 'Rounds', value: String(highlights?.totalRounds ?? 0), route: '/my-progress' as const },
               { label: 'In Practice', value: formatMinutes(highlights?.totalMinutes ?? 0), route: '/my-progress' as const },
               { label: 'Nitya Days', value: `${highlights?.nityaDays ?? 0}/30`, route: '/my-progress' as const },
-              { label: 'Saved Verses', value: String(highlights?.bookmarkedVerses ?? 0), route: '/kosh' as const },
             ].map((item) => (
               <PressableSurface
                 key={item.label}
@@ -1167,59 +1150,8 @@ export default function ProfileScreen() {
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <MetricTile label="Streak" value={`${streak} 🔥`} icon="zap" onPress={() => router.push('/my-progress')} theme={theme} />
           <MetricTile label="Seva" value={String(profile.seva_score)} icon="heart" onPress={() => router.push('/my-progress')} theme={theme} />
-          <MetricTile label="Relics" value={`${unlockedCount}/${totalVisibleRelics}`} icon="star" onPress={() => router.push('/kosh')} theme={theme} />
           <MetricTile label="Ashrama" value={lifeStageLabel} icon="sun" onPress={() => router.push('/settings')} theme={theme} />
         </View>
-
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View>
-              <Text style={{ ...TYPE.section, color: theme.brand }}>Sacred Kosh</Text>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Your relics</Text>
-            </View>
-            <PressableSurface haptic="selection" style={{ minHeight: 0 }} onPress={() => router.push('/kosh')}>
-              <Text style={{ ...TYPE.label, color: theme.brand }}>View all</Text>
-            </PressableSurface>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-            {visibleRelics.map((relic) => {
-              const isUnlocked = unlockedRelics.some((item) => item.id === relic.id);
-              const isActive = profile.active_symbol_id === relic.id;
-              return (
-                <PressableSurface
-                  key={relic.id}
-                  haptic="selection"
-                  accessibilityLabel={`${relic.name}. ${isUnlocked ? 'Unlocked' : 'Locked'}`}
-                  onPress={() => router.push('/kosh')}
-                  style={{ minHeight: 0, width: 62, alignItems: 'center', gap: 7 }}
-                >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 28,
-                      borderWidth: 1,
-                      borderColor: isActive ? theme.brand : isUnlocked ? theme.premiumBorder : theme.borderSoft,
-                      backgroundColor: isActive ? theme.brandSoft : theme.glass,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {isUnlocked ? (
-                      <Image source={{ uri: `${API_BASE}${relic.imageUrl}` }} style={{ width: 38, height: 38 }} />
-                    ) : (
-                      <Feather name="lock" size={15} color={theme.dim} />
-                    )}
-                  </View>
-                  <Text numberOfLines={2} style={{ ...TYPE.chip, color: isUnlocked ? theme.dim : theme.border, textAlign: 'center' }}>
-                    {relic.name}
-                  </Text>
-                </PressableSurface>
-              );
-            })}
-          </ScrollView>
-        </Card>
 
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>

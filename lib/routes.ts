@@ -48,7 +48,6 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
   if (pathname.startsWith('/nitya-karma')) return '/nitya-karma';
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';
-  if (pathname.startsWith('/kosh')) return '/kosh';
   if (pathname.startsWith('/mandali')) return '/mandali';
   if (pathname.startsWith('/mood')) return '/mood' as Href;
   // Mood's recommendation stack (lib/mood/engine.ts on web) always includes
