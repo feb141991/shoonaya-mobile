@@ -33,7 +33,9 @@ export type SacredIconName =
   | 'progress'
   | 'ai-guide'
   | 'tirtha'
-  | 'seva';
+  | 'seva'
+  | 'rashiphala'
+  | 'kundali';
 
 const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   japa: require('@/assets/icons/japa.png'),
@@ -53,6 +55,8 @@ const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
   'ai-guide': require('@/assets/icons/ai-guide-scroll.png'),
   tirtha: require('@/assets/icons/tirtha.png'),
   seva: require('@/assets/icons/seva.png'),
+  rashiphala: require('@/assets/icons/rashiphala.png'),
+  kundali: require('@/assets/icons/kundali.png'),
 };
 
 const FULL_COLOR_ASSETS = new Set<SacredIconName>([
@@ -61,12 +65,15 @@ const FULL_COLOR_ASSETS = new Set<SacredIconName>([
   'nitya',
   'panchang',
   'pathshala',
+  'dharmveer',
   'quiz',
   'ai-guide',
   'progress',
   'live-darshan',
   'tirtha',
   'seva',
+  'rashiphala',
+  'kundali',
 ]);
 
 type SacredIconProps = {

@@ -107,6 +107,20 @@ type HomeMenuTileItem = {
   border?: string;
 };
 
+const FULL_ART_MENU_ICONS = new Set<SacredIconName>([
+  'panchang',
+  'rashiphala',
+  'kundali',
+  'nitya',
+  'quiz',
+  'ai-guide',
+  'progress',
+  'live-darshan',
+  'mandali',
+  'tirtha',
+  'seva',
+]);
+
 type HomeMenuTheme = {
   glass: string;
   premiumBorder: string;
@@ -127,6 +141,7 @@ function HomeMenuTile({
   onPress: () => void;
 }) {
   const isThreeColumn = columns === 3;
+  const hasFullArtIcon = item.sacredId ? FULL_ART_MENU_ICONS.has(item.sacredId) : false;
 
   return (
     <PressableSurface
@@ -150,7 +165,25 @@ function HomeMenuTile({
     >
       <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         {item.sacredId ? (
-          <IconTile name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size="lg" color={item.accent} accent={item.accent} />
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: hasFullArtIcon ? 'transparent' : `${item.accent}26`,
+              borderWidth: hasFullArtIcon ? 0 : 1,
+              borderColor: hasFullArtIcon ? 'transparent' : `${item.accent}47`,
+            }}
+          >
+            <SacredIcon
+              name={item.sacredId}
+              fallbackGlyph={item.fallbackGlyph}
+              size={hasFullArtIcon ? 42 : 30}
+              color={item.accent}
+            />
+          </View>
         ) : (
           <View
             style={{
@@ -576,6 +609,7 @@ function HomeContent() {
   const [moodPulseVisible, setMoodPulseVisible] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
+  const [aiAuthGateVisible, setAiAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
   const [heroPickerVisible, setHeroPickerVisible] = useState(false);
@@ -1548,14 +1582,14 @@ function HomeContent() {
                 {
                   label: 'Rashiphal',
                   href: '/rashiphala',
-                  sacredId: null,
+                  sacredId: 'rashiphala' as SacredIconName,
                   fallbackGlyph: 'moon' as const,
                   accent: COLORS.tilePurple,
                 },
                 {
                   label: 'Kundali',
                   href: '/kundali',
-                  sacredId: null,
+                  sacredId: 'kundali' as SacredIconName,
                   fallbackGlyph: 'aperture' as const,
                   accent: COLORS.tileBlue,
                 },
@@ -1588,7 +1622,13 @@ function HomeContent() {
                   columns={2}
                   isDark={isDark}
                   theme={theme}
-                  onPress={() => navigate(item.href as Href)}
+                  onPress={() => {
+                    if (item.href === '/ai-chat' && isGuest) {
+                      setAiAuthGateVisible(true);
+                      return;
+                    }
+                    navigate(item.href as Href);
+                  }}
                 />
               ))}
             </View>
@@ -1628,6 +1668,12 @@ function HomeContent() {
         onClose={() => setAuthGateVisible(false)}
         title="Check in with your mood"
         message="Sign in to save your sadhana and track your mood patterns."
+      />
+      <AuthGate
+        visible={aiAuthGateVisible}
+        onClose={() => setAiAuthGateVisible(false)}
+        title="Talk to your AI Guide"
+        message="Sign in to chat with Dharma Mitra and get personalized guidance."
       />
       <MoodPulseSheet
         visible={moodPulseVisible}
