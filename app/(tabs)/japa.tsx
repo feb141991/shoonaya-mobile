@@ -105,6 +105,7 @@ const MAX_TARGET_ROUNDS = 108;
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
 const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
 const JAPA_CUSTOM_MANTRA_KEY = 'shoonaya.japa.customMantra';
+const JAPA_MANTRA_KEY = 'shoonaya.japa.mantraKey';
 const JAPA_TARGET_ROUNDS_KEY = 'shoonaya.japa.targetRounds';
 const JAPA_LIFETIME_KEY = 'shoonaya.japa.lifetime';
 
@@ -716,6 +717,8 @@ export default function JapaScreen() {
   const [count, setCount] = useState(0);
   const [completedRounds, setCompletedRounds] = useState(0);
   const [mantraIndex, setMantraIndex] = useState(0);
+  const [savedMantraKey, setSavedMantraKey] = useState<string | null>(null);
+  const restoredMantraRef = useRef(false);
   const [activeSymbolId, setActiveSymbolId] = useState<string | null>(null);
   const [tradition, setTradition] = useState<string | null>('hindu');
   const [streak, setStreak] = useState(0);
@@ -857,11 +860,13 @@ export default function JapaScreen() {
       AsyncStorage.getItem(JAPA_CUSTOM_MANTRA_KEY),
       AsyncStorage.getItem(JAPA_TARGET_ROUNDS_KEY),
       AsyncStorage.getItem(JAPA_LIFETIME_KEY),
+      AsyncStorage.getItem(JAPA_MANTRA_KEY),
     ])
-      .then(([malaId, sceneId, customText, rounds, lifetimeRaw]) => {
+      .then(([malaId, sceneId, customText, rounds, lifetimeRaw, mantraKey]) => {
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
+        if (mantraKey) setSavedMantraKey(mantraKey);
         const parsedRounds = rounds ? Number(rounds) : 1;
         if (Number.isInteger(parsedRounds) && parsedRounds >= 1 && parsedRounds <= MAX_TARGET_ROUNDS) {
           setTargetRounds(parsedRounds);
@@ -884,6 +889,23 @@ export default function JapaScreen() {
     if (mantraIndex >= mantraOptions.length) setMantraIndex(0);
   }, [mantraIndex, mantraOptions.length]);
 
+  // Restore the last-selected mantra once, as soon as both the saved key
+  // (from AsyncStorage) and a matching option (mantraOptions depends on
+  // tradition, which resolves async from the profile fetch, and on
+  // customMantraText, which loads from its own AsyncStorage read) are
+  // available. Guarded by a ref rather than deps alone so this fires
+  // exactly once and never fights a real-time tap after that — without the
+  // guard, every mantraOptions recompute (e.g. typing in the custom-mantra
+  // sheet) would silently snap the selection back to the saved one.
+  useEffect(() => {
+    if (restoredMantraRef.current || !savedMantraKey || mantraOptions.length === 0) return;
+    const idx = mantraOptions.findIndex((item) => item.key === savedMantraKey);
+    if (idx >= 0) {
+      setMantraIndex(idx);
+      restoredMantraRef.current = true;
+    }
+  }, [savedMantraKey, mantraOptions]);
+
   const updateLifetime = useCallback(async (beadsToAdd: number) => {
     setLifetime((prev) => {
       const next: JapaLifetimeData = {
@@ -905,7 +927,6 @@ export default function JapaScreen() {
       if (guest) {
         setTradition('hindu');
         setActiveSymbolId(null);
-        setMantraIndex(0);
         setJapaAlreadyDoneToday(false);
         setStreak(0);
         return;
@@ -923,7 +944,6 @@ export default function JapaScreen() {
       const profile = profileResult.data as ProfileRow | null;
       setActiveSymbolId(profile?.active_symbol_id ?? null);
       setTradition(profile?.tradition ?? 'hindu');
-      setMantraIndex(0);
 
       const today = spiritualDate(profile?.timezone ?? 'UTC');
       const { data: sadhanaData } = await supabase
@@ -938,7 +958,6 @@ export default function JapaScreen() {
     } catch {
       setActiveSymbolId(null);
       setTradition('hindu');
-      setMantraIndex(0);
       setJapaAlreadyDoneToday(false);
       setStreak(0);
     } finally {
@@ -1862,6 +1881,7 @@ export default function JapaScreen() {
               onPress={() => {
                 if (customMantra) {
                   setMantraIndex(mantraOptions.length - 1);
+                  void AsyncStorage.setItem(JAPA_MANTRA_KEY, 'custom');
                 } else {
                   setCustomMantraOpen(true);
                 }
@@ -1913,7 +1933,10 @@ export default function JapaScreen() {
                     key={item.key}
                     selected={selected}
                     accessibilityLabel={`Select ${item.label} mantra`}
-                    onPress={() => setMantraIndex(index)}
+                    onPress={() => {
+                      setMantraIndex(index);
+                      void AsyncStorage.setItem(JAPA_MANTRA_KEY, item.key);
+                    }}
                     style={{
                       borderRadius: 18,
                       borderWidth: selected ? 1.5 : 1,
@@ -2492,6 +2515,7 @@ export default function JapaScreen() {
                   void AsyncStorage.setItem(JAPA_CUSTOM_MANTRA_KEY, trimmed);
                   if (trimmed.length >= 2) {
                     setMantraIndex(mantraOptions.length - 1);
+                    void AsyncStorage.setItem(JAPA_MANTRA_KEY, 'custom');
                   }
                   setCustomMantraOpen(false);
                 }}

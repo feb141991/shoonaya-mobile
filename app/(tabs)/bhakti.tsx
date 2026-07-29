@@ -12,7 +12,7 @@ import { Screen } from '@/components/ui/Screen';
 import type { SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 
@@ -110,7 +110,9 @@ function StatPill({ icon, label, accent }: { icon: keyof typeof Feather.glyphMap
         alignItems: 'center',
         gap: 6,
         borderRadius: 999,
-        backgroundColor: `${accent}18`,
+        backgroundColor: `${accent}2E`,
+        borderWidth: 1,
+        borderColor: `${accent}4D`,
         paddingHorizontal: 12,
         paddingVertical: 7,
       }}
@@ -275,7 +277,15 @@ export default function BhaktiScreen() {
                         accessibilityLabel={`${card.title}, ${card.description}`}
                         style={{ flex: 1 }}
                       >
-                        <Card tone="auto" style={{ gap: 12, borderColor: theme.premiumBorder }}>
+                        <Card
+                          tone="auto"
+                          style={{
+                            gap: 12,
+                            backgroundColor: card.kind === 'tile' ? theme.brandSoft : `${card.accent}14`,
+                            borderColor: card.kind === 'tile' ? `${theme.brand}40` : `${card.accent}40`,
+                            boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                          }}
+                        >
                           {card.kind === 'tile' ? (
                             <IconTile name={card.id} fallbackGlyph={card.fallbackGlyph} size="md" color={theme.brand} />
                           ) : (
@@ -284,9 +294,9 @@ export default function BhaktiScreen() {
                                 width: 48,
                                 height: 48,
                                 borderRadius: RADII.md,
-                                backgroundColor: `${card.accent}15`,
+                                backgroundColor: `${card.accent}33`,
                                 borderWidth: 1,
-                                borderColor: `${card.accent}28`,
+                                borderColor: `${card.accent}59`,
                                 alignItems: 'center',
                                 justifyContent: 'center',
                               }}
