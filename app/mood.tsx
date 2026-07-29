@@ -18,6 +18,7 @@ import { useRouter, type Href } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { MotionView } from '@/components/ui/Motion';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
@@ -648,67 +649,73 @@ export default function MoodScreen() {
         {step === 2 && (
           <View style={styles.list}>
             {selectedMood ? (
-              <View style={styles.selectedMoodWrap}>
-                <View
-                  style={[
-                    styles.selectedMoodIcon,
-                    { backgroundColor: selectedMood.bg, borderColor: `${selectedMood.colour}35` },
-                  ]}
-                >
-                  <MoodGlyph mood={selectedMood.key} color={selectedMood.colour} size={36} />
-                </View>
-                <Text style={[styles.selectedMoodLabel, { color: theme.dim }]}>You&apos;re feeling</Text>
-                <Text style={[styles.selectedMoodTitle, { color: selectedMood.colour }]}>{selectedMood.label}</Text>
-              </View>
-            ) : null}
-            {TIME_OPTIONS.map(opt => (
-              <PressableSurface key={opt.key} haptic="selection" onPress={() => handleTimeSelect(opt.key)}>
-                <Card tone="auto" style={styles.timeCard}>
-                  <Text style={styles.timeEmoji}>{opt.emoji}</Text>
-                  <View style={styles.timeTextContainer}>
-                    <Text style={[styles.timeTitle, { color: theme.text }]}>
-                      {opt.label}
-                    </Text>
-                    <Text style={[styles.timeDesc, { color: theme.dim }]}>
-                      {opt.desc}
-                    </Text>
+              <MotionView animationKey={`mood-${selectedMood.key}`} distance={10}>
+                <View style={styles.selectedMoodWrap}>
+                  <View
+                    style={[
+                      styles.selectedMoodIcon,
+                      { backgroundColor: selectedMood.bg, borderColor: `${selectedMood.colour}35` },
+                    ]}
+                  >
+                    <MoodGlyph mood={selectedMood.key} color={selectedMood.colour} size={36} />
                   </View>
-                  <Feather name="chevron-right" size={17} color={theme.dim} />
-                </Card>
-              </PressableSurface>
+                  <Text style={[styles.selectedMoodLabel, { color: theme.dim }]}>You&apos;re feeling</Text>
+                  <Text style={[styles.selectedMoodTitle, { color: selectedMood.colour }]}>{selectedMood.label}</Text>
+                </View>
+              </MotionView>
+            ) : null}
+            {TIME_OPTIONS.map((opt, index) => (
+              <MotionView key={opt.key} animationKey={`time-${opt.key}`} delay={80 + index * 60} distance={10}>
+                <PressableSurface haptic="selection" onPress={() => handleTimeSelect(opt.key)}>
+                  <Card tone="auto" style={styles.timeCard}>
+                    <Text style={styles.timeEmoji}>{opt.emoji}</Text>
+                    <View style={styles.timeTextContainer}>
+                      <Text style={[styles.timeTitle, { color: theme.text }]}>
+                        {opt.label}
+                      </Text>
+                      <Text style={[styles.timeDesc, { color: theme.dim }]}>
+                        {opt.desc}
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={17} color={theme.dim} />
+                  </Card>
+                </PressableSurface>
+              </MotionView>
             ))}
-            <View
-              style={{
-                borderRadius: 18,
-                borderWidth: 1,
-                backgroundColor: selectedMood?.bg ?? theme.card,
-                borderColor: selectedMood?.colour ?? theme.premiumBorder,
-                opacity: loading ? 0.6 : 1,
-              }}
-            >
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Save mood without recommendations"
-                onPress={handleMoodOnly}
-                disabled={loading}
+            <MotionView animationKey="mood-only" delay={80 + TIME_OPTIONS.length * 60} distance={10}>
+              <View
                 style={{
-                  minHeight: MIN_TOUCH_TARGET,
-                  padding: SPACING.lg,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: SPACING.md,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  backgroundColor: selectedMood?.bg ?? theme.card,
+                  borderColor: selectedMood?.colour ?? theme.premiumBorder,
+                  opacity: loading ? 0.6 : 1,
                 }}
               >
-                <View style={[styles.moodOnlyIcon, { backgroundColor: `${selectedMood?.colour ?? theme.brand}18` }]}>
-                  <Feather name="check" size={16} color={selectedMood?.colour ?? theme.brand} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.moodOnlyTitle, { color: theme.text }]}>Just set my mood</Text>
-                  <Text style={[styles.moodOnlyDesc, { color: theme.dim }]}>Save today&apos;s mood without recommendations</Text>
-                </View>
-                {loading ? <ActivityIndicator size="small" color={selectedMood?.colour ?? theme.brand} /> : null}
-              </PressableSurface>
-            </View>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityLabel="Save mood without recommendations"
+                  onPress={handleMoodOnly}
+                  disabled={loading}
+                  style={{
+                    minHeight: MIN_TOUCH_TARGET,
+                    padding: SPACING.lg,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: SPACING.md,
+                  }}
+                >
+                  <View style={[styles.moodOnlyIcon, { backgroundColor: `${selectedMood?.colour ?? theme.brand}18` }]}>
+                    <Feather name="check" size={16} color={selectedMood?.colour ?? theme.brand} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.moodOnlyTitle, { color: theme.text }]}>Just set my mood</Text>
+                    <Text style={[styles.moodOnlyDesc, { color: theme.dim }]}>Save today&apos;s mood without recommendations</Text>
+                  </View>
+                  {loading ? <ActivityIndicator size="small" color={selectedMood?.colour ?? theme.brand} /> : null}
+                </PressableSurface>
+              </View>
+            </MotionView>
           </View>
         )}
 
