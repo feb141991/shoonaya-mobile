@@ -921,9 +921,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.sansSemiBold,
   },
   title: {
-    fontFamily: FONTS.serifBold,
-    fontSize: 26,
-    lineHeight: 32,
+    ...TYPE.screenTitle,
     marginBottom: SPACING.xl,
     textAlign: 'center',
   },
