@@ -708,6 +708,13 @@ function HomeContent() {
       ? `Start with ${state.nextPractice.title} · ${state.practices.length - completedCount} practices today`
       : `Next: ${state.nextPractice.title} · ${state.nextPractice.suggestion}`;
   const sadhanaButtonLabel = sadhanaComplete ? "Today's Recap" : completedCount === 0 ? 'Begin' : 'Continue';
+  const sadhanaCtaGradient: readonly [string, string] = isDark
+    ? ['rgba(38,28,18,0.96)', 'rgba(24,18,13,0.94)']
+    : ['rgba(255,248,234,0.96)', 'rgba(250,236,211,0.88)'];
+  const sadhanaCtaText = isDark ? 'rgba(255,246,230,0.96)' : '#3f2b1f';
+  const sadhanaCtaSubtext = isDark ? 'rgba(255,230,190,0.66)' : 'rgba(63,43,31,0.66)';
+  const sadhanaCtaMeta = isDark ? 'rgba(255,230,190,0.58)' : 'rgba(63,43,31,0.58)';
+  const sadhanaCtaIconBg = isDark ? 'rgba(197,160,89,0.16)' : 'rgba(217,178,105,0.18)';
 
   const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
   const dharmVeerDone = dharmVeerRow?.done ?? false;
@@ -1347,14 +1354,16 @@ function HomeContent() {
               paddingHorizontal: 14,
               paddingVertical: 11,
               borderWidth: 1,
-              borderColor: 'rgba(205,166,92,0.28)',
-              boxShadow: '0 12px 28px rgba(105,75,35,0.10), inset 0 1px 0 rgba(255,255,255,0.75)',
+              borderColor: isDark ? 'rgba(197,160,89,0.22)' : 'rgba(205,166,92,0.28)',
+              boxShadow: isDark
+                ? '0 12px 28px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,240,200,0.08)'
+                : '0 12px 28px rgba(105,75,35,0.10), inset 0 1px 0 rgba(255,255,255,0.75)',
               gap: 9,
               overflow: 'hidden',
             }}
           >
             <LinearGradient
-              colors={['rgba(255,248,234,0.96)', 'rgba(250,236,211,0.88)']}
+              colors={sadhanaCtaGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -1365,7 +1374,7 @@ function HomeContent() {
                   width: 42,
                   height: 42,
                   borderRadius: 14,
-                  backgroundColor: 'rgba(217,178,105,0.18)',
+                  backgroundColor: sadhanaCtaIconBg,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -1378,17 +1387,17 @@ function HomeContent() {
                 />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ ...TYPE.cardHeading, color: '#3f2b1f' }} numberOfLines={1}>
+                <Text style={{ ...TYPE.cardHeading, color: sadhanaCtaText }} numberOfLines={1}>
                   {sadhanaTitle}
                 </Text>
-                <Text style={{ marginTop: 2, ...TYPE.caption, color: 'rgba(63,43,31,0.66)' }} numberOfLines={1}>
+                <Text style={{ marginTop: 2, ...TYPE.caption, color: sadhanaCtaSubtext }} numberOfLines={1}>
                   {sadhanaSubtitle}
                 </Text>
               </View>
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <Text style={{ ...TYPE.chip, letterSpacing: 1.1, textTransform: 'uppercase', color: 'rgba(63,43,31,0.58)' }} numberOfLines={1}>
+              <Text style={{ ...TYPE.chip, letterSpacing: 1.1, textTransform: 'uppercase', color: sadhanaCtaMeta }} numberOfLines={1}>
                 {completedCount} of {state.practices.length} practices
               </Text>
               <View
