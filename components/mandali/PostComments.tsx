@@ -31,6 +31,7 @@ export function PostComments({
   userId,
   posting,
   onSubmit,
+  onViewProfile,
   text,
   dim,
   border,
@@ -42,6 +43,7 @@ export function PostComments({
   userId: string;
   posting: boolean;
   onSubmit: (body: string, parentId?: string | null) => void;
+  onViewProfile: (userId: string) => void;
   text: string;
   dim: string;
   border: string;
@@ -100,16 +102,30 @@ export function PostComments({
             return (
               <View key={comment.id} style={{ gap: 6 }}>
                 <View style={{ flexDirection: 'row', gap: 7 }}>
-                  <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: text }}>
-                      {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
+                    onPress={() => onViewProfile(comment.author_id)}
+                    style={{ minHeight: 0 }}
+                  >
+                    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: text }}>
+                        {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  </PressableSurface>
                   <View style={{ flex: 1, gap: 1 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>
-                      {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
-                      {comment.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
-                    </Text>
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
+                      onPress={() => onViewProfile(comment.author_id)}
+                      style={{ minHeight: 0, alignSelf: 'flex-start' }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>
+                        {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
+                        {comment.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
+                      </Text>
+                    </PressableSurface>
                     <Text style={{ fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 17, color: text }}>{comment.body}</Text>
                     <PressableSurface
                       haptic="selection"
@@ -128,16 +144,30 @@ export function PostComments({
                   <View style={{ marginLeft: 29, gap: 6 }}>
                     {replies.map((reply) => (
                       <View key={reply.id} style={{ flexDirection: 'row', gap: 7 }}>
-                        <View style={{ width: 19, height: 19, borderRadius: 10, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: text }}>
-                            {(reply.profiles?.full_name ?? reply.profiles?.username ?? '?').charAt(0).toUpperCase()}
-                          </Text>
-                        </View>
+                        <PressableSurface
+                          haptic="selection"
+                          accessibilityLabel={`View ${reply.profiles?.full_name ?? reply.profiles?.username ?? 'profile'}`}
+                          onPress={() => onViewProfile(reply.author_id)}
+                          style={{ minHeight: 0 }}
+                        >
+                          <View style={{ width: 19, height: 19, borderRadius: 10, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: text }}>
+                              {(reply.profiles?.full_name ?? reply.profiles?.username ?? '?').charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        </PressableSurface>
                         <View style={{ flex: 1, gap: 1 }}>
-                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: text }}>
-                            {reply.profiles?.full_name ?? reply.profiles?.username ?? 'Seeker'}
-                            {reply.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
-                          </Text>
+                          <PressableSurface
+                            haptic="selection"
+                            accessibilityLabel={`View ${reply.profiles?.full_name ?? reply.profiles?.username ?? 'profile'}`}
+                            onPress={() => onViewProfile(reply.author_id)}
+                            style={{ minHeight: 0, alignSelf: 'flex-start' }}
+                          >
+                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: text }}>
+                              {reply.profiles?.full_name ?? reply.profiles?.username ?? 'Seeker'}
+                              {reply.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
+                            </Text>
+                          </PressableSurface>
                           <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16, color: text }}>{reply.body}</Text>
                         </View>
                       </View>

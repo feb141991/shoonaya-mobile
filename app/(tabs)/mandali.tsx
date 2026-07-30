@@ -154,6 +154,7 @@ type MandaliPostCardProps = {
   onToggleComments: (postId: string) => void;
   onSelectReaction: (postId: string, reaction: ReactionType) => void;
   onRemoveReaction: (postId: string) => void;
+  onViewProfile: (userId: string) => void;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -172,6 +173,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onToggleComments,
   onSelectReaction,
   onRemoveReaction,
+  onViewProfile,
 }: MandaliPostCardProps) {
   const isOwnPost = post.author_id === userId;
   const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
@@ -197,26 +199,40 @@ const MandaliPostCard = memo(function MandaliPostCard({
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-        {post.profiles?.avatar_url ? (
-          <Image source={{ uri: post.profiles.avatar_url }} style={{ width: 30, height: 30, borderRadius: 15 }} contentFit="cover" />
-        ) : (
-          <LinearGradient
-            colors={[theme.brand, COLORS.brandGoldLight]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-              {getInitials(post.profiles?.full_name ?? post.profiles?.username ?? '?')}
-            </Text>
-          </LinearGradient>
-        )}
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={`View ${post.profiles?.full_name ?? post.profiles?.username ?? 'profile'}`}
+          onPress={() => onViewProfile(post.author_id)}
+          style={{ minHeight: 0 }}
+        >
+          {post.profiles?.avatar_url ? (
+            <Image source={{ uri: post.profiles.avatar_url }} style={{ width: 30, height: 30, borderRadius: 15 }} contentFit="cover" />
+          ) : (
+            <LinearGradient
+              colors={[theme.brand, COLORS.brandGoldLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+                {getInitials(post.profiles?.full_name ?? post.profiles?.username ?? '?')}
+              </Text>
+            </LinearGradient>
+          )}
+        </PressableSurface>
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5, marginBottom: 3 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-              {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
-            </Text>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={`View ${post.profiles?.full_name ?? post.profiles?.username ?? 'profile'}`}
+              onPress={() => onViewProfile(post.author_id)}
+              style={{ minHeight: 0 }}
+            >
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
+              </Text>
+            </PressableSurface>
             <Text style={{ color: theme.dim, fontSize: 9, opacity: 0.5 }}>•</Text>
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
               {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
@@ -333,6 +349,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
         userId={userId ?? ''}
         posting={postingComment}
         onSubmit={(body, parentId) => onSubmitComment(post.id, body, parentId)}
+        onViewProfile={onViewProfile}
         text={theme.text}
         dim={theme.dim}
         border={theme.premiumBorder}
@@ -965,11 +982,17 @@ export default function MandaliScreen() {
   // did nothing (seekers had zero interactivity; members only had the
   // "..." Report action). Both open the same lightweight MemberInfoSheet,
   // normalized from their different source shapes (MemberRow vs
-  // NearbySeeker) since neither app has a full "view another user's
-  // profile" screen to link to yet.
+  // NearbySeeker); its "View full profile" action, plus the post/comment
+  // author taps below, all route to app/profile/[id].tsx -- the first full
+  // "view another user's profile" screen in either app.
   // Connection status is fetched fresh every time the sheet opens (not
   // cached alongside members/seekers) since it's a two-party relationship
   // that can change independently of the members/seekers lists themselves.
+  const handleViewProfile = useCallback((userId: string) => {
+    setSelectedMember(null);
+    router.push(`/profile/${userId}`);
+  }, [router]);
+
   const loadConnectionStatus = useCallback((otherId: string) => {
     if (!profile) return;
     setConnectionStatus('none');
@@ -1147,9 +1170,10 @@ export default function MandaliScreen() {
         onToggleComments={toggleComments}
         onSelectReaction={handleSelectReaction}
         onRemoveReaction={handleRemoveReaction}
+        onViewProfile={handleViewProfile}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
@@ -1526,6 +1550,7 @@ export default function MandaliScreen() {
         visible={!!selectedMember}
         subject={selectedMember}
         onClose={() => setSelectedMember(null)}
+        onViewProfile={(subject) => handleViewProfile(subject.id)}
         onReport={
           selectedMember && members.some((m) => m.id === selectedMember.id)
             ? (subject) => {

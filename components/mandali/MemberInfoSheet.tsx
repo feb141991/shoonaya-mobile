@@ -26,6 +26,7 @@ type MemberInfoSheetProps = {
   visible: boolean;
   subject: MemberInfoSubject | null;
   onClose: () => void;
+  onViewProfile?: (subject: MemberInfoSubject) => void;
   onReport?: (subject: MemberInfoSubject) => void;
   connectionStatus?: ConnectionStatus;
   connectionBusy?: boolean;
@@ -45,16 +46,16 @@ function getInitials(name: string): string {
 // Lightweight "who is this" sheet — the first version of a much-requested
 // gap: tapping a Mandali member or a nearby seeker previously did nothing
 // (only the "..." Report action existed for members; seekers had zero
-// interactivity at all). This is deliberately NOT a full profile screen —
-// no such screen exists anywhere in this app or the PWA for viewing
-// another user's profile, so building one is a bigger, separate project.
-// This sheet only surfaces fields already fetched for the members/seekers
-// lists today (lib/mandali.ts's MemberRow/NearbySeeker) — no new backend
-// call.
+// interactivity at all). This sheet still only surfaces fields already
+// fetched for the members/seekers lists today (lib/mandali.ts's
+// MemberRow/NearbySeeker) — no new backend call for the sheet itself — but
+// its "View full profile" action now opens app/profile/[id].tsx, the app's
+// first full "view another user's profile" screen.
 export function MemberInfoSheet({
   visible,
   subject,
   onClose,
+  onViewProfile,
   onReport,
   connectionStatus,
   connectionBusy,
@@ -229,6 +230,26 @@ export function MemberInfoSheet({
             >
               {connectionBusy ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="user-plus" size={14} color={COLORS.ink} />}
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.ink }}>Connect</Text>
+            </PressableSurface>
+          ) : null}
+
+          {onViewProfile ? (
+            <PressableSurface
+              haptic="selection"
+              onPress={() => onViewProfile(displaySubject)}
+              style={{
+                minHeight: 44,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 8,
+              }}
+            >
+              <Feather name="user" size={14} color={theme.brand} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>View full profile</Text>
             </PressableSurface>
           ) : null}
 
