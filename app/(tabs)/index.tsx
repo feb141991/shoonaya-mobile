@@ -112,7 +112,7 @@ type HomeMenuTheme = {
 };
 
 // No card, no per-icon well background — every tile is just the icon art
-// and label, sized identically (see the single `size={30}` below) regardless
+// and label, sized identically (see the single `size={35}` below) regardless
 // of whether the icon is a full-art clay render or a plain Feather glyph.
 // Every row is a single non-wrapping line of equal-width (`flex: 1`) tiles —
 // tight gap, compact padding — so 3 or 4 icons per row sit close together
@@ -141,14 +141,14 @@ function HomeMenuTile({
       }}
     >
       <View
-        style={{ width: 56, height: 56, marginBottom: 8, alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: 70, height: 70, marginBottom: 8, alignItems: 'center', justifyContent: 'center' }}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
         {item.sacredId ? (
-          <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={28} color={item.accent} />
+          <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={35} color={item.accent} />
         ) : (
-          <Feather name={item.fallbackGlyph} size={28} color={item.accent} />
+          <Feather name={item.fallbackGlyph} size={35} color={item.accent} />
         )}
       </View>
       <Text
@@ -1616,7 +1616,7 @@ function HomeContent() {
                 // hidden tab (href: null in _layout.tsx) with no entry point
                 // anywhere in the app. This card is the fix; the tab stays hidden.
                 { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: 'tirtha' as SacredIconName,        fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral },
-                { label: 'Seva',        href: '/my-progress',      sacredId: 'seva' as SacredIconName,          fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen },
+                { label: 'Seva',        href: '/seva',             sacredId: 'seva' as SacredIconName,          fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen },
               ] satisfies HomeMenuTileItem[]).map((item) => (
                 <HomeMenuTile
                   key={item.label}
