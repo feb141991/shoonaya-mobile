@@ -4,7 +4,7 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 type AudioRate = 0.75 | 1.0 | 1.25;
 
 type UseAudioPlayerResult = {
-  loadAndPlay: (url: string, loop?: boolean) => Promise<void>;
+  loadAndPlay: (url: string, loop?: boolean, onComplete?: () => void) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   stop: () => Promise<void>;
@@ -25,8 +25,11 @@ async function configureAudioMode() {
 
 export function useAudioPlayer(): UseAudioPlayerResult {
   const playerRef = useRef<AudioPlayer | null>(null);
+  const statusSubscriptionRef = useRef<{ remove: () => void } | null>(null);
 
   const stop = useCallback(async () => {
+    statusSubscriptionRef.current?.remove();
+    statusSubscriptionRef.current = null;
     const player = playerRef.current;
     if (!player) return;
     try {
@@ -47,15 +50,31 @@ export function useAudioPlayer(): UseAudioPlayerResult {
   }, [stop]);
 
   const loadAndPlay = useCallback(
-    async (url: string, loop = false) => {
+    async (url: string, loop = false, onComplete?: () => void) => {
       await stop();
       await configureAudioMode();
 
       const player = createAudioPlayer({ uri: url });
       player.loop = loop;
       player.volume = 1.0;
-      player.play();
+      const subscription = player.addListener('playbackStatusUpdate', (status) => {
+        if (!loop && status.didJustFinish) {
+          statusSubscriptionRef.current?.remove();
+          statusSubscriptionRef.current = null;
+          if (playerRef.current === player) {
+            playerRef.current = null;
+            try {
+              player.remove();
+            } catch {
+              // already removed
+            }
+          }
+          onComplete?.();
+        }
+      });
+      statusSubscriptionRef.current = subscription;
       playerRef.current = player;
+      player.play();
     },
     [stop]
   );

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import { ActivityIndicator, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -11,24 +11,13 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getDevotionalTrackById } from '@/lib/devotional-audio';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { supabase } from '@/lib/supabase';
 
-// Stotram detail/reader screen — Bhakti Phase 3. Scoped deliberately smaller
-// than the PWA's src/app/(main)/bhakti/stotram/[id]/StotramClient.tsx,
-// which is a full TTS-powered reading platform (on-demand Bhashini/Sarvam
-// speech synthesis per verse, sequential "Play All" narration with
-// auto-scroll, live English/Hindi/Punjabi translation switching, a font-size
-// stepper, and a scripture-correction report modal). Per explicit scope
-// decision: this screen covers the actual content — verses (Sanskrit/
-// transliteration/meaning), expand per verse, and playback only for
-// stotrams with a pre-recorded track in lib/devotional-audio.ts (played via
-// expo-audio, no server round-trip). The TTS pipeline, translation
-// switching, and correction modal are NOT ported — they're web-only
-// infrastructure, not core content, and each is its own project-sized lift.
-// Daily-sadhana "stotram done" completion tracking (PWA's
-// `supabase.rpc('complete_stotram', ...)`) is also intentionally NOT wired
-// here — out of this phase's agreed scope; would need its own native API
-// route decision (see shloka.tsx's /api/native/shloka/read pattern) rather
-// than a direct client RPC call.
+// New Reader Foundation imports
+import { ReaderShell } from '@/components/reader/ReaderShell';
+import { useReaderControls } from '@/hooks/useReaderControls';
+import { buildReadableCapabilities } from '@/lib/readable-content';
+import { resolveReadablePreferences } from '@/lib/readable-preferences';
 
 type StotramVerse = {
   number: number;
@@ -55,10 +44,6 @@ type Stotram = {
   verses: StotramVerse[];
 };
 
-// Ported from PWA's DEITY_META (src/lib/stotrams.ts) — just the accent
-// colors, since that's all this screen needs; the fuller deity metadata
-// (labels/emoji) lives server-side and isn't required for a detail view
-// that already has the stotram's own title/deityEmoji.
 const DEITY_COLOR: Record<string, string> = {
   ganesha: '#e07b3a',
   shiva: '#8b7de0',
@@ -68,6 +53,14 @@ const DEITY_COLOR: Record<string, string> = {
   surya: '#f0a020',
   universal: '#8b9e6e',
 };
+
+type FontSize = 'sm' | 'md' | 'lg' | 'xl';
+const FONT_PRESETS = [
+  { label: 'A-', value: 'sm' },
+  { label: 'A', value: 'md' },
+  { label: 'A+', value: 'lg' },
+  { label: 'A++', value: 'xl' },
+];
 
 export default function StotramDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
@@ -81,6 +74,9 @@ export default function StotramDetailScreen() {
   const [stotram, setStotram] = useState<Stotram | null>(null);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [lang, setLang] = useState<'en' | 'hi' | 'pa'>('en');
+  const [fontStep, setFontStep] = useState(1); // 'md'
+  const [ttsRate, setTtsRate] = useState(1);
 
   const audio = useAudioPlayer();
 
@@ -99,8 +95,28 @@ export default function StotramDetailScreen() {
         return;
       }
       const json = await response.json();
-      setStotram(json?.stotram ?? null);
-      if (!json?.stotram) setLoadError(true);
+      const loadedStotram = (json?.stotram ?? null) as Stotram | null;
+      setStotram(loadedStotram);
+      if (!loadedStotram) {
+        setLoadError(true);
+        return;
+      }
+      const hasHindi = loadedStotram.verses.some((verse) => Boolean(verse.meaning_hi));
+      const hasPunjabi = loadedStotram.verses.some((verse) => Boolean(verse.meaning_pa));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && (hasHindi || hasPunjabi)) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('app_language, meaning_language')
+          .eq('id', user.id)
+          .maybeSingle();
+        const preferences = resolveReadablePreferences({
+          appLanguage: profile?.app_language,
+          meaningLanguage: profile?.meaning_language,
+        });
+        if (preferences.effectiveMeaningLanguage === 'hi' && hasHindi) setLang('hi');
+        if (preferences.effectiveMeaningLanguage === 'pa' && hasPunjabi) setLang('pa');
+      }
     } catch {
       setLoadError(true);
     } finally {
@@ -121,10 +137,47 @@ export default function StotramDetailScreen() {
       await audio.pause();
       setPlaying(false);
     } else {
-      await audio.loadAndPlay(track.audioUrl);
+      await audio.loadAndPlay(track.audioUrl, false, () => setPlaying(false));
       setPlaying(true);
     }
   };
+
+  const textToCopy = stotram ? `${stotram.title}\n\n${stotram.verses.map(v => v.sanskrit + '\n' + v.meaning).join('\n\n')}` : '';
+  const textToShare = stotram ? `Read the ${stotram.title} on the Shoonaya App! 🙏` : '';
+
+  const hasHindi = Boolean(stotram?.verses.some((verse) => verse.meaning_hi));
+  const hasPunjabi = Boolean(stotram?.verses.some((verse) => verse.meaning_pa));
+  const capabilities = useMemo(() => buildReadableCapabilities({
+    original: stotram?.verses[0]?.sanskrit ?? '',
+    transliteration: stotram?.verses[0]?.transliteration,
+    meaning: stotram?.verses[0]?.meaning,
+    language: 'sa',
+    script: 'devanagari',
+    pipelineTags: {
+      content_type: 'stotram',
+      audio_mode: track ? 'prerecorded' : 'recitation',
+      tradition: stotram?.tradition as 'hindu' | 'buddhist' | 'jain' | 'sikh' | undefined,
+      script: 'devanagari',
+      delivery_intent: 'recitation',
+    },
+  }, {
+    canToggleLocalLanguage: hasHindi || hasPunjabi,
+    canGenerateTTS: !track,
+    canShowExplain: false,
+  }), [hasHindi, hasPunjabi, stotram, track]);
+
+  const { state, handlers } = useReaderControls(capabilities);
+
+  const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
+  const activeVerseIndex = activeVerse ?? 0;
+  const verseForAudio = stotram?.verses[activeVerseIndex];
+  const meaningForLanguage = (verse: StotramVerse) => (
+    lang === 'hi' && verse.meaning_hi
+      ? verse.meaning_hi
+      : lang === 'pa' && verse.meaning_pa
+        ? verse.meaning_pa
+        : verse.meaning
+  );
 
   if (loading) {
     return (
@@ -151,10 +204,58 @@ export default function StotramDetailScreen() {
   }
 
   return (
-    <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 60, gap: 16 }} showsVerticalScrollIndicator={false}>
-        <BackButton style={{ marginBottom: 4 }} />
-
+    <ReaderShell
+      title={stotram.title}
+      subtitle={stotram.deityEmoji ? `${stotram.deityEmoji} ${stotram.type}` : stotram.type}
+      fallbackBackUrl="/bhakti/browse"
+      themeColor={accent}
+      ambientGlowColor={accent}
+      fontPresets={FONT_PRESETS}
+      fontStep={fontStep}
+      setFontStep={setFontStep}
+      languages={[
+        { code: 'en' as const, label: 'EN' },
+        ...(hasHindi ? [{ code: 'hi' as const, label: 'हिं' }] : []),
+        ...(hasPunjabi ? [{ code: 'pa' as const, label: 'ਪੰ' }] : []),
+      ]}
+      currentLanguage={lang}
+      setLanguage={setLang}
+      showTransliterationToggle
+      isTransliterationOn={state.showTransliteration}
+      onToggleTransliteration={handlers.toggleTransliteration}
+      showMeaningToggle
+      isMeaningOn={state.showMeaning}
+      onToggleMeaning={handlers.toggleMeaning}
+      onTTS={() => {
+        if (track) {
+          void togglePlayback();
+          return;
+        }
+        if (!verseForAudio) return;
+        void handlers.toggleTTS(
+          [verseForAudio.sanskrit, verseForAudio.transliteration, meaningForLanguage(verseForAudio)].join('\n\n'),
+          {
+            quality: 'pandit',
+            language: lang === 'hi' ? 'hi-IN' : lang === 'pa' ? 'pa-IN' : 'sa-IN',
+            rate: ttsRate,
+            pipelineTags: {
+              content_type: 'stotram',
+              audio_mode: 'recitation',
+              script: 'devanagari',
+              delivery_intent: 'recitation',
+            },
+          },
+        );
+      }}
+      ttsRate={track ? undefined : ttsRate}
+      onTTSRateChange={track ? undefined : setTtsRate}
+      isSpeaking={track ? playing : state.isSpeaking}
+      isTTSGenerating={state.isGeneratingTTS}
+      onCopy={() => handlers.copyText(textToCopy, 'Stotram')}
+      isCopied={state.isCopied}
+      onShare={() => handlers.share(textToShare)}
+    >
+      <View style={{ gap: 16, marginBottom: 8 }}>
         {/* Info card */}
         <View
           style={{
@@ -261,7 +362,7 @@ export default function StotramDetailScreen() {
                       {verse.number}
                     </Text>
                   </View>
-                  <Text style={{ ...TYPE.body, color: theme.text, flex: 1 }} numberOfLines={1}>
+                  <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: TYPE.body.fontSize * fsScale }} numberOfLines={1}>
                     {verse.sanskrit.split('\n')[0]}…
                   </Text>
                   {stotram.verses.length > 1 ? (
@@ -278,8 +379,8 @@ export default function StotramDetailScreen() {
                       <Text
                         style={{
                           fontFamily: TYPE.shloka.fontFamily,
-                          fontSize: TYPE.shloka.fontSize,
-                          lineHeight: TYPE.shloka.lineHeight,
+                          fontSize: TYPE.shloka.fontSize * fsScale,
+                          lineHeight: TYPE.shloka.lineHeight * fsScale,
                           letterSpacing: TYPE.shloka.letterSpacing,
                           color: theme.text,
                         }}
@@ -287,18 +388,18 @@ export default function StotramDetailScreen() {
                         {verse.sanskrit}
                       </Text>
                     </View>
-                    <View>
+                    {state.showTransliteration ? <View>
                       <Text style={{ ...TYPE.micro, color: `${accent}bb`, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>
                         Transliteration
                       </Text>
-                      <Text style={{ ...TYPE.body, color: theme.dim, fontStyle: 'italic' }}>{verse.transliteration}</Text>
-                    </View>
-                    <View style={{ borderRadius: RADII.md, backgroundColor: `${accent}0c`, padding: 12 }}>
+                      <Text style={{ ...TYPE.body, color: theme.dim, fontStyle: 'italic', fontSize: TYPE.body.fontSize * fsScale }}>{verse.transliteration}</Text>
+                    </View> : null}
+                    {state.showMeaning ? <View style={{ borderRadius: RADII.md, backgroundColor: `${accent}0c`, padding: 12 }}>
                       <Text style={{ ...TYPE.micro, color: `${accent}bb`, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>
                         Meaning
                       </Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 19 }}>{verse.meaning}</Text>
-                    </View>
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: TYPE.caption.lineHeight * fsScale, fontSize: TYPE.caption.fontSize * fsScale }}>{meaningForLanguage(verse)}</Text>
+                    </View> : null}
                   </View>
                 ) : null}
               </View>
@@ -307,7 +408,7 @@ export default function StotramDetailScreen() {
         </View>
 
         <Text style={{ ...TYPE.micro, color: theme.dim, textAlign: 'center', marginTop: 4 }}>{stotram.source}</Text>
-      </ScrollView>
-    </Screen>
+      </View>
+    </ReaderShell>
   );
 }

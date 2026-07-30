@@ -13,7 +13,7 @@
 export interface DharmVeer {
   id: string;
   name: string;
-  nameLocal?: string; 
+  nameLocal?: string;
   era: string;
   eraLocal?: string;
   tradition: 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'sufi' | 'tribal';
@@ -416,7 +416,7 @@ He sat under a Bodhi tree and vowed not to rise until he found the cause of suff
     tagline: 'A 30-year-old monk who walked into the World\'s Parliament of Religions and changed the world.',
     taglineLocal: 'शिकागो के धर्म संसद में उनके एक भाषण ने पूरी दुनिया का भारत के प्रति नजरिया बदल दिया।',
     journey:
-      `Narendra Nath Datta was a brilliant young man in Calcutta who asked one question: have you seen God? Ramakrishna Paramahamsa answered: Yes. 
+      `Narendra Nath Datta was a brilliant young man in Calcutta who asked one question: have you seen God? Ramakrishna Paramahamsa answered: Yes.
 
 Vivekananda walked the length of India alone, seeing the poverty and the spiritual genius of his country. In 1893, he spoke at Chicago. His opening "Sisters and brothers of America" gave him a two-minute standing ovation. He brought Vedanta to the modern West and died at thirty-nine, having compressed centuries of work into a few years.`,
     journeyLocal:
@@ -582,4 +582,74 @@ export function selectDharmVeerOfTheDayFromRoster(
  */
 export function getDharmVeerOfTheDay(userTradition?: string | null): DharmVeer {
   return selectDharmVeerOfTheDayFromRoster(DHARM_VEERS, userTradition);
+}
+
+// ── Client-side Rotation logic ─────────────────────────────────────────────
+
+/**
+ * Pure function to select a Dharm Veer for the user based on history and tradition.
+ * Implements a no-repeat window (default 14) and tradition-awareness.
+ */
+export function selectDharmVeer({
+  userTradition,
+  historyIds,
+  roster,
+  festivalTags = [],
+  noRepeatWindow = 14,
+}: {
+  userTradition?: string | null;
+  historyIds: string[];
+  roster: DharmVeer[];
+  festivalTags?: string[];
+  noRepeatWindow?: number;
+}): DharmVeer {
+  if (roster.length === 0) {
+    throw new Error('selectDharmVeer requires a non-empty roster');
+  }
+  type TaggedDharmVeer = DharmVeer & { tags?: string[] };
+
+  // 1. Separate heroes by tradition
+  const sameTradition = roster.filter(h => h.tradition === userTradition);
+  const otherTradition = roster.filter(h => h.tradition !== userTradition);
+
+  // 2. Identify recently seen based on window
+  const recentIds = new Set(historyIds.slice(-noRepeatWindow));
+
+  // 3. Find candidates not seen recently
+  const freshSame = sameTradition.filter(h => !recentIds.has(h.id));
+  const freshOther = otherTradition.filter(h => !recentIds.has(h.id));
+
+  // 4. Boost by festival/tags if provided
+  if (festivalTags.length > 0) {
+    const freshBoosted = [...freshSame, ...freshOther].find(h =>
+      festivalTags.some(tag => (h as TaggedDharmVeer).tags?.includes(tag))
+    );
+    if (freshBoosted) return freshBoosted;
+  }
+
+  // 5. Prefer fresh same-tradition heroes
+  if (freshSame.length > 0) {
+    return freshSame[0]; // Could shuffle deterministically, but first available is fine for a stable roster
+  }
+
+  // 6. Occasional cross-tradition (if no fresh same-tradition)
+  if (freshOther.length > 0) {
+    return freshOther[0];
+  }
+
+  // 7. Graceful degradation: roster is exhausted (smaller than no-repeat window).
+  // Pick the least recently shown item from their tradition (the one that appeared earliest in history)
+  if (sameTradition.length > 0) {
+    // Sort sameTradition by index in historyIds (lower index = older)
+    // If not in history, index is -1, which shouldn't happen here since freshSame is empty
+    const sortedByOldest = [...sameTradition].sort((a, b) => {
+      const idxA = historyIds.indexOf(a.id);
+      const idxB = historyIds.indexOf(b.id);
+      return idxA - idxB;
+    });
+    return sortedByOldest[0];
+  }
+
+  // 8. Absolute fallback
+  return roster[0];
 }

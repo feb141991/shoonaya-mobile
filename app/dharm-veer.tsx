@@ -1,112 +1,86 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Modal,
+  FlatList,
   ScrollView,
-  Switch,
   Text,
-  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  interpolate,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 
 import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
-import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { selectDharmVeerOfTheDayFromRoster, DHARM_VEERS, type DharmVeer } from '@/lib/dharm-veer';
-import { shareCapturedShoonayaCard } from '@/lib/share-card';
-import { spiritualDate } from '@/lib/spiritualDate';
+import { selectDharmVeer, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
-import { AuthGate } from '@/components/ui/AuthGate';
 
-type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
-type SwipeDecision = 'inspired' | 'skip' | 'share';
+type TraditionFilter = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
-type ProfileContext = {
-  userId: string;
-  tradition: Tradition;
-  timezone: string;
+const TRADITION_FILTERS: Array<{ key: TraditionFilter; label: string; emoji: string }> = [
+  { key: 'all',      label: 'All',      emoji: '📚' },
+  { key: 'hindu',    label: 'Hindu',    emoji: '🕉️' },
+  { key: 'sikh',     label: 'Sikh',     emoji: '☬' },
+  { key: 'buddhist', label: 'Buddhist', emoji: '☸️' },
+  { key: 'jain',     label: 'Jain',     emoji: '🤲' },
+];
+
+const TRADITION_ACCENT: Record<string, string> = {
+  hindu:    '#FF7800',
+  sikh:     '#4080FF',
+  buddhist: '#FFC800',
+  jain:     '#00C832',
+  sufi:     '#8C5ADC',
+  tribal:   '#3CA05A',
 };
 
-type ProgressSnapshot = {
-  done: boolean;
-  seenIds: string[];
-};
+function getLocalSpiritualDate(tz: string, rolloverHour: number = 4): string {
+  try {
+    const d = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: 'numeric', hourCycle: 'h23',
+    }).formatToParts(d);
 
-const MAX_DAILY_CARDS = 3;
+    const year = parts.find(p => p.type === 'year')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    const dayStr = parts.find(p => p.type === 'day')?.value;
+    const hourStr = parts.find(p => p.type === 'hour')?.value;
 
-// Builds the deck from the CANONICAL roster fetched from
-// `GET /api/dharm-veer/roster` (see loadState). Does not fall back to the
-// local fixture — if `roster` is empty this returns an empty deck, and the
-// screen renders an honest "Unable to load today's profile" state instead
-// of silently substituting stale local content.
-function buildDailyDeck(tradition: Tradition, roster: DharmVeer[]) {
-  if (roster.length === 0) {
-    return [];
-  }
-
-  const byTradition = roster.filter((hero) => hero.tradition === tradition);
-  const fallbackPool = byTradition.length > 0 ? byTradition : roster.filter((hero) => hero.tradition === 'hindu');
-  const effectivePool = fallbackPool.length > 0 ? fallbackPool : roster;
-  const todayHero = selectDharmVeerOfTheDayFromRoster(roster, tradition);
-  const anchorIndex = Math.max(
-    0,
-    effectivePool.findIndex((hero) => hero.id === todayHero.id)
-  );
-
-  return Array.from({ length: Math.min(MAX_DAILY_CARDS, effectivePool.length) }, (_, index) => {
-    return effectivePool[(anchorIndex + index) % effectivePool.length];
-  });
+    if (year && month && dayStr && hourStr) {
+      let day = parseInt(dayStr, 10);
+      const hour = parseInt(hourStr, 10);
+      if (hour < rolloverHour) {
+         const temp = new Date(`${year}-${month}-${dayStr}T12:00:00Z`);
+         temp.setUTCDate(temp.getUTCDate() - 1);
+         return temp.toISOString().split('T')[0];
+      }
+      return `${year}-${month}-${dayStr}`;
+    }
+  } catch {}
+  const fallback = new Date(Date.now() - rolloverHour * 3600 * 1000);
+  return fallback.toISOString().split('T')[0];
 }
 
 export default function DharmVeerScreen() {
   const router = useRouter();
-  const dharmVeerShareCardRef = useRef<View>(null);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const [isGuest, setIsGuest] = useState(false);
-  const [authGateVisible, setAuthGateVisible] = useState(false);
-  const [profile, setProfile] = useState<ProfileContext | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [roster, setRoster] = useState<DharmVeer[]>([]);
   const [rosterError, setRosterError] = useState(false);
-  const [dayProgress, setDayProgress] = useState<ProgressSnapshot>({ done: false, seenIds: [] });
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [privacyCommunity, setPrivacyCommunity] = useState(false);
-  const [intention, setIntention] = useState('');
-  const [mood, setMood] = useState<'gratitude' | 'devotion' | 'peace' | 'courage'>('gratitude');
-  const [shareHeroData, setShareHeroData] = useState<DharmVeer | null>(null);
-  const [journeyExpanded, setJourneyExpanded] = useState(false);
-  // Check-in (mood/intention/privacy) is only asked after an "inspired"
-  // swipe — no point prompting for a written reflection on a hero the user
-  // is about to skip. Holds the hero+decision so the modal keeps working
-  // with the right card even after dayProgress advances past it.
-  const [pendingCheckIn, setPendingCheckIn] = useState<{ hero: DharmVeer; decision: SwipeDecision } | null>(null);
-
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const rotate = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  const [filter, setFilter] = useState<TraditionFilter>('all');
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [liveTodayHero, setLiveTodayHero] = useState<DharmVeer | null>(null);
 
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
@@ -114,102 +88,99 @@ export default function DharmVeerScreen() {
   const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const surface = isDark ? COLORS.darkBg : COLORS.creamBg;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-
-  const today = useMemo(() => spiritualDate(profile?.timezone ?? 'UTC'), [profile?.timezone]);
-  const storageKey = useMemo(() => `shoonaya-dharm-veer-mobile-${today}`, [today]);
-  const deck = useMemo(() => buildDailyDeck(profile?.tradition ?? 'hindu', roster), [profile?.tradition, roster]);
-  const visibleCards = useMemo(
-    () => deck.filter((hero) => !dayProgress.seenIds.includes(hero.id)),
-    [deck, dayProgress.seenIds]
-  );
-  const currentHero = visibleCards[currentIndex] ?? null;
-
-  useEffect(() => {
-    setJourneyExpanded(false);
-  }, [currentHero?.id]);
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { rotate: `${rotate.value}deg` },
-    ],
-    opacity: opacity.value,
-  }));
+  const gold = brand;
 
   const loadState = useCallback(async () => {
     const guest = await isGuestMode();
-    setIsGuest(guest);
 
+    let resolvedTimezone = 'UTC';
+    let resolvedTradition = 'hindu';
+
+    if (!guest) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace('/(auth)/login');
+        return;
+      }
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('tradition, timezone')
+        .eq('id', user.id)
+        .single();
+
+      resolvedTradition = profileRow?.tradition ?? 'hindu';
+      resolvedTimezone = profileRow?.timezone ?? 'UTC';
+    }
+
+    let rosterData: DharmVeer[] = [];
     if (guest) {
-      const tradition: Tradition = 'hindu';
-      const timezone = 'UTC';
-      const resolvedToday = spiritualDate(timezone);
-      const localKey = `shoonaya-dharm-veer-mobile-${resolvedToday}`;
-      const storedValue = await AsyncStorage.getItem(localKey);
-      const parsed = storedValue ? (JSON.parse(storedValue) as ProgressSnapshot) : null;
-
-      setProfile({ userId: 'guest', tradition, timezone });
-      setDayProgress({
-        done: Boolean(parsed?.done),
-        seenIds: parsed?.seenIds ?? [],
-      });
-      setRoster(DHARM_VEERS);
-      setRosterError(false);
-      setCurrentIndex(0);
-      return;
+      rosterData = DHARM_VEERS;
+    } else {
+      const res = await apiFetch('/api/dharm-veer/roster');
+      if (!res.ok) {
+        throw new Error('Dharm Veer roster unavailable');
+      }
+      const json = await res.json();
+      rosterData = Array.isArray(json?.roster) ? json.roster : [];
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
+    if (rosterData.length === 0) {
+      throw new Error('Dharm Veer roster is empty');
     }
 
-    const { data: profileRow } = await supabase
-      .from('profiles')
-      .select('tradition, timezone')
-      .eq('id', user.id)
-      .single();
+    setRoster(rosterData);
+    setRosterError(!rosterData || rosterData.length === 0);
 
-    const tradition = (profileRow?.tradition ?? 'hindu') as Tradition;
-    const timezone = profileRow?.timezone ?? 'UTC';
-    const resolvedToday = spiritualDate(timezone);
-    const localKey = `shoonaya-dharm-veer-mobile-${resolvedToday}`;
+    try {
+      const historyRaw = await AsyncStorage.getItem('shoonaya-dharmveer-history');
+      const ids = new Set<string>();
+      if (historyRaw) {
+        const historyArr = JSON.parse(historyRaw) as string[];
+        historyArr.forEach(id => ids.add(id));
+      }
 
-    const [storedValue, sadhanaRow, rosterResponse] = await Promise.all([
-      AsyncStorage.getItem(localKey),
-      supabase
-        .from('daily_sadhana')
-        .select('dharmveer_done')
-        .eq('user_id', user.id)
-        .eq('date', resolvedToday)
-        .maybeSingle(),
-      // Canonical, DB-backed roster — see src/app/api/dharm-veer/roster/route.ts
-      // (wraps web's getDharmVeerRoster). Failure here is surfaced honestly
-      // below rather than silently falling back to the local fixture.
-      apiFetch('/api/dharm-veer/roster')
-        .then(async (res) => {
-          if (!res.ok) return null;
-          const json = await res.json();
-          return Array.isArray(json?.roster) ? (json.roster as DharmVeer[]) : null;
-        })
-        .catch(() => null),
-    ]);
+      const todayDate = getLocalSpiritualDate(resolvedTimezone, 4);
+      // Legacy guest-only fallback from the old local fixture flow.
+      if (guest && await AsyncStorage.getItem(`shoonaya-dharmveer-done-${todayDate}`)) {
+        const fallbackHero = getDharmVeerOfTheDay(resolvedTradition);
+        ids.add(fallbackHero.id);
+      }
+      setReadIds(ids);
 
-    const parsed = storedValue ? (JSON.parse(storedValue) as ProgressSnapshot) : null;
+      const lastSelectedDate = await AsyncStorage.getItem('shoonaya-dharmveer-last-selected-date');
+      const lastSelectedId = await AsyncStorage.getItem('shoonaya-dharmveer-last-selected-id');
+      const historyIds = Array.from(ids);
 
-    setProfile({ userId: user.id, tradition, timezone });
-    setDayProgress({
-      done: Boolean(sadhanaRow.data?.dharmveer_done) || Boolean(parsed?.done),
-      seenIds: parsed?.seenIds ?? [],
-    });
-    setRoster(rosterResponse ?? []);
-    setRosterError(!rosterResponse || rosterResponse.length === 0);
-    setCurrentIndex(0);
+      const saveSelection = async (selected: DharmVeer) => {
+        const newHistory = [...historyIds.filter(id => id !== selected.id), selected.id].slice(-14);
+        await AsyncStorage.setItem('shoonaya-dharmveer-history', JSON.stringify(newHistory));
+        await AsyncStorage.setItem('shoonaya-dharmveer-last-selected-date', todayDate);
+        await AsyncStorage.setItem('shoonaya-dharmveer-last-selected-id', selected.id);
+      };
+
+      if (lastSelectedDate === todayDate && lastSelectedId) {
+        const found = rosterData.find(h => h.id === lastSelectedId);
+        if (found) {
+          setLiveTodayHero(found);
+        } else {
+          const selected = selectDharmVeer({
+            userTradition: resolvedTradition,
+            historyIds,
+            roster: rosterData,
+          });
+          setLiveTodayHero(selected);
+          await saveSelection(selected);
+        }
+      } else {
+        const selected = selectDharmVeer({
+          userTradition: resolvedTradition,
+          historyIds,
+          roster: rosterData,
+        });
+        setLiveTodayHero(selected);
+        await saveSelection(selected);
+      }
+    } catch (e) {}
   }, [router]);
 
   useEffect(() => {
@@ -223,185 +194,10 @@ export default function DharmVeerScreen() {
       });
   }, [loadState]);
 
-  const shareHero = useCallback(async (hero: DharmVeer) => {
-    setShareHeroData(hero);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await shareCapturedShoonayaCard(dharmVeerShareCardRef, {
-      fileName: `shoonaya-dharm-veer-${hero.id}.png`,
-      dialogTitle: 'Share Dharm Veer',
-      fallbackMessage: `${hero.name} — ${hero.tagline}`,
-    });
-  }, []);
-
-  const persistCompletion = useCallback(async () => {
-    if (!profile) {
-      return;
-    }
-
-    // daily_sadhana.dharmveer_done is now kept in sync server-side by
-    // POST /api/dharm-veer/submit (called per-swipe in submitSwipe below,
-    // via the complete_dharmveer RPC there) — each swipe already carries
-    // real evidence into dharm_veer_responses, which is what
-    // /api/sadhana/perfect-day now actually trusts. This function no longer
-    // needs its own direct RPC call; it only awards the flat completion
-    // bonus once all three cards are seen.
-    await apiFetch('/api/karma/award', {
-      method: 'POST',
-      body: JSON.stringify({ amount: 5, reason: 'dharm_veer' }),
-    }).catch(() => null);
-  }, [profile]);
-
-  const submitSwipe = useCallback(
-    async (
-      hero: DharmVeer,
-      decision: SwipeDecision,
-      checkIn: { mood: typeof mood; intention: string; privacyCommunity: boolean }
-    ) => {
-      if (!profile) {
-        return;
-      }
-
-      const nextSeen = Array.from(new Set([...dayProgress.seenIds, hero.id]));
-      const nextDone = nextSeen.length >= MAX_DAILY_CARDS;
-
-      setDayProgress({ done: nextDone, seenIds: nextSeen });
-      setCurrentIndex(0);
-      await AsyncStorage.setItem(storageKey, JSON.stringify({ done: nextDone, seenIds: nextSeen }));
-
-      if (isGuest) {
-        if (decision === 'share') {
-          await shareHero(hero);
-        }
-        if (nextDone) {
-          setAuthGateVisible(true);
-        }
-        return;
-      }
-
-      await apiFetch('/api/dharm-veer/submit', {
-        method: 'POST',
-        body: JSON.stringify({
-          heroId: hero.id,
-          decision,
-          mood: checkIn.mood,
-          intention: checkIn.intention,
-          privacy: checkIn.privacyCommunity ? 'community' : 'private',
-        }),
-      }).catch(() => null);
-
-      if (decision === 'share') {
-        await shareHero(hero);
-      }
-
-      if (nextDone) {
-        await persistCompletion();
-      }
-    },
-    [dayProgress.seenIds, persistCompletion, isGuest, profile, shareHero, storageKey]
+  const filtered = useMemo(
+    () => filter === 'all' ? roster : roster.filter((hero) => hero.tradition === filter),
+    [filter, roster],
   );
-
-  // Skip/share commit immediately with no check-in — only an "inspired"
-  // swipe opens the reflection modal (see the Modal below), since that's
-  // the only decision worth interrupting the swipe flow for.
-  const finalizeGesture = useCallback(
-    (decision: SwipeDecision) => {
-      if (!currentHero || submitting) {
-        return;
-      }
-
-      if (decision === 'inspired') {
-        setPendingCheckIn({ hero: currentHero, decision });
-        translateX.value = 0;
-        translateY.value = 0;
-        rotate.value = 0;
-        opacity.value = 1;
-        return;
-      }
-
-      setSubmitting(true);
-      submitSwipe(currentHero, decision, { mood: 'gratitude', intention: '', privacyCommunity: false })
-        .catch(() => {
-          Alert.alert("Could not save today's response");
-        })
-        .finally(() => {
-          setSubmitting(false);
-          translateX.value = 0;
-          translateY.value = 0;
-          rotate.value = 0;
-          opacity.value = 1;
-        });
-    },
-    [currentHero, rotate, submitSwipe, submitting, translateX, translateY, opacity]
-  );
-
-  const confirmCheckIn = useCallback(() => {
-    if (!pendingCheckIn) {
-      return;
-    }
-    setSubmitting(true);
-    submitSwipe(pendingCheckIn.hero, pendingCheckIn.decision, { mood, intention, privacyCommunity })
-      .catch(() => {
-        Alert.alert("Could not save today's response");
-      })
-      .finally(() => {
-        setSubmitting(false);
-        setPendingCheckIn(null);
-        setMood('gratitude');
-        setIntention('');
-        setPrivacyCommunity(false);
-      });
-  }, [intention, mood, pendingCheckIn, privacyCommunity, submitSwipe]);
-
-  const skipCheckInNote = useCallback(() => {
-    if (!pendingCheckIn) {
-      return;
-    }
-    setSubmitting(true);
-    submitSwipe(pendingCheckIn.hero, pendingCheckIn.decision, { mood: 'gratitude', intention: '', privacyCommunity: false })
-      .catch(() => {
-        Alert.alert("Could not save today's response");
-      })
-      .finally(() => {
-        setSubmitting(false);
-        setPendingCheckIn(null);
-        setMood('gratitude');
-        setIntention('');
-        setPrivacyCommunity(false);
-      });
-  }, [pendingCheckIn, submitSwipe]);
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-      rotate.value = interpolate(event.translationX, [-240, 0, 240], [-10, 0, 10]);
-    })
-    .onEnd((event) => {
-      if (event.translationX > 120) {
-        translateX.value = withTiming(480, { duration: 220 });
-        opacity.value = withTiming(0, { duration: 220 });
-        runOnJS(finalizeGesture)('inspired');
-        return;
-      }
-
-      if (event.translationX < -120) {
-        translateX.value = withTiming(-480, { duration: 220 });
-        opacity.value = withTiming(0, { duration: 220 });
-        runOnJS(finalizeGesture)('skip');
-        return;
-      }
-
-      if (event.translationY < -120) {
-        translateY.value = withTiming(-420, { duration: 220 });
-        opacity.value = withTiming(0, { duration: 220 });
-        runOnJS(finalizeGesture)('share');
-        return;
-      }
-
-      translateX.value = withSpring(0);
-      translateY.value = withSpring(0);
-      rotate.value = withSpring(0);
-    });
 
   if (loading) {
     return (
@@ -413,16 +209,15 @@ export default function DharmVeerScreen() {
     );
   }
 
-  if (rosterError) {
+  if (rosterError || !liveTodayHero) {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
           <BackButton variant="glass" />
-
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-              {"Unable to load today's profile. Check your connection and try again."}
+              {"Unable to load today's profiles. Check your connection and try again."}
             </Text>
             <PressableSurface
               haptic="selection"
@@ -448,210 +243,228 @@ export default function DharmVeerScreen() {
     );
   }
 
-  if (dayProgress.done || !currentHero) {
-    return (
-      <Screen style={{ backgroundColor: surface }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <BackButton variant="glass" />
-
-          <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-              {"You have completed today's three hero cards. Come back tomorrow for a new set."}
-            </Text>
-          </Card>
-        </ScrollView>
-      </Screen>
-    );
-  }
-
   return (
-    <Screen style={{ backgroundColor: surface }}>
-      {shareHeroData ? (
-        <View
-          pointerEvents="none"
-          collapsable={false}
-          style={{
-            position: 'absolute',
-            left: -420,
-            top: 0,
-            opacity: 0.01,
-          }}
-        >
-          <ShoonayaShareCard
-            ref={dharmVeerShareCardRef}
-            data={{
-              tradition: shareHeroData.tradition,
-              headlineValue: shareHeroData.name,
-              title: 'Dharm Veer',
-              subtitle: `${shareHeroData.era} · ${shareHeroData.region}`,
-              caption: shareHeroData.teaching || shareHeroData.tagline,
-              footer: 'Shared from Shoonaya',
-            }}
-          />
-        </View>
-      ) : null}
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <BackButton variant="glass" />
-
-        <View style={{ gap: 4 }}>
-          <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
-          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>
-            Card {dayProgress.seenIds.length + 1} of {MAX_DAILY_CARDS}
+    <Screen style={{ backgroundColor: surface, paddingHorizontal: 0 }}>
+      {/* Sticky Header */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: border,
+        backgroundColor: cardBg,
+        gap: 12
+      }}>
+        <BackButton variant="glass" style={{ marginHorizontal: 0, marginBottom: 0 }} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>
+            Sacred Archive
+          </Text>
+          <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>
+            Dharm Veer
           </Text>
         </View>
-
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={cardStyle}>
-            <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 16 }}>
-              <DharmVeerPoster hero={currentHero} />
-
-              <View style={{ gap: 4 }}>
-                <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{currentHero.name}</Text>
-                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-                  {currentHero.emoji} {currentHero.tradition.toUpperCase()} · {currentHero.era}
-                </Text>
-              </View>
-
-              <View>
-                <Text
-                  numberOfLines={journeyExpanded ? undefined : 6}
-                  style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}
-                >
-                  {currentHero.journey}
-                </Text>
-                {currentHero.journey.length > 300 ? (
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={() => setJourneyExpanded((value) => !value)}
-                    style={{ marginTop: 6, minHeight: 0, alignSelf: 'flex-start' }}
-                  >
-                    <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-                      {journeyExpanded ? 'Read less' : 'Read more'}
-                    </Text>
-                  </PressableSurface>
-                ) : null}
-              </View>
-
-              <View style={{ borderTopWidth: 1, borderTopColor: border, paddingTop: 14, gap: 6 }}>
-                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Teaching</Text>
-                <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{currentHero.teaching}</Text>
-              </View>
-            </Card>
-          </Animated.View>
-        </GestureDetector>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Swipe left to skip</Text>
-          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Swipe right if inspired</Text>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          backgroundColor: isDark ? 'rgba(197,160,89,0.1)' : 'rgba(197,160,89,0.15)',
+          borderColor: isDark ? 'rgba(197,160,89,0.22)' : 'rgba(197,160,89,0.4)',
+          borderWidth: 1,
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 999
+        }}>
+          <Feather name="award" size={12} color={gold} />
+          <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+            {readIds.size}/{roster.length}
+          </Text>
         </View>
-        <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>Swipe up to share</Text>
-      </ScrollView>
+      </View>
 
-      <AuthGate
-        visible={authGateVisible}
-        onClose={() => setAuthGateVisible(false)}
-        title="Dharm Veer"
-        message="Sign in to save your responses and streaks for daily heroes."
-      />
-
-      <Modal transparent visible={!!pendingCheckIn} animationType="slide" onRequestClose={skipCheckInNote}>
-        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
-          <View
-            style={{
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              backgroundColor: cardBg,
-              borderWidth: 1,
-              borderColor: border,
-              padding: 22,
-              paddingBottom: 34,
-              gap: 16,
-            }}
-          >
-            <View style={{ alignItems: 'center' }}>
-              <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
-            </View>
-
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 20 }}>
-              {pendingCheckIn ? `What are you taking from ${pendingCheckIn.hero.name}?` : ''}
+      <FlatList
+        data={filtered}
+        keyExtractor={(hero) => hero.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: 20 }}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={7}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        ListHeaderComponent={(
+          <>
+            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
+              Today's Dharm Veer
             </Text>
+            <PressableSurface
+              haptic="selection"
+              onPress={() => router.push(`/dharm-veer/${liveTodayHero.id}`)}
+              style={{
+                backgroundColor: isDark ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.1)',
+                borderColor: isDark ? 'rgba(197,160,89,0.28)' : 'rgba(197,160,89,0.4)',
+                borderWidth: 1,
+                borderRadius: 28,
+                padding: 20,
+                marginBottom: 24,
+                overflow: 'hidden',
+              }}
+            >
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <View style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: TRADITION_META[liveTodayHero.tradition]?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)',
+                  borderColor: 'rgba(197,160,89,0.3)',
+                  borderWidth: 1,
+                }}>
+                  <Text style={{ fontSize: 32 }}>{liveTodayHero.emoji}</Text>
+                </View>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
+                      <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        {TRADITION_META[liveTodayHero.tradition]?.label ?? liveTodayHero.tradition}
+                      </Text>
+                    </View>
+                    {readIds.has(liveTodayHero.id) ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Feather name="check-circle" size={12} color={COLORS.success} />
+                        <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>Read</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{liveTodayHero.name}</Text>
+                  <Text numberOfLines={2} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18 }}>{liveTodayHero.tagline}</Text>
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 8 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(197,160,89,0.2)' }} />
+                <Feather name="book-open" size={14} color={gold} />
+                <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Read story</Text>
+                <Feather name="chevron-right" size={14} color={gold} />
+                <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(197,160,89,0.2)' }} />
+              </View>
+            </PressableSurface>
 
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {(['gratitude', 'devotion', 'peace', 'courage'] as const).map((option) => {
-                const active = mood === option;
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginBottom: 20 }}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {TRADITION_FILTERS.map((tradition) => {
+                const active = filter === tradition.key;
                 return (
                   <PressableSurface
-                    key={option}
+                    key={tradition.key}
                     haptic="selection"
-                    onPress={() => setMood(option)}
+                    onPress={() => setFilter(tradition.key)}
+                    accessibilityState={{ selected: active }}
                     style={{
-                      borderRadius: 999,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
                       paddingHorizontal: 14,
                       paddingVertical: 8,
+                      borderRadius: 999,
+                      backgroundColor: active ? gold : isDark ? 'rgba(197,160,89,0.07)' : 'rgba(197,160,89,0.1)',
+                      borderColor: active ? gold : 'rgba(197,160,89,0.18)',
                       borderWidth: 1,
-                      borderColor: active ? brand : border,
-                      backgroundColor: active ? brand : cardBg,
                     }}
                   >
-                    <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                      {option}
+                    <Text style={{ fontSize: 14 }}>{tradition.emoji}</Text>
+                    <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                      {tradition.label}
                     </Text>
                   </PressableSurface>
                 );
               })}
-            </View>
+            </ScrollView>
+          </>
+        )}
+        renderItem={({ item: hero }) => {
+            const isToday = hero.id === liveTodayHero.id;
+            const isRead = readIds.has(hero.id);
+            const meta = TRADITION_META[hero.tradition];
+            const accent = TRADITION_ACCENT[hero.tradition] ?? gold;
 
-            <TextInput
-              value={intention}
-              onChangeText={setIntention}
-              placeholder="A word or two (optional)"
-              placeholderTextColor={textDim}
-              multiline
-              style={{
-                minHeight: 80,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: border,
-                backgroundColor: surface,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                color: text,
-                fontFamily: FONTS.sans,
-                fontSize: 14,
-                textAlignVertical: 'top',
-              }}
-            />
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Share with community</Text>
-              <Switch value={privacyCommunity} onValueChange={setPrivacyCommunity} trackColor={{ true: brand }} />
-            </View>
-
+          return (
             <PressableSurface
               haptic="selection"
-              onPress={confirmCheckIn}
-              disabled={submitting}
+              onPress={() => router.push(`/dharm-veer/${hero.id}`)}
+              accessibilityLabel={`${hero.name}, ${isRead ? 'read' : 'unread'}`}
               style={{
-                borderRadius: 999,
-                paddingVertical: 14,
+                flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: brand,
+                gap: 14,
+                padding: 16,
+                borderRadius: 20,
+                backgroundColor: isToday ? 'rgba(197,160,89,0.08)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                borderColor: isToday ? 'rgba(197,160,89,0.32)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                borderWidth: 1,
               }}
             >
-              {submitting ? (
-                <ActivityIndicator color={COLORS.ink} />
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: meta?.color.replace('0.12', '0.22') ?? 'rgba(197,160,89,0.15)',
+                borderColor: meta?.color.replace('0.12', '0.32') ?? 'rgba(197,160,89,0.2)',
+                borderWidth: 1,
+              }}>
+                <Text style={{ fontSize: 24 }}>{hero.emoji}</Text>
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <Text style={{ color: accent, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    {meta?.label ?? hero.tradition}
+                  </Text>
+                  {isToday ? (
+                    <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999 }}>
+                      <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Today</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text numberOfLines={1} style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{hero.name}</Text>
+                <Text numberOfLines={1} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12 }}>
+                  {hero.era} · {hero.region}
+                </Text>
+              </View>
+              {isRead ? (
+                <Feather name="check-circle" size={20} color={COLORS.success} />
               ) : (
-                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Save & continue</Text>
+                <View style={{ width: 20, height: 20, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(197,160,89,0.3)' }} />
               )}
             </PressableSurface>
-
-            <PressableSurface haptic="selection" onPress={skipCheckInNote} disabled={submitting} style={{ alignItems: 'center', minHeight: 0 }}>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Skip note</Text>
-            </PressableSurface>
+          );
+        }}
+        ListFooterComponent={(
+          <View style={{
+            marginTop: 32,
+            padding: 24,
+            borderRadius: 24,
+            alignItems: 'center',
+            backgroundColor: 'rgba(197,160,89,0.05)',
+            borderColor: 'rgba(197,160,89,0.12)',
+            borderWidth: 1,
+            gap: 8,
+          }}>
+            <Feather name="shield" size={28} color={gold} />
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 20, textAlign: 'center' }}>
+              Read daily — earn your Dharm Veer mark
+            </Text>
+            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+              {'30 seconds of reading counts as your Sadhana.\nA new hero surfaces each day.'}
+            </Text>
           </View>
-        </View>
-      </Modal>
+        )}
+      />
     </Screen>
   );
 }

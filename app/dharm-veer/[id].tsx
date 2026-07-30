@@ -1,61 +1,120 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TextInput,
+  useColorScheme,
+  View,
+  Modal,
+  Switch,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { DharmVeerPoster } from '@/components/dharm-veer/DharmVeerPoster';
-import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { BackButton } from '@/components/ui/BackButton';
-import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
-import type { DharmVeer } from '@/lib/dharm-veer';
-import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { COLORS, FONTS } from '@/lib/constants';
+import { DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
+import { supabase } from '@/lib/supabase';
+import { isGuestMode } from '@/lib/guestSession';
+import { AuthGate } from '@/components/ui/AuthGate';
 
-// Detail screen for a SPECIFIC Dharm Veer, reached from Home's
-// `dharmVeer.href` (`/dharm-veer/{id}`) or any other deep link that names a
-// hero by id. This is the fix for a real bug: Home shows hero X (from
-// /api/native/home-summary, whose id comes from
-// getDharmVeerRoster()+selectDharmVeerOfTheDayFromRoster()), but the old
-// static `/dharm-veer` route ignored the id entirely and recomputed its own
-// "hero of the day" locally — so a tap on Home could land on a *different*
-// hero than the one just shown. This screen instead:
-//   1. Fetches the same canonical roster Home's id was drawn from
-//      (`GET /api/dharm-veer/roster` — no direct Supabase read/write here).
-//   2. Finds the hero by the route's `id` param.
-//   3. Renders that exact hero — never a substitute.
-// If the id is missing or not found in the roster, it shows an honest
-// "not found" state with Retry + Back rather than silently falling back to
-// a different (e.g. today's) hero. Opening this screen never marks daily
-// completion — that stays owned by the swipe deck at app/dharm-veer.tsx,
-// which is unchanged and still the "practice" surface; this is a "read
-// about this hero" surface reachable from Home, notifications, or a share.
+// New Reader Foundation imports
+import { ReaderShell } from '@/components/reader/ReaderShell';
+import { useReaderControls } from '@/hooks/useReaderControls';
+import { buildReadableCapabilities } from '@/lib/readable-content';
+import { getInitialReaderDisplayMode, resolveReadablePreferences } from '@/lib/readable-preferences';
+
+function getLocalSpiritualDate(tz: string, rolloverHour: number = 4): string {
+  try {
+    const d = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: 'numeric', hourCycle: 'h23',
+    }).formatToParts(d);
+
+    const year = parts.find(p => p.type === 'year')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    const dayStr = parts.find(p => p.type === 'day')?.value;
+    const hourStr = parts.find(p => p.type === 'hour')?.value;
+
+    if (year && month && dayStr && hourStr) {
+      let day = parseInt(dayStr, 10);
+      const hour = parseInt(hourStr, 10);
+      if (hour < rolloverHour) {
+         const temp = new Date(`${year}-${month}-${dayStr}T12:00:00Z`);
+         temp.setUTCDate(temp.getUTCDate() - 1);
+         return temp.toISOString().split('T')[0];
+      }
+      return `${year}-${month}-${dayStr}`;
+    }
+  } catch {}
+  const fallback = new Date(Date.now() - rolloverHour * 3600 * 1000);
+  return fallback.toISOString().split('T')[0];
+}
+
+type FontSize = 'sm' | 'md' | 'lg' | 'xl';
+const FONT_PRESETS = [
+  { label: 'A-', value: 'sm' },
+  { label: 'A', value: 'md' },
+  { label: 'A+', value: 'lg' },
+  { label: 'A++', value: 'xl' },
+];
+
 export default function DharmVeerDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const shareCardRef = useRef<View>(null);
-  const params = useLocalSearchParams<{ id: string | string[] }>();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
-
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [hero, setHero] = useState<DharmVeer | null>(null);
+
+  const [isGuest, setIsGuest] = useState(false);
+  const [authGateVisible, setAuthGateVisible] = useState(false);
+  const [profile, setProfile] = useState<{
+    userId: string;
+    timezone: string;
+    appLanguage: string | null;
+    meaningLanguage: string | null;
+  } | null>(null);
+
+  const [lang, setLang] = useState<'en' | 'local'>('en');
+  const [fontStep, setFontStep] = useState(1); // 'md'
+
+  // Explicit Inspiration state
+  const [pendingCheckIn, setPendingCheckIn] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [privacyCommunity, setPrivacyCommunity] = useState(false);
+  const [intention, setIntention] = useState('');
+  const [mood, setMood] = useState<'gratitude' | 'devotion' | 'peace' | 'courage'>('gratitude');
+
+  // Ask AI state
+  const [askMoreQuery, setAskMoreQuery] = useState('');
+  const [askMoreResponse, setAskMoreResponse] = useState('');
+  const [askMoreLoading, setAskMoreLoading] = useState(false);
+
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const text = isDark ? COLORS.creamBg : COLORS.ink;
   const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const surface = isDark ? COLORS.darkBg : COLORS.creamBg;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const gold = brand;
 
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const [notFound, setNotFound] = useState(false);
-  const [hero, setHero] = useState<DharmVeer | null>(null);
-  const [journeyExpanded, setJourneyExpanded] = useState(false);
-  const [trialExpanded, setTrialExpanded] = useState(false);
-  const [askMoreQuery, setAskMoreQuery] = useState('');
-  const [askMoreResponse, setAskMoreResponse] = useState('');
-  const [askMoreLoading, setAskMoreLoading] = useState(false);
+  const fontStyles: Record<FontSize, { fontSize: number; lineHeight: number }> = {
+    sm: { fontSize: 13, lineHeight: 20 },
+    md: { fontSize: 15, lineHeight: 24 },
+    lg: { fontSize: 18, lineHeight: 28 },
+    xl: { fontSize: 22, lineHeight: 32 },
+  };
 
   const load = useCallback(async () => {
     setLoadError(false);
@@ -67,24 +126,67 @@ export default function DharmVeerDetailScreen() {
     }
 
     try {
-      const response = await apiFetch('/api/dharm-veer/roster');
-      if (!response.ok) {
+      const guest = await isGuestMode();
+      setIsGuest(guest);
+
+      let tz = 'UTC';
+      let uid = 'guest';
+      let appLanguage: string | null = null;
+      let meaningLanguage: string | null = null;
+      if (!guest) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          uid = user.id;
+          const { data: profileRow } = await supabase
+            .from('profiles')
+            .select('timezone, app_language, meaning_language')
+            .eq('id', user.id)
+            .single();
+          if (profileRow?.timezone) tz = profileRow.timezone;
+          appLanguage = profileRow?.app_language ?? null;
+          meaningLanguage = profileRow?.meaning_language ?? null;
+        }
+      }
+      setProfile({ userId: uid, timezone: tz, appLanguage, meaningLanguage });
+
+      let roster: DharmVeer[] = [];
+      if (guest) {
+        roster = DHARM_VEERS;
+      } else {
+        const response = await apiFetch('/api/dharm-veer/roster');
+        if (!response.ok) {
+          setLoadError(true);
+          return;
+        }
+        const json = await response.json();
+        roster = Array.isArray(json?.roster) ? json.roster : [];
+      }
+
+      if (roster.length === 0) {
         setLoadError(true);
         return;
       }
 
-      const json = await response.json();
-      const roster: DharmVeer[] = Array.isArray(json?.roster) ? json.roster : [];
       const match = roster.find((candidate) => candidate.id === id) ?? null;
 
       if (!match) {
-        // Correct on purpose: an unknown id is a "not found" state, never a
-        // silent substitution for today's hero or the first roster entry.
         setNotFound(true);
         return;
       }
 
       setHero(match);
+      const hasLocalContent = Boolean(
+        match.nameLocal
+        && match.taglineLocal
+        && match.journeyLocal
+        && match.trialLocal
+        && match.teachingLocal
+        && match.moralLocal,
+      );
+      setLang(getInitialReaderDisplayMode(
+        resolveReadablePreferences({ appLanguage, meaningLanguage }),
+        hasLocalContent,
+      ));
     } catch {
       setLoadError(true);
     }
@@ -95,49 +197,171 @@ export default function DharmVeerDetailScreen() {
     load().finally(() => setLoading(false));
   }, [load]);
 
-  const retry = useCallback(() => {
-    setLoading(true);
-    load().finally(() => setLoading(false));
-  }, [load]);
+  // Silent 30-second completion, matching the PWA reader rule.
+  useEffect(() => {
+    if (!hero || !profile) return;
 
-  const askDharmaMitra = useCallback(async () => {
-    const question = askMoreQuery.trim();
-    if (!question || !hero || askMoreLoading) return;
+    const timer = setTimeout(async () => {
+      try {
+        const tz = profile.timezone;
+        const today = getLocalSpiritualDate(tz, 4);
+        const dailyKey = `shoonaya-dharmveer-done-${today}-${profile.userId}-${hero.id}`;
 
-    setAskMoreLoading(true);
-    setAskMoreResponse('');
+        const alreadyDoneToday = await AsyncStorage.getItem(dailyKey);
+        if (alreadyDoneToday) return;
+
+        let ok = false;
+        if (!isGuest) {
+          const res = await apiFetch('/api/dharm-veer/submit', {
+            method: 'POST',
+            body: JSON.stringify({
+              heroId: hero.id,
+              decision: 'inspired',
+              privacy: 'private',
+            }),
+          });
+          ok = res.ok;
+        } else {
+          ok = true; // For guests, we only care about local cache
+        }
+
+        if (ok) {
+          await AsyncStorage.setItem(dailyKey, 'true');
+          const historyRaw = await AsyncStorage.getItem('shoonaya-dharmveer-history');
+          const historyArr = historyRaw ? (JSON.parse(historyRaw) as string[]) : [];
+          if (!historyArr.includes(hero.id)) {
+            historyArr.push(hero.id);
+            const newHistory = historyArr.slice(-14);
+            await AsyncStorage.setItem('shoonaya-dharmveer-history', JSON.stringify(newHistory));
+          }
+        }
+      } catch (e) {}
+    }, 30_000);
+
+    return () => clearTimeout(timer);
+  }, [hero, isGuest, profile]);
+
+  const confirmCheckIn = useCallback(async () => {
+    if (!hero || !profile) return;
+    setSubmitting(true);
     try {
-      const response = await apiFetch('/api/ai/chat', {
+      const res = await apiFetch('/api/dharm-veer/submit', {
         method: 'POST',
         body: JSON.stringify({
-          message: question,
-          mode: 'dharam_veer_reflection',
-          figure_id: hero.id,
+          heroId: hero.id,
+          decision: 'inspired',
+          mood,
+          intention,
+          privacy: privacyCommunity ? 'community' : 'private',
         }),
       });
 
-      if (!response.ok) {
-        setAskMoreResponse('Dharma Mitra could not answer right now.');
-        return;
+      if (!res.ok) throw new Error();
+
+      const tz = profile.timezone;
+      const today = getLocalSpiritualDate(tz, 4);
+      const dailyKey = `shoonaya-dharmveer-done-${today}-${profile.userId}-${hero.id}`;
+      await AsyncStorage.setItem(dailyKey, 'true');
+
+      const historyRaw = await AsyncStorage.getItem('shoonaya-dharmveer-history');
+      const historyArr = historyRaw ? (JSON.parse(historyRaw) as string[]) : [];
+      if (!historyArr.includes(hero.id)) {
+        historyArr.push(hero.id);
+        const newHistory = historyArr.slice(-14);
+        await AsyncStorage.setItem('shoonaya-dharmveer-history', JSON.stringify(newHistory));
       }
 
-      const answer = await response.text();
-      setAskMoreResponse(answer.trim() || 'Dharma Mitra could not answer right now.');
+      setPendingCheckIn(false);
+      setMood('gratitude');
+      setIntention('');
+      setPrivacyCommunity(false);
+      Alert.alert("Reflection Saved", "Your reflection has been safely stored.");
     } catch {
-      setAskMoreResponse('Dharma Mitra could not answer right now.');
+      Alert.alert("Could not save your reflection", "Please try again later.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [hero, mood, intention, privacyCommunity, profile]);
+
+  const handleAskMore = async () => {
+    if (!askMoreQuery.trim() || !hero) return;
+    if (isGuest) {
+      setAuthGateVisible(true);
+      return;
+    }
+    setAskMoreLoading(true);
+    setAskMoreResponse('');
+    try {
+      const res = await apiFetch('/api/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({
+          message: askMoreQuery,
+          mode: 'dharam_veer_reflection',
+          figure_id: hero.id
+        }),
+      });
+      if (res.ok) {
+        const text = await res.text();
+        setAskMoreResponse(text);
+      } else {
+        setAskMoreResponse('Failed to fetch response.');
+      }
+    } catch(err) {
+      setAskMoreResponse('An error occurred.');
     } finally {
       setAskMoreLoading(false);
     }
-  }, [askMoreLoading, askMoreQuery, hero]);
+  };
 
-  const shareHero = useCallback(async () => {
-    if (!hero) return;
-    await shareCapturedShoonayaCard(shareCardRef, {
-      fileName: `shoonaya-dharm-veer-${hero.id}.png`,
-      dialogTitle: 'Share Dharm Veer',
-      fallbackMessage: `${hero.name} — ${hero.tagline}`,
-    });
-  }, [hero]);
+  const title = lang === 'local' && hero?.nameLocal ? hero.nameLocal : hero?.name;
+  const era = lang === 'local' && hero?.eraLocal ? hero.eraLocal : hero?.era;
+  const region = lang === 'local' && hero?.regionLocal ? hero.regionLocal : hero?.region;
+  const tagline = lang === 'local' && hero?.taglineLocal ? hero.taglineLocal : hero?.tagline;
+  const journeyText = lang === 'local' && hero?.journeyLocal ? hero.journeyLocal : hero?.journey;
+  const trialText = lang === 'local' && hero?.trialLocal ? hero.trialLocal : hero?.trial;
+  const teachingText = lang === 'local' && hero?.teachingLocal ? hero.teachingLocal : hero?.teaching;
+  const moralText = lang === 'local' && hero?.moralLocal ? hero.moralLocal : hero?.moral;
+  const quoteText = lang === 'local' && hero?.quoteLocal?.text ? hero.quoteLocal.text : hero?.quote?.text;
+  const quoteAttribution = lang === 'local' && hero?.quoteLocal?.attribution ? hero.quoteLocal.attribution : hero?.quote?.attribution;
+
+  const textToCopy = hero ? `${title}
+${tagline}
+
+[Journey]
+${journeyText}
+
+[Trial]
+${trialText}
+
+[Teaching]
+${teachingText}
+
+[Moral]
+${moralText}` : '';
+
+  const textToShare = hero ? `🙏 Jai Shri Hari! Read this inspiring Dharm Veer story of '${title}' on the Shoonaya App. Download now to grow your Sadhana.` : '';
+
+  const hasCompleteLocalContent = !!hero?.nameLocal && !!hero?.taglineLocal && !!hero?.journeyLocal && !!hero?.trialLocal && !!hero?.teachingLocal && !!hero?.moralLocal;
+  const meta = hero ? TRADITION_META[hero.tradition] : null;
+  const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)';
+
+  const capabilities = useMemo(() => buildReadableCapabilities({
+    original: hero?.journey ?? '',
+    meaning: hero?.journeyLocal,
+    script: 'latin',
+    pipelineTags: {
+      content_type: 'instruction',
+      audio_mode: 'none',
+    },
+  }, {
+    canToggleLocalLanguage: hasCompleteLocalContent,
+    canShowExplain: false,
+  }), [hasCompleteLocalContent, hero?.journey, hero?.journeyLocal]);
+
+  const { state, handlers } = useReaderControls(capabilities);
+
+  const fontSizeToken = FONT_PRESETS[fontStep].value as FontSize;
+  const fs = fontStyles[fontSizeToken];
 
   if (loading) {
     return (
@@ -149,268 +373,283 @@ export default function DharmVeerDetailScreen() {
     );
   }
 
-  if (loadError || notFound) {
+  if (loadError || notFound || !hero) {
     return (
       <Screen style={{ backgroundColor: surface }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
+        <View style={{ padding: 20 }}>
           <BackButton variant="glass" />
-
-          <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 26 }}>
-              {notFound ? 'Hero not found' : 'Could not load this hero'}
-            </Text>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-              {notFound
-                ? "This Dharm Veer couldn't be found. It may have been renamed or removed — try again, or go back."
-                : 'Check your connection and try again.'}
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <PressableSurface
-                haptic="selection"
-                onPress={retry}
-                style={{
-                  alignSelf: 'flex-start',
-                  borderRadius: 999,
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                  backgroundColor: brand,
-                }}
-              >
-                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Retry</Text>
-              </PressableSurface>
-              <PressableSurface
-                haptic="selection"
-                onPress={() => router.back()}
-                style={{
-                  alignSelf: 'flex-start',
-                  borderRadius: 999,
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                  borderWidth: 1,
-                  borderColor: border,
-                }}
-              >
-                <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Go back</Text>
-              </PressableSurface>
-            </View>
-          </Card>
-        </ScrollView>
+          <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30, marginTop: 20 }}>Dharm Veer</Text>
+          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, marginTop: 10 }}>
+            {notFound ? 'Story not found.' : 'Failed to load story.'}
+          </Text>
+        </View>
       </Screen>
     );
   }
 
-  if (!hero) {
-    // Unreachable in practice (covered by notFound above), kept only so
-    // TypeScript can narrow `hero` to non-null below without a cast.
-    return null;
-  }
-
   return (
-    <Screen style={{ backgroundColor: surface }}>
-      <View
-        pointerEvents="none"
-        collapsable={false}
-        style={{
-          position: 'absolute',
-          left: -420,
-          top: 0,
-          opacity: 0.01,
-        }}
+    <>
+      <ReaderShell
+        title={title ?? 'Dharm Veer'}
+        subtitle={meta?.dharmVeerLocal || 'Dharm Veer'}
+        fallbackBackUrl="/dharm-veer"
+        themeColor={brand}
+        ambientGlowColor={brand}
+        fontPresets={FONT_PRESETS}
+        fontStep={fontStep}
+        setFontStep={setFontStep}
+        languages={hasCompleteLocalContent ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिं/Local' }] : undefined}
+        currentLanguage={lang}
+        setLanguage={setLang}
+        onCopy={() => handlers.copyText(textToCopy, 'Story')}
+        isCopied={state.isCopied}
+        onShare={() => handlers.share(textToShare)}
       >
-        <ShoonayaShareCard
-          ref={shareCardRef}
-          data={{
-            tradition: hero.tradition,
-            headlineValue: hero.name,
-            title: 'Dharm Veer',
-            subtitle: `${hero.era} · ${hero.region}`,
-            caption: hero.teaching || hero.tagline,
-            footer: 'Shared from Shoonaya',
-          }}
-        />
-      </View>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-        <BackButton variant="glass" />
-
-        <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 16 }}>
-          <DharmVeerPoster hero={hero} />
-
-          <View style={{ gap: 4 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>{hero.name}</Text>
-            {hero.nameLocal ? (
-              <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 14 }}>{hero.nameLocal}</Text>
-            ) : null}
-            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-              {hero.emoji} {hero.tradition.toUpperCase()} · {hero.era} · {hero.region}
-            </Text>
+        {/* Identity Section */}
+        <View style={{ alignItems: 'center', gap: 16, marginBottom: 32 }}>
+          <View style={{ width: 80, height: 80, borderRadius: 24, backgroundColor: accent, borderColor: brand, borderWidth: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontSize: 40 }}>{hero.emoji}</Text>
           </View>
-
-          <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>
-            {hero.tagline}
+          <View style={{ alignItems: 'center', gap: 4 }}>
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28, textAlign: 'center' }}>{title}</Text>
+            <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2 }}>{era} · {region}</Text>
+          </View>
+          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: fs.fontSize, fontStyle: 'italic', textAlign: 'center' }}>
+            "{tagline}"
           </Text>
+        </View>
 
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Journey</Text>
-            <Text
-              numberOfLines={journeyExpanded ? undefined : 5}
-              style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}
-            >
-              {hero.journey}
-            </Text>
-            {hero.journey.length > 260 ? (
-              <PressableSurface haptic="selection" onPress={() => setJourneyExpanded((value) => !value)} style={{ minHeight: 0, alignSelf: 'flex-start' }}>
-                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-                  {journeyExpanded ? 'Read less' : 'Read more'}
-                </Text>
-              </PressableSurface>
-            ) : null}
+        {/* Narrative Sections */}
+        <View style={{ gap: 24 }}>
+          {/* Journey */}
+          <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+              <Feather name="book-open" size={14} color={text} />
+              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>The Journey</Text>
+            </View>
+            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{journeyText}</Text>
           </View>
 
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>The Trial</Text>
-            <Text
-              numberOfLines={trialExpanded ? undefined : 5}
-              style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}
-            >
-              {hero.trial}
-            </Text>
-            {hero.trial.length > 260 ? (
-              <PressableSurface haptic="selection" onPress={() => setTrialExpanded((value) => !value)} style={{ minHeight: 0, alignSelf: 'flex-start' }}>
-                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-                  {trialExpanded ? 'Read less' : 'Read more'}
-                </Text>
-              </PressableSurface>
-            ) : null}
+          {/* Trial */}
+          <View style={{ backgroundColor: 'rgba(197, 160, 89,0.05)', borderColor: 'rgba(197, 160, 89,0.1)', borderWidth: 1, borderRadius: 24, padding: 20, gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Feather name="shield" size={14} color={brand} />
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>Test of Dharma</Text>
+            </View>
+            <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontStyle: 'italic', fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{trialText}</Text>
           </View>
 
-          <View style={{ borderTopWidth: 1, borderTopColor: border, paddingTop: 14, gap: 6 }}>
-            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Teaching</Text>
-            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{hero.teaching}</Text>
+          {/* Teaching */}
+          <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+              <Feather name="target" size={14} color={text} />
+              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>Wisdom</Text>
+            </View>
+            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{teachingText}</Text>
           </View>
 
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-              Moral for Today
-            </Text>
-            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.moral}</Text>
-          </View>
-
-          {hero.legacy ? (
-            <View style={{ gap: 6 }}>
-              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Legacy</Text>
-              <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 25 }}>{hero.legacy}</Text>
+          {/* Quote */}
+          {quoteText ? (
+            <View style={{ paddingVertical: 24, borderTopWidth: 1, borderBottomWidth: 1, borderColor: border, alignItems: 'center', gap: 16 }}>
+              <Feather name="feather" size={24} color={brand} style={{ opacity: 0.4 }} />
+              <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: fs.fontSize + 2, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 16 }}>
+                {quoteText}
+              </Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>— {quoteAttribution}</Text>
             </View>
           ) : null}
 
-          {hero.quote ? (
-            <View
+          {/* Moral */}
+          <View style={{ alignItems: 'center', paddingTop: 16, gap: 12 }}>
+            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 3, opacity: 0.5 }}>Essence</Text>
+            <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: fs.fontSize + 2, lineHeight: fs.lineHeight + 4, textAlign: 'center' }}>
+              {moralText}
+            </Text>
+          </View>
+        </View>
+
+        {/* Ask Dharma Mitra */}
+        <View style={{ marginTop: 40, borderTopWidth: 1, borderTopColor: border, paddingTop: 24, gap: 16 }}>
+          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>Ask more about this Dharam Veer</Text>
+          <View style={{ gap: 12 }}>
+            <TextInput
+              value={askMoreQuery}
+              onChangeText={setAskMoreQuery}
+              placeholder="Ask a question..."
+              placeholderTextColor={textDim}
               style={{
-                borderLeftWidth: 3,
-                borderLeftColor: brand,
-                paddingLeft: 14,
-                gap: 4,
+                backgroundColor: surface,
+                borderColor: border,
+                borderWidth: 1,
+                borderRadius: 16,
+                padding: 16,
+                color: text,
+                fontFamily: FONTS.sans,
+                fontSize: 15
+              }}
+            />
+            <PressableSurface
+              haptic="selection"
+              onPress={handleAskMore}
+              disabled={askMoreLoading || !askMoreQuery.trim()}
+              style={{
+                backgroundColor: brand,
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                borderRadius: 16,
+                alignSelf: 'flex-end',
+                opacity: (askMoreLoading || !askMoreQuery.trim()) ? 0.5 : 1
               }}
             >
-              <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>
-                “{hero.quote.text}”
-              </Text>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                — {hero.quote.attribution}
-              </Text>
-            </View>
-          ) : null}
-        </Card>
-
-        <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 12 }}>
-          <View style={{ gap: 4 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>Ask more about this Dharm Veer</Text>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20 }}>
-              {"Dharma Mitra can help you reflect on this hero's teaching."}
-            </Text>
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{askMoreLoading ? 'Asking...' : 'Ask AI'}</Text>
+            </PressableSurface>
           </View>
-          <TextInput
-            value={askMoreQuery}
-            onChangeText={setAskMoreQuery}
-            placeholder="Ask a question..."
-            placeholderTextColor={textDim}
-            multiline
-            style={{
-              minHeight: 90,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: surface,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              color: text,
-              fontFamily: FONTS.sans,
-              fontSize: 14,
-              textAlignVertical: 'top',
-            }}
-          />
-          <PressableSurface
-            haptic="selection"
-            onPress={() => { void askDharmaMitra(); }}
-            disabled={!askMoreQuery.trim() || askMoreLoading}
-            style={{
-              alignSelf: 'flex-end',
-              minHeight: MIN_TOUCH_TARGET,
-              borderRadius: 999,
-              paddingHorizontal: 18,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: brand,
-            }}
-          >
-            {askMoreLoading ? (
-              <ActivityIndicator color={COLORS.ink} size="small" />
-            ) : (
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Ask AI</Text>
-            )}
-          </PressableSurface>
           {askMoreResponse ? (
-            <View style={{ borderRadius: 18, borderWidth: 1, borderColor: border, backgroundColor: surface, padding: 14 }}>
+            <View style={{ marginTop: 16, padding: 16, backgroundColor: 'rgba(197,160,89,0.05)', borderRadius: 16, borderWidth: 1, borderColor: border }}>
               <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{askMoreResponse}</Text>
             </View>
           ) : null}
-        </Card>
+        </View>
 
-        <PressableSurface
-          haptic="selection"
-          onPress={() => router.push('/dharm-veer')}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            borderRadius: 999,
-            paddingVertical: 12,
-            borderWidth: 1,
-            borderColor: border,
-          }}
-        >
-          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-            {"Open today's Dharm Veer practice"}
-          </Text>
-          <Feather name="arrow-right" size={16} color={text} />
-        </PressableSurface>
-        <PressableSurface
-          haptic="selection"
-          onPress={() => { void shareHero(); }}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            borderRadius: 999,
-            minHeight: MIN_TOUCH_TARGET,
-            backgroundColor: brand,
-          }}
-        >
-          <Feather name="share-2" size={16} color={COLORS.ink} />
-          <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Share reflection</Text>
-        </PressableSurface>
-      </ScrollView>
-    </Screen>
+        {/* Take Inspiration Button */}
+        <View style={{ alignItems: 'center', marginTop: 40 }}>
+          <PressableSurface
+            haptic="selection"
+            onPress={() => {
+              if (isGuest) {
+                setAuthGateVisible(true);
+              } else {
+                setPendingCheckIn(true);
+              }
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              borderRadius: 999,
+              paddingVertical: 14,
+              paddingHorizontal: 32,
+              backgroundColor: brand,
+              shadowColor: brand,
+              shadowOpacity: 0.3,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 }
+            }}
+          >
+            <Feather name="heart" size={16} color={COLORS.ink} />
+            <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+              Share reflection
+            </Text>
+          </PressableSurface>
+        </View>
+      </ReaderShell>
+
+      <AuthGate
+        visible={authGateVisible}
+        onClose={() => setAuthGateVisible(false)}
+        title="Dharm Veer"
+        message="Sign in to save your reflections and share with the community."
+      />
+
+      <Modal transparent visible={pendingCheckIn} animationType="slide" onRequestClose={() => setPendingCheckIn(false)}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: border,
+              padding: 22,
+              paddingBottom: 34,
+              gap: 16,
+            }}
+          >
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
+            </View>
+
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 20 }}>
+              What are you taking from {hero?.name}?
+            </Text>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {(['gratitude', 'devotion', 'peace', 'courage'] as const).map((option) => {
+                const active = mood === option;
+                return (
+                  <PressableSurface
+                    key={option}
+                    haptic="selection"
+                    onPress={() => setMood(option)}
+                    style={{
+                      borderRadius: 999,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderWidth: 1,
+                      borderColor: active ? brand : border,
+                      backgroundColor: active ? brand : cardBg,
+                      minHeight: 0
+                    }}
+                  >
+                    <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+                      {option}
+                    </Text>
+                  </PressableSurface>
+                );
+              })}
+            </View>
+
+            <TextInput
+              value={intention}
+              onChangeText={setIntention}
+              placeholder="A word or two (optional)"
+              placeholderTextColor={textDim}
+              multiline
+              style={{
+                minHeight: 80,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: border,
+                backgroundColor: surface,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: text,
+                fontFamily: FONTS.sans,
+                fontSize: 14,
+                textAlignVertical: 'top',
+              }}
+            />
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>Share with community</Text>
+              <Switch value={privacyCommunity} onValueChange={setPrivacyCommunity} trackColor={{ true: brand }} />
+            </View>
+
+            <PressableSurface
+              haptic="selection"
+              onPress={confirmCheckIn}
+              disabled={submitting}
+              style={{
+                borderRadius: 999,
+                paddingVertical: 14,
+                alignItems: 'center',
+                backgroundColor: brand,
+              }}
+            >
+              {submitting ? (
+                <ActivityIndicator color={COLORS.ink} />
+              ) : (
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Save & continue</Text>
+              )}
+            </PressableSurface>
+
+            <PressableSurface haptic="selection" onPress={() => setPendingCheckIn(false)} disabled={submitting} style={{ alignItems: 'center', minHeight: 0 }}>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Cancel</Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }

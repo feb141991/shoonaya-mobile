@@ -28,6 +28,11 @@ import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 
+import { ReaderShell } from '@/components/reader/ReaderShell';
+import { useReaderControls } from '@/hooks/useReaderControls';
+import { buildReadableCapabilities } from '@/lib/readable-content';
+import { getInitialReaderDisplayMode, resolveReadablePreferences } from '@/lib/readable-preferences';
+
 type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
 const TRADITION_FILTERS: Tradition[] = ['all', 'hindu', 'sikh', 'buddhist', 'jain'];
@@ -37,15 +42,17 @@ type ProfileGeoState = {
   lon: number;
   timezone: string;
   tradition: string | null;
+  appLanguage: string | null;
+  meaningLanguage: string | null;
 };
 
-// Default anchor (Ujjain — same fallback native's Panchang screen already
-// uses) when a user has no saved location yet.
 const DEFAULT_GEO: ProfileGeoState = {
   lat: 23.1765,
   lon: 75.7885,
   timezone: 'Asia/Kolkata',
   tradition: null,
+  appLanguage: null,
+  meaningLanguage: null,
 };
 
 type UpcomingVrat = {
@@ -54,10 +61,6 @@ type UpcomingVrat = {
   vratData: VratData;
 };
 
-// Maps a live-calculated tithi index (from @sangam/panchang-engine) to the
-// matching recurring VRAT_DATABASE key. Kept in exact sync with the index
-// checks inside that package's own `getTithiReminder` so "today is special"
-// and "which vrat card to highlight" never disagree.
 function tithiIndexToVratId(tithiIndex: number, tradition: string | null | undefined): string | null {
   if (tithiIndex === 11 || tithiIndex === 26) return 'ekadashi';
   if (tithiIndex === 15) return 'purnima';
@@ -93,6 +96,14 @@ if (Notifications) {
   });
 }
 
+type FontSize = 'sm' | 'md' | 'lg' | 'xl';
+const FONT_PRESETS = [
+  { label: 'A-', value: 'sm' },
+  { label: 'A', value: 'md' },
+  { label: 'A+', value: 'lg' },
+  { label: 'A++', value: 'xl' },
+];
+
 export default function VratScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -105,8 +116,10 @@ export default function VratScreen() {
   const [upcomingError, setUpcomingError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
 
-  // ── Vrat observation tracker — mirrors web's VratClient.tsx (same
-  // GET/POST /api/vrat/observe contract, same karma-award behavior). ────────
+  const [fontStep, setFontStep] = useState(1);
+  const [lang, setLang] = useState<'en' | 'local'>('en');
+  const [ttsRate, setTtsRate] = useState(1);
+
   const [observedToday, setObservedToday] = useState(false);
   const [observeCount, setObserveCount] = useState(0);
   const [observeLoading, setObserveLoading] = useState(false);
@@ -126,10 +139,6 @@ export default function VratScreen() {
 
   const loadProfileGeo = useCallback(async () => {
     if (await isGuestMode()) {
-      // Guests browse Vrat with DEFAULT_GEO's fallback location/timezone —
-      // same as a signed-in user with no saved location yet. Only the
-      // personal "Mark as Observed" action (handleObserve) actually needs
-      // an account, not viewing the calendar itself.
       setIsGuest(true);
       return;
     }
@@ -145,7 +154,7 @@ export default function VratScreen() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('latitude, longitude, timezone, tradition')
+      .select('latitude, longitude, timezone, tradition, app_language, meaning_language')
       .eq('id', user.id)
       .single();
 
@@ -154,6 +163,8 @@ export default function VratScreen() {
       lon: profile?.longitude ?? DEFAULT_GEO.lon,
       timezone: profile?.timezone ?? DEFAULT_GEO.timezone,
       tradition: profile?.tradition ?? null,
+      appLanguage: profile?.app_language ?? null,
+      meaningLanguage: profile?.meaning_language ?? null,
     });
   }, [router]);
 
@@ -162,13 +173,6 @@ export default function VratScreen() {
     loadProfileGeo().finally(() => setLoading(false));
   }, [loadProfileGeo]);
 
-  // Canonical upcoming observances — same endpoint app/panchang.tsx already
-  // uses. Filter to kind === 'vrat' and resolve each slug back to the rich
-  // local VratData (VRAT_DATABASE / NAMED_VRAT_DATABASE) via lookupVratData
-  // (already handles both direct-key and alias lookups), so dates are
-  // live/real but the descriptive content stays the same trusted local copy.
-  // Runs independently of the profile/auth load, so switching the tradition
-  // filter only refreshes this list, not the whole screen.
   useEffect(() => {
     let cancelled = false;
 
@@ -240,7 +244,6 @@ export default function VratScreen() {
         setObserveCount(data.total_count ?? 0);
       })
       .catch(() => {
-        // Silently ignore — tracker is non-critical, mirrors web behavior.
       })
       .finally(() => {
         if (!cancelled) setObserveStatusLoaded(true);
@@ -319,6 +322,67 @@ export default function VratScreen() {
     Alert.alert('Reminder scheduled');
   };
 
+  const selectedName = lang === 'local' && selectedVrat?.nameLocal ? selectedVrat.nameLocal : selectedVrat?.name ?? '';
+  const selectedTagline = lang === 'local' && selectedVrat?.taglineLocal ? selectedVrat.taglineLocal : selectedVrat?.tagline ?? '';
+  const selectedSignificance = lang === 'local' && selectedVrat?.significanceLocal
+    ? selectedVrat.significanceLocal
+    : selectedVrat?.significance ?? '';
+  const selectedPractice = lang === 'local' && selectedVrat?.practiceLocal
+    ? selectedVrat.practiceLocal
+    : selectedVrat?.practice ?? '';
+  const selectedMantra = lang === 'local' && selectedVrat?.mantraLocal
+    ? selectedVrat.mantraLocal
+    : selectedVrat?.mantra ?? '';
+  const hasLocalVrat = Boolean(
+    selectedVrat?.nameLocal
+    && selectedVrat?.taglineLocal
+    && selectedVrat?.significanceLocal
+    && selectedVrat?.practiceLocal
+    && selectedVrat?.mantraLocal,
+  );
+  const textToCopy = selectedVrat
+    ? `${selectedName}\n\n${selectedSignificance}\n\n${selectedPractice}\n\nMantra:\n${selectedMantra}`
+    : '';
+  const textToShare = selectedVrat ? `Read about ${selectedName} on the Shoonaya App.` : '';
+
+  const capabilities = useMemo(() => buildReadableCapabilities({
+    original: selectedVrat?.mantra ?? '',
+    meaning: selectedVrat?.mantraLocal,
+    script: 'latin',
+    pipelineTags: {
+      content_type: 'mantra',
+      audio_mode: 'recitation',
+      tradition: 'hindu',
+      script: 'latin',
+      delivery_intent: 'recitation',
+    },
+  }, {
+    canToggleLocalLanguage: hasLocalVrat,
+    canShowMeaning: false,
+    canShowExplain: false,
+  }), [hasLocalVrat, selectedVrat]);
+
+  const { state, handlers } = useReaderControls(capabilities);
+  const { resetDisplayState, stopTTS } = handlers;
+
+  useEffect(() => {
+    if (!selectedVrat) return;
+    const preferences = resolveReadablePreferences({
+      appLanguage: geo.appLanguage,
+      meaningLanguage: geo.meaningLanguage,
+    });
+    setLang(getInitialReaderDisplayMode(preferences, hasLocalVrat));
+    void stopTTS();
+    resetDisplayState();
+  }, [
+    geo.appLanguage,
+    geo.meaningLanguage,
+    hasLocalVrat,
+    resetDisplayState,
+    selectedVrat,
+    stopTTS,
+  ]);
+
   if (loading) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
@@ -329,9 +393,158 @@ export default function VratScreen() {
     );
   }
 
+  // Reader details full-page view
+  if (selectedVrat) {
+    const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
+
+    return (
+      <ReaderShell
+        title={selectedName}
+        subtitle={selectedTagline}
+        fallbackBackUrl="/vrat"
+        onBack={() => setSelectedVrat(null)}
+        themeColor={theme.brand}
+        fontPresets={FONT_PRESETS}
+        fontStep={fontStep}
+        setFontStep={setFontStep}
+        languages={hasLocalVrat ? [
+          { code: 'en' as const, label: 'EN' },
+          { code: 'local' as const, label: selectedVrat.mantraLocal && /[\u0A00-\u0A7F]/.test(selectedVrat.mantraLocal) ? 'ਪੰ' : 'हिं' },
+        ] : undefined}
+        currentLanguage={lang}
+        setLanguage={setLang}
+        onTTS={() => handlers.toggleTTS(selectedMantra, {
+          quality: 'pandit',
+          language: lang === 'local' ? 'hi-IN' : 'en-IN',
+          rate: ttsRate,
+          pipelineTags: {
+            content_type: 'mantra',
+            audio_mode: 'recitation',
+            delivery_intent: 'recitation',
+          },
+        })}
+        ttsRate={ttsRate}
+        onTTSRateChange={setTtsRate}
+        isSpeaking={state.isSpeaking}
+        isTTSGenerating={state.isGeneratingTTS}
+        onCopy={() => handlers.copyText(textToCopy, 'Vrat Details')}
+        isCopied={state.isCopied}
+        onShare={() => handlers.share(textToShare)}
+      >
+        <View style={{ gap: 20, marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Text style={{ fontSize: 40 }}>{selectedVrat.emoji}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...TYPE.hero, fontSize: 32, color: theme.text }}>
+                {selectedName}
+              </Text>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 15, marginTop: 4 }}>
+                {selectedTagline}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ gap: 14 }}>
+            <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 16 * fsScale, lineHeight: 26 * fsScale }}>
+              {selectedSignificance}
+            </Text>
+
+            <View style={{ marginTop: 8 }}>
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 * fsScale, textTransform: 'uppercase', letterSpacing: 1.5, opacity: 0.7, marginBottom: 6 }}>
+                How to observe
+              </Text>
+              <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 16 * fsScale, lineHeight: 26 * fsScale }}>
+                {selectedPractice}
+              </Text>
+            </View>
+
+            <View style={{ marginTop: 8 }}>
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 * fsScale, textTransform: 'uppercase', letterSpacing: 1.5, opacity: 0.7, marginBottom: 6 }}>
+                Mantra
+              </Text>
+              <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 19 * fsScale, lineHeight: 28 * fsScale }}>
+                {selectedMantra}
+              </Text>
+            </View>
+
+            {selectedVrat.breakFastTime ? (
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 * fsScale, textTransform: 'uppercase', letterSpacing: 1.5, opacity: 0.7, marginBottom: 6 }}>
+                  Duration
+                </Text>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 16 * fsScale }}>{selectedVrat.breakFastTime}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={{ gap: 12, marginTop: 16 }}>
+            <PressableSurface
+              onPress={() => {
+                void setReminder(selectedVrat);
+              }}
+              style={{
+                borderRadius: 999,
+                backgroundColor: theme.brand,
+                paddingVertical: 14,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Set reminder</Text>
+            </PressableSurface>
+
+            {observedToday ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 8,
+                  borderRadius: 999,
+                  borderWidth: 1.5,
+                  borderColor: COLORS.successBorder,
+                  backgroundColor: COLORS.successBg,
+                  paddingVertical: 14,
+                }}
+              >
+                <Feather name="check-circle" size={18} color={COLORS.success} />
+                <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  Observed today ✓{observeCount > 1 ? `  (${observeCount}× total)` : ''}
+                </Text>
+              </View>
+            ) : (
+              <PressableSurface
+                onPress={() => {
+                  void handleObserve();
+                }}
+                disabled={observeLoading || !observeStatusLoaded}
+                style={{
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.card,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  opacity: observeLoading || !observeStatusLoaded ? 0.6 : 1,
+                }}
+              >
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  🙏 Mark as Observed{observeCount > 0 ? `  (${observeCount}× before)` : ''}
+                </Text>
+              </PressableSurface>
+            )}
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
+              {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat'}
+            </Text>
+          </View>
+        </View>
+      </ReaderShell>
+    );
+  }
+
+  // Base list view
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
         <BackButton />
 
         <Text style={{ color: theme.text, ...TYPE.screenTitle }}>Vrat</Text>
@@ -365,27 +578,25 @@ export default function VratScreen() {
           })}
         </ScrollView>
 
-        {!selectedVrat && (
-          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Today</Text>
-            {todayReminder && todayVrat ? (
-              <PressableSurface onPress={() => setSelectedVrat(todayVrat)} haptic="selection" style={{ gap: 4 }}>
-                <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 20 }}>
-                  {todayReminder.title}
-                </Text>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
-                  {todayReminder.body}
-                </Text>
-              </PressableSurface>
-            ) : (
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
-                No special observance today — browse below or check what&apos;s coming up.
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
+          <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Today</Text>
+          {todayReminder && todayVrat ? (
+            <PressableSurface onPress={() => setSelectedVrat(todayVrat)} haptic="selection" style={{ gap: 4 }}>
+              <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 20 }}>
+                {todayReminder.title}
               </Text>
-            )}
-          </Card>
-        )}
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
+                {todayReminder.body}
+              </Text>
+            </PressableSurface>
+          ) : (
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>
+              No special observance today — browse below or check what's coming up.
+            </Text>
+          )}
+        </Card>
 
-        {!selectedVrat && upcomingVrats.length > 0 && (
+        {upcomingVrats.length > 0 && (
           <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Upcoming</Text>
             {upcomingVrats.slice(0, 5).map((upcoming) => (
@@ -404,113 +615,22 @@ export default function VratScreen() {
           </Card>
         )}
 
-        {!selectedVrat && upcomingError && (
+        {upcomingError && (
           <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
             Unable to load upcoming dates right now — showing the full observance list below.
           </Text>
         )}
 
-        {selectedVrat ? (
-          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.hero, color: theme.text }}>
-                  {selectedVrat.emoji} {selectedVrat.name}
-                </Text>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: 4 }}>
-                  {selectedVrat.tagline}
-                </Text>
-              </View>
-              <PressableSurface onPress={() => setSelectedVrat(null)} haptic="selection" hitSlop={10}>
-                <Feather name="x" size={18} color={theme.dim} />
-              </PressableSurface>
-            </View>
-
-            <View style={{ gap: 12 }}>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-                {selectedVrat.significance}
+        {vrats.map((vrat) => (
+          <PressableSurface key={vrat.id} onPress={() => setSelectedVrat(vrat)} haptic="selection">
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
+              <Text style={{ ...TYPE.metric, color: theme.text }}>
+                {vrat.emoji} {vrat.name}
               </Text>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>How to observe</Text>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
-                {selectedVrat.practice}
-              </Text>
-              {selectedVrat.breakFastTime ? (
-                <>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Duration</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}>{selectedVrat.breakFastTime}</Text>
-                </>
-              ) : null}
-              <PressableSurface
-                onPress={() => {
-                  void setReminder(selectedVrat);
-                }}
-                style={{
-                  borderRadius: 18,
-                  backgroundColor: theme.brand,
-                  paddingVertical: 14,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Set reminder</Text>
-              </PressableSurface>
-
-              {observedToday ? (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 8,
-                    borderRadius: 18,
-                    borderWidth: 1.5,
-                    borderColor: COLORS.successBorder,
-                    backgroundColor: COLORS.successBg,
-                    paddingVertical: 14,
-                  }}
-                >
-                  <Feather name="check-circle" size={18} color={COLORS.success} />
-                  <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                    Observed today ✓{observeCount > 1 ? `  (${observeCount}× total)` : ''}
-                  </Text>
-                </View>
-              ) : (
-                <PressableSurface
-                  onPress={() => {
-                    void handleObserve();
-                  }}
-                  disabled={observeLoading || !observeStatusLoaded}
-                  style={{
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                    backgroundColor: theme.card,
-                    paddingVertical: 14,
-                    alignItems: 'center',
-                    opacity: observeLoading || !observeStatusLoaded ? 0.6 : 1,
-                  }}
-                >
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                    🙏 Mark as Observed{observeCount > 0 ? `  (${observeCount}× before)` : ''}
-                  </Text>
-                </PressableSurface>
-              )}
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
-                {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat'}
-              </Text>
-            </View>
-          </Card>
-        ) : (
-          vrats.map((vrat) => (
-            <PressableSurface key={vrat.id} onPress={() => setSelectedVrat(vrat)} haptic="selection">
-              <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
-                <Text style={{ ...TYPE.metric, color: theme.text }}>
-                  {vrat.emoji} {vrat.name}
-                </Text>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>{vrat.tagline}</Text>
-              </Card>
-            </PressableSurface>
-          ))
-        )}
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>{vrat.tagline}</Text>
+            </Card>
+          </PressableSurface>
+        ))}
       </ScrollView>
     </Screen>
   );
