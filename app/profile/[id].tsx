@@ -206,7 +206,7 @@ export default function MemberProfileScreen() {
 
         {profile.bio ? (
           <Card tone="auto" style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1 }}>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, color: theme.text }}>{profile.bio}</Text>
+            <Text style={{ ...TYPE.body, color: theme.text }}>{profile.bio}</Text>
           </Card>
         ) : null}
 
@@ -223,7 +223,7 @@ export default function MemberProfileScreen() {
               gap: 4,
             }}
           >
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: theme.text }}>{profile.seva_score ?? 0}</Text>
+            <Text style={{ ...TYPE.metric, color: theme.text }}>{profile.seva_score ?? 0}</Text>
             <Text style={{ ...TYPE.chip, color: theme.dim }}>SEVA</Text>
           </View>
           <View
@@ -238,7 +238,7 @@ export default function MemberProfileScreen() {
               gap: 4,
             }}
           >
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: theme.text }}>{profile.karma_points ?? 0}</Text>
+            <Text style={{ ...TYPE.metric, color: theme.text }}>{profile.karma_points ?? 0}</Text>
             <Text style={{ ...TYPE.chip, color: theme.dim }}>KARMA</Text>
           </View>
         </View>

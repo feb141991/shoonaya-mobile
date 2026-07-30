@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
@@ -190,7 +190,7 @@ export default function PathLessonListScreen() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
         <BackButton showLabel={false} iconSize={22} iconColor={text} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{path.title}</Text>
+          <Text style={{ ...TYPE.hero, color: text }}>{path.title}</Text>
           <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
             {lessons.length} lessons
           </Text>

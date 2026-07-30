@@ -310,7 +310,7 @@ function PanchangRow({
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: warn ? '#FDBA74' : CREAM }}>
               {value}
             </Text>
-            {upto ? <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>upto {upto}</Text> : null}
+            {upto ? <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>upto {upto}</Text> : null}
           </View>
         </View>
         {infoKey ? (
@@ -320,7 +320,7 @@ function PanchangRow({
               backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
             }}
           >
-            <Text style={{ fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.55)' }}>i</Text>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: 'rgba(255,255,255,0.55)' }}>i</Text>
           </View>
         ) : null}
       </Pressable>
@@ -331,7 +331,7 @@ function PanchangRow({
             backgroundColor: 'rgba(8,6,22,0.65)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
           }}
         >
-          <Text style={{ fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.75)' }}>{INFO_TEXT[infoKey]}</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.75)' }}>{INFO_TEXT[infoKey]}</Text>
         </View>
       ) : null}
     </View>
@@ -502,7 +502,7 @@ export default function PanchangScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#050508' }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.darkBg }} edges={['top']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={GOLD} />
         </View>
@@ -526,10 +526,10 @@ export default function PanchangScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: CREAM }}>Panchang</Text>
               <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: tradMeta.accent }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: '#fff' }}>{tradMeta.badge}</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: COLORS.onMediaWhite }}>{tradMeta.badge}</Text>
               </View>
             </View>
-            <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
               {PHASE_LABELS[skyPhase]}{profileState.city ? ` · 📍 ${profileState.city}` : ''}
             </Text>
           </View>
@@ -568,10 +568,10 @@ export default function PanchangScreen() {
                   borderWidth: 1, borderColor: active ? GOLD : 'rgba(255,255,255,0.12)',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: active ? '#1c1c1a' : 'rgba(255,255,255,0.5)' }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: active ? COLORS.heroBgDark : 'rgba(255,255,255,0.5)' }}>
                   {date.toLocaleDateString('en-GB', { weekday: 'short' })}
                 </Text>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: active ? '#1c1c1a' : CREAM }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: active ? COLORS.heroBgDark : CREAM }}>
                   {date.getDate()}
                 </Text>
               </Pressable>
@@ -591,13 +591,13 @@ export default function PanchangScreen() {
             <Text style={{ color: '#fff', fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
               {panchang.paksha} Paksha · {panchang.masaName}
             </Text>
-            <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 }}>
+            <Text style={{ color: 'rgba(255,255,255,0.65)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
               {panchang.vara} · {panchang.samvatYear} {panchang.samvatName}
             </Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: FONTS.sansSemiBold }}>{panchang.sunrise}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>sunrise</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 10 }}>sunrise</Text>
           </View>
         </View>
 
@@ -627,11 +627,11 @@ export default function PanchangScreen() {
                 }}
               >
                 {markingViewed ? (
-                  <ActivityIndicator color="#1c1c1a" />
+                  <ActivityIndicator color={COLORS.heroBgDark} />
                 ) : (
                   <>
-                    <Feather name="check" size={16} color="#1c1c1a" />
-                    <Text style={{ color: '#1c1c1a', fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+                    <Feather name="check" size={16} color={COLORS.heroBgDark} />
+                    <Text style={{ color: COLORS.heroBgDark, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                       Mark today&apos;s Panchang as observed
                     </Text>
                   </>
@@ -673,7 +673,7 @@ export default function PanchangScreen() {
 
         {/* Guidance footer */}
         <View style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: 'rgba(255,200,100,0.08)', borderWidth: 1, borderColor: 'rgba(255,200,100,0.15)' }}>
-          <Text style={{ fontSize: 12, lineHeight: 18, color: 'rgba(253,230,180,0.85)' }}>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: 'rgba(253,230,180,0.85)' }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, color: '#FDE6B4' }}>Today&apos;s guidance: </Text>
             {panchang.paksha === 'Shukla'
               ? 'Shukla Paksha — auspicious for new beginnings, prayers, and blessings. Act and grow.'

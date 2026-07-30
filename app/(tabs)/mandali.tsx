@@ -20,6 +20,7 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JoinMandaliPrompt } from '@/components/mandali/JoinMandaliPrompt';
 import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
@@ -1307,11 +1308,11 @@ export default function MandaliScreen() {
               justifyContent: 'center',
             }}
           >
-            <Feather name="users" size={24} color={theme.brand} />
+            <SacredIcon name="mandali" fallbackGlyph="users" size={24} color={theme.brand} />
           </View>
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Sacred Circle</Text>
-            <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 25, lineHeight: 31 }} numberOfLines={1}>
+            <Text style={{ color: theme.text, ...TYPE.hero }} numberOfLines={1}>
               {profile?.mandaliName ?? 'Mandali'}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>

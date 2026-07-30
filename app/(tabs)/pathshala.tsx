@@ -565,7 +565,7 @@ function PathshalaContent() {
 
             <Text style={{ ...TYPE.shloka, color: text }}>{sacredText.original}</Text>
             {sacredText.meaning ? (
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, color: dim }}>
+              <Text style={{ ...TYPE.body, color: dim }}>
                 {sacredText.meaning}
               </Text>
             ) : null}

@@ -21,7 +21,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { DIASPORA_TEMPLES, getCuratedNearbyTemples } from '@/lib/diaspora-temples';
 import { distanceKm, fetchNearbyTemples, geocodeCity, mergeCuratedAndOsm, type Temple } from '@/lib/overpass';
@@ -596,7 +596,7 @@ export default function TirthaScreen() {
             <View style={{ alignItems: 'center' }}>
               <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
             </View>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
+            <Text style={{ ...TYPE.metric, color: text }}>
               {selectedTemple?.name ?? 'Temple check-in'}
             </Text>
 

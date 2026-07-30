@@ -414,7 +414,7 @@ export default function VratScreen() {
           <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 28 }}>
+                <Text style={{ ...TYPE.hero, color: theme.text }}>
                   {selectedVrat.emoji} {selectedVrat.name}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: 4 }}>
@@ -503,7 +503,7 @@ export default function VratScreen() {
           vrats.map((vrat) => (
             <PressableSurface key={vrat.id} onPress={() => setSelectedVrat(vrat)} haptic="selection">
               <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24 }}>
+                <Text style={{ ...TYPE.metric, color: theme.text }}>
                   {vrat.emoji} {vrat.name}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14 }}>{vrat.tagline}</Text>

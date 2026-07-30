@@ -2251,7 +2251,7 @@ export default function JapaScreen() {
                 >
                   Focused mala
                 </Text>
-                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 24, color: text }}>
+                <Text style={{ ...TYPE.metric, color: text }}>
                   Stop this session?
                 </Text>
               </View>

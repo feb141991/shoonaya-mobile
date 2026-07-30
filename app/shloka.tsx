@@ -360,7 +360,7 @@ export default function ShlokaScreen() {
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
           <BackButton variant="glass" />
           <View style={{ borderRadius: 26, padding: 22, backgroundColor: glass, borderWidth: 1, borderColor: border }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28 }}>
+            <Text style={{ ...TYPE.hero, color: text }}>
               {"Could not load today's verse"}
             </Text>
             <Text style={{ marginTop: 8, color: dim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
@@ -663,7 +663,7 @@ export default function ShlokaScreen() {
             <View style={{ width: 64, height: 64, borderRadius: 24, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
               <Feather name="zap" size={26} color={brand} />
             </View>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text, textAlign: 'center' }}>
+            <Text style={{ ...TYPE.hero, color: text, textAlign: 'center' }}>
               {celebration.streak}-day streak
             </Text>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>+5 seva points</Text>

@@ -9,7 +9,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
 import {
   clearNotifications,
   fetchNotifications,
@@ -357,7 +357,7 @@ export default function NotificationsScreen() {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Notifications</Text>
+            <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Notifications</Text>
             {unreadCount > 0 ? (
               <View
                 style={{

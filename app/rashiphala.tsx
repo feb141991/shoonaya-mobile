@@ -232,10 +232,10 @@ export default function RashiphalaScreen() {
         <View style={{ paddingHorizontal: 16, paddingTop: 80 }}>
           <Card tone="auto" style={{ alignItems: 'center', gap: 14 }}>
             <Text style={{ fontSize: 30 }}>✨</Text>
-            <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 24, textAlign: 'center' }}>
+            <Text style={{ ...TYPE.metric, color: theme.text, textAlign: 'center' }}>
               Rashiphala could not load
             </Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, textAlign: 'center' }}>
+            <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>
               {errorMessage ?? 'Please try again in a moment.'}
             </Text>
             <PressableSurface
