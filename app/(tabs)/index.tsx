@@ -1531,18 +1531,7 @@ function HomeContent() {
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>
               Jyotish & Panchang
             </Text>
-            <View
-              style={{
-                borderRadius: 24,
-                paddingVertical: 18,
-                paddingHorizontal: 12,
-                backgroundColor: theme.glass,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-              }}
-            >
-              <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
               {([
                 {
                   label: 'Panchang',
@@ -1574,25 +1563,13 @@ function HomeContent() {
                   onPress={() => navigate(item.href as Href)}
                 />
               ))}
-              </View>
             </View>
           </View>
 
           {/* Quick Actions Row */}
           <View style={{ marginTop: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Sadhana</Text>
-            <View
-              style={{
-                borderRadius: 24,
-                paddingVertical: 18,
-                paddingHorizontal: 12,
-                backgroundColor: theme.glass,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-              }}
-            >
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {([
                 { label: 'Nitya',    href: '/nitya-karma', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold },
                 { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple },
@@ -1613,25 +1590,13 @@ function HomeContent() {
                   }}
                 />
               ))}
-              </View>
             </View>
           </View>
 
           {/* Community Row */}
           <View style={{ marginTop: 12, marginBottom: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Community</Text>
-            <View
-              style={{
-                borderRadius: 24,
-                paddingVertical: 18,
-                paddingHorizontal: 12,
-                backgroundColor: theme.glass,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-              }}
-            >
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {([
                 { label: 'Live Darshan', href: '/live-darshan',    sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue },
                 { label: 'Mandali',      href: '/(tabs)/mandali',  sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple },
@@ -1650,7 +1615,6 @@ function HomeContent() {
                   onPress={() => navigate(item.href as Href)}
                 />
               ))}
-              </View>
             </View>
           </View>
 
