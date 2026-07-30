@@ -1525,6 +1525,21 @@ function HomeContent() {
 
           <QuizSparkCard />
 
+          {/* Menu icons sit directly on the app's own theme background —
+              no card/well behind them — with soft brand-gold glow bubbles
+              (same COLORS.navGlowGoldLight/navGlowIvoryDark + theme.brandSoft
+              tokens as app/(tabs)/japa.tsx's launcher backdrop) bleeding in
+              from the edges behind the whole Jyotish/Sadhana/Community block. */}
+          <View style={{ position: 'relative' }}>
+            <View
+              pointerEvents="none"
+              style={{ position: 'absolute', top: 10, right: -70, width: 200, height: 200, borderRadius: 100, backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight, opacity: 0.6 }}
+            />
+            <View
+              pointerEvents="none"
+              style={{ position: 'absolute', top: 360, left: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.55 }}
+            />
+
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}
           <View style={{ marginTop: 12 }}>
@@ -1616,6 +1631,8 @@ function HomeContent() {
                 />
               ))}
             </View>
+          </View>
+
           </View>
 
         </View>
