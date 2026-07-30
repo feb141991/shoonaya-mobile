@@ -1523,21 +1523,6 @@ function HomeContent() {
 
           <QuizSparkCard />
 
-          {/* Menu icons sit directly on the app's standard gold brand tint —
-              no card border/shadow, just a flat continuous wash (not the
-              patchy bubbles this used to be, which left visible pale gaps
-              of COLORS.creamBg showing through) covering the whole Jyotish/
-              Sadhana/Community block. */}
-          <View
-            style={{
-              position: 'relative',
-              borderRadius: 28,
-              backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}1F`,
-              paddingTop: 4,
-              paddingBottom: 4,
-            }}
-          >
-
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}
           <View style={{ marginTop: 12 }}>
@@ -1626,8 +1611,6 @@ function HomeContent() {
                 />
               ))}
             </View>
-          </View>
-
           </View>
 
         </View>
