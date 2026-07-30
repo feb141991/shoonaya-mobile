@@ -1525,17 +1525,24 @@ function HomeContent() {
 
           {/* Menu icons sit directly on the app's own theme background —
               no card/well behind them — with soft brand-gold glow bubbles
-              (same COLORS.navGlowGoldLight/navGlowIvoryDark + theme.brandSoft
-              tokens as app/(tabs)/japa.tsx's launcher backdrop) bleeding in
-              from the edges behind the whole Jyotish/Sadhana/Community block. */}
+              bleeding in from the edges behind the whole Jyotish/Sadhana/
+              Community block. Stronger/more saturated than japa.tsx's own
+              backdrop glows (which sit under much busier content): against
+              this section's plain COLORS.creamBg (#FAF6EF, near-white) and
+              now-cardless icons, the subtler japa.tsx-matched alpha read as
+              washed out rather than warm. */}
           <View style={{ position: 'relative' }}>
             <View
               pointerEvents="none"
-              style={{ position: 'absolute', top: 10, right: -70, width: 200, height: 200, borderRadius: 100, backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight, opacity: 0.6 }}
+              style={{ position: 'absolute', top: 10, right: -70, width: 220, height: 220, borderRadius: 110, backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}40` }}
             />
             <View
               pointerEvents="none"
-              style={{ position: 'absolute', top: 360, left: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.55 }}
+              style={{ position: 'absolute', top: 300, left: -90, width: 240, height: 240, borderRadius: 120, backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}33` }}
+            />
+            <View
+              pointerEvents="none"
+              style={{ position: 'absolute', top: 620, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}30` }}
             />
 
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
