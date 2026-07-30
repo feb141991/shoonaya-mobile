@@ -1523,27 +1523,20 @@ function HomeContent() {
 
           <QuizSparkCard />
 
-          {/* Menu icons sit directly on the app's own theme background —
-              no card/well behind them — with soft brand-gold glow bubbles
-              bleeding in from the edges behind the whole Jyotish/Sadhana/
-              Community block. Stronger/more saturated than japa.tsx's own
-              backdrop glows (which sit under much busier content): against
-              this section's plain COLORS.creamBg (#FAF6EF, near-white) and
-              now-cardless icons, the subtler japa.tsx-matched alpha read as
-              washed out rather than warm. */}
-          <View style={{ position: 'relative' }}>
-            <View
-              pointerEvents="none"
-              style={{ position: 'absolute', top: 10, right: -70, width: 220, height: 220, borderRadius: 110, backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}40` }}
-            />
-            <View
-              pointerEvents="none"
-              style={{ position: 'absolute', top: 300, left: -90, width: 240, height: 240, borderRadius: 120, backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}33` }}
-            />
-            <View
-              pointerEvents="none"
-              style={{ position: 'absolute', top: 620, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}30` }}
-            />
+          {/* Menu icons sit directly on the app's standard gold brand tint —
+              no card border/shadow, just a flat continuous wash (not the
+              patchy bubbles this used to be, which left visible pale gaps
+              of COLORS.creamBg showing through) covering the whole Jyotish/
+              Sadhana/Community block. */}
+          <View
+            style={{
+              position: 'relative',
+              borderRadius: 28,
+              backgroundColor: `${isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight}1F`,
+              paddingTop: 4,
+              paddingBottom: 4,
+            }}
+          >
 
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}
