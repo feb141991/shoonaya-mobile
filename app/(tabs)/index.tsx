@@ -103,23 +103,7 @@ type HomeMenuTileItem = {
   sacredId: SacredIconName | null;
   fallbackGlyph: keyof typeof Feather.glyphMap;
   accent: string;
-  bg?: string;
-  border?: string;
 };
-
-const FULL_ART_MENU_ICONS = new Set<SacredIconName>([
-  'panchang',
-  'rashiphala',
-  'kundali',
-  'nitya',
-  'quiz',
-  'ai-guide',
-  'progress',
-  'live-darshan',
-  'mandali',
-  'tirtha',
-  'seva',
-]);
 
 type HomeMenuTheme = {
   glass: string;
@@ -127,21 +111,21 @@ type HomeMenuTheme = {
   text: string;
 };
 
+// No card, no per-icon well background — every tile is just the icon art
+// and label, sized identically (see the single `size={30}` below) regardless
+// of whether the icon is a full-art clay render or a plain Feather glyph.
 function HomeMenuTile({
   item,
   columns,
-  isDark,
   theme,
   onPress,
 }: {
   item: HomeMenuTileItem;
   columns: 2 | 3;
-  isDark: boolean;
   theme: HomeMenuTheme;
   onPress: () => void;
 }) {
   const isThreeColumn = columns === 3;
-  const hasFullArtIcon = item.sacredId ? FULL_ART_MENU_ICONS.has(item.sacredId) : false;
 
   return (
     <PressableSurface
@@ -152,53 +136,21 @@ function HomeMenuTile({
         flex: isThreeColumn ? 1 : undefined,
         width: isThreeColumn ? undefined : '48.5%',
         minHeight: isThreeColumn ? 118 : 112,
-        borderRadius: 20,
         paddingVertical: 14,
         paddingHorizontal: 6,
-        backgroundColor: item.bg ?? theme.glass,
-        borderWidth: 1,
-        borderColor: item.border ?? theme.premiumBorder,
-        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <View style={{ marginBottom: 10 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View
+        style={{ width: 64, height: 64, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         {item.sacredId ? (
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 20,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: hasFullArtIcon ? 'transparent' : `${item.accent}26`,
-              borderWidth: hasFullArtIcon ? 0 : 1,
-              borderColor: hasFullArtIcon ? 'transparent' : `${item.accent}47`,
-            }}
-          >
-            <SacredIcon
-              name={item.sacredId}
-              fallbackGlyph={item.fallbackGlyph}
-              size={hasFullArtIcon ? 42 : 30}
-              color={item.accent}
-            />
-          </View>
+          <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={30} color={item.accent} />
         ) : (
-          <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 18,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: `${item.accent}15`,
-              borderWidth: 1,
-              borderColor: `${item.accent}28`,
-            }}
-          >
-            <Feather name={item.fallbackGlyph} size={27} color={item.accent} />
-          </View>
+          <Feather name={item.fallbackGlyph} size={30} color={item.accent} />
         )}
       </View>
       <Text
@@ -1607,7 +1559,6 @@ function HomeContent() {
                   key={item.label}
                   item={item}
                   columns={3}
-                  isDark={isDark}
                   theme={theme}
                   onPress={() => navigate(item.href as Href)}
                 />
@@ -1620,16 +1571,15 @@ function HomeContent() {
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Sadhana</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {([
-                { label: 'Nitya',    href: '/nitya-karma', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold,   bg: isDark ? COLORS.tileGoldBgDark   : COLORS.tileGoldBgLight,   border: COLORS.tileGoldBorder },
-                { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
-                { label: 'AI Guide', href: '/ai-chat',     sacredId: 'ai-guide' as SacredIconName, fallbackGlyph: 'message-circle' as const, accent: COLORS.tileViolet, bg: isDark ? COLORS.tileVioletBgDark : COLORS.tileVioletBgLight, border: COLORS.tileVioletBorder },
-                { label: 'Progress', href: '/my-progress', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'trending-up' as const, accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
+                { label: 'Nitya',    href: '/nitya-karma', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold },
+                { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple },
+                { label: 'AI Guide', href: '/ai-chat',     sacredId: 'ai-guide' as SacredIconName, fallbackGlyph: 'message-circle' as const, accent: COLORS.tileViolet },
+                { label: 'Progress', href: '/my-progress', sacredId: 'progress' as SacredIconName, fallbackGlyph: 'trending-up' as const, accent: COLORS.tileGreen },
               ] satisfies HomeMenuTileItem[]).map((item) => (
                 <HomeMenuTile
                   key={item.label}
                   item={item}
                   columns={2}
-                  isDark={isDark}
                   theme={theme}
                   onPress={() => {
                     if (item.href === '/ai-chat' && isGuest) {
@@ -1648,20 +1598,19 @@ function HomeContent() {
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Community</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {([
-                { label: 'Live Darshan', href: '/live-darshan',    sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue,   bg: isDark ? COLORS.tileBlueBgDark   : COLORS.tileBlueBgLight,   border: COLORS.tileBlueBorder },
-                { label: 'Mandali',      href: '/(tabs)/mandali',  sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple, bg: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight, border: COLORS.tilePurpleBorder },
+                { label: 'Live Darshan', href: '/live-darshan',    sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue },
+                { label: 'Mandali',      href: '/(tabs)/mandali',  sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
                 // hidden tab (href: null in _layout.tsx) with no entry point
                 // anywhere in the app. This card is the fix; the tab stays hidden.
-                { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: 'tirtha' as SacredIconName,        fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral,  bg: isDark ? COLORS.tileCoralBgDark  : COLORS.tileCoralBgLight,  border: COLORS.tileCoralBorder },
-                { label: 'Seva',        href: '/my-progress',      sacredId: 'seva' as SacredIconName,          fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen,  bg: isDark ? COLORS.tileGreenBgDark  : COLORS.tileGreenBgLight,  border: COLORS.tileGreenBorder },
+                { label: 'Tirtha',      href: '/(tabs)/tirtha',    sacredId: 'tirtha' as SacredIconName,        fallbackGlyph: 'map-pin' as const, accent: COLORS.tileCoral },
+                { label: 'Seva',        href: '/my-progress',      sacredId: 'seva' as SacredIconName,          fallbackGlyph: 'heart' as const,   accent: COLORS.tileGreen },
               ] satisfies HomeMenuTileItem[]).map((item) => (
                 <HomeMenuTile
                   key={item.label}
                   item={item}
                   columns={2}
-                  isDark={isDark}
                   theme={theme}
                   onPress={() => navigate(item.href as Href)}
                 />
