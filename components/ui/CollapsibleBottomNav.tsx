@@ -147,7 +147,7 @@ export function CollapsibleBottomNav() {
         href: '/japa',
         label: 'Japa',
         match: (p) => matchesAny(p, ['/japa', '/japa-insights']),
-        renderIcon: (color, size) => <Feather name="heart" color={color} size={size} />,
+        renderIcon: (color, size) => <SacredIcon name="japa" fallbackGlyph="heart" color={color} size={size} />,
       },
       {
         key: 'bhakti',
@@ -167,21 +167,21 @@ export function CollapsibleBottomNav() {
             '/nitya-ashrama',
           ]),
         isCenter: true,
-        renderIcon: (color, size) => <Feather name="star" color={color} size={size} />,
+        renderIcon: (color, size) => <SacredIcon name="bhakti" fallbackGlyph="star" color={color} size={size} />,
       },
       {
         key: 'pathshala',
         href: '/pathshala',
         label: 'Pathshala',
         match: (p) => matchesAny(p, ['/pathshala']),
-        renderIcon: (color, size) => <Feather name="book-open" color={color} size={size} />,
+        renderIcon: (color, size) => <SacredIcon name="pathshala" fallbackGlyph="book-open" color={color} size={size} />,
       },
       {
         key: 'mandali',
         href: '/mandali',
         label: 'Mandali',
         match: (p) => matchesAny(p, ['/mandali']),
-        renderIcon: (color, size) => <Feather name="users" color={color} size={size} />,
+        renderIcon: (color, size) => <SacredIcon name="mandali" fallbackGlyph="users" color={color} size={size} />,
       },
     ],
     []
