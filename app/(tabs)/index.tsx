@@ -114,50 +114,48 @@ type HomeMenuTheme = {
 // No card, no per-icon well background — every tile is just the icon art
 // and label, sized identically (see the single `size={30}` below) regardless
 // of whether the icon is a full-art clay render or a plain Feather glyph.
+// Every row is a single non-wrapping line of equal-width (`flex: 1`) tiles —
+// tight gap, compact padding — so 3 or 4 icons per row sit close together
+// instead of being stretched across a 2-column grid with dead space.
 function HomeMenuTile({
   item,
-  columns,
   theme,
   onPress,
 }: {
   item: HomeMenuTileItem;
-  columns: 2 | 3;
   theme: HomeMenuTheme;
   onPress: () => void;
 }) {
-  const isThreeColumn = columns === 3;
-
   return (
     <PressableSurface
       accessibilityLabel={item.label}
       onPress={onPress}
       pressedStyle={{ transform: [{ scale: 0.96 }] }}
       style={{
-        flex: isThreeColumn ? 1 : undefined,
-        width: isThreeColumn ? undefined : '48.5%',
-        minHeight: isThreeColumn ? 118 : 112,
-        paddingVertical: 14,
-        paddingHorizontal: 6,
+        flex: 1,
+        minHeight: 96,
+        paddingVertical: 8,
+        paddingHorizontal: 2,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
       <View
-        style={{ width: 64, height: 64, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: 56, height: 56, marginBottom: 8, alignItems: 'center', justifyContent: 'center' }}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
         {item.sacredId ? (
-          <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={30} color={item.accent} />
+          <SacredIcon name={item.sacredId} fallbackGlyph={item.fallbackGlyph} size={28} color={item.accent} />
         ) : (
-          <Feather name={item.fallbackGlyph} size={30} color={item.accent} />
+          <Feather name={item.fallbackGlyph} size={28} color={item.accent} />
         )}
       </View>
       <Text
         style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.text, textAlign: 'center' }}
         numberOfLines={1}
         adjustsFontSizeToFit
-        minimumFontScale={0.82}
+        minimumFontScale={0.75}
       >
         {item.label}
       </Text>
@@ -1546,7 +1544,7 @@ function HomeContent() {
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>
               Jyotish & Panchang
             </Text>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
               {([
                 {
                   label: 'Panchang',
@@ -1573,7 +1571,6 @@ function HomeContent() {
                 <HomeMenuTile
                   key={item.label}
                   item={item}
-                  columns={3}
                   theme={theme}
                   onPress={() => navigate(item.href as Href)}
                 />
@@ -1584,7 +1581,7 @@ function HomeContent() {
           {/* Quick Actions Row */}
           <View style={{ marginTop: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Sadhana</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
               {([
                 { label: 'Nitya',    href: '/nitya-karma', sacredId: 'nitya' as SacredIconName,    fallbackGlyph: 'sunrise' as const,     accent: COLORS.tileGold },
                 { label: 'Quiz',     href: '/quiz',        sacredId: 'quiz' as SacredIconName,     fallbackGlyph: 'help-circle' as const, accent: COLORS.tilePurple },
@@ -1594,7 +1591,6 @@ function HomeContent() {
                 <HomeMenuTile
                   key={item.label}
                   item={item}
-                  columns={2}
                   theme={theme}
                   onPress={() => {
                     if (item.href === '/ai-chat' && isGuest) {
@@ -1611,7 +1607,7 @@ function HomeContent() {
           {/* Community Row */}
           <View style={{ marginTop: 12, marginBottom: 12 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 12 }}>Community</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
               {([
                 { label: 'Live Darshan', href: '/live-darshan',    sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue },
                 { label: 'Mandali',      href: '/(tabs)/mandali',  sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple },
@@ -1625,7 +1621,6 @@ function HomeContent() {
                 <HomeMenuTile
                   key={item.label}
                   item={item}
-                  columns={2}
                   theme={theme}
                   onPress={() => navigate(item.href as Href)}
                 />
