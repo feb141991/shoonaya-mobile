@@ -23,7 +23,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -59,6 +59,7 @@ type UpcomingVrat = {
   date: string;
   slug: string;
   vratData: VratData;
+  observance: any;
 };
 
 function tithiIndexToVratId(tithiIndex: number, tradition: string | null | undefined): string | null {
@@ -111,6 +112,7 @@ export default function VratScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedTradition, setSelectedTradition] = useState<Tradition>('all');
   const [selectedVrat, setSelectedVrat] = useState<VratData | null>(null);
+  const [selectedOccurrence, setSelectedOccurrence] = useState<UpcomingVrat | null>(null);
   const [geo, setGeo] = useState<ProfileGeoState>(DEFAULT_GEO);
   const [upcomingVrats, setUpcomingVrats] = useState<UpcomingVrat[]>([]);
   const [upcomingError, setUpcomingError] = useState(false);
@@ -133,6 +135,12 @@ export default function VratScreen() {
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
+      // Mirrors themeColor() in lib/constants.ts. This screen builds its own
+      // theme object rather than calling themeColor(isDark); these two keys are
+      // added here so the review notice can use sourced gold tints instead of
+      // an ad hoc rgba at the call site.
+      brandSoft: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
+      premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
     }),
     [isDark]
   );
@@ -188,7 +196,7 @@ export default function VratScreen() {
           .filter((observance) => observance.kind === 'vrat')
           .map((observance) => {
             const vratData = lookupVratData(observance.slug);
-            return vratData ? { date: observance.date, slug: observance.slug, vratData } : null;
+            return vratData ? { date: observance.date, slug: observance.slug, vratData, observance } : null;
           })
           .filter((entry): entry is UpcomingVrat => entry !== null);
         if (!cancelled) {
@@ -444,6 +452,62 @@ export default function VratScreen() {
             </View>
           </View>
 
+          {selectedOccurrence?.observance && (
+            (() => {
+              const obs = selectedOccurrence.observance;
+              if (obs.status === 'unresolved') {
+                return (
+                  <View style={{
+                    borderRadius: RADII.xl,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: theme.brandSoft,
+                    gap: 8,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Feather name="help-circle" size={16} color={theme.brand} />
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Under Advisory Council Review
+                      </Text>
+                    </View>
+                    <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
+                      This observance is currently under review by scholars. The engine detected potential candidate dates but has not finalized the selection. No final date is set.
+                    </Text>
+                    {obs.reasons?.[0]?.text ? (
+                      <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
+                        Reason: {obs.reasons[0].text}
+                      </Text>
+                    ) : null}
+                  </View>
+                );
+              }
+              if (obs.alternatives && obs.alternatives.length > 0) {
+                return (
+                  <View style={{
+                    borderRadius: RADII.xl,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: 'rgba(197, 160, 89, 0.4)',
+                    backgroundColor: 'rgba(197, 160, 89, 0.1)',
+                    gap: 8,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Feather name="info" size={16} color={theme.brand} />
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Multiple Dates (Tradition Variant)
+                      </Text>
+                    </View>
+                    <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
+                      Your tradition observes this on <Text style={{ fontFamily: FONTS.sansSemiBold }}>{selectedOccurrence.date}</Text>. Other traditions observe it on {obs.alternatives.map((alt: any) => alt.civilDate || 'Under Review').join(', ')}. Both dates are correct based on their respective rule systems.
+                    </Text>
+                  </View>
+                );
+              }
+              return null;
+            })()
+          )}
+
           <View style={{ gap: 14 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 16 * fsScale, lineHeight: 26 * fsScale }}>
               {selectedSignificance}
@@ -596,13 +660,33 @@ export default function VratScreen() {
           )}
         </Card>
 
+        <View style={{
+          borderRadius: RADII.xl,
+          padding: 16,
+          borderWidth: 1,
+          borderColor: 'rgba(197, 160, 89, 0.3)',
+          backgroundColor: 'rgba(197, 160, 89, 0.1)',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 12,
+        }}>
+          <Feather name="globe" size={18} color={theme.brand} style={{ flexShrink: 0 }} />
+          <Text style={{ flex: 1, color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}>
+            Observance dates and timings depend on your tradition and location. Set your profile location for local calculations.
+          </Text>
+        </View>
+
         {upcomingVrats.length > 0 && (
           <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 10 }}>
             <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Upcoming</Text>
             {upcomingVrats.slice(0, 5).map((upcoming) => (
               <PressableSurface
                 key={`${upcoming.slug}-${upcoming.date}`}
-                onPress={() => setSelectedVrat(upcoming.vratData)}
+                onPress={() => {
+                  setSelectedVrat(upcoming.vratData);
+                  setSelectedOccurrence(upcoming);
+                }}
                 haptic="selection"
                 style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
               >
@@ -622,7 +706,14 @@ export default function VratScreen() {
         )}
 
         {vrats.map((vrat) => (
-          <PressableSurface key={vrat.id} onPress={() => setSelectedVrat(vrat)} haptic="selection">
+          <PressableSurface
+            key={vrat.id}
+            onPress={() => {
+              setSelectedVrat(vrat);
+              setSelectedOccurrence(null);
+            }}
+            haptic="selection"
+          >
             <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
               <Text style={{ ...TYPE.metric, color: theme.text }}>
                 {vrat.emoji} {vrat.name}

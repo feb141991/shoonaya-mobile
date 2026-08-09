@@ -44,6 +44,8 @@ type UpcomingFestival = {
   emoji: string;
   kind: 'major' | 'vrat' | 'regional';
   tradition: Tradition;
+  status?: 'resolved' | 'ambiguous' | 'unresolved';
+  alternatives?: any[];
 };
 
 type PanchangState = {
@@ -787,13 +789,41 @@ export default function PanchangScreen() {
                   <Text style={{ color: CREAM, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                     {festival.emoji} {festival.display_name}
                   </Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>{festival.date}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
+                    {festival.status === 'unresolved' ? 'Date under review' : festival.date}
+                  </Text>
                 </View>
-                <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{festival.kind.toUpperCase()}</Text>
+                <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                  <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{festival.kind.toUpperCase()}</Text>
+                  {festival.status === 'unresolved' && (
+                    <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>UNDER REVIEW</Text>
+                  )}
+                  {festival.status !== 'unresolved' && festival.alternatives && festival.alternatives.length > 0 && (
+                    <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>VARIANTS</Text>
+                  )}
+                </View>
               </View>
             ))
           )}
         </GlassCard>
+
+        <View style={{
+          borderRadius: 14,
+          padding: 12,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
+          backgroundColor: 'rgba(255,255,255,0.04)',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          marginTop: 12,
+          marginBottom: 16,
+        }}>
+          <Feather name="globe" size={16} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
+          <Text style={{ flex: 1, color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>
+            Observance dates and timings depend on tradition and location. Verify calculations locally.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
