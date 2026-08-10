@@ -16,6 +16,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
@@ -30,6 +31,15 @@ import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+
+if (GOOGLE_WEB_CLIENT_ID) {
+  GoogleSignin.configure({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    scopes: ['email', 'profile'],
+  });
+}
 
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
@@ -409,6 +419,39 @@ export default function LoginScreen() {
     setNoticeMessage(null);
 
     try {
+      // The Android project already carries google-services.json and the Google
+      // Services Gradle plugin. iOS intentionally keeps the established browser
+      // OAuth path until an iOS OAuth client / GoogleService-Info.plist exists.
+      if (GOOGLE_WEB_CLIENT_ID && Platform.OS === 'android') {
+        try {
+          await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+          const response = await GoogleSignin.signIn();
+
+          if (response.data?.idToken) {
+            const { error: nativeAuthError } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: response.data.idToken,
+            });
+
+            if (nativeAuthError) throw nativeAuthError;
+
+            const session = await waitForStoredSession();
+            if (session) {
+              router.replace('/(tabs)');
+              return;
+            }
+          }
+        } catch (nativeError: any) {
+          if (nativeError?.code === statusCodes.SIGN_IN_CANCELLED) {
+            // User cancelled native prompt
+            return;
+          }
+          if (__DEV__) {
+            console.log('[auth] Native Google Sign-In failed or cancelled, falling back to web browser:', nativeError);
+          }
+        }
+      }
+
       const redirectUri = getOAuthRedirectUri();
 
       if (__DEV__) {
