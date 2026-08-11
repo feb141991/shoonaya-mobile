@@ -11,7 +11,8 @@
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com"
       }
     },
     "development-simulator": {
@@ -24,7 +25,8 @@
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -37,7 +39,8 @@
         "EXPO_PUBLIC_APP_ENV": "preview",
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -53,7 +56,8 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-i2cel6onssuhaf2hepg2bb41fqlel3iu.apps.googleusercontent.com"
       }
     }
   },

@@ -33,10 +33,12 @@ import { setGuestMode } from '@/lib/guestSession';
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
 if (GOOGLE_WEB_CLIENT_ID) {
   GoogleSignin.configure({
     webClientId: GOOGLE_WEB_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
     scopes: ['email', 'profile'],
   });
 }
