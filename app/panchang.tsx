@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
@@ -46,6 +47,11 @@ type UpcomingFestival = {
   tradition: Tradition;
   status?: 'resolved' | 'ambiguous' | 'unresolved';
   alternatives?: any[];
+  monthLabel?: { formattedLabel: string; isDivergentFromRuleDefault?: boolean } | null;
+  description?: string | null;
+  reasons?: Array<{ label: string; description: string }>;
+  diagnostics?: string[];
+  sourceRefs?: Array<{ title: string; tier?: string; citation?: string | null }>;
 };
 
 type PanchangState = {
@@ -350,6 +356,7 @@ export default function PanchangScreen() {
   const [profileState, setProfileState] = useState<PanchangState>(INITIAL_STATE);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [festivals, setFestivals] = useState<UpcomingFestival[]>([]);
+  const [whyTodayFestival, setWhyTodayFestival] = useState<UpcomingFestival | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewedToday, setViewedToday] = useState(false);
   const [markingViewed, setMarkingViewed] = useState(false);
@@ -778,8 +785,10 @@ export default function PanchangScreen() {
             <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 13 }}>No upcoming observances loaded.</Text>
           ) : (
             festivals.slice(0, 8).map((festival) => (
-              <View
+              <PressableSurface
                 key={`${festival.date}-${festival.slug}`}
+                onPress={() => setWhyTodayFestival(festival)}
+                accessibilityLabel={`Why ${festival.display_name} is on ${festival.date}`}
                 style={{
                   borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.05)',
                   padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12,
@@ -790,7 +799,11 @@ export default function PanchangScreen() {
                     {festival.emoji} {festival.display_name}
                   </Text>
                   <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
-                    {festival.status === 'unresolved' ? 'Date under review' : festival.date}
+                    {festival.status === 'unresolved'
+                      ? 'Date under review'
+                      : festival.monthLabel
+                        ? `${festival.date} · ${festival.monthLabel.formattedLabel}`
+                        : festival.date}
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 4 }}>
@@ -802,10 +815,16 @@ export default function PanchangScreen() {
                     <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>VARIANTS</Text>
                   )}
                 </View>
-              </View>
+              </PressableSurface>
             ))
           )}
         </GlassCard>
+
+        <WhyTodayModal
+          visible={!!whyTodayFestival}
+          observance={whyTodayFestival}
+          onClose={() => setWhyTodayFestival(null)}
+        />
 
         <View style={{
           borderRadius: 14,

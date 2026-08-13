@@ -495,12 +495,19 @@ export default function SettingsScreen() {
                   }}
                 />
               ) : (
-                <Button
-                  label={signingOut ? 'Signing out...' : 'Sign out'}
-                  variant="secondary"
-                  loading={signingOut}
-                  onPress={() => { void handleSignOut(); }}
-                />
+                <>
+                  <Button
+                    label="Personal details"
+                    variant="secondary"
+                    onPress={() => router.push('/settings/personal-details')}
+                  />
+                  <Button
+                    label={signingOut ? 'Signing out...' : 'Sign out'}
+                    variant="secondary"
+                    loading={signingOut}
+                    onPress={() => { void handleSignOut(); }}
+                  />
+                </>
               )}
             </SettingsSection>
 

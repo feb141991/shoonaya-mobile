@@ -95,6 +95,7 @@ type ObservanceEntry = {
   routeSlug: string;
   href: string;
   label: string;
+  monthLabel?: string | null;
 };
 
 type HomeMenuTileItem = {
@@ -404,7 +405,7 @@ function PanchangPill({
 
   const slides = useMemo(() => {
     const seen = new Set<string>();
-    const rows: { key: string; icon: string; label: string }[] = [];
+    const rows: { key: string; icon: string; label: string; monthLabel?: string | null }[] = [];
     const normalizeObservanceKey = (label: string) => label
       .replace(/^[^\p{L}\p{N}]+/u, '')
       .replace(/^(today is|tomorrow is)\s+/i, '')
@@ -412,12 +413,12 @@ function PanchangPill({
       .replace(/\s+today$/i, '')
       .trim()
       .toLowerCase();
-    const add = (row: { key: string; icon: string; label: string; dedupeKey?: string } | null) => {
+    const add = (row: { key: string; icon: string; label: string; dedupeKey?: string; monthLabel?: string | null } | null) => {
       if (!row?.label) return;
       const normalized = (row.dedupeKey ?? normalizeObservanceKey(row.label));
       if (!normalized || seen.has(normalized)) return;
       seen.add(normalized);
-      rows.push({ key: row.key, icon: row.icon, label: row.label });
+      rows.push({ key: row.key, icon: row.icon, label: row.label, monthLabel: row.monthLabel });
     };
 
     if (kind === 'observance') {
@@ -426,6 +427,7 @@ function PanchangPill({
         icon: summary.observance.emoji ?? '🪔',
         label: summary.observance.label,
         dedupeKey: summary.observance.name.trim().toLowerCase(),
+        monthLabel: summary.observance.monthLabel,
       } : null);
       // Genuinely different upcoming observances (next Ekadashi, next
       // Amavasya, next festival...) from the same DB-backed window, rather
@@ -438,6 +440,7 @@ function PanchangPill({
           icon: entry.emoji ?? '🪔',
           label: entry.label,
           dedupeKey: entry.name.trim().toLowerCase(),
+          monthLabel: entry.monthLabel,
         });
       });
       return rows;
@@ -516,7 +519,7 @@ function PanchangPill({
       <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
         <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
-          {currentSlide.label}
+          {currentSlide.monthLabel ? `${currentSlide.label} · ${currentSlide.monthLabel}` : currentSlide.label}
         </Text>
       </Animated.View>
 

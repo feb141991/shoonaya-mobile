@@ -20,13 +20,30 @@ import { COLORS, FONTS, RADII } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
+import {
+  LIFE_STAGES,
+  GENDERS,
+  CALENDAR_PROFILES,
+  CALENDAR_SCOPES,
+  genderContext,
+  ageFromDob,
+  suggestedLifeStage,
+  type LifeStageKey,
+  type GenderKey,
+  type CalendarProfileSlug,
+  type CalendarScopeSlug,
+} from '@/lib/profile-constants';
 
 // 'founderNote' is a preface, not a counted step — it sits before the
 // tracked STEPS array on purpose (see below) so the "Step X of Y" progress
 // dots still start counting at Tradition, the first real question. This is
 // a brief, honest note from the founder shown once, before Shoonaya asks
 // anything of the user — the "why" before the "what."
-type Step = 'founderNote' | 'tradition' | 'personal' | 'nakshatra' | 'goals' | 'name' | 'nameStory' | 'language' | 'notifications' | 'ready';
+//
+// 'calendarProfile' and 'calendarScope' are Hindu-only steps (regional
+// amanta/purnimanta month-system convention + observance density), mirroring
+// web onboarding's steps 11/13 -- see STEPS below for the conditional insert.
+type Step = 'founderNote' | 'tradition' | 'personal' | 'nakshatra' | 'calendarProfile' | 'calendarScope' | 'goals' | 'name' | 'nameStory' | 'language' | 'notifications' | 'ready';
 
 const TRADITIONS = [
   { key: 'hindu', label: 'Hindu', icon: 'sun' as const, emoji: '🪔', description: 'Mantras, panchang and daily sadhana' },
@@ -43,23 +60,6 @@ const LANGUAGES = [
 ] as const;
 
 type LanguageKey = (typeof LANGUAGES)[number]['key'];
-
-const LIFE_STAGES = [
-  { key: 'brahmacharya', label: 'Brahmacharya', age: '0-25', description: 'Student - learn, build, purify', emoji: '⭐' },
-  { key: 'grihastha', label: 'Grihastha', age: '25-50', description: 'Householder - work, family, dharma', emoji: '🏡' },
-  { key: 'vanaprastha', label: 'Vanaprastha', age: '50-75', description: 'Forest Dweller - mentor, withdraw', emoji: '🌳' },
-  { key: 'sannyasa', label: 'Sannyasa', age: '75+', description: 'Renunciate - release, liberation', emoji: '💨' },
-] as const;
-
-type LifeStageKey = (typeof LIFE_STAGES)[number]['key'];
-
-const GENDERS = [
-  { key: 'male', label: 'Male', emoji: '♂' },
-  { key: 'female', label: 'Female', emoji: '♀' },
-  { key: 'prefer_not', label: 'Prefer not to say', emoji: '·' },
-] as const;
-
-type GenderKey = (typeof GENDERS)[number]['key'];
 
 const RASHIS = [
   { key: 'mesha', label: 'Mesha', sanskrit: 'मेष', symbol: '♈', dates: 'Apr 14 - May 14' },
@@ -128,13 +128,24 @@ const READY_FEATURES = [
   { emoji: '👥', label: 'Mandali', description: 'Your sangat' },
 ] as const;
 
-const STEPS: Step[] = ['tradition', 'personal', 'nakshatra', 'goals', 'name', 'nameStory', 'language', 'notifications', 'ready'];
+// calendarProfile/calendarScope only apply to Hindu tradition (amanta/
+// purnimanta regional convention has no meaning for Sikh/Buddhist/Jain
+// users), mirroring web onboarding's own conditional step branching
+// (OnboardingClient.tsx visibleStepsList) -- computed per-render from the
+// current tradition selection, not a fixed constant.
+function buildSteps(tradition: TraditionKey): Step[] {
+  const base: Step[] = ['tradition', 'personal', 'nakshatra'];
+  const calendarSteps: Step[] = tradition === 'hindu' ? ['calendarProfile', 'calendarScope'] : [];
+  return [...base, ...calendarSteps, 'goals', 'name', 'nameStory', 'language', 'notifications', 'ready'];
+}
 
 const STEP_TITLES: Record<Step, string> = {
   founderNote: 'A note from our founder',
   tradition: 'Your tradition',
   personal: 'Personal details',
   nakshatra: 'Your Birth Nakshatra',
+  calendarProfile: 'Your regional calendar',
+  calendarScope: 'Calendar detail level',
   goals: 'What calls you here?',
   name: 'Your name',
   nameStory: 'Your Name Story',
@@ -143,32 +154,8 @@ const STEP_TITLES: Record<Step, string> = {
   ready: 'Ready',
 };
 
-function stepEyebrow(step: Step) {
-  return `Step ${STEPS.indexOf(step) + 1} of ${STEPS.length}`;
-}
-
-function ageFromDob(value: string) {
-  if (!value) return null;
-  const birth = new Date(value);
-  if (Number.isNaN(birth.getTime())) return null;
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDelta = today.getMonth() - birth.getMonth();
-  if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birth.getDate())) age -= 1;
-  return age >= 0 ? age : null;
-}
-
-function suggestedLifeStage(value: string): LifeStageKey | null {
-  const age = ageFromDob(value);
-  if (age === null) return null;
-  if (age <= 25) return 'brahmacharya';
-  if (age <= 50) return 'grihastha';
-  if (age <= 75) return 'vanaprastha';
-  return 'sannyasa';
-}
-
-function genderContext(value: GenderKey) {
-  return value === 'female' ? 'female' : 'general';
+function stepEyebrow(step: Step, steps: Step[]) {
+  return `Step ${steps.indexOf(step) + 1} of ${steps.length}`;
 }
 
 type NameStory = {
@@ -218,6 +205,8 @@ export default function OnboardingScreen() {
   const [lifeStage, setLifeStage] = useState<LifeStageKey>('brahmacharya');
   const [rashi, setRashi] = useState('');
   const [nakshatra, setNakshatra] = useState('');
+  const [calendarProfile, setCalendarProfile] = useState<CalendarProfileSlug | ''>('');
+  const [calendarScope, setCalendarScope] = useState<CalendarScopeSlug | ''>('');
   const [goals, setGoals] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [notificationsRequested, setNotificationsRequested] = useState(false);
@@ -227,6 +216,7 @@ export default function OnboardingScreen() {
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const STEPS = buildSteps(tradition);
   const stepIndex = STEPS.indexOf(step);
   const age = ageFromDob(dateOfBirth);
   const suggestedStage = suggestedLifeStage(dateOfBirth);
@@ -317,6 +307,10 @@ export default function OnboardingScreen() {
           date_of_birth: dateOfBirth || null,
           gender_context: genderContext(gender),
           life_stage: lifeStage,
+          rashi: rashi || null,
+          nakshatra: nakshatra || null,
+          calendar_profile: calendarProfile || null,
+          calendar_scope: calendarScope || null,
           onboarding_goal: goals.join(','),
           wants_shloka_reminders: notificationsRequested,
           wants_community_notifications: notificationsRequested,
@@ -420,7 +414,7 @@ export default function OnboardingScreen() {
   return (
     <Screen style={{ backgroundColor: bg }}>
       {step !== 'founderNote' ? (
-        <View accessible accessibilityLabel={stepEyebrow(step)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+        <View accessible accessibilityLabel={stepEyebrow(step, STEPS)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
           {STEPS.map((s, i) => (
             <View
               key={s}
@@ -442,7 +436,7 @@ export default function OnboardingScreen() {
       >
         {step !== 'ready' && step !== 'founderNote' ? (
           <View style={{ gap: 10 }}>
-            <SectionHeader label={stepEyebrow(step)} />
+            <SectionHeader label={stepEyebrow(step, STEPS)} />
             <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>
               {STEP_TITLES[step]}
             </Text>
@@ -702,6 +696,40 @@ export default function OnboardingScreen() {
           </>
         )}
 
+        {step === 'calendarProfile' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              Select the regional system used by your family or community to calculate month boundaries and eras.
+            </Text>
+            <View style={{ gap: 12 }}>
+              {CALENDAR_PROFILES.map((item) => renderSelectRow({
+                selected: calendarProfile === item.slug,
+                label: item.label,
+                description: `${item.system} · ${item.era}`,
+                icon: 'calendar',
+                onPress: () => setCalendarProfile(calendarProfile === item.slug ? '' : item.slug),
+              }))}
+            </View>
+          </>
+        )}
+
+        {step === 'calendarScope' && (
+          <>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
+              What density level of observances would you like to see on your dashboard?
+            </Text>
+            <View style={{ gap: 12 }}>
+              {CALENDAR_SCOPES.map((item) => renderSelectRow({
+                selected: calendarScope === item.slug,
+                label: item.label,
+                description: item.desc,
+                icon: 'sliders',
+                onPress: () => setCalendarScope(item.slug),
+              }))}
+            </View>
+          </>
+        )}
+
         {step === 'goals' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
@@ -931,7 +959,7 @@ export default function OnboardingScreen() {
       {step !== 'notifications' && step !== 'ready' && step !== 'nameStory' && step !== 'founderNote' ? (
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
           {stepIndex > 0 ? <Button label="Back" variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
-          <Button label={step === 'nakshatra' || step === 'name' ? 'Continue / Skip' : 'Continue'} onPress={() => { void goNext(); }} style={{ flex: 1 }} />
+          <Button label={step === 'nakshatra' || step === 'name' || step === 'calendarProfile' || step === 'calendarScope' ? 'Continue / Skip' : 'Continue'} onPress={() => { void goNext(); }} style={{ flex: 1 }} />
         </View>
       ) : null}
     </Screen>
