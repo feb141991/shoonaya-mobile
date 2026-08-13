@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, Modal, Pressable, Text, useColorScheme, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -11,14 +11,8 @@ import { startMoodCheckin } from '@/lib/mood';
 import { getMoodSpiritualDate, setMoodPulseDismissedDate } from '@/lib/moodPulsePreference';
 import { resolveNativeRoute } from '@/lib/routes';
 
-type HomeLiveMoodStatus = {
-  hasLoggedMoodToday: boolean;
-  lastMood: string | null;
-};
-
 type MoodPulseSheetProps = {
   visible: boolean;
-  moodStatus: HomeLiveMoodStatus | null;
   firstName?: string;
   onClose: () => void;
   onLogged: (mood: string) => void;
@@ -36,15 +30,10 @@ type MoodPulseSheetProps = {
 // usual bottom-sheet idiom -- explicit PWA-parity request, not the
 // bottom-sheet alternative this component started out as.
 //
-// One deliberate deviation from the PWA source: PWA only renders its close
-// (X) button when `!hasCompleted`, and its "already logged today" pill only
-// ever calls setState (nothing actually re-opens the recommendations flow
-// from there) -- read closely, that leaves the PWA modal with no visible way
-// to dismiss once a mood is already logged for the day. Rather than port
-// that dead end, this always shows a close button, and the "already logged"
-// pill genuinely navigates to /mood (which will show today's already-
-// completed status) instead of being a no-op.
-export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogged }: MoodPulseSheetProps) {
+// Unlike the PWA's completed-state branch, native always keeps the full mood
+// picker visible. Backend mood history and per-device dismissal state can
+// legitimately differ, but they must not produce different picker layouts.
+export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPulseSheetProps) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
@@ -82,13 +71,6 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
     }
   }, [pickedMood, reducedMotion, confirmAnim]);
 
-  const alreadyLoggedMood = useMemo(
-    () => (moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? MOODS.find((m) => m.key === moodStatus.lastMood) ?? null : null),
-    [moodStatus, MOODS]
-  );
-
-  const showAlreadyLogged = Boolean(alreadyLoggedMood) && !pickedMood;
-
   const handleDismiss = () => {
     void setMoodPulseDismissedDate(getMoodSpiritualDate());
     onClose();
@@ -109,11 +91,6 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
     setSaving(true);
     await startMoodCheckin(pickedMood.key);
     setSaving(false);
-    onClose();
-    router.push(resolveNativeRoute('/mood', '/(tabs)'));
-  };
-
-  const handleExploreCompleted = () => {
     onClose();
     router.push(resolveNativeRoute('/mood', '/(tabs)'));
   };
@@ -176,39 +153,6 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
           </View>
 
           <View>
-            {showAlreadyLogged && alreadyLoggedMood ? (
-              <Pressable
-                onPress={handleExploreCompleted}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  alignSelf: 'flex-start',
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  borderRadius: 999,
-                  backgroundColor: alreadyLoggedMood.bg,
-                  borderWidth: 1,
-                  borderColor: alreadyLoggedMood.colour,
-                }}
-              >
-                <View
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 15,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: theme.card,
-                  }}
-                >
-                  <MoodGlyph mood={alreadyLoggedMood.key} color={alreadyLoggedMood.colour} size={16} />
-                </View>
-                <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: alreadyLoggedMood.colour }}>
-                  {alreadyLoggedMood.label} · Explore →
-                </Text>
-              </Pressable>
-            ) : (
               <>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                   {MOODS.map((mood, index) => {
@@ -322,7 +266,6 @@ export function MoodPulseSheet({ visible, moodStatus, firstName, onClose, onLogg
                   </Animated.View>
                 ) : null}
               </>
-            )}
           </View>
         </Animated.View>
       </View>

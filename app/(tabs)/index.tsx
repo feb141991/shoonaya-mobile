@@ -1633,7 +1633,6 @@ function HomeContent() {
       />
       <MoodPulseSheet
         visible={moodPulseVisible}
-        moodStatus={moodStatus}
         firstName={state.profile.firstName}
         onClose={() => setMoodPulseVisible(false)}
         onLogged={(mood) => setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood })}
