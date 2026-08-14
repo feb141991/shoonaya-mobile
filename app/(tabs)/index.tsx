@@ -632,16 +632,18 @@ function HomeContent() {
   const completedCount = state.practices.filter((row) => row.done).length;
   const actionRoute = resolveNativeRoute(state.nextPractice.actionHref);
 
-  // A device-local greeting pick (lib/greetingPreference.ts) replaces the
-  // daily-rotating tradition greeting, but the time-of-day word still
-  // takes priority in front of it when one applies (e.g. "Suprabhat, Jai
-  // Shri Ram" in the morning) — only at midday, when there's no
-  // time-of-day word, does the pick stand alone.
+  // A device-local greeting pick (lib/greetingPreference.ts) fully replaces
+  // the greeting line, time-word included -- GREETING_POOLS entries
+  // (lib/greetings.ts) are complete, standalone traditional greetings
+  // ("Waheguru Ji Ka Khalsa", "Jai Shri Ram"), not modifier words meant to
+  // follow one. Previously this concatenated the time-word in front of the
+  // pick, and the render below still appends ", {firstName}" on top of
+  // that -- three greeting-shaped fragments stacked in one line (e.g.
+  // "Shubh Sandhya, Waheguru Ji Ka Khalsa, Prince"), which read as
+  // accumulating rather than a single greeting.
   const greeting = useMemo(() => {
+    if (greetingOverride) return greetingOverride;
     const timeGreeting = getTimeGreeting(new Date().getHours());
-    if (greetingOverride) {
-      return timeGreeting ? `${timeGreeting}, ${greetingOverride}` : greetingOverride;
-    }
     return timeGreeting ?? getTraditionGreeting(state.profile.tradition, new Date(`${state.date.iso}T12:00:00`).getDate());
   }, [state.profile.tradition, state.date.iso, greetingOverride]);
 
