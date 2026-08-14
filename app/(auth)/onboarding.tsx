@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { COLORS, FONTS, RADII } from '@/lib/constants';
+import { COLORS, FONTS, RADII, TRADITION_ACCENT } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
@@ -205,6 +205,7 @@ export default function OnboardingScreen() {
   const [lifeStage, setLifeStage] = useState<LifeStageKey>('brahmacharya');
   const [rashi, setRashi] = useState('');
   const [nakshatra, setNakshatra] = useState('');
+  const [gotra, setGotra] = useState('');
   const [calendarProfile, setCalendarProfile] = useState<CalendarProfileSlug | ''>('');
   const [calendarScope, setCalendarScope] = useState<CalendarScopeSlug | ''>('');
   const [goals, setGoals] = useState<string[]>([]);
@@ -221,6 +222,11 @@ export default function OnboardingScreen() {
   const age = ageFromDob(dateOfBirth);
   const suggestedStage = suggestedLifeStage(dateOfBirth);
   const readyCopy = READY_COPY[tradition];
+  // Drives every selection accent from the 'tradition' step onward (kept
+  // static COLORS.brandGold on founderNote, above, since that screen is
+  // shown before the user has stated a preference).
+  const accent = TRADITION_ACCENT[tradition];
+  const traditionLabel = TRADITIONS.find((t) => t.key === tradition)?.label ?? 'your';
 
   const selectWithHaptic = async (callback: () => void) => {
     callback();
@@ -231,6 +237,41 @@ export default function OnboardingScreen() {
     setDateOfBirth(value);
     const nextStage = suggestedLifeStage(value);
     if (nextStage) setLifeStage(nextStage);
+  };
+
+  // Best-effort, non-blocking: saves the tradition choice the moment it's
+  // made, so a user who abandons onboarding mid-way still has it recorded
+  // instead of it only existing in local state until the final complete()
+  // write. Mirrors complete()'s own update-then-upsert-fallback pattern
+  // (a fresh sign-up's `profiles` row may not exist yet). Never awaited by
+  // the caller and errors are swallowed -- complete() still writes the
+  // authoritative full payload at the end, so a failed early write here is
+  // a missed nicety, not data loss.
+  const persistTraditionEarly = async (value: TraditionKey) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: updated, error } = await supabase
+        .from('profiles')
+        .update({ tradition: value })
+        .eq('id', user.id)
+        .select('id')
+        .maybeSingle();
+      if (error) throw error;
+
+      if (!updated) {
+        const fallbackUsername = `user_${user.id.replace(/-/g, '').slice(0, 12)}`;
+        await supabase.from('profiles').upsert(
+          { id: user.id, username: fallbackUsername, tradition: value },
+          { onConflict: 'id' }
+        );
+      }
+    } catch (error) {
+      console.warn('[Onboarding] early tradition save failed', error);
+    }
   };
 
   const goToStep = async (target: Step) => {
@@ -309,6 +350,7 @@ export default function OnboardingScreen() {
           life_stage: lifeStage,
           rashi: rashi || null,
           nakshatra: nakshatra || null,
+          gotra: gotra.trim() || null,
           calendar_profile: calendarProfile || null,
           calendar_scope: calendarScope || null,
           onboarding_goal: goals.join(','),
@@ -353,6 +395,7 @@ export default function OnboardingScreen() {
   };
 
   const renderSelectRow = ({
+    key,
     selected,
     label,
     description,
@@ -360,6 +403,7 @@ export default function OnboardingScreen() {
     emoji,
     onPress,
   }: {
+    key: string;
     selected: boolean;
     label: string;
     description?: string;
@@ -368,6 +412,7 @@ export default function OnboardingScreen() {
     onPress: () => void;
   }) => (
     <Pressable
+      key={key}
       onPress={() => { void selectWithHaptic(onPress); }}
       accessibilityState={{ selected }}
       accessibilityLabel={description ? `${label}, ${description}` : label}
@@ -376,7 +421,7 @@ export default function OnboardingScreen() {
         minHeight: 44,
         borderRadius: RADII.lg,
         borderWidth: 1.5,
-        borderColor: selected ? COLORS.brandGold : border,
+        borderColor: selected ? accent : border,
         backgroundColor: selected ? cardBg : 'transparent',
         padding: 16,
         flexDirection: 'row',
@@ -394,11 +439,11 @@ export default function OnboardingScreen() {
           backgroundColor: selected ? wellBgSelected : wellBg,
         }}
       >
-        {icon ? <Feather name={icon} size={20} color={selected ? COLORS.brandGold : dim} /> : null}
+        {icon ? <Feather name={icon} size={20} color={selected ? accent : dim} /> : null}
         {emoji ? <Text style={{ fontSize: 20 }}>{emoji}</Text> : null}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: selected ? COLORS.brandGold : text }}>
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: selected ? accent : text }}>
           {label}
         </Text>
         {description ? (
@@ -407,7 +452,7 @@ export default function OnboardingScreen() {
           </Text>
         ) : null}
       </View>
-      {selected ? <Feather name="check-circle" size={20} color={COLORS.brandGold} /> : null}
+      {selected ? <Feather name="check-circle" size={20} color={accent} /> : null}
     </Pressable>
   );
 
@@ -422,7 +467,7 @@ export default function OnboardingScreen() {
                 height: 4,
                 flex: 1,
                 borderRadius: 999,
-                backgroundColor: i <= stepIndex ? COLORS.brandGold : border,
+                backgroundColor: i <= stepIndex ? accent : border,
               }}
             />
           ))}
@@ -508,15 +553,19 @@ export default function OnboardingScreen() {
         {step === 'tradition' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              Shoonaya adapts its guidance to your path. Choose your tradition.
+              This one choice changes everything ahead — colors, calendar, mantras, and guidance all adapt to your path from here.
             </Text>
             <View style={{ gap: 12 }}>
               {TRADITIONS.map((t) => renderSelectRow({
+                key: t.key,
                 selected: tradition === t.key,
                 label: t.label,
                 description: t.description,
                 icon: t.icon,
-                onPress: () => setTradition(t.key),
+                onPress: () => {
+                  setTradition(t.key);
+                  void persistTraditionEarly(t.key);
+                },
               }))}
             </View>
           </>
@@ -525,7 +574,7 @@ export default function OnboardingScreen() {
         {step === 'personal' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              Your date of birth helps personalise Panchang, life-stage guidance, and Jyotish readings.
+              Most apps make you dig up your birth date every time you check a muhurta. Save it once, and every {traditionLabel} reading — Panchang, life-stage guidance, Jyotish — is already yours.
             </Text>
 
             <View style={{ gap: 8 }}>
@@ -563,6 +612,7 @@ export default function OnboardingScreen() {
                 Your stage of life
               </Text>
               {LIFE_STAGES.map((stage) => renderSelectRow({
+                key: stage.key,
                 selected: lifeStage === stage.key,
                 label: `${stage.label} · ${stage.age}`,
                 description: stage.description,
@@ -589,14 +639,14 @@ export default function OnboardingScreen() {
                         minHeight: 50,
                         borderRadius: RADII.lg,
                         borderWidth: 1.5,
-                        borderColor: selected ? COLORS.brandGold : border,
+                        borderColor: selected ? accent : border,
                         backgroundColor: selected ? cardBg : 'transparent',
                         alignItems: 'center',
                         justifyContent: 'center',
                         paddingHorizontal: 8,
                       }}
                     >
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: selected ? accent : text, textAlign: 'center' }}>
                         {g.emoji} {g.label}
                       </Text>
                     </PressableSurface>
@@ -623,7 +673,7 @@ export default function OnboardingScreen() {
                         minHeight: 104,
                         borderRadius: RADII.lg,
                         borderWidth: 1.5,
-                        borderColor: selected ? COLORS.brandGold : border,
+                        borderColor: selected ? accent : border,
                         backgroundColor: selected ? cardBg : 'transparent',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -631,7 +681,7 @@ export default function OnboardingScreen() {
                       }}
                     >
                       <Text style={{ fontSize: 24 }}>{item.symbol}</Text>
-                      <Text style={{ marginTop: 4, fontFamily: FONTS.sansSemiBold, fontSize: 12, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
+                      <Text style={{ marginTop: 4, fontFamily: FONTS.sansSemiBold, fontSize: 12, color: selected ? accent : text, textAlign: 'center' }}>
                         {item.label}
                       </Text>
                       <Text style={{ fontFamily: FONTS.serifBold, fontSize: 11, color: dim, textAlign: 'center' }}>
@@ -645,13 +695,41 @@ export default function OnboardingScreen() {
                 })}
               </View>
             </View>
+
+            {tradition === 'hindu' ? (
+              <View style={{ gap: 8 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Gotra (optional)
+                </Text>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 19, color: dim }}>
+                  You always forget it right when a priest asks. Save it once here, and Shoonaya remembers it for every sankalpa and puja.
+                </Text>
+                <TextInput
+                  value={gotra}
+                  onChangeText={setGotra}
+                  placeholder="e.g. Bharadwaja"
+                  placeholderTextColor={dim}
+                  style={{
+                    minHeight: 52,
+                    borderRadius: RADII.lg,
+                    borderWidth: 1.5,
+                    borderColor: border,
+                    paddingHorizontal: 16,
+                    color: text,
+                    fontFamily: FONTS.sans,
+                    fontSize: 16,
+                    backgroundColor: cardBg,
+                  }}
+                />
+              </View>
+            ) : null}
           </>
         )}
 
         {step === 'nakshatra' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              The lunar mansion at your birth - more precise than your Rashi. Not sure? Check a Janma Kundali app with your birth date, time and place - or skip for now.
+              You've probably had to look this up more than once already. Save your Nakshatra now — more precise than your Rashi — and Shoonaya remembers it for every reading, forever. Not sure? Check a Janma Kundali app with your birth date, time and place, or skip for now.
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {NAKSHATRAS.map((item) => {
@@ -668,7 +746,7 @@ export default function OnboardingScreen() {
                       minHeight: 102,
                       borderRadius: RADII.lg,
                       borderWidth: 1.5,
-                      borderColor: selected ? COLORS.brandGold : border,
+                      borderColor: selected ? accent : border,
                       backgroundColor: selected ? cardBg : 'transparent',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -676,7 +754,7 @@ export default function OnboardingScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 22 }}>{item.symbol}</Text>
-                    <Text style={{ marginTop: 4, fontFamily: FONTS.sansSemiBold, fontSize: 11, color: selected ? COLORS.brandGold : text, textAlign: 'center' }}>
+                    <Text style={{ marginTop: 4, fontFamily: FONTS.sansSemiBold, fontSize: 11, color: selected ? accent : text, textAlign: 'center' }}>
                       {item.label}
                     </Text>
                     <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: dim, textAlign: 'center' }}>
@@ -688,7 +766,7 @@ export default function OnboardingScreen() {
             </View>
             {nakshatra ? (
               <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 14 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.brandGold, textAlign: 'center' }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: accent, textAlign: 'center' }}>
                   {NAKSHATRAS.find((n) => n.key === nakshatra)?.label} · Ruled by {NAKSHATRAS.find((n) => n.key === nakshatra)?.ruler} · Deity: {NAKSHATRAS.find((n) => n.key === nakshatra)?.deity}
                 </Text>
               </View>
@@ -699,10 +777,11 @@ export default function OnboardingScreen() {
         {step === 'calendarProfile' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              Select the regional system used by your family or community to calculate month boundaries and eras.
+              Choose it once and stop second-guessing which date is right — every festival and vrat you see from here will already match your family's own regional convention.
             </Text>
             <View style={{ gap: 12 }}>
               {CALENDAR_PROFILES.map((item) => renderSelectRow({
+                key: item.slug,
                 selected: calendarProfile === item.slug,
                 label: item.label,
                 description: `${item.system} · ${item.era}`,
@@ -716,10 +795,11 @@ export default function OnboardingScreen() {
         {step === 'calendarScope' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              What density level of observances would you like to see on your dashboard?
+              Set it once so your dashboard never feels cluttered or sparse — just the level of detail that actually fits how closely you follow your practice.
             </Text>
             <View style={{ gap: 12 }}>
               {CALENDAR_SCOPES.map((item) => renderSelectRow({
+                key: item.slug,
                 selected: calendarScope === item.slug,
                 label: item.label,
                 description: item.desc,
@@ -733,10 +813,11 @@ export default function OnboardingScreen() {
         {step === 'goals' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              This shapes your feed, guidance, and path. Choose one or more.
+              Tell us once, and stop wading through content that isn't for you — this shapes your entire feed, guidance, and path from here. Choose one or more.
             </Text>
             <View style={{ gap: 12 }}>
               {GOALS.map((item) => renderSelectRow({
+                key: item.key,
                 selected: goals.includes(item.key),
                 label: item.label,
                 description: item.sub,
@@ -752,7 +833,7 @@ export default function OnboardingScreen() {
         {step === 'name' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              This is how you&apos;ll appear to your Mandali.
+              This is how you&apos;ll appear to your Mandali — get it right once, and you'll never have to explain who you are again.
             </Text>
             <TextInput
               value={name}
@@ -777,11 +858,11 @@ export default function OnboardingScreen() {
         {step === 'nameStory' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              Shoonaya can reveal a gentle AI-guided reflection on your first name. This is optional and can be skipped.
+              Most people never learn the sacred meaning behind their own name. Shoonaya can reveal it in a gentle, AI-guided reflection — optional, and yours to keep once generated.
             </Text>
 
             <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 12 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1.4 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: 'uppercase', letterSpacing: 1.4 }}>
                 Analyzing significance for
               </Text>
               <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>
@@ -807,7 +888,7 @@ export default function OnboardingScreen() {
 
             {nameStoryLoading ? (
               <View style={{ minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <ActivityIndicator color={COLORS.brandGold} />
+                <ActivityIndicator color={accent} />
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
                   Dharma Mitra is reading the sound and meaning of your name...
                 </Text>
@@ -836,7 +917,7 @@ export default function OnboardingScreen() {
                 ) : null}
                 {nameStory.name_mantra ? (
                   <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.homeBorderSoftLight, backgroundColor: wellBg, padding: 14, gap: 6 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: COLORS.brandGold, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: 'uppercase', letterSpacing: 1 }}>
                       Name mantra
                     </Text>
                     <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: text }}>
@@ -858,10 +939,11 @@ export default function OnboardingScreen() {
         {step === 'language' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              Choose how you want meanings and explanations displayed.
+              Set it once and every meaning, mantra, and explanation Shoonaya shows you from here speaks in the language you actually think in.
             </Text>
             <View style={{ gap: 12 }}>
               {LANGUAGES.map((l) => renderSelectRow({
+                key: l.key,
                 selected: language === l.key,
                 label: l.label,
                 description: l.native,
@@ -875,7 +957,7 @@ export default function OnboardingScreen() {
         {step === 'notifications' && (
           <>
             <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 21, color: dim }}>
-              Receive your daily shloka, streak nudges, and community mentions. You can always adjust this later in Settings.
+              Sadhana is easy to intend and easy to forget. A gentle nudge at the right moment is the difference — receive your daily shloka, streak reminders, and Mandali mentions. Adjust anytime in Settings.
             </Text>
             <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 20, gap: 16 }}>
               {[
@@ -885,7 +967,7 @@ export default function OnboardingScreen() {
               ].map((item) => (
                 <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
-                    <Feather name={item.icon} size={16} color={COLORS.brandGold} />
+                    <Feather name={item.icon} size={16} color={accent} />
                   </View>
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 14, color: text }}>
                     {item.label}
@@ -910,7 +992,7 @@ export default function OnboardingScreen() {
 
         {step === 'ready' && (
           <View style={{ minHeight: 560, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
-            <View style={{ width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBgSelected, borderWidth: 1.5, borderColor: COLORS.brandGold }}>
+            <View style={{ width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBgSelected, borderWidth: 1.5, borderColor: accent }}>
               <Text style={{ fontSize: 38 }}>{TRADITIONS.find((t) => t.key === tradition)?.emoji}</Text>
             </View>
             <View style={{ alignItems: 'center', gap: 8 }}>

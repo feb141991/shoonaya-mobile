@@ -2,6 +2,7 @@ import { StyleSheet, useColorScheme, View, type StyleProp, type ViewStyle } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS, RADII } from '@/lib/constants';
+import { LoadingTips } from '@/components/ui/LoadingTips';
 
 // Loading placeholder shaped like the real Home layout (hero, pill row,
 // shloka, Next Practice card, practice-list row, Sankalpa row, Dharm Veer
@@ -19,7 +20,7 @@ function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) 
 const HERO_MIN_HEIGHT = 420;
 const HERO_SHLOKA_TOP_SPACE = 42;
 
-export function HomeSkeleton() {
+export function HomeSkeleton({ tradition }: { tradition?: string | null }) {
   const isDark = useColorScheme() === 'dark';
   const background = isDark ? COLORS.darkBg : COLORS.creamBg;
   const hero = isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight;
@@ -68,6 +69,12 @@ export function HomeSkeleton() {
             <Block dark={isDark} style={{ marginTop: 10, width: '60%', height: 14, borderRadius: 6 }} />
           </View>
         </View>
+
+        {/* Placed right after the hero/shloka fold, not at the bottom of the
+            block stack -- HomeSkeleton has no ScrollView, so content below
+            the Dharm Veer row can sit past the viewport on shorter screens
+            and never actually be seen. */}
+        <LoadingTips tradition={tradition} />
 
         <View style={{ paddingHorizontal: 20, marginTop: 14, gap: 14 }}>
           {/* Next Practice */}

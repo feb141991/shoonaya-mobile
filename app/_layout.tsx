@@ -119,9 +119,9 @@ function RootLayout() {
       // logout, reinstall, second device, token refresh bringing a fresh
       // session object. This listener already re-runs on every auth state
       // change, so it's the single correct place for this, rather than
-      // duplicating the call at every sign-in entry point (Google/Apple/
-      // WhatsApp/OTP in login.tsx and otp.tsx). Cheap/idempotent to call
-      // repeatedly — registerPushToken() skips the network round-trip if
+      // duplicating the call at every sign-in entry point (Google/Apple in
+      // login.tsx). Cheap/idempotent to call repeatedly — registerPushToken()
+      // skips the network round-trip if
       // the token hasn't changed since the last successful registration.
       void registerPushToken(session.user.id);
 
@@ -259,12 +259,12 @@ function RootLayout() {
     prepare();
 
     // Auth redirects that arrive while the app is already running (the
-    // common case: user taps Google/WhatsApp sign-in, completes auth in the
-    // system browser, and returns to the still-running app). Google/WhatsApp
+    // common case: user taps Google/Apple sign-in, completes auth in the
+    // system browser, and returns to the still-running app). Google/Apple
     // sign-in already exchange the code directly from the WebBrowser result
-    // in app/(auth)/login.tsx and app/(auth)/otp.tsx; this listener is a
-    // defense-in-depth fallback for any redirect delivered through the
-    // platform's normal URL-scheme handling instead.
+    // in app/(auth)/login.tsx; this listener is a defense-in-depth fallback
+    // for any redirect delivered through the platform's normal URL-scheme
+    // handling instead.
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
       exchangeUrlIfPresent(url).catch((e) => {
         console.error('Deep link auth exchange error:', e);

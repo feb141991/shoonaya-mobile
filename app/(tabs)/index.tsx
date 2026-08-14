@@ -15,7 +15,7 @@ import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
 import { findMoodConfig } from '@/lib/mood-registry';
 
@@ -36,11 +36,11 @@ import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { GreetingPicker } from '@/components/home/GreetingPicker';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
-import { HERO_MIN_HEIGHT } from '@/lib/nav-bar';
+import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
@@ -550,6 +550,7 @@ function PanchangPill({
 
 function HomeContent() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [loading, setLoading] = useState(true);
@@ -596,8 +597,14 @@ function HomeContent() {
       // PWA's brand-primary is theme-aware, not one static value: light mode
       // uses a deeper terracotta while dark mode keeps the softer gold.
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
+      // Additive, not a replacement for `brand` above -- `brand` stays
+      // light/dark-contrast-tuned for text/border legibility everywhere.
+      // This is only for the tradition greeting chip and hero identity
+      // badge, so a Sikh/Buddhist/Jain user sees their own path's color
+      // there without every other branded surface in the app shifting too.
+      traditionAccent: TRADITION_ACCENT[state.profile.tradition as keyof typeof TRADITION_ACCENT] ?? TRADITION_ACCENT.all,
     }),
-    [isDark]
+    [isDark, state.profile.tradition]
   );
 
   // A device-local backdrop pick (lib/heroPreference.ts) overrides the
@@ -919,10 +926,19 @@ function HomeContent() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
+      {/* Ambient backdrop glow — matches japa.tsx's launcher pattern. The
+          hero above has its own image background, but everything below fold
+          (practice cards, Jyotish & Panchang / Sadhana / Community tile
+          rows) sat on flat theme.background with no atmosphere. Fixed here
+          (siblings before ScrollView, not scrolling with content) so the
+          glow reads behind whichever cards are on screen at any scroll
+          position, same as japa's launcher screen. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 90, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.soft, opacity: 0.72 }} />
+      <View pointerEvents="none" style={{ position: 'absolute', top: 420, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 128 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
         showsVerticalScrollIndicator={false}
         onScroll={navScrollHandler}
@@ -1121,8 +1137,12 @@ function HomeContent() {
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: theme.heroOverlay,
-              borderWidth: 1,
-              borderColor: theme.borderSoft,
+              borderWidth: 1.5,
+              // Tradition-accent identity ring around the avatar -- the
+              // one "hero identity badge" touch, kept narrow (border only,
+              // not the avatar image itself) so it reads as a subtle
+              // per-tradition signature rather than a re-theme.
+              borderColor: theme.traditionAccent,
               overflow: 'hidden',
             }}
           >
@@ -1157,7 +1177,10 @@ function HomeContent() {
           <View style={{ position: 'absolute', zIndex: 2, top: 78, left: 20, right: 20, alignItems: 'flex-start' }}>
             {state.profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <Feather name="map-pin" size={12} color={theme.dim} />
+                {/* Tradition-accent touch (not theme.brand, which stays
+                    contrast-tuned for hero legibility) -- a Sikh/Buddhist/
+                    Jain user sees their own path's color here. */}
+                <Feather name="map-pin" size={12} color={theme.traditionAccent} />
                 <Text style={{ ...TYPE.homeHeroLocation, letterSpacing: 1.1, textTransform: 'uppercase', color: theme.dim }}>
                   {state.profile.city}
                 </Text>
@@ -1616,6 +1639,12 @@ function HomeContent() {
             </View>
           </View>
 
+          {/* Closing footer — same line profile.tsx already uses, so the
+              scroll ends on a deliberate stop instead of trailing into
+              empty space above the nav-bar clearance padding. */}
+          <View style={{ marginTop: 20, alignItems: 'center' }}>
+            <Text style={{ ...TYPE.caption, color: theme.dim }}>Shoonaya · Find your infinity</Text>
+          </View>
         </View>
       </ScrollView>
 

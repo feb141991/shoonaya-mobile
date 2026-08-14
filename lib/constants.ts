@@ -174,14 +174,6 @@ export const COLORS = {
   celebrationScrim: 'rgba(0,0,0,0.45)',
   bottomSheetScrim: 'rgba(0,0,0,0.28)',
 
-  // Branded sharing surfaces. WhatsApp green is a platform brand color,
-  // but it should still be named once instead of repeated as screen-local
-  // literals; the translucent bg/border mirror the PWA invite/share card
-  // treatment with a native-safe Pressable surface.
-  whatsApp: '#25D366',
-  whatsAppBg: 'rgba(37,211,102,0.10)',
-  whatsAppBorder: 'rgba(37,211,102,0.35)',
-
   // Progress pillar accents. These are content/data accents, not core
   // chrome colors, so they are named here instead of forcing every pillar
   // into brand gold. Used by My Progress to keep the scorecard rich while

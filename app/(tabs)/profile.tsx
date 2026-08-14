@@ -636,17 +636,11 @@ export default function ProfileScreen() {
     Alert.alert('Copied', 'Your invite link is copied to clipboard.');
   };
 
-  const shareWhatsApp = async () => {
-    const text = `Join me on Shoonaya: ${inviteLink}`;
-    const url = `whatsapp://send?text=${encodeURIComponent(text)}`;
+  const shareInviteLink = async () => {
     try {
-      if (await Linking.canOpenURL(url)) {
-        await Linking.openURL(url);
-      } else {
-        await Sharing.shareAsync(API_BASE, { dialogTitle: 'Share Shoonaya' });
-      }
+      await Sharing.shareAsync(API_BASE, { dialogTitle: 'Share Shoonaya' });
     } catch {
-      Alert.alert('Error', 'Could not open WhatsApp.');
+      Alert.alert('Error', 'Could not open the share sheet.');
     }
   };
 
@@ -1290,7 +1284,7 @@ export default function ProfileScreen() {
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Invite someone to Shoonaya"
-              onPress={() => { void shareWhatsApp(); }}
+              onPress={() => { void shareInviteLink(); }}
               style={{
                 minHeight: 46,
                 borderRadius: 18,
@@ -1362,26 +1356,6 @@ export default function ProfileScreen() {
           </View>
           <View style={{ width: '100%', height: 1, backgroundColor: theme.borderSoft }} />
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Share journey card"
-              onPress={() => { void shareProfileCard(); }}
-              disabled={shareLoading}
-              style={{
-                width: 76,
-                minHeight: 78,
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: COLORS.whatsAppBorder,
-                backgroundColor: COLORS.whatsAppBg,
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
-              {shareLoading ? <ActivityIndicator color={COLORS.whatsApp} /> : <Feather name="message-circle" size={24} color={COLORS.whatsApp} />}
-              <Text style={{ ...TYPE.chip, color: theme.dim }}>WhatsApp</Text>
-            </PressableSurface>
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Share journey card"
