@@ -33,6 +33,7 @@ import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/consta
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
 import { AuthGate } from '@/components/ui/AuthGate';
 import {
   getIshtaDevataLabel,
@@ -324,6 +325,8 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('');
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
+  const [locationSyncing, setLocationSyncing] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -642,6 +645,19 @@ export default function ProfileScreen() {
     } catch {
       Alert.alert('Error', 'Could not open the share sheet.');
     }
+  };
+
+  const updateLocation = async () => {
+    if (!profile || locationSyncing) return;
+    setLocationSyncing(true);
+    setLocationError(null);
+    const result = await requestAndSyncDeviceLocation(profile.id);
+    if (result.ok) {
+      setProfile((current) => (current ? { ...current, city: result.city } : current));
+    } else {
+      setLocationError(result.reason);
+    }
+    setLocationSyncing(false);
   };
 
   const shareProfileCard = async () => {
@@ -1259,6 +1275,50 @@ export default function ProfileScreen() {
             </Text>
           </View>
           <Feather name="chevron-right" size={22} color={theme.text} />
+        </PressableSurface>
+
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={profile.city ? `Location: ${profile.city}. Tap to update.` : 'Set your location'}
+          onPress={() => { void updateLocation(); }}
+          style={{
+            minHeight: 86,
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: theme.borderSoft,
+            backgroundColor: theme.card,
+            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+          }}
+        >
+          <View
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: theme.glass,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="map-pin" size={20} color={theme.dim} />
+          </View>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={{ ...TYPE.section, color: theme.dim }}>Location</Text>
+            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
+              {profile.city || 'Not set'}
+            </Text>
+            <Text style={{ ...TYPE.body, color: locationError ? COLORS.danger : theme.dim }}>
+              {locationError ?? 'Used for accurate Panchang & sunrise times'}
+            </Text>
+          </View>
+          {locationSyncing ? (
+            <ActivityIndicator color={theme.brand} />
+          ) : (
+            <Feather name="crosshair" size={22} color={theme.text} />
+          )}
         </PressableSurface>
 
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>

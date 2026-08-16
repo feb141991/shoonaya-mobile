@@ -26,6 +26,7 @@ import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
+import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 // Keep splash screen visible until we are ready
@@ -128,6 +129,12 @@ function RootLayout() {
       // Keep profiles.timezone honest — see lib/timezoneSync.ts for why this
       // matters (every "today" calculation on the backend depends on it).
       void syncDeviceTimezone(session.user.id);
+
+      // Keep profiles.latitude/longitude/city honest too, but only when
+      // permission is already granted -- see lib/locationSync.ts. Never
+      // prompts from here; a fresh prompt only comes from Profile's
+      // explicit "Update location" action.
+      void syncDeviceLocationIfPermitted(session.user.id);
 
       // Onboarding gate — mirrors the web app's src/lib/onboarding-gate.ts /
       // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md fix. `profiles.onboarding_completed`
