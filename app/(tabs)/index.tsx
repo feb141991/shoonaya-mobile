@@ -29,6 +29,7 @@ import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
+import { SacredDaysCard } from '@/components/home/SacredDaysCard';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { MoodPulseSheet } from '@/components/home/MoodPulseSheet';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
@@ -96,6 +97,7 @@ type ObservanceEntry = {
   href: string;
   label: string;
   monthLabel?: string | null;
+  description?: string | null;
 };
 
 type HomeMenuTileItem = {
@@ -403,9 +405,11 @@ function PanchangPill({
     return () => sub.remove();
   }, []);
 
+  const router = useRouter();
+
   const slides = useMemo(() => {
     const seen = new Set<string>();
-    const rows: { key: string; icon: string; label: string; monthLabel?: string | null }[] = [];
+    const rows: { key: string; icon: string; label: string; monthLabel?: string | null; href?: string | null }[] = [];
     const normalizeObservanceKey = (label: string) => label
       .replace(/^[^\p{L}\p{N}]+/u, '')
       .replace(/^(today is|tomorrow is)\s+/i, '')
@@ -413,12 +417,12 @@ function PanchangPill({
       .replace(/\s+today$/i, '')
       .trim()
       .toLowerCase();
-    const add = (row: { key: string; icon: string; label: string; dedupeKey?: string; monthLabel?: string | null } | null) => {
+    const add = (row: { key: string; icon: string; label: string; dedupeKey?: string; monthLabel?: string | null; href?: string | null } | null) => {
       if (!row?.label) return;
       const normalized = (row.dedupeKey ?? normalizeObservanceKey(row.label));
       if (!normalized || seen.has(normalized)) return;
       seen.add(normalized);
-      rows.push({ key: row.key, icon: row.icon, label: row.label, monthLabel: row.monthLabel });
+      rows.push({ key: row.key, icon: row.icon, label: row.label, monthLabel: row.monthLabel, href: row.href });
     };
 
     if (kind === 'observance') {
@@ -428,6 +432,7 @@ function PanchangPill({
         label: summary.observance.label,
         dedupeKey: summary.observance.name.trim().toLowerCase(),
         monthLabel: summary.observance.monthLabel,
+        href: summary.observance.href,
       } : null);
       // Genuinely different upcoming observances (next Ekadashi, next
       // Amavasya, next festival...) from the same DB-backed window, rather
@@ -441,11 +446,15 @@ function PanchangPill({
           label: entry.label,
           dedupeKey: entry.name.trim().toLowerCase(),
           monthLabel: entry.monthLabel,
+          href: entry.href,
         });
       });
       return rows;
     }
 
+    // Panchang (tithi/nakshatra) slides have no per-item destination of
+    // their own -- tapping either always opens the full Panchang screen
+    // (see the pill's onPress below), so href is intentionally omitted here.
     add({ key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` });
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
 
@@ -461,8 +470,8 @@ function PanchangPill({
     // Reduced motion means calm, not just "no fade" — auto-cycling on a
     // fixed timer is itself motion the user asked to avoid. Respect that by
     // not auto-advancing at all when reduced motion is on; the pill stays on
-    // one slide until the user explicitly taps (handleCycle below, which
-    // already skips the animation in that case too).
+    // whichever slide it's currently showing (tapping now navigates, it no
+    // longer manually advances the cycle).
     if (reducedMotion || total <= 1) {
       return;
     }
@@ -475,30 +484,31 @@ function PanchangPill({
     return () => clearInterval(t);
   }, [fadeAnim, reducedMotion, total]);
 
-  const handleCycle = useCallback(() => {
-    if (total <= 1) return;
-    if (reducedMotion) {
-      setIdx((i) => (i + 1) % total);
-    } else {
-      Animated.timing(fadeAnim, { toValue: 0, duration: 100, useNativeDriver: true }).start(() => {
-        setIdx((i) => (i + 1) % total);
-        Animated.timing(fadeAnim, { toValue: 1, duration: 100, useNativeDriver: true }).start();
-      });
-    }
-  }, [fadeAnim, reducedMotion, total]);
-
   if (kind === 'observance' && slides.length === 0) {
     return null;
   }
 
-  const currentSlide = slides[idx] ?? slides[0] ?? { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}` };
+  const currentSlide = slides[idx] ?? slides[0] ?? { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}`, href: null as string | null };
   const isObservance = kind === 'observance';
+  // Slides already auto-cycle on their own timer (the interval effect
+  // above) -- tapping the pill used to just manually advance that same
+  // cycle, which is why it looked "unclickable": nothing visibly
+  // navigated. Tapping now takes you to the actual destination: the
+  // specific observance's own page for the observance pill (its `href`,
+  // server-computed as /vrat or /panchang per routeKind), or the full
+  // Panchang screen for the tithi/nakshatra pill, which has no
+  // per-item destination of its own.
+  const handleOpen = () => {
+    const dest = isObservance ? currentSlide.href : '/panchang';
+    if (!dest) return;
+    router.push(resolveNativeRoute(dest) as Href);
+  };
 
   return (
     <PressableSurface
       haptic="selection"
-      accessibilityLabel={`${isObservance ? 'Sacred observance' : 'Panchang info'}: ${currentSlide.label}. Tap to cycle`}
-      onPress={handleCycle}
+      accessibilityLabel={`${isObservance ? 'Sacred observance' : 'Panchang info'}: ${currentSlide.label}. Tap to open`}
+      onPress={handleOpen}
       hitSlop={4}
       style={{
         minHeight: slides.length > 1 ? 42 : 36,
@@ -524,7 +534,7 @@ function PanchangPill({
       </Animated.View>
 
       {/* Dot indicators — PWA's PanchangPill (HeroSection.tsx) shows these
-          so the pill visibly reads as "tap to cycle through N things"
+          so the pill visibly reads as "showing 1 of N things, auto-rotating"
           instead of just looking like a static label. Colors are the warm
           cream PWA uses verbatim (rgba(255,240,200,*)) rather than
           theme-flipped — the pill always sits over the hero's darkened
@@ -606,6 +616,17 @@ function HomeContent() {
     }),
     [isDark, state.profile.tradition]
   );
+
+  // Mirrors PWA's HOME_OBSERVANCE_WINDOW_DAYS = 3 (HomeDashboard.tsx /
+  // VratCarousel.tsx) — spotlight only the soonest observance within the
+  // next 3 days; the hero PanchangPill above keeps rotating through all
+  // upcoming entries regardless of window.
+  const soonestObservance = useMemo(() => {
+    const candidates = [state.panchang.observance, ...state.panchang.upcomingObservances].filter(
+      (entry): entry is NonNullable<typeof entry> => Boolean(entry) && entry!.daysLeft >= 0 && entry!.daysLeft <= 3
+    );
+    return candidates.sort((a, b) => a.daysLeft - b.daysLeft)[0] ?? null;
+  }, [state.panchang.observance, state.panchang.upcomingObservances]);
 
   // A device-local backdrop pick (lib/heroPreference.ts) overrides the
   // server-resolved tradition/festival hero — same precedence PWA's own
@@ -1308,6 +1329,10 @@ function HomeContent() {
 
           {state.firstWeek ? (
             <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
+          ) : null}
+
+          {soonestObservance ? (
+            <SacredDaysCard entry={soonestObservance} theme={theme} isDark={isDark} />
           ) : null}
 
           {/* Smart daily Sadhana CTA — mirrors PWA's HeroSection.tsx card
