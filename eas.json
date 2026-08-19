@@ -12,7 +12,8 @@
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "393433572848-rq20g7g2s1br1bt0rpt3mm1gadn5tlvm.apps.googleusercontent.com"
       }
     },
     "development-simulator": {
@@ -26,7 +27,8 @@
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "393433572848-rq20g7g2s1br1bt0rpt3mm1gadn5tlvm.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -40,7 +42,8 @@
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-bfuf7t6hrufknteerls7uenbq4c0ootv.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "393433572848-rq20g7g2s1br1bt0rpt3mm1gadn5tlvm.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -57,7 +60,8 @@
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
         "EXPO_PUBLIC_SUPABASE_URL": "https://mnbwodcswxoojndytngu.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uYndvZGNzd3hvb2puZHl0bmd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTQ0NDYsImV4cCI6MjA4OTkzMDQ0Nn0.xTRKUUE4a8AYLaXyq0OKo89Zrte8YXxkFRFi8Ynk47o",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-i2cel6onssuhaf2hepg2bb41fqlel3iu.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "393433572848-i2cel6onssuhaf2hepg2bb41fqlel3iu.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "393433572848-rq20g7g2s1br1bt0rpt3mm1gadn5tlvm.apps.googleusercontent.com"
       }
     }
   },
@@ -68,8 +72,12 @@
         "track": "internal"
       },
       "ios": {
-        "appleId": "PLACEHOLDER_APPLE_ID",
-        "ascAppId": "PLACEHOLDER_ASC_APP_ID"
+        "appleId": "pprince.ssharma@live.com",
+        "ascAppId": "8219537719",
+        "ascApiKeyPath": "./AuthKey_5WWDG75K97.p8",
+        "ascApiKeyId": "5WWDG75K97",
+        "ascApiKeyIssuerId": "e38054f5-47ea-4ea7-87f1-e25c61d3993c",
+        "appleTeamId": "3K78ST7PG3"
       }
     }
   }
