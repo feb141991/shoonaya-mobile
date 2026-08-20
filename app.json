@@ -15,7 +15,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby."
       },
-      "buildNumber": "4"
+      "buildNumber": "5"
     },
     "android": {
       "package": "com.shoonaya.app",
@@ -33,7 +33,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 16,
+      "versionCode": 17,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

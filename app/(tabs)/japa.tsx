@@ -715,6 +715,8 @@ export default function JapaScreen() {
 
   const [loading, setLoading] = useState(true);
   const [count, setCount] = useState(0);
+  const countRef = useRef(0);
+  countRef.current = count;
   const [completedRounds, setCompletedRounds] = useState(0);
   const [mantraIndex, setMantraIndex] = useState(0);
   const [savedMantraKey, setSavedMantraKey] = useState<string | null>(null);
@@ -852,16 +854,17 @@ export default function JapaScreen() {
   const fact = useMemo(() => pickDharmaFact(tradition), [tradition]);
 
   // Load saved local preferences (mala/scene/custom mantra/target rounds/
-  // lifetime totals).
+  // lifetime totals) in a single native bridge call via multiGet.
   useEffect(() => {
-    Promise.all([
-      AsyncStorage.getItem(JAPA_MALA_KEY),
-      AsyncStorage.getItem(JAPA_SCENE_KEY),
-      AsyncStorage.getItem(JAPA_CUSTOM_MANTRA_KEY),
-      AsyncStorage.getItem(JAPA_TARGET_ROUNDS_KEY),
-      AsyncStorage.getItem(JAPA_LIFETIME_KEY),
-      AsyncStorage.getItem(JAPA_MANTRA_KEY),
+    AsyncStorage.multiGet([
+      JAPA_MALA_KEY,
+      JAPA_SCENE_KEY,
+      JAPA_CUSTOM_MANTRA_KEY,
+      JAPA_TARGET_ROUNDS_KEY,
+      JAPA_LIFETIME_KEY,
+      JAPA_MANTRA_KEY,
     ])
+      .then((pairs) => pairs.map(([, v]) => v))
       .then(([malaId, sceneId, customText, rounds, lifetimeRaw, mantraKey]) => {
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
@@ -1099,7 +1102,7 @@ export default function JapaScreen() {
   const increment = useCallback(async () => {
     if (saving) return;
 
-    if (count === 0 && completedRounds === 0 && sessionStartTime === null) {
+    if (countRef.current === 0 && completedRounds === 0 && sessionStartTime === null) {
       setSessionStartTime(Date.now());
     }
 
@@ -1120,7 +1123,7 @@ export default function JapaScreen() {
       triggerTapMotion();
       return next;
     });
-  }, [completedRounds, count, saving, sessionStartTime, triggerBloom, triggerTapMotion]);
+  }, [completedRounds, saving, sessionStartTime, triggerBloom, triggerTapMotion]);
 
   useEffect(() => {
     if (count === 108 && !saving) {
