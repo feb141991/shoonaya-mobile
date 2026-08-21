@@ -1,3 +1,4 @@
+import { useReducedMotion } from "@/components/ui/Motion";
 import {
   ActivityIndicator,
   Pressable,
@@ -57,6 +58,7 @@ export function Button({
   const theme = themeColor(isDark);
   const isBusy = loading || !!disabled;
   const [pressed, setPressed] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   const palette =
     variant === 'primary'
@@ -89,7 +91,7 @@ export function Button({
         pointerEvents="none"
         style={{
           opacity: isBusy ? 0.6 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed && !isBusy ? 0.985 : 1 }],
+          transform: [{ scale: pressed && !isBusy && !reducedMotion ? 0.985 : 1 }],
         }}
       >
         {loading ? (

@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -821,20 +822,26 @@ function HomeContent() {
   }, [router]);
 
   const hasLoadedRef = useRef(false);
+  const lastLoadedAtRef = useRef(0);
   useFocusEffect(
     useCallback(() => {
-      const run = async () => {
-        if (!hasLoadedRef.current) setLoading(true);
-        try {
-          await loadHome();
-          hasLoadedRef.current = true;
-        } catch {
-          setLoadError(true);
-        } finally {
-          setLoading(false);
-        }
-      };
-      void run();
+      const now = Date.now();
+      const isStale = now - lastLoadedAtRef.current > 5 * 60 * 1000;
+      if (!hasLoadedRef.current || isStale) {
+        const run = async () => {
+          if (!hasLoadedRef.current) setLoading(true);
+          try {
+            await loadHome();
+            hasLoadedRef.current = true;
+            lastLoadedAtRef.current = Date.now();
+          } catch {
+            setLoadError(true);
+          } finally {
+            setLoading(false);
+          }
+        };
+        void run();
+      }
     }, [loadHome])
   );
 
@@ -1518,7 +1525,11 @@ function HomeContent() {
               `state.sankalpa` snapshot), and refetches on every screen focus
               so a check-in made on the full /sankalpa screen shows up here
               without an app restart. See components/home/SankalpaCard.tsx. */}
-          <SankalpaCard />
+          <SankalpaCard
+            userId={state.profile?.name ? 'active-user' : undefined}
+            timezone={state.date?.timezone}
+            initialSankalpa={state.sankalpa ? { id: state.sankalpa.id, text: state.sankalpa.text, start_date: state.sankalpa.startDate, target_days: state.sankalpa.targetDays } : null}
+          />
 
           <Pressable
             accessibilityRole="button"
@@ -1574,7 +1585,12 @@ function HomeContent() {
             )}
           </Pressable>
 
-          <QuizSparkCard />
+          <QuizSparkCard
+            tradition={state.profile?.tradition}
+            quizDone={state.practices?.find((p) => p.id === 'quiz')?.done}
+            quizStreak={0}
+            timezone={state.date?.timezone}
+          />
 
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}

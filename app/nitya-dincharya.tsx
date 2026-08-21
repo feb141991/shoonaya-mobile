@@ -8,7 +8,7 @@ import {
   Share,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 

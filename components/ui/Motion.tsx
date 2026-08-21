@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
+import { useEffect, useRef, useSyncExternalStore, type PropsWithChildren } from "react";
 import {
   AccessibilityInfo,
   Animated,
   Easing,
   type StyleProp,
   type ViewStyle,
-} from 'react-native';
-import { usePathname } from 'expo-router';
+} from "react-native";
+import { usePathname } from "expo-router";
 
 type MotionViewProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
@@ -17,25 +17,46 @@ type MotionViewProps = PropsWithChildren<{
   enabled?: boolean;
 }>;
 
-export function useReducedMotion() {
-  const [reducedMotion, setReducedMotion] = useState(false);
+// Singleton module-level subscription to AccessibilityInfo (zero duplicate listeners across 67+ usages)
+let isReduceMotionActive = false;
+let isInitialized = false;
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled()
-      .then((enabled) => {
-        if (mounted) setReducedMotion(enabled);
-      })
-      .catch(() => {});
+function notify() {
+  listeners.forEach((fn) => fn());
+}
 
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReducedMotion);
-    return () => {
-      mounted = false;
-      subscription?.remove?.();
-    };
-  }, []);
+function initReduceMotion() {
+  if (isInitialized) return;
+  isInitialized = true;
 
-  return reducedMotion;
+  AccessibilityInfo.isReduceMotionEnabled()
+    .then((enabled) => {
+      isReduceMotionActive = enabled;
+      notify();
+    })
+    .catch(() => {});
+
+  AccessibilityInfo.addEventListener?.("reduceMotionChanged", (enabled) => {
+    isReduceMotionActive = enabled;
+    notify();
+  });
+}
+
+function subscribe(callback: () => void) {
+  initReduceMotion();
+  listeners.add(callback);
+  return () => {
+    listeners.delete(callback);
+  };
+}
+
+function getSnapshot(): boolean {
+  return isReduceMotionActive;
+}
+
+export function useReducedMotion(): boolean {
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
 export function MotionView({
@@ -60,6 +81,7 @@ export function MotionView({
 
     opacity.setValue(0);
     translateY.setValue(distance);
+
     const animation = Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
@@ -76,12 +98,24 @@ export function MotionView({
         useNativeDriver: true,
       }),
     ]);
+
     animation.start();
-    return () => animation.stop();
+
+    return () => {
+      animation.stop();
+    };
   }, [animationKey, delay, distance, duration, enabled, opacity, reducedMotion, translateY]);
 
   return (
-    <Animated.View style={[style, { opacity, transform: [{ translateY }] }]}>
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity,
+          transform: [{ translateY }],
+        },
+      ]}
+    >
       {children}
     </Animated.View>
   );

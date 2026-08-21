@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import Svg, { Circle } from 'react-native-svg';
 
 export function ProgressRing({

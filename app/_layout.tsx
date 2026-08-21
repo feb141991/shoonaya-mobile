@@ -9,6 +9,7 @@ import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   CormorantGaramond_600SemiBold,
   CormorantGaramond_700Bold,
@@ -146,11 +147,43 @@ function RootLayout() {
       // `/home` <-> `/onboarding` redirect loop. Native fails open toward tabs
       // instead of onboarding on an ambiguous read, since (unlike web's
       // page-level gates) this function always has to pick a concrete route.
+      // Onboarding gate: check local cache first so returning users route immediately
+      // without blocking cold start on a network round-trip.
+      const cacheKey = `shoonaya:onboarding_completed:${session.user.id}`;
+      const cached = await AsyncStorage.getItem(cacheKey).catch(() => null);
+
+      if (cached === 'true') {
+        if (inAuthGroup) {
+          router.replace('/(tabs)');
+        }
+        // Background revalidation: keep cache in sync without gating initial render
+        void supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', session.user.id)
+          .maybeSingle()
+          .then(({ data: p }) => {
+            if (p?.onboarding_completed === false) {
+              void AsyncStorage.setItem(cacheKey, 'false').catch(() => {});
+              router.replace('/(auth)/onboarding');
+            } else if (p?.onboarding_completed === true) {
+              void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
+            }
+          });
+        return;
+      }
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', session.user.id)
         .maybeSingle();
+
+      if (profile?.onboarding_completed === true) {
+        void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
+      } else if (profile?.onboarding_completed === false) {
+        void AsyncStorage.setItem(cacheKey, 'false').catch(() => {});
+      }
 
       const needsOnboarding = profile?.onboarding_completed === false;
       const isOnboarding = inAuthGroup && childSegment === 'onboarding';
@@ -242,12 +275,13 @@ function RootLayout() {
         ]);
 
         // Handle Auth Redirects — cold start only; see the live Linking
-        // listener below for the app-already-running case.
-        await exchangeUrlIfPresent(initialUrl);
+        // listener below for the app-already-running case. Only re-fetch the session
+        // when an OAuth exchange actually took place.
+        const didExchange = initialUrl ? await exchangeOAuthUrlIfPresent(initialUrl) : false;
 
-        const { session } = initialUrl
-          ? (await supabase.auth.getSession()).data
-          : sessionResult.data;
+        const session = didExchange
+          ? (await supabase.auth.getSession()).data.session
+          : sessionResult.data.session;
         setApiAccessTokenFromSession(session);
 
         if (!mounted) return;

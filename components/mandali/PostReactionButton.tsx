@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Animated, Modal, Pressable, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useReducedMotion } from '@/components/ui/Motion';

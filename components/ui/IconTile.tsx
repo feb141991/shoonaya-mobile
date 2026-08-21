@@ -2,7 +2,7 @@ import { View, useColorScheme, type OpaqueColorValue } from 'react-native';
 
 import { ICON_WELL, iconWellColor, type IconWellSize } from '@/lib/icons';
 import { SacredIcon, type SacredIconName } from './SacredIcon';
-import type { Feather } from '@expo/vector-icons';
+import type Feather from '@expo/vector-icons/Feather';
 
 // The single icon-well building block — see lib/icons.ts for the size/color
 // tokens this consumes. Replaces every hand-rolled

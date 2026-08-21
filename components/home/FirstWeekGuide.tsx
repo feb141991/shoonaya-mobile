@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Text, useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';

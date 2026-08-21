@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
 import { PathCard } from '@/components/pathshala/PathCard';

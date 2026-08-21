@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 import * as Sharing from 'expo-sharing';

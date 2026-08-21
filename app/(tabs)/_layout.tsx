@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Text, useColorScheme, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { COLORS, SHADOWS, themeColor } from '@/lib/constants';

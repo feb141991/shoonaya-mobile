@@ -7,7 +7,8 @@ import {
   View,
   Dimensions,
 } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, type Href } from 'expo-router';
 import Svg, { Rect } from 'react-native-svg';
 

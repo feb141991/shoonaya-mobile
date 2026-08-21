@@ -1,5 +1,5 @@
 import { Text, View, useColorScheme } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS } from '@/lib/constants';

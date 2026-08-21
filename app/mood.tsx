@@ -13,7 +13,7 @@ import {
   StyleSheet,
   Linking
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';

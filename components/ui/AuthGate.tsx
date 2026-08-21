@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Text, View, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';

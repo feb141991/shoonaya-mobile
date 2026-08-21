@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';

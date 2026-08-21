@@ -1,5 +1,5 @@
 import { Pressable, Text, useColorScheme, View, type ViewStyle } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 
 type FeatherIconName = React.ComponentProps<typeof Feather>['name'];

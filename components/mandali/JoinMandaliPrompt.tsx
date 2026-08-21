@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Text, TextInput, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import * as Location from 'expo-location';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';

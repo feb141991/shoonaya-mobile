@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { ActivityIndicator, Text, useColorScheme, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 
 import { BackButton } from '@/components/ui/BackButton';

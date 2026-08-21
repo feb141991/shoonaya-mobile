@@ -1,6 +1,6 @@
-import { useEffect, useState, type PropsWithChildren } from 'react';
+import { useReducedMotion } from "@/components/ui/Motion";
+import { useState, type PropsWithChildren } from 'react';
 import {
-  AccessibilityInfo,
   Pressable,
   StyleSheet,
   View,
@@ -37,21 +37,8 @@ export function PressableSurface({
   accessibilityState,
   ...props
 }: PressableSurfaceProps) {
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const reduceMotion = useReducedMotion();
   const [pressed, setPressed] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (mounted) setReduceMotion(enabled);
-    });
-
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', setReduceMotion);
-    return () => {
-      mounted = false;
-      subscription?.remove?.();
-    };
-  }, []);
 
   const isPressed = pressed && !disabled;
   const flattenedStyle = StyleSheet.flatten(style) ?? {};

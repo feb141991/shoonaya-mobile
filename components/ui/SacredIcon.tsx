@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { Image, type ImageSource } from 'expo-image';
 import type { OpaqueColorValue } from 'react-native';
 

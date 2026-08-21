@@ -1,6 +1,6 @@
 import { Component, type PropsWithChildren, type ReactNode } from 'react';
 import { Pressable, Text, useColorScheme, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { COLORS, FONTS } from '@/lib/constants';
 
 type ErrorBoundaryState = {

@@ -9,6 +9,8 @@ expo-env.d.ts
 .env
 .env.*
 .env*.local
+*.p8
+google-service-account*.json
 /ios
 /android
 
@@ -18,3 +20,4 @@ graphify-out/
 check_panchang.ts
 rewrite_japa.py
 scripts/graphify-update-source.sh
+antigravity-7-prompts.md

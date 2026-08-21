@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, useColorScheme, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
@@ -10,6 +10,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { supabase } from '@/lib/supabase';
+import { spiritualDate } from '@/lib/spiritualDate';
 
 /**
  * SankalpaCard — self-contained Home row for the active Sankalpa.
@@ -43,8 +44,8 @@ type SankalpaRow = {
 
 type Status = 'loading' | 'ready' | 'hidden' | 'error';
 
-function todayUtcString(): string {
-  return new Date().toISOString().slice(0, 10);
+function todayUtcString(timezone?: string): string {
+  return spiritualDate(timezone ?? 'UTC');
 }
 
 function buildDayNumber(startDate: string, today: string): number {
@@ -57,7 +58,13 @@ function clampProgress(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-export function SankalpaCard() {
+export type SankalpaCardProps = {
+  userId?: string;
+  timezone?: string;
+  initialSankalpa?: SankalpaRow | null;
+};
+
+export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initialSankalpa }: SankalpaCardProps = {}) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(
@@ -75,23 +82,19 @@ export function SankalpaCard() {
   );
 
   const [status, setStatus] = useState<Status>('loading');
-  const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(null);
+  const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(initialSankalpa ?? null);
   const [checkedToday, setCheckedToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
   const load = useCallback(async () => {
     setStatus('loading');
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        // Guests (and any other no-session state) have no Sankalpa to
-        // fetch — render nothing instead of hitting the API, getting a
-        // 401, and landing in a permanent "Couldn't load — Retry" state
-        // that can never succeed. Matches QuizSparkCard's sibling pattern.
-        setStatus('hidden');
-        return;
+      if (!propUserId) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session?.user) {
+          setStatus('hidden');
+          return;
+        }
       }
 
       const response = await apiFetch('/api/sankalpa');
@@ -228,7 +231,7 @@ export function SankalpaCard() {
     );
   }
 
-  const today = todayUtcString();
+  const today = todayUtcString(propTimezone);
   const day = buildDayNumber(sankalpa.start_date, today);
   const targetDays = sankalpa.target_days ?? 0;
   const progress = targetDays > 0 ? clampProgress(day / targetDays) : 0;

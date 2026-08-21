@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View, useColorScheme } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
