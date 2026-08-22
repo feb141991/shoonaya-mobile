@@ -49,6 +49,12 @@ import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { isGuestMode } from '@/lib/guestSession';
 import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
+import {
+  HomeSummaryCoordinator,
+  resolveHomeIdentity,
+  getIdentityKey,
+  type HomeAuthIdentity,
+} from '@/lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 import { getHeroPick, type HeroPick } from '@/lib/heroPreference';
@@ -815,153 +821,86 @@ function HomeContent() {
     },
   }), []);
 
-  const resolveIdentityAndDate = useCallback(async (): Promise<{
-    auth: { kind: 'guest' } | { kind: 'authenticated'; userId: string } | { kind: 'unauthenticated' };
-    timezone: string;
-  }> => {
-    const [guest, sessionRes] = await Promise.all([
-      isGuestMode(),
-      supabase.auth.getSession(),
-    ]);
+  const [currentIdentity, setCurrentIdentity] = useState<HomeAuthIdentity>({ kind: 'unauthenticated' });
+  const heroImageUrlRef = useRef<string | null>(null);
+  heroImageUrlRef.current = heroImageUrl;
 
-    setIsGuest(guest);
-    const timezone = safeTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const coordinatorRef = useRef<HomeSummaryCoordinator | null>(null);
+  if (!coordinatorRef.current) {
+    coordinatorRef.current = new HomeSummaryCoordinator({
+      fetchApi: apiFetch,
+      onApplyPayload: (payload) => applyPayload(payload),
+      onSetLoading: (loading) => setLoading(loading),
+      onSetError: (error) => setLoadError(error),
+      onRedirectToLogin: () => router.replace('/(auth)/login'),
+      onPrefetchHeroImage: (url) => {
+        const assetUrl = resolveAssetUrl(url);
+        if (assetUrl) {
+          void Image.prefetch(assetUrl).catch(() => {});
+        }
+      },
+      buildGuestPayload,
+    });
+  }
 
-    if (guest) {
-      return { auth: { kind: 'guest' }, timezone };
-    }
+  // Subscribe to auth state changes to immediately invalidate and wipe memory state
+  // when an account switch, sign out, or sign in occurs.
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const guest = await isGuestMode();
+      const nextIdentity = resolveHomeIdentity(guest, session?.user);
+      const nextKey = getIdentityKey(nextIdentity);
 
-    const user = sessionRes?.data?.session?.user;
-    if (user) {
-      return { auth: { kind: 'authenticated', userId: user.id }, timezone };
-    }
+      if (coordinatorRef.current?.state.lastIdentityKey !== nextKey) {
+        coordinatorRef.current?.invalidateMemoryState(nextKey);
+        setCurrentIdentity(nextIdentity);
+        setIsGuest(guest);
+        setState(INITIAL_STATE);
 
-    return { auth: { kind: 'unauthenticated' }, timezone };
-  }, []);
-
-  const loadHome = useCallback(async (_isManualRefresh = false) => {
-    const requestGen = ++requestGenRef.current;
-    setLoadError(false);
-
-    // Resolve identity and date concurrently
-    const { auth, timezone } = await resolveIdentityAndDate();
-
-    // Guard against stale response if auth changed during resolution
-    if (requestGen !== requestGenRef.current) return;
-
-    if (auth.kind === 'unauthenticated') {
-      hasValidStateRef.current = false;
-      lastLoadedAtRef.current = 0;
-      lastIdentityKeyRef.current = null;
-      setState(INITIAL_STATE);
-      setLoading(false);
-      router.replace('/(auth)/login');
-      return;
-    }
-
-    const identity: CacheIdentity =
-      auth.kind === 'guest'
-        ? { kind: 'guest' }
-        : { kind: 'authenticated', userId: auth.userId };
-
-    const identityKey = identity.kind === 'guest' ? 'guest' : identity.userId;
-    if (lastIdentityKeyRef.current && lastIdentityKeyRef.current !== identityKey) {
-      // Account switch or guest/auth boundary: clear previous in-memory state immediately
-      hasValidStateRef.current = false;
-      lastLoadedAtRef.current = 0;
-      setState(INITIAL_STATE);
-    }
-    lastIdentityKeyRef.current = identityKey;
-
-    // 1. If we don't have valid state rendered yet, check stale-while-revalidate cache
-    if (!hasValidStateRef.current) {
-      const cached = await readHomeCache(identity, timezone);
-      if (cached && requestGen === requestGenRef.current) {
-        applyPayload(cached.payload);
-        lastLoadedAtRef.current = cached.savedAt;
-        setLoading(false);
-      }
-    }
-
-    // If still no valid state, show skeleton while loading
-    if (!hasValidStateRef.current) {
-      setLoading(true);
-    }
-
-    // Guest mode returns deterministic template
-    if (identity.kind === 'guest') {
-      if (requestGen === requestGenRef.current) {
-        const guestPayload = buildGuestPayload();
-        applyPayload(guestPayload);
-        void writeHomeCache(identity, guestPayload, timezone);
-        lastLoadedAtRef.current = Date.now();
-        setLoading(false);
-        setLoadError(false);
-      }
-      return;
-    }
-
-    // 2. Fetch fresh network payload for authenticated user
-    try {
-      const response = await apiFetch('/api/native/home-summary');
-
-      if (response.status === 401) {
-        await clearHomeCache(identity);
-        if (requestGen === requestGenRef.current) {
-          hasValidStateRef.current = false;
-          lastLoadedAtRef.current = 0;
-          lastIdentityKeyRef.current = null;
-          setState(INITIAL_STATE);
+        if (nextIdentity.kind === 'unauthenticated') {
           router.replace('/(auth)/login');
+        } else {
+          void coordinatorRef.current?.loadHome(nextIdentity);
         }
-        return;
       }
+    });
 
-      if (!response.ok) {
-        throw new Error('Could not load home summary');
-      }
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [buildGuestPayload, router]);
 
-      const payload = (await response.json()) as HomeSummary;
-
-      if (requestGen === requestGenRef.current) {
-        // Prefetch hero image if URL changed before applying state
-        if (payload.hero?.imageUrl) {
-          const nextHeroUrl = resolveAssetUrl(payload.hero.imageUrl);
-          if (nextHeroUrl && nextHeroUrl !== heroImageUrl) {
-            void Image.prefetch(nextHeroUrl).catch(() => {});
-          }
-        }
-
-        applyPayload(payload);
-        lastLoadedAtRef.current = Date.now();
-        setLoading(false);
-        setLoadError(false);
-
-        // Atomically cache valid payload with matching canonical timezone and spiritual date
-        const canonicalTimezone = safeTimezone(payload.date?.timezone || timezone);
-        const canonicalSpiritualDate = spiritualDate(canonicalTimezone);
-        void writeHomeCache(identity, payload, canonicalTimezone, canonicalSpiritualDate);
-      }
-    } catch (error) {
-      console.warn('[Home] background revalidation failed', error);
-      if (requestGen === requestGenRef.current) {
-        // Retain cached content if available. Only show full-screen loadError if no valid state exists!
-        if (!hasValidStateRef.current) {
-          setLoadError(true);
-        }
-        setLoading(false);
-      }
-    }
-  }, [applyPayload, buildGuestPayload, heroImageUrl, resolveIdentityAndDate, router]);
-
+  // Focus effect: Resolves identity FIRST on every focus before evaluating freshness or reloading
   useFocusEffect(
     useCallback(() => {
-      const now = Date.now();
-      const isStale = now - lastLoadedAtRef.current > 5 * 60 * 1000;
-      if (!hasValidStateRef.current || isStale) {
-        void loadHome(false);
+      let active = true;
+
+      async function handleFocus() {
+        const [guest, sessionRes] = await Promise.all([
+          isGuestMode(),
+          supabase.auth.getSession(),
+        ]);
+
+        if (!active) return;
+        setIsGuest(guest);
+
+        const resolved = resolveHomeIdentity(guest, sessionRes?.data?.session?.user);
+        setCurrentIdentity(resolved);
+
+        if (coordinatorRef.current) {
+          coordinatorRef.current.setHeroUrl(heroImageUrlRef.current);
+          await coordinatorRef.current.onFocus(resolved);
+        }
       }
-    }, [loadHome])
+
+      void handleFocus();
+
+      return () => {
+        active = false;
+      };
+    }, [])
   );
 
   // Keeps the bell badge honest without a full app restart. Two parts:
@@ -1035,10 +974,22 @@ function HomeContent() {
     };
   }, [moodStatus, isGuest]);
 
+  const loadHome = useCallback(async (isManualRefresh = false) => {
+    const [guest, sessionRes] = await Promise.all([
+      isGuestMode(),
+      supabase.auth.getSession(),
+    ]);
+    const resolved = resolveHomeIdentity(guest, sessionRes?.data?.session?.user);
+    if (coordinatorRef.current) {
+      coordinatorRef.current.setHeroUrl(heroImageUrlRef.current);
+      await coordinatorRef.current.loadHome(resolved, isManualRefresh);
+    }
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await loadHome();
+      await loadHome(true);
     } finally {
       setRefreshing(false);
     }
@@ -1663,9 +1614,29 @@ function HomeContent() {
               so a check-in made on the full /sankalpa screen shows up here
               without an app restart. See components/home/SankalpaCard.tsx. */}
           <SankalpaCard
-            userId={state.profile?.name ? 'active-user' : undefined}
+            identity={currentIdentity}
+            isGuest={isGuest}
             timezone={state.date?.timezone}
-            initialSankalpa={state.sankalpa ? { id: state.sankalpa.id, text: state.sankalpa.text, start_date: state.sankalpa.startDate, target_days: state.sankalpa.targetDays } : null}
+            initialSankalpa={
+              state.sankalpa === undefined
+                ? undefined
+                : state.sankalpa === null
+                ? null
+                : {
+                    id: state.sankalpa.id,
+                    user_id: currentIdentity.kind === 'authenticated' ? currentIdentity.userId : '',
+                    sankalpa_text: state.sankalpa.text,
+                    target_count: state.sankalpa.targetDays ?? 40,
+                    completed_count: 0,
+                    current_streak: 0,
+                    best_streak: 0,
+                    start_date: state.sankalpa.startDate ?? '',
+                    end_date: null,
+                    status: 'active',
+                    created_at: '',
+                    updated_at: '',
+                  }
+            }
           />
 
           <Pressable

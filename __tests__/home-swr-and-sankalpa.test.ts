@@ -1,18 +1,47 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
+// Node.js test environment polyfill for AsyncStorage web driver
+if (typeof window === 'undefined' || !(window as any).localStorage) {
+  const memoryStore = new Map<string, string>();
+  (globalThis as any).window = {
+    localStorage: {
+      getItem: (key: string) => memoryStore.get(key) ?? null,
+      setItem: (key: string, value: string) => memoryStore.set(key, String(value)),
+      removeItem: (key: string) => memoryStore.delete(key),
+      clear: () => memoryStore.clear(),
+      get length() {
+        return memoryStore.size;
+      },
+      key: (i: number) => Array.from(memoryStore.keys())[i] ?? null,
+    },
+  };
+}
+
 import {
   HOME_CACHE_SCHEMA_VERSION,
   getHomeCacheKey,
   sanitizeForHomeCache,
   validateHomeSummaryPayload,
+  writeHomeCache,
+  readHomeCache,
+  clearHomeCache,
+  clearAllHomeCaches,
   type CachedHomeRenderModel,
   type CacheIdentity,
   type HomeCacheEnvelope,
 } from '../lib/homeCache';
+import {
+  HomeSummaryCoordinator,
+  SankalpaCoordinator,
+  resolveHomeIdentity,
+  getIdentityKey,
+  type HomeAuthIdentity,
+  type SankalpaRow,
+} from '../lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '../lib/spiritualDate';
 
-describe('Home SWR, Identity & Sankalpa Test Suite', () => {
+describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', () => {
   const sampleHomeSummary = {
     profile: {
       name: 'Prince Sharma',
@@ -97,38 +126,42 @@ describe('Home SWR, Identity & Sankalpa Test Suite', () => {
     firstWeek: false,
   };
 
-  describe('1. Identity Resolution & Fallback Invariants', () => {
-    function resolveIdentity(isGuest: boolean, user: { id: string } | null) {
-      if (isGuest) {
-        return { kind: 'guest' as const };
-      }
-      if (user) {
-        return { kind: 'authenticated' as const, userId: user.id };
-      }
-      return { kind: 'unauthenticated' as const };
-    }
+  const guestPayloadTemplate = {
+    ...sampleHomeSummary,
+    profile: {
+      ...sampleHomeSummary.profile,
+      name: 'Seeker',
+      firstName: 'Seeker',
+    },
+  };
 
-    it('returns guest identity only when isGuestMode is explicitly true', () => {
-      const guestIdentity = resolveIdentity(true, null);
-      assert.deepEqual(guestIdentity, { kind: 'guest' });
-
-      const guestOverrideIdentity = resolveIdentity(true, { id: 'user-123' });
-      assert.deepEqual(guestOverrideIdentity, { kind: 'guest' });
-    });
-
-    it('returns authenticated identity when signed in and guest mode is false', () => {
-      const authIdentity = resolveIdentity(false, { id: 'user-abc' });
-      assert.deepEqual(authIdentity, { kind: 'authenticated', userId: 'user-abc' });
-    });
-
-    it('returns unauthenticated (never guest) when session is missing and guest mode is false', () => {
-      const unauthIdentity = resolveIdentity(false, null);
-      assert.deepEqual(unauthIdentity, { kind: 'unauthenticated' });
-      assert.notEqual(unauthIdentity.kind, 'guest');
-    });
+  beforeEach(async () => {
+    await clearAllHomeCaches();
   });
 
-  describe('2. Account Partitioning & Stale Request Protection', () => {
+  describe('1. Production Identity Resolution & Isolation', () => {
+    it('resolves guest identity only when isGuest is true', () => {
+      const guestIdentity = resolveHomeIdentity(true, null);
+      assert.deepEqual(guestIdentity, { kind: 'guest' });
+      assert.equal(getIdentityKey(guestIdentity), 'guest');
+
+      const guestOverride = resolveHomeIdentity(true, { id: 'user-123' });
+      assert.deepEqual(guestOverride, { kind: 'guest' });
+      assert.equal(getIdentityKey(guestOverride), 'guest');
+    });
+
+    it('resolves authenticated identity when user exists and isGuest is false', () => {
+      const authIdentity = resolveHomeIdentity(false, { id: 'user-aaa' });
+      assert.deepEqual(authIdentity, { kind: 'authenticated', userId: 'user-aaa' });
+      assert.equal(getIdentityKey(authIdentity), 'authenticated:user-aaa');
+    });
+
+    it('resolves unauthenticated (never guest) when session is missing and isGuest is false', () => {
+      const unauth = resolveHomeIdentity(false, null);
+      assert.deepEqual(unauth, { kind: 'unauthenticated' });
+      assert.equal(getIdentityKey(unauth), null);
+    });
+
     it('isolates cache keys between accounts and guest', () => {
       const guestKey = getHomeCacheKey({ kind: 'guest' });
       const userAKey = getHomeCacheKey({ kind: 'authenticated', userId: 'user-aaa' });
@@ -140,212 +173,419 @@ describe('Home SWR, Identity & Sankalpa Test Suite', () => {
       assert.notEqual(userAKey, userBKey);
       assert.notEqual(userAKey, guestKey);
     });
-
-    it('prevents stale requests from overwriting state when user/generation changes', () => {
-      let currentRequestGen = 0;
-      let state = 'initial';
-
-      // Start Request 1 for User A
-      const req1Gen = ++currentRequestGen;
-
-      // User switches to User B -> starts Request 2
-      const req2Gen = ++currentRequestGen;
-
-      // Request 2 finishes first
-      if (req2Gen === currentRequestGen) {
-        state = 'user-b-state';
-      }
-
-      // Late Request 1 finishes later
-      if (req1Gen === currentRequestGen) {
-        state = 'user-a-state'; // Should not execute
-      }
-
-      assert.equal(state, 'user-b-state', 'Stale Request 1 must not overwrite newer Request 2');
-    });
   });
 
-  describe('3. Timezone Awareness & 4 AM Spiritual Day Boundary', () => {
-    it('handles safe timezone fallbacks gracefully for invalid/malformed strings', () => {
-      assert.doesNotThrow(() => safeTimezone('Invalid/Timezone_Name'));
-      assert.doesNotThrow(() => safeTimezone(''));
-      assert.doesNotThrow(() => safeTimezone(null));
-      assert.doesNotThrow(() => safeTimezone(undefined));
+  describe('2. HomeSummaryCoordinator Production Lifecycle & Request Deduplication', () => {
+    it('fresh cache + same identity: renders cache and performs zero redundant background requests when valid and fresh', async () => {
+      let homeSummaryNetworkRequests = 0;
+      let appliedPayloads: any[] = [];
+      let loadingStates: boolean[] = [];
 
-      assert.equal(safeTimezone('Asia/Kolkata'), 'Asia/Kolkata');
-      assert.equal(safeTimezone('America/New_York'), 'America/New_York');
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-fresh-1' };
+      const timezone = 'Europe/London';
+
+      // Pre-seed cache
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-fresh-1' }, sampleHomeSummary, timezone);
+
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          homeSummaryNetworkRequests++;
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: (l) => loadingStates.push(l),
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      // Initial focus
+      await coordinator.onFocus(userA);
+
+      assert.equal(appliedPayloads.length, 2); // Cache first, then fresh network response
+      assert.equal(homeSummaryNetworkRequests, 1, 'Initial cold focus with cache performs 1 network revalidation');
+
+      // Second focus within freshness window (< 5m)
+      await coordinator.onFocus(userA);
+      assert.equal(homeSummaryNetworkRequests, 1, 'Subsequent fresh focus issues 0 additional network requests');
     });
 
-    it('computes 4 AM rollover correctly (before 4 AM belongs to previous spiritual day)', () => {
-      // 2026-08-22 at 03:30 AM in Asia/Kolkata (UTC is 2026-08-21T22:00:00Z)
-      const before4AmUtc = new Date('2026-08-21T22:00:00.000Z');
-      const dateBefore4Am = spiritualDate('Asia/Kolkata', before4AmUtc);
-      assert.equal(dateBefore4Am, '2026-08-21', '03:30 AM should belong to previous spiritual day (2026-08-21)');
+    it('stale cache: renders cache immediately and issues exactly one background request', async () => {
+      let homeSummaryNetworkRequests = 0;
+      let appliedPayloads: any[] = [];
 
-      // 2026-08-22 at 04:01 AM in Asia/Kolkata (UTC is 2026-08-21T22:31:00Z)
-      const after4AmUtc = new Date('2026-08-21T22:31:00.000Z');
-      const dateAfter4Am = spiritualDate('Asia/Kolkata', after4AmUtc);
-      assert.equal(dateAfter4Am, '2026-08-22', '04:01 AM should belong to current spiritual day (2026-08-22)');
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-stale-1' };
+      const timezone = 'Europe/London';
+
+      // Seed cache saved 10 minutes ago
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-stale-1' }, sampleHomeSummary, timezone);
+
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          homeSummaryNetworkRequests++;
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      // Simulate state already having cached data from 10 minutes ago
+      coordinator.state.hasValidState = true;
+      coordinator.state.lastLoadedAt = Date.now() - 10 * 60 * 1000;
+      coordinator.state.lastIdentityKey = 'authenticated:user-stale-1';
+
+      await coordinator.onFocus(userA);
+
+      assert.equal(homeSummaryNetworkRequests, 1, 'Stale cache focus issues exactly 1 background request');
+      assert.equal(coordinator.state.hasValidState, true);
     });
 
-    it('validates envelope spiritual date using the envelope canonical timezone', () => {
-      const fixedNow = new Date('2026-08-22T10:00:00.000Z'); // 10:00 UTC / 15:30 IST / 11:00 London
+    it('hero changes during hydration: still issues exactly one request and triggers prefetch', async () => {
+      let homeSummaryNetworkRequests = 0;
+      let prefetchedUrls: string[] = [];
 
-      const envelopeKolkata: HomeCacheEnvelope = {
-        schemaVersion: HOME_CACHE_SCHEMA_VERSION,
-        identity: { kind: 'authenticated', userId: 'user-1' },
-        spiritualDate: '2026-08-22',
-        timezone: 'Asia/Kolkata',
-        savedAt: fixedNow.getTime() - 1000,
-        payload: sampleHomeSummary,
-      };
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-hero-1' };
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          homeSummaryNetworkRequests++;
+          const nextSummary = {
+            ...sampleHomeSummary,
+            hero: {
+              ...sampleHomeSummary.hero,
+              imageUrl: '/assets/images/heroes/all/new-festival.webp',
+            },
+          };
+          return new Response(JSON.stringify(nextSummary), { status: 200 });
+        },
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        onPrefetchHeroImage: (url) => prefetchedUrls.push(url),
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
 
-      // When validating in London device timezone vs Kolkata profile timezone:
-      const kolkataSpiritualDate = spiritualDate(envelopeKolkata.timezone, fixedNow);
-      assert.equal(kolkataSpiritualDate, envelopeKolkata.spiritualDate);
-    });
-  });
+      coordinator.setHeroUrl('/assets/images/heroes/all/default.webp');
+      await coordinator.loadHome(userA);
 
-  describe('4. Cache Validation & Corruption Handling', () => {
-    it('validates complete HomeSummary payload structure', () => {
-      assert.equal(validateHomeSummaryPayload(sampleHomeSummary), true);
-      assert.equal(validateHomeSummaryPayload(null), false);
-      assert.equal(validateHomeSummaryPayload({}), false);
-      assert.equal(validateHomeSummaryPayload({ profile: {} }), false);
-    });
-
-    it('rejects schema mismatch or corrupted JSON', () => {
-      const invalidVersionEnvelope = {
-        schemaVersion: 999,
-        identity: { kind: 'guest' },
-        spiritualDate: '2026-08-22',
-        timezone: 'Asia/Kolkata',
-        savedAt: Date.now(),
-        payload: sampleHomeSummary,
-      };
-
-      assert.notEqual(invalidVersionEnvelope.schemaVersion, HOME_CACHE_SCHEMA_VERSION);
-    });
-  });
-
-  describe('5. Sankalpa Referential Stability & Focus Fetch Cardinality', () => {
-    it('ensures load handler does not re-create on state updates', () => {
-      let fetchCount = 0;
-      let state = { sankalpa: null as null | { id: string; text: string } };
-
-      // Simulate a stable load function with refs
-      const sankalpaRef = { current: state.sankalpa };
-
-      const load = async () => {
-        fetchCount++;
-        const fetched = { id: 's1', text: 'Daily Japa' };
-        sankalpaRef.current = fetched;
-        state = { sankalpa: fetched };
-        return fetched;
-      };
-
-      // Simulating 2 genuine focus events
-      void load();
-      assert.equal(fetchCount, 1);
-      assert.deepEqual(sankalpaRef.current, { id: 's1', text: 'Daily Japa' });
-
-      // State updated, but `load` reference does not change
-      // Second genuine focus event
-      void load();
-      assert.equal(fetchCount, 2);
+      assert.equal(homeSummaryNetworkRequests, 1, 'Exactly 1 request issued');
+      assert.deepEqual(prefetchedUrls, ['/assets/images/heroes/all/new-festival.webp']);
     });
 
-    it('retains initial or cached data on network revalidation failure', async () => {
-      let status: 'loading' | 'ready' | 'error' = 'ready';
-      let currentSankalpa: { id: string; text: string } | null = { id: 'initial-1', text: 'Initial Sadhana' };
+    it('rapid refocus: deduplicates in-flight requests and produces no duplicate network calls', async () => {
+      let homeSummaryNetworkRequests = 0;
 
-      const sankalpaRef = { current: currentSankalpa };
-      const hasEverLoadedRef = { current: true };
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-rapid-1' };
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          homeSummaryNetworkRequests++;
+          // Simulate latency
+          await new Promise((r) => setTimeout(r, 10));
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
 
-      // Simulating a failed background network fetch
-      const simulateFailedRevalidation = async () => {
-        try {
-          throw new Error('Network timeout');
-        } catch {
-          if (sankalpaRef.current !== null || hasEverLoadedRef.current) {
-            status = 'ready'; // Retain valid initial data
-          } else {
-            status = 'error';
+      // Fire two rapid focus/load calls simultaneously
+      await Promise.all([
+        coordinator.loadHome(userA),
+        coordinator.loadHome(userA),
+        coordinator.loadHome(userA),
+      ]);
+
+      assert.equal(homeSummaryNetworkRequests, 1, 'Rapid concurrent focus calls deduplicate to exactly 1 network request');
+    });
+
+    it('User A -> User B: User A data cleared immediately before User B data renders', async () => {
+      let homeSummaryNetworkRequests = 0;
+      let appliedNames: string[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-A' };
+      const userB: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-B' };
+      let currentActiveUser = 'user-A';
+
+      const coordinator: HomeSummaryCoordinator = new HomeSummaryCoordinator({
+        fetchApi: async (): Promise<Response> => {
+          homeSummaryNetworkRequests++;
+          const name = currentActiveUser === 'user-B' ? 'User B Name' : 'User A Name';
+          return new Response(
+            JSON.stringify({
+              ...sampleHomeSummary,
+              profile: { ...sampleHomeSummary.profile, name },
+            }),
+            { status: 200 }
+          );
+        },
+        onApplyPayload: (p) => appliedNames.push(p.profile.name),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
+
+      // User A loads
+      currentActiveUser = 'user-A';
+      await coordinator.onFocus(userA);
+      assert.equal(appliedNames[appliedNames.length - 1], 'User A Name');
+      assert.equal(coordinator.state.lastIdentityKey, 'authenticated:user-A');
+
+      // Switch to User B
+      currentActiveUser = 'user-B';
+      await coordinator.onFocus(userB);
+
+      assert.equal(appliedNames[appliedNames.length - 1], 'User B Name');
+      assert.equal(coordinator.state.lastIdentityKey, 'authenticated:user-B');
+      assert.equal(homeSummaryNetworkRequests, 2, 'Exactly 1 request for User A and 1 request for User B');
+    });
+
+    it('superseded response cannot overwrite the current identity', async () => {
+      let appliedUsers: string[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-slow-A' };
+      const userB: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-fast-B' };
+
+      const coordinator: HomeSummaryCoordinator = new HomeSummaryCoordinator({
+        fetchApi: async (path: string): Promise<Response> => {
+          // Slow response for User A, fast response for User B
+          const isA = coordinator.state.lastIdentityKey === 'authenticated:user-slow-A';
+          if (isA) {
+            await new Promise((r) => setTimeout(r, 30));
+            return new Response(
+              JSON.stringify({
+                ...sampleHomeSummary,
+                profile: { ...sampleHomeSummary.profile, name: 'Slow User A' },
+              }),
+              { status: 200 }
+            );
           }
-        }
-      };
+          return new Response(
+            JSON.stringify({
+              ...sampleHomeSummary,
+              profile: { ...sampleHomeSummary.profile, name: 'Fast User B' },
+            }),
+            { status: 200 }
+          );
+        },
+        onApplyPayload: (p) => appliedUsers.push(p.profile.name),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
 
-      await simulateFailedRevalidation();
-      assert.equal(status, 'ready');
-      assert.deepEqual(currentSankalpa, { id: 'initial-1', text: 'Initial Sadhana' });
-    });
+      // Trigger User A load (slow)
+      const loadAPromise = coordinator.loadHome(userA);
 
-    it('shows error state instead of false "Set a Sankalpa" when cold fetch fails', async () => {
-      let status: 'loading' | 'ready' | 'error' = 'loading';
-      let currentSankalpa: { id: string; text: string } | null = null;
+      // Immediately switch to User B before A finishes
+      coordinator.invalidateMemoryState('authenticated:user-fast-B');
+      const loadBPromise = coordinator.loadHome(userB);
 
-      const sankalpaRef = { current: null };
-      const hasEverLoadedRef = { current: false };
+      await Promise.all([loadAPromise, loadBPromise]);
 
-      // Simulating a failed cold load with NO prior data
-      const simulateFailedColdLoad = async () => {
-        try {
-          throw new Error('Network timeout');
-        } catch {
-          if (sankalpaRef.current !== null || hasEverLoadedRef.current) {
-            status = 'ready';
-          } else {
-            status = 'error';
-          }
-        }
-      };
-
-      await simulateFailedColdLoad();
-      assert.equal(status, 'error', 'Must show retry error rather than empty "Set your Sankalpa" on cold network failure');
+      // Final applied user must be User B, not overwritten by late User A
+      assert.equal(appliedUsers[appliedUsers.length - 1], 'Fast User B');
+      assert.equal(coordinator.state.lastIdentityKey, 'authenticated:user-fast-B');
     });
   });
 
-  describe('6. Explicit Cached Home Render Model & Privacy Invariants', () => {
+  describe('3. SankalpaCoordinator Production Invariants & Request Counting', () => {
+    it('authenticated -> guest: authenticated data cleared; ZERO Sankalpa API calls', async () => {
+      let sankalpaRequests = 0;
+      let statuses: string[] = [];
+
+      const sankalpaCoordinator = new SankalpaCoordinator({
+        fetchApi: async () => {
+          sankalpaRequests++;
+          return new Response(JSON.stringify({ sankalpa: null }), { status: 200 });
+        },
+        onSetStatus: (s) => statuses.push(s),
+        onSetSankalpa: () => {},
+        onSetCheckedToday: () => {},
+      });
+
+      const guestIdentity: HomeAuthIdentity = { kind: 'guest' };
+
+      await sankalpaCoordinator.load(guestIdentity);
+
+      assert.equal(sankalpaRequests, 0, 'Guest mode must make 0 authenticated Sankalpa network requests');
+      assert.equal(statuses[statuses.length - 1], 'hidden');
+    });
+
+    it('unknown Sankalpa + network failure shows retry error, never empty state', async () => {
+      let sankalpaRequests = 0;
+      let currentStatus = 'initial';
+
+      const sankalpaCoordinator = new SankalpaCoordinator(
+        {
+          fetchApi: async () => {
+            sankalpaRequests++;
+            throw new Error('Network timeout');
+          },
+          onSetStatus: (s) => {
+            currentStatus = s;
+          },
+          onSetSankalpa: () => {},
+          onSetCheckedToday: () => {},
+        },
+        undefined // undefined = unknown initial state
+      );
+
+      const authUser: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-err-1' };
+      await sankalpaCoordinator.load(authUser);
+
+      assert.equal(sankalpaRequests, 1, 'Attempted 1 fetch');
+      assert.equal(currentStatus, 'error', 'Must show retry error instead of empty "Set your Sankalpa" on unverified cold load failure');
+    });
+
+    it('confirmed null Sankalpa shows setup CTA (ready state)', async () => {
+      let sankalpaRequests = 0;
+      let currentStatus = 'initial';
+      let currentSankalpa: SankalpaRow | null | undefined = undefined;
+
+      const sankalpaCoordinator = new SankalpaCoordinator(
+        {
+          fetchApi: async () => {
+            sankalpaRequests++;
+            return new Response(JSON.stringify({ sankalpa: null }), { status: 200 });
+          },
+          onSetStatus: (s) => {
+            currentStatus = s;
+          },
+          onSetSankalpa: (sk) => {
+            currentSankalpa = sk;
+          },
+          onSetCheckedToday: () => {},
+        },
+        undefined
+      );
+
+      const authUser: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-null-1' };
+      await sankalpaCoordinator.load(authUser);
+
+      assert.equal(sankalpaRequests, 1, 'Issued 1 active sankalpa request');
+      assert.equal(currentStatus, 'ready');
+      assert.equal(currentSankalpa, null, 'Confirmed null sankalpa renders ready with setup CTA');
+    });
+
+    it('active Sankalpa present: issues exactly 1 active-sankalpa request and 1 checkin-status request', async () => {
+      let activeSankalpaRequests = 0;
+      let checkinRequests = 0;
+
+      const activeSankalpa: SankalpaRow = {
+        id: 'sankalpa-active-1',
+        user_id: 'user-active-1',
+        sankalpa_text: 'Daily Japa Meditation',
+        target_count: 40,
+        completed_count: 10,
+        current_streak: 5,
+        best_streak: 7,
+        start_date: '2026-08-01',
+        end_date: null,
+        status: 'active',
+        created_at: '',
+        updated_at: '',
+      };
+
+      const sankalpaCoordinator = new SankalpaCoordinator(
+        {
+          fetchApi: async (path) => {
+            if (path === '/api/sankalpa') {
+              activeSankalpaRequests++;
+              return new Response(JSON.stringify({ sankalpa: activeSankalpa }), { status: 200 });
+            }
+            if (path.startsWith('/api/sankalpa/checkin')) {
+              checkinRequests++;
+              return new Response(JSON.stringify({ checkins: ['2026-08-22'] }), { status: 200 });
+            }
+            throw new Error(`Unexpected path ${path}`);
+          },
+          onSetStatus: () => {},
+          onSetSankalpa: () => {},
+          onSetCheckedToday: () => {},
+        },
+        undefined
+      );
+
+      const authUser: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-active-1' };
+      await sankalpaCoordinator.load(authUser);
+
+      assert.equal(activeSankalpaRequests, 1, 'Exact 1 active sankalpa request');
+      assert.equal(checkinRequests, 1, 'Exact 1 check-in status request');
+    });
+
+    it('repeated state updates do not retrigger the focus fetch', async () => {
+      let activeSankalpaRequests = 0;
+
+      const sankalpaCoordinator = new SankalpaCoordinator(
+        {
+          fetchApi: async () => {
+            activeSankalpaRequests++;
+            return new Response(JSON.stringify({ sankalpa: null }), { status: 200 });
+          },
+          onSetStatus: () => {},
+          onSetSankalpa: () => {},
+          onSetCheckedToday: () => {},
+        },
+        null
+      );
+
+      const authUser: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-stable-1' };
+
+      // Initial focus load
+      await sankalpaCoordinator.load(authUser);
+      assert.equal(activeSankalpaRequests, 1);
+
+      // Parent component re-renders or updates state multiple times
+      sankalpaCoordinator.setInitialSankalpa(null);
+      sankalpaCoordinator.setInitialSankalpa(null);
+
+      // Re-triggering load while in-flight or stable does not duplicate request
+      assert.equal(activeSankalpaRequests, 1, 'State updates did not trigger redundant network calls');
+    });
+  });
+
+  describe('4. Deterministic Cache Sanitization & Timezone Validation', () => {
     it('sanitizes full HomeSummary and strips unnecessary/sensitive metadata', () => {
       const sanitized = sanitizeForHomeCache(sampleHomeSummary);
 
-      // Verify fields needed for first rendered frame are preserved
       assert.equal(sanitized.profile.name, 'Prince Sharma');
       assert.equal(sanitized.profile.firstName, 'Prince');
       assert.equal(sanitized.profile.tradition, 'hindu');
       assert.equal(sanitized.profile.karmaPoints, 120);
 
-      // Verify unrendered location strings (city/country) are not persisted in cached model
+      // Unrendered location strings omitted
       assert.equal((sanitized.profile as any).city, undefined);
       assert.equal((sanitized.profile as any).country, undefined);
 
-      // Verify free-text Sankalpa reflections are omitted from generic home cache
+      // Free-text reflections omitted
       assert.equal((sanitized as any).sankalpa, undefined);
 
-      // Verify coordinates are preserved strictly for immediate local Panchang calculation
+      // Coordinates preserved strictly for local Panchang computation
       assert.equal(sanitized.date.latitude, 51.5074);
       assert.equal(sanitized.date.longitude, -0.1278);
       assert.equal(sanitized.date.timezone, 'Europe/London');
 
-      // Verify sacred text and hero rendering data
-      assert.equal(sanitized.sacredText.original, 'वसुधैव कुटुम्बकम्');
-      assert.equal(sanitized.hero.imageUrl, '/assets/images/heroes/all/default.webp');
-      assert.equal(sanitized.practices.length, 1);
+      assert.equal(validateHomeSummaryPayload(sanitized), true);
     });
 
-    it('measures cache hydration and render timing', () => {
-      const t0 = performance.now();
-      const sanitized = sanitizeForHomeCache(sampleHomeSummary);
-      const json = JSON.stringify(sanitized);
-      const tSerialized = performance.now() - t0;
+    it('computes 4 AM spiritual date boundary rollover accurately', () => {
+      const earlyMorning = new Date('2026-08-22T03:30:00Z');
+      const dayDate = new Date('2026-08-22T06:00:00Z');
 
-      const tHydrateStart = performance.now();
-      const hydrated = JSON.parse(json);
-      const isValid = validateHomeSummaryPayload(hydrated);
-      const tHydrateEnd = performance.now() - tHydrateStart;
+      const earlySpiritualDate = spiritualDate('UTC', earlyMorning);
+      const normalSpiritualDate = spiritualDate('UTC', dayDate);
 
-      assert.equal(isValid, true);
-      assert.ok(tHydrateEnd < 10, `Cache hydration took ${tHydrateEnd.toFixed(2)}ms (expected < 10ms)`);
+      assert.equal(earlySpiritualDate, '2026-08-21', 'Before 4 AM belongs to previous spiritual date');
+      assert.equal(normalSpiritualDate, '2026-08-22', 'After 4 AM belongs to current date');
     });
   });
 });

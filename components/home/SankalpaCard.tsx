@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -11,38 +11,14 @@ import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
+import {
+  SankalpaCoordinator,
+  type SankalpaRow,
+  type HomeAuthIdentity,
+  type SankalpaStatus,
+} from '@/lib/homeCoordinator';
 
-/**
- * SankalpaCard — self-contained Home row for the active Sankalpa.
- *
- * Native port of the PWA's src/components/home/SankalpaBanner.tsx, following
- * the same self-fetching pattern MoodCheckin.tsx already established on this
- * screen (own loading/error state, own apiFetch calls) rather than reading
- * from /api/native/home-summary's `sankalpa` field — that field has no
- * "checked in today" flag, and duplicating a second Sankalpa summary shape
- * into home-summary just to add one boolean was less consistent with this
- * repo's existing convention than giving Home a self-contained card, same as
- * mood.
- *
- * Refetches on every screen focus (not just mount) so a check-in or
- * completion made on the full /sankalpa screen is reflected on Home the
- * moment the user navigates back — no app restart required.
- *
- * Matches PWA behaviour: Home offers Set + Check-in only. PWA's own
- * SankalpaBanner accepts an onComplete prop but never renders a control that
- * calls it (confirmed by reading the component) — completion in PWA only
- * happens from the fuller My Progress page. Native mirrors that: "Mark
- * complete" lives on the /sankalpa screen, not here.
- */
-
-type SankalpaRow = {
-  id: string;
-  text: string;
-  start_date: string;
-  target_days: number | null;
-};
-
-type Status = 'loading' | 'ready' | 'hidden' | 'error';
+export type { SankalpaRow };
 
 function todayUtcString(timezone?: string): string {
   return spiritualDate(timezone ?? 'UTC');
@@ -51,6 +27,7 @@ function todayUtcString(timezone?: string): string {
 function buildDayNumber(startDate: string, today: string): number {
   const start = new Date(`${startDate}T00:00:00Z`).getTime();
   const current = new Date(`${today}T00:00:00Z`).getTime();
+  if (isNaN(start) || isNaN(current)) return 1;
   return Math.max(1, Math.floor((current - start) / 86_400_000) + 1);
 }
 
@@ -60,11 +37,19 @@ function clampProgress(value: number): number {
 
 export type SankalpaCardProps = {
   userId?: string;
+  isGuest?: boolean;
+  identity?: HomeAuthIdentity;
   timezone?: string;
   initialSankalpa?: SankalpaRow | null;
 };
 
-export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initialSankalpa }: SankalpaCardProps = {}) {
+export function SankalpaCard({
+  userId: propUserId,
+  isGuest: propIsGuest,
+  identity: propIdentity,
+  timezone: propTimezone,
+  initialSankalpa,
+}: SankalpaCardProps = {}) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(
@@ -81,61 +66,65 @@ export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initi
     [isDark]
   );
 
-  const [status, setStatus] = useState<Status>(initialSankalpa !== undefined ? 'ready' : 'loading');
+  const [status, setStatus] = useState<SankalpaStatus>(
+    propIsGuest || propIdentity?.kind === 'guest'
+      ? 'hidden'
+      : initialSankalpa !== undefined
+      ? 'ready'
+      : 'loading'
+  );
   const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(initialSankalpa ?? null);
   const [checkedToday, setCheckedToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
-  const sankalpaRef = useRef<SankalpaRow | null>(initialSankalpa ?? null);
-  const hasEverLoadedRef = useRef<boolean>(initialSankalpa !== undefined);
+  const coordinatorRef = useRef<SankalpaCoordinator | null>(null);
+  if (!coordinatorRef.current) {
+    coordinatorRef.current = new SankalpaCoordinator(
+      {
+        fetchApi: apiFetch,
+        onSetStatus: (s) => setStatus(s),
+        onSetSankalpa: (sk) => setSankalpa(sk),
+        onSetCheckedToday: (c) => setCheckedToday(c),
+        getTimezone: () => propTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+      initialSankalpa
+    );
+  }
+
+  // Synchronize authoritative initialSankalpa changes from parent
+  useEffect(() => {
+    if (initialSankalpa !== undefined && coordinatorRef.current) {
+      coordinatorRef.current.setInitialSankalpa(initialSankalpa);
+    }
+  }, [initialSankalpa]);
 
   const load = useCallback(async () => {
-    // Only display skeleton on initial cold load when no initial data was provided
-    if (!hasEverLoadedRef.current && !sankalpaRef.current) {
-      setStatus('loading');
+    if (propIsGuest || propIdentity?.kind === 'guest') {
+      setStatus('hidden');
+      return;
     }
-    try {
-      if (!propUserId) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData?.session?.user) {
-          setStatus('hidden');
-          return;
-        }
-      }
 
-      const response = await apiFetch('/api/sankalpa');
-      if (!response.ok) throw new Error(`Request failed (${response.status})`);
-      const payload = (await response.json()) as { sankalpa: SankalpaRow | null };
-      const nextSankalpa = payload.sankalpa ?? null;
-      sankalpaRef.current = nextSankalpa;
-      setSankalpa(nextSankalpa);
-      hasEverLoadedRef.current = true;
-
-      if (nextSankalpa) {
-        const checkinRes = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(nextSankalpa.id)}`);
-        if (checkinRes.ok) {
-          const checkinPayload = (await checkinRes.json()) as { checkins?: string[] };
-          setCheckedToday((checkinPayload.checkins ?? []).includes(todayUtcString(propTimezone)));
-        } else {
-          setCheckedToday(false);
-        }
-      } else {
-        setCheckedToday(false);
-      }
-      setStatus('ready');
-    } catch {
-      // If we already had valid data (cached or initial), retain it
-      if (sankalpaRef.current !== null || hasEverLoadedRef.current) {
-        setStatus('ready');
-      } else {
-        // When backend failed on cold load and state is unknown, show retry error (never false "Set a Sankalpa")
-        setStatus('error');
-      }
+    let identity: HomeAuthIdentity;
+    if (propIdentity) {
+      identity = propIdentity;
+    } else if (propUserId) {
+      identity = { kind: 'authenticated', userId: propUserId };
+    } else {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
+      identity = user ? { kind: 'authenticated', userId: user.id } : { kind: 'unauthenticated' };
     }
-  }, [propTimezone, propUserId]);
 
-  // useFocusEffect alone covers both the initial mount and every subsequent
-  // genuine focus return, without re-triggering itself on state updates.
+    if (identity.kind !== 'authenticated') {
+      setStatus('hidden');
+      return;
+    }
+
+    if (coordinatorRef.current) {
+      await coordinatorRef.current.load(identity);
+    }
+  }, [propIdentity, propIsGuest, propUserId]);
+
   useFocusEffect(
     useCallback(() => {
       load().catch(() => {});
@@ -244,9 +233,11 @@ export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initi
   }
 
   const today = todayUtcString(propTimezone);
-  const day = buildDayNumber(sankalpa.start_date, today);
-  const targetDays = sankalpa.target_days ?? 0;
+  const startDate = sankalpa.start_date ?? sankalpa.startDate ?? today;
+  const day = buildDayNumber(startDate, today);
+  const targetDays = sankalpa.target_days ?? sankalpa.target_count ?? 0;
   const progress = targetDays > 0 ? clampProgress(day / targetDays) : 0;
+  const sankalpaText = sankalpa.text ?? sankalpa.sankalpa_text ?? '';
 
   return (
     <View
@@ -282,7 +273,7 @@ export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initi
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text }} numberOfLines={1}>
-            {sankalpa.text}
+            {sankalpaText}
           </Text>
           <Text style={{ marginTop: 1, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
             {checkedToday ? 'Honoured today' : `Day ${Math.min(day, targetDays || day)} of ${targetDays}`}
