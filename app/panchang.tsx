@@ -442,9 +442,17 @@ export default function PanchangScreen() {
     if (!userId || savingRashi) return;
     setSavingRashi(true);
     try {
-      await supabase.from('profiles').update({ rashi }).eq('id', userId);
+      const response = await apiFetch('/api/native/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ rashi }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update rashi');
+      }
       setProfileState((prev) => ({ ...prev, rashi }));
       setShowRashiPicker(false);
+    } catch (e) {
+      console.warn('[Panchang] saveRashi failed', e);
     } finally {
       setSavingRashi(false);
     }
