@@ -15,6 +15,8 @@ import {
   CormorantGaramond_700Bold,
 } from '@expo-google-fonts/cormorant-garamond';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
+import { Mukta_400Regular, Mukta_700Bold } from '@expo-google-fonts/mukta';
 import { useFonts } from 'expo-font';
 import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
@@ -57,6 +59,10 @@ function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    Kalam_400Regular,
+    Kalam_700Bold,
+    Mukta_400Regular,
+    Mukta_700Bold,
   });
 
   const [authReady, setAuthReady] = useState(false);

@@ -128,8 +128,8 @@ function hasNotificationPermission(permission: NotificationPermissionsStatus) {
  * in the UI (onboarding's "notifications" step, settings' notification
  * toggle) without needing a signed-in user id in hand at that exact point.
  * Actual token registration still happens separately via registerPushToken,
- * which app/_layout.tsx already calls on every authenticated session — so
- * granting permission here doesn't leave the device unregistered.
+ * which app/_layout.tsx calls on authenticated sessions. Registration never
+ * opens the OS prompt itself, so a user's explicit "Not now" remains intact.
  * Safe no-op if permission is already granted; iOS/Android both silently
  * no-op a re-prompt after a previous denial rather than re-showing the OS
  * dialog, so this never nags.
@@ -147,8 +147,9 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * Request permission (if not already granted), fetch this device's Expo
- * push token, and register it against the signed-in user. Cheap/idempotent
+ * If permission is already granted, fetch this device's Expo push token and
+ * register it against the signed-in user. This function deliberately never
+ * opens the OS permission prompt; UI actions own that decision. Cheap/idempotent
  * to call repeatedly — skips the network round-trip entirely if the token
  * hasn't changed since the last successful registration this session, so
  * calling it on every auth-state change (the same pattern OneSignal's
@@ -159,8 +160,7 @@ export async function registerPushToken(userId: string) {
 
   try {
     const existing = await Notifications.getPermissionsAsync();
-    const finalPermission = hasNotificationPermission(existing) ? existing : await Notifications.requestPermissionsAsync();
-    if (!hasNotificationPermission(finalPermission)) return;
+    if (!hasNotificationPermission(existing)) return;
 
     const projectId = getExpoProjectId();
     if (!projectId) {

@@ -130,6 +130,11 @@ export const COLORS = {
   chipFillDark: '#F5E8D4',
   chipTextLight: '#5F3A16',
   chipTextDark: '#7A4514',
+  // Text color on solid brand-filled surfaces (e.g. active filter chips).
+  // Reusing creamBg on brandGoldLight produces ~2.6:1 contrast (failing WCAG AA).
+  // Using dark ink in light mode achieves 4.9:1, and darkBg in dark mode achieves 7.5:1.
+  textOnBrandLight: '#1C160C',
+  textOnBrandDark: '#0C0A07',
   premiumGlassLight: 'rgba(255,255,255,0.75)',
   premiumGlassDark: 'rgba(22,20,16,0.72)',
   premiumBorderLight: 'rgba(216,138,28,0.15)',
@@ -281,6 +286,7 @@ export const themeColor = (isDark: boolean) => ({
   premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
   chipFill: isDark ? COLORS.chipFillDark : COLORS.chipFillLight,
   chipText: isDark ? COLORS.chipTextDark : COLORS.chipTextLight,
+  textOnBrand: isDark ? COLORS.textOnBrandDark : COLORS.textOnBrandLight,
 });
 
 export const FONTS = {
@@ -289,6 +295,16 @@ export const FONTS = {
   sans: 'Inter_400Regular',
   sansMedium: 'Inter_500Medium',
   sansSemiBold: 'Inter_600SemiBold',
+  // Handwritten signature look (onboarding founder note) — Kalam covers
+  // Latin only here, used for the "Prince" signature so it reads as an
+  // ink flourish rather than typeset text.
+  script: 'Kalam_400Regular',
+  scriptBold: 'Kalam_700Bold',
+  // Hindi body copy (onboarding founder note EN/HI toggle) — Mukta is a
+  // clean, widely-used Devanagari text face; Cormorant/Inter have no
+  // Devanagari glyphs at all.
+  devanagari: 'Mukta_400Regular',
+  devanagariBold: 'Mukta_700Bold',
 } as const;
 
 // ── Radii ────────────────────────────────────────────────────────────────
