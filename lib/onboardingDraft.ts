@@ -92,6 +92,7 @@ export class OnboardingDraftStore {
   private userCompletedSeq = new Map<string, number>();
   private userEpochs = new Map<string, number>();
   private userQueues = new Map<string, Promise<void>>();
+  private clearAllBarrier: Promise<void> = Promise.resolve();
 
   constructor(storage: StorageAdapter = asyncStorageAdapter, clock: Clock = systemClock) {
     this.storage = storage;
@@ -107,7 +108,7 @@ export class OnboardingDraftStore {
     if (!userId) return;
 
     // Snapshot draft data immediately
-    const snapshot: OnboardingDraftData = { ...data };
+    const snapshot: OnboardingDraftData = { ...data, goals: [...data.goals] };
 
     // Allocate monotonic sequence number and capture current epoch for this user
     const seq = (this.userNextSeq.get(userId) ?? 0) + 1;
@@ -115,7 +116,8 @@ export class OnboardingDraftStore {
     const epoch = this.userEpochs.get(userId) ?? 0;
 
     const prevTask = this.userQueues.get(userId) ?? Promise.resolve();
-    const currentTask = prevTask
+    const clearAllBarrier = this.clearAllBarrier;
+    const currentTask = Promise.all([prevTask, clearAllBarrier])
       .then(async () => {
         // If clear was called (epoch advanced) or a newer sequence was completed, discard obsolete write
         if ((this.userEpochs.get(userId) ?? 0) !== epoch) return;
@@ -188,32 +190,54 @@ export class OnboardingDraftStore {
   public async clearDraft(userId: string): Promise<void> {
     if (!userId) return;
 
-    // Advance epoch so any queued or in-flight save is dropped
+    // Invalidate saves queued before this clear. The clear itself becomes the
+    // next queue item, so an already-running setItem finishes before removal
+    // and saves started after this call run only after removal.
     this.userEpochs.set(userId, (this.userEpochs.get(userId) ?? 0) + 1);
-    this.userCompletedSeq.set(userId, Number.MAX_SAFE_INTEGER);
+    const prevTask = this.userQueues.get(userId) ?? Promise.resolve();
+    const clearAllBarrier = this.clearAllBarrier;
 
-    try {
-      await this.storage.removeItem(getDraftStorageKey(userId));
-    } catch {}
+    const clearTask = Promise.all([prevTask, clearAllBarrier])
+      .then(async () => {
+        await this.storage.removeItem(getDraftStorageKey(userId));
+      })
+      .catch(() => {});
+
+    this.userQueues.set(userId, clearTask);
+    await clearTask;
   }
 
   /**
    * Clears all onboarding drafts and invalidates pending writes across all users.
    */
   public async clearAllDrafts(): Promise<void> {
-    // Invalidate all pending user queues
-    for (const userId of this.userEpochs.keys()) {
+    const activeUserIds = new Set([
+      ...this.userQueues.keys(),
+      ...this.userNextSeq.keys(),
+      ...this.userEpochs.keys(),
+    ]);
+
+    // Invalidate every save started before this barrier.
+    for (const userId of activeUserIds) {
       this.userEpochs.set(userId, (this.userEpochs.get(userId) ?? 0) + 1);
-      this.userCompletedSeq.set(userId, Number.MAX_SAFE_INTEGER);
     }
 
-    try {
-      const allKeys = await this.storage.getAllKeys();
-      const draftKeys = allKeys.filter((k) => k.startsWith(ONBOARDING_DRAFT_PREFIX));
-      if (draftKeys.length > 0) {
-        await this.storage.multiRemove(draftKeys);
-      }
-    } catch {}
+    const pendingWrites = [...this.userQueues.values()];
+    const previousBarrier = this.clearAllBarrier;
+    const clearTask = Promise.all([previousBarrier, ...pendingWrites])
+      .then(async () => {
+        const allKeys = await this.storage.getAllKeys();
+        const draftKeys = allKeys.filter((k) => k.startsWith(ONBOARDING_DRAFT_PREFIX));
+        if (draftKeys.length > 0) {
+          await this.storage.multiRemove(draftKeys);
+        }
+      })
+      .catch(() => {});
+
+    // Saves started after clearAllDrafts() wait for this barrier, then persist
+    // normally instead of being suppressed for the rest of the app process.
+    this.clearAllBarrier = clearTask;
+    await clearTask;
   }
 }
 

@@ -327,21 +327,29 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
 
     it('pending save cannot recreate a draft after clearDraft', async () => {
       class LatencyStorageAdapter extends ControllableStorageAdapter {
-        public delayPromise: Promise<void> | null = null;
-        public resolveDelay: (() => void) | null = null;
+        public readonly writeStarted: Promise<void>;
+        private resolveWriteStarted: (() => void) | null = null;
+        private readonly writeGate: Promise<void>;
+        private resolveWriteGate: (() => void) | null = null;
 
         constructor() {
           super();
-          this.delayPromise = new Promise<void>((r) => {
-            this.resolveDelay = r;
+          this.writeStarted = new Promise<void>((resolve) => {
+            this.resolveWriteStarted = resolve;
+          });
+          this.writeGate = new Promise<void>((resolve) => {
+            this.resolveWriteGate = resolve;
           });
         }
 
         override async setItem(key: string, value: string): Promise<void> {
-          if (this.delayPromise) {
-            await this.delayPromise;
-          }
+          this.resolveWriteStarted?.();
+          await this.writeGate;
           await super.setItem(key, value);
+        }
+
+        releaseWrite() {
+          this.resolveWriteGate?.();
         }
       }
 
@@ -368,22 +376,55 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
 
       // Start saving draft with artificial latency
       const savePromise = store.saveDraft('user-1', draft);
+      await delayedStorage.writeStarted;
 
-      // User immediately finishes onboarding or logs out (clearDraft is called)
-      await store.clearDraft('user-1');
-
-      // Now resolve pending save
-      if (delayedStorage.resolveDelay) {
-        delayedStorage.resolveDelay();
-      }
-      await savePromise;
+      // The write is now genuinely inside setItem. Clearing must queue behind
+      // it and remove the value after the blocked write is released.
+      const clearPromise = store.clearDraft('user-1');
+      delayedStorage.releaseWrite();
+      await Promise.all([savePromise, clearPromise]);
 
       const finalDraft = await store.readDraft('user-1');
       assert.equal(finalDraft, null, 'Earlier pending save must NOT recreate draft after clearDraft was called');
+
+      const futureDraft: OnboardingDraftData = { ...draft, step: 'goals', goals: ['peace'] };
+      await store.saveDraft('user-1', futureDraft);
+      assert.equal((await store.readDraft('user-1'))?.step, 'goals', 'A future save must work after clearDraft');
     });
 
     it('clearAllDrafts invalidates all pending writes across all users', async () => {
-      const storage = new ControllableStorageAdapter();
+      class MultiWriteLatencyStorageAdapter extends ControllableStorageAdapter {
+        public readonly allWritesStarted: Promise<void>;
+        private resolveAllWritesStarted: (() => void) | null = null;
+        private readonly writeGate: Promise<void>;
+        private resolveWriteGate: (() => void) | null = null;
+        private startedWrites = 0;
+
+        constructor(private readonly expectedWrites: number) {
+          super();
+          this.allWritesStarted = new Promise<void>((resolve) => {
+            this.resolveAllWritesStarted = resolve;
+          });
+          this.writeGate = new Promise<void>((resolve) => {
+            this.resolveWriteGate = resolve;
+          });
+        }
+
+        override async setItem(key: string, value: string): Promise<void> {
+          this.startedWrites += 1;
+          if (this.startedWrites === this.expectedWrites) {
+            this.resolveAllWritesStarted?.();
+          }
+          await this.writeGate;
+          await super.setItem(key, value);
+        }
+
+        releaseWrites() {
+          this.resolveWriteGate?.();
+        }
+      }
+
+      const storage = new MultiWriteLatencyStorageAdapter(2);
       const clock = new ControllableClock();
       const store = new OnboardingDraftStore(storage, clock);
 
@@ -404,14 +445,21 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         name: '',
       };
 
-      await store.saveDraft('user-1', draft);
-      await store.saveDraft('user-2', draft);
+      const saveUser1 = store.saveDraft('user-1', draft);
+      const saveUser2 = store.saveDraft('user-2', draft);
+      await storage.allWritesStarted;
 
-      await store.clearAllDrafts();
+      const clearAllPromise = store.clearAllDrafts();
+      storage.releaseWrites();
+      await Promise.all([saveUser1, saveUser2, clearAllPromise]);
 
       assert.equal(await store.readDraft('user-1'), null);
       assert.equal(await store.readDraft('user-2'), null);
       assert.equal(storage.map.size, 0);
+
+      const futureDraft: OnboardingDraftData = { ...draft, step: 'name', name: 'New session' };
+      await store.saveDraft('user-1', futureDraft);
+      assert.equal((await store.readDraft('user-1'))?.name, 'New session', 'A future save must work after clearAllDrafts');
     });
 
     it('rejects expired drafts (> 7 days TTL) and removes them from storage', async () => {
