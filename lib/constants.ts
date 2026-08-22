@@ -84,6 +84,8 @@ export const COLORS = {
   homeIconWellDark: 'rgba(255,248,225,0.08)',
   homeSkeletonBlockLight: 'rgba(105,75,35,0.08)',
   homeSkeletonBlockDark: 'rgba(255,248,225,0.08)',
+  homeSkeletonPlaceholderLight: 'rgba(105,75,35,0.14)',
+  homeSkeletonPlaceholderDark: 'rgba(255,248,225,0.12)',
   homeShlokaSurfaceLight: 'rgba(255,249,240,0.80)',
   homeShlokaSurfaceDark: 'rgba(23,17,11,0.76)',
   homeShlokaGlassLight: 'rgba(255,255,255,0.18)',

@@ -1,57 +1,94 @@
-import { StyleSheet, useColorScheme, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, useColorScheme, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { COLORS, RADII } from '@/lib/constants';
-import { LoadingTips } from '@/components/ui/LoadingTips';
+import { COLORS } from '@/lib/constants';
+import { useReducedMotion } from '@/components/ui/Motion';
 
-// Loading placeholder shaped like the real Home layout (hero, pill row,
-// shloka, Next Practice card, practice-list row, Sankalpa row, Dharm Veer
-// row) rather than two generic cards — so the screen doesn't visibly
-// "reflow" once data arrives. Reuses the same shimmer block pattern as
-// components/ui/SkeletonLoader.tsx, but doesn't import from it since none
-// of its exports (SkeletonCard/SkeletonRow/SkeletonCircle) draw the hero's
-// specific proportions.
+// Content-shaped loading placeholder matching the real Home layout (Hero,
+// Shloka fold, Smart Sadhana CTA, Practices row, Sankalpa row, Dharm Veer row)
+// to prevent any vertical layout shift upon data arrival.
+// Uses one single opacity-based shimmer loop driver across all placeholders.
 
 function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) {
-  const color = dark ? COLORS.homeSkeletonBlockDark : COLORS.homeSkeletonBlockLight;
+  const color = dark ? COLORS.homeSkeletonPlaceholderDark : COLORS.homeSkeletonPlaceholderLight;
   return <View style={[{ backgroundColor: color, borderRadius: 8 }, style]} />;
 }
 
 const HERO_MIN_HEIGHT = 420;
 const HERO_SHLOKA_TOP_SPACE = 42;
 
-export function HomeSkeleton({ tradition }: { tradition?: string | null }) {
+export function HomeSkeleton({ tradition: _tradition }: { tradition?: string | null } = {}) {
   const isDark = useColorScheme() === 'dark';
   const background = isDark ? COLORS.darkBg : COLORS.creamBg;
   const hero = isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight;
   const card = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
 
+  const reducedMotion = useReducedMotion();
+  const shimmer = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    if (reducedMotion) {
+      shimmer.setValue(1);
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmer, {
+          toValue: 0.5,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [reducedMotion, shimmer]);
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={['top']}>
-      <View style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: background }}
+      edges={['top']}
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel="Loading Home"
+      aria-busy={true}
+    >
+      <View style={{ flex: 1 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         {/* Hero */}
         <View style={{ minHeight: HERO_MIN_HEIGHT, width: '100%', paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'flex-start' }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Block dark={isDark} style={{ width: 60, height: 44, borderRadius: 22 }} />
-              <Block dark={isDark} style={{ width: 48, height: 48, borderRadius: 24 }} />
+          <Animated.View style={{ opacity: shimmer }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Block dark={isDark} style={{ width: 60, height: 44, borderRadius: 22 }} />
+                <Block dark={isDark} style={{ width: 48, height: 48, borderRadius: 24 }} />
+              </View>
             </View>
-          </View>
-          <View style={{ marginTop: 18 }}>
-            <Block dark={isDark} style={{ width: '64%', height: 24, borderRadius: 8 }} />
-            <Block dark={isDark} style={{ marginTop: 8, width: '45%', height: 12, borderRadius: 6 }} />
-            <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
-              <Block dark={isDark} style={{ width: 150, height: 44, borderRadius: 22 }} />
-              <Block dark={isDark} style={{ width: 110, height: 44, borderRadius: 22 }} />
+            <View style={{ marginTop: 18 }}>
+              <Block dark={isDark} style={{ width: '64%', height: 24, borderRadius: 8 }} />
+              <Block dark={isDark} style={{ marginTop: 8, width: '45%', height: 12, borderRadius: 6 }} />
+              <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
+                <Block dark={isDark} style={{ width: 140, height: 40, borderRadius: 20 }} />
+                <Block dark={isDark} style={{ width: 110, height: 40, borderRadius: 20 }} />
+              </View>
             </View>
-          </View>
+          </Animated.View>
 
-          {/* Shloka — background matches `background` (theme.background),
-              same as the real Home's shloka panel now uses, so this
-              skeleton's fold blends the same way instead of showing the
-              old translucent-white glass card seam during loading. */}
+          {/* Shloka fold */}
           <View
             style={{
               marginTop: HERO_SHLOKA_TOP_SPACE,
@@ -64,41 +101,118 @@ export function HomeSkeleton({ tradition }: { tradition?: string | null }) {
               backgroundColor: background,
             }}
           >
-            <Block dark={isDark} style={{ width: 110, height: 11, borderRadius: 6 }} />
-            <Block dark={isDark} style={{ marginTop: 12, width: '76%', height: 20, borderRadius: 8 }} />
-            <Block dark={isDark} style={{ marginTop: 10, width: '60%', height: 14, borderRadius: 6 }} />
+            <Animated.View style={{ width: '100%', alignItems: 'center', opacity: shimmer }}>
+              <Block dark={isDark} style={{ width: 110, height: 11, borderRadius: 6 }} />
+              <Block dark={isDark} style={{ marginTop: 12, width: '76%', height: 20, borderRadius: 8 }} />
+              <Block dark={isDark} style={{ marginTop: 10, width: '60%', height: 14, borderRadius: 6 }} />
+            </Animated.View>
           </View>
         </View>
 
-        {/* Placed right after the hero/shloka fold, not at the bottom of the
-            block stack -- HomeSkeleton has no ScrollView, so content below
-            the Dharm Veer row can sit past the viewport on shorter screens
-            and never actually be seen. */}
-        <LoadingTips tradition={tradition} />
-
-        <View style={{ paddingHorizontal: 20, marginTop: 14, gap: 14 }}>
-          {/* Next Practice */}
-          <View style={{ borderRadius: 26, padding: 18, backgroundColor: card, borderWidth: 1, borderColor: border, gap: 10 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1, gap: 10 }}>
-                <Block dark={isDark} style={{ width: 90, height: 11, borderRadius: 6 }} />
-                <Block dark={isDark} style={{ width: '70%', height: 26, borderRadius: 8 }} />
-                <Block dark={isDark} style={{ width: '90%', height: 14, borderRadius: 6 }} />
+        {/* Below fold: Content-shaped cards matching real Home components */}
+        <Animated.View style={{ opacity: shimmer, paddingHorizontal: 20, marginTop: 12, gap: 12 }}>
+          {/* Smart daily Sadhana CTA */}
+          <View
+            style={{
+              borderRadius: 22,
+              paddingHorizontal: 14,
+              paddingVertical: 11,
+              backgroundColor: card,
+              borderWidth: 1,
+              borderColor: border,
+              gap: 9,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Block dark={isDark} style={{ width: 42, height: 42, borderRadius: 14 }} />
+              <View style={{ flex: 1, gap: 5 }}>
+                <Block dark={isDark} style={{ width: '55%', height: 16, borderRadius: 6 }} />
+                <Block dark={isDark} style={{ width: '40%', height: 12, borderRadius: 5 }} />
               </View>
-              <Block dark={isDark} style={{ width: 34, height: 34, borderRadius: 17 }} />
             </View>
-            <Block dark={isDark} style={{ marginTop: 8, width: '100%', height: 52, borderRadius: 18 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <Block dark={isDark} style={{ width: 115, height: 12, borderRadius: 5 }} />
+              <Block dark={isDark} style={{ width: 88, height: 32, borderRadius: 16 }} />
+            </View>
           </View>
 
-          {/* Practice list row */}
-          <View style={{ borderRadius: 18, backgroundColor: card, borderWidth: 1, borderColor: border, minHeight: 48 }} />
+          {/* Practices ("View all practices") row */}
+          <View
+            style={{
+              minHeight: 44,
+              borderRadius: 22,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              backgroundColor: card,
+              borderWidth: 1,
+              borderColor: border,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Block dark={isDark} style={{ width: 120, height: 13, borderRadius: 6 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Block dark={isDark} style={{ width: 32, height: 12, borderRadius: 5 }} />
+              <Block dark={isDark} style={{ width: 14, height: 14, borderRadius: 7 }} />
+            </View>
+          </View>
 
-          {/* Sankalpa */}
-          <View style={{ minHeight: 76, borderRadius: 22, backgroundColor: card, borderWidth: 1, borderColor: border }} />
+          {/* Sankalpa row */}
+          <View
+            style={{
+              minHeight: 64,
+              borderRadius: 22,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              backgroundColor: card,
+              borderWidth: 1,
+              borderColor: border,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <Block dark={isDark} style={{ width: 40, height: 40, borderRadius: 14 }} />
+            <View style={{ flex: 1, gap: 5 }}>
+              <Block dark={isDark} style={{ width: '68%', height: 14, borderRadius: 6 }} />
+              <Block dark={isDark} style={{ width: '42%', height: 11, borderRadius: 5 }} />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Block dark={isDark} style={{ width: 24, height: 24, borderRadius: 12 }} />
+              <Block dark={isDark} style={{ width: 32, height: 32, borderRadius: 16 }} />
+            </View>
+          </View>
 
-          {/* Dharm Veer */}
-          <View style={{ minHeight: 72, borderRadius: 22, backgroundColor: card, borderWidth: 1, borderColor: border }} />
-        </View>
+          {/* Dharm Veer row */}
+          <View
+            style={{
+              minHeight: 70,
+              borderRadius: 22,
+              paddingHorizontal: 16,
+              paddingVertical: 11,
+              backgroundColor: card,
+              borderWidth: 1,
+              borderColor: border,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+              <Block dark={isDark} style={{ width: 40, height: 40, borderRadius: 14 }} />
+              <View style={{ flex: 1, gap: 4 }}>
+                <Block dark={isDark} style={{ width: 75, height: 10, borderRadius: 5 }} />
+                <Block dark={isDark} style={{ width: '55%', height: 14, borderRadius: 6 }} />
+                <Block dark={isDark} style={{ width: '42%', height: 11, borderRadius: 5 }} />
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Block dark={isDark} style={{ width: 54, height: 22, borderRadius: 11 }} />
+              <Block dark={isDark} style={{ width: 14, height: 14, borderRadius: 7 }} />
+            </View>
+          </View>
+        </Animated.View>
       </View>
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -81,13 +81,19 @@ export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initi
     [isDark]
   );
 
-  const [status, setStatus] = useState<Status>('loading');
+  const [status, setStatus] = useState<Status>(initialSankalpa !== undefined ? 'ready' : 'loading');
   const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(initialSankalpa ?? null);
   const [checkedToday, setCheckedToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
+  const sankalpaRef = useRef<SankalpaRow | null>(initialSankalpa ?? null);
+  const hasEverLoadedRef = useRef<boolean>(initialSankalpa !== undefined);
+
   const load = useCallback(async () => {
-    setStatus('loading');
+    // Only display skeleton on initial cold load when no initial data was provided
+    if (!hasEverLoadedRef.current && !sankalpaRef.current) {
+      setStatus('loading');
+    }
     try {
       if (!propUserId) {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -100,13 +106,16 @@ export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initi
       const response = await apiFetch('/api/sankalpa');
       if (!response.ok) throw new Error(`Request failed (${response.status})`);
       const payload = (await response.json()) as { sankalpa: SankalpaRow | null };
-      setSankalpa(payload.sankalpa ?? null);
+      const nextSankalpa = payload.sankalpa ?? null;
+      sankalpaRef.current = nextSankalpa;
+      setSankalpa(nextSankalpa);
+      hasEverLoadedRef.current = true;
 
-      if (payload.sankalpa) {
-        const checkinRes = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(payload.sankalpa.id)}`);
+      if (nextSankalpa) {
+        const checkinRes = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(nextSankalpa.id)}`);
         if (checkinRes.ok) {
           const checkinPayload = (await checkinRes.json()) as { checkins?: string[] };
-          setCheckedToday((checkinPayload.checkins ?? []).includes(todayUtcString()));
+          setCheckedToday((checkinPayload.checkins ?? []).includes(todayUtcString(propTimezone)));
         } else {
           setCheckedToday(false);
         }
@@ -115,15 +124,18 @@ export function SankalpaCard({ userId: propUserId, timezone: propTimezone, initi
       }
       setStatus('ready');
     } catch {
-      setStatus('error');
+      // If we already had valid data (cached or initial), retain it
+      if (sankalpaRef.current !== null || hasEverLoadedRef.current) {
+        setStatus('ready');
+      } else {
+        // When backend failed on cold load and state is unknown, show retry error (never false "Set a Sankalpa")
+        setStatus('error');
+      }
     }
-  }, []);
+  }, [propTimezone, propUserId]);
 
-  // useFocusEffect alone covers both the initial mount (Home is focused
-  // immediately on first render) and every subsequent return to Home — e.g.
-  // after the user checks in or completes on the full /sankalpa screen and
-  // navigates back — without a redundant extra fetch from a separate
-  // mount-only useEffect.
+  // useFocusEffect alone covers both the initial mount and every subsequent
+  // genuine focus return, without re-triggering itself on state updates.
   useFocusEffect(
     useCallback(() => {
       load().catch(() => {});

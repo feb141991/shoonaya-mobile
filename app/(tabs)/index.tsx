@@ -37,6 +37,7 @@ import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
 import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { GreetingPicker } from '@/components/home/GreetingPicker';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
+import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
 import { getGreetingPick } from '@/lib/greetingPreference';
@@ -47,6 +48,9 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { isGuestMode } from '@/lib/guestSession';
+import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
+import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
+import { supabase } from '@/lib/supabase';
 import { getHeroPick, type HeroPick } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -705,108 +709,14 @@ function HomeContent() {
   const dharmVeerIcon = dharmVeerRow?.icon ?? 'shield';
   const dharmVeerColor = PRACTICE_COLOR.dharmveer;
 
-  const loadHome = useCallback(async () => {
-    setLoadError(false);
-    const guest = await isGuestMode();
-    setIsGuest(guest);
+  const requestGenRef = useRef(0);
+  const hasValidStateRef = useRef(false);
+  const lastLoadedAtRef = useRef(0);
+  const lastIdentityKeyRef = useRef<string | null>(null);
 
-    if (guest) {
-      setState({
-        ...INITIAL_STATE,
-        profile: {
-          name: 'Atithi',
-          firstName: 'Atithi',
-          tradition: 'hindu',
-          city: '',
-          country: '',
-          karmaPoints: 0,
-          relicImageUrl: null,
-          avatarUrl: null,
-        },
-        practices: [
-          {
-            id: 'japa',
-            icon: 'circle',
-            label: 'Japa Mala',
-            detail: 'Begin your daily mala',
-            href: '/bhakti/mala',
-            done: false,
-            progress: 0,
-            color: PRACTICE_COLOR.japa,
-          },
-          {
-            id: 'nitya',
-            icon: 'check-circle',
-            label: 'Nitya Karma',
-            detail: 'Open your daily sequence',
-            href: '/nitya-karma',
-            done: false,
-            progress: 0,
-            color: PRACTICE_COLOR.nitya,
-          },
-          {
-            id: 'pathshala',
-            icon: 'book-open',
-            label: 'Pathshala',
-            detail: 'Study scripture',
-            href: '/pathshala',
-            done: false,
-            progress: 0,
-            color: PRACTICE_COLOR.pathshala,
-          },
-          {
-            id: 'quiz',
-            icon: 'help-circle',
-            label: 'Daily Quiz',
-            detail: 'Test your dharmic memory',
-            href: '/quiz',
-            done: false,
-            progress: 0,
-            color: PRACTICE_COLOR.quiz,
-          },
-          {
-            id: 'dharmveer',
-            icon: 'shield',
-            label: 'Dharm Veer',
-            detail: 'Remember a life of courage',
-            href: '/dharm-veer',
-            done: false,
-            progress: 0,
-            color: PRACTICE_COLOR.dharmveer,
-          },
-        ],
-        nextPractice: {
-          id: 'pathshala',
-          contextLabel: 'Next Practice',
-          title: 'Pathshala',
-          suggestion: 'Study scripture to quiet the mind.',
-          nudge: 'Consistency builds the strongest foundation.',
-          actionLabel: 'Go to Pathshala',
-          actionHref: '/pathshala',
-          progress: 0,
-        },
-        dharmVeer: {
-          id: 'sri-krishna',
-          name: 'Sri Krishna',
-          tagline: 'Ancient wisdom. Daily practice.',
-          href: '/dharm-veer',
-        },
-      });
-      return;
-    }
+  const reducedMotion = useReducedMotion();
 
-    const response = await apiFetch('/api/native/home-summary');
-
-    if (response.status === 401) {
-      router.replace('/(auth)/login');
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Could not load home summary');
-    }
-
-    const payload = (await response.json()) as HomeSummary;
+  const applyPayload = useCallback((payload: HomeSummary | CachedHomeRenderModel) => {
     setState({
       ...INITIAL_STATE,
       ...payload,
@@ -816,31 +726,240 @@ function HomeContent() {
       sacredText: { ...INITIAL_STATE.sacredText, ...payload.sacredText },
       panchang: { ...INITIAL_STATE.panchang, ...payload.panchang },
       nextPractice: { ...INITIAL_STATE.nextPractice, ...payload.nextPractice },
-      practices: payload.practices ?? [],
+      practices: (payload.practices as HomeSummary['practices']) ?? [],
       dharmVeer: { ...INITIAL_STATE.dharmVeer, ...payload.dharmVeer },
+      sankalpa: (payload as HomeSummary).sankalpa ?? null,
     });
-  }, [router]);
+    hasValidStateRef.current = true;
+  }, []);
 
-  const hasLoadedRef = useRef(false);
-  const lastLoadedAtRef = useRef(0);
+  const buildGuestPayload = useCallback((): HomeSummary => ({
+    ...INITIAL_STATE,
+    profile: {
+      name: 'Atithi',
+      firstName: 'Atithi',
+      tradition: 'hindu',
+      city: '',
+      country: '',
+      karmaPoints: 0,
+      relicImageUrl: null,
+      avatarUrl: null,
+    },
+    practices: [
+      {
+        id: 'japa',
+        icon: 'circle',
+        label: 'Japa Mala',
+        detail: 'Begin your daily mala',
+        href: '/bhakti/mala',
+        done: false,
+        progress: 0,
+        color: PRACTICE_COLOR.japa,
+      },
+      {
+        id: 'nitya',
+        icon: 'check-circle',
+        label: 'Nitya Karma',
+        detail: 'Open your daily sequence',
+        href: '/nitya-karma',
+        done: false,
+        progress: 0,
+        color: PRACTICE_COLOR.nitya,
+      },
+      {
+        id: 'pathshala',
+        icon: 'book-open',
+        label: 'Pathshala',
+        detail: 'Study scripture',
+        href: '/pathshala',
+        done: false,
+        progress: 0,
+        color: PRACTICE_COLOR.pathshala,
+      },
+      {
+        id: 'quiz',
+        icon: 'help-circle',
+        label: 'Daily Quiz',
+        detail: 'Test your dharmic memory',
+        href: '/quiz',
+        done: false,
+        progress: 0,
+        color: PRACTICE_COLOR.quiz,
+      },
+      {
+        id: 'dharmveer',
+        icon: 'shield',
+        label: 'Dharm Veer',
+        detail: 'Remember a life of courage',
+        href: '/dharm-veer',
+        done: false,
+        progress: 0,
+        color: PRACTICE_COLOR.dharmveer,
+      },
+    ],
+    nextPractice: {
+      id: 'pathshala',
+      contextLabel: 'Next Practice',
+      title: 'Pathshala',
+      suggestion: 'Study scripture to quiet the mind.',
+      nudge: 'Consistency builds the strongest foundation.',
+      actionLabel: 'Go to Pathshala',
+      actionHref: '/pathshala',
+      progress: 0,
+    },
+    dharmVeer: {
+      id: 'sri-krishna',
+      name: 'Sri Krishna',
+      tagline: 'Ancient wisdom. Daily practice.',
+      href: '/dharm-veer',
+    },
+  }), []);
+
+  const resolveIdentityAndDate = useCallback(async (): Promise<{
+    auth: { kind: 'guest' } | { kind: 'authenticated'; userId: string } | { kind: 'unauthenticated' };
+    timezone: string;
+  }> => {
+    const [guest, sessionRes] = await Promise.all([
+      isGuestMode(),
+      supabase.auth.getSession(),
+    ]);
+
+    setIsGuest(guest);
+    const timezone = safeTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+    if (guest) {
+      return { auth: { kind: 'guest' }, timezone };
+    }
+
+    const user = sessionRes?.data?.session?.user;
+    if (user) {
+      return { auth: { kind: 'authenticated', userId: user.id }, timezone };
+    }
+
+    return { auth: { kind: 'unauthenticated' }, timezone };
+  }, []);
+
+  const loadHome = useCallback(async (_isManualRefresh = false) => {
+    const requestGen = ++requestGenRef.current;
+    setLoadError(false);
+
+    // Resolve identity and date concurrently
+    const { auth, timezone } = await resolveIdentityAndDate();
+
+    // Guard against stale response if auth changed during resolution
+    if (requestGen !== requestGenRef.current) return;
+
+    if (auth.kind === 'unauthenticated') {
+      hasValidStateRef.current = false;
+      lastLoadedAtRef.current = 0;
+      lastIdentityKeyRef.current = null;
+      setState(INITIAL_STATE);
+      setLoading(false);
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    const identity: CacheIdentity =
+      auth.kind === 'guest'
+        ? { kind: 'guest' }
+        : { kind: 'authenticated', userId: auth.userId };
+
+    const identityKey = identity.kind === 'guest' ? 'guest' : identity.userId;
+    if (lastIdentityKeyRef.current && lastIdentityKeyRef.current !== identityKey) {
+      // Account switch or guest/auth boundary: clear previous in-memory state immediately
+      hasValidStateRef.current = false;
+      lastLoadedAtRef.current = 0;
+      setState(INITIAL_STATE);
+    }
+    lastIdentityKeyRef.current = identityKey;
+
+    // 1. If we don't have valid state rendered yet, check stale-while-revalidate cache
+    if (!hasValidStateRef.current) {
+      const cached = await readHomeCache(identity, timezone);
+      if (cached && requestGen === requestGenRef.current) {
+        applyPayload(cached.payload);
+        lastLoadedAtRef.current = cached.savedAt;
+        setLoading(false);
+      }
+    }
+
+    // If still no valid state, show skeleton while loading
+    if (!hasValidStateRef.current) {
+      setLoading(true);
+    }
+
+    // Guest mode returns deterministic template
+    if (identity.kind === 'guest') {
+      if (requestGen === requestGenRef.current) {
+        const guestPayload = buildGuestPayload();
+        applyPayload(guestPayload);
+        void writeHomeCache(identity, guestPayload, timezone);
+        lastLoadedAtRef.current = Date.now();
+        setLoading(false);
+        setLoadError(false);
+      }
+      return;
+    }
+
+    // 2. Fetch fresh network payload for authenticated user
+    try {
+      const response = await apiFetch('/api/native/home-summary');
+
+      if (response.status === 401) {
+        await clearHomeCache(identity);
+        if (requestGen === requestGenRef.current) {
+          hasValidStateRef.current = false;
+          lastLoadedAtRef.current = 0;
+          lastIdentityKeyRef.current = null;
+          setState(INITIAL_STATE);
+          router.replace('/(auth)/login');
+        }
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Could not load home summary');
+      }
+
+      const payload = (await response.json()) as HomeSummary;
+
+      if (requestGen === requestGenRef.current) {
+        // Prefetch hero image if URL changed before applying state
+        if (payload.hero?.imageUrl) {
+          const nextHeroUrl = resolveAssetUrl(payload.hero.imageUrl);
+          if (nextHeroUrl && nextHeroUrl !== heroImageUrl) {
+            void Image.prefetch(nextHeroUrl).catch(() => {});
+          }
+        }
+
+        applyPayload(payload);
+        lastLoadedAtRef.current = Date.now();
+        setLoading(false);
+        setLoadError(false);
+
+        // Atomically cache valid payload with matching canonical timezone and spiritual date
+        const canonicalTimezone = safeTimezone(payload.date?.timezone || timezone);
+        const canonicalSpiritualDate = spiritualDate(canonicalTimezone);
+        void writeHomeCache(identity, payload, canonicalTimezone, canonicalSpiritualDate);
+      }
+    } catch (error) {
+      console.warn('[Home] background revalidation failed', error);
+      if (requestGen === requestGenRef.current) {
+        // Retain cached content if available. Only show full-screen loadError if no valid state exists!
+        if (!hasValidStateRef.current) {
+          setLoadError(true);
+        }
+        setLoading(false);
+      }
+    }
+  }, [applyPayload, buildGuestPayload, heroImageUrl, resolveIdentityAndDate, router]);
+
   useFocusEffect(
     useCallback(() => {
       const now = Date.now();
       const isStale = now - lastLoadedAtRef.current > 5 * 60 * 1000;
-      if (!hasLoadedRef.current || isStale) {
-        const run = async () => {
-          if (!hasLoadedRef.current) setLoading(true);
-          try {
-            await loadHome();
-            hasLoadedRef.current = true;
-            lastLoadedAtRef.current = Date.now();
-          } catch {
-            setLoadError(true);
-          } finally {
-            setLoading(false);
-          }
-        };
-        void run();
+      if (!hasValidStateRef.current || isStale) {
+        void loadHome(false);
       }
     }, [loadHome])
   );
@@ -860,21 +979,38 @@ function HomeContent() {
   useFocusEffect(
     useCallback(() => {
       let unsubscribe: (() => void) | undefined;
-      isGuestMode().then((guest) => {
+      let active = true;
+
+      Promise.all([isGuestMode(), supabase.auth.getSession()]).then(([guest, sessionRes]) => {
+        if (!active) return;
         if (guest) {
           setUnreadNotifications(0);
           setMoodStatus(null);
           return;
         }
+
+        const user = sessionRes?.data?.session?.user;
+        if (!user) {
+          setUnreadNotifications(0);
+          setMoodStatus(null);
+          return;
+        }
+
         void fetchHomeLive().then((live) => {
+          if (!active) return;
           if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
           if (live.moodStatus) setMoodStatus(live.moodStatus);
         });
         unsubscribe = subscribeToMyNotifications(() => {
-          void getMyUnreadNotificationCount().then(setUnreadNotifications);
+          if (!active) return;
+          void getMyUnreadNotificationCount().then((count) => {
+            if (active) setUnreadNotifications(count);
+          });
         });
       });
+
       return () => {
+        active = false;
         if (unsubscribe) unsubscribe();
       };
     }, [])
@@ -993,6 +1129,7 @@ function HomeContent() {
               style={[StyleSheet.absoluteFill, { zIndex: 0 }]}
               contentFit="cover"
               contentPosition={heroObjectPosition}
+              transition={reducedMotion ? 0 : 180}
             />
           ) : null}
 

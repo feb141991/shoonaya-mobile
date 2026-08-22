@@ -33,6 +33,8 @@ import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/consta
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { clearAllHomeCaches } from '@/lib/homeCache';
+import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
 import { AuthGate } from '@/components/ui/AuthGate';
 import {
@@ -520,6 +522,8 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
+      await clearAllHomeCaches();
+      await clearAllOnboardingDrafts();
       await supabase.auth.signOut();
     } finally {
       setSigningOut(false);

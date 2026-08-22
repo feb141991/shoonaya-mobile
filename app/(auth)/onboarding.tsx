@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,7 +8,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
@@ -22,6 +22,14 @@ import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
 import {
+  type Step,
+  buildSteps,
+  getActiveSteps,
+  stepEyebrow,
+  buildOnboardingProfilePayload,
+} from '@/lib/onboarding-contract';
+import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft } from '@/lib/onboardingDraft';
+import {
   LIFE_STAGES,
   GENDERS,
   CALENDAR_PROFILES,
@@ -34,11 +42,6 @@ import {
   type CalendarProfileSlug,
   type CalendarScopeSlug,
 } from '@/lib/profile-constants';
-
-// 'calendarProfile' and 'calendarScope' are Hindu-only steps (regional
-// amanta/purnimanta month-system convention + observance density), mirroring
-// web onboarding's steps 11/13 -- see STEPS below for the conditional insert.
-type Step = 'preferences' | 'personal' | 'nakshatra' | 'calendarProfile' | 'calendarScope' | 'goals' | 'name' | 'nameStory' | 'notifications' | 'ready';
 
 const TRADITIONS = [
   { key: 'hindu', label: 'Hindu', labelHi: 'हिंदू', icon: 'sun' as const, emoji: '🪔', description: 'Mantras, panchang and daily sadhana', descriptionHi: 'मंत्र, पंचांग और दैनिक साधना' },
@@ -57,48 +60,48 @@ const LANGUAGES = [
 type LanguageKey = (typeof LANGUAGES)[number]['key'];
 
 const RASHIS = [
-  { key: 'mesha', label: 'Mesha', sanskrit: 'मेष', symbol: '♈', dates: 'Apr 14 - May 14' },
-  { key: 'vrishabha', label: 'Vrishabha', sanskrit: 'वृषभ', symbol: '♉', dates: 'May 15 - Jun 14' },
-  { key: 'mithuna', label: 'Mithuna', sanskrit: 'मिथुन', symbol: '♊', dates: 'Jun 15 - Jul 14' },
-  { key: 'karka', label: 'Karka', sanskrit: 'कर्क', symbol: '♋', dates: 'Jul 15 - Aug 14' },
-  { key: 'simha', label: 'Simha', sanskrit: 'सिंह', symbol: '♌', dates: 'Aug 15 - Sep 15' },
-  { key: 'kanya', label: 'Kanya', sanskrit: 'कन्या', symbol: '♍', dates: 'Sep 16 - Oct 15' },
-  { key: 'tula', label: 'Tula', sanskrit: 'तुला', symbol: '♎', dates: 'Oct 16 - Nov 14' },
-  { key: 'vrishchika', label: 'Vrishchika', sanskrit: 'वृश्चिक', symbol: '♏', dates: 'Nov 15 - Dec 14' },
-  { key: 'dhanu', label: 'Dhanu', sanskrit: 'धनु', symbol: '♐', dates: 'Dec 15 - Jan 13' },
-  { key: 'makara', label: 'Makara', sanskrit: 'मकर', symbol: '♑', dates: 'Jan 14 - Feb 12' },
-  { key: 'kumbha', label: 'Kumbha', sanskrit: 'कुम्भ', symbol: '♒', dates: 'Feb 13 - Mar 13' },
-  { key: 'meena', label: 'Meena', sanskrit: 'मीन', symbol: '♓', dates: 'Mar 14 - Apr 13' },
+  { key: 'mesha', label: 'Mesha', sanskrit: 'मेष', symbol: '♈', dates: 'Apr 14 - May 14', datesHi: '14 अप्रैल - 14 मई' },
+  { key: 'vrishabha', label: 'Vrishabha', sanskrit: 'वृषभ', symbol: '♉', dates: 'May 15 - Jun 14', datesHi: '15 मई - 14 जून' },
+  { key: 'mithuna', label: 'Mithuna', sanskrit: 'मिथुन', symbol: '♊', dates: 'Jun 15 - Jul 14', datesHi: '15 जून - 14 जुलाई' },
+  { key: 'karka', label: 'Karka', sanskrit: 'कर्क', symbol: '♋', dates: 'Jul 15 - Aug 14', datesHi: '15 जुलाई - 14 अगस्त' },
+  { key: 'simha', label: 'Simha', sanskrit: 'सिंह', symbol: '♌', dates: 'Aug 15 - Sep 15', datesHi: '15 अगस्त - 15 सितंबर' },
+  { key: 'kanya', label: 'Kanya', sanskrit: 'कन्या', symbol: '♍', dates: 'Sep 16 - Oct 15', datesHi: '16 सितंबर - 15 अक्टूबर' },
+  { key: 'tula', label: 'Tula', sanskrit: 'तुला', symbol: '♎', dates: 'Oct 16 - Nov 14', datesHi: '16 अक्टूबर - 14 नवंबर' },
+  { key: 'vrishchika', label: 'Vrishchika', sanskrit: 'वृश्चिक', symbol: '♏', dates: 'Nov 15 - Dec 14', datesHi: '15 नवंबर - 14 दिसंबर' },
+  { key: 'dhanu', label: 'Dhanu', sanskrit: 'धनु', symbol: '♐', dates: 'Dec 15 - Jan 13', datesHi: '15 दिसंबर - 13 जनवरी' },
+  { key: 'makara', label: 'Makara', sanskrit: 'मकर', symbol: '♑', dates: 'Jan 14 - Feb 12', datesHi: '14 जनवरी - 12 फरवरी' },
+  { key: 'kumbha', label: 'Kumbha', sanskrit: 'कुम्भ', symbol: '♒', dates: 'Feb 13 - Mar 13', datesHi: '13 फरवरी - 13 मार्च' },
+  { key: 'meena', label: 'Meena', sanskrit: 'मीन', symbol: '♓', dates: 'Mar 14 - Apr 13', datesHi: '14 मार्च - 13 अप्रैल' },
 ] as const;
 
 const NAKSHATRAS = [
-  { key: 'ashwini', label: 'Ashwini', sanskrit: 'अश्विनी', ruler: 'Ketu', deity: 'Ashwini Kumaras', symbol: '🐴' },
-  { key: 'bharani', label: 'Bharani', sanskrit: 'भरणी', ruler: 'Venus', deity: 'Yama', symbol: '⚖️' },
-  { key: 'krittika', label: 'Krittika', sanskrit: 'कृत्तिका', ruler: 'Sun', deity: 'Agni', symbol: '🔥' },
-  { key: 'rohini', label: 'Rohini', sanskrit: 'रोहिणी', ruler: 'Moon', deity: 'Brahma', symbol: '🌙' },
-  { key: 'mrigashira', label: 'Mrigashira', sanskrit: 'मृगशिरा', ruler: 'Mars', deity: 'Soma', symbol: '🦌' },
-  { key: 'ardra', label: 'Ardra', sanskrit: 'आर्द्रा', ruler: 'Rahu', deity: 'Rudra', symbol: '💧' },
-  { key: 'punarvasu', label: 'Punarvasu', sanskrit: 'पुनर्वसु', ruler: 'Jupiter', deity: 'Aditi', symbol: '⭐' },
-  { key: 'pushya', label: 'Pushya', sanskrit: 'पुष्य', ruler: 'Saturn', deity: 'Brihaspati', symbol: '🌸' },
-  { key: 'ashlesha', label: 'Ashlesha', sanskrit: 'आश्लेषा', ruler: 'Mercury', deity: 'Naga', symbol: '🐍' },
-  { key: 'magha', label: 'Magha', sanskrit: 'मघा', ruler: 'Ketu', deity: 'Pitrs', symbol: '👑' },
-  { key: 'purva_phalguni', label: 'Purva Phalguni', sanskrit: 'पूर्व फाल्गुनी', ruler: 'Venus', deity: 'Bhaga', symbol: '🌺' },
-  { key: 'uttara_phalguni', label: 'Uttara Phalguni', sanskrit: 'उत्तर फाल्गुनी', ruler: 'Sun', deity: 'Aryaman', symbol: '☀️' },
-  { key: 'hasta', label: 'Hasta', sanskrit: 'हस्त', ruler: 'Moon', deity: 'Savitar', symbol: '✋' },
-  { key: 'chitra', label: 'Chitra', sanskrit: 'चित्रा', ruler: 'Mars', deity: 'Vishwakarma', symbol: '💎' },
-  { key: 'swati', label: 'Swati', sanskrit: 'स्वाती', ruler: 'Rahu', deity: 'Vayu', symbol: '🍃' },
-  { key: 'vishakha', label: 'Vishakha', sanskrit: 'विशाखा', ruler: 'Jupiter', deity: 'Indra-Agni', symbol: '⚡' },
-  { key: 'anuradha', label: 'Anuradha', sanskrit: 'अनुराधा', ruler: 'Saturn', deity: 'Mitra', symbol: '🤝' },
-  { key: 'jyeshtha', label: 'Jyeshtha', sanskrit: 'ज्येष्ठा', ruler: 'Mercury', deity: 'Indra', symbol: '🛡️' },
-  { key: 'mula', label: 'Mula', sanskrit: 'मूल', ruler: 'Ketu', deity: 'Nirriti', symbol: '🌿' },
-  { key: 'purva_ashadha', label: 'Purva Ashadha', sanskrit: 'पूर्वाषाढ़', ruler: 'Venus', deity: 'Apas', symbol: '🌊' },
-  { key: 'uttara_ashadha', label: 'Uttara Ashadha', sanskrit: 'उत्तराषाढ़', ruler: 'Sun', deity: 'Vishwadevas', symbol: '🏆' },
-  { key: 'shravana', label: 'Shravana', sanskrit: 'श्रवण', ruler: 'Moon', deity: 'Vishnu', symbol: '👂' },
-  { key: 'dhanishta', label: 'Dhanishta', sanskrit: 'धनिष्ठा', ruler: 'Mars', deity: 'Ashta Vasus', symbol: '🥁' },
-  { key: 'shatabhisha', label: 'Shatabhisha', sanskrit: 'शतभिषा', ruler: 'Rahu', deity: 'Varuna', symbol: '💫' },
-  { key: 'purva_bhadrapada', label: 'Purva Bhadrapada', sanskrit: 'पूर्व भाद्रपद', ruler: 'Jupiter', deity: 'Aja Ekapada', symbol: '⚔️' },
-  { key: 'uttara_bhadrapada', label: 'Uttara Bhadrapada', sanskrit: 'उत्तर भाद्रपद', ruler: 'Saturn', deity: 'Ahir Budhnya', symbol: '🌊' },
-  { key: 'revati', label: 'Revati', sanskrit: 'रेवती', ruler: 'Mercury', deity: 'Pushan', symbol: '🐟' },
+  { key: 'ashwini', label: 'Ashwini', sanskrit: 'अश्विनी', ruler: 'Ketu', rulerHi: 'केतु', deity: 'Ashwini Kumaras', deityHi: 'अश्विनी कुमार', symbol: '🐴' },
+  { key: 'bharani', label: 'Bharani', sanskrit: 'भरणी', ruler: 'Venus', rulerHi: 'शुक्र', deity: 'Yama', deityHi: 'यम', symbol: '⚖️' },
+  { key: 'krittika', label: 'Krittika', sanskrit: 'कृत्तिका', ruler: 'Sun', rulerHi: 'सूर्य', deity: 'Agni', deityHi: 'अग्नि', symbol: '🔥' },
+  { key: 'rohini', label: 'Rohini', sanskrit: 'रोहिणी', ruler: 'Moon', rulerHi: 'चंद्र', deity: 'Brahma', deityHi: 'ब्रह्मा', symbol: '🌙' },
+  { key: 'mrigashira', label: 'Mrigashira', sanskrit: 'मृगशिरा', ruler: 'Mars', rulerHi: 'मंगल', deity: 'Soma', deityHi: 'सोम', symbol: '🦌' },
+  { key: 'ardra', label: 'Ardra', sanskrit: 'आर्द्रा', ruler: 'Rahu', rulerHi: 'राहु', deity: 'Rudra', deityHi: 'रुद्र', symbol: '💧' },
+  { key: 'punarvasu', label: 'Punarvasu', sanskrit: 'पुनर्वसु', ruler: 'Jupiter', rulerHi: 'गुरु', deity: 'Aditi', deityHi: 'अदिति', symbol: '⭐' },
+  { key: 'pushya', label: 'Pushya', sanskrit: 'पुष्य', ruler: 'Saturn', rulerHi: 'शनि', deity: 'Brihaspati', deityHi: 'बृहस्पति', symbol: '🌸' },
+  { key: 'ashlesha', label: 'Ashlesha', sanskrit: 'आश्लेषा', ruler: 'Mercury', rulerHi: 'बुध', deity: 'Naga', deityHi: 'नाग', symbol: '🐍' },
+  { key: 'magha', label: 'Magha', sanskrit: 'मघा', ruler: 'Ketu', rulerHi: 'केतु', deity: 'Pitrs', deityHi: 'पितृ', symbol: '👑' },
+  { key: 'purva_phalguni', label: 'Purva Phalguni', sanskrit: 'पूर्व फाल्गुनी', ruler: 'Venus', rulerHi: 'शुक्र', deity: 'Bhaga', deityHi: 'भग', symbol: '🌺' },
+  { key: 'uttara_phalguni', label: 'Uttara Phalguni', sanskrit: 'उत्तर फाल्गुनी', ruler: 'Sun', rulerHi: 'सूर्य', deity: 'Aryaman', deityHi: 'अर्यमा', symbol: '☀️' },
+  { key: 'hasta', label: 'Hasta', sanskrit: 'हस्त', ruler: 'Moon', rulerHi: 'चंद्र', deity: 'Savitar', deityHi: 'सविता', symbol: '✋' },
+  { key: 'chitra', label: 'Chitra', sanskrit: 'चित्रा', ruler: 'Mars', rulerHi: 'मंगल', deity: 'Vishwakarma', deityHi: 'विश्वकर्मा', symbol: '💎' },
+  { key: 'swati', label: 'Swati', sanskrit: 'स्वाती', ruler: 'Rahu', rulerHi: 'राहु', deity: 'Vayu', deityHi: 'वायु', symbol: '🍃' },
+  { key: 'vishakha', label: 'Vishakha', sanskrit: 'विशाखा', ruler: 'Jupiter', rulerHi: 'गुरु', deity: 'Indra-Agni', deityHi: 'इन्द्राग्नि', symbol: '⚡' },
+  { key: 'anuradha', label: 'Anuradha', sanskrit: 'अनुराधा', ruler: 'Saturn', rulerHi: 'शनि', deity: 'Mitra', deityHi: 'मित्र', symbol: '🤝' },
+  { key: 'jyeshtha', label: 'Jyeshtha', sanskrit: 'ज्येष्ठा', ruler: 'Mercury', rulerHi: 'बुध', deity: 'Indra', deityHi: 'इंद्र', symbol: '🛡️' },
+  { key: 'mula', label: 'Mula', sanskrit: 'मूल', ruler: 'Ketu', rulerHi: 'केतु', deity: 'Nirriti', deityHi: 'निर्ऋति', symbol: '🌿' },
+  { key: 'purva_ashadha', label: 'Purva Ashadha', sanskrit: 'पूर्वाषाढ़', ruler: 'Venus', rulerHi: 'शुक्र', deity: 'Apas', deityHi: 'आपः', symbol: '🌊' },
+  { key: 'uttara_ashadha', label: 'Uttara Ashadha', sanskrit: 'उत्तराषाढ़', ruler: 'Sun', rulerHi: 'सूर्य', deity: 'Vishwadevas', deityHi: 'विश्वेदेव', symbol: '🏆' },
+  { key: 'shravana', label: 'Shravana', sanskrit: 'श्रवण', ruler: 'Moon', rulerHi: 'चंद्र', deity: 'Vishnu', deityHi: 'विष्णु', symbol: '👂' },
+  { key: 'dhanishta', label: 'Dhanishta', sanskrit: 'धनिष्ठा', ruler: 'Mars', rulerHi: 'मंगल', deity: 'Ashta Vasus', deityHi: 'अष्ट वसु', symbol: '🥁' },
+  { key: 'shatabhisha', label: 'Shatabhisha', sanskrit: 'शतभिषा', ruler: 'Rahu', rulerHi: 'राहु', deity: 'Varuna', deityHi: 'वरुण', symbol: '💫' },
+  { key: 'purva_bhadrapada', label: 'Purva Bhadrapada', sanskrit: 'पूर्व भाद्रपद', ruler: 'Jupiter', rulerHi: 'गुरु', deity: 'Aja Ekapada', deityHi: 'अज एकपाद', symbol: '⚔️' },
+  { key: 'uttara_bhadrapada', label: 'Uttara Bhadrapada', sanskrit: 'उत्तर भाद्रपद', ruler: 'Saturn', rulerHi: 'शनि', deity: 'Ahir Budhnya', deityHi: 'अहिर्बुध्न्य', symbol: '🌊' },
+  { key: 'revati', label: 'Revati', sanskrit: 'रेवती', ruler: 'Mercury', rulerHi: 'बुध', deity: 'Pushan', deityHi: 'पूषा', symbol: '🐟' },
 ] as const;
 
 const GOALS = [
@@ -124,17 +127,17 @@ const GENDER_HI: Record<GenderKey, string> = {
 };
 
 const CALENDAR_PROFILE_HI: Record<CalendarProfileSlug, { label: string; description: string }> = {
-  north_indian_purnimanta: { label: 'उत्तर भारतीय', description: 'पूर्णिमांत · विक्रम संवत' },
-  gujarati_amanta: { label: 'गुजराती', description: 'अमांत · विक्रम संवत' },
+  north_indian_purnimanta: { label: 'उत्तर भारतीय', description: 'पूर्णिमांत (पूर्णिमा पर मास समाप्ति) · विक्रम संवत' },
+  gujarati_amanta: { label: 'गुजराती', description: 'अमांत (अमावस्या पर मास समाप्ति) · विक्रम संवत' },
   marathi_amanta: { label: 'मराठी', description: 'अमांत · शक संवत' },
   kannada_amanta: { label: 'कन्नड़', description: 'अमांत · शक संवत' },
   telugu_amanta: { label: 'तेलुगु', description: 'अमांत · शक संवत' },
-  tamil_solar: { label: 'तमिल', description: 'सौर · तमिल कालगणना' },
+  tamil_solar: { label: 'तमिल', description: 'सौर (संक्रांति पर मास प्रारंभ) · तमिल कालगणना' },
   malayalam_solar: { label: 'मलयालम', description: 'सौर · कोल्लम कालगणना' },
   bengali_solar: { label: 'बंगाली', description: 'सौर · बंगाली सन' },
   odia: { label: 'ओड़िया', description: 'अमांत / सौर नियम · शक संवत' },
   nepali_bikram: { label: 'नेपाली', description: 'पूर्णिमांत · विक्रम संवत (नेपाल)' },
-  global_sanatan: { label: 'वैश्विक', description: 'अमांत · विक्रम संवत' },
+  global_sanatan: { label: 'वैश्विक सनातन', description: 'अमांत · विक्रम संवत' },
 };
 
 const CALENDAR_SCOPE_HI: Record<CalendarScopeSlug, { label: string; description: string }> = {
@@ -178,17 +181,6 @@ const READY_FEATURES: Record<TraditionKey, ReadonlyArray<{ emoji: string; label:
   ],
 };
 
-// calendarProfile/calendarScope only apply to Hindu tradition (amanta/
-// purnimanta regional convention has no meaning for Sikh/Buddhist/Jain
-// users), mirroring web onboarding's own conditional step branching
-// (OnboardingClient.tsx visibleStepsList) -- computed per-render from the
-// current tradition selection, not a fixed constant.
-function buildSteps(tradition: TraditionKey | null): Step[] {
-  const base: Step[] = ['preferences', 'personal'];
-  const hinduSteps: Step[] = tradition === 'hindu' ? ['nakshatra', 'calendarProfile', 'calendarScope'] : [];
-  return [...base, ...hinduSteps, 'goals', 'name', 'nameStory', 'notifications', 'ready'];
-}
-
 const STEP_TITLES: Record<Step, string> = {
   preferences: 'Make Shoonaya yours',
   personal: 'Personal details',
@@ -197,28 +189,21 @@ const STEP_TITLES: Record<Step, string> = {
   calendarScope: 'Calendar detail level',
   goals: 'What calls you here?',
   name: 'Your name',
-  nameStory: 'Your Name Story',
   notifications: 'Daily reminders',
   ready: 'Ready',
 };
 
 const STEP_TITLES_HI: Record<Step, string> = {
-  preferences: 'अपना Shoonaya चुनें',
+  preferences: 'Shoonaya को अपना बनाएं',
   personal: 'व्यक्तिगत विवरण',
   nakshatra: 'आपका जन्म नक्षत्र',
   calendarProfile: 'आपका क्षेत्रीय पंचांग',
   calendarScope: 'पंचांग का विस्तार',
   goals: 'आप यहाँ किसलिए आए हैं?',
   name: 'आपका नाम',
-  nameStory: 'आपके नाम की कथा',
   notifications: 'दैनिक स्मरण',
   ready: 'तैयार',
 };
-
-function stepEyebrow(step: Step, steps: Step[], language: LanguageKey | null) {
-  const current = steps.indexOf(step) + 1;
-  return language === 'hi' ? `चरण ${current} / ${steps.length}` : `Step ${current} of ${steps.length}`;
-}
 
 type NameStory = {
   sacred_meaning?: string | null;
@@ -263,7 +248,8 @@ export default function OnboardingScreen() {
   const [language, setLanguage] = useState<LanguageKey | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState<GenderKey>('prefer_not');
-  const [lifeStage, setLifeStage] = useState<LifeStageKey>('brahmacharya');
+  const [lifeStage, setLifeStage] = useState<LifeStageKey | null>(null);
+  const [isManualLifeStage, setIsManualLifeStage] = useState(false);
   const [rashi, setRashi] = useState('');
   const [nakshatra, setNakshatra] = useState('');
   const [gotra, setGotra] = useState('');
@@ -271,7 +257,9 @@ export default function OnboardingScreen() {
   const [calendarScope, setCalendarScope] = useState<CalendarScopeSlug | ''>('');
   const [goals, setGoals] = useState<string[]>([]);
   const [name, setName] = useState('');
-  const [notificationsRequested, setNotificationsRequested] = useState(false);
+  const [notificationsPermissionGranted, setNotificationsPermissionGranted] = useState(false);
+  const [notificationsDenied, setNotificationsDenied] = useState(false);
+  const [requestingNotifications, setRequestingNotifications] = useState(false);
   const [nameStory, setNameStory] = useState<NameStory | null>(null);
   const [nameStoryLoading, setNameStoryLoading] = useState(false);
   const [nameStoryError, setNameStoryError] = useState('');
@@ -279,6 +267,7 @@ export default function OnboardingScreen() {
   const [saving, setSaving] = useState(false);
 
   const STEPS = buildSteps(tradition);
+  const activeSteps = getActiveSteps(STEPS);
   const stepIndex = STEPS.indexOf(step);
   const age = ageFromDob(dateOfBirth);
   const suggestedStage = suggestedLifeStage(dateOfBirth);
@@ -294,10 +283,78 @@ export default function OnboardingScreen() {
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    async function restoreDraft() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user || !isMounted) return;
+        const draft = await readOnboardingDraft(user.id);
+        if (draft && isMounted) {
+          if (draft.tradition) setTradition(draft.tradition);
+          if (draft.language) setLanguage(draft.language);
+          if (draft.dateOfBirth) setDateOfBirth(draft.dateOfBirth);
+          if (draft.gender) setGender(draft.gender);
+          if (draft.lifeStage !== undefined) setLifeStage(draft.lifeStage);
+          if (draft.isManualLifeStage !== undefined) setIsManualLifeStage(draft.isManualLifeStage);
+          if (draft.rashi) setRashi(draft.rashi);
+          if (draft.nakshatra) setNakshatra(draft.nakshatra);
+          if (draft.gotra) setGotra(draft.gotra);
+          if (draft.calendarProfile) setCalendarProfile(draft.calendarProfile);
+          if (draft.calendarScope) setCalendarScope(draft.calendarScope);
+          if (draft.goals) setGoals(draft.goals);
+          if (draft.name) setName(draft.name);
+          if (draft.notificationsPermissionGranted !== undefined) {
+            setNotificationsPermissionGranted(draft.notificationsPermissionGranted);
+          }
+          if (draft.step) setStep(draft.step);
+        }
+      } catch {}
+    }
+    void restoreDraft();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const syncDraft = async (targetStep: Step) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      await saveOnboardingDraft(user.id, {
+        step: targetStep,
+        tradition,
+        language,
+        dateOfBirth,
+        gender,
+        lifeStage,
+        isManualLifeStage,
+        rashi,
+        nakshatra,
+        gotra,
+        calendarProfile,
+        calendarScope,
+        goals,
+        name,
+        notificationsPermissionGranted,
+      });
+    } catch {}
+  };
+
   const handleDobChange = (value: string) => {
     setDateOfBirth(value);
+    if (!value) {
+      if (!isManualLifeStage) setLifeStage(null);
+      return;
+    }
     const nextStage = suggestedLifeStage(value);
-    if (nextStage) setLifeStage(nextStage);
+    if (!isManualLifeStage) {
+      setLifeStage(nextStage);
+    }
   };
 
   // Best-effort, non-blocking: these first-screen choices must be available
@@ -331,29 +388,29 @@ export default function OnboardingScreen() {
     }
   };
 
-  const goToStep = async (target: Step) => {
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+  const goToStep = (target: Step) => {
     setStep(target);
+    void syncDraft(target);
   };
 
-  const goNext = async () => {
+  const goNext = () => {
     if (step === 'preferences') {
       if (!tradition || !language) return;
       setFounderNoteContext({ tradition, language });
       return;
     }
     const next = STEPS[stepIndex + 1];
-    if (next) await goToStep(next);
+    if (next) goToStep(next);
   };
 
   const continueFromFounderNote = () => {
     setFounderNoteContext(null);
-    setStep('personal');
+    goToStep('personal');
   };
 
-  const goBack = async () => {
+  const goBack = () => {
     const previous = STEPS[stepIndex - 1];
-    if (previous) await goToStep(previous);
+    if (previous) goToStep(previous);
   };
 
   const generateNameStory = async () => {
@@ -377,30 +434,50 @@ export default function OnboardingScreen() {
 
       const body = await response.json();
       if (!response.ok) {
-        throw new Error(body?.error ?? 'Could not generate your Name Story.');
+        throw new Error(body?.error ?? (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.'));
       }
 
       setNameStory((body?.data ?? null) as NameStory | null);
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
     } catch (error) {
-      setNameStoryError(error instanceof Error ? error.message : 'Could not generate your Name Story.');
+      setNameStoryError(error instanceof Error ? error.message : (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.'));
     } finally {
       setNameStoryLoading(false);
     }
   };
 
   const handleAllowNotifications = async () => {
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
-    const granted = await requestNotificationPermission();
-    setNotificationsRequested(granted);
-    setStep('ready');
+    if (requestingNotifications || saving) return;
+    setRequestingNotifications(true);
+    try {
+      const granted = await requestNotificationPermission();
+      setNotificationsPermissionGranted(granted);
+      if (granted) {
+        setNotificationsDenied(false);
+        goToStep('ready');
+      } else {
+        setNotificationsDenied(true);
+      }
+    } catch {
+      setNotificationsPermissionGranted(false);
+      setNotificationsDenied(true);
+    } finally {
+      setRequestingNotifications(false);
+    }
   };
 
-  const complete = async () => {
+  const handleNotNow = () => {
+    if (requestingNotifications || saving) return;
+    setNotificationsPermissionGranted(false);
+    setNotificationsDenied(false);
+    goToStep('ready');
+  };
+
+  const complete = async (destination: Href = '/(tabs)') => {
     if (saving) return;
     if (!tradition || !language) {
-      setSaveError('Choose your language and tradition before continuing.');
-      setStep('preferences');
+      setSaveError(isHindi ? 'आगे बढ़ने से पहले अपनी भाषा और परंपरा चुनें।' : 'Choose your language and tradition before continuing.');
+      goToStep('preferences');
       return;
     }
     setSaving(true);
@@ -412,25 +489,21 @@ export default function OnboardingScreen() {
 
       if (user) {
         const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
-        const isHinduProfile = tradition === 'hindu';
-        const profilePayload = {
+        const profilePayload = buildOnboardingProfilePayload({
+          displayName,
           tradition,
-          app_language: language,
-          meaning_language: language,
-          full_name: displayName,
-          date_of_birth: dateOfBirth || null,
-          gender_context: genderContext(gender),
-          life_stage: lifeStage,
-          rashi: isHinduProfile && rashi ? rashi : null,
-          nakshatra: isHinduProfile && nakshatra ? nakshatra : null,
-          gotra: isHinduProfile ? gotra.trim() || null : null,
-          calendar_profile: isHinduProfile ? calendarProfile || null : null,
-          calendar_scope: isHinduProfile ? calendarScope || null : null,
-          onboarding_goal: goals.join(','),
-          wants_shloka_reminders: notificationsRequested,
-          wants_community_notifications: notificationsRequested,
-          onboarding_completed: true,
-        };
+          language,
+          dateOfBirth,
+          gender,
+          lifeStage,
+          rashi,
+          nakshatra,
+          gotra,
+          calendarProfile,
+          calendarScope,
+          goals,
+          notificationsPermissionGranted,
+        });
 
         const { data: updatedProfile, error } = await supabase
           .from('profiles')
@@ -453,20 +526,22 @@ export default function OnboardingScreen() {
           if (insertError) throw insertError;
         }
 
-        if (notificationsRequested) {
+        if (notificationsPermissionGranted) {
           void registerPushToken(user.id);
         }
+
+        await clearOnboardingDraft(user.id);
       }
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);
-      setSaveError(error instanceof Error ? error.message : 'Unable to save onboarding. Please try again.');
+      setSaveError(error instanceof Error ? error.message : (isHindi ? 'ऑनबोर्डिंग सहेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Unable to save onboarding. Please try again.'));
       setSaving(false);
       return;
     }
 
     setSaving(false);
     try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-    router.replace('/(tabs)');
+    router.replace(destination);
   };
 
   const renderSelectRow = ({
@@ -493,7 +568,7 @@ export default function OnboardingScreen() {
       accessibilityLabel={description ? `${label}, ${description}` : label}
       accessibilityRole="button"
       style={{
-        minHeight: 44,
+        minHeight: 52,
         borderRadius: RADII.lg,
         borderWidth: 1.5,
         borderColor: selected ? accent : border,
@@ -518,11 +593,11 @@ export default function OnboardingScreen() {
         {emoji ? <Text style={{ fontSize: 20 }}>{emoji}</Text> : null}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 16, color: selected ? accent : text }}>
+        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 16, lineHeight: isHindi ? 22 : 20, color: selected ? accent : text }}>
           {label}
         </Text>
         {description ? (
-          <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 17, color: dim }}>
+          <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: isHindi ? 18 : 17, color: dim }}>
             {description}
           </Text>
         ) : null}
@@ -537,12 +612,6 @@ export default function OnboardingScreen() {
         key={`${founderNoteContext.language}-${founderNoteContext.tradition}`}
         language={founderNoteContext.language}
         tradition={founderNoteContext.tradition}
-        progress={{
-          completed: 1,
-          total: STEPS.length,
-          activeColor: TRADITION_ACCENT[founderNoteContext.tradition],
-          inactiveColor: border,
-        }}
         onBack={() => setFounderNoteContext(null)}
         onContinue={continueFromFounderNote}
       />
@@ -551,19 +620,21 @@ export default function OnboardingScreen() {
 
   return (
     <Screen style={{ backgroundColor: bg }}>
-      <View accessible accessibilityLabel={stepEyebrow(step, STEPS, language)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-        {STEPS.map((s, i) => (
-          <View
-            key={s}
-            style={{
-              height: 4,
-              flex: 1,
-              borderRadius: 999,
-              backgroundColor: i <= stepIndex ? accent : border,
-            }}
-          />
-        ))}
-      </View>
+      {step !== 'ready' ? (
+        <View accessible accessibilityLabel={stepEyebrow(step, STEPS, language)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+          {activeSteps.map((s, i) => (
+            <View
+              key={s}
+              style={{
+                height: 4,
+                flex: 1,
+                borderRadius: 999,
+                backgroundColor: i <= activeSteps.indexOf(step) ? accent : border,
+              }}
+            />
+          ))}
+        </View>
+      ) : null}
 
       <ScrollView
         style={{ flex: 1 }}
@@ -753,6 +824,7 @@ export default function OnboardingScreen() {
                           style={{
                             fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.sansSemiBold,
                             fontSize: 15,
+                            lineHeight: isHindi ? 21 : 19,
                             color: text,
                           }}
                         >
@@ -764,7 +836,7 @@ export default function OnboardingScreen() {
                             fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans,
                             fontSize: 12,
                             color: dim,
-                            lineHeight: 16,
+                            lineHeight: isHindi ? 18 : 16,
                           }}
                         >
                           {desc}
@@ -805,7 +877,7 @@ export default function OnboardingScreen() {
             </Text>
 
             <View style={{ gap: 8 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                 {translated('Date of birth', 'जन्मतिथि')}
               </Text>
               <TextInput
@@ -837,21 +909,24 @@ export default function OnboardingScreen() {
             </View>
 
             <View style={{ gap: 12 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, color: text }}>
+              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 28 : 24, color: text }}>
                 {translated('Your stage of life', 'आपका जीवन चरण')}
               </Text>
               {LIFE_STAGES.map((stage) => renderSelectRow({
                 key: stage.key,
                 selected: lifeStage === stage.key,
-                label: `${isHindi ? LIFE_STAGE_HI[stage.key].label : stage.label} · ${stage.age}`,
+                label: `${isHindi ? LIFE_STAGE_HI[stage.key].label : stage.label} · ${isHindi ? `आयु ${stage.age}` : stage.age}`,
                 description: isHindi ? LIFE_STAGE_HI[stage.key].description : stage.description,
                 emoji: stage.emoji,
-                onPress: () => setLifeStage(stage.key),
+                onPress: () => {
+                  setLifeStage((prev) => (prev === stage.key ? null : stage.key));
+                  setIsManualLifeStage(true);
+                },
               }))}
             </View>
 
             <View style={{ gap: 12 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                 {translated('Gender', 'लिंग')}
               </Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -886,7 +961,7 @@ export default function OnboardingScreen() {
 
             {tradition === 'hindu' ? (
               <View style={{ gap: 12 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, color: text }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 28 : 24, color: text }}>
                   {translated('Your Rashi', 'आपकी राशि')}
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -917,8 +992,8 @@ export default function OnboardingScreen() {
                         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 11, color: dim, textAlign: 'center' }}>
                           {isHindi ? item.label : item.sanskrit}
                         </Text>
-                        <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
-                          {item.dates}
+                        <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
+                          {isHindi ? item.datesHi : item.dates}
                         </Text>
                       </PressableSurface>
                     );
@@ -929,10 +1004,10 @@ export default function OnboardingScreen() {
 
             {tradition === 'hindu' ? (
               <View style={{ gap: 8 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                   {translated('Gotra (optional)', 'गोत्र (वैकल्पिक)')}
                 </Text>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: 19, color: dim }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: isHindi ? 19 : 18, color: dim }}>
                   {translated(
                     'Save it once here, and Shoonaya can remember it for future sankalpa and puja details.',
                     'इसे एक बार यहाँ सहेजें, ताकि Shoonaya भविष्य के संकल्प और पूजा विवरण में इसे याद रख सके।'
@@ -950,7 +1025,7 @@ export default function OnboardingScreen() {
                     borderColor: border,
                     paddingHorizontal: 16,
                     color: text,
-                    fontFamily: FONTS.sans,
+                    fontFamily: isHindi ? FONTS.devanagari : FONTS.sans,
                     fontSize: 16,
                     backgroundColor: cardBg,
                   }}
@@ -962,7 +1037,7 @@ export default function OnboardingScreen() {
 
         {step === 'nakshatra' && (
           <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
                 'Save your Nakshatra for more precise readings. If you are unsure, check a Janma Kundali using your birth date, time and place, or skip this step for now.',
                 'अधिक सटीक मार्गदर्शन के लिए अपना नक्षत्र सहेजें। यदि निश्चित नहीं हैं, तो जन्मतिथि, समय और स्थान से जन्म कुंडली देखें, या अभी इस चरण को छोड़ दें।'
@@ -979,7 +1054,7 @@ export default function OnboardingScreen() {
                     accessibilityState={{ selected }}
                     accessibilityLabel={
                       isHindi
-                        ? `${item.sanskrit}, स्वामी ${item.ruler}, देवता ${item.deity}`
+                        ? `${item.sanskrit} (${item.label}), स्वामी ${item.rulerHi}, देवता ${item.deityHi}`
                         : `${item.label}, ruled by ${item.ruler}, deity ${item.deity}`
                     }
                     style={{
@@ -995,7 +1070,7 @@ export default function OnboardingScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 22 }}>{item.symbol}</Text>
-                    <Text style={{ marginTop: 4, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: selected ? accent : text, textAlign: 'center' }}>
+                    <Text style={{ marginTop: 4, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: selected ? accent : text, textAlign: 'center' }}>
                       {isHindi ? item.sanskrit : item.label}
                     </Text>
                     <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: dim, textAlign: 'center' }}>
@@ -1007,11 +1082,17 @@ export default function OnboardingScreen() {
             </View>
             {nakshatra ? (
               <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 14 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: accent, textAlign: 'center' }}>
-                  {isHindi
-                    ? `${NAKSHATRAS.find((n) => n.key === nakshatra)?.sanskrit} · स्वामी: ${NAKSHATRAS.find((n) => n.key === nakshatra)?.ruler} · देवता: ${NAKSHATRAS.find((n) => n.key === nakshatra)?.deity}`
-                    : `${NAKSHATRAS.find((n) => n.key === nakshatra)?.label} · Ruled by ${NAKSHATRAS.find((n) => n.key === nakshatra)?.ruler} · Deity: ${NAKSHATRAS.find((n) => n.key === nakshatra)?.deity}`}
-                </Text>
+                {(() => {
+                  const sel = NAKSHATRAS.find((n) => n.key === nakshatra);
+                  if (!sel) return null;
+                  return (
+                    <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: accent, textAlign: 'center' }}>
+                      {isHindi
+                        ? `${sel.sanskrit} · स्वामी: ${sel.rulerHi} · देवता: ${sel.deityHi}`
+                        : `${sel.label} · Ruled by ${sel.ruler} · Deity: ${sel.deity}`}
+                    </Text>
+                  );
+                })()}
               </View>
             ) : null}
           </>
@@ -1019,7 +1100,7 @@ export default function OnboardingScreen() {
 
         {step === 'calendarProfile' && (
           <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
                 "Choose the regional calendar convention your family follows. Shoonaya will use it for festival and vrat presentation.",
                 'अपने परिवार की क्षेत्रीय पंचांग परंपरा चुनें। Shoonaya त्योहार और व्रत दिखाते समय इसी का उपयोग करेगा।'
@@ -1040,7 +1121,7 @@ export default function OnboardingScreen() {
 
         {step === 'calendarScope' && (
           <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
                 'Choose how much calendar detail you want to see. You can change this later in Settings.',
                 'चुनें कि पंचांग में कितना विवरण देखना चाहते हैं। इसे बाद में सेटिंग्स में बदला जा सकता है।'
@@ -1061,7 +1142,7 @@ export default function OnboardingScreen() {
 
         {step === 'goals' && (
           <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
                 'Choose one or more goals so Shoonaya can shape your feed and guidance around what matters to you.',
                 'एक या अधिक लक्ष्य चुनें, ताकि Shoonaya आपकी रुचि के अनुसार सामग्री और मार्गदर्शन तैयार कर सके।'
@@ -1083,8 +1164,8 @@ export default function OnboardingScreen() {
         )}
 
         {step === 'name' && (
-          <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
+          <View style={{ gap: 16 }}>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
                 'This is how your name will appear in your Mandali and across Shoonaya.',
                 'आपका नाम मंडली और Shoonaya में इसी रूप में दिखाई देगा।'
@@ -1092,7 +1173,11 @@ export default function OnboardingScreen() {
             </Text>
             <TextInput
               value={name}
-              onChangeText={setName}
+              onChangeText={(textVal) => {
+                setName(textVal);
+                setNameStory(null);
+                setNameStoryError('');
+              }}
               placeholder={translated('Your name or spiritual name', 'आपका नाम या आध्यात्मिक नाम')}
               placeholderTextColor={dim}
               style={{
@@ -1102,104 +1187,107 @@ export default function OnboardingScreen() {
                 borderColor: border,
                 paddingHorizontal: 16,
                 color: text,
-                fontFamily: FONTS.sans,
+                fontFamily: isHindi ? FONTS.devanagari : FONTS.sans,
                 fontSize: 16,
                 backgroundColor: cardBg,
               }}
             />
-          </>
-        )}
 
-        {step === 'nameStory' && (
-          <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
-              {translated(
-                'Explore the sacred meaning of your name through an optional AI-guided reflection.',
-                'वैकल्पिक AI-मार्गदर्शित चिंतन के माध्यम से अपने नाम का पवित्र अर्थ जानें।'
-              )}
-            </Text>
-
-            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 12 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: 'uppercase', letterSpacing: 1.4 }}>
-                {translated('Exploring the meaning of', 'इस नाम का अर्थ खोज रहे हैं')}
-              </Text>
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>
-                {name.trim() || translated('Your name', 'आपका नाम')}
-              </Text>
-              {!name.trim() ? (
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
-                  {translated('Go back and enter your name first.', 'पहले पीछे जाकर अपना नाम दर्ज करें।')}
-                </Text>
-              ) : null}
-            </View>
-
-            {!nameStory && !nameStoryLoading ? (
-              <View style={{ gap: 10 }}>
-                <Button
-                  label={translated('Reveal my Name Story', 'मेरे नाम की कथा दिखाएँ')}
-                  onPress={() => { void generateNameStory(); }}
-                  disabled={!name.trim()}
-                />
-                <Button label={translated('Skip for now', 'अभी छोड़ें')} variant="ghost" onPress={() => { void goNext(); }} />
-              </View>
-            ) : null}
-
-            {nameStoryLoading ? (
-              <View style={{ minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <ActivityIndicator color={accent} />
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
-                  {translated(
-                    'Dharma Mitra is exploring the sound and meaning of your name…',
-                    'धर्म मित्र आपके नाम की ध्वनि और अर्थ को समझ रहा है…'
-                  )}
-                </Text>
-              </View>
-            ) : null}
-
-            {nameStoryError ? (
-              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14 }}>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: COLORS.danger }}>
-                  {nameStoryError}
-                </Text>
-              </View>
-            ) : null}
-
-            {nameStory ? (
-              <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 14 }}>
-                {nameStory.sacred_meaning ? (
-                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, lineHeight: 28, color: text }}>
-                    {nameStory.sacred_meaning}
+            {name.trim() ? (
+              <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1.2 }}>
+                    {translated('Optional Name Story', 'वैकल्पिक नाम कथा')}
                   </Text>
-                ) : null}
-                {nameStory.name_story ? (
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22, color: text }}>
-                    {nameStory.name_story}
-                  </Text>
-                ) : null}
-                {nameStory.name_mantra ? (
-                  <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.homeBorderSoftLight, backgroundColor: wellBg, padding: 14, gap: 6 }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: 'uppercase', letterSpacing: 1 }}>
-                      {translated('Name mantra', 'नाम मंत्र')}
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: text }}>
-                      {nameStory.name_mantra}
+                  {!nameStory && !nameStoryLoading ? (
+                    <PressableSurface
+                      haptic="impact"
+                      onPress={() => { void generateNameStory(); }}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: RADII.md,
+                        backgroundColor: wellBgSelected,
+                        borderWidth: 1,
+                        borderColor: accent,
+                      }}
+                    >
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: accent }}>
+                        {translated('Discover meaning', 'अर्थ जानें')}
+                      </Text>
+                    </PressableSurface>
+                  ) : null}
+                </View>
+
+                {nameStoryLoading ? (
+                  <View style={{ paddingVertical: 14, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <ActivityIndicator color={accent} />
+                    <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
+                      {translated(
+                        'Dharma Mitra is exploring the sound and sacred meaning of your name…',
+                        'धर्म मित्र आपके नाम की ध्वनि और पावन अर्थ को समझ रहा है…'
+                      )}
                     </Text>
                   </View>
                 ) : null}
-                {nameStory.practice_suggestion ? (
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: dim }}>
-                    {nameStory.practice_suggestion}
+
+                {nameStoryError ? (
+                  <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 12, gap: 8 }}>
+                    <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: 19, color: COLORS.danger }}>
+                      {nameStoryError}
+                    </Text>
+                    <PressableSurface onPress={() => { void generateNameStory(); }} style={{ alignSelf: 'flex-start' }}>
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: COLORS.danger, textDecorationLine: 'underline' }}>
+                        {translated('Retry', 'पुनः प्रयास करें')}
+                      </Text>
+                    </PressableSurface>
+                  </View>
+                ) : null}
+
+                {nameStory ? (
+                  <View style={{ gap: 12, marginTop: 4 }}>
+                    {nameStory.sacred_meaning ? (
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: 26, color: text }}>
+                        {nameStory.sacred_meaning}
+                      </Text>
+                    ) : null}
+                    {nameStory.name_story ? (
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 14, lineHeight: 22, color: text }}>
+                        {nameStory.name_story}
+                      </Text>
+                    ) : null}
+                    {nameStory.name_mantra ? (
+                      <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.homeBorderSoftLight, backgroundColor: wellBg, padding: 12, gap: 4 }}>
+                        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+                          {translated('Name mantra', 'नाम मंत्र')}
+                        </Text>
+                        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 18, color: text }}>
+                          {nameStory.name_mantra}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {nameStory.practice_suggestion ? (
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: 19, color: dim }}>
+                        {nameStory.practice_suggestion}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : !nameStoryLoading ? (
+                  <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: 19, color: dim }}>
+                    {translated(
+                      'Discover the sacred meaning, root sound, and spiritual qualities associated with your name.',
+                      'अपने नाम से जुड़े पावन अर्थ, मूल ध्वनि और आध्यात्मिक गुणों को जानें।'
+                    )}
                   </Text>
                 ) : null}
-                <Button label={translated('Continue', 'आगे बढ़ें')} onPress={() => { void goNext(); }} />
               </View>
             ) : null}
-          </>
+          </View>
         )}
 
         {step === 'notifications' && (
           <>
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim }}>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
                 'Receive gentle reminders for daily wisdom, practice streaks and Mandali mentions. You can change this anytime in Settings.',
                 'दैनिक ज्ञान, अभ्यास क्रम और मंडली संदेशों के लिए सहज स्मरण पाएँ। इसे कभी भी सेटिंग्स में बदला जा सकता है।'
@@ -1208,8 +1296,9 @@ export default function OnboardingScreen() {
             <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 20, gap: 16 }}>
               {[
                 { icon: 'book-open' as const, label: translated('Daily wisdom notification', 'दैनिक ज्ञान स्मरण') },
-                { icon: 'zap' as const, label: translated('Practice streak reminders', 'अभ्यास क्रम स्मरण') },
-                { icon: 'users' as const, label: translated('Mandali mentions', 'मंडली उल्लेख') },
+                { icon: 'calendar' as const, label: translated('Sacred day and festival reminders', 'पर्व और पावन दिवस स्मरण') },
+                { icon: 'zap' as const, label: translated('Daily practice sequence reminders', 'दैनिक अभ्यास क्रम स्मरण') },
+                { icon: 'users' as const, label: translated('Mandali messages and community updates', 'मंडली संदेश और समुदाय सूचनाएँ') },
               ].map((item) => (
                 <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
@@ -1221,17 +1310,42 @@ export default function OnboardingScreen() {
                 </View>
               ))}
             </View>
+            {notificationsDenied ? (
+              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14, gap: 4 }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>
+                  {translated('Notifications not enabled', 'सूचना अनुमति नहीं मिली')}
+                </Text>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger }}>
+                  {translated(
+                    'Permission was not granted on this device. You can turn reminders on anytime in Settings.',
+                    'इस डिवाइस पर अनुमति नहीं मिली। आप कभी भी सेटिंग्स में जाकर स्मरण चालू कर सकते हैं।'
+                  )}
+                </Text>
+              </View>
+            ) : null}
             <View style={{ gap: 10 }}>
-              <Button label={translated('Allow notifications', 'सूचनाएँ अनुमति दें')} onPress={() => { void handleAllowNotifications(); }} disabled={saving} loading={saving} />
-              <Button
-                label={translated('Not now', 'अभी नहीं')}
-                variant="ghost"
-                onPress={() => {
-                  setNotificationsRequested(false);
-                  setStep('ready');
-                }}
-                disabled={saving}
-              />
+              {notificationsDenied ? (
+                <Button
+                  label={translated('Continue', 'आगे बढ़ें')}
+                  onPress={() => { setStep('ready'); }}
+                  disabled={saving || requestingNotifications}
+                />
+              ) : (
+                <>
+                  <Button
+                    label={translated('Allow notifications', 'सूचनाएँ अनुमति दें')}
+                    onPress={() => { void handleAllowNotifications(); }}
+                    disabled={saving || requestingNotifications}
+                    loading={requestingNotifications}
+                  />
+                  <Button
+                    label={translated('Not now', 'अभी नहीं')}
+                    variant="ghost"
+                    onPress={() => { void handleNotNow(); }}
+                    disabled={saving || requestingNotifications}
+                  />
+                </>
+              )}
             </View>
           </>
         )}
@@ -1256,20 +1370,20 @@ export default function OnboardingScreen() {
               {READY_FEATURES[tradition ?? 'hindu'].map((item) => (
                 <View key={item.label} style={{ flex: 1, minHeight: 100, borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, alignItems: 'center', justifyContent: 'center', padding: 10 }}>
                   <Text style={{ fontSize: 24 }}>{item.emoji}</Text>
-                  <Text style={{ marginTop: 5, fontFamily: FONTS.sansSemiBold, fontSize: 11, color: text, textAlign: 'center' }}>
+                  <Text style={{ marginTop: 5, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: text, textAlign: 'center' }}>
                     {language === 'hi' ? item.labelHi : item.label}
                   </Text>
-                  <Text style={{ marginTop: 2, fontFamily: FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
+                  <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
                     {language === 'hi' ? item.descriptionHi : item.description}
                   </Text>
                 </View>
               ))}
             </View>
             <View style={{ width: '100%', gap: 10 }}>
-              <Button label={language === 'hi' ? 'अपना अभ्यास शुरू करें' : 'Begin my practice'} onPress={() => { void complete(); }} disabled={saving} loading={saving} />
-              <Button label={language === 'hi' ? 'Shoonaya देखें' : 'Explore Shoonaya'} variant="ghost" onPress={() => { void complete(); }} disabled={saving} />
+              <Button label={language === 'hi' ? 'अपना अभ्यास शुरू करें' : 'Begin my practice'} onPress={() => { void complete('/bhakti/mala'); }} disabled={saving} loading={saving} />
+              <Button label={language === 'hi' ? 'Shoonaya देखें' : 'Explore Shoonaya'} variant="ghost" onPress={() => { void complete('/(tabs)'); }} disabled={saving} />
               {saveError ? (
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger, textAlign: 'center' }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger, textAlign: 'center' }}>
                   {saveError}
                 </Text>
               ) : null}
@@ -1278,18 +1392,37 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      {step !== 'notifications' && step !== 'ready' && step !== 'nameStory' ? (
+      {step !== 'notifications' && step !== 'ready' ? (
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
           {stepIndex > 0 ? <Button label={language === 'hi' ? 'पीछे' : 'Back'} variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
           <Button
             label={
-              language === 'hi'
-                ? (step === 'nakshatra' || step === 'name' || step === 'calendarProfile' || step === 'calendarScope'
-                    ? 'आगे / अभी छोड़ें'
-                    : (step === 'preferences' ? 'आगे बढ़ें' : 'आगे'))
-                : (step === 'nakshatra' || step === 'name' || step === 'calendarProfile' || step === 'calendarScope'
-                    ? 'Continue / Skip'
-                    : 'Continue')
+              (() => {
+                const stepHasValue =
+                  step === 'nakshatra'
+                    ? Boolean(nakshatra || rashi || gotra.trim())
+                    : step === 'calendarProfile'
+                    ? Boolean(calendarProfile)
+                    : step === 'calendarScope'
+                    ? Boolean(calendarScope)
+                    : step === 'goals'
+                    ? goals.length > 0
+                    : step === 'name'
+                    ? Boolean(name.trim())
+                    : true;
+
+                if (
+                  step === 'nakshatra' ||
+                  step === 'calendarProfile' ||
+                  step === 'calendarScope' ||
+                  step === 'goals' ||
+                  step === 'name'
+                ) {
+                  if (isHindi) return stepHasValue ? 'आगे बढ़ें' : 'अभी छोड़ें';
+                  return stepHasValue ? 'Continue' : 'Skip for now';
+                }
+                return isHindi ? 'आगे बढ़ें' : 'Continue';
+              })()
             }
             onPress={() => { void goNext(); }}
             disabled={step === 'preferences' && (!tradition || !language)}

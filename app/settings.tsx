@@ -29,6 +29,8 @@ import { apiFetch } from '@/lib/api';
 import { registerPushToken, requestNotificationPermission } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { clearAllHomeCaches } from '@/lib/homeCache';
+import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 
 type AppLanguage = 'en' | 'hi' | 'pa';
 type ThemePref = 'light' | 'dark' | 'system';
@@ -444,6 +446,8 @@ export default function SettingsScreen() {
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
+      await clearAllHomeCaches();
+      await clearAllOnboardingDrafts();
       await supabase.auth.signOut();
     } finally {
       setSigningOut(false);

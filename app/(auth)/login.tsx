@@ -24,6 +24,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { GoogleIcon } from '@/components/ui/GoogleIcon';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
@@ -129,6 +130,78 @@ function AmbientField({ isDark }: { isDark: boolean }) {
           opacity: 0.7,
         }}
       />
+    </View>
+  );
+}
+
+function GoogleAuthButton({
+  onPress,
+  disabled,
+  loading,
+  isDark,
+}: {
+  onPress: () => void | Promise<void>;
+  disabled?: boolean;
+  loading?: boolean;
+  isDark: boolean;
+}) {
+  const theme = themeColor(isDark);
+  const borderSoft = isDark ? COLORS.homeBorderSoftDark : COLORS.borderLight;
+  const bgColor = isDark ? COLORS.cardBgDark : '#FFFFFF';
+  const textColor = isDark ? theme.text : '#1F2937';
+
+  return (
+    <View
+      style={{
+        minHeight: 54,
+        borderRadius: 18,
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        alignSelf: 'stretch',
+        width: '100%',
+        opacity: disabled ? 0.68 : 1,
+      }}
+    >
+      <PressableSurface
+        disabled={disabled}
+        onPress={() => {
+          void onPress();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Continue with Google"
+        accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+        haptic="selection"
+        style={{
+          minHeight: 54,
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: borderSoft,
+          backgroundColor: bgColor,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          alignSelf: 'stretch',
+          width: '100%',
+          gap: 12,
+        }}
+      >
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <GoogleIcon size={20} />
+        </View>
+        <Text
+          style={{
+            color: textColor,
+            fontFamily: FONTS.sansSemiBold,
+            fontSize: 15,
+            letterSpacing: 0.1,
+          }}
+        >
+          {loading ? 'Connecting to Google...' : 'Continue with Google'}
+        </Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={theme.brand} style={{ marginLeft: 4 }} />
+        ) : null}
+      </PressableSurface>
     </View>
   );
 }
@@ -783,26 +856,33 @@ export default function LoginScreen() {
               Choose how to enter
             </Text>
 
-            <View style={{ gap: 9 }}>
-              <AuthButton
-                label={activeAction === 'google' ? 'Connecting to Google...' : 'Continue with Google'}
+            <View style={{ gap: 10 }}>
+              <GoogleAuthButton
                 onPress={handleGoogle}
                 disabled={busy}
                 loading={activeAction === 'google'}
-                icon={<FontAwesome name="google" size={16} color={theme.brand} />}
                 isDark={isDark}
               />
 
               {Platform.OS === 'ios' && appleAvailable ? (
                 <View
                   pointerEvents={busy ? 'none' : 'auto'}
-                  style={{ opacity: busy && activeAction !== 'apple' ? 0.6 : 1 }}
+                  style={{
+                    opacity: busy && activeAction !== 'apple' ? 0.6 : 1,
+                    borderRadius: 18,
+                    overflow: 'hidden',
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                  }}
                 >
                   <AppleAuthentication.AppleAuthenticationButton
                     buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    buttonStyle={
+                      isDark
+                        ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                        : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                    }
                     cornerRadius={18}
-                    style={{ height: 56, width: '100%' }}
+                    style={{ height: 54, width: '100%' }}
                     onPress={() => {
                       void handleApple();
                     }}

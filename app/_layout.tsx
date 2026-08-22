@@ -27,10 +27,12 @@ import { trackScreenView } from '@/lib/analytics';
 import { setApiAccessTokenFromSession } from '@/lib/api';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
+import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { clearAllHomeCaches } from '@/lib/homeCache';
+import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -102,6 +104,8 @@ function RootLayout() {
         // session rather than requiring each call site to remember to clean
         // up push identity itself.
         void unregisterPushToken();
+        void clearAllHomeCaches();
+        void clearAllOnboardingDrafts();
 
         // If guest mode is active, allow tabs and bypass login
         const guest = await isGuestMode();
