@@ -67,6 +67,7 @@
     "babel-preset-expo": "^56.0.14",
     "patch-package": "^8.0.1",
     "tailwindcss": "^3.4.19",
+    "tsx": "^4.19.3",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -76,6 +77,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "test": "npx tsx --test __tests__/*.test.ts",
     "eas:android:apk": "eas build --platform android --profile preview",
     "eas:android:dev": "eas build --platform android --profile development",
     "eas:android:store": "eas build --platform android --profile production"
