@@ -92,9 +92,24 @@ type ProgressSummary = {
     isPro: boolean;
     subscriptionStatus: ProfileData['subscription_status'];
   };
+  coreProfile?: {
+    isComplete: boolean;
+    fullName: string;
+    tradition: Tradition;
+    appLanguage: AppLanguage;
+  };
   completion: {
     pct: number;
     missing: string[];
+    coreComplete?: boolean;
+    suggestions?: {
+      key: string;
+      label: string;
+      reason: string;
+      route: string;
+      priority: number;
+      context: 'personal_details' | 'personalisation' | 'general';
+    }[];
   };
   progress: {
     practices: {
@@ -1167,43 +1182,97 @@ export default function ProfileScreen() {
           <MetricTile label="Ashrama" value={lifeStageLabel} icon="sun" onPress={() => router.push('/settings')} theme={theme} />
         </View>
 
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <ProgressRing
-              label="Profile"
-              value={profileCompletion?.pct ?? 100}
-              accent={theme.brand}
-              textColor={theme.text}
-              dimColor={theme.dim}
-            />
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ ...TYPE.section, color: theme.brand }}>Profile Strength</Text>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-                {(profileCompletion?.pct ?? 100) >= 100 ? 'Complete profile' : 'Finish your profile'}
-              </Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                {(profileCompletion?.missing.length ?? 0) > 0
-                  ? `Add ${profileCompletion?.missing.slice(0, 2).join(', ')}${(profileCompletion?.missing.length ?? 0) > 2 ? ` +${(profileCompletion?.missing.length ?? 0) - 2} more` : ''}`
-                  : 'Your core identity is ready.'}
-              </Text>
-            </View>
-            {(profileCompletion?.pct ?? 100) < 100 ? (
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Complete profile"
-                onPress={() => router.push('/settings')}
+        {/* ── Personalise Shoonaya (Truthful Progressive Suggestions) ──────── */}
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
+          {profileCompletion?.suggestions && profileCompletion.suggestions.length > 0 ? (
+            <>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ gap: 2, flex: 1 }}>
+                  <Text style={{ ...TYPE.section, color: theme.brand }}>Personalise Shoonaya</Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                    Optional details to tailor your daily sadhana & panchang
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: theme.brandSoft,
+                    borderRadius: 12,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ ...TYPE.chip, color: theme.brand }}>
+                    {profileCompletion.suggestions.length} left
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ gap: 10 }}>
+                {profileCompletion.suggestions.slice(0, 2).map((item) => (
+                  <View
+                    key={item.key}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: theme.glass,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: theme.borderSoft,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      gap: 10,
+                    }}
+                  >
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text style={{ ...TYPE.label, color: theme.text }}>{item.label}</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+                        {item.reason}
+                      </Text>
+                    </View>
+
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityLabel={`Set ${item.label}`}
+                      onPress={() => router.push(item.route as any)}
+                      style={{
+                        minHeight: 44,
+                        minWidth: 64,
+                        borderRadius: 22,
+                        backgroundColor: theme.brand,
+                        paddingHorizontal: 14,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Set</Text>
+                    </PressableSurface>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <View
                 style={{
-                  minHeight: 44,
+                  width: 44,
+                  height: 44,
                   borderRadius: 22,
-                  backgroundColor: theme.brand,
-                  paddingHorizontal: 14,
+                  backgroundColor: theme.brandSoft,
+                  alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Complete</Text>
-              </PressableSurface>
-            ) : null}
-          </View>
+                <Feather name="check" size={22} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ ...TYPE.section, color: theme.brand }}>Your profile is ready</Text>
+                <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                  Core identity & personalisation preferences are set.
+                </Text>
+              </View>
+            </View>
+          )}
         </Card>
 
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 18 }}>
