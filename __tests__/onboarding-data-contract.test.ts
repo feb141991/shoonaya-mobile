@@ -8,17 +8,69 @@ import {
   getNotificationPersistencePayload,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
+  computeFinalNotificationState,
   type Step,
   type TraditionKey,
+  type NotificationChoice,
 } from '../lib/onboarding-contract';
 import {
+  OnboardingDraftStore,
   ONBOARDING_DRAFT_SCHEMA_VERSION,
   ONBOARDING_DRAFT_TTL_MS,
   getDraftStorageKey,
+  type StorageAdapter,
+  type Clock,
   type OnboardingDraftData,
   type OnboardingDraftEnvelope,
 } from '../lib/onboardingDraft';
 import { suggestedLifeStage } from '../lib/profile-constants';
+
+/**
+ * Controllable in-memory storage adapter for testing asynchronous out-of-order execution,
+ * latency injection, and edge-case cancellation without duplicating production logic.
+ */
+class ControllableStorageAdapter implements StorageAdapter {
+  public map = new Map<string, string>();
+  public setItemHooks: Array<{ key: string; value: string; delayMs?: number }> = [];
+
+  async getItem(key: string): Promise<string | null> {
+    return this.map.get(key) ?? null;
+  }
+
+  async setItem(key: string, value: string): Promise<void> {
+    this.map.set(key, value);
+  }
+
+  async removeItem(key: string): Promise<void> {
+    this.map.delete(key);
+  }
+
+  async getAllKeys(): Promise<readonly string[]> {
+    return Array.from(this.map.keys());
+  }
+
+  async multiRemove(keys: readonly string[]): Promise<void> {
+    for (const key of keys) {
+      this.map.delete(key);
+    }
+  }
+}
+
+class ControllableClock implements Clock {
+  public currentTime: number;
+
+  constructor(initialTime: number = 1700000000000) {
+    this.currentTime = initialTime;
+  }
+
+  now(): number {
+    return this.currentTime;
+  }
+
+  advance(ms: number) {
+    this.currentTime += ms;
+  }
+}
 
 describe('Onboarding Data Contract & Draft Persistence Suite', () => {
   describe('1. Tradition-Aware Ready Destination Resolver', () => {
@@ -47,9 +99,14 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
     });
   });
 
-  describe('2. Notification Runtime OS State Invariants', () => {
-    it('sets all 4 reminder fields true when live permission is granted', () => {
-      const payload = getNotificationPersistencePayload(true);
+  describe('2. Notification Decision Table & Intent Invariants', () => {
+    it('Allow + OS granted => preferences true, token registration eligible', () => {
+      const choice: NotificationChoice = 'enabled';
+      const osGranted = true;
+      const finalState = computeFinalNotificationState(choice, osGranted);
+      assert.equal(finalState, true);
+
+      const payload = getNotificationPersistencePayload(finalState);
       assert.deepEqual(payload, {
         wants_festival_reminders: true,
         wants_nitya_reminders: true,
@@ -58,8 +115,13 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       });
     });
 
-    it('sets all 4 reminder fields false when live permission is denied or revoked', () => {
-      const payload = getNotificationPersistencePayload(false);
+    it('Allow + OS denied/revoked => preferences false', () => {
+      const choice: NotificationChoice = 'enabled';
+      const osGranted = false;
+      const finalState = computeFinalNotificationState(choice, osGranted);
+      assert.equal(finalState, false);
+
+      const payload = getNotificationPersistencePayload(finalState);
       assert.deepEqual(payload, {
         wants_festival_reminders: false,
         wants_nitya_reminders: false,
@@ -68,8 +130,41 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       });
     });
 
-    it('builds full profile payload reflecting live OS permission', () => {
-      const grantedProfile = buildOnboardingProfilePayload({
+    it('Not now + OS granted => preferences false', () => {
+      const choice: NotificationChoice = 'disabled';
+      const osGranted = true;
+      const finalState = computeFinalNotificationState(choice, osGranted);
+      assert.equal(finalState, false, 'User explicit "Not now" must override already-granted OS permission');
+
+      const payload = getNotificationPersistencePayload(finalState);
+      assert.equal(payload.wants_festival_reminders, false);
+      assert.equal(payload.wants_nitya_reminders, false);
+      assert.equal(payload.wants_shloka_reminders, false);
+      assert.equal(payload.wants_community_notifications, false);
+    });
+
+    it('Not now + OS denied => preferences false', () => {
+      const choice: NotificationChoice = 'disabled';
+      const osGranted = false;
+      const finalState = computeFinalNotificationState(choice, osGranted);
+      assert.equal(finalState, false);
+    });
+
+    it('Restored disabled choice + OS granted => preferences false', () => {
+      const restoredChoice: NotificationChoice = 'disabled';
+      const liveOsPermission = true;
+      const finalState = computeFinalNotificationState(restoredChoice, liveOsPermission);
+      assert.equal(finalState, false, 'Restored "disabled" choice must keep reminder preferences false');
+    });
+
+    it('Unset choice => preferences false', () => {
+      const unsetChoice: NotificationChoice = 'unset';
+      assert.equal(computeFinalNotificationState(unsetChoice, true), false);
+      assert.equal(computeFinalNotificationState(unsetChoice, false), false);
+    });
+
+    it('builds full profile payload reflecting final notification decision', () => {
+      const profile = buildOnboardingProfilePayload({
         displayName: 'Prince',
         tradition: 'hindu',
         language: 'en',
@@ -82,39 +177,19 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarProfile: 'north_indian_purnimanta',
         calendarScope: 'all_observances',
         goals: ['peace'],
-        notificationsPermissionGranted: true,
+        notificationsEnabled: true,
       });
 
-      assert.equal(grantedProfile.wants_festival_reminders, true);
-      assert.equal(grantedProfile.wants_nitya_reminders, true);
-      assert.equal(grantedProfile.wants_shloka_reminders, true);
-      assert.equal(grantedProfile.wants_community_notifications, true);
-
-      const deniedProfile = buildOnboardingProfilePayload({
-        displayName: 'Prince',
-        tradition: 'hindu',
-        language: 'en',
-        dateOfBirth: '1990-01-01',
-        gender: 'male',
-        lifeStage: 'grihastha',
-        rashi: 'Karka',
-        nakshatra: 'Pushya',
-        gotra: 'Kashyap',
-        calendarProfile: 'north_indian_purnimanta',
-        calendarScope: 'all_observances',
-        goals: ['peace'],
-        notificationsPermissionGranted: false,
-      });
-
-      assert.equal(deniedProfile.wants_festival_reminders, false);
-      assert.equal(deniedProfile.wants_nitya_reminders, false);
-      assert.equal(deniedProfile.wants_shloka_reminders, false);
-      assert.equal(deniedProfile.wants_community_notifications, false);
+      assert.equal(profile.wants_festival_reminders, true);
+      assert.equal(profile.wants_nitya_reminders, true);
+      assert.equal(profile.wants_shloka_reminders, true);
+      assert.equal(profile.wants_community_notifications, true);
+      assert.equal(profile.onboarding_completed, true);
     });
   });
 
-  describe('3. Draft Persistence, Expiry & Sequential Ordering', () => {
-    it('generates distinct storage keys per user to prevent data cross-contamination', () => {
+  describe('3. Production User-Scoped OnboardingDraftStore Invariants', () => {
+    it('isolates storage keys strictly per user', () => {
       const keyUserA = getDraftStorageKey('user-aaa-111');
       const keyUserB = getDraftStorageKey('user-bbb-222');
 
@@ -123,7 +198,11 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(keyUserB, 'shoonaya_onboarding_draft_v1_user-bbb-222');
     });
 
-    it('ensures notification permission is excluded from durable draft storage', () => {
+    it('ensures notification OS permission is absent from serialized drafts while user choice is preserved', async () => {
+      const storage = new ControllableStorageAdapter();
+      const clock = new ControllableClock();
+      const store = new OnboardingDraftStore(storage, clock);
+
       const sampleDraft: OnboardingDraftData = {
         step: 'notifications',
         tradition: 'hindu',
@@ -139,64 +218,28 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarScope: 'all_observances',
         goals: ['peace'],
         name: 'Pooja',
+        notificationChoice: 'disabled',
         deniedNotificationPromptShown: true,
       };
 
-      assert.equal((sampleDraft as any).notificationsPermissionGranted, undefined);
+      await store.saveDraft('user-1', sampleDraft);
+
+      const rawSerialized = await storage.getItem(getDraftStorageKey('user-1'));
+      assert.notEqual(rawSerialized, null);
+      assert.equal(rawSerialized?.includes('notificationsPermissionGranted'), false, 'Dynamic OS permission must NOT be serialized');
+
+      const restored = await store.readDraft('user-1');
+      assert.notEqual(restored, null);
+      assert.equal(restored?.notificationChoice, 'disabled', 'User notification choice must be preserved');
+      assert.equal(restored?.name, 'Pooja');
     });
 
-    it('validates schema version and handles 7-day TTL expiration', () => {
-      const validEnvelope: OnboardingDraftEnvelope = {
-        schemaVersion: ONBOARDING_DRAFT_SCHEMA_VERSION,
-        userId: 'user-1',
-        savedAt: Date.now() - 1000 * 60 * 60, // 1 hour ago
-        data: {
-          step: 'personal',
-          tradition: 'hindu',
-          language: 'en',
-          dateOfBirth: '1990-01-01',
-          gender: 'male',
-          lifeStage: 'grihastha',
-          isManualLifeStage: false,
-          rashi: '',
-          nakshatra: '',
-          gotra: '',
-          calendarProfile: '',
-          calendarScope: '',
-          goals: [],
-          name: 'Prince',
-        },
-      };
+    it('newer same-user navigation wins despite delayed asynchronous writes', async () => {
+      const storage = new ControllableStorageAdapter();
+      const clock = new ControllableClock();
+      const store = new OnboardingDraftStore(storage, clock);
 
-      assert.equal(validEnvelope.schemaVersion, 1);
-      const isExpired = Date.now() - validEnvelope.savedAt > ONBOARDING_DRAFT_TTL_MS;
-      assert.equal(isExpired, false);
-
-      const expiredEnvelope: OnboardingDraftEnvelope = {
-        ...validEnvelope,
-        savedAt: Date.now() - (ONBOARDING_DRAFT_TTL_MS + 1000), // > 7 days ago
-      };
-      const isActuallyExpired = Date.now() - expiredEnvelope.savedAt > ONBOARDING_DRAFT_TTL_MS;
-      assert.equal(isActuallyExpired, true);
-    });
-
-    it('orders draft writes so newer saves always take precedence over older saves', () => {
-      let savedEnvelope: OnboardingDraftEnvelope | null = null;
-      let latestQueuedTimestamp = 0;
-
-      function simulateQueuedSave(userId: string, data: OnboardingDraftData, timestamp: number) {
-        latestQueuedTimestamp = Math.max(latestQueuedTimestamp, timestamp);
-        if (timestamp < latestQueuedTimestamp) return; // Drop obsolete write
-        savedEnvelope = {
-          schemaVersion: 1,
-          userId,
-          savedAt: timestamp,
-          data,
-        };
-      }
-
-      // Step 1 save started at t=100
-      const draftStep1: OnboardingDraftData = {
+      const baseDraft: OnboardingDraftData = {
         step: 'preferences',
         tradition: 'hindu',
         language: 'en',
@@ -213,20 +256,238 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         name: '',
       };
 
-      // Step 2 save started at t=200
-      const draftStep2: OnboardingDraftData = {
-        ...draftStep1,
+      const step1Draft: OnboardingDraftData = { ...baseDraft, step: 'preferences' };
+      const step2Draft: OnboardingDraftData = { ...baseDraft, step: 'personal', dateOfBirth: '1990-01-01' };
+      const step3Draft: OnboardingDraftData = { ...baseDraft, step: 'goals', goals: ['peace', 'focus'] };
+
+      // Queue saves rapidly (simulating fast user navigation)
+      const p1 = store.saveDraft('user-1', step1Draft);
+      const p2 = store.saveDraft('user-1', step2Draft);
+      const p3 = store.saveDraft('user-1', step3Draft);
+
+      await Promise.all([p1, p2, p3]);
+
+      const finalDraft = await store.readDraft('user-1');
+      assert.equal(finalDraft?.step, 'goals', 'Latest queued step (step 3) must be the final saved state');
+      assert.deepEqual(finalDraft?.goals, ['peace', 'focus']);
+    });
+
+    it('separate users remain isolated and do not delay or suppress each other', async () => {
+      const storage = new ControllableStorageAdapter();
+      const clock = new ControllableClock();
+      const store = new OnboardingDraftStore(storage, clock);
+
+      const userADraft: OnboardingDraftData = {
         step: 'personal',
-        dateOfBirth: '1990-01-01',
+        tradition: 'hindu',
+        language: 'en',
+        dateOfBirth: '1985-05-10',
+        gender: 'male',
+        lifeStage: 'grihastha',
+        isManualLifeStage: false,
+        rashi: '',
+        nakshatra: '',
+        gotra: '',
+        calendarProfile: '',
+        calendarScope: '',
+        goals: [],
+        name: 'User A',
       };
 
-      // Step 2 arrives first
-      simulateQueuedSave('user-1', draftStep2, 200);
-      assert.equal((savedEnvelope as any)?.data.step, 'personal');
+      const userBDraft: OnboardingDraftData = {
+        step: 'name',
+        tradition: 'buddhist',
+        language: 'hi',
+        dateOfBirth: '1995-11-20',
+        gender: 'female',
+        lifeStage: null,
+        isManualLifeStage: false,
+        rashi: '',
+        nakshatra: '',
+        gotra: '',
+        calendarProfile: '',
+        calendarScope: '',
+        goals: ['mindfulness'],
+        name: 'User B',
+      };
 
-      // Late Step 1 arrives afterwards
-      simulateQueuedSave('user-1', draftStep1, 100);
-      assert.equal((savedEnvelope as any)?.data.step, 'personal', 'Late Step 1 must not overwrite newer Step 2');
+      await Promise.all([
+        store.saveDraft('user-A', userADraft),
+        store.saveDraft('user-B', userBDraft),
+      ]);
+
+      const readA = await store.readDraft('user-A');
+      const readB = await store.readDraft('user-B');
+
+      assert.equal(readA?.name, 'User A');
+      assert.equal(readA?.tradition, 'hindu');
+      assert.equal(readB?.name, 'User B');
+      assert.equal(readB?.tradition, 'buddhist');
+    });
+
+    it('pending save cannot recreate a draft after clearDraft', async () => {
+      class LatencyStorageAdapter extends ControllableStorageAdapter {
+        public delayPromise: Promise<void> | null = null;
+        public resolveDelay: (() => void) | null = null;
+
+        constructor() {
+          super();
+          this.delayPromise = new Promise<void>((r) => {
+            this.resolveDelay = r;
+          });
+        }
+
+        override async setItem(key: string, value: string): Promise<void> {
+          if (this.delayPromise) {
+            await this.delayPromise;
+          }
+          await super.setItem(key, value);
+        }
+      }
+
+      const delayedStorage = new LatencyStorageAdapter();
+      const clock = new ControllableClock();
+      const store = new OnboardingDraftStore(delayedStorage, clock);
+
+      const draft: OnboardingDraftData = {
+        step: 'personal',
+        tradition: 'hindu',
+        language: 'en',
+        dateOfBirth: '1990-01-01',
+        gender: 'male',
+        lifeStage: null,
+        isManualLifeStage: false,
+        rashi: '',
+        nakshatra: '',
+        gotra: '',
+        calendarProfile: '',
+        calendarScope: '',
+        goals: [],
+        name: 'Prince',
+      };
+
+      // Start saving draft with artificial latency
+      const savePromise = store.saveDraft('user-1', draft);
+
+      // User immediately finishes onboarding or logs out (clearDraft is called)
+      await store.clearDraft('user-1');
+
+      // Now resolve pending save
+      if (delayedStorage.resolveDelay) {
+        delayedStorage.resolveDelay();
+      }
+      await savePromise;
+
+      const finalDraft = await store.readDraft('user-1');
+      assert.equal(finalDraft, null, 'Earlier pending save must NOT recreate draft after clearDraft was called');
+    });
+
+    it('clearAllDrafts invalidates all pending writes across all users', async () => {
+      const storage = new ControllableStorageAdapter();
+      const clock = new ControllableClock();
+      const store = new OnboardingDraftStore(storage, clock);
+
+      const draft: OnboardingDraftData = {
+        step: 'preferences',
+        tradition: 'sikh',
+        language: 'en',
+        dateOfBirth: '',
+        gender: 'prefer_not',
+        lifeStage: null,
+        isManualLifeStage: false,
+        rashi: '',
+        nakshatra: '',
+        gotra: '',
+        calendarProfile: '',
+        calendarScope: '',
+        goals: [],
+        name: '',
+      };
+
+      await store.saveDraft('user-1', draft);
+      await store.saveDraft('user-2', draft);
+
+      await store.clearAllDrafts();
+
+      assert.equal(await store.readDraft('user-1'), null);
+      assert.equal(await store.readDraft('user-2'), null);
+      assert.equal(storage.map.size, 0);
+    });
+
+    it('rejects expired drafts (> 7 days TTL) and removes them from storage', async () => {
+      const storage = new ControllableStorageAdapter();
+      const clock = new ControllableClock(1700000000000);
+      const store = new OnboardingDraftStore(storage, clock);
+
+      const draft: OnboardingDraftData = {
+        step: 'personal',
+        tradition: 'hindu',
+        language: 'en',
+        dateOfBirth: '1990-01-01',
+        gender: 'male',
+        lifeStage: null,
+        isManualLifeStage: false,
+        rashi: '',
+        nakshatra: '',
+        gotra: '',
+        calendarProfile: '',
+        calendarScope: '',
+        goals: [],
+        name: 'Prince',
+      };
+
+      await store.saveDraft('user-1', draft);
+      assert.notEqual(await store.readDraft('user-1'), null);
+
+      // Advance clock by 7 days + 1 minute
+      clock.advance(ONBOARDING_DRAFT_TTL_MS + 60000);
+
+      const expiredRead = await store.readDraft('user-1');
+      assert.equal(expiredRead, null, 'Expired draft must return null');
+      assert.equal(await storage.getItem(getDraftStorageKey('user-1')), null, 'Expired draft must be purged from storage');
+    });
+
+    it('rejects malformed envelopes, wrong user IDs, wrong schema versions, and future timestamps safely', async () => {
+      const storage = new ControllableStorageAdapter();
+      const clock = new ControllableClock(1700000000000);
+      const store = new OnboardingDraftStore(storage, clock);
+
+      const key = getDraftStorageKey('user-victim');
+
+      // 1. Malformed JSON
+      await storage.setItem(key, '{ invalid json');
+      assert.equal(await store.readDraft('user-victim'), null);
+      assert.equal(await storage.getItem(key), null);
+
+      // 2. Wrong schema version
+      const wrongSchemaEnvelope: OnboardingDraftEnvelope = {
+        schemaVersion: 999,
+        userId: 'user-victim',
+        savedAt: clock.now(),
+        data: { step: 'personal' } as any,
+      };
+      await storage.setItem(key, JSON.stringify(wrongSchemaEnvelope));
+      assert.equal(await store.readDraft('user-victim'), null);
+
+      // 3. Wrong user ID
+      const wrongUserEnvelope: OnboardingDraftEnvelope = {
+        schemaVersion: ONBOARDING_DRAFT_SCHEMA_VERSION,
+        userId: 'attacker-id',
+        savedAt: clock.now(),
+        data: { step: 'personal' } as any,
+      };
+      await storage.setItem(key, JSON.stringify(wrongUserEnvelope));
+      assert.equal(await store.readDraft('user-victim'), null);
+
+      // 4. Invalid future timestamp (> 60s ahead)
+      const futureEnvelope: OnboardingDraftEnvelope = {
+        schemaVersion: ONBOARDING_DRAFT_SCHEMA_VERSION,
+        userId: 'user-victim',
+        savedAt: clock.now() + 10000000,
+        data: { step: 'personal' } as any,
+      };
+      await storage.setItem(key, JSON.stringify(futureEnvelope));
+      assert.equal(await store.readDraft('user-victim'), null);
     });
   });
 
@@ -245,7 +506,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarProfile: '',
         calendarScope: '',
         goals: [],
-        notificationsPermissionGranted: false,
+        notificationsEnabled: false,
       });
 
       assert.equal(unansweredProfile.life_stage, null);

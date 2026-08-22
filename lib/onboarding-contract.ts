@@ -15,6 +15,8 @@ export type Step =
   | 'notifications'
   | 'ready';
 
+export type NotificationChoice = 'enabled' | 'disabled' | 'unset';
+
 export type ReadyPracticeCta = {
   route: string;
   labelEn: string;
@@ -77,6 +79,22 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
   return null;
 }
 
+/**
+ * Pure helper determining whether notification reminders should be enabled in the profile.
+ *
+ * Rules:
+ * - User choice 'enabled' AND OS permission granted => true (eligible for reminders & push token)
+ * - User choice 'disabled' (e.g. tapped 'Not now' or denied) => false (even if OS permission was already granted)
+ * - User choice 'unset' => false
+ * - OS permission denied/revoked => false
+ */
+export function computeFinalNotificationState(
+  choice: NotificationChoice,
+  osPermissionGranted: boolean
+): boolean {
+  return choice === 'enabled' && osPermissionGranted;
+}
+
 export function getNotificationPersistencePayload(permissionGranted: boolean) {
   return {
     wants_festival_reminders: permissionGranted,
@@ -99,7 +117,7 @@ export function buildOnboardingProfilePayload({
   calendarProfile,
   calendarScope,
   goals,
-  notificationsPermissionGranted,
+  notificationsEnabled,
 }: {
   displayName: string;
   tradition: TraditionKey;
@@ -113,7 +131,7 @@ export function buildOnboardingProfilePayload({
   calendarProfile: CalendarProfileSlug | '';
   calendarScope: CalendarScopeSlug | '';
   goals: string[];
-  notificationsPermissionGranted: boolean;
+  notificationsEnabled: boolean;
 }) {
   const isHinduProfile = tradition === 'hindu';
   return {
@@ -130,7 +148,7 @@ export function buildOnboardingProfilePayload({
     calendar_profile: isHinduProfile ? calendarProfile || null : null,
     calendar_scope: isHinduProfile ? calendarScope || null : null,
     onboarding_goal: goals.join(','),
-    ...getNotificationPersistencePayload(notificationsPermissionGranted),
+    ...getNotificationPersistencePayload(notificationsEnabled),
     onboarding_completed: true,
   };
 }

@@ -77,7 +77,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx --test __tests__/*.test.ts",
+    "test": "tsx --test __tests__/*.test.ts",
     "eas:android:apk": "eas build --platform android --profile preview",
     "eas:android:dev": "eas build --platform android --profile development",
     "eas:android:store": "eas build --platform android --profile production"

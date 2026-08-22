@@ -23,11 +23,13 @@ import { supabase } from '@/lib/supabase';
 import { requestNotificationPermission, checkNotificationPermission, registerPushToken } from '@/lib/notifications';
 import {
   type Step,
+  type NotificationChoice,
   buildSteps,
   getActiveSteps,
   stepEyebrow,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
+  computeFinalNotificationState,
 } from '@/lib/onboarding-contract';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
 import {
@@ -258,7 +260,7 @@ export default function OnboardingScreen() {
   const [calendarScope, setCalendarScope] = useState<CalendarScopeSlug | ''>('');
   const [goals, setGoals] = useState<string[]>([]);
   const [name, setName] = useState('');
-  const [notificationsPermissionGranted, setNotificationsPermissionGranted] = useState(false);
+  const [notificationChoice, setNotificationChoice] = useState<NotificationChoice>('unset');
   const [notificationsDenied, setNotificationsDenied] = useState(false);
   const [requestingNotifications, setRequestingNotifications] = useState(false);
   const [nameStory, setNameStory] = useState<NameStory | null>(null);
@@ -321,6 +323,9 @@ export default function OnboardingScreen() {
           if (draft.calendarScope) setCalendarScope(draft.calendarScope);
           if (draft.goals) setGoals(draft.goals);
           if (draft.name) setName(draft.name);
+          if (draft.notificationChoice) {
+            setNotificationChoice(draft.notificationChoice);
+          }
           if (draft.deniedNotificationPromptShown) {
             setNotificationsDenied(true);
           }
@@ -353,6 +358,7 @@ export default function OnboardingScreen() {
         calendarScope,
         goals,
         name,
+        notificationChoice,
         deniedNotificationPromptShown: notificationsDenied,
         ...overrides,
       });
@@ -371,6 +377,8 @@ export default function OnboardingScreen() {
     }
   };
 
+  // Best-effort, non-blocking: these first-screen choices must be available
+  // to later server-backed content even if onboarding is abandoned midway.
   const persistPreferenceEarly = async (
     payload: { tradition?: TraditionKey; app_language?: LanguageKey; meaning_language?: LanguageKey }
   ) => {
@@ -378,15 +386,35 @@ export default function OnboardingScreen() {
       const uid = await getCachedUserId();
       if (!uid) return;
 
-      await supabase.from('profiles').update(payload).eq('id', uid);
-    } catch {
-      // non-blocking
+      const { data: updated, error: updateError } = await supabase
+        .from('profiles')
+        .update(payload)
+        .eq('id', uid)
+        .select('id')
+        .maybeSingle();
+
+      if (updateError) {
+        console.warn('[Onboarding] early preference update failed', updateError.message);
+      }
+
+      if (!updated && !updateError) {
+        const fallbackUsername = `user_${uid.replace(/-/g, '').slice(0, 12)}`;
+        const { error: upsertError } = await supabase.from('profiles').upsert(
+          { id: uid, username: fallbackUsername, ...payload },
+          { onConflict: 'id' }
+        );
+        if (upsertError) {
+          console.warn('[Onboarding] early preference upsert fallback failed', upsertError.message);
+        }
+      }
+    } catch (error) {
+      console.warn('[Onboarding] early preference unexpected exception', error);
     }
   };
 
-  const goToStep = (nextStep: Step) => {
+  const goToStep = (nextStep: Step, overrides: Partial<OnboardingDraftData> = {}) => {
     setStep(nextStep);
-    void syncDraft(nextStep);
+    void syncDraft(nextStep, overrides);
   };
 
   const goNext = () => {
@@ -450,18 +478,25 @@ export default function OnboardingScreen() {
     setRequestingNotifications(true);
     try {
       const granted = await requestNotificationPermission();
-      setNotificationsPermissionGranted(granted);
       if (granted) {
+        setNotificationChoice('enabled');
         setNotificationsDenied(false);
-        goToStep('ready');
+        goToStep('ready', { notificationChoice: 'enabled' });
       } else {
+        setNotificationChoice('disabled');
         setNotificationsDenied(true);
-        void syncDraft('notifications', { deniedNotificationPromptShown: true });
+        void syncDraft('notifications', {
+          notificationChoice: 'disabled',
+          deniedNotificationPromptShown: true,
+        });
       }
     } catch {
-      setNotificationsPermissionGranted(false);
+      setNotificationChoice('disabled');
       setNotificationsDenied(true);
-      void syncDraft('notifications', { deniedNotificationPromptShown: true });
+      void syncDraft('notifications', {
+        notificationChoice: 'disabled',
+        deniedNotificationPromptShown: true,
+      });
     } finally {
       setRequestingNotifications(false);
     }
@@ -469,9 +504,9 @@ export default function OnboardingScreen() {
 
   const handleNotNow = () => {
     if (requestingNotifications || saving) return;
-    setNotificationsPermissionGranted(false);
+    setNotificationChoice('disabled');
     setNotificationsDenied(false);
-    goToStep('ready');
+    goToStep('ready', { notificationChoice: 'disabled' });
   };
 
   const complete = async (destination?: Href) => {
@@ -489,8 +524,9 @@ export default function OnboardingScreen() {
       } = await supabase.auth.getUser();
 
       if (user) {
-        // Re-check live OS permission immediately before building the final profile payload
-        const freshPermission = await checkNotificationPermission();
+        // Re-check live OS permission and compute final notification state
+        const osPermissionGranted = await checkNotificationPermission();
+        const finalNotificationsEnabled = computeFinalNotificationState(notificationChoice, osPermissionGranted);
 
         const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
         const profilePayload = buildOnboardingProfilePayload({
@@ -506,7 +542,7 @@ export default function OnboardingScreen() {
           calendarProfile,
           calendarScope,
           goals,
-          notificationsPermissionGranted: freshPermission,
+          notificationsEnabled: finalNotificationsEnabled,
         });
 
         const { data: updatedProfile, error } = await supabase
@@ -530,7 +566,7 @@ export default function OnboardingScreen() {
           if (insertError) throw insertError;
         }
 
-        if (freshPermission) {
+        if (finalNotificationsEnabled) {
           void registerPushToken(user.id);
         }
 
@@ -1331,7 +1367,10 @@ export default function OnboardingScreen() {
               {notificationsDenied ? (
                 <Button
                   label={translated('Continue', 'आगे बढ़ें')}
-                  onPress={() => { setStep('ready'); }}
+                  onPress={() => {
+                    setNotificationChoice('disabled');
+                    goToStep('ready', { notificationChoice: 'disabled' });
+                  }}
                   disabled={saving || requestingNotifications}
                 />
               ) : (
