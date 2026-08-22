@@ -8,12 +8,14 @@ type AnalyticsEventName =
   | 'onboarding_completed'
   | 'practice_started'
   | 'practice_completed'
-  | 'share_started';
+  | 'share_started'
+  | 'progressive_profiling';
 
 type AnalyticsEventParams = {
   surface?: string;
   action?: string;
   route?: string;
+  prompt_key?: string;
 };
 
 let firebaseAnalytics: FirebaseAnalyticsModule | null | undefined;

@@ -8,6 +8,9 @@ import {
   getPromptDismissedAt,
   clearPromptDismissal,
   buildProgressiveAnalyticsEvent,
+  claimPromptForSession,
+  clearPromptSessionClaimsForTests,
+  getSessionPromptClaim,
   PROMPT_DISMISSAL_TTL_MS,
   type SimpleStorage,
   type PromptKey,
@@ -34,6 +37,7 @@ describe('Restrained Progressive Profiling & Dismissal TTL Invariants', () => {
 
   beforeEach(() => {
     storage = new MemoryStorage();
+    clearPromptSessionClaimsForTests();
   });
 
   it('evaluates panchang_rashi eligibility accurately for Hindu vs non-Hindu and presence of rashi', () => {
@@ -79,9 +83,9 @@ describe('Restrained Progressive Profiling & Dismissal TTL Invariants', () => {
     // Dismissed 29 days ago -> must NOT be eligible (< 30 days)
     assert.equal(
       isPromptEligible({
-        promptKey: 'sankalpa_gotra',
+        promptKey: 'calendar_setup',
         tradition: 'hindu',
-        profile: { gotra: null },
+        profile: { calendar_profile: null, calendar_scope: null },
         dismissedAtMs: twentyNineDaysAgo,
         nowMs: now,
       }),
@@ -91,9 +95,9 @@ describe('Restrained Progressive Profiling & Dismissal TTL Invariants', () => {
     // Dismissed 31 days ago -> eligible again (>= 30 days)
     assert.equal(
       isPromptEligible({
-        promptKey: 'sankalpa_gotra',
+        promptKey: 'calendar_setup',
         tradition: 'hindu',
-        profile: { gotra: null },
+        profile: { calendar_profile: null, calendar_scope: null },
         dismissedAtMs: thirtyOneDaysAgo,
         nowMs: now,
       }),
@@ -128,5 +132,34 @@ describe('Restrained Progressive Profiling & Dismissal TTL Invariants', () => {
     for (const key of forbiddenKeys) {
       assert.equal(key in event, false, `Analytics event must never contain ${key}`);
     }
+  });
+
+  it('allows at most one contextual suggestion per user in an app session', () => {
+    assert.equal(claimPromptForSession('user-a', 'panchang_rashi'), true);
+    assert.equal(claimPromptForSession('user-a', 'calendar_setup'), false);
+    assert.equal(getSessionPromptClaim('user-a'), 'panchang_rashi');
+
+    assert.equal(claimPromptForSession('user-b', 'calendar_setup'), true);
+    assert.equal(getSessionPromptClaim('user-b'), 'calendar_setup');
+  });
+
+  it('never offers calendar setup to a non-Hindu profile', () => {
+    for (const tradition of ['sikh', 'buddhist', 'jain', null, undefined]) {
+      assert.equal(isPromptEligible({
+        promptKey: 'calendar_setup',
+        tradition,
+        profile: { calendar_profile: null, calendar_scope: null },
+        dismissedAtMs: null,
+      }), false);
+    }
+  });
+
+  it('fails closed before the persisted tradition has loaded', () => {
+    assert.equal(isPromptEligible({
+      promptKey: 'panchang_rashi',
+      tradition: undefined,
+      profile: { rashi: null },
+      dismissedAtMs: null,
+    }), false);
   });
 });

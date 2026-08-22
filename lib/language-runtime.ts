@@ -1,7 +1,24 @@
-export type AppContentLanguage = 'en' | 'hi' | 'pa';
+export const SUPPORTED_APP_LANGUAGES = ['en', 'hi', 'pa'] as const;
+
+export type AppLanguage = (typeof SUPPORTED_APP_LANGUAGES)[number];
+export type AppContentLanguage = AppLanguage;
+
+export function isAppLanguage(value: unknown): value is AppLanguage {
+  return typeof value === 'string'
+    && (SUPPORTED_APP_LANGUAGES as readonly string[]).includes(value);
+}
 
 export function normalizeContentLanguage(value?: string | null): AppContentLanguage {
-  return value === 'hi' || value === 'pa' ? value : 'en';
+  return isAppLanguage(value) ? value : 'en';
+}
+
+export function resolveLanguageFallback<T>(
+  translations: Partial<Record<AppLanguage, T>>,
+  preferredLanguage?: string | null,
+  fallbackLanguage: AppLanguage = 'en',
+): T | null {
+  const preferred = normalizeContentLanguage(preferredLanguage);
+  return translations[preferred] ?? translations[fallbackLanguage] ?? null;
 }
 
 export function resolveEffectiveMeaningLanguage(

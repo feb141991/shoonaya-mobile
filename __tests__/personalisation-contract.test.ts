@@ -7,45 +7,8 @@ import {
   NAKSHATRAS,
   ONBOARDING_GOALS,
   RASHIS,
-  type CalendarProfileSlug,
-  type CalendarScopeSlug,
 } from '../lib/profile-constants';
-
-/**
- * Pure helper mirroring the payload composition logic in app/settings/personalisation.tsx
- */
-export function buildPersonalisationPatchPayload({
-  tradition,
-  rashi,
-  nakshatra,
-  gotra,
-  calendarProfile,
-  calendarScope,
-  goals,
-}: {
-  tradition: string;
-  rashi: string;
-  nakshatra: string;
-  gotra: string;
-  calendarProfile: CalendarProfileSlug | '';
-  calendarScope: CalendarScopeSlug | '';
-  goals: string[];
-}): Record<string, unknown> {
-  const isHindu = tradition === 'hindu';
-  const payload: Record<string, unknown> = {
-    onboarding_goal: goals.length > 0 ? goals.join(',') : null,
-  };
-
-  if (isHindu) {
-    payload.rashi = rashi || null;
-    payload.nakshatra = nakshatra || null;
-    payload.gotra = gotra.trim() || null;
-    payload.calendar_profile = calendarProfile || null;
-    payload.calendar_scope = calendarScope || null;
-  }
-
-  return payload;
-}
+import { buildPersonalisationPatchPayload } from '../lib/profile-personalisation';
 
 describe('Personalisation Screen & Contract Suite', () => {
   it('builds full payload with valid Hindu-only fields for Hindu profiles', () => {

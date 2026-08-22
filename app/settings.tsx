@@ -31,8 +31,8 @@ import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
+import { SUPPORTED_APP_LANGUAGES, type AppLanguage } from '@/lib/language-runtime';
 
-type AppLanguage = 'en' | 'hi' | 'pa';
 type ThemePref = 'light' | 'dark' | 'system';
 
 // Every field below already exists on `profiles` and is already read/written
@@ -75,11 +75,13 @@ const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle:
   { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity' },
 ];
 
-const LANGUAGES: { key: AppLanguage; label: string }[] = [
-  { key: 'en', label: 'English' },
-  { key: 'hi', label: 'Hindi' },
-  { key: 'pa', label: 'Punjabi' },
-];
+const LANGUAGE_LABELS: Record<AppLanguage, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  pa: 'Punjabi',
+};
+
+const LANGUAGES = SUPPORTED_APP_LANGUAGES.map((key) => ({ key, label: LANGUAGE_LABELS[key] }));
 
 const THEME_OPTIONS: { key: ThemePref; label: string }[] = [
   { key: 'system', label: 'System' },
@@ -340,10 +342,16 @@ export default function SettingsScreen() {
   };
 
   const enableNotificationReminder = async (nextState: SettingsState) => {
-    void persistSettings(nextState);
-
     const allowed = await requestNotificationPermission();
-    if (!allowed) return;
+    if (!allowed) {
+      Alert.alert(
+        'Notifications are off',
+        'Shoonaya could not enable this reminder without notification permission. You can allow notifications in your device settings and try again.',
+      );
+      return;
+    }
+
+    await persistSettings(nextState);
 
     if (isGuest) return;
 

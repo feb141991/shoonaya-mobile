@@ -23,6 +23,8 @@ import { decode } from 'base64-arraybuffer';
 
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { type AppLanguage } from '@/lib/language-runtime';
+import { getVisibleProfileSuggestions, type ProfileSuggestion } from '@/lib/profile-suggestions';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -45,7 +47,6 @@ import {
 } from '@/lib/traditions';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
-type AppLanguage = 'en' | 'hi' | 'pa';
 
 type ProfileData = {
   id: string;
@@ -102,14 +103,7 @@ type ProgressSummary = {
     pct: number;
     missing: string[];
     coreComplete?: boolean;
-    suggestions?: {
-      key: string;
-      label: string;
-      reason: string;
-      route: string;
-      priority: number;
-      context: 'personal_details' | 'personalisation' | 'general';
-    }[];
+    suggestions?: ProfileSuggestion[];
   };
   progress: {
     practices: {
@@ -497,6 +491,10 @@ export default function ProfileScreen() {
   const streak = summary?.progress?.streaks?.shloka ?? 0;
   const progressData = summary?.progress;
   const profileCompletion = summary?.completion;
+  const visibleProfileSuggestions = useMemo(
+    () => getVisibleProfileSuggestions(profileCompletion?.suggestions),
+    [profileCompletion?.suggestions],
+  );
   const sampradayaLabel = profile ? getSampradayaLabel(profile.tradition) : 'Sampradaya';
   const ishtaDevataLabel = profile ? getIshtaDevataLabel(profile.tradition) : 'Ishta Devata';
   const sampradayaOptions = profile ? SAMPRADAYAS_BY_TRADITION[profile.tradition] : [];
@@ -1208,7 +1206,7 @@ export default function ProfileScreen() {
               </View>
 
               <View style={{ gap: 10 }}>
-                {profileCompletion.suggestions.slice(0, 2).map((item) => (
+                {visibleProfileSuggestions.map((item) => (
                   <View
                     key={item.key}
                     style={{

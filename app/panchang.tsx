@@ -25,10 +25,12 @@ import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
 import { isGuestMode } from '@/lib/guestSession';
 import {
+  claimPromptForSession,
   getPromptDismissedAt,
+  isPromptEligible,
   recordPromptDismissal,
-  PROMPT_DISMISSAL_TTL_MS,
 } from '@/lib/progressiveProfiling';
+import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
 
 // ── Panchang — rebuilt to match PWA's src/app/(main)/panchang/today/
 // PanchangDetail.tsx living-sky design (sky-phase gradient, glow orb,
@@ -375,14 +377,29 @@ export default function PanchangScreen() {
   const [displayTz, setDisplayTz] = useState<'local' | 'ist'>('local');
 
   useEffect(() => {
-    if (userId) {
-      getPromptDismissedAt(userId, 'panchang_rashi').then((dismissedAt) => {
-        if (dismissedAt && Date.now() - dismissedAt < PROMPT_DISMISSAL_TTL_MS) {
-          setRashiPromptDismissed(true);
-        }
-      });
+    if (!userId || profileState.rashi || profileState.tradition !== 'hindu') {
+      setRashiPromptDismissed(true);
+      return;
     }
-  }, [userId]);
+
+    let cancelled = false;
+    getPromptDismissedAt(userId, 'panchang_rashi').then((dismissedAt) => {
+      if (cancelled) return;
+      const eligible = isPromptEligible({
+        promptKey: 'panchang_rashi',
+        tradition: profileState.tradition,
+        profile: profileState,
+        dismissedAtMs: dismissedAt,
+      });
+      const claimed = eligible && claimPromptForSession(userId, 'panchang_rashi');
+      setRashiPromptDismissed(!claimed);
+      if (claimed) trackProgressivePromptEvent('panchang_rashi', 'shown');
+    }).catch(() => setRashiPromptDismissed(true));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profileState.rashi, profileState.tradition, userId]);
 
   const loadPanchangContext = useCallback(async () => {
     if (await isGuestMode()) {
@@ -412,8 +429,6 @@ export default function PanchangScreen() {
       return;
     }
 
-    setUserId(user.id);
-
     const { data: profile } = await supabase
       .from('profiles')
       .select('latitude, longitude, timezone, tradition, rashi, city, neighbourhood')
@@ -429,6 +444,7 @@ export default function PanchangScreen() {
       city: profile?.neighbourhood ?? profile?.city ?? '',
     };
     setProfileState(nextState);
+    setUserId(user.id);
 
     const [festivalsResponse, viewedResponse] = await Promise.all([
       apiFetch(
@@ -467,7 +483,7 @@ export default function PanchangScreen() {
       }
       setProfileState((prev) => ({ ...prev, rashi }));
       setShowRashiPicker(false);
-      if (userId) void recordPromptDismissal(userId, 'panchang_rashi');
+      trackProgressivePromptEvent('panchang_rashi', 'completed');
     } catch (e) {
       console.warn('[Panchang] saveRashi failed', e);
     } finally {
@@ -755,7 +771,10 @@ export default function PanchangScreen() {
                   <Pressable
                     onPress={async () => {
                       setRashiPromptDismissed(true);
-                      if (userId) await recordPromptDismissal(userId, 'panchang_rashi');
+                      if (userId) {
+                        await recordPromptDismissal(userId, 'panchang_rashi');
+                        trackProgressivePromptEvent('panchang_rashi', 'dismissed');
+                      }
                     }}
                     style={{ minHeight: 44, justifyContent: 'center' }}
                   >

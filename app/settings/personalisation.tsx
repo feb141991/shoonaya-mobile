@@ -29,6 +29,7 @@ import {
   type CalendarProfileSlug,
   type CalendarScopeSlug,
 } from '@/lib/profile-constants';
+import { buildPersonalisationPatchPayload } from '@/lib/profile-personalisation';
 
 type PersonalisationState = {
   tradition: string;
@@ -103,9 +104,6 @@ export default function PersonalisationScreen() {
   const isHindu = form.tradition === 'hindu';
 
   const toggleGoal = (goalKey: string) => {
-    try {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
     setForm((prev) => {
       const exists = prev.goals.includes(goalKey);
       const nextGoals = exists
@@ -118,17 +116,15 @@ export default function PersonalisationScreen() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const payload: Record<string, unknown> = {
-        onboarding_goal: form.goals.length > 0 ? form.goals.join(',') : null,
-      };
-
-      if (isHindu) {
-        payload.rashi = form.rashi || null;
-        payload.nakshatra = form.nakshatra || null;
-        payload.gotra = form.gotra.trim() || null;
-        payload.calendar_profile = form.calendar_profile || null;
-        payload.calendar_scope = form.calendar_scope || null;
-      }
+      const payload = buildPersonalisationPatchPayload({
+        tradition: form.tradition,
+        rashi: form.rashi,
+        nakshatra: form.nakshatra,
+        gotra: form.gotra,
+        calendarProfile: form.calendar_profile,
+        calendarScope: form.calendar_scope,
+        goals: form.goals,
+      });
 
       const response = await apiFetch('/api/native/profile', {
         method: 'PATCH',
@@ -197,7 +193,6 @@ export default function PersonalisationScreen() {
                             label={p.label}
                             selected={selected}
                             onPress={() => {
-                              try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
                               setForm((prev) => ({
                                 ...prev,
                                 calendar_profile: selected ? '' : p.slug,
@@ -225,7 +220,6 @@ export default function PersonalisationScreen() {
                             label={s.label}
                             selected={selected}
                             onPress={() => {
-                              try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
                               setForm((prev) => ({
                                 ...prev,
                                 calendar_scope: selected ? '' : s.slug,
@@ -253,7 +247,6 @@ export default function PersonalisationScreen() {
                             label={`${r.symbol} ${r.label}`}
                             selected={selected}
                             onPress={() => {
-                              try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
                               setForm((prev) => ({
                                 ...prev,
                                 rashi: selected ? '' : r.key,
@@ -281,7 +274,6 @@ export default function PersonalisationScreen() {
                             label={`${n.symbol} ${n.label}`}
                             selected={selected}
                             onPress={() => {
-                              try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
                               setForm((prev) => ({
                                 ...prev,
                                 nakshatra: selected ? '' : n.key,

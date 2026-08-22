@@ -27,6 +27,13 @@ import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
+import {
+  claimPromptForSession,
+  getPromptDismissedAt,
+  isPromptEligible,
+  recordPromptDismissal,
+} from '@/lib/progressiveProfiling';
+import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
 
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { useReaderControls } from '@/hooks/useReaderControls';
@@ -44,6 +51,8 @@ type ProfileGeoState = {
   tradition: string | null;
   appLanguage: string | null;
   meaningLanguage: string | null;
+  calendarProfile: string | null;
+  calendarScope: string | null;
 };
 
 const DEFAULT_GEO: ProfileGeoState = {
@@ -53,6 +62,8 @@ const DEFAULT_GEO: ProfileGeoState = {
   tradition: null,
   appLanguage: null,
   meaningLanguage: null,
+  calendarProfile: null,
+  calendarScope: null,
 };
 
 type UpcomingVrat = {
@@ -117,6 +128,8 @@ export default function VratScreen() {
   const [upcomingVrats, setUpcomingVrats] = useState<UpcomingVrat[]>([]);
   const [upcomingError, setUpcomingError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
 
   const [fontStep, setFontStep] = useState(1);
   const [lang, setLang] = useState<'en' | 'local'>('en');
@@ -162,7 +175,7 @@ export default function VratScreen() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('latitude, longitude, timezone, tradition, app_language, meaning_language')
+      .select('latitude, longitude, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
       .eq('id', user.id)
       .single();
 
@@ -173,13 +186,44 @@ export default function VratScreen() {
       tradition: profile?.tradition ?? null,
       appLanguage: profile?.app_language ?? null,
       meaningLanguage: profile?.meaning_language ?? null,
+      calendarProfile: profile?.calendar_profile ?? null,
+      calendarScope: profile?.calendar_scope ?? null,
     });
+    setUserId(user.id);
   }, [router]);
 
   useEffect(() => {
     setLoading(true);
     loadProfileGeo().finally(() => setLoading(false));
   }, [loadProfileGeo]);
+
+  useEffect(() => {
+    if (!userId || geo.tradition !== 'hindu') {
+      setShowCalendarPrompt(false);
+      return;
+    }
+
+    let cancelled = false;
+    getPromptDismissedAt(userId, 'calendar_setup').then((dismissedAt) => {
+      if (cancelled) return;
+      const eligible = isPromptEligible({
+        promptKey: 'calendar_setup',
+        tradition: geo.tradition,
+        profile: {
+          calendar_profile: geo.calendarProfile,
+          calendar_scope: geo.calendarScope,
+        },
+        dismissedAtMs: dismissedAt,
+      });
+      const claimed = eligible && claimPromptForSession(userId, 'calendar_setup');
+      setShowCalendarPrompt(claimed);
+      if (claimed) trackProgressivePromptEvent('calendar_setup', 'shown');
+    }).catch(() => setShowCalendarPrompt(false));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [geo.calendarProfile, geo.calendarScope, geo.tradition, userId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -612,6 +656,44 @@ export default function VratScreen() {
         <BackButton />
 
         <Text style={{ color: theme.text, ...TYPE.screenTitle }}>Vrat</Text>
+
+        {showCalendarPrompt ? (
+          <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+              <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="calendar" size={19} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Use your family calendar</Text>
+                <Text style={{ color: theme.dim, ...TYPE.caption }}>Choose a regional calendar and observance scope for the Vrat dates shown here.</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Set calendar preferences"
+                onPress={() => router.push('/settings/personalisation')}
+                style={{ flex: 1, minHeight: 44, borderRadius: 999, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Set preferences</Text>
+              </PressableSurface>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss calendar suggestion"
+                onPress={() => {
+                  if (!userId) return;
+                  setShowCalendarPrompt(false);
+                  void recordPromptDismissal(userId, 'calendar_setup').then(() => {
+                    trackProgressivePromptEvent('calendar_setup', 'dismissed');
+                  });
+                }}
+                style={{ minWidth: 64, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Not now</Text>
+              </Pressable>
+            </View>
+          </Card>
+        ) : null}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
           {TRADITION_FILTERS.map((tradition) => {

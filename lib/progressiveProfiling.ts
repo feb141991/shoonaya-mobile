@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type PromptKey = 'panchang_rashi' | 'kundali_jyotish' | 'sankalpa_gotra' | 'home_personalisation';
+export type PromptKey = 'panchang_rashi' | 'calendar_setup';
 export type PromptAction = 'shown' | 'dismissed' | 'completed';
 
 export const PROMPT_DISMISSAL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -43,7 +43,10 @@ export function isPromptEligible({
   dismissedAtMs: number | null;
   nowMs?: number;
 }): boolean {
-  const isHindu = (tradition ?? 'hindu') === 'hindu';
+  // Profile-dependent suggestions must fail closed until the signed-in
+  // user's persisted tradition has loaded. Defaulting missing data to Hindu
+  // can briefly expose Hindu-only prompts to another tradition.
+  const isHindu = tradition === 'hindu';
 
   // Check 30-day dismissal TTL
   if (dismissedAtMs !== null) {
@@ -57,25 +60,34 @@ export function isPromptEligible({
       // Only for Hindu users when rashi is unset
       return isHindu && !profile.rashi;
 
-    case 'kundali_jyotish':
-      // Only for Hindu users when either rashi or nakshatra is unset
-      return isHindu && (!profile.rashi || !profile.nakshatra);
-
-    case 'sankalpa_gotra':
-      // Only for Hindu users when gotra is unset
-      return isHindu && !profile.gotra;
-
-    case 'home_personalisation':
-      // For Hindu: missing calendar_profile, rashi, or nakshatra
-      // For non-Hindu: missing city or goals
-      if (isHindu) {
-        return !profile.calendar_profile || !profile.rashi || !profile.nakshatra;
-      }
-      return !profile.city || !profile.onboarding_goal;
+    case 'calendar_setup':
+      return isHindu && (!profile.calendar_profile || !profile.calendar_scope);
 
     default:
       return false;
   }
+}
+
+const sessionPromptClaims = new Map<string, PromptKey>();
+
+/**
+ * Claims the single contextual profile suggestion allowed for this user in
+ * the current JS session. A different signed-in account has an independent
+ * claim, while refocusing or navigating between surfaces cannot show a
+ * second prompt.
+ */
+export function claimPromptForSession(userId: string, promptKey: PromptKey): boolean {
+  if (!userId || sessionPromptClaims.has(userId)) return false;
+  sessionPromptClaims.set(userId, promptKey);
+  return true;
+}
+
+export function getSessionPromptClaim(userId: string): PromptKey | null {
+  return sessionPromptClaims.get(userId) ?? null;
+}
+
+export function clearPromptSessionClaimsForTests(): void {
+  sessionPromptClaims.clear();
 }
 
 /**
