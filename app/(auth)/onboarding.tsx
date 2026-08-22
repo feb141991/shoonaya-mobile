@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -20,15 +20,16 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
-import { requestNotificationPermission, registerPushToken } from '@/lib/notifications';
+import { requestNotificationPermission, checkNotificationPermission, registerPushToken } from '@/lib/notifications';
 import {
   type Step,
   buildSteps,
   getActiveSteps,
   stepEyebrow,
   buildOnboardingProfilePayload,
+  getOnboardingReadyPracticeCta,
 } from '@/lib/onboarding-contract';
-import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft } from '@/lib/onboardingDraft';
+import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
 import {
   LIFE_STAGES,
   GENDERS,
@@ -266,6 +267,22 @@ export default function OnboardingScreen() {
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const userIdRef = useRef<string | null>(null);
+
+  const getCachedUserId = async (): Promise<string | null> => {
+    if (userIdRef.current) return userIdRef.current;
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        userIdRef.current = user.id;
+        return user.id;
+      }
+    } catch {}
+    return null;
+  };
+
   const STEPS = buildSteps(tradition);
   const activeSteps = getActiveSteps(STEPS);
   const stepIndex = STEPS.indexOf(step);
@@ -287,11 +304,9 @@ export default function OnboardingScreen() {
     let isMounted = true;
     async function restoreDraft() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user || !isMounted) return;
-        const draft = await readOnboardingDraft(user.id);
+        const uid = await getCachedUserId();
+        if (!uid || !isMounted) return;
+        const draft = await readOnboardingDraft(uid);
         if (draft && isMounted) {
           if (draft.tradition) setTradition(draft.tradition);
           if (draft.language) setLanguage(draft.language);
@@ -306,8 +321,8 @@ export default function OnboardingScreen() {
           if (draft.calendarScope) setCalendarScope(draft.calendarScope);
           if (draft.goals) setGoals(draft.goals);
           if (draft.name) setName(draft.name);
-          if (draft.notificationsPermissionGranted !== undefined) {
-            setNotificationsPermissionGranted(draft.notificationsPermissionGranted);
+          if (draft.deniedNotificationPromptShown) {
+            setNotificationsDenied(true);
           }
           if (draft.step) setStep(draft.step);
         }
@@ -319,13 +334,11 @@ export default function OnboardingScreen() {
     };
   }, []);
 
-  const syncDraft = async (targetStep: Step) => {
+  const syncDraft = async (targetStep: Step, overrides: Partial<OnboardingDraftData> = {}) => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      await saveOnboardingDraft(user.id, {
+      const uid = await getCachedUserId();
+      if (!uid) return;
+      await saveOnboardingDraft(uid, {
         step: targetStep,
         tradition,
         language,
@@ -340,7 +353,8 @@ export default function OnboardingScreen() {
         calendarScope,
         goals,
         name,
-        notificationsPermissionGranted,
+        deniedNotificationPromptShown: notificationsDenied,
+        ...overrides,
       });
     } catch {}
   };
@@ -357,45 +371,28 @@ export default function OnboardingScreen() {
     }
   };
 
-  // Best-effort, non-blocking: these first-screen choices must be available
-  // to later server-backed content even if onboarding is abandoned midway.
   const persistPreferenceEarly = async (
     payload: { tradition?: TraditionKey; app_language?: LanguageKey; meaning_language?: LanguageKey }
   ) => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      const uid = await getCachedUserId();
+      if (!uid) return;
 
-      const { data: updated, error } = await supabase
-        .from('profiles')
-        .update(payload)
-        .eq('id', user.id)
-        .select('id')
-        .maybeSingle();
-      if (error) throw error;
-
-      if (!updated) {
-        const fallbackUsername = `user_${user.id.replace(/-/g, '').slice(0, 12)}`;
-        await supabase.from('profiles').upsert(
-          { id: user.id, username: fallbackUsername, ...payload },
-          { onConflict: 'id' }
-        );
-      }
-    } catch (error) {
-      console.warn('[Onboarding] early preference save failed', error);
+      await supabase.from('profiles').update(payload).eq('id', uid);
+    } catch {
+      // non-blocking
     }
   };
 
-  const goToStep = (target: Step) => {
-    setStep(target);
-    void syncDraft(target);
+  const goToStep = (nextStep: Step) => {
+    setStep(nextStep);
+    void syncDraft(nextStep);
   };
 
   const goNext = () => {
     if (step === 'preferences') {
       if (!tradition || !language) return;
+      void persistPreferenceEarly({ tradition, app_language: language, meaning_language: language });
       setFounderNoteContext({ tradition, language });
       return;
     }
@@ -403,14 +400,16 @@ export default function OnboardingScreen() {
     if (next) goToStep(next);
   };
 
+  const goBack = () => {
+    if (stepIndex > 0) {
+      const prevStep = STEPS[stepIndex - 1];
+      goToStep(prevStep);
+    }
+  };
+
   const continueFromFounderNote = () => {
     setFounderNoteContext(null);
     goToStep('personal');
-  };
-
-  const goBack = () => {
-    const previous = STEPS[stepIndex - 1];
-    if (previous) goToStep(previous);
   };
 
   const generateNameStory = async () => {
@@ -457,10 +456,12 @@ export default function OnboardingScreen() {
         goToStep('ready');
       } else {
         setNotificationsDenied(true);
+        void syncDraft('notifications', { deniedNotificationPromptShown: true });
       }
     } catch {
       setNotificationsPermissionGranted(false);
       setNotificationsDenied(true);
+      void syncDraft('notifications', { deniedNotificationPromptShown: true });
     } finally {
       setRequestingNotifications(false);
     }
@@ -473,7 +474,7 @@ export default function OnboardingScreen() {
     goToStep('ready');
   };
 
-  const complete = async (destination: Href = '/(tabs)') => {
+  const complete = async (destination?: Href) => {
     if (saving) return;
     if (!tradition || !language) {
       setSaveError(isHindi ? 'आगे बढ़ने से पहले अपनी भाषा और परंपरा चुनें।' : 'Choose your language and tradition before continuing.');
@@ -488,6 +489,9 @@ export default function OnboardingScreen() {
       } = await supabase.auth.getUser();
 
       if (user) {
+        // Re-check live OS permission immediately before building the final profile payload
+        const freshPermission = await checkNotificationPermission();
+
         const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
         const profilePayload = buildOnboardingProfilePayload({
           displayName,
@@ -502,7 +506,7 @@ export default function OnboardingScreen() {
           calendarProfile,
           calendarScope,
           goals,
-          notificationsPermissionGranted,
+          notificationsPermissionGranted: freshPermission,
         });
 
         const { data: updatedProfile, error } = await supabase
@@ -526,7 +530,7 @@ export default function OnboardingScreen() {
           if (insertError) throw insertError;
         }
 
-        if (notificationsPermissionGranted) {
+        if (freshPermission) {
           void registerPushToken(user.id);
         }
 
@@ -541,7 +545,7 @@ export default function OnboardingScreen() {
 
     setSaving(false);
     try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-    router.replace(destination);
+    router.replace(destination ?? '/(tabs)');
   };
 
   const renderSelectRow = ({
@@ -1380,8 +1384,35 @@ export default function OnboardingScreen() {
               ))}
             </View>
             <View style={{ width: '100%', gap: 10 }}>
-              <Button label={language === 'hi' ? 'अपना अभ्यास शुरू करें' : 'Begin my practice'} onPress={() => { void complete('/bhakti/mala'); }} disabled={saving} loading={saving} />
-              <Button label={language === 'hi' ? 'Shoonaya देखें' : 'Explore Shoonaya'} variant="ghost" onPress={() => { void complete('/(tabs)'); }} disabled={saving} />
+              {(() => {
+                const readyPracticeCta = getOnboardingReadyPracticeCta(tradition);
+                if (readyPracticeCta) {
+                  return (
+                    <>
+                      <Button
+                        label={isHindi ? readyPracticeCta.labelHi : readyPracticeCta.labelEn}
+                        onPress={() => { void complete(readyPracticeCta.route as Href); }}
+                        disabled={saving}
+                        loading={saving}
+                      />
+                      <Button
+                        label={isHindi ? 'Shoonaya देखें' : 'Explore Shoonaya'}
+                        variant="ghost"
+                        onPress={() => { void complete('/(tabs)'); }}
+                        disabled={saving}
+                      />
+                    </>
+                  );
+                }
+                return (
+                  <Button
+                    label={isHindi ? 'Shoonaya देखें' : 'Explore Shoonaya'}
+                    onPress={() => { void complete('/(tabs)'); }}
+                    disabled={saving}
+                    loading={saving}
+                  />
+                );
+              })()}
               {saveError ? (
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger, textAlign: 'center' }}>
                   {saveError}

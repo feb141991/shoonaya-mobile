@@ -15,6 +15,12 @@ export type Step =
   | 'notifications'
   | 'ready';
 
+export type ReadyPracticeCta = {
+  route: string;
+  labelEn: string;
+  labelHi: string;
+};
+
 export function buildSteps(tradition: TraditionKey | null): Step[] {
   if (tradition === 'hindu') {
     return [
@@ -48,6 +54,27 @@ export function stepEyebrow(step: Step, steps: Step[], language: LanguageKey | n
   const current = activeSteps.indexOf(step) + 1;
   if (current <= 0) return '';
   return language === 'hi' ? `चरण ${current} / ${activeSteps.length}` : `Step ${current} of ${activeSteps.length}`;
+}
+
+export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): ReadyPracticeCta | null {
+  if (tradition === 'hindu') {
+    return {
+      route: '/bhakti/mala',
+      labelEn: 'Begin Japa Mala',
+      labelHi: 'जाप माला शुरू करें',
+    };
+  }
+  if (tradition === 'buddhist') {
+    return {
+      route: '/bhakti/zen',
+      labelEn: 'Begin Meditation',
+      labelHi: 'ध्यान शुरू करें',
+    };
+  }
+  // For Sikh and Jain traditions, no dedicated first-practice screen currently exists.
+  // Returning null tells the Ready screen to cleanly omit the primary practice button
+  // and offer 'Explore Shoonaya' as the single, clear entry point.
+  return null;
 }
 
 export function getNotificationPersistencePayload(permissionGranted: boolean) {

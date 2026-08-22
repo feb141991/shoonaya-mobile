@@ -147,6 +147,19 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
+ * Reads the current OS notification permission status without showing any prompt.
+ */
+export async function checkNotificationPermission(): Promise<boolean> {
+  if (!Notifications) return false;
+  try {
+    const existing = await Notifications.getPermissionsAsync();
+    return hasNotificationPermission(existing);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * If permission is already granted, fetch this device's Expo push token and
  * register it against the signed-in user. This function deliberately never
  * opens the OS permission prompt; UI actions own that decision. Cheap/idempotent
