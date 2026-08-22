@@ -24,6 +24,11 @@ import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
 import { isGuestMode } from '@/lib/guestSession';
+import {
+  getPromptDismissedAt,
+  recordPromptDismissal,
+  PROMPT_DISMISSAL_TTL_MS,
+} from '@/lib/progressiveProfiling';
 
 // ── Panchang — rebuilt to match PWA's src/app/(main)/panchang/today/
 // PanchangDetail.tsx living-sky design (sky-phase gradient, glow orb,
@@ -364,9 +369,20 @@ export default function PanchangScreen() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [showRashiPicker, setShowRashiPicker] = useState(false);
+  const [rashiPromptDismissed, setRashiPromptDismissed] = useState(false);
   const [savingRashi, setSavingRashi] = useState(false);
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const [displayTz, setDisplayTz] = useState<'local' | 'ist'>('local');
+
+  useEffect(() => {
+    if (userId) {
+      getPromptDismissedAt(userId, 'panchang_rashi').then((dismissedAt) => {
+        if (dismissedAt && Date.now() - dismissedAt < PROMPT_DISMISSAL_TTL_MS) {
+          setRashiPromptDismissed(true);
+        }
+      });
+    }
+  }, [userId]);
 
   const loadPanchangContext = useCallback(async () => {
     if (await isGuestMode()) {
@@ -451,6 +467,7 @@ export default function PanchangScreen() {
       }
       setProfileState((prev) => ({ ...prev, rashi }));
       setShowRashiPicker(false);
+      if (userId) void recordPromptDismissal(userId, 'panchang_rashi');
     } catch (e) {
       console.warn('[Panchang] saveRashi failed', e);
     } finally {
@@ -724,17 +741,27 @@ export default function PanchangScreen() {
             <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.4)" />
           </PressableSurface>
 
-          {(showRashiPicker || !profileState.rashi) && (
+          {(showRashiPicker || (!profileState.rashi && !rashiPromptDismissed)) && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {profileState.rashi ? 'Change your Rashi' : '✦ Set your Rashi for personalised readings'}
                 </Text>
-                {profileState.rashi && showRashiPicker && (
-                  <Pressable onPress={() => setShowRashiPicker(false)}>
+                {profileState.rashi && showRashiPicker ? (
+                  <Pressable onPress={() => setShowRashiPicker(false)} style={{ minHeight: 44, justifyContent: 'center' }}>
                     <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 12, textDecorationLine: 'underline' }}>Cancel</Text>
                   </Pressable>
-                )}
+                ) : !profileState.rashi ? (
+                  <Pressable
+                    onPress={async () => {
+                      setRashiPromptDismissed(true);
+                      if (userId) await recordPromptDismissal(userId, 'panchang_rashi');
+                    }}
+                    style={{ minHeight: 44, justifyContent: 'center' }}
+                  >
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.sans, fontSize: 12 }}>Not now</Text>
+                  </Pressable>
+                ) : null}
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {Object.entries(RASHI_MAP).map(([key, r]) => {
