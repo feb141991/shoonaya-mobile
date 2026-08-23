@@ -1,13 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export interface VratObservationPayload {
-  vrat_id: string;
-  vrat_name: string;
-  occurrence_date?: string | null;
-  occurrence_id?: string | null;
-  calendar_profile?: string | null;
-  tradition?: string | null;
+  occurrence_id: string;
 }
 
 export interface VratObservationResult {
@@ -20,36 +17,35 @@ export interface VratObservationResult {
 
 export function isEligibleToObserveToday(params: {
   selectedVratId: string | null;
-  selectedOccurrenceDate?: string | null;
-  todayVratId?: string | null;
+  selectedOccurrence?: {
+    date: string;
+    observance?: {
+      id?: string | null;
+      status?: string;
+    };
+  } | null;
   todayDateStr: string;
 }): boolean {
   if (!params.selectedVratId) return false;
-  if (params.selectedOccurrenceDate) {
-    return params.selectedOccurrenceDate === params.todayDateStr;
+  if (params.selectedOccurrence?.observance?.id && params.selectedOccurrence?.date) {
+    return (
+      params.selectedOccurrence.date === params.todayDateStr &&
+      params.selectedOccurrence.observance.status !== 'unresolved'
+    );
   }
-  return params.selectedVratId === params.todayVratId;
+  return false;
 }
 
 export function buildVratObservationPayload(params: {
-  vratId: string;
-  vratName: string;
-  occurrenceDate?: string | null;
   occurrenceId?: string | null;
-  calendarProfile?: string | null;
-  tradition?: string | null;
 }): VratObservationPayload {
-  if (!params.vratId || params.vratId.trim().length === 0) {
-    throw new Error('vrat_id is required');
+  const occId = params.occurrenceId?.trim();
+  if (!occId || !UUID_REGEX.test(occId)) {
+    throw new Error('Valid canonical occurrence_id UUID is required');
   }
 
   return {
-    vrat_id: params.vratId.trim(),
-    vrat_name: params.vratName || params.vratId.trim(),
-    occurrence_date: params.occurrenceDate ?? null,
-    occurrence_id: params.occurrenceId ?? null,
-    calendar_profile: params.calendarProfile ?? null,
-    tradition: params.tradition ?? null,
+    occurrence_id: occId,
   };
 }
 
@@ -74,60 +70,77 @@ export function handleObservationResponse(
   };
 }
 
-describe('Vrat Observation Contract & Idempotent Ledger Suite', () => {
-  it('builds canonical observation payload with occurrence qualification', () => {
+describe('Vrat Observation Contract & Occurrence-Qualified Ledger Suite', () => {
+  it('builds canonical observation payload with occurrence_id only (non-forgeable)', () => {
     const payload = buildVratObservationPayload({
-      vratId: 'ekadashi',
-      vratName: 'Nirjala Ekadashi',
-      occurrenceDate: '2026-08-23',
-      occurrenceId: 'occ-1234',
-      calendarProfile: 'surya_siddhanta',
-      tradition: 'hindu',
+      occurrenceId: '12345678-1234-1234-1234-123456789abc',
     });
 
-    assert.equal(payload.vrat_id, 'ekadashi');
-    assert.equal(payload.vrat_name, 'Nirjala Ekadashi');
-    assert.equal(payload.occurrence_date, '2026-08-23');
-    assert.equal(payload.occurrence_id, 'occ-1234');
-    assert.equal(payload.calendar_profile, 'surya_siddhanta');
-    assert.equal(payload.tradition, 'hindu');
+    assert.equal(payload.occurrence_id, '12345678-1234-1234-1234-123456789abc');
+    assert.equal(Object.keys(payload).length, 1);
   });
 
-  it('rejects empty or whitespace-only vrat_id', () => {
+  it('rejects missing, null, or malformed occurrence UUIDs', () => {
     assert.throws(() => {
-      buildVratObservationPayload({
-        vratId: '',
-        vratName: 'Test',
-      });
-    }, /vrat_id is required/);
+      buildVratObservationPayload({ occurrenceId: '' });
+    }, /Valid canonical occurrence_id UUID is required/);
+
+    assert.throws(() => {
+      buildVratObservationPayload({ occurrenceId: 'not-a-uuid' });
+    }, /Valid canonical occurrence_id UUID is required/);
+
+    assert.throws(() => {
+      buildVratObservationPayload({ occurrenceId: null });
+    }, /Valid canonical occurrence_id UUID is required/);
   });
 
-  it('evaluates observation eligibility strictly by occurrence date or today match', () => {
-    // 1. Browsing arbitrary library item not occurring today -> false
+  it('evaluates observation eligibility strictly by resolved canonical occurrence id today', () => {
+    const validOccId = '12345678-1234-1234-1234-123456789abc';
+
+    // 1. Browsing arbitrary library item with no occurrence -> false
     assert.equal(isEligibleToObserveToday({
       selectedVratId: 'chaturthi',
-      todayVratId: 'ekadashi',
+      selectedOccurrence: null,
       todayDateStr: '2026-08-23',
     }), false);
 
-    // 2. Browsing item that matches todayVratId -> true
+    // 2. Browsing occurrence without canonical id -> false
     assert.equal(isEligibleToObserveToday({
       selectedVratId: 'ekadashi',
-      todayVratId: 'ekadashi',
+      selectedOccurrence: {
+        date: '2026-08-23',
+        observance: { id: null, status: 'resolved' },
+      },
       todayDateStr: '2026-08-23',
-    }), true);
+    }), false);
 
     // 3. Browsing occurrence with future date -> false
     assert.equal(isEligibleToObserveToday({
       selectedVratId: 'ekadashi',
-      selectedOccurrenceDate: '2026-08-30',
+      selectedOccurrence: {
+        date: '2026-08-30',
+        observance: { id: validOccId, status: 'resolved' },
+      },
       todayDateStr: '2026-08-23',
     }), false);
 
-    // 4. Browsing occurrence with today's date -> true
+    // 4. Browsing unresolved placeholder -> false
     assert.equal(isEligibleToObserveToday({
       selectedVratId: 'ekadashi',
-      selectedOccurrenceDate: '2026-08-23',
+      selectedOccurrence: {
+        date: '2026-08-23',
+        observance: { id: validOccId, status: 'unresolved' },
+      },
+      todayDateStr: '2026-08-23',
+    }), false);
+
+    // 5. Browsing valid resolved occurrence today -> true
+    assert.equal(isEligibleToObserveToday({
+      selectedVratId: 'ekadashi',
+      selectedOccurrence: {
+        date: '2026-08-23',
+        observance: { id: validOccId, status: 'resolved' },
+      },
       todayDateStr: '2026-08-23',
     }), true);
   });

@@ -23,7 +23,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -59,9 +59,9 @@ const DEFAULT_GEO: ProfileGeoState = {
   lat: 23.1765,
   lon: 75.7885,
   timezone: 'Asia/Kolkata',
-  tradition: null,
-  appLanguage: null,
-  meaningLanguage: null,
+  tradition: 'hindu',
+  appLanguage: 'en',
+  meaningLanguage: 'en',
   calendarProfile: null,
   calendarScope: null,
 };
@@ -70,7 +70,17 @@ type UpcomingVrat = {
   date: string;
   slug: string;
   vratData: VratData;
-  observance: any;
+  observance: {
+    id?: string | null;
+    date: string;
+    slug: string;
+    kind: string;
+    civilDate?: string | null;
+    status?: string;
+    isPrimary?: boolean;
+    reasons?: Array<{ code?: string; text?: string }>;
+    alternatives?: Array<{ civilDate?: string | null }>;
+  };
 };
 
 function tithiIndexToVratId(tithiIndex: number, tradition: string | null | undefined): string | null {
@@ -100,102 +110,106 @@ function vratMatchesTradition(vrat: VratData, tradition: Tradition) {
 if (Notifications) {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
       shouldShowBanner: true,
       shouldShowList: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
     }),
   });
 }
 
-type FontSize = 'sm' | 'md' | 'lg' | 'xl';
 const FONT_PRESETS = [
-  { label: 'A-', value: 'sm' },
-  { label: 'A', value: 'md' },
-  { label: 'A+', value: 'lg' },
-  { label: 'A++', value: 'xl' },
+  { label: 'Standard', value: 0 },
+  { label: 'Comfortable', value: 1 },
+  { label: 'Spacious', value: 2 },
+  { label: 'Large', value: 3 },
 ];
 
 export default function VratScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = themeColor(isDark);
+
   const [loading, setLoading] = useState(true);
+  const [geo, setGeo] = useState<ProfileGeoState>(DEFAULT_GEO);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [selectedTradition, setSelectedTradition] = useState<Tradition>('all');
   const [selectedVrat, setSelectedVrat] = useState<VratData | null>(null);
   const [selectedOccurrence, setSelectedOccurrence] = useState<UpcomingVrat | null>(null);
-  const [geo, setGeo] = useState<ProfileGeoState>(DEFAULT_GEO);
   const [upcomingVrats, setUpcomingVrats] = useState<UpcomingVrat[]>([]);
   const [upcomingError, setUpcomingError] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
-
-  const [fontStep, setFontStep] = useState(1);
-  const [lang, setLang] = useState<'en' | 'local'>('en');
-  const [ttsRate, setTtsRate] = useState(1);
-
   const [observedToday, setObservedToday] = useState(false);
   const [observeCount, setObserveCount] = useState(0);
   const [observeLoading, setObserveLoading] = useState(false);
   const [observeStatusLoaded, setObserveStatusLoaded] = useState(false);
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
 
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-      brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
-      // Mirrors themeColor() in lib/constants.ts. This screen builds its own
-      // theme object rather than calling themeColor(isDark); these two keys are
-      // added here so the review notice can use sourced gold tints instead of
-      // an ad hoc rgba at the call site.
-      brandSoft: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
-      premiumBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
-    }),
-    [isDark]
-  );
-
-  const loadProfileGeo = useCallback(async () => {
-    if (await isGuestMode()) {
-      setIsGuest(true);
-      return;
-    }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('latitude, longitude, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
-      .eq('id', user.id)
-      .single();
-
-    setGeo({
-      lat: profile?.latitude ?? DEFAULT_GEO.lat,
-      lon: profile?.longitude ?? DEFAULT_GEO.lon,
-      timezone: profile?.timezone ?? DEFAULT_GEO.timezone,
-      tradition: profile?.tradition ?? null,
-      appLanguage: profile?.app_language ?? null,
-      meaningLanguage: profile?.meaning_language ?? null,
-      calendarProfile: profile?.calendar_profile ?? null,
-      calendarScope: profile?.calendar_scope ?? null,
-    });
-    setUserId(user.id);
-  }, [router]);
+  const [lang, setLang] = useState<'en' | 'local'>('en');
+  const [fontStep, setFontStep] = useState(1);
+  const [ttsRate, setTtsRate] = useState<number>(1);
 
   useEffect(() => {
-    setLoading(true);
-    loadProfileGeo().finally(() => setLoading(false));
-  }, [loadProfileGeo]);
+    let cancelled = false;
+
+    async function loadIdentityAndProfile() {
+      const guest = await isGuestMode();
+      if (cancelled) return;
+      setIsGuest(guest);
+
+      if (guest) {
+        setUserId(null);
+        setGeo(DEFAULT_GEO);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (cancelled) return;
+
+        if (!user) {
+          setUserId(null);
+          setGeo(DEFAULT_GEO);
+          setLoading(false);
+          return;
+        }
+
+        setUserId(user.id);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('latitude, longitude, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+        if (profile) {
+          setGeo({
+            lat: profile.latitude ?? DEFAULT_GEO.lat,
+            lon: profile.longitude ?? DEFAULT_GEO.lon,
+            timezone: profile.timezone || DEFAULT_GEO.timezone,
+            tradition: profile.tradition ?? null,
+            appLanguage: profile.app_language ?? null,
+            meaningLanguage: profile.meaning_language ?? null,
+            calendarProfile: profile.calendar_profile ?? null,
+            calendarScope: profile.calendar_scope ?? null,
+          });
+        }
+      } catch {
+        if (!cancelled) setGeo(DEFAULT_GEO);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadIdentityAndProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!userId || geo.tradition !== 'hindu') {
@@ -234,7 +248,17 @@ export default function VratScreen() {
       .then(async (response) => {
         if (!response.ok) throw new Error('upcoming fetch failed');
         const payload = (await response.json()) as {
-          observances?: Array<{ date: string; slug: string; kind: string }>;
+          observances?: Array<{
+            id?: string | null;
+            date: string;
+            slug: string;
+            kind: string;
+            civilDate?: string | null;
+            status?: string;
+            isPrimary?: boolean;
+            reasons?: Array<{ code?: string; text?: string }>;
+            alternatives?: Array<{ civilDate?: string | null }>;
+          }>;
         };
         const resolved = (payload.observances ?? [])
           .filter((observance) => observance.kind === 'vrat')
@@ -286,9 +310,15 @@ export default function VratScreen() {
     }
 
     let cancelled = false;
+    setObservedToday(false);
+    setObserveCount(0);
     setObserveStatusLoaded(false);
 
-    apiFetch(`/api/vrat/observe?vrat_id=${encodeURIComponent(selectedVrat.id)}`)
+    const url = selectedOccurrence?.observance?.id
+      ? `/api/vrat/observe?occurrence_id=${encodeURIComponent(selectedOccurrence.observance.id)}`
+      : `/api/vrat/observe?vrat_id=${encodeURIComponent(selectedVrat.id)}`;
+
+    apiFetch(url)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data) return;
@@ -304,19 +334,20 @@ export default function VratScreen() {
     return () => {
       cancelled = true;
     };
-  }, [selectedVrat]);
+  }, [selectedVrat, selectedOccurrence?.observance?.id]);
 
   const isOccurringToday = useMemo(() => {
     if (!selectedVrat) return false;
-    if (selectedOccurrence) {
+    if (selectedOccurrence?.observance?.id && selectedOccurrence?.date) {
       const todayStr = new Date().toISOString().split('T')[0];
-      return selectedOccurrence.date === todayStr;
+      return selectedOccurrence.date === todayStr && selectedOccurrence.observance.status !== 'unresolved';
     }
-    return selectedVrat.id === todayVrat?.id;
-  }, [selectedVrat, selectedOccurrence, todayVrat?.id]);
+    return false;
+  }, [selectedVrat, selectedOccurrence]);
 
   const handleObserve = async () => {
-    if (!selectedVrat || !isOccurringToday || observedToday || observeLoading) {
+    const occId = selectedOccurrence?.observance?.id;
+    if (!selectedVrat || !occId || !isOccurringToday || observedToday || observeLoading) {
       return;
     }
 
@@ -330,12 +361,7 @@ export default function VratScreen() {
       const res = await apiFetch('/api/vrat/observe', {
         method: 'POST',
         body: JSON.stringify({
-          vrat_id: selectedVrat.id,
-          vrat_name: selectedVrat.name,
-          occurrence_date: selectedOccurrence?.date,
-          occurrence_id: selectedOccurrence?.observance?.id,
-          calendar_profile: geo.calendarProfile,
-          tradition: geo.tradition,
+          occurrence_id: occId,
         }),
       });
       const data = await res.json();
@@ -349,7 +375,7 @@ export default function VratScreen() {
           Alert.alert('Vrat observed');
         }
       } else {
-        Alert.alert('Could not record observation');
+        Alert.alert(data?.error ?? 'Could not record observation');
       }
     } catch {
       Alert.alert('Could not record observation');
