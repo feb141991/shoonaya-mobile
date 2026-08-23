@@ -16,6 +16,27 @@ prompt. Do not push, deploy, apply a production migration, flip an engine flag,
 materialise production occurrences, or send production notifications without
 explicit approval.
 
+## Execution Status — 2026-08-23
+
+Do not rerun completed prompts unless an independent review identifies a
+regression.
+
+| Prompt | Status | Remaining gate |
+|---|---|---|
+| 1. Naraka Chaturdashi | Complete in code | Apply `20260823181312_approve_naraka_chaturdashi_rule.sql` and run controlled materialisation only with explicit production approval |
+| 2. Observance-series contract | Complete in code | Keep PWA and Native generated contract byte-identical |
+| 3. Sourced daily content | Pending | Editorial/source model and generated Native snapshot |
+| 4. Premium series cards | Pending | PWA, Android, and iOS implementation and visual QA |
+| 5. Notifications and observation writes | Pending | Series-aware dedupe, exact-child routing, festival participation semantics, and real-device push proof |
+
+Naraka Chaturdashi is now an `included` canonical rule. Its ratified policy is
+Krishna Chaturdashi prevailing through the full local Arunodaya window. The
+Ujjain 2026-11-08 fixture is source-backed; Bedford 2026-11-07 is a computed,
+location-qualified result. The migration registers the definition and fixture
+but deliberately inserts no occurrence. Until that migration and controlled
+materialisation are approved and executed, production continues to return no
+Naraka row.
+
 ## Binding Engineering Contract
 
 Before every prompt, read:
@@ -50,9 +71,10 @@ Required behavior:
 10. For every code change run targeted tests, TypeScript, `git diff --check`,
     `git status --short`, and backend `graphify update .`.
 
-## Confirmed Starting Evidence
+## Historical Starting Evidence
 
-The implementation must re-prove, not merely repeat, this baseline:
+This was the baseline before Prompts 1–2. It is retained as an audit record,
+not as current-state guidance:
 
 - `naraka-chaturdashi`, `choti-diwali`, `chhoti-diwali`, `kali-chaudas`, and
   `roop-chaudas` currently have no canonical `observance_definitions` row and no
