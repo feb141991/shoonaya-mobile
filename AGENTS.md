@@ -2,6 +2,30 @@
 
 Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.
 
+## Principal Engineering & Audit Standards
+
+1. **Zero Optimistic Assumptions:**
+   - Never claim two files, models, or catalogues are "identical" or "already complete" without running an actual programmatic diff (`node`, `jq`, `diff`) in the shell and printing the verified count/result.
+   - If there is drift (e.g., 18 vs. 49 entries), report the exact missing keys, schema divergences, and structural differences first.
+
+2. **Trace The Wire (End-to-End Audit):**
+   - For every API or feature audit, trace the complete execution path:
+     `UI Trigger -> Request Payload -> Auth Headers (Bearer vs Cookie) -> Route Handler -> DB Query & Atomicity Constraints -> Response DTO -> Local State`.
+   - Identify transport, auth, or idempotency failures before discussing UI.
+
+3. **Architecture & Contracts Before UI:**
+   - Separate concerns strictly into:
+     a) Editorial Definition (static/content)
+     b) Dynamic/Occurrence Calculation (astronomy/geo)
+     c) Private User State (ledger/idempotent records)
+   - Never propose visual components until data contracts and schemas are locked.
+
+4. **Strict Verification Receipts:**
+   - Every code change must conclude with:
+     - Exact test suite execution (`npm test` / `npx vitest`)
+     - Clean typecheck (`tsc --noEmit`)
+     - `git diff --check` and `git status --short`
+
 ## Styling — match existing DNA, never invent
 
 `lib/constants.ts` is the single source of truth: `COLORS`, `themeColor(isDark)`
