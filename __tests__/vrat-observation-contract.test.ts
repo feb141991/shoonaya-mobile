@@ -71,35 +71,59 @@ describe('Vrat Observation Contract & Production Helpers Suite', () => {
 
     // 2. Occurrence with missing ID -> false
     assert.equal(isEligibleToObserveToday({
-      occurrence: { id: null, date: '2026-08-23', status: 'resolved' },
+      occurrence: { id: null, date: '2026-08-23', status: 'resolved', isPrimary: true },
       canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 3. Occurrence with mismatched/future date -> false
+    // 3. Occurrence with malformed UUID -> false
     assert.equal(isEligibleToObserveToday({
-      occurrence: { id: validOccId, date: '2026-08-30', status: 'resolved' },
+      occurrence: { id: 'bad-id', date: '2026-08-23', status: 'resolved', isPrimary: true },
       canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 4. Occurrence marked unresolved or under_review -> false
+    // 4. Occurrence with mismatched/future date -> false
     assert.equal(isEligibleToObserveToday({
-      occurrence: { id: validOccId, date: '2026-08-23', status: 'unresolved' },
-      canonicalTodayDate: canonicalToday,
-    }), false);
-    assert.equal(isEligibleToObserveToday({
-      occurrence: { id: validOccId, date: '2026-08-23', status: 'under_review' },
+      occurrence: { id: validOccId, date: '2026-08-30', status: 'resolved', isPrimary: true },
       canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 5. Missing canonical today string -> false
+    // 5. Negative statuses: unresolved, under_review, ambiguous, missing status -> all false
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'unresolved', isPrimary: true },
+      canonicalTodayDate: canonicalToday,
+    }), false);
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'under_review', isPrimary: true },
+      canonicalTodayDate: canonicalToday,
+    }), false);
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'ambiguous', isPrimary: true },
+      canonicalTodayDate: canonicalToday,
+    }), false);
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: null, isPrimary: true },
+      canonicalTodayDate: canonicalToday,
+    }), false);
+
+    // 6. Non-primary variants: isPrimary: false or missing -> false
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'resolved', isPrimary: false },
+      canonicalTodayDate: canonicalToday,
+    }), false);
     assert.equal(isEligibleToObserveToday({
       occurrence: { id: validOccId, date: '2026-08-23', status: 'resolved' },
+      canonicalTodayDate: canonicalToday,
+    }), false);
+
+    // 7. Missing canonical today string -> false
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'resolved', isPrimary: true },
       canonicalTodayDate: null,
     }), false);
 
-    // 6. Valid resolved occurrence with matching date -> true
+    // 8. Valid resolved primary occurrence with matching date -> true
     assert.equal(isEligibleToObserveToday({
-      occurrence: { id: validOccId, date: '2026-08-23', civilDate: '2026-08-23', status: 'resolved' },
+      occurrence: { id: validOccId, date: '2026-08-23', civilDate: '2026-08-23', status: 'resolved', isPrimary: true },
       canonicalTodayDate: canonicalToday,
     }), true);
   });
