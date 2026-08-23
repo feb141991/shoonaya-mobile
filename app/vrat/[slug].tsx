@@ -18,7 +18,11 @@ import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { lookupVratData, getVratData, type VratData } from '@/lib/vrat-data';
-import { isEligibleToObserveToday, buildVratObservationPayload } from '@/lib/vrat-observation';
+import {
+  buildVratObservationPayload,
+  isEligibleToObserveToday,
+  matchesRequestedOccurrence,
+} from '@/lib/vrat-observation';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -36,7 +40,6 @@ export default function VratDetailScreen() {
   const params = useLocalSearchParams<{ slug: string; occurrence_id?: string; date?: string }>();
   const slug = params.slug || 'ekadashi';
   const occurrenceIdParam = params.occurrence_id || null;
-  const occurrenceDateParam = params.date || null;
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -84,54 +87,29 @@ export default function VratDetailScreen() {
     setCanonicalToday(null);
     setOccurrence(null);
 
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-
-    // 1. If occurrenceIdParam is provided, fetch canonical occurrence details from upcoming calendar
+    // 1. Resolve the exact canonical UUID. This remains valid for historical
+    // notification/deep links and is not bounded to a rolling calendar window.
     if (occurrenceIdParam) {
       setOccurrenceLoading(true);
-      apiFetch(`/api/calendar/upcoming?days=60&tz=${encodeURIComponent(timezone)}`, {
+      const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+      apiFetch(`/api/vrat/occurrence?occurrence_id=${encodeURIComponent(occurrenceIdParam)}&tz=${encodeURIComponent(deviceTimezone)}`, {
         signal: controller.signal,
       })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (cancelled || controller.signal.aborted || !data) return;
-          const observances: ClientObservanceResult[] = Array.isArray(data.observances)
-            ? data.observances
-            : [];
-          const match = observances.find((o) => o.id === occurrenceIdParam);
-          if (match) {
-            setOccurrence(match);
-          } else if (occurrenceDateParam) {
-            setOccurrence({
-              id: occurrenceIdParam,
-              festivalId: slug,
-              slug,
-              display_name: vrat.name,
-              emoji: vrat.emoji,
-              kind: 'vrat',
-              tradition: 'hindu',
-              route_kind: 'vrat',
-              route_slug: slug,
-              description: vrat.tagline,
-              status: 'resolved',
-              civilDate: occurrenceDateParam,
-              date: occurrenceDateParam,
-              candidateDates: [occurrenceDateParam],
-              reviewPlacementDate: occurrenceDateParam,
-              location: { label: 'Local', lat: 0, lon: 0, tz: timezone },
-              profile: { calendar: 'local', tradition: 'hindu' },
-              versions: { panchangaCore: '1.0', calendarProfile: '1.0', ruleEngine: '1.0', rule: '1.0' },
-              reasons: [],
-              alternatives: [],
-              confidence: 'high',
-              diagnostics: [],
-              sourceRefs: [],
-              reviewStatus: 'reviewed',
-              isPrimary: true,
-            });
+          const resolvedOccurrence = data.occurrence as ClientObservanceResult | undefined;
+          if (matchesRequestedOccurrence(occurrenceIdParam, resolvedOccurrence)) {
+            setOccurrence(resolvedOccurrence);
+          } else {
+            setOccurrence(null);
           }
         })
-        .catch(() => {})
+        .catch(() => {
+          if (!cancelled && !controller.signal.aborted) {
+            setOccurrence(null);
+          }
+        })
         .finally(() => {
           if (!cancelled && !controller.signal.aborted) {
             setOccurrenceLoading(false);
@@ -163,7 +141,7 @@ export default function VratDetailScreen() {
       cancelled = true;
       controller.abort();
     };
-  }, [slug, occurrenceIdParam, occurrenceDateParam, vrat.id, vrat.name, vrat.emoji, vrat.tagline]);
+  }, [slug, occurrenceIdParam, vrat.id]);
 
   const isEligibleToday = useMemo(() => {
     if (!occurrenceIdParam || !occurrence) return false;
@@ -317,7 +295,49 @@ export default function VratDetailScreen() {
                 </View>
               ) : null}
             </View>
-          ) : !occurrenceIdParam ? (
+          ) : occurrenceIdParam ? (
+            occurrenceLoading ? (
+              <View style={{ marginTop: 16, padding: 12, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={theme.brand} />
+              </View>
+            ) : (
+              <View
+                style={{
+                  marginTop: 16,
+                  padding: 12,
+                  borderRadius: RADII.md,
+                  backgroundColor: theme.card,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Feather name="info" size={16} color={theme.dim} />
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>
+                    Occurrence Details Unavailable
+                  </Text>
+                </View>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, marginTop: 4, lineHeight: 18 }}>
+                  This specific observance occurrence is not active or could not be verified with the canonical calendar service. You can explore the sacred significance and practices below.
+                </Text>
+                <PressableSurface
+                  onPress={() => router.push('/vrat')}
+                  style={{
+                    marginTop: 10,
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                    borderRadius: RADII.sm,
+                    backgroundColor: theme.brandSoft,
+                    alignSelf: 'flex-start',
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
+                    Back to Fasting Calendar
+                  </Text>
+                </PressableSurface>
+              </View>
+            )
+          ) : (
             <View
               style={{
                 marginTop: 12,
@@ -330,7 +350,7 @@ export default function VratDetailScreen() {
                 Educational Catalogue Overview · See upcoming calendar for dated fasts
               </Text>
             </View>
-          ) : null}
+          )}
         </Card>
 
         {/* Action CTA: Mark as Observed (only when occurrence is eligible today) */}

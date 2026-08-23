@@ -22,6 +22,36 @@ export interface ObservationEligibleOccurrence {
   isPrimary?: boolean;
 }
 
+export interface ConfirmedVratOccurrence extends ObservationEligibleOccurrence {
+  kind?: string | null;
+  reviewStatus?: string | null;
+}
+
+export function isConfirmedVratOccurrence(
+  occurrence: ConfirmedVratOccurrence | null | undefined,
+): boolean {
+  return Boolean(
+    occurrence?.id &&
+    UUID_REGEX.test(occurrence.id) &&
+    occurrence.kind === "vrat" &&
+    occurrence.isPrimary === true &&
+    occurrence.status === "resolved" &&
+    occurrence.reviewStatus === "reviewed" &&
+    (occurrence.civilDate || occurrence.date),
+  );
+}
+
+export function matchesRequestedOccurrence(
+  requestedOccurrenceId: string | null | undefined,
+  occurrence: ObservationEligibleOccurrence | null | undefined,
+): occurrence is ObservationEligibleOccurrence & { id: string } {
+  return Boolean(
+    requestedOccurrenceId &&
+    UUID_REGEX.test(requestedOccurrenceId) &&
+    occurrence?.id === requestedOccurrenceId,
+  );
+}
+
 export function isEligibleToObserveToday(params: {
   occurrence: ObservationEligibleOccurrence | null | undefined;
   canonicalTodayDate: string | null | undefined;

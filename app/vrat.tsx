@@ -27,6 +27,7 @@ import {
   recordPromptDismissal,
 } from '@/lib/progressiveProfiling';
 import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
+import { isConfirmedVratOccurrence } from '@/lib/vrat-observation';
 
 type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
@@ -213,11 +214,12 @@ export default function VratScreen() {
         const vratObservances = rawObservances.filter((o) => o.kind === 'vrat');
 
         const resolvedUpcoming: UpcomingVrat[] = vratObservances
+          .filter(isConfirmedVratOccurrence)
           .map((observance) => {
             const vratData = lookupVratData(observance.slug);
             return vratData
               ? {
-                  date: observance.civilDate ?? observance.date,
+                  date: (observance.civilDate ?? observance.date)!,
                   slug: observance.slug,
                   vratData,
                   observance,
@@ -444,9 +446,9 @@ export default function VratScreen() {
           </Card>
         ) : upcomingVrats.length > 0 ? (
           <View style={{ gap: 8, marginBottom: 24 }}>
-            {upcomingVrats.map((upcoming, index) => (
+            {upcomingVrats.map((upcoming) => (
               <PressableSurface
-                key={`${upcoming.observance.id ?? upcoming.date}-${index}`}
+                key={upcoming.observance.id ?? `${upcoming.slug}-${upcoming.date}`}
                 onPress={() => openVratDetail(upcoming.vratData, upcoming.observance)}
                 style={{
                   padding: 14,
