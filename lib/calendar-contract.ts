@@ -1,3 +1,5 @@
+import type { ObservanceSeries } from './observance-series-contract.generated';
+
 export interface SourceReference {
   code: string;
   tradition?: string;
@@ -87,4 +89,6 @@ export interface UpcomingCalendarResponse {
   from: string;
   to: string;
   observances: ClientObservanceResult[];
+  /** Optional for backward compatibility with backend versions before contract 1.0.0. */
+  series?: ObservanceSeries[];
 }
