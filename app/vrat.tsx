@@ -25,6 +25,7 @@ import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
+import { isEligibleToObserveToday, buildVratObservationPayload } from '@/lib/vrat-observation';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import {
@@ -145,6 +146,7 @@ export default function VratScreen() {
   const [observeCount, setObserveCount] = useState(0);
   const [observeLoading, setObserveLoading] = useState(false);
   const [observeStatusLoaded, setObserveStatusLoaded] = useState(false);
+  const [canonicalToday, setCanonicalToday] = useState<string | null>(null);
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
 
   const [lang, setLang] = useState<'en' | 'local'>('en');
@@ -303,9 +305,12 @@ export default function VratScreen() {
 
   useEffect(() => {
     if (!selectedVrat) {
+      setSelectedOccurrence(null);
       setObservedToday(false);
       setObserveCount(0);
       setObserveStatusLoaded(false);
+      setObserveLoading(false);
+      setCanonicalToday(null);
       return;
     }
 
@@ -313,6 +318,8 @@ export default function VratScreen() {
     setObservedToday(false);
     setObserveCount(0);
     setObserveStatusLoaded(false);
+    setObserveLoading(false);
+    setCanonicalToday(null);
 
     const url = selectedOccurrence?.observance?.id
       ? `/api/vrat/observe?occurrence_id=${encodeURIComponent(selectedOccurrence.observance.id)}`
@@ -324,6 +331,7 @@ export default function VratScreen() {
         if (cancelled || !data) return;
         setObservedToday(Boolean(data.observed_today));
         setObserveCount(data.total_count ?? 0);
+        if (data.today) setCanonicalToday(data.today);
       })
       .catch(() => {
       })
@@ -338,12 +346,11 @@ export default function VratScreen() {
 
   const isOccurringToday = useMemo(() => {
     if (!selectedVrat) return false;
-    if (selectedOccurrence?.observance?.id && selectedOccurrence?.date) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      return selectedOccurrence.date === todayStr && selectedOccurrence.observance.status !== 'unresolved';
-    }
-    return false;
-  }, [selectedVrat, selectedOccurrence]);
+    return isEligibleToObserveToday({
+      occurrence: selectedOccurrence?.observance,
+      canonicalTodayDate: canonicalToday,
+    });
+  }, [selectedVrat, selectedOccurrence, canonicalToday]);
 
   const handleObserve = async () => {
     const occId = selectedOccurrence?.observance?.id;
@@ -358,11 +365,10 @@ export default function VratScreen() {
 
     setObserveLoading(true);
     try {
+      const payload = buildVratObservationPayload({ occurrenceId: occId });
       const res = await apiFetch('/api/vrat/observe', {
         method: 'POST',
-        body: JSON.stringify({
-          occurrence_id: occId,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
 

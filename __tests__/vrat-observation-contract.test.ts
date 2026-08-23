@@ -1,11 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export interface VratObservationPayload {
-  occurrence_id: string;
-}
+import {
+  buildVratObservationPayload,
+  isEligibleToObserveToday,
+  type ObservationEligibleOccurrence,
+} from '../lib/vrat-observation';
 
 export interface VratObservationResult {
   success: boolean;
@@ -13,40 +12,6 @@ export interface VratObservationResult {
   karma_earned: number;
   today?: string;
   occurrence_date?: string;
-}
-
-export function isEligibleToObserveToday(params: {
-  selectedVratId: string | null;
-  selectedOccurrence?: {
-    date: string;
-    observance?: {
-      id?: string | null;
-      status?: string;
-    };
-  } | null;
-  todayDateStr: string;
-}): boolean {
-  if (!params.selectedVratId) return false;
-  if (params.selectedOccurrence?.observance?.id && params.selectedOccurrence?.date) {
-    return (
-      params.selectedOccurrence.date === params.todayDateStr &&
-      params.selectedOccurrence.observance.status !== 'unresolved'
-    );
-  }
-  return false;
-}
-
-export function buildVratObservationPayload(params: {
-  occurrenceId?: string | null;
-}): VratObservationPayload {
-  const occId = params.occurrenceId?.trim();
-  if (!occId || !UUID_REGEX.test(occId)) {
-    throw new Error('Valid canonical occurrence_id UUID is required');
-  }
-
-  return {
-    occurrence_id: occId,
-  };
 }
 
 export function handleObservationResponse(
@@ -70,8 +35,8 @@ export function handleObservationResponse(
   };
 }
 
-describe('Vrat Observation Contract & Occurrence-Qualified Ledger Suite', () => {
-  it('builds canonical observation payload with occurrence_id only (non-forgeable)', () => {
+describe('Vrat Observation Contract & Production Helpers Suite', () => {
+  it('builds canonical observation payload with occurrence_id strictly', () => {
     const payload = buildVratObservationPayload({
       occurrenceId: '12345678-1234-1234-1234-123456789abc',
     });
@@ -86,7 +51,7 @@ describe('Vrat Observation Contract & Occurrence-Qualified Ledger Suite', () => 
     }, /Valid canonical occurrence_id UUID is required/);
 
     assert.throws(() => {
-      buildVratObservationPayload({ occurrenceId: 'not-a-uuid' });
+      buildVratObservationPayload({ occurrenceId: 'bad-uuid-format' });
     }, /Valid canonical occurrence_id UUID is required/);
 
     assert.throws(() => {
@@ -94,54 +59,48 @@ describe('Vrat Observation Contract & Occurrence-Qualified Ledger Suite', () => 
     }, /Valid canonical occurrence_id UUID is required/);
   });
 
-  it('evaluates observation eligibility strictly by resolved canonical occurrence id today', () => {
+  it('evaluates observation eligibility strictly using production isEligibleToObserveToday helper', () => {
     const validOccId = '12345678-1234-1234-1234-123456789abc';
+    const canonicalToday = '2026-08-23';
 
-    // 1. Browsing arbitrary library item with no occurrence -> false
+    // 1. Null occurrence -> false
     assert.equal(isEligibleToObserveToday({
-      selectedVratId: 'chaturthi',
-      selectedOccurrence: null,
-      todayDateStr: '2026-08-23',
+      occurrence: null,
+      canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 2. Browsing occurrence without canonical id -> false
+    // 2. Occurrence with missing ID -> false
     assert.equal(isEligibleToObserveToday({
-      selectedVratId: 'ekadashi',
-      selectedOccurrence: {
-        date: '2026-08-23',
-        observance: { id: null, status: 'resolved' },
-      },
-      todayDateStr: '2026-08-23',
+      occurrence: { id: null, date: '2026-08-23', status: 'resolved' },
+      canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 3. Browsing occurrence with future date -> false
+    // 3. Occurrence with mismatched/future date -> false
     assert.equal(isEligibleToObserveToday({
-      selectedVratId: 'ekadashi',
-      selectedOccurrence: {
-        date: '2026-08-30',
-        observance: { id: validOccId, status: 'resolved' },
-      },
-      todayDateStr: '2026-08-23',
+      occurrence: { id: validOccId, date: '2026-08-30', status: 'resolved' },
+      canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 4. Browsing unresolved placeholder -> false
+    // 4. Occurrence marked unresolved or under_review -> false
     assert.equal(isEligibleToObserveToday({
-      selectedVratId: 'ekadashi',
-      selectedOccurrence: {
-        date: '2026-08-23',
-        observance: { id: validOccId, status: 'unresolved' },
-      },
-      todayDateStr: '2026-08-23',
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'unresolved' },
+      canonicalTodayDate: canonicalToday,
+    }), false);
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'under_review' },
+      canonicalTodayDate: canonicalToday,
     }), false);
 
-    // 5. Browsing valid resolved occurrence today -> true
+    // 5. Missing canonical today string -> false
     assert.equal(isEligibleToObserveToday({
-      selectedVratId: 'ekadashi',
-      selectedOccurrence: {
-        date: '2026-08-23',
-        observance: { id: validOccId, status: 'resolved' },
-      },
-      todayDateStr: '2026-08-23',
+      occurrence: { id: validOccId, date: '2026-08-23', status: 'resolved' },
+      canonicalTodayDate: null,
+    }), false);
+
+    // 6. Valid resolved occurrence with matching date -> true
+    assert.equal(isEligibleToObserveToday({
+      occurrence: { id: validOccId, date: '2026-08-23', civilDate: '2026-08-23', status: 'resolved' },
+      canonicalTodayDate: canonicalToday,
     }), true);
   });
 
