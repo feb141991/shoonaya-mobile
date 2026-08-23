@@ -306,8 +306,17 @@ export default function VratScreen() {
     };
   }, [selectedVrat]);
 
+  const isOccurringToday = useMemo(() => {
+    if (!selectedVrat) return false;
+    if (selectedOccurrence) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      return selectedOccurrence.date === todayStr;
+    }
+    return selectedVrat.id === todayVrat?.id;
+  }, [selectedVrat, selectedOccurrence, todayVrat?.id]);
+
   const handleObserve = async () => {
-    if (!selectedVrat || observedToday || observeLoading) {
+    if (!selectedVrat || !isOccurringToday || observedToday || observeLoading) {
       return;
     }
 
@@ -607,49 +616,73 @@ export default function VratScreen() {
               <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Set reminder</Text>
             </PressableSurface>
 
-            {observedToday ? (
+            {isOccurringToday ? (
+              <>
+                {observedToday ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 8,
+                      borderRadius: 999,
+                      borderWidth: 1.5,
+                      borderColor: COLORS.successBorder,
+                      backgroundColor: COLORS.successBg,
+                      paddingVertical: 14,
+                    }}
+                  >
+                    <Feather name="check-circle" size={18} color={COLORS.success} />
+                    <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                      Observed today ✓{observeCount > 1 ? `  (${observeCount}× total)` : ''}
+                    </Text>
+                  </View>
+                ) : (
+                  <PressableSurface
+                    onPress={() => {
+                      void handleObserve();
+                    }}
+                    disabled={observeLoading || !observeStatusLoaded}
+                    style={{
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.card,
+                      paddingVertical: 14,
+                      alignItems: 'center',
+                      opacity: observeLoading || !observeStatusLoaded ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                      🙏 Mark as Observed{observeCount > 0 ? `  (${observeCount}× before)` : ''}
+                    </Text>
+                  </PressableSurface>
+                )}
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
+                  {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat today'}
+                </Text>
+              </>
+            ) : (
               <View
                 style={{
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 8,
-                  borderRadius: 999,
-                  borderWidth: 1.5,
-                  borderColor: COLORS.successBorder,
-                  backgroundColor: COLORS.successBg,
-                  paddingVertical: 14,
-                }}
-              >
-                <Feather name="check-circle" size={18} color={COLORS.success} />
-                <Text style={{ color: COLORS.success, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                  Observed today ✓{observeCount > 1 ? `  (${observeCount}× total)` : ''}
-                </Text>
-              </View>
-            ) : (
-              <PressableSurface
-                onPress={() => {
-                  void handleObserve();
-                }}
-                disabled={observeLoading || !observeStatusLoaded}
-                style={{
-                  borderRadius: 999,
+                  borderRadius: RADII.xl,
                   borderWidth: 1,
                   borderColor: theme.border,
                   backgroundColor: theme.card,
-                  paddingVertical: 14,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
                   alignItems: 'center',
-                  opacity: observeLoading || !observeStatusLoaded ? 0.6 : 1,
+                  gap: 4,
                 }}
               >
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                  🙏 Mark as Observed{observeCount > 0 ? `  (${observeCount}× before)` : ''}
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13 }}>
+                  📖 Educational Reference
                 </Text>
-              </PressableSurface>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
+                  Karma tracking is enabled on the sacred observance date.
+                </Text>
+              </View>
             )}
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13, textAlign: 'center' }}>
-              {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat'}
-            </Text>
           </View>
         </View>
       </ReaderShell>

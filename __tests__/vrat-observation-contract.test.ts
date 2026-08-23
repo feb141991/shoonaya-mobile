@@ -18,6 +18,19 @@ export interface VratObservationResult {
   occurrence_date?: string;
 }
 
+export function isEligibleToObserveToday(params: {
+  selectedVratId: string | null;
+  selectedOccurrenceDate?: string | null;
+  todayVratId?: string | null;
+  todayDateStr: string;
+}): boolean {
+  if (!params.selectedVratId) return false;
+  if (params.selectedOccurrenceDate) {
+    return params.selectedOccurrenceDate === params.todayDateStr;
+  }
+  return params.selectedVratId === params.todayVratId;
+}
+
 export function buildVratObservationPayload(params: {
   vratId: string;
   vratName: string;
@@ -87,6 +100,36 @@ describe('Vrat Observation Contract & Idempotent Ledger Suite', () => {
         vratName: 'Test',
       });
     }, /vrat_id is required/);
+  });
+
+  it('evaluates observation eligibility strictly by occurrence date or today match', () => {
+    // 1. Browsing arbitrary library item not occurring today -> false
+    assert.equal(isEligibleToObserveToday({
+      selectedVratId: 'chaturthi',
+      todayVratId: 'ekadashi',
+      todayDateStr: '2026-08-23',
+    }), false);
+
+    // 2. Browsing item that matches todayVratId -> true
+    assert.equal(isEligibleToObserveToday({
+      selectedVratId: 'ekadashi',
+      todayVratId: 'ekadashi',
+      todayDateStr: '2026-08-23',
+    }), true);
+
+    // 3. Browsing occurrence with future date -> false
+    assert.equal(isEligibleToObserveToday({
+      selectedVratId: 'ekadashi',
+      selectedOccurrenceDate: '2026-08-30',
+      todayDateStr: '2026-08-23',
+    }), false);
+
+    // 4. Browsing occurrence with today's date -> true
+    assert.equal(isEligibleToObserveToday({
+      selectedVratId: 'ekadashi',
+      selectedOccurrenceDate: '2026-08-23',
+      todayDateStr: '2026-08-23',
+    }), true);
   });
 
   it('handles first-time observation and awards karma', () => {
