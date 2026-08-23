@@ -312,7 +312,7 @@ export default function VratScreen() {
     }
 
     if (isGuest) {
-      Alert.alert('Sign in required', 'Sign in to track your Vrat observances.');
+      Alert.alert('Sign in required', 'Sign in to track your Vrat observances and earn karma.');
       return;
     }
 
@@ -320,7 +320,14 @@ export default function VratScreen() {
     try {
       const res = await apiFetch('/api/vrat/observe', {
         method: 'POST',
-        body: JSON.stringify({ vrat_id: selectedVrat.id, vrat_name: selectedVrat.name }),
+        body: JSON.stringify({
+          vrat_id: selectedVrat.id,
+          vrat_name: selectedVrat.name,
+          occurrence_date: selectedOccurrence?.date,
+          occurrence_id: selectedOccurrence?.observance?.id,
+          calendar_profile: geo.calendarProfile,
+          tradition: geo.tradition,
+        }),
       });
       const data = await res.json();
 
