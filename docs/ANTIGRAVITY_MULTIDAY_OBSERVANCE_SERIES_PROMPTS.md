@@ -25,7 +25,7 @@ regression.
 |---|---|---|
 | 1. Naraka Chaturdashi | Complete in code | Apply `20260823181312_approve_naraka_chaturdashi_rule.sql` and run controlled materialisation only with explicit production approval |
 | 2. Observance-series contract | Complete in code | Keep PWA and Native generated contract byte-identical |
-| 3. Sourced daily content | Pending | Editorial/source model and generated Native snapshot |
+| 3. Sourced daily content | Complete in code | Unratified deity, ritual, significance, and early Navratri titles remain `pending_source` and fail closed until separately sourced or council-reviewed |
 | 4. Premium series cards | Pending | PWA, Android, and iOS implementation and visual QA |
 | 5. Notifications and observation writes | Pending | Series-aware dedupe, exact-child routing, festival participation semantics, and real-device push proof |
 
@@ -326,6 +326,21 @@ Stop after Prompt 3.
 
 ## Prompt 4: Build Premium PWA and Native Series Cards
 
+### Mandatory preflight
+
+1. Read the canonical backend contract and generated Native snapshot. Prove they
+   are byte-identical with `npm run verify:native-observance-series-contract`.
+2. Consume `currentCivilDate` and `activeChildOccurrenceIds`; do not reduce an
+   active date to `currentDay` or a single child.
+3. Render editorial fields only through a shared status/applicability guard.
+   `pending_source` and `withheld` must never appear. A
+   `council_reviewed_editorial` field without `reviewRef` also remains hidden.
+4. Use the occurrence title as the safe fallback when an editorial title is
+   withheld. Never substitute another child's content.
+5. Trace the real Home data path in each repository and prove `series` reaches
+   the card. Do not construct series membership, dates, progress, or active
+   children in UI code.
+
 ### Objective
 
 Render platform-appropriate cards from the canonical series DTO without changing
@@ -344,6 +359,13 @@ For `festival_cluster`:
 - Upcoming: `Diwali festival · five observances · begins in 2 days`
 - Active: today’s child plus a compact cluster progress indicator
 - Same-day children: both visible and independently addressable
+
+For `under_review` or incomplete series:
+
+- Do not show final progress, celebratory language, observation actions, or a
+  guessed active child.
+- Show one restrained unavailable/review state with diagnostics accessible to
+  the user; preserve independently valid single-observance cards.
 
 For `season`:
 
@@ -366,6 +388,26 @@ For `recurring_series`:
    unresolved, incomplete, empty, and error states.
 6. No layout shift when a single card becomes a series card.
 7. Accessibility labels include series name, current child, sequence, and status.
+8. PWA must wire the series DTO into the existing Home carousel rather than only
+   declaring an unused component.
+9. Native must wire the series DTO through the existing Home summary state into
+   `SacredDaysCard` (or a narrowly extracted sibling). Call hooks unconditionally
+   before any series/single-observance render branch.
+10. Preserve the existing single-observance spotlight when no publishable series
+    exists. Do not redesign unrelated Home cards or navigation.
+
+### Required tests
+
+- PWA and Native: upcoming, active, concluding, complete, under-review, missing
+  child, and empty states.
+- Diwali 2026-11-08 exposes and routes both Naraka Chaturdashi and Diwali by
+  their distinct occurrence IDs.
+- Pending editorial copy and region-mismatched rituals do not render.
+- Source-backed localized titles render in English, Hindi, and Punjabi with
+  English fallback only when the requested translation is unavailable and not
+  marked pending.
+- Switching between a single observance and a series does not alter hook order.
+- Existing Home request count and API shape remain unchanged.
 
 ### Visual verification
 

@@ -24,6 +24,8 @@ describe('generated observance-series contract', () => {
       status: 'under_review',
       startDate: null,
       endDate: null,
+      currentCivilDate: null,
+      activeChildOccurrenceIds: [],
       currentDay: null,
       totalDays: 5,
       children: [{
