@@ -1,3 +1,4 @@
+import type { ObservanceSeries } from '@/lib/observance-series-contract.generated';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -182,6 +183,7 @@ type HomeSummary = {
     name: string;
     firstName: string;
     tradition: string;
+    appLanguage: 'en' | 'hi' | 'pa';
     city: string;
     country: string;
     karmaPoints: number;
@@ -222,6 +224,7 @@ type HomeSummary = {
     // pill can rotate through genuinely different items instead of just
     // re-labeling the same nearest one.
     upcomingObservances: ObservanceEntry[];
+    series?: ObservanceSeries[];
   };
   nextPractice: {
     id: PracticeId;
@@ -296,6 +299,7 @@ const INITIAL_STATE: HomeSummary = {
     name: 'Seeker',
     firstName: 'Seeker',
     tradition: 'hindu',
+    appLanguage: 'en',
     city: '',
     country: '',
     karmaPoints: 0,
@@ -332,6 +336,7 @@ const INITIAL_STATE: HomeSummary = {
     viewedToday: false,
     observance: null,
     upcomingObservances: [],
+    series: [],
   },
   nextPractice: {
     id: 'pathshala',
@@ -745,6 +750,7 @@ function HomeContent() {
       name: 'Atithi',
       firstName: 'Atithi',
       tradition: 'hindu',
+      appLanguage: 'en',
       city: '',
       country: '',
       karmaPoints: 0,
@@ -1426,8 +1432,15 @@ function HomeContent() {
             <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
           ) : null}
 
-          {soonestObservance ? (
-            <SacredDaysCard entry={soonestObservance} theme={theme} isDark={isDark} />
+          {Boolean(state.panchang.series?.length || soonestObservance) ? (
+            <SacredDaysCard
+              entry={soonestObservance}
+              series={state.panchang.series}
+              theme={theme}
+              isDark={isDark}
+              lang={state.profile.appLanguage}
+              spiritualDate={state.date.iso}
+            />
           ) : null}
 
           {/* Smart daily Sadhana CTA — mirrors PWA's HeroSection.tsx card

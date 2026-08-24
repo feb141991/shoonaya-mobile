@@ -63,6 +63,16 @@ export const COLORS = {
   dangerBg: 'rgba(220,38,38,0.10)',
   dangerBorder: 'rgba(220,38,38,0.28)',
 
+  // Calendar review state. Sourced from the PWA's existing amber-500/600
+  // review treatment used by the observance-series card, promoted here so
+  // Native never carries screen-local warning literals.
+  warningLight: '#D97706',
+  warningDark: '#F59E0B',
+  warningBgLight: 'rgba(217,119,6,0.15)',
+  warningBgDark: 'rgba(245,158,11,0.15)',
+  warningBorderLight: 'rgba(217,119,6,0.35)',
+  warningBorderDark: 'rgba(245,158,11,0.30)',
+
   // Home/Auth premium surfaces — promoted from the first Home/Auth visual
   // pass so the PWA-matched ivory, ink, and translucent gold treatments are
   // reusable tokens instead of screen-local literals.

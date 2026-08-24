@@ -7,17 +7,15 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
+import { ObservanceSeriesCard } from './ObservanceSeriesCard';
+import type { ObservanceSeries } from '@/lib/observance-series-contract.generated';
+import {
+  getNativeSeriesCardChildren,
+  getNativeSeriesCardCopy,
+  getNativeSeriesCardDayDistance,
+} from '@/lib/observance-series-card-helpers';
 
-// Mobile's spotlight version of the PWA's VratCarousel/VratCard
-// (src/components/home/VratCarousel.tsx) — same 3-day-before window
-// (HOME_OBSERVANCE_WINDOW_DAYS), but a single soonest-first card rather
-// than a swipeable carousel, matching how BrahmaMuhurtaPrompt/
-// FirstWeekGuide are each a one-shot conditional card on this screen.
-// Gradient + glow + "Learn more" pill mirror the Sadhana CTA card's
-// (index.tsx) premium-accent treatment and the japa.tsx/nav backdrop-glow
-// convention, not ported PWA hex/rgba.
-
-type ObservanceEntryLike = {
+export type ObservanceEntryLike = {
   name: string;
   emoji: string | null;
   daysLeft: number;
@@ -43,44 +41,95 @@ const ROUTE_ICON: Partial<Record<string, SacredIconName>> = {
   festival: 'panchang',
 };
 
-function daysBadgeLabel(daysLeft: number): string {
-  if (daysLeft === 0) return 'Today';
-  if (daysLeft === 1) return 'Tomorrow';
-  return `in ${daysLeft}d`;
+function daysBadgeLabel(daysLeft: number, lang: 'en' | 'hi' | 'pa'): string {
+  const copy = getNativeSeriesCardCopy(lang);
+  if (daysLeft === 0) return copy.today;
+  if (daysLeft === 1) return copy.tomorrow;
+  return copy.inDays(daysLeft);
 }
 
-export function SacredDaysCard({ entry, theme, isDark }: { entry: ObservanceEntryLike; theme: Theme; isDark: boolean }) {
+export function SacredDaysCard({
+  entry,
+  series,
+  theme,
+  isDark,
+  lang = 'en',
+  spiritualDate,
+}: {
+  entry?: ObservanceEntryLike | null;
+  series?: ObservanceSeries[] | null;
+  theme: Theme;
+  isDark: boolean;
+  lang?: 'en' | 'hi' | 'pa';
+  spiritualDate: string;
+}) {
+  // CRITICAL: Hooks called unconditionally before ANY branching
   const router = useRouter();
+
+  // Keep the Native spotlight aligned with Home's established three-day
+  // window and let the nearest resolved observance win.
+  const relevantSeries = (series ?? [])
+    .map(candidate => ({
+      candidate,
+      days: getNativeSeriesCardDayDistance(candidate, spiritualDate),
+    }))
+    .filter(({ candidate, days }) =>
+      days !== null
+      && days >= 0
+      && days <= 3
+      && (candidate.status === 'under_review' || getNativeSeriesCardChildren(candidate).length > 0),
+    )
+    .sort((a, b) => a.days! - b.days!);
+  const publishableSeries = relevantSeries.find(({ candidate }) => candidate.status !== 'under_review');
+  const reviewSeries = relevantSeries.find(({ candidate }) => candidate.status === 'under_review');
+  const shouldPreferSeries = Boolean(
+    publishableSeries
+    && (!entry || publishableSeries.days! <= entry.daysLeft),
+  );
+  const activeSeries = shouldPreferSeries
+    ? publishableSeries!.candidate
+    : (!entry ? reviewSeries?.candidate ?? null : null);
+
+  if (activeSeries) {
+    return (
+      <ObservanceSeriesCard
+        series={activeSeries}
+        theme={theme}
+        isDark={isDark}
+        lang={lang}
+        spiritualDate={spiritualDate}
+      />
+    );
+  }
+
+  // 2. Fallback to single-observance spotlight card if present
+  if (!entry) return null;
+
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const iconName = ROUTE_ICON[entry.routeKind] ?? 'panchang';
   const isToday = entry.daysLeft === 0;
+  const copy = getNativeSeriesCardCopy(lang);
 
-  // Same "premium accent" gradient pair as the Sadhana CTA card
-  // (index.tsx's sadhanaCtaGradient) — this card sits in the same list,
-  // so it should read as the same visual tier, not a plainer sibling.
   const gradient: readonly [string, string] = isDark
-    ? ['rgba(38,28,18,0.96)', 'rgba(24,18,13,0.94)']
-    : ['rgba(255,248,234,0.96)', 'rgba(250,236,211,0.88)'];
-  const ctaTextColor = isDark ? COLORS.darkBg : COLORS.creamBg;
+    ? [COLORS.navGlassTopDark, COLORS.navGlassBottomDark]
+    : [COLORS.navGlassTopLight, COLORS.navGlassBottomLight];
+  const ctaTextColor = isDark ? COLORS.textOnBrandDark : COLORS.textOnBrandLight;
 
   return (
     <PressableSurface
       haptic="selection"
-      accessibilityLabel={`${entry.name}, ${daysBadgeLabel(entry.daysLeft)}${entry.description ? `. ${entry.description}` : ''}. Tap to open`}
+        accessibilityLabel={`${entry.name}, ${daysBadgeLabel(entry.daysLeft, lang)}${entry.description ? `. ${entry.description}` : ''}`}
       onPress={() => router.push(resolveNativeRoute(entry.href) as Href)}
       style={{
         borderRadius: RADII.xl,
         borderWidth: 1,
-        borderColor: isDark ? 'rgba(197,160,89,0.22)' : 'rgba(205,166,92,0.28)',
+        borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
         boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
         overflow: 'hidden',
       }}
     >
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
 
-      {/* Off-edge glow bubble — same backdrop-bleed pattern as index.tsx's
-          own hero glows (theme.brandSoft-style circle, pointerEvents none,
-          absolutely positioned, bleeding off the corner). */}
       <View
         pointerEvents="none"
         style={{
@@ -102,7 +151,7 @@ export function SacredDaysCard({ entry, theme, isDark }: { entry: ObservanceEntr
             borderRadius: 12,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: isDark ? 'rgba(197,160,89,0.16)' : 'rgba(217,178,105,0.18)',
+            backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
             borderWidth: 1,
             borderColor: theme.premiumBorder,
           }}
@@ -126,19 +175,17 @@ export function SacredDaysCard({ entry, theme, isDark }: { entry: ObservanceEntr
               }}
             >
               <Text style={{ ...TYPE.chip, color: isToday ? ctaTextColor : theme.dim }}>
-                {daysBadgeLabel(entry.daysLeft)}
+              {daysBadgeLabel(entry.daysLeft, lang)}
               </Text>
             </View>
           </View>
 
-          {/* Compact hook -- reads as an invitation to tap, without the
-              weight of a full separate CTA pill/row. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}>
             <Text style={{ ...TYPE.caption, color: theme.dim, flexShrink: 1 }} numberOfLines={1}>
               {entry.description ?? (isToday ? 'Observed today' : entry.monthLabel ?? 'Sacred day')}
             </Text>
             <Text style={{ ...TYPE.caption, color: accent, fontFamily: TYPE.label.fontFamily }}>
-              {' · Learn more'}
+              {` · ${copy.learnMore}`}
             </Text>
           </View>
         </View>

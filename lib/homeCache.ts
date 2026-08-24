@@ -1,3 +1,4 @@
+import type { ObservanceSeries } from './observance-series-contract.generated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 
@@ -36,6 +37,7 @@ export type CachedHomeRenderModel = {
     name: string;
     firstName: string;
     tradition: string;
+    appLanguage: 'en' | 'hi' | 'pa';
     karmaPoints: number;
     relicImageUrl: string | null;
     avatarUrl: string | null;
@@ -70,6 +72,7 @@ export type CachedHomeRenderModel = {
     viewedToday: boolean;
     observance: CachedObservanceEntry | null;
     upcomingObservances: CachedObservanceEntry[];
+    series?: ObservanceSeries[];
   };
   nextPractice: {
     id: 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -141,6 +144,9 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       name: full.profile?.name ?? 'Seeker',
       firstName: full.profile?.firstName ?? 'Seeker',
       tradition: full.profile?.tradition ?? 'hindu',
+      appLanguage: full.profile?.appLanguage === 'hi' || full.profile?.appLanguage === 'pa'
+        ? full.profile.appLanguage
+        : 'en',
       karmaPoints: full.profile?.karmaPoints ?? 0,
       relicImageUrl: full.profile?.relicImageUrl ?? null,
       avatarUrl: full.profile?.avatarUrl ?? null,
@@ -175,6 +181,7 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       viewedToday: Boolean(full.panchang?.viewedToday),
       observance: full.panchang?.observance ?? null,
       upcomingObservances: full.panchang?.upcomingObservances ?? [],
+      series: Array.isArray(full.panchang?.series) ? full.panchang.series : [],
     },
     nextPractice: {
       id: full.nextPractice?.id ?? 'pathshala',
