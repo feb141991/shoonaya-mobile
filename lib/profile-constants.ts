@@ -51,15 +51,19 @@ export function suggestedLifeStage(value: string): LifeStageKey | null {
  * both clients offer the identical reviewed copy. Matches
  * `calendar_profiles.slug` in the shared Supabase project.
  */
+// tamil_solar/malayalam_solar/bengali_solar deliberately excluded -- founder
+// decision 2026-08-18 (docs/CALENDAR_ENGINE_ASSESSMENT.md changelog): these 3
+// remain unratified pending D38's solar day-assignment sourcing, and were
+// removed from web's onboarding/profile pickers the same day. Kept out of
+// mobile's list too so both clients offer the same 8 selectable, ratified
+// profiles. The ninth ratified profile, kannada_telugu_amanta, is retained in
+// the backend profile model but is not exposed as a separate picker option.
 export const CALENDAR_PROFILES = [
   { slug: 'north_indian_purnimanta', label: 'North Indian', system: 'Purnimanta (Month ends on Purnima)', era: 'Vikram Samvat' },
   { slug: 'gujarati_amanta', label: 'Gujarati', system: 'Amanta (Month ends on Amavasya)', era: 'Vikram Samvat' },
   { slug: 'marathi_amanta', label: 'Marathi', system: 'Amanta', era: 'Śaka Samvat' },
   { slug: 'kannada_amanta', label: 'Kannada', system: 'Amanta', era: 'Śaka Samvat' },
   { slug: 'telugu_amanta', label: 'Telugu', system: 'Amanta', era: 'Śaka Samvat' },
-  { slug: 'tamil_solar', label: 'Tamil', system: 'Solar (Month begins on Sankranti)', era: 'Tamil Era' },
-  { slug: 'malayalam_solar', label: 'Malayalam', system: 'Solar', era: 'Kollam Era' },
-  { slug: 'bengali_solar', label: 'Bengali', system: 'Solar', era: 'Bengali San' },
   { slug: 'odia', label: 'Odia', system: 'Amanta / Solar Rule', era: 'Śaka Samvat' },
   { slug: 'nepali_bikram', label: 'Nepali', system: 'Purnimanta', era: 'Bikram Sambat (Nepal)' },
   { slug: 'global_sanatan', label: 'Global', system: 'Amanta (English Transliterated)', era: 'Vikram Samvat' },

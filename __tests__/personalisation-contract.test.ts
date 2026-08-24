@@ -75,8 +75,29 @@ describe('Personalisation Screen & Contract Suite', () => {
   it('constants maintain canonical non-empty lists without drift', () => {
     assert.equal(RASHIS.length, 12);
     assert.equal(NAKSHATRAS.length, 27);
-    assert.equal(CALENDAR_PROFILES.length, 11);
+    assert.equal(CALENDAR_PROFILES.length, 8);
     assert.equal(CALENDAR_SCOPES.length, 2);
     assert.equal(ONBOARDING_GOALS.length, 6);
+  });
+
+  it('only exposes the reviewed calendar profiles in personalisation pickers', () => {
+    assert.deepEqual(
+      CALENDAR_PROFILES.map(({ slug }) => slug),
+      [
+        'north_indian_purnimanta',
+        'gujarati_amanta',
+        'marathi_amanta',
+        'kannada_amanta',
+        'telugu_amanta',
+        'odia',
+        'nepali_bikram',
+        'global_sanatan',
+      ],
+    );
+
+    const exposed = new Set<string>(CALENDAR_PROFILES.map(({ slug }) => slug));
+    for (const parkedProfile of ['tamil_solar', 'malayalam_solar', 'bengali_solar']) {
+      assert.equal(exposed.has(parkedProfile), false, `${parkedProfile} must remain parked`);
+    }
   });
 });
