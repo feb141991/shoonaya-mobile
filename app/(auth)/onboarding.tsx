@@ -13,6 +13,7 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
 import { FounderNoteInterlude } from '@/components/onboarding/FounderNoteInterlude';
+import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
@@ -943,6 +944,7 @@ export default function OnboardingScreen() {
                     : `Age ${age} · suggested stage ${LIFE_STAGES.find((s) => s.key === suggestedStage)?.label}`}
                 </Text>
               ) : null}
+              <AgeGuidanceNotice dateOfBirth={dateOfBirth} language={language ?? 'en'} />
             </View>
 
             <View style={{ gap: 12 }}>

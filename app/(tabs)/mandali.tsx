@@ -31,20 +31,18 @@ import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequests
 import { FilterPicker } from '@/components/mandali/FilterPicker';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import {
-  BLEND_THRESHOLD,
   blockUser,
   cancelConnectionRequest,
   createMandaliComment,
+  createMandaliPost,
   fetchConnectionStatus,
   fetchNearbySeekers,
   fetchPendingConnectionRequests,
-  fetchSafetyState,
-  filterAuthoredPosts,
-  filterMemberRows,
   leaveMandali,
   reportMandaliMember,
   reportMandaliPost,
@@ -53,6 +51,7 @@ import {
   sendConnectionRequest,
   setPostReaction,
   updateMandaliRsvp,
+  updateMandaliPost,
   type CommentRow,
   type ConnectionRequestRow,
   type ConnectionStatus,
@@ -443,12 +442,27 @@ export default function MandaliScreen() {
       return;
     }
 
-    const [{ data: profileRow }, safetyState] = await Promise.all([
-      supabase.from('profiles').select('id, mandali_id, city, country, latitude, longitude, mandalis(name)').eq('id', user.id).single(),
-      fetchSafetyState(user.id),
-    ]);
-
-    const mandaliRelation = Array.isArray(profileRow?.mandalis) ? profileRow?.mandalis[0] : profileRow?.mandalis;
+    type FeedPayload = {
+      profile: {
+        id: string;
+        mandali_id: string | null;
+        city: string | null;
+        country: string | null;
+        latitude: number | null;
+        longitude: number | null;
+        mandalis?: { name?: string | null } | Array<{ name?: string | null }> | null;
+      } | null;
+      posts: PostRow[];
+      comments: CommentRow[];
+      rsvps: RsvpRow[];
+      members: Array<{ id: string; username: string; avatar_url: string | null; seva_score: number }>;
+      blendedPosts: PostRow[];
+    };
+    const feedResponse = await apiFetch('/api/mandali/feed');
+    if (!feedResponse.ok) throw new Error('Could not load Mandali.');
+    const feed = await feedResponse.json() as FeedPayload;
+    const profileRow = feed.profile;
+    const mandaliRelation = Array.isArray(profileRow?.mandalis) ? profileRow.mandalis[0] : profileRow?.mandalis;
     const context: ProfileContext = {
       userId: user.id,
       mandaliId: profileRow?.mandali_id ?? null,
@@ -471,87 +485,37 @@ export default function MandaliScreen() {
       return;
     }
 
-    const [postRows, memberRows] = await Promise.all([
-      supabase
-        .from('posts')
-        .select('id, created_at, author_id, mandali_id, content, type, upvotes, comment_count, event_date, event_location, profiles!posts_author_id_fkey(full_name, username, avatar_url, sampradaya, spiritual_level)')
-        .eq('mandali_id', context.mandaliId)
-        .order('created_at', { ascending: false })
-        .limit(30),
-      supabase
-        .from('profiles')
-        .select('id, full_name, username, avatar_url, sampradaya, ishta_devata, spiritual_level, city, country, seva_score')
-        .eq('mandali_id', context.mandaliId)
-        .order('seva_score', { ascending: false })
-        .limit(50),
-    ]);
-
-    const normalizedPosts = (postRows.data ?? []).map((row) => ({
-      ...row,
-      profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
-    })) as PostRow[];
-
-    const visiblePosts = filterAuthoredPosts(normalizedPosts, safetyState);
-    const visibleMembers = filterMemberRows((memberRows.data ?? []) as MemberRow[], safetyState);
+    const visiblePosts = feed.posts;
+    const visibleMembers: MemberRow[] = feed.members.map((member) => ({
+      ...member,
+      full_name: member.username,
+      sampradaya: null,
+      ishta_devata: null,
+      spiritual_level: null,
+      city: null,
+      country: null,
+    }));
+    const visibleBlended = feed.blendedPosts;
     setPosts(visiblePosts);
     setMembers(visibleMembers);
+    setBlendedPosts(visibleBlended);
+    setComments(feed.comments);
+    setRsvps(feed.rsvps);
 
-    const postIds = visiblePosts.map((p) => p.id);
-    const visiblePostIds = new Set(postIds);
-
-    // Blend Sangam-wide posts when the local Mandali is thin — same
-    // BLEND_THRESHOLD PWA's mandali/page.tsx uses. Resolved before the
-    // comments/RSVPs/upvotes fetch below so that fetch can be scoped to the
-    // full visible post set (local + blended), not just local posts.
-    // Previously the comments/RSVPs query only ever used `postIds` (local
-    // posts), so a blended post's comments and RSVPs never loaded even
-    // though its upvote state did — this closes that gap.
-    let blendedPostIds: string[] = [];
-    if (visibleMembers.length < BLEND_THRESHOLD) {
-      const { data: blendRows } = await supabase
-        .from('posts')
-        .select('id, created_at, author_id, mandali_id, content, type, upvotes, comment_count, event_date, event_location, profiles!posts_author_id_fkey(full_name, username, avatar_url, sampradaya, spiritual_level)')
-        .neq('mandali_id', context.mandaliId)
-        .order('created_at', { ascending: false })
-        .limit(15);
-      const normalizedBlend = (blendRows ?? []).map((row) => ({
-        ...row,
-        profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
-      })) as PostRow[];
-      setBlendedPosts(filterAuthoredPosts(normalizedBlend, safetyState));
-      blendedPostIds = normalizedBlend.map((row) => row.id);
-      for (const id of blendedPostIds) visiblePostIds.add(id);
-    } else {
-      setBlendedPosts([]);
-    }
-
-    const allPostIds = [...postIds, ...blendedPostIds];
-
+    const allPostIds = [...visiblePosts, ...visibleBlended].map((post) => post.id);
+    const visiblePostIds = new Set(allPostIds);
     if (allPostIds.length > 0) {
-      const [commentRows, rsvpRows, upvoteRows] = await Promise.all([
-        supabase
-          .from('post_comments')
-          .select('id, post_id, author_id, body, parent_id, created_at, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
-          .in('post_id', allPostIds)
-          .order('created_at', { ascending: true }),
-        supabase.from('event_rsvps').select('id, post_id, user_id, status, created_at, updated_at').in('post_id', allPostIds),
-        supabase.from('post_upvotes').select('post_id, reaction_type').eq('user_id', user.id).in('post_id', allPostIds),
-      ]);
-      setComments(
-        (commentRows.data ?? []).map((row) => ({
-          ...row,
-          profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
-        })) as CommentRow[]
-      );
-      setRsvps((rsvpRows.data ?? []) as RsvpRow[]);
+      const { data: upvoteRows } = await supabase
+        .from('post_upvotes')
+        .select('post_id, reaction_type')
+        .eq('user_id', user.id)
+        .in('post_id', allPostIds);
       setMyReactions(
         Object.fromEntries(
-          (upvoteRows.data ?? []).map((row) => [row.post_id, (row.reaction_type ?? 'pranam') as ReactionType])
+          (upvoteRows ?? []).map((row) => [row.post_id, (row.reaction_type ?? 'pranam') as ReactionType])
         )
       );
     } else {
-      setComments([]);
-      setRsvps([]);
       setMyReactions({});
     }
 
@@ -1025,7 +989,7 @@ export default function MandaliScreen() {
       username: seeker.username,
       avatarUrl: seeker.avatar_url,
       city: seeker.city,
-      distanceKm: seeker.distanceKm ?? null,
+      distanceKm: null,
     });
     loadConnectionStatus(seeker.id);
   }, [loadConnectionStatus]);
@@ -1109,26 +1073,25 @@ export default function MandaliScreen() {
       const eventLocation = composeType === 'event' && composeEventLoc ? composeEventLoc : null;
 
       if (editingPost) {
-        const { error } = await supabase
-          .from('posts')
-          .update({ content, type: composeType, event_date: eventDate, event_location: eventLocation })
-          .eq('id', editingPost.id);
-        if (error) throw error;
+        await updateMandaliPost({
+          postId: editingPost.id,
+          content,
+          postType: composeType,
+          eventDate,
+          eventLocation,
+        });
         const patch = (list: PostRow[]) =>
           list.map((p) => (p.id === editingPost.id ? { ...p, content, type: composeType, event_date: eventDate, event_location: eventLocation } : p));
         setPosts(patch);
         setBlendedPosts(patch);
       } else {
         if (!profile?.mandaliId) return;
-        const { error } = await supabase.from('posts').insert({
-          author_id: profile.userId,
-          mandali_id: profile.mandaliId,
+        await createMandaliPost({
           content,
-          type: composeType,
-          event_date: eventDate,
-          event_location: eventLocation,
+          postType: composeType,
+          eventDate,
+          eventLocation,
         });
-        if (error) throw error;
         await loadMandali();
       }
       resetComposeState();

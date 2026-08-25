@@ -129,9 +129,7 @@ export type NearbySeeker = {
   username: string | null;
   avatar_url: string | null;
   city: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  distanceKm?: number;
+  distanceLabel?: string;
 };
 
 // Same blend threshold as PWA's mandali page.tsx / lib/api/mandali.ts —
@@ -140,7 +138,6 @@ export type NearbySeeker = {
 export const BLEND_THRESHOLD = 5;
 // Same radius/degree conversions PWA's SeekersNearYou.tsx and
 // NoMandaliPrompt's nearby-mandalis lookup use.
-const SEEKERS_RADIUS_KM = 80;
 const NEARBY_MANDALI_RADIUS_KM = 120;
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -212,40 +209,15 @@ export async function fetchNearbyMandalis(lat: number, lon: number): Promise<Nea
 }
 
 export async function fetchNearbySeekers(userId: string, city: string | null, lat: number | null, lon: number | null): Promise<NearbySeeker[]> {
-  if (lat != null && lon != null) {
-    const LAT_DELTA = SEEKERS_RADIUS_KM / 111;
-    const LON_DELTA = SEEKERS_RADIUS_KM / 85;
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, username, avatar_url, city, latitude, longitude')
-      .gte('latitude', lat - LAT_DELTA)
-      .lte('latitude', lat + LAT_DELTA)
-      .gte('longitude', lon - LON_DELTA)
-      .lte('longitude', lon + LON_DELTA)
-      .neq('id', userId)
-      .limit(40);
-
-    if (!error && data) {
-      return (data as NearbySeeker[])
-        .map((p) => (p.latitude != null && p.longitude != null ? { ...p, distanceKm: haversineKm(lat, lon, p.latitude, p.longitude) } : { ...p, distanceKm: SEEKERS_RADIUS_KM }))
-        .filter((p) => (p.distanceKm ?? 0) <= SEEKERS_RADIUS_KM)
-        .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0))
-        .slice(0, 12);
-    }
-    return [];
-  }
-
-  if (city) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, username, avatar_url, city')
-      .ilike('city', `%${city.trim()}%`)
-      .neq('id', userId)
-      .limit(12);
-    return (data ?? []) as NearbySeeker[];
-  }
-
-  return [];
+  if (!userId || (lat == null && !city)) return [];
+  const response = await apiFetch('/api/mandali/nearby');
+  if (!response.ok) return [];
+  const payload = await response.json() as { seekers: Array<{ id: string; username: string; avatar_url: string | null; distanceLabel: string }> };
+  return payload.seekers.map((seeker) => ({
+    ...seeker,
+    full_name: seeker.username,
+    city: null,
+  }));
 }
 
 // Direct RPC — same call PWA's joinMandaliForLocation makes. The RPC itself
@@ -299,22 +271,46 @@ export async function leaveMandali(userId: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function createMandaliPost(payload: {
+  content: string;
+  postType: 'update' | 'event' | 'question' | 'announcement';
+  eventDate?: string | null;
+  eventLocation?: string | null;
+}): Promise<void> {
+  const response = await apiFetch('/api/mandali/posts', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Could not create post');
+}
+
+export async function updateMandaliPost(payload: {
+  postId: string;
+  content: string;
+  postType: 'update' | 'event' | 'question' | 'announcement';
+  eventDate?: string | null;
+  eventLocation?: string | null;
+}): Promise<void> {
+  const response = await apiFetch('/api/mandali/posts', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Could not update post');
+}
+
 // Returns the new row's id so the caller can patch it into local state
 // directly (a single targeted re-fetch with the profile join) instead of
 // reloading the entire screen for one new comment.
 export async function createMandaliComment(payload: { postId: string; userId: string; body: string; parentId?: string | null }): Promise<string> {
-  const { data, error } = await supabase
-    .from('post_comments')
-    .insert({
-      post_id: payload.postId,
-      author_id: payload.userId,
-      body: payload.body.trim(),
-      parent_id: payload.parentId ?? null,
-    })
-    .select('id')
-    .single();
-  if (error) throw error;
-  return data.id as string;
+  void payload.userId;
+  const response = await apiFetch('/api/mandali/comments', {
+    method: 'POST',
+    body: JSON.stringify({ postId: payload.postId, body: payload.body, parentId: payload.parentId }),
+  });
+  if (!response.ok) throw new Error('Could not create comment');
+  const result = await response.json() as { id?: string };
+  if (!result.id) throw new Error('Comment response was incomplete');
+  return result.id;
 }
 
 export async function updateMandaliRsvp(payload: { postId: string; userId: string; status: RsvpStatus }): Promise<void> {
@@ -331,35 +327,30 @@ export async function updateMandaliRsvp(payload: { postId: string; userId: strin
 // showed a false "success" message. Now surfaces the real error so the
 // screen can show a genuine failure alert instead.
 export async function reportMandaliPost(reportedBy: string, post: PostRow, reason: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('content_reports')
-    .insert({
-      reported_by: reportedBy,
-      content_author_id: post.author_id,
-      content_type: 'mandali_post',
-      content_id: post.id,
-      reason,
-      metadata: { source: 'native_mandali' },
-    })
-    .select('id')
-    .single();
-  if (error) throw error;
-  triggerPush(`content_reported:${data.id}`);
+  void reportedBy;
+  const normalizedReason = reason.toLowerCase().includes('spam')
+    ? 'spam'
+    : reason.toLowerCase().includes('harassment')
+      ? 'harassment'
+      : 'other';
+  const response = await apiFetch('/api/mandali/report', {
+    method: 'POST',
+    body: JSON.stringify({ targetType: 'post', targetId: post.id, reason: normalizedReason }),
+  });
+  if (!response.ok) throw new Error('Could not submit report');
+  const result = await response.json() as { reportId?: string | null };
+  if (result.reportId) triggerPush(`content_reported:${result.reportId}`);
 }
 
 export async function reportMandaliMember(reportedBy: string, memberId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('content_reports')
-    .insert({
-      reported_by: reportedBy,
-      content_type: 'user_profile',
-      content_id: memberId,
-      reason: 'inappropriate_behaviour',
-    })
-    .select('id')
-    .single();
-  if (error) throw error;
-  triggerPush(`content_reported:${data.id}`);
+  void reportedBy;
+  const response = await apiFetch('/api/mandali/report', {
+    method: 'POST',
+    body: JSON.stringify({ targetType: 'user_profile', targetId: memberId, reason: 'other' }),
+  });
+  if (!response.ok) throw new Error('Could not submit report');
+  const result = await response.json() as { reportId?: string | null };
+  if (result.reportId) triggerPush(`content_reported:${result.reportId}`);
 }
 
 // Matches PWA's ContentSafetyMenu.tsx exactly: upsert with
@@ -544,16 +535,11 @@ export async function respondToConnectionRequest(requestId: string, status: 'acc
 }
 
 export async function fetchPendingConnectionRequests(userId: string): Promise<ConnectionRequestRow[]> {
-  const { data } = await supabase
-    .from('mandali_connections')
-    .select('id, requester_id, created_at, requester:profiles!mandali_connections_requester_id_fkey(full_name, username, avatar_url)')
-    .eq('recipient_id', userId)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false });
-  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
-    ...row,
-    requester: Array.isArray(row.requester) ? row.requester[0] ?? null : row.requester ?? null,
-  })) as ConnectionRequestRow[];
+  if (!userId) return [];
+  const response = await apiFetch('/api/mandali/connections/pending');
+  if (!response.ok) return [];
+  const payload = await response.json() as { requests: ConnectionRequestRow[] };
+  return payload.requests;
 }
 
 // ── Reactions (devotional set replacing the single upvote heart) ───────────

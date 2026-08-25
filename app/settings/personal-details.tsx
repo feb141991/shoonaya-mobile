@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 
 import { BackButton } from '@/components/ui/BackButton';
+import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -155,6 +156,7 @@ export default function PersonalDetailsScreen() {
                 {age !== null ? (
                   <Text style={{ ...TYPE.caption, color: theme.dim }}>Age {age}</Text>
                 ) : null}
+                <AgeGuidanceNotice dateOfBirth={details.date_of_birth} />
               </Card>
             </View>
 

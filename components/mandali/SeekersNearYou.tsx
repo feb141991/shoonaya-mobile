@@ -60,9 +60,9 @@ export function SeekersNearYou({
                 <Text numberOfLines={1} style={{ fontFamily: FONTS.sansMedium, fontSize: 12.5, color: text }}>
                   {p.full_name ?? p.username}
                 </Text>
-                {p.distanceKm != null ? (
+                {p.distanceLabel ? (
                   <Text style={{ fontFamily: FONTS.sans, fontSize: 10.5, color: dim }}>
-                    {p.distanceKm < 1 ? '< 1 km away' : `${Math.round(p.distanceKm)} km`}
+                    {p.distanceLabel}
                   </Text>
                 ) : null}
               </View>

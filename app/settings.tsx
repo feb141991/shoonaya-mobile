@@ -64,7 +64,7 @@ const INITIAL_SETTINGS: SettingsState = {
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
-  consent_religious_data: true,
+  consent_religious_data: false,
 };
 
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string }[] = [
@@ -196,14 +196,15 @@ function DangerButton({
   );
 }
 
-async function openLegalUrl(path: '/terms' | '/privacy') {
+async function openLegalUrl(path: '/terms' | '/privacy' | '/sources') {
   const url = `${API_BASE}${path}`;
   try {
     const canOpen = await Linking.canOpenURL(url);
     if (!canOpen) throw new Error('Cannot open URL');
     await Linking.openURL(url);
   } catch {
-    Alert.alert('Error', `Could not open ${path === '/terms' ? 'Terms of Service' : 'Privacy Policy'}.`);
+    const label = path === '/terms' ? 'Terms of Service' : path === '/privacy' ? 'Privacy Policy' : 'Content Sources';
+    Alert.alert('Error', `Could not open ${label}.`);
   }
 }
 
@@ -700,6 +701,18 @@ export default function SettingsScreen() {
               >
                 <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
                   Privacy
+                </Text>
+              </PressableSurface>
+              <PressableSurface
+                haptic="selection"
+                accessibilityRole="link"
+                accessibilityLabel="Content Sources"
+                hitSlop={10}
+                onPress={() => { void openLegalUrl('/sources'); }}
+                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+              >
+                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Sources
                 </Text>
               </PressableSurface>
             </View>

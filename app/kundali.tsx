@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
+import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
@@ -370,6 +371,7 @@ export default function KundaliScreen() {
                 </View>
               </View>
               <Text style={{ color: theme.dim, ...TYPE.caption }}>Use 24-hour format. Leave time empty if unknown.</Text>
+              <AgeGuidanceNotice dateOfBirth={formData.dateOfBirth} />
             </Card>
 
             <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
