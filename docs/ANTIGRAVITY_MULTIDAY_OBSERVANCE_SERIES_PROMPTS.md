@@ -16,26 +16,59 @@ prompt. Do not push, deploy, apply a production migration, flip an engine flag,
 materialise production occurrences, or send production notifications without
 explicit approval.
 
-## Execution Status — 2026-08-23
+## Execution Status — 2026-08-24 (revised)
 
 Do not rerun completed prompts unless an independent review identifies a
 regression.
 
 | Prompt | Status | Remaining gate |
 |---|---|---|
-| 1. Naraka Chaturdashi | Complete in code | Apply `20260823181312_approve_naraka_chaturdashi_rule.sql` and run controlled materialisation only with explicit production approval |
-| 2. Observance-series contract | Complete in code | Keep PWA and Native generated contract byte-identical |
-| 3. Sourced daily content | Complete in code | Unratified deity, ritual, significance, and early Navratri titles remain `pending_source` and fail closed until separately sourced or council-reviewed |
-| 4. Premium series cards | Pending | PWA, Android, and iOS implementation and visual QA |
-| 5. Notifications and observation writes | Pending | Series-aware dedupe, exact-child routing, festival participation semantics, and real-device push proof |
+| 1. Naraka Chaturdashi | Migration applied to production 2026-08-24 (definition + Tier-1 golden fixture, no occurrence row yet, as designed) | Occurrence materialisation is blocked by an **unrelated pre-existing bug**: `materializeApprovedFixtures` processes the entire approved-fixtures manifest atomically, and a different, already-approved fixture (`guru-gobind-singh-gurpurab__2027__ujjain_india__unspecified`, approved 2026-08-19) has `profile.calendar: null`, which throws and blocks the whole manifest — including Naraka. Needs its own fix/decision before any approved fixture (not just Naraka) can be materialised through the proper tool. |
+| 2. Observance-series contract | Complete | Verified byte-identical again 2026-08-24 |
+| 3. Sourced daily content | Complete | Unratified deity, ritual, significance, and early Navratri titles remain `pending_source` and fail closed, confirmed still true 2026-08-24 |
+| 4. Premium series cards | **Code-verified on PWA 2026-08-24**, native (Android/iOS) visual QA still outstanding | PWA: upcoming/active/concluding/same-date-cluster/Hindi/Punjabi/fail-closed-upcoming all confirmed correct via a real dev-server pass against the actual `VratCarousel` component (`src/app/qa-series/page.tsx`). **New finding**: an already-*active* series that becomes `under_review` renders nothing at all on Home (silently disappears) rather than showing the review-pending state — `isSeriesStartWithinWindow` only admits series that haven't started yet (`daysUntilStart >= 0`), so a mid-sequence break has no card at all. Native wasn't visually verified this pass (only a stale Release build with an embedded old JS bundle was available; a fresh build was judged too costly for this pass) — the underlying card-selection logic is byte-identical between web and native (confirmed earlier), so risk is lower than a cold check, but this is not a substitute for actually looking at it on device/simulator. Android untested. Dark mode, text scaling, and reduced-motion not verified on either platform this pass. |
+| 5. Notifications and observation writes | **Core implementation done and verified against live data 2026-08-24** | Series-completeness gating implemented for both the notification cron (`fetchIncompleteSeriesOccurrenceIds`, canonical-profile proxy) and the observation-write path (`isOccurrenceObservableInItsSeries`, full per-user precision) — see `src/lib/calendar/observance-series-eligibility.ts`. Proven against real production data: the Diwali cluster is *currently* incomplete (Naraka has no occurrence row) and the gate correctly identifies all 4 existing sibling occurrences as suppressed. `vrat-reminder`/`festival-reminder` dry-run against production succeeded end-to-end with the new gate wired in. **Not done**: the 30-day multi-timezone dry-run (India/Bedford/New York/Sydney/DST), and real-device push evidence (no physical device access — simulator cannot prove this per this doc's own release gate). Expansion catalogue below. |
 
 Naraka Chaturdashi is now an `included` canonical rule. Its ratified policy is
 Krishna Chaturdashi prevailing through the full local Arunodaya window. The
 Ujjain 2026-11-08 fixture is source-backed; Bedford 2026-11-07 is a computed,
 location-qualified result. The migration registers the definition and fixture
-but deliberately inserts no occurrence. Until that migration and controlled
-materialisation are approved and executed, production continues to return no
-Naraka row.
+but deliberately inserts no occurrence. **The migration is now applied to
+production** (2026-08-24); occurrence materialisation is still blocked by the
+unrelated Gurpurab fixture bug described above, so production still returns
+no Naraka row for now.
+
+## Prompt 5 Expansion Catalogue — generated 2026-08-24
+
+Machine-derived from `packages/dharma-rules/src/festivals/{rules,series,
+series-content}.json`. No new dates, prose, or series definitions were
+written — gap report only, per Prompt 5's own scope.
+
+| Tradition | Series | Mode | Gate |
+|---|---|---|---|
+| Hindu | Chaitra Navratri | daily journey | Rule (`chaitra-navratri-begins`) exists and is sourced, but evaluator `launch_status: deferred` — no occurrence rows possible until included |
+| Hindu | Magha/Ashadha Gupt Navratri | daily journey | Rules exist, evaluator `deferred`, **and unsourced** (no `ratification_note`) — needs source before evaluator work is even worth doing |
+| Hindu | Chhath Puja | daily journey (4 canonical children) | Rule (`chhath-puja`) exists, sourced, evaluator `deferred`; no per-child rule breakdown exists yet (single rule, not four) |
+| Hindu | Ganeshotsav | festival period | `ganesh-chaturthi` itself is `included`/sourced/live today as a single occurrence; no begin/end rule pair exists for the full period through Anant Chaturdashi — needs rule authoring, not just a series wrapper |
+| Hindu | Pitru Paksha | lunar period | No rule entry exists at all — blocked before the rule-authoring stage |
+| Hindu | Holika Dahan + Holi | festival cluster | `holi` rule is `included`/sourced, but its own `ratification_note` flags an **unresolved content question**: whether the rule's date represents Holika Dahan or the following Rangwali Holi day. A 2-day cluster needs that resolved first — a council/product decision, not an engineering one |
+| Hindu | Shravan Somvar | recurring series | Rule exists, evaluator `deferred`, unsourced. Also a shape mismatch: this is a weekly-recurring vrat, not a bounded multi-day journey — needs product framing for what "series" even means here before a gate matters |
+| Hindu | Mangala Gauri | recurring series | Same profile as Shravan Somvar: rule exists, `deferred`, unsourced, same shape-mismatch question |
+| Sikh | Hola Mohalla | festival period | No rule entry exists at all. Needs its own source track (SGPC), not the Rashtriya Panchang source already in use for Hindu content — flagged as a known gap earlier this session too |
+| Buddhist | Vassa | season | Both `vassa-begins-rains-retreat` (sourced) and `pavarana-end-of-vassa` (**unsourced**) exist as rule stubs, both `deferred`. A real 3-month season needs both ends sourced and included before this is meaningful |
+| Buddhist | Losar | festival period | Rule exists, `deferred`, unsourced. Also needs confirmation this is genuinely multi-day rather than a single new-year date — not established either way yet |
+| Jain | Paryushana | 8-day daily journey | **Best-positioned candidate.** Both `paryushana-parva-begins` and `samvatsari-paryushana-ends` are `included`, sourced, and live today as individual occurrences. Only the `series.json` definition and `series-content.json` editorial rows are missing — no rule or sourcing work needed to start |
+| Jain | Das Lakshana | 10-day daily journey | `das-lakshana-dharma-begins` exists but `deferred` and unsourced; only a "begins" rule exists, no end-date rule at all (Digambara profile) |
+
+Kathina remains omitted for the India launch, consistent with the original
+instruction — not evaluated here.
+
+**Reading this table**: Paryushana is the only candidate where the source
+and evaluator gates are already clear — it needs series/content authoring
+only. Ganeshotsav and Holi are blocked on a specific, nameable next step
+(a begin/end rule pair; a content dispute) rather than a broad "needs
+sourcing." Everything else is blocked earlier, at the source or
+rule-authoring stage, before series work would even be relevant.
 
 ## Binding Engineering Contract
 
