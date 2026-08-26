@@ -16,7 +16,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
-import { VRAT_DATABASE, lookupVratData, type VratData } from '@/lib/vrat-data';
+import { VRAT_DATABASE, lookupVratData, resolveVratSlug, type VratData } from '@/lib/vrat-data';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -228,10 +228,48 @@ export default function VratScreen() {
           })
           .filter((item): item is UpcomingVrat => item !== null);
 
-        setUpcomingVrats(resolvedUpcoming);
+        // Two independent duplicate sources confirmed live, both handled by
+        // one dedup pass keyed on the *resolved canonical slug* + date:
+        //
+        // 1. The calendar API can legitimately return the same observance as
+        //    more than one isPrimary row -- recurring, non-cited slugs like
+        //    ekadashi/purnima-vrat can land in separate server-side grouping
+        //    buckets when legacy rows carry slightly different computed
+        //    location metadata (confirmed: 3 raw rows, same slug+date,
+        //    different ids/profiles, for one real occurrence).
+        // 2. lib/vrat-data.ts's alias resolver matches by substring
+        //    (`value.includes(alias)`), so a specifically-named Ekadashi
+        //    slug like "aja-ekadashi" silently resolves to the generic
+        //    "ekadashi" VratData entry -- confirmed live: slugs "ekadashi"
+        //    and "aja-ekadashi" landed on the same date, both displaying the
+        //    identical generic name "Ekadashi" with identical content, i.e.
+        //    indistinguishable to the user even though they're technically
+        //    different source slugs. There's no verified, sourced content
+        //    for "Aja Ekadashi" specifically to give it its own card, so
+        //    collapsing to the one generic entry is the honest fix here,
+        //    not fabricating a distinct description.
+        //
+        // Dedupe on resolveVratSlug(item.slug)+date, not raw slug+date: not
+        // on id (differs per duplicate row), not on canonical-slug alone
+        // (would wrongly collapse different future dates of the same
+        // recurring vrat), and not on date alone (would wrongly collapse
+        // genuinely distinct festivals sharing a date, e.g. Diwali + Naraka
+        // Chaturdashi -- those have different canonical slugs and are
+        // unaffected). List is already server-sorted ascending by date, so
+        // keeping the first-seen item is correct and stable.
+        const seenVrats = new Set<string>();
+        const dedupedUpcoming = resolvedUpcoming.filter((item) => {
+          const canonicalSlug = resolveVratSlug(item.slug) ?? item.slug;
+          const key = `${canonicalSlug}|${item.date}`;
+          if (seenVrats.has(key)) return false;
+          seenVrats.add(key);
+          return true;
+        });
+
+        setUpcomingVrats(dedupedUpcoming);
 
         // Find canonical Today observance: resolved, primary, kind=vrat, matching canonicalToday
-        const todayMatch = resolvedUpcoming.find(
+        const todayMatch = dedupedUpcoming.find(
           (u) =>
             u.observance.isPrimary === true &&
             u.observance.status === 'resolved' &&

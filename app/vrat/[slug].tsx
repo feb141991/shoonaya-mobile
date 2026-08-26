@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
@@ -56,6 +57,22 @@ export default function VratDetailScreen() {
 
   const [lang, setLang] = useState<'en' | 'local'>('en');
   const [fontStep, setFontStep] = useState(1);
+
+  // Non-blocking success/error feedback -- matches the local toast pattern
+  // already established in app/(tabs)/japa.tsx (this codebase has no shared
+  // toast component yet; each screen owns its own instance).
+  type ToastState = { visible: boolean; message: string };
+  const [toast, setToast] = useState<ToastState>({ visible: false, message: '' });
+  const insets = useSafeAreaInsets();
+
+  // "Around the World" global stats -- ported from the PWA's
+  // GET /api/vrat/stats (public, no auth).
+  const [globalStats, setGlobalStats] = useState<{
+    today_count: number;
+    total_count: number;
+    next_date: string | null;
+    today: string;
+  } | null>(null);
 
   const vrat: VratData = useMemo(() => {
     return lookupVratData(slug) ?? getVratData(slug) ?? {
@@ -143,6 +160,29 @@ export default function VratDetailScreen() {
     };
   }, [slug, occurrenceIdParam, vrat.id]);
 
+  useEffect(() => {
+    if (!toast.visible) return;
+    const timer = setTimeout(() => setToast({ visible: false, message: '' }), 2200);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // Global "Around the World" stats -- public, no auth required.
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`/api/vrat/stats?vrat_id=${encodeURIComponent(vrat.id)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setGlobalStats(data);
+      })
+      .catch(() => {
+        if (!cancelled) setGlobalStats(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [vrat.id]);
+
   const isEligibleToday = useMemo(() => {
     if (!occurrenceIdParam || !occurrence) return false;
     return isEligibleToObserveToday({
@@ -174,15 +214,15 @@ export default function VratDetailScreen() {
         setObservedToday(true);
         setObserveCount((count) => count + (data.already_observed ? 0 : 1));
         if (!data.already_observed && data.karma_earned > 0) {
-          Alert.alert(`🙏 Vrat observed! +${data.karma_earned} karma`);
+          setToast({ visible: true, message: `🙏 Vrat observed! +${data.karma_earned} karma` });
         } else {
-          Alert.alert('Vrat observed');
+          setToast({ visible: true, message: 'Vrat observed' });
         }
       } else {
-        Alert.alert(data?.error ?? 'Could not record observation');
+        setToast({ visible: true, message: data?.error ?? 'Could not record observation' });
       }
     } catch {
-      Alert.alert('Could not record observation');
+      setToast({ visible: true, message: 'Could not record observation' });
     } finally {
       setObserveLoading(false);
     }
@@ -240,26 +280,26 @@ export default function VratDetailScreen() {
                 {occurrence.status === 'resolved' ? (
                   <View
                     style={{
-                      backgroundColor: 'rgba(134,187,110,0.2)',
+                      backgroundColor: COLORS.successBg,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                       borderRadius: 4,
                       marginLeft: 'auto',
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: '#5aaa38', fontFamily: FONTS.sansSemiBold }}>Canonical</Text>
+                    <Text style={{ fontSize: 11, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>Canonical</Text>
                   </View>
                 ) : (
                   <View
                     style={{
-                      backgroundColor: 'rgba(235,160,50,0.2)',
+                      backgroundColor: isDark ? COLORS.warningBgDark : COLORS.warningBgLight,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                       borderRadius: 4,
                       marginLeft: 'auto',
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: '#c58a20', fontFamily: FONTS.sansSemiBold }}>Under Review</Text>
+                    <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>Under Review</Text>
                   </View>
                 )}
               </View>
@@ -343,7 +383,7 @@ export default function VratDetailScreen() {
                 marginTop: 12,
                 padding: 8,
                 borderRadius: RADII.sm,
-                backgroundColor: 'rgba(0,0,0,0.03)',
+                backgroundColor: theme.cardSoft,
               }}
             >
               <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, textAlign: 'center' }}>
@@ -366,13 +406,13 @@ export default function VratDetailScreen() {
                   width: '100%',
                   paddingVertical: 12,
                   borderRadius: RADII.pill,
-                  backgroundColor: 'rgba(134,187,110,0.15)',
+                  backgroundColor: COLORS.successBg,
                   borderWidth: 1.5,
-                  borderColor: 'rgba(134,187,110,0.45)',
+                  borderColor: COLORS.successBorder,
                 }}
               >
-                <Feather name="check-circle" size={18} color="#5aaa38" />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: '#5aaa38' }}>
+                <Feather name="check-circle" size={18} color={COLORS.success} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.success }}>
                   Observed today ✓ {observeCount > 1 ? `(${observeCount}× total)` : ''}
                 </Text>
               </View>
@@ -388,15 +428,15 @@ export default function VratDetailScreen() {
                   width: '100%',
                   paddingVertical: 14,
                   borderRadius: RADII.pill,
-                  backgroundColor: 'rgba(197,160,89,0.92)',
+                  backgroundColor: theme.brand,
                 }}
               >
                 {observeLoading ? (
-                  <ActivityIndicator size="small" color="#1c1208" />
+                  <ActivityIndicator size="small" color={theme.textOnBrand} />
                 ) : (
                   <>
                     <Text style={{ fontSize: 16 }}>🙏</Text>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: '#1c1208' }}>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.textOnBrand }}>
                       Mark as Observed {observeCount > 0 ? `(${observeCount}× before)` : ''}
                     </Text>
                   </>
@@ -406,6 +446,65 @@ export default function VratDetailScreen() {
             <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
               {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat today'}
             </Text>
+          </Card>
+        ) : null}
+
+        {/* Around the World -- global stats, ported from the PWA's
+            GET /api/vrat/stats. Same gating as web: only render when there's
+            something to show. */}
+        {globalStats && (globalStats.next_date || globalStats.total_count > 0) ? (
+          <Card style={{ padding: 16, marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+              <Feather name="calendar" size={14} color={theme.dim} />
+              <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Around the World
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              {globalStats.next_date ? (
+                <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Next date
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
+                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString('en', { day: 'numeric', month: 'short' })}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
+                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString('en', { weekday: 'long' })}
+                  </Text>
+                </View>
+              ) : null}
+              {globalStats.today_count > 0 ? (
+                <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Observing today
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
+                    {globalStats.today_count.toLocaleString()}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
+                    seekers on Shoonaya
+                  </Text>
+                </View>
+              ) : globalStats.total_count > 0 ? (
+                <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    All-time
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
+                    {globalStats.total_count.toLocaleString()}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
+                    observances recorded
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            {globalStats.today_count > 0 ? (
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, textAlign: 'center', marginTop: 10 }}>
+                {globalStats.today_count === 1 ? '1 seeker is' : `${globalStats.today_count} seekers are`} observing with you today
+              </Text>
+            ) : null}
           </Card>
         ) : null}
 
@@ -442,10 +541,10 @@ export default function VratDetailScreen() {
         {/* Do's and Don'ts if present */}
         {vrat.dos && vrat.dos.length > 0 ? (
           <Card style={{ padding: 16, marginBottom: 16 }}>
-            <Text style={{ ...TYPE.section, color: '#5aaa38', marginBottom: 8 }}>Recommended Practices (Do's)</Text>
+            <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 8 }}>Recommended Practices (Do's)</Text>
             {vrat.dos.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                <Feather name="check" size={14} color="#5aaa38" style={{ marginTop: 3 }} />
+                <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
                 <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
               </View>
             ))}
@@ -454,10 +553,10 @@ export default function VratDetailScreen() {
 
         {vrat.donts && vrat.donts.length > 0 ? (
           <Card style={{ padding: 16, marginBottom: 16 }}>
-            <Text style={{ ...TYPE.section, color: '#d9534f', marginBottom: 8 }}>Restrictions (Don'ts)</Text>
+            <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 8 }}>Restrictions (Don'ts)</Text>
             {vrat.donts.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                <Feather name="x" size={14} color="#d9534f" style={{ marginTop: 3 }} />
+                <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
                 <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
               </View>
             ))}
@@ -472,6 +571,25 @@ export default function VratDetailScreen() {
           </Text>
         </Card>
       </ScrollView>
+
+      {toast.visible ? (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: insets.bottom + 20,
+            left: 20,
+            right: 20,
+            borderRadius: 16,
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.brand,
+            paddingVertical: 12,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>{toast.message}</Text>
+        </View>
+      ) : null}
     </ReaderShell>
   );
 }
