@@ -40,7 +40,7 @@ import { GreetingPicker } from '@/components/home/GreetingPicker';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
@@ -506,6 +506,20 @@ function PanchangPill({
 
   const currentSlide = slides[idx] ?? slides[0] ?? { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}`, href: null as string | null };
   const isObservance = kind === 'observance';
+  const splitSentences = (text: string) => text.split(/(?<=\.)\s+/).map((line) => line.trim()).filter(Boolean);
+  // The label and the month label are two separate clauses (e.g. "Tomorrow
+  // is Raksha Bandhan" + "Shravana (purnimanta)") -- joining them with " · "
+  // and letting RN wrap wherever it fits broke mid-clause and, combined with
+  // the fully-rounded pill shape, produced an oversized uneven blob behind
+  // the text. Put the month label on its own explicit line instead so the
+  // line count (and therefore the pill shape below) is always known up
+  // front, for every slide this pill ever shows, not just this one.
+  const labelLines = [
+    // The "·" stays at the END of the first line (where it visually reads as
+    // "...Bandhan ·"), not carried onto the front of the second line.
+    ...splitSentences(currentSlide.monthLabel ? `${currentSlide.label} ·` : currentSlide.label),
+    ...(currentSlide.monthLabel ? splitSentences(currentSlide.monthLabel) : []),
+  ];
   // Slides already auto-cycle on their own timer (the interval effect
   // above) -- tapping the pill used to just manually advance that same
   // cycle, which is why it looked "unclickable": nothing visibly
@@ -527,8 +541,12 @@ function PanchangPill({
       onPress={handleOpen}
       hitSlop={4}
       style={{
-        minHeight: slides.length > 1 ? 42 : 36,
-        borderRadius: 999,
+        // A fully-rounded (999) pill only reads correctly at one line tall --
+        // stretched over two sentence-lines it turns into an oversized blob
+        // ("aura") behind the text instead of a tight pill. Fall back to a
+        // normal rounded-rectangle radius once there's more than one line,
+        // for every slide/message this pill ever shows, not just this one.
+        borderRadius: labelLines.length > 1 ? RADII.lg : RADII.pill,
         paddingHorizontal: 12,
         paddingVertical: slides.length > 1 ? 5 : 4,
         alignItems: 'center',
@@ -538,15 +556,28 @@ function PanchangPill({
         borderWidth: 0,
         borderColor: 'transparent',
         minWidth: 120,
-        maxWidth: '100%',
-        overflow: 'hidden',
+        maxWidth: 260,
+        // RN's auto-height measurement for this pill was landing on wildly
+        // unstable values across renders (observed 173-195pt for a 2-line
+        // label that should only need ~62pt) -- almost certainly a text/
+        // font-metrics remeasure race, not anything content-driven, since
+        // it reproduced identically regardless of border radius or how the
+        // label text was split into lines. Pin the height explicitly per
+        // line count instead of trusting auto-sizing here, for every
+        // slide/message this pill ever shows, not just this one.
+        minHeight: labelLines.length > 1 ? 58 : MIN_TOUCH_TARGET,
+        maxHeight: labelLines.length > 1 ? 66 : MIN_TOUCH_TARGET,
       }}
     >
-      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
+      <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
-        <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
-          {currentSlide.monthLabel ? `${currentSlide.label} · ${currentSlide.monthLabel}` : currentSlide.label}
-        </Text>
+        <View style={{ flexShrink: 1 }}>
+          {labelLines.map((line, i) => (
+            <Text key={i} style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }}>
+              {line}
+            </Text>
+          ))}
+        </View>
       </Animated.View>
 
       {/* Dot indicators — PWA's PanchangPill (HeroSection.tsx) shows these
