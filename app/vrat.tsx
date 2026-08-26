@@ -374,7 +374,7 @@ export default function VratScreen() {
                     style={{
                       fontFamily: active ? FONTS.sansSemiBold : FONTS.sans,
                       fontSize: 13,
-                      color: active ? '#1c1208' : theme.text,
+                      color: active ? theme.textOnBrand : theme.text,
                       textTransform: 'capitalize',
                     }}
                   >

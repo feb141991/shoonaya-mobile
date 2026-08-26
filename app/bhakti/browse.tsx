@@ -77,7 +77,7 @@ function PillRow({
                   borderColor: isActive ? `${accent}50` : theme.border,
                 }}
               >
-                <Text style={{ ...TYPE.caption, color: isActive ? accent : theme.dim, fontWeight: isActive ? '700' : '500' }}>
+                <Text style={{ ...TYPE.caption, color: isActive ? accent : theme.dim, fontFamily: isActive ? FONTS.sansBold : FONTS.sansMedium }}>
                   {item.emoji ? `${item.emoji} ` : ''}{item.label}
                 </Text>
               </View>
