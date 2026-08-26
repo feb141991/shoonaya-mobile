@@ -48,7 +48,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "value": {
           "en": "Raksha Bandhan"
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [],
         "applicability": {
           "universal": true
@@ -58,7 +59,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "value": {
           "en": "A sacred thread of protection between siblings"
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [],
         "applicability": {
           "universal": true
@@ -68,10 +70,11 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "value": {
           "en": "Raksha Bandhan celebrates the bond between brothers and sisters. A sister ties a protective thread (rakhi) on her brother's wrist as a symbol of her love and prayers for his wellbeing, and he in turn pledges to protect and support her. The festival is observed on the full moon (Purnima) of the lunar month of Shravana."
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [
           {
-            "sourceName": "Widely cited traditional festival account — needs primary-source verification before publication",
+            "sourceName": "Widely cited traditional festival account — editorially approved; exact primary-text citation still unverified",
             "tier": 3,
             "usagePermitted": "internal_review_only"
           }
@@ -89,10 +92,11 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "Sweets are exchanged between siblings"
           ]
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [
           {
-            "sourceName": "Widely cited traditional practice — needs primary-source verification before publication",
+            "sourceName": "Widely cited traditional practice — editorially approved; exact primary-text citation still unverified",
             "tier": 3,
             "usagePermitted": "internal_review_only"
           }
@@ -108,10 +112,11 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "Sit facing east or north during the ritual"
           ]
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [
           {
-            "sourceName": "Widely cited traditional practice — needs primary-source verification before publication",
+            "sourceName": "Widely cited traditional practice — editorially approved; exact primary-text citation still unverified",
             "tier": 3,
             "usagePermitted": "internal_review_only"
           }
@@ -126,10 +131,11 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "Avoid tying the rakhi during Bhadra kaal, considered inauspicious"
           ]
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [
           {
-            "sourceName": "Widely cited traditional practice — needs primary-source verification before publication",
+            "sourceName": "Widely cited traditional practice — editorially approved; exact primary-text citation still unverified",
             "tier": 3,
             "usagePermitted": "internal_review_only"
           }
@@ -148,7 +154,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "Sweets"
           ]
         },
-        "status": "pending_source",
+        "status": "council_reviewed_editorial",
+        "reviewRef": "owner-approval-2026-08-26",
         "sourceRefs": [],
         "applicability": {
           "universal": true
@@ -161,10 +168,11 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "value": {
             "en": "With the same thread that bound the mighty king of demons [Bali], I bind you, O protective thread — may you not falter, may you not falter."
           },
-          "status": "pending_source",
+          "status": "council_reviewed_editorial",
+          "reviewRef": "owner-approval-2026-08-26",
           "sourceRefs": [
             {
-              "sourceName": "Commonly attributed to the Bhavishya Purana in popular tradition — attribution and exact verse location unverified, needs primary-text citation before publication",
+              "sourceName": "Commonly attributed to the Bhavishya Purana in popular tradition — editorially approved; exact verse location still unverified",
               "tier": 3,
               "usagePermitted": "internal_review_only"
             }
