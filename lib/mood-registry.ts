@@ -33,7 +33,7 @@ export const MOODS_CONFIG: Record<'dark' | 'light', MoodConfig[]> = {
   light: [
     { key: 'anxious',     label: 'Anxious',      colour: '#5E4B8B', bg: 'rgba(94,75,139,0.08)' },
     { key: 'grieving',    label: 'Grieving',      colour: '#3F51B5', bg: 'rgba(63,81,181,0.08)' },
-    { key: 'angry',       label: 'Angry',         colour: '#BF360C', bg: 'rgba(191,54,12,0.08)'  },
+    { key: 'angry',       label: 'Angry',         colour: '#B5654A', bg: 'rgba(181,101,74,0.08)'  },
     { key: 'scattered',   label: 'Scattered',     colour: '#2E7D32', bg: 'rgba(46,125,50,0.08)'  },
     { key: 'lost',        label: 'Lost',          colour: '#455A64', bg: 'rgba(69,90,100,0.08)'  },
     { key: 'joyful',      label: 'Joyful',        colour: '#E65100', bg: 'rgba(230,81,0,0.08)'   },
