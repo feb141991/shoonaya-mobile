@@ -39,6 +39,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/panchang')) return '/panchang';
   if (pathname.startsWith('/vrat/')) return path as Href;
   if (pathname.startsWith('/vrat')) return '/vrat';
+  if (pathname.startsWith('/festival/')) return path as Href;
   if (pathname.startsWith('/quiz')) return '/quiz';
   // A specific hero (Home's dharmVeer.href, or a shared/deep link) — routes
   // to the dynamic detail screen at app/dharm-veer/[id].tsx, which fetches

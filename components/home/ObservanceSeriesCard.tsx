@@ -120,7 +120,9 @@ export function ObservanceSeriesCard({
   });
   const href = activeChild.routeKind === 'vrat' && activeChild.routeSlug
     ? `/vrat/${encodeURIComponent(activeChild.routeSlug)}`
-    : null;
+    : activeChild.routeKind === 'festival' && activeChild.routeSlug
+      ? `/festival/${encodeURIComponent(activeChild.routeSlug)}`
+      : null;
   const iconName: SacredIconName = series.mode === 'daily_journey' ? 'vrat' : 'panchang';
 
   const isConcluded = series.status === 'concluding' || (activeChild.sequence === totalCount && isToday);
