@@ -395,6 +395,66 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(appliedUsers[appliedUsers.length - 1], 'Fast User B');
       assert.equal(coordinator.state.lastIdentityKey, 'authenticated:user-fast-B');
     });
+
+    it('benign timeout-cancellation retries once and succeeds, without ever showing the error state', async () => {
+      // Reproduces a real production trace: /api/native/home-summary
+      // returned 200 at ~15.0s and was cancelled by apiFetch's own 15s
+      // AbortController race -- a benign race per isFetchCancelled's own
+      // doc comment, not a real connectivity failure. First attempt throws
+      // the same AbortError shape; second attempt (the automatic retry)
+      // succeeds.
+      let attempt = 0;
+      let errorStates: boolean[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-cancel-retry' };
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          attempt++;
+          if (attempt === 1) {
+            const abortError = new Error('Aborted');
+            abortError.name = 'AbortError';
+            throw abortError;
+          }
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: (e) => errorStates.push(e),
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
+
+      await coordinator.loadHome(userA);
+
+      assert.equal(attempt, 2, 'Cancelled first attempt is retried exactly once');
+      assert.equal(coordinator.state.hasValidState, true, 'Retry succeeded and produced valid state');
+      assert.ok(!errorStates.includes(true), 'Error state is never set true for a benign cancellation that succeeds on retry');
+    });
+
+    it('a second cancellation (retry also fails) surfaces the error state -- no infinite retry loop', async () => {
+      let attempt = 0;
+      let errorStates: boolean[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-cancel-twice' };
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          attempt++;
+          const abortError = new Error('Aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        },
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: (e) => errorStates.push(e),
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
+
+      await coordinator.loadHome(userA);
+
+      assert.equal(attempt, 2, 'Retries exactly once, then stops -- never an infinite loop');
+      assert.equal(errorStates[errorStates.length - 1], true, 'Second cancellation with no valid state falls back to the real error state');
+    });
   });
 
   describe('3. SankalpaCoordinator Production Invariants & Request Counting', () => {
@@ -444,6 +504,39 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
 
       assert.equal(sankalpaRequests, 1, 'Attempted 1 fetch');
       assert.equal(currentStatus, 'error', 'Must show retry error instead of empty "Set your Sankalpa" on unverified cold load failure');
+    });
+
+    it('benign timeout-cancellation retries once and reaches ready, without ever showing error', async () => {
+      let attempt = 0;
+      let statuses: string[] = [];
+
+      const sankalpaCoordinator = new SankalpaCoordinator(
+        {
+          fetchApi: async () => {
+            attempt++;
+            if (attempt === 1) {
+              const abortError = new Error('Aborted');
+              abortError.name = 'AbortError';
+              throw abortError;
+            }
+            return new Response(JSON.stringify({ sankalpa: null }), { status: 200 });
+          },
+          onSetStatus: (s) => statuses.push(s),
+          onSetSankalpa: () => {},
+          onSetCheckedToday: () => {},
+        },
+        undefined
+      );
+
+      const authUser: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-sankalpa-cancel-retry' };
+      await sankalpaCoordinator.load(authUser);
+      // The retry is deferred via setTimeout(0) so it runs after `finally`
+      // clears inFlightFetch -- wait a tick for it to actually complete.
+      await new Promise((r) => setTimeout(r, 10));
+
+      assert.equal(attempt, 2, 'Cancelled first attempt is retried exactly once');
+      assert.equal(statuses[statuses.length - 1], 'ready', 'Retry succeeded and reached ready state');
+      assert.ok(!statuses.includes('error'), 'Error status is never set for a benign cancellation that succeeds on retry');
     });
 
     it('confirmed null Sankalpa shows setup CTA (ready state)', async () => {

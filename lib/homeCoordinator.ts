@@ -1,5 +1,6 @@
 import { readHomeCache, writeHomeCache, clearHomeCache, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
 import { safeTimezone, spiritualDate } from './spiritualDate';
+import { isFetchCancelled } from './fetch-error';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -128,7 +129,7 @@ export class HomeSummaryCoordinator {
     await this.loadHome(identity);
   }
 
-  public async loadHome(identity: HomeAuthIdentity, isManualRefresh = false): Promise<void> {
+  public async loadHome(identity: HomeAuthIdentity, isManualRefresh = false, retryCount = 0): Promise<void> {
     const currentIdentityKey = getIdentityKey(identity);
 
     if (identity.kind === 'unauthenticated' || !currentIdentityKey) {
@@ -244,6 +245,16 @@ export class HomeSummaryCoordinator {
       }
     } catch (error) {
       if (requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {
+        // apiFetch's own 15s timeout can race a slow-but-successful cold
+        // response (confirmed live: a home-summary request that returned
+        // 200 at ~15.0s was cancelled by this exact race). That's not a
+        // real connectivity failure, so retry once before surfacing the
+        // "check your connection" error -- matches the "benign race, not a
+        // real backend/network problem" framing isFetchCancelled() and its
+        // doc comment already establish in lib/api.ts.
+        if (isFetchCancelled(error) && retryCount === 0 && !this.state.hasValidState) {
+          return this.loadHome(identity, isManualRefresh, retryCount + 1);
+        }
         if (!this.state.hasValidState) {
           this.deps.onSetError(true);
         }
@@ -302,7 +313,7 @@ export class SankalpaCoordinator {
     }
   }
 
-  public async load(identity: HomeAuthIdentity): Promise<void> {
+  public async load(identity: HomeAuthIdentity, retryCount = 0): Promise<void> {
     // Guest mode: ZERO authenticated Sankalpa API requests
     if (identity.kind === 'guest' || identity.kind === 'unauthenticated') {
       this.deps.onSetStatus('hidden');
@@ -366,6 +377,17 @@ export class SankalpaCoordinator {
         } else if (this.state.hasEverLoaded && this.state.sankalpa === null) {
           // Confirmed null sankalpa shows ready (setup CTA)
           this.deps.onSetStatus('ready');
+        } else if (isFetchCancelled(error) && retryCount === 0) {
+          // apiFetch's own 15s timeout can race a slow-but-successful cold
+          // response -- a benign race, not a real connectivity failure (see
+          // the matching comment on HomeSummaryCoordinator.loadHome's catch
+          // block, where this was confirmed live). Retry once, deferred so
+          // it runs after `finally` below clears inFlightFetch -- calling
+          // this.load() synchronously here would just return the
+          // already-settling in-flight promise instead of starting fresh.
+          setTimeout(() => {
+            if (requestGen === this.state.requestGen) void this.load(identity, retryCount + 1);
+          }, 0);
         } else {
           // Unverified cold load failure: show retry error, NEVER false "Set a Sankalpa"
           this.deps.onSetStatus('error');
