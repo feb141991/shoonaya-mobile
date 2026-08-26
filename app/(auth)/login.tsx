@@ -206,6 +206,78 @@ function GoogleAuthButton({
   );
 }
 
+function AppleAuthButton({
+  onPress,
+  disabled,
+  loading,
+  isDark,
+}: {
+  onPress: () => void | Promise<void>;
+  disabled?: boolean;
+  loading?: boolean;
+  isDark: boolean;
+}) {
+  const borderSoft = isDark ? '#FFFFFF' : '#000000';
+  const bgColor = isDark ? '#FFFFFF' : '#000000';
+  const textColor = isDark ? '#000000' : '#FFFFFF';
+  const iconColor = isDark ? '#000000' : '#FFFFFF';
+
+  return (
+    <View
+      style={{
+        minHeight: 54,
+        borderRadius: 18,
+        boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+        alignSelf: 'stretch',
+        width: '100%',
+        opacity: disabled ? 0.68 : 1,
+      }}
+    >
+      <PressableSurface
+        disabled={disabled}
+        onPress={() => {
+          void onPress();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Continue with Apple"
+        accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+        haptic="selection"
+        style={{
+          minHeight: 54,
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: borderSoft,
+          backgroundColor: bgColor,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          alignSelf: 'stretch',
+          width: '100%',
+          gap: 12,
+        }}
+      >
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <FontAwesome name="apple" size={20} color={iconColor} style={{ marginBottom: 2 }} />
+        </View>
+        <Text
+          style={{
+            color: textColor,
+            fontFamily: FONTS.sansSemiBold,
+            fontSize: 15,
+            letterSpacing: 0.1,
+          }}
+        >
+          {loading ? 'Connecting to Apple...' : 'Continue with Apple'}
+        </Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={iconColor} style={{ marginLeft: 4 }} />
+        ) : null}
+      </PressableSurface>
+    </View>
+  );
+}
+
 // Local to this screen (not promoted to components/ui) — the left icon-well
 // layout is specific to the auth buttons here, not a pattern repeated across
 // other screens yet.
@@ -865,29 +937,12 @@ export default function LoginScreen() {
               />
 
               {Platform.OS === 'ios' && appleAvailable ? (
-                <View
-                  pointerEvents={busy ? 'none' : 'auto'}
-                  style={{
-                    opacity: busy && activeAction !== 'apple' ? 0.6 : 1,
-                    borderRadius: 18,
-                    overflow: 'hidden',
-                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                  }}
-                >
-                  <AppleAuthentication.AppleAuthenticationButton
-                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                    buttonStyle={
-                      isDark
-                        ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                        : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                    }
-                    cornerRadius={18}
-                    style={{ height: 54, width: '100%' }}
-                    onPress={() => {
-                      void handleApple();
-                    }}
-                  />
-                </View>
+                <AppleAuthButton
+                  onPress={handleApple}
+                  disabled={busy}
+                  loading={activeAction === 'apple'}
+                  isDark={isDark}
+                />
               ) : null}
             </View>
 
