@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Text, useColorScheme, View } from 'react-native';
+import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from '@expo/vector-icons/Feather';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
+import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE } from '@/lib/constants';
 
 /**
  * BrahmaMuhurtaPrompt — sunrise-aware japa reminder.
@@ -141,18 +142,42 @@ export function BrahmaMuhurtaPrompt({ brahmaMuhurta, sunrise, japaAlreadyDoneTod
 
   const isActive = phase === 'active';
 
+  // Same premium-card recipe as SacredDaysCard/the Sadhana CTA card on this
+  // same Home screen (gradient + glow blob + real border + shadow) --
+  // previously this was the one outlier still using a flat, thin, no-shadow
+  // tint (`${accent}0f`/`14`) instead of matching its Home-screen siblings.
+  const gradient: readonly [string, string] = isDark
+    ? [COLORS.navGlassTopDark, COLORS.navGlassBottomDark]
+    : [COLORS.navGlassTopLight, COLORS.navGlassBottomLight];
+
   return (
     <View style={{ marginBottom: 16 }}>
       <View
         style={{
-          borderRadius: 22,
+          borderRadius: RADII.xl,
           paddingVertical: 14,
           paddingHorizontal: 16,
-          backgroundColor: isDark ? `${accent}14` : `${accent}0f`,
           borderWidth: 1,
           borderColor: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
+          boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+          overflow: 'hidden',
         }}
       >
+        <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: -30,
+            right: -30,
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            backgroundColor: isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight,
+          }}
+        />
+
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
           <View
             style={{
