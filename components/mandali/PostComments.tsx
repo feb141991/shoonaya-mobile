@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, RADII } from '@/lib/constants';
 import type { CommentRow } from '@/lib/mandali';
 
 // The "chat thread" under each Mandali post — PWA's post_comments UI
@@ -107,24 +107,26 @@ function CommentItem({
             Comment deleted
           </Text>
         ) : editing ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 2 }}>
             <TextInput
               value={editDraft}
               onChangeText={setEditDraft}
               autoFocus
+              multiline
+              maxLength={1000}
               style={{
                 flex: 1,
-                borderRadius: 10,
+                borderRadius: RADII.xs,
                 borderWidth: 1,
                 borderColor: border,
                 paddingHorizontal: 8,
-                paddingVertical: 5,
+                paddingVertical: 6,
                 fontFamily: FONTS.sans,
                 fontSize: bodySize,
+                lineHeight: bodyLineHeight,
                 color: text,
+                maxHeight: 140,
               }}
-              onSubmitEditing={submitEdit}
-              returnKeyType="done"
             />
             <PressableSurface accessibilityLabel="Cancel edit" onPress={() => { setEditing(false); setEditDraft(comment.body); }} style={{ minHeight: 0, padding: 4 }}>
               <Feather name="x" size={13} color={dim} />
@@ -312,26 +314,28 @@ export function PostComments({
                 ) : null}
 
                 {isReplying ? (
-                  <View style={{ marginLeft: 29, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                  <View style={{ marginLeft: 29, flexDirection: 'row', alignItems: 'flex-end', gap: 7 }}>
                     <TextInput
                       value={replyDraft}
                       onChangeText={setReplyDraft}
                       placeholder={`Reply to ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'this comment'}…`}
                       placeholderTextColor={dim}
                       autoFocus
+                      multiline
+                      maxLength={1000}
                       style={{
                         flex: 1,
-                        borderRadius: 12,
+                        borderRadius: RADII.xs,
                         borderWidth: 1,
                         borderColor: border,
                         paddingHorizontal: 10,
-                        paddingVertical: 6,
+                        paddingVertical: 7,
                         fontFamily: FONTS.sans,
                         fontSize: 12,
+                        lineHeight: 16,
                         color: text,
+                        maxHeight: 140,
                       }}
-                      onSubmitEditing={() => submitReply(comment.id)}
-                      returnKeyType="send"
                     />
                     <PressableSurface
                       accessibilityLabel="Cancel reply"
@@ -366,25 +370,27 @@ export function PostComments({
             );
           })}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 1 }}>
             <TextInput
               value={draft}
               onChangeText={setDraft}
               placeholder="Write a comment…"
               placeholderTextColor={dim}
+              multiline
+              maxLength={1000}
               style={{
                 flex: 1,
-                borderRadius: 12,
+                borderRadius: RADII.xs,
                 borderWidth: 1,
                 borderColor: border,
                 paddingHorizontal: 10,
-                paddingVertical: 7,
+                paddingVertical: 8,
                 fontFamily: FONTS.sans,
                 fontSize: 12.5,
+                lineHeight: 17,
                 color: text,
+                maxHeight: 140,
               }}
-              onSubmitEditing={submit}
-              returnKeyType="send"
             />
             <PressableSurface
               accessibilityLabel="Send comment"
