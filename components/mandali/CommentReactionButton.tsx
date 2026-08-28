@@ -57,11 +57,7 @@ export function CommentReactionButton({
   };
 
   const handlePress = () => {
-    if (reaction) {
-      onRemove();
-    } else {
-      onSelect('love');
-    }
+    openPicker();
   };
 
   const pick = (type: ReactionType) => {

@@ -379,22 +379,26 @@ export async function removeCommentReaction(commentId: string, userId: string): 
 export async function fetchCommentReactors(commentId: string, currentUserId?: string): Promise<CommentReactor[]> {
   const { data, error } = await supabase
     .from('comment_upvotes')
-    .select('user_id, reaction_type, created_at, profiles(id, full_name, username, avatar_url)')
+    .select('user_id, reaction_type, created_at')
     .eq('comment_id', commentId)
     .order('created_at', { ascending: false });
   if (error) throw error;
 
-  let safetyState: SafetyState | null = null;
-  if (currentUserId) {
-    try {
-      safetyState = await fetchSafetyState(currentUserId);
-    } catch {
-      // best-effort safety filtering
-    }
-  }
+  const rawRows = (data ?? []) as Array<{ user_id: string; reaction_type?: string; created_at: string }>;
+  if (rawRows.length === 0) return [];
 
-  const rows = (data ?? []).map((row: any) => {
-    const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+  const userIds = Array.from(new Set(rawRows.map((r) => r.user_id)));
+
+  // Query public_profiles (client-readable under RLS, exposing id, username, avatar_url)
+  const [{ data: profileRows }, safetyState] = await Promise.all([
+    supabase.from('public_profiles').select('id, username, avatar_url').in('id', userIds),
+    currentUserId ? fetchSafetyState(currentUserId).catch(() => null) : Promise.resolve(null),
+  ]);
+
+  const profileMap = new Map((profileRows ?? []).map((p: any) => [p.id, p]));
+
+  const rows: CommentReactor[] = rawRows.map((row) => {
+    const p = profileMap.get(row.user_id);
     return {
       userId: row.user_id,
       reactionType: (row.reaction_type ?? 'love') as ReactionType,
@@ -402,9 +406,9 @@ export async function fetchCommentReactors(commentId: string, currentUserId?: st
       profile: p
         ? {
             id: p.id,
-            fullName: p.full_name,
-            username: p.username,
-            avatarUrl: p.avatar_url,
+            fullName: p.username ?? 'A fellow seeker',
+            username: p.username ?? null,
+            avatarUrl: p.avatar_url ?? null,
           }
         : null,
     };
