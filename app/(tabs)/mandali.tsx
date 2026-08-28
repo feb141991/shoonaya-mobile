@@ -167,9 +167,9 @@ type MandaliPostCardProps = {
   onViewProfile: (userId: string) => void;
   onEditComment: (commentId: string, body: string) => void;
   onDeleteComment: (commentId: string) => void;
-  onReactComment: (commentId: string) => void;
-  onUnreactComment: (commentId: string) => void;
-  myReactedCommentIds: Set<string>;
+  onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
+  onRemoveCommentReaction: (commentId: string) => void;
+  myCommentReactions: Record<string, ReactionType>;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -191,9 +191,9 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onViewProfile,
   onEditComment,
   onDeleteComment,
-  onReactComment,
-  onUnreactComment,
-  myReactedCommentIds,
+  onSelectCommentReaction,
+  onRemoveCommentReaction,
+  myCommentReactions,
 }: MandaliPostCardProps) {
   const isOwnPost = post.author_id === userId;
   const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
@@ -371,12 +371,13 @@ const MandaliPostCard = memo(function MandaliPostCard({
         onSubmit={(body, parentId) => onSubmitComment(post.id, body, parentId)}
         onEditComment={onEditComment}
         onDeleteComment={onDeleteComment}
-        onReactComment={onReactComment}
-        onUnreactComment={onUnreactComment}
-        myReactedCommentIds={myReactedCommentIds}
+        onSelectCommentReaction={onSelectCommentReaction}
+        onRemoveCommentReaction={onRemoveCommentReaction}
+        myCommentReactions={myCommentReactions}
         onViewProfile={onViewProfile}
         text={theme.text}
         dim={theme.dim}
+        cardBg={theme.card}
         border={theme.premiumBorder}
         brand={theme.brand}
       />
@@ -412,7 +413,7 @@ export default function MandaliScreen() {
   const [rsvps, setRsvps] = useState<RsvpRow[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [myReactions, setMyReactions] = useState<Record<string, ReactionType>>({});
-  const [myCommentReactions, setMyCommentReactions] = useState<Set<string>>(new Set());
+  const [myCommentReactions, setMyCommentReactions] = useState<Record<string, ReactionType>>({});
   const [seekers, setSeekers] = useState<NearbySeeker[]>([]);
   const [loadingSeekers, setLoadingSeekers] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
@@ -508,7 +509,7 @@ export default function MandaliScreen() {
       setRsvps([]);
       setMembers([]);
       setMyReactions({});
-      setMyCommentReactions(new Set());
+      setMyCommentReactions({});
       return;
     }
 
@@ -550,12 +551,16 @@ export default function MandaliScreen() {
     if (allCommentIds.length > 0) {
       const { data: commentUpvoteRows } = await supabase
         .from('comment_upvotes')
-        .select('comment_id')
+        .select('comment_id, reaction_type')
         .eq('user_id', user.id)
         .in('comment_id', allCommentIds);
-      setMyCommentReactions(new Set((commentUpvoteRows ?? []).map((row) => row.comment_id as string)));
+      setMyCommentReactions(
+        Object.fromEntries(
+          (commentUpvoteRows ?? []).map((row) => [row.comment_id, (row.reaction_type ?? 'love') as ReactionType])
+        )
+      );
     } else {
-      setMyCommentReactions(new Set());
+      setMyCommentReactions({});
     }
 
     visiblePostIdsRef.current = visiblePostIds;
@@ -866,37 +871,50 @@ export default function MandaliScreen() {
     }
   }, [patchNewComment, profile]);
 
-  const handleReactComment = useCallback(async (commentId: string) => {
+  const handleSelectCommentReaction = useCallback(async (commentId: string, reaction: ReactionType) => {
     if (!profile) return;
-    setMyCommentReactions((current) => new Set(current).add(commentId));
-    setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
+    const hadReaction = myCommentReactions[commentId] != null;
+    const previous = myCommentReactions[commentId];
+
+    setMyCommentReactions((current) => ({ ...current, [commentId]: reaction }));
+    if (!hadReaction) {
+      setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
+    }
+
     try {
-      await setCommentReaction(commentId, profile.userId);
+      await setCommentReaction(commentId, profile.userId, reaction);
     } catch {
       setMyCommentReactions((current) => {
-        const next = new Set(current);
-        next.delete(commentId);
-        return next;
+        if (previous == null) {
+          const { [commentId]: _removed, ...rest } = current;
+          return rest;
+        }
+        return { ...current, [commentId]: previous };
       });
-      setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
+      if (!hadReaction) {
+        setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
+      }
     }
-  }, [profile]);
+  }, [profile, myCommentReactions]);
 
-  const handleUnreactComment = useCallback(async (commentId: string) => {
+  const handleRemoveCommentReaction = useCallback(async (commentId: string) => {
     if (!profile) return;
+    const previous = myCommentReactions[commentId];
+    if (previous == null) return;
+
     setMyCommentReactions((current) => {
-      const next = new Set(current);
-      next.delete(commentId);
-      return next;
+      const { [commentId]: _removed, ...rest } = current;
+      return rest;
     });
     setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
+
     try {
       await removeCommentReaction(commentId, profile.userId);
     } catch {
-      setMyCommentReactions((current) => new Set(current).add(commentId));
+      setMyCommentReactions((current) => ({ ...current, [commentId]: previous }));
       setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
     }
-  }, [profile]);
+  }, [profile, myCommentReactions]);
 
   const handleEditComment = useCallback(async (commentId: string, body: string) => {
     const previous = comments.find((c) => c.id === commentId);
@@ -1257,12 +1275,12 @@ export default function MandaliScreen() {
         onViewProfile={handleViewProfile}
         onEditComment={handleEditComment}
         onDeleteComment={handleDeleteComment}
-        onReactComment={handleReactComment}
-        onUnreactComment={handleUnreactComment}
-        myReactedCommentIds={myCommentReactions}
+        onSelectCommentReaction={handleSelectCommentReaction}
+        onRemoveCommentReaction={handleRemoveCommentReaction}
+        myCommentReactions={myCommentReactions}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, handleEditComment, handleDeleteComment, handleReactComment, handleUnreactComment, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, handleEditComment, handleDeleteComment, handleSelectCommentReaction, handleRemoveCommentReaction, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>

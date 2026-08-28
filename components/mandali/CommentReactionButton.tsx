@@ -4,29 +4,35 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useReducedMotion } from '@/components/ui/Motion';
-import { FONTS } from '@/lib/constants';
+import { COLORS, FONTS } from '@/lib/constants';
 import { type ReactionType, REACTION_META, REACTION_ORDER } from '@/lib/mandali';
 
-export { REACTION_META, REACTION_ORDER };
-
-type PostReactionButtonProps = {
+type CommentReactionButtonProps = {
   reaction: ReactionType | null;
   count: number;
   onSelect: (reaction: ReactionType) => void;
   onRemove: () => void;
+  onViewReactors: () => void;
   dim: string;
   cardBg: string;
   border: string;
   scrimColor: string;
 };
 
-// Same Facebook reaction-picker mechanism as FilterPicker (tap reveals a
-// small anchored popup of colored options) applied to post reactions
-// instead of the single upvote heart. Tapping the already-active reaction
-// removes it; tapping a different one switches. No literal "dislike" --
-// deliberately a devotional set (pranam/love/insightful), not a general
-// social reaction bar.
-export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, cardBg, border, scrimColor }: PostReactionButtonProps) {
+// Comment-level reaction button matching PostReactionButton's 3-type devotional
+// variety (pranam, love, insightful). Tap toggles the reaction; long-press opens
+// the anchored reaction picker; tapping the count opens the "Who reacted" sheet.
+export function CommentReactionButton({
+  reaction,
+  count,
+  onSelect,
+  onRemove,
+  onViewReactors,
+  dim,
+  cardBg,
+  border,
+  scrimColor,
+}: CommentReactionButtonProps) {
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
@@ -50,57 +56,89 @@ export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, c
     });
   };
 
+  const handlePress = () => {
+    if (reaction) {
+      onRemove();
+    } else {
+      onSelect('love');
+    }
+  };
+
   const pick = (type: ReactionType) => {
-    if (type === reaction) onRemove();
-    else onSelect(type);
+    if (type === reaction) {
+      onRemove();
+    } else {
+      onSelect(type);
+    }
     closePicker();
   };
 
   return (
     <>
-      {/* Unlike FilterPicker (a column-context trigger, where the default
-          alignSelf:'flex-start'-on-PressableSurface fix is enough), this
-          trigger sits in a row alongside the Comment button. A row's
-          non-flex children size to content, so PressableSurface's internal
-          flex:1 content wrapper collapses to zero without an explicit
-          minWidth here to give it a resolvable box to fill. */}
-      <View ref={triggerRef} collapsable={false} style={{ minWidth: 34 }}>
-        <PressableSurface
-          haptic="selection"
-          accessibilityLabel={active ? `Remove ${active.label} reaction` : 'React to this post'}
-          onPress={openPicker}
-          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 5 }}
-        >
-          {active ? (
-            <Text style={{ fontSize: 14 }}>{active.emoji}</Text>
-          ) : (
-            <Feather name="smile" size={13} color={dim} />
-          )}
-          {count > 0 ? (
-            <Text style={{ color: active ? active.color : dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>{count}</Text>
-          ) : null}
-        </PressableSurface>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+        {/* Reaction Icon Trigger (Tap toggles, Long-press opens picker) */}
+        <View ref={triggerRef} collapsable={false}>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel={active ? `Remove ${active.label} reaction` : 'React to this comment'}
+            onPress={handlePress}
+            onLongPress={openPicker}
+            style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', padding: 2 }}
+          >
+            {active ? (
+              <Text style={{ fontSize: 13 }}>{active.emoji}</Text>
+            ) : (
+              <Feather name="heart" size={11} color={dim} />
+            )}
+          </PressableSurface>
+        </View>
+
+        {/* Count Button (Tapping opens "Who reacted" sheet) */}
+        {count > 0 ? (
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel={`View all ${count} reactions`}
+            onPress={onViewReactors}
+            style={{ minHeight: 0, paddingHorizontal: 2, paddingVertical: 2 }}
+          >
+            <Text
+              style={{
+                fontFamily: FONTS.sansSemiBold,
+                fontSize: 10.5,
+                color: active ? active.color : dim,
+              }}
+            >
+              {count}
+            </Text>
+          </PressableSurface>
+        ) : null}
       </View>
 
+      {/* Floating Reaction Picker Popup */}
       <Modal transparent visible={open} animationType="none" onRequestClose={closePicker}>
         <Pressable style={{ flex: 1, backgroundColor: scrimColor }} onPress={closePicker}>
           {anchor ? (
             <Animated.View
               style={{
                 position: 'absolute',
-                top: anchor.y + anchor.height + 8,
-                left: anchor.x,
+                top: Math.max(10, anchor.y - 56), // anchor above comment
+                left: Math.max(12, anchor.x - 20),
                 flexDirection: 'row',
                 gap: 8,
                 backgroundColor: cardBg,
                 borderRadius: 18,
                 borderWidth: 1,
                 borderColor: border,
-                padding: 10,
+                padding: 8,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 10,
+                elevation: 6,
                 opacity: progress,
                 transform: [
                   { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) },
-                  { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] }) },
+                  { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) },
                 ],
               }}
             >
@@ -114,15 +152,15 @@ export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, c
                     style={{
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
                       backgroundColor: `${meta.color}18`,
                       borderWidth: isActive ? 1.5 : 0,
                       borderColor: meta.color,
                     }}
                   >
-                    <Text style={{ fontSize: 20 }}>{meta.emoji}</Text>
+                    <Text style={{ fontSize: 18 }}>{meta.emoji}</Text>
                   </Pressable>
                 );
               })}

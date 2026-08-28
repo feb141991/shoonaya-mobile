@@ -49,6 +49,14 @@ export type RsvpStatus = 'going' | 'interested' | 'not_going';
 // updates, losses, and scripture questions on).
 export type ReactionType = 'pranam' | 'love' | 'insightful';
 
+export const REACTION_META: Record<ReactionType, { emoji: string; label: string; color: string }> = {
+  pranam: { emoji: "🙏", label: "Pranam", color: "#C5A059" },
+  love: { emoji: "❤️", label: "Love", color: "#E0684C" },
+  insightful: { emoji: "💡", label: "Insightful", color: "#4C8BF5" },
+};
+
+export const REACTION_ORDER: ReactionType[] = ["pranam", "love", "insightful"];
+
 export type ConnectionStatus = 'none' | 'pending_sent' | 'pending_received' | 'connected';
 
 export type ConnectionRequestRow = {
@@ -90,7 +98,20 @@ export type CommentRow = {
   updated_at: string | null;
   deleted_at: string | null;
   upvotes: number;
+  myReaction?: ReactionType | null;
   profiles?: { full_name: string; username: string; avatar_url: string | null } | null;
+};
+
+export type CommentReactor = {
+  userId: string;
+  reactionType: ReactionType;
+  createdAt: string;
+  profile: {
+    id: string;
+    fullName: string | null;
+    username: string | null;
+    avatarUrl: string | null;
+  } | null;
 };
 
 export type RsvpRow = {
@@ -337,13 +358,15 @@ export async function deleteMandaliComment(commentId: string): Promise<void> {
   if (!response.ok) throw new Error('Could not delete comment');
 }
 
-// ── Comment reactions (plain heart, no type variety — comments are a
-// lighter-weight surface than a post) ──────────────────────────────────────
+// ── Comment reactions (3 devotional types: pranam, love, insightful) ──────
 // comment_upvotes has PRIMARY KEY (comment_id, user_id), matching
-// post_upvotes' one-row-per-user shape.
+// post_upvotes' one-row-per-user shape. Switching reaction types updates
+// the existing row (upsert) rather than inserting a duplicate row.
 
-export async function setCommentReaction(commentId: string, userId: string): Promise<void> {
-  const { error } = await supabase.from('comment_upvotes').insert({ comment_id: commentId, user_id: userId });
+export async function setCommentReaction(commentId: string, userId: string, reaction: ReactionType): Promise<void> {
+  const { error } = await supabase
+    .from('comment_upvotes')
+    .upsert({ comment_id: commentId, user_id: userId, reaction_type: reaction }, { onConflict: 'comment_id,user_id' });
   if (error) throw error;
   triggerPush(`comment_reaction:${commentId}:${userId}`);
 }
@@ -351,6 +374,46 @@ export async function setCommentReaction(commentId: string, userId: string): Pro
 export async function removeCommentReaction(commentId: string, userId: string): Promise<void> {
   const { error } = await supabase.from('comment_upvotes').delete().match({ comment_id: commentId, user_id: userId });
   if (error) throw error;
+}
+
+export async function fetchCommentReactors(commentId: string, currentUserId?: string): Promise<CommentReactor[]> {
+  const { data, error } = await supabase
+    .from('comment_upvotes')
+    .select('user_id, reaction_type, created_at, profiles(id, full_name, username, avatar_url)')
+    .eq('comment_id', commentId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+
+  let safetyState: SafetyState | null = null;
+  if (currentUserId) {
+    try {
+      safetyState = await fetchSafetyState(currentUserId);
+    } catch {
+      // best-effort safety filtering
+    }
+  }
+
+  const rows = (data ?? []).map((row: any) => {
+    const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    return {
+      userId: row.user_id,
+      reactionType: (row.reaction_type ?? 'love') as ReactionType,
+      createdAt: row.created_at,
+      profile: p
+        ? {
+            id: p.id,
+            fullName: p.full_name,
+            username: p.username,
+            avatarUrl: p.avatar_url,
+          }
+        : null,
+    };
+  });
+
+  if (safetyState) {
+    return rows.filter((r) => !safetyState.excludedAuthorIds.has(r.userId));
+  }
+  return rows;
 }
 
 export async function updateMandaliRsvp(payload: { postId: string; userId: string; status: RsvpStatus }): Promise<void> {

@@ -4,26 +4,24 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, RADII } from '@/lib/constants';
-import type { CommentRow } from '@/lib/mandali';
+import type { CommentRow, ReactionType } from '@/lib/mandali';
+import { CommentReactionButton } from '@/components/mandali/CommentReactionButton';
+import { CommentReactorsSheet } from '@/components/mandali/CommentReactorsSheet';
 
 // The "chat thread" under each Mandali post — PWA's post_comments UI
 // embedded inline in MandaliClient.tsx. Comments arrive here already
 // filtered to this post's id; the parent screen (app/(tabs)/mandali.tsx)
 // owns the single realtime subscription that keeps `comments` current, so
-// this list updates live without a manual refresh — the behavior the user
-// specifically asked to be better than PWA (which needs a refresh to see
-// new comments).
+// this list updates live without a manual refresh.
 //
 // Threading: matches PWA's MandaliClient.tsx one-level reply model — root
 // comments (parent_id null) can each have direct replies grouped under
 // them via parent_id, with a "Reply" button per root comment opening an
 // inline reply composer.
 //
-// Edit/delete/reactions (native-only — PWA is being retired, no parity
-// work there): a comment's own author can edit its body inline or soft
-// delete it (renders as a "[deleted]" tombstone rather than disappearing,
-// so replies underneath don't get orphaned); anyone can heart a comment,
-// mirroring the post-level reaction affordance one level down.
+// Reactions & Sheet: comment-level devotional reactions with the same 3-type
+// variety as posts (pranam, love, insightful), long-press reaction picker,
+// and a "Who reacted" bottom sheet opened by tapping the reaction count.
 function CommentItem({
   comment,
   userId,
@@ -31,11 +29,15 @@ function CommentItem({
   onReply,
   onEdit,
   onDelete,
-  onReact,
-  hasReacted,
+  onSelectReaction,
+  onRemoveReaction,
+  onViewReactors,
+  myReaction,
   text,
   dim,
+  cardBg,
   border,
+  scrimColor,
   brand,
   avatarSize,
   nameSize,
@@ -48,11 +50,15 @@ function CommentItem({
   onReply?: () => void;
   onEdit: (commentId: string, body: string) => void;
   onDelete: (commentId: string) => void;
-  onReact: (commentId: string) => void;
-  hasReacted: boolean;
+  onSelectReaction: (commentId: string, reaction: ReactionType) => void;
+  onRemoveReaction: (commentId: string) => void;
+  onViewReactors: (commentId: string) => void;
+  myReaction: ReactionType | null;
   text: string;
   dim: string;
+  cardBg: string;
   border: string;
+  scrimColor: string;
   brand: string;
   avatarSize: number;
   nameSize: number;
@@ -82,7 +88,16 @@ function CommentItem({
         onPress={() => onViewProfile(comment.author_id)}
         style={{ minHeight: 0 }}
       >
-        <View style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            width: avatarSize,
+            height: avatarSize,
+            borderRadius: avatarSize / 2,
+            backgroundColor: border,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: avatarSize * 0.45, color: text }}>
             {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
           </Text>
@@ -103,7 +118,15 @@ function CommentItem({
         </PressableSurface>
 
         {isDeleted ? (
-          <Text style={{ fontFamily: FONTS.sans, fontSize: bodySize, lineHeight: bodyLineHeight, color: dim, fontStyle: 'italic' }}>
+          <Text
+            style={{
+              fontFamily: FONTS.sans,
+              fontSize: bodySize,
+              lineHeight: bodyLineHeight,
+              color: dim,
+              fontStyle: 'italic',
+            }}
+          >
             Comment deleted
           </Text>
         ) : editing ? (
@@ -128,7 +151,14 @@ function CommentItem({
                 maxHeight: 140,
               }}
             />
-            <PressableSurface accessibilityLabel="Cancel edit" onPress={() => { setEditing(false); setEditDraft(comment.body); }} style={{ minHeight: 0, padding: 4 }}>
+            <PressableSurface
+              accessibilityLabel="Cancel edit"
+              onPress={() => {
+                setEditing(false);
+                setEditDraft(comment.body);
+              }}
+              style={{ minHeight: 0, padding: 4 }}
+            >
               <Feather name="x" size={13} color={dim} />
             </PressableSurface>
             <PressableSurface accessibilityLabel="Save edit" onPress={submitEdit} style={{ minHeight: 0, padding: 4 }}>
@@ -136,34 +166,46 @@ function CommentItem({
             </PressableSurface>
           </View>
         ) : (
-          <Text style={{ fontFamily: FONTS.sans, fontSize: bodySize, lineHeight: bodyLineHeight, color: text }}>{comment.body}</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: bodySize, lineHeight: bodyLineHeight, color: text }}>
+            {comment.body}
+          </Text>
         )}
 
         {!isDeleted ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel={hasReacted ? 'Remove heart' : 'Heart this comment'}
-              onPress={() => onReact(comment.id)}
-              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 3 }}
-            >
-              <Feather name="heart" size={11} color={hasReacted ? COLORS.like : dim} />
-              {comment.upvotes > 0 ? (
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10.5, color: hasReacted ? COLORS.like : dim }}>{comment.upvotes}</Text>
-              ) : null}
-            </PressableSurface>
+            <CommentReactionButton
+              reaction={myReaction}
+              count={comment.upvotes}
+              onSelect={(reaction) => onSelectReaction(comment.id, reaction)}
+              onRemove={() => onRemoveReaction(comment.id)}
+              onViewReactors={() => onViewReactors(comment.id)}
+              dim={dim}
+              cardBg={cardBg}
+              border={border}
+              scrimColor={scrimColor}
+            />
             {onReply ? (
               <PressableSurface haptic="selection" onPress={onReply} style={{ minHeight: 0 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Reply</Text>
               </PressableSurface>
             ) : null}
             {isOwn ? (
-              <PressableSurface haptic="selection" accessibilityLabel="Edit comment" onPress={() => setEditing(true)} style={{ minHeight: 0 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Edit comment"
+                onPress={() => setEditing(true)}
+                style={{ minHeight: 0 }}
+              >
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Edit</Text>
               </PressableSurface>
             ) : null}
             {isOwn ? (
-              <PressableSurface haptic="selection" accessibilityLabel="Delete comment" onPress={() => onDelete(comment.id)} style={{ minHeight: 0 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Delete comment"
+                onPress={() => onDelete(comment.id)}
+                style={{ minHeight: 0 }}
+              >
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Delete</Text>
               </PressableSurface>
             ) : null}
@@ -183,13 +225,15 @@ export function PostComments({
   onSubmit,
   onEditComment,
   onDeleteComment,
-  onReactComment,
-  onUnreactComment,
-  myReactedCommentIds,
+  onSelectCommentReaction,
+  onRemoveCommentReaction,
+  myCommentReactions,
   onViewProfile,
   text,
   dim,
+  cardBg = COLORS.cardBgLight,
   border,
+  scrimColor = 'rgba(0,0,0,0.4)',
   brand,
 }: {
   comments: CommentRow[];
@@ -200,18 +244,21 @@ export function PostComments({
   onSubmit: (body: string, parentId?: string | null) => void;
   onEditComment: (commentId: string, body: string) => void;
   onDeleteComment: (commentId: string) => void;
-  onReactComment: (commentId: string) => void;
-  onUnreactComment: (commentId: string) => void;
-  myReactedCommentIds: Set<string>;
+  onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
+  onRemoveCommentReaction: (commentId: string) => void;
+  myCommentReactions: Record<string, ReactionType>;
   onViewProfile: (userId: string) => void;
   text: string;
   dim: string;
+  cardBg?: string;
   border: string;
+  scrimColor?: string;
   brand: string;
 }) {
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [activeReactorsCommentId, setActiveReactorsCommentId] = useState<string | null>(null);
 
   const rootComments = useMemo(() => comments.filter((comment) => !comment.parent_id), [comments]);
   const repliesByParent = useMemo(() => {
@@ -238,11 +285,6 @@ export function PostComments({
     onSubmit(trimmed, parentId);
     setReplyDraft('');
     setReplyTo(null);
-  };
-
-  const toggleReaction = (commentId: string) => {
-    if (myReactedCommentIds.has(commentId)) onUnreactComment(commentId);
-    else onReactComment(commentId);
   };
 
   return (
@@ -276,11 +318,15 @@ export function PostComments({
                   }}
                   onEdit={onEditComment}
                   onDelete={onDeleteComment}
-                  onReact={toggleReaction}
-                  hasReacted={myReactedCommentIds.has(comment.id)}
+                  onSelectReaction={onSelectCommentReaction}
+                  onRemoveReaction={onRemoveCommentReaction}
+                  onViewReactors={(id) => setActiveReactorsCommentId(id)}
+                  myReaction={myCommentReactions[comment.id] ?? null}
                   text={text}
                   dim={dim}
+                  cardBg={cardBg}
                   border={border}
+                  scrimColor={scrimColor}
                   brand={brand}
                   avatarSize={22}
                   nameSize={12}
@@ -298,11 +344,15 @@ export function PostComments({
                         onViewProfile={onViewProfile}
                         onEdit={onEditComment}
                         onDelete={onDeleteComment}
-                        onReact={toggleReaction}
-                        hasReacted={myReactedCommentIds.has(reply.id)}
+                        onSelectReaction={onSelectCommentReaction}
+                        onRemoveReaction={onRemoveCommentReaction}
+                        onViewReactors={(id) => setActiveReactorsCommentId(id)}
+                        myReaction={myCommentReactions[reply.id] ?? null}
                         text={text}
                         dim={dim}
+                        cardBg={cardBg}
                         border={border}
+                        scrimColor={scrimColor}
                         brand={brand}
                         avatarSize={19}
                         nameSize={11.5}
@@ -362,7 +412,11 @@ export function PostComments({
                         minHeight: 0,
                       }}
                     >
-                      {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={11} color={COLORS.ink} />}
+                      {posting ? (
+                        <ActivityIndicator size="small" color={COLORS.ink} />
+                      ) : (
+                        <Feather name="send" size={11} color={COLORS.ink} />
+                      )}
                     </PressableSurface>
                   </View>
                 ) : null}
@@ -407,11 +461,24 @@ export function PostComments({
                 minHeight: 0,
               }}
             >
-              {posting ? <ActivityIndicator size="small" color={COLORS.ink} /> : <Feather name="send" size={13} color={COLORS.ink} />}
+              {posting ? (
+                <ActivityIndicator size="small" color={COLORS.ink} />
+              ) : (
+                <Feather name="send" size={13} color={COLORS.ink} />
+              )}
             </PressableSurface>
           </View>
         </View>
       ) : null}
+
+      {/* Who Reacted Bottom Sheet */}
+      <CommentReactorsSheet
+        visible={!!activeReactorsCommentId}
+        commentId={activeReactorsCommentId}
+        currentUserId={userId}
+        onClose={() => setActiveReactorsCommentId(null)}
+        onViewProfile={onViewProfile}
+      />
     </View>
   );
 }
