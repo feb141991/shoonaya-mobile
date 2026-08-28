@@ -1,8 +1,9 @@
 import type { ObservanceSeries } from './observance-series-contract.generated';
+import type { HomeObservanceStoryCard } from './observance-story-contract.generated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 
-export const HOME_CACHE_SCHEMA_VERSION = 1;
+export const HOME_CACHE_SCHEMA_VERSION = 2;
 
 export type CacheIdentity =
   | { kind: 'authenticated'; userId: string }
@@ -73,6 +74,7 @@ export type CachedHomeRenderModel = {
     observance: CachedObservanceEntry | null;
     upcomingObservances: CachedObservanceEntry[];
     series?: ObservanceSeries[];
+    storyCards?: HomeObservanceStoryCard[];
   };
   nextPractice: {
     id: 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -182,6 +184,7 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       observance: full.panchang?.observance ?? null,
       upcomingObservances: full.panchang?.upcomingObservances ?? [],
       series: Array.isArray(full.panchang?.series) ? full.panchang.series : [],
+      storyCards: Array.isArray(full.panchang?.storyCards) ? full.panchang.storyCards : [],
     },
     nextPractice: {
       id: full.nextPractice?.id ?? 'pathshala',

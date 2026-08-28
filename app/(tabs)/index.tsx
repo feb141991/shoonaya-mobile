@@ -32,6 +32,8 @@ import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SacredDaysCard } from '@/components/home/SacredDaysCard';
+import { FestivalStoryStack } from '@/components/home/FestivalStoryStack';
+import type { HomeObservanceStoryCard } from '@/lib/observance-story-contract.generated';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { MoodPulseSheet } from '@/components/home/MoodPulseSheet';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
@@ -225,6 +227,7 @@ type HomeSummary = {
     // re-labeling the same nearest one.
     upcomingObservances: ObservanceEntry[];
     series?: ObservanceSeries[];
+    storyCards?: HomeObservanceStoryCard[];
   };
   nextPractice: {
     id: PracticeId;
@@ -1473,6 +1476,8 @@ function HomeContent() {
               spiritualDate={state.date.iso}
             />
           ) : null}
+
+          <FestivalStoryStack cards={state.panchang.storyCards} theme={theme} isDark={isDark} />
 
           {/* Smart daily Sadhana CTA — mirrors PWA's HeroSection.tsx card
               exactly (same 26px radius, cream/gold gradient, 54px icon well,

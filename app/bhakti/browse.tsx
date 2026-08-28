@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, RADII, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, RADII, TYPE, themeColor } from '@/lib/constants';
 
 // ── Bhakti Phase 5 — native equivalent of the PWA's
 // src/app/(main)/bhakti/browse/page.tsx "Sacred Library". Backs the hub's
@@ -77,7 +77,7 @@ function PillRow({
                   borderColor: isActive ? `${accent}50` : theme.border,
                 }}
               >
-                <Text style={{ ...TYPE.caption, color: isActive ? accent : theme.dim, fontFamily: isActive ? FONTS.sansBold : FONTS.sansMedium }}>
+                <Text style={{ ...TYPE.caption, color: isActive ? accent : theme.dim, fontFamily: isActive ? FONTS.sansSemiBold : FONTS.sansMedium }}>
                   {item.emoji ? `${item.emoji} ` : ''}{item.label}
                 </Text>
               </View>
