@@ -555,9 +555,9 @@ function PanchangPill({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 3,
-        backgroundColor: COLORS.homePwaPillBg,
-        borderWidth: 0,
-        borderColor: 'transparent',
+        backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
+        borderWidth: isObservance ? 1 : 0,
+        borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
         minWidth: 120,
         maxWidth: 260,
         // RN's auto-height measurement for this pill was landing on wildly
@@ -576,7 +576,7 @@ function PanchangPill({
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
         <View style={{ flexShrink: 1 }}>
           {labelLines.map((line, i) => (
-            <Text key={i} style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }}>
+            <Text key={i} style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? COLORS.homePwaObservanceText : COLORS.homePwaPillText }}>
               {line}
             </Text>
           ))}
@@ -598,7 +598,9 @@ function PanchangPill({
               width: i === idx ? 10 : 4,
               height: 4,
               borderRadius: 99,
-              backgroundColor: i === idx ? COLORS.homePwaPillDotActive : COLORS.homePwaPillDotInactive,
+              backgroundColor: i === idx
+                ? (isObservance ? COLORS.homePwaObservanceText : COLORS.homePwaPillDotActive)
+                : (isObservance ? COLORS.homePwaObservanceBorder : COLORS.homePwaPillDotInactive),
             }}
           />
         ))}
@@ -1223,9 +1225,9 @@ function HomeContent() {
               justifyContent: 'center',
               flexDirection: 'row',
               gap: 6,
-              backgroundColor: 'transparent',
-              borderWidth: 0,
-              borderColor: 'transparent',
+              backgroundColor: isDark ? COLORS.homeMoodPillBgDark : COLORS.homeMoodPillBgLight,
+              borderWidth: 1,
+              borderColor: isDark ? COLORS.homeMoodPillBorderDark : COLORS.homeMoodPillBorderLight,
             }}
           >
             {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (

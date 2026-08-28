@@ -111,6 +111,12 @@ export const COLORS = {
   homePwaObservanceBg: 'rgba(234,112,48,0.22)',
   homePwaObservanceBorder: 'rgba(255,180,100,0.18)',
   homePwaObservanceText: 'rgba(255,200,140,0.95)',
+  // Mood check-in pill on the Home hero -- sourced from PWA's
+  // HeroSection.tsx mood Link (background/border pair, theme-aware).
+  homeMoodPillBgLight: 'rgba(255,255,255,0.72)',
+  homeMoodPillBgDark: 'rgba(0,0,0,0.40)',
+  homeMoodPillBorderLight: 'rgba(0,0,0,0.08)',
+  homeMoodPillBorderDark: 'rgba(255,255,255,0.12)',
   authGoldWellBg: 'rgba(197,160,89,0.14)',
   selectionWellLight: 'rgba(255,255,255,0.60)',
   selectionWellDark: 'rgba(255,248,225,0.06)',
