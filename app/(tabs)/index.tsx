@@ -673,11 +673,28 @@ function HomeContent() {
   // VratCarousel.tsx) — spotlight only the soonest observance within the
   // next 3 days; the hero PanchangPill above keeps rotating through all
   // upcoming entries regardless of window.
-  const soonestObservance = useMemo(() => {
+  // PWA shows every occurrence/festival that falls in the window (its
+  // VratCarousel is a swipeable multi-card list, not a single spotlight) --
+  // native was collapsing this down to just the soonest one via `[0]`,
+  // which is why a coincidental same-day pairing (e.g. Purnima Vrat and
+  // Raksha Bandhan both landing on the same date) only ever showed
+  // whichever one happened to win the tie-break, silently dropping the
+  // other. Dedupe by name (not just by the upstream slug:date key, which
+  // home-summary already applies) and keep every distinct entry in the
+  // window instead of slicing to one, for every same-day pairing this ever
+  // produces, not just this specific one.
+  const relevantObservances = useMemo(() => {
+    const seen = new Set<string>();
     const candidates = [state.panchang.observance, ...state.panchang.upcomingObservances].filter(
       (entry): entry is NonNullable<typeof entry> => Boolean(entry) && entry!.daysLeft >= 0 && entry!.daysLeft <= 3
     );
-    return candidates.sort((a, b) => a.daysLeft - b.daysLeft)[0] ?? null;
+    const deduped = candidates.filter((entry) => {
+      const key = entry.name.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return deduped.sort((a, b) => a.daysLeft - b.daysLeft);
   }, [state.panchang.observance, state.panchang.upcomingObservances]);
 
   // A device-local backdrop pick (lib/heroPreference.ts) overrides the
@@ -1468,9 +1485,9 @@ function HomeContent() {
             <FirstWeekGuide tradition={state.profile.tradition} userName={state.profile.firstName} />
           ) : null}
 
-          {Boolean(state.panchang.series?.length || soonestObservance) ? (
+          {state.panchang.series?.length ? (
             <SacredDaysCard
-              entry={soonestObservance}
+              entry={null}
               series={state.panchang.series}
               theme={theme}
               isDark={isDark}
@@ -1478,6 +1495,18 @@ function HomeContent() {
               spiritualDate={state.date.iso}
             />
           ) : null}
+
+          {relevantObservances.map((entry) => (
+            <SacredDaysCard
+              key={entry.name}
+              entry={entry}
+              series={null}
+              theme={theme}
+              isDark={isDark}
+              lang={state.profile.appLanguage}
+              spiritualDate={state.date.iso}
+            />
+          ))}
 
           <FestivalStoryStack cards={state.panchang.storyCards} theme={theme} isDark={isDark} />
 
