@@ -251,6 +251,12 @@ export const COLORS = {
   // ('#c4789a', for the Devi accent), with no shared source. Named here so
   // both stay in sync instead of drifting if one is ever tuned.
   deityRose: '#C4789A',
+
+  // "Liked" heart accent — sourced from app/bhakti/katha/[id].tsx's existing
+  // local LIKE_ACCENT literal ('#F47888'), named here so the Mandali comment
+  // reaction heart matches that established precedent instead of picking a
+  // new red/pink independently.
+  like: '#F47888',
 } as const;
 
 // Tradition accent colors — was independently redeclared twice in the same

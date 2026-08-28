@@ -87,6 +87,9 @@ export type CommentRow = {
   body: string;
   parent_id: string | null;
   created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
+  upvotes: number;
   profiles?: { full_name: string; username: string; avatar_url: string | null } | null;
 };
 
@@ -310,7 +313,44 @@ export async function createMandaliComment(payload: { postId: string; userId: st
   if (!response.ok) throw new Error('Could not create comment');
   const result = await response.json() as { id?: string };
   if (!result.id) throw new Error('Comment response was incomplete');
+  // notify_mandali_comment() writes the notifications row (recipient is the
+  // parent comment's author for a reply, otherwise the post's author) keyed
+  // deterministically off the new comment's own id -- matches every other
+  // triggerPush call in this file, claiming that row for an actual push.
+  triggerPush(`mandali_comment:${result.id}`);
   return result.id;
+}
+
+export async function updateMandaliComment(payload: { commentId: string; body: string }): Promise<void> {
+  const response = await apiFetch('/api/mandali/comments', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Could not update comment');
+}
+
+export async function deleteMandaliComment(commentId: string): Promise<void> {
+  const response = await apiFetch('/api/mandali/comments', {
+    method: 'DELETE',
+    body: JSON.stringify({ commentId }),
+  });
+  if (!response.ok) throw new Error('Could not delete comment');
+}
+
+// ── Comment reactions (plain heart, no type variety — comments are a
+// lighter-weight surface than a post) ──────────────────────────────────────
+// comment_upvotes has PRIMARY KEY (comment_id, user_id), matching
+// post_upvotes' one-row-per-user shape.
+
+export async function setCommentReaction(commentId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('comment_upvotes').insert({ comment_id: commentId, user_id: userId });
+  if (error) throw error;
+  triggerPush(`comment_reaction:${commentId}:${userId}`);
+}
+
+export async function removeCommentReaction(commentId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('comment_upvotes').delete().match({ comment_id: commentId, user_id: userId });
+  if (error) throw error;
 }
 
 export async function updateMandaliRsvp(payload: { postId: string; userId: string; status: RsvpStatus }): Promise<void> {

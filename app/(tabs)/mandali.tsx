@@ -40,16 +40,20 @@ import {
   cancelConnectionRequest,
   createMandaliComment,
   createMandaliPost,
+  deleteMandaliComment,
   fetchConnectionStatus,
   fetchNearbySeekers,
   fetchPendingConnectionRequests,
   leaveMandali,
+  removeCommentReaction,
   reportMandaliMember,
   reportMandaliPost,
   removePostReaction,
   respondToConnectionRequest,
   sendConnectionRequest,
+  setCommentReaction,
   setPostReaction,
+  updateMandaliComment,
   updateMandaliRsvp,
   updateMandaliPost,
   type CommentRow,
@@ -72,8 +76,14 @@ type RealtimeUpvotePayload = {
 
 type RealtimeCommentPayload = {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new?: { id?: unknown; post_id?: unknown; author_id?: unknown };
+  new?: { id?: unknown; post_id?: unknown; author_id?: unknown; body?: unknown; updated_at?: unknown; deleted_at?: unknown; upvotes?: unknown };
   old?: { id?: unknown; post_id?: unknown; author_id?: unknown };
+};
+
+type RealtimeCommentUpvotePayload = {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new?: { comment_id?: unknown; user_id?: unknown };
+  old?: { comment_id?: unknown; user_id?: unknown };
 };
 
 type RealtimeRsvpPayload = {
@@ -155,6 +165,11 @@ type MandaliPostCardProps = {
   onSelectReaction: (postId: string, reaction: ReactionType) => void;
   onRemoveReaction: (postId: string) => void;
   onViewProfile: (userId: string) => void;
+  onEditComment: (commentId: string, body: string) => void;
+  onDeleteComment: (commentId: string) => void;
+  onReactComment: (commentId: string) => void;
+  onUnreactComment: (commentId: string) => void;
+  myReactedCommentIds: Set<string>;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -174,6 +189,11 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onSelectReaction,
   onRemoveReaction,
   onViewProfile,
+  onEditComment,
+  onDeleteComment,
+  onReactComment,
+  onUnreactComment,
+  myReactedCommentIds,
 }: MandaliPostCardProps) {
   const isOwnPost = post.author_id === userId;
   const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
@@ -349,6 +369,11 @@ const MandaliPostCard = memo(function MandaliPostCard({
         userId={userId ?? ''}
         posting={postingComment}
         onSubmit={(body, parentId) => onSubmitComment(post.id, body, parentId)}
+        onEditComment={onEditComment}
+        onDeleteComment={onDeleteComment}
+        onReactComment={onReactComment}
+        onUnreactComment={onUnreactComment}
+        myReactedCommentIds={myReactedCommentIds}
         onViewProfile={onViewProfile}
         text={theme.text}
         dim={theme.dim}
@@ -387,6 +412,7 @@ export default function MandaliScreen() {
   const [rsvps, setRsvps] = useState<RsvpRow[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [myReactions, setMyReactions] = useState<Record<string, ReactionType>>({});
+  const [myCommentReactions, setMyCommentReactions] = useState<Set<string>>(new Set());
   const [seekers, setSeekers] = useState<NearbySeeker[]>([]);
   const [loadingSeekers, setLoadingSeekers] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
@@ -482,6 +508,7 @@ export default function MandaliScreen() {
       setRsvps([]);
       setMembers([]);
       setMyReactions({});
+      setMyCommentReactions(new Set());
       return;
     }
 
@@ -517,6 +544,18 @@ export default function MandaliScreen() {
       );
     } else {
       setMyReactions({});
+    }
+
+    const allCommentIds = feed.comments.map((comment) => comment.id);
+    if (allCommentIds.length > 0) {
+      const { data: commentUpvoteRows } = await supabase
+        .from('comment_upvotes')
+        .select('comment_id')
+        .eq('user_id', user.id)
+        .in('comment_id', allCommentIds);
+      setMyCommentReactions(new Set((commentUpvoteRows ?? []).map((row) => row.comment_id as string)));
+    } else {
+      setMyCommentReactions(new Set());
     }
 
     visiblePostIdsRef.current = visiblePostIds;
@@ -561,7 +600,7 @@ export default function MandaliScreen() {
   const patchNewComment = useCallback(async (commentId: string) => {
     const { data } = await supabase
       .from('post_comments')
-      .select('id, post_id, author_id, body, parent_id, created_at, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
+      .select('id, post_id, author_id, body, parent_id, created_at, updated_at, deleted_at, upvotes, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
       .eq('id', commentId)
       .maybeSingle();
     if (!data) return;
@@ -602,8 +641,24 @@ export default function MandaliScreen() {
     }
     if (payload.eventType === 'INSERT' && authorId !== profile?.userId) {
       void patchNewComment(commentId);
+      return;
     }
-    // UPDATE: no comment-edit feature exists today, nothing to patch.
+    if (payload.eventType === 'UPDATE') {
+      // Covers both an author's edit/soft-delete AND the upvotes column
+      // getting bumped by sync_comment_upvote_count -- both land as a
+      // post_comments UPDATE, and re-applying the row's own current values
+      // (not an increment) is safe even for the echo of this device's own
+      // write, unlike the increment-based upvote/RSVP handlers above.
+      const next = payload.new;
+      if (!next) return;
+      setComments((current) => current.map((c) => (c.id === commentId ? {
+        ...c,
+        body: typeof next.body === 'string' ? next.body : c.body,
+        updated_at: typeof next.updated_at === 'string' ? next.updated_at : c.updated_at,
+        deleted_at: typeof next.deleted_at === 'string' ? next.deleted_at : (next.deleted_at === null ? null : c.deleted_at),
+        upvotes: typeof next.upvotes === 'number' ? next.upvotes : c.upvotes,
+      } : c)));
+    }
   }, [patchNewComment, profile?.userId]);
 
   const handleRsvpRealtimeChange = useCallback((payload: RealtimeRsvpPayload) => {
@@ -810,6 +865,71 @@ export default function MandaliScreen() {
       setCommenting(null);
     }
   }, [patchNewComment, profile]);
+
+  const handleReactComment = useCallback(async (commentId: string) => {
+    if (!profile) return;
+    setMyCommentReactions((current) => new Set(current).add(commentId));
+    setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
+    try {
+      await setCommentReaction(commentId, profile.userId);
+    } catch {
+      setMyCommentReactions((current) => {
+        const next = new Set(current);
+        next.delete(commentId);
+        return next;
+      });
+      setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
+    }
+  }, [profile]);
+
+  const handleUnreactComment = useCallback(async (commentId: string) => {
+    if (!profile) return;
+    setMyCommentReactions((current) => {
+      const next = new Set(current);
+      next.delete(commentId);
+      return next;
+    });
+    setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
+    try {
+      await removeCommentReaction(commentId, profile.userId);
+    } catch {
+      setMyCommentReactions((current) => new Set(current).add(commentId));
+      setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
+    }
+  }, [profile]);
+
+  const handleEditComment = useCallback(async (commentId: string, body: string) => {
+    const previous = comments.find((c) => c.id === commentId);
+    if (!previous) return;
+    const nowIso = new Date().toISOString();
+    setComments((current) => current.map((c) => (c.id === commentId ? { ...c, body, updated_at: nowIso } : c)));
+    try {
+      await updateMandaliComment({ commentId, body });
+    } catch {
+      setComments((current) => current.map((c) => (c.id === commentId ? previous : c)));
+      Alert.alert('Could not save changes', 'Check your connection and try again.');
+    }
+  }, [comments]);
+
+  const handleDeleteComment = useCallback((commentId: string) => {
+    Alert.alert('Delete comment', 'This will remove your comment for everyone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          const previous = comments.find((c) => c.id === commentId);
+          if (!previous) return;
+          const nowIso = new Date().toISOString();
+          setComments((current) => current.map((c) => (c.id === commentId ? { ...c, deleted_at: nowIso } : c)));
+          deleteMandaliComment(commentId).catch(() => {
+            setComments((current) => current.map((c) => (c.id === commentId ? previous : c)));
+            Alert.alert('Could not delete comment', 'Check your connection and try again.');
+          });
+        },
+      },
+    ]);
+  }, [comments]);
 
   const handleRsvp = useCallback(async (postId: string, status: RsvpStatus) => {
     if (!profile) return;
@@ -1135,9 +1255,14 @@ export default function MandaliScreen() {
         onSelectReaction={handleSelectReaction}
         onRemoveReaction={handleRemoveReaction}
         onViewProfile={handleViewProfile}
+        onEditComment={handleEditComment}
+        onDeleteComment={handleDeleteComment}
+        onReactComment={handleReactComment}
+        onUnreactComment={handleUnreactComment}
+        myReactedCommentIds={myCommentReactions}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, handleEditComment, handleDeleteComment, handleReactComment, handleUnreactComment, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>

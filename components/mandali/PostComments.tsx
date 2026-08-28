@@ -17,13 +17,161 @@ import type { CommentRow } from '@/lib/mandali';
 // Threading: matches PWA's MandaliClient.tsx one-level reply model — root
 // comments (parent_id null) can each have direct replies grouped under
 // them via parent_id, with a "Reply" button per root comment opening an
-// inline reply composer. `onSubmit`'s second argument mirrors PWA's
-// onAddComment(postId, body, parentId) — omitted/undefined for a top-level
-// comment, set to the root comment's id for a reply. Previously this
-// component only ever posted flat top-level comments (no grouping, no
-// Reply affordance) even though the data layer (CommentRow.parent_id,
-// createMandaliComment's parentId param) already fully supported replies —
-// this rebuild is what actually wires that up.
+// inline reply composer.
+//
+// Edit/delete/reactions (native-only — PWA is being retired, no parity
+// work there): a comment's own author can edit its body inline or soft
+// delete it (renders as a "[deleted]" tombstone rather than disappearing,
+// so replies underneath don't get orphaned); anyone can heart a comment,
+// mirroring the post-level reaction affordance one level down.
+function CommentItem({
+  comment,
+  userId,
+  onViewProfile,
+  onReply,
+  onEdit,
+  onDelete,
+  onReact,
+  hasReacted,
+  text,
+  dim,
+  border,
+  brand,
+  avatarSize,
+  nameSize,
+  bodySize,
+  bodyLineHeight,
+}: {
+  comment: CommentRow;
+  userId: string;
+  onViewProfile: (userId: string) => void;
+  onReply?: () => void;
+  onEdit: (commentId: string, body: string) => void;
+  onDelete: (commentId: string) => void;
+  onReact: (commentId: string) => void;
+  hasReacted: boolean;
+  text: string;
+  dim: string;
+  border: string;
+  brand: string;
+  avatarSize: number;
+  nameSize: number;
+  bodySize: number;
+  bodyLineHeight: number;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editDraft, setEditDraft] = useState(comment.body);
+  const isOwn = comment.author_id === userId;
+  const isDeleted = !!comment.deleted_at;
+
+  const submitEdit = () => {
+    const trimmed = editDraft.trim();
+    if (!trimmed || trimmed === comment.body) {
+      setEditing(false);
+      return;
+    }
+    onEdit(comment.id, trimmed);
+    setEditing(false);
+  };
+
+  return (
+    <View style={{ flexDirection: 'row', gap: 7 }}>
+      <PressableSurface
+        haptic="selection"
+        accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
+        onPress={() => onViewProfile(comment.author_id)}
+        style={{ minHeight: 0 }}
+      >
+        <View style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: avatarSize * 0.45, color: text }}>
+            {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      </PressableSurface>
+      <View style={{ flex: 1, gap: 1 }}>
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
+          onPress={() => onViewProfile(comment.author_id)}
+          style={{ minHeight: 0, alignSelf: 'flex-start' }}
+        >
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: nameSize, color: text }}>
+            {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
+            {isOwn ? <Text style={{ color: brand }}> · you</Text> : null}
+            {comment.updated_at && !isDeleted ? <Text style={{ color: dim, fontFamily: FONTS.sans }}> · edited</Text> : null}
+          </Text>
+        </PressableSurface>
+
+        {isDeleted ? (
+          <Text style={{ fontFamily: FONTS.sans, fontSize: bodySize, lineHeight: bodyLineHeight, color: dim, fontStyle: 'italic' }}>
+            Comment deleted
+          </Text>
+        ) : editing ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <TextInput
+              value={editDraft}
+              onChangeText={setEditDraft}
+              autoFocus
+              style={{
+                flex: 1,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: border,
+                paddingHorizontal: 8,
+                paddingVertical: 5,
+                fontFamily: FONTS.sans,
+                fontSize: bodySize,
+                color: text,
+              }}
+              onSubmitEditing={submitEdit}
+              returnKeyType="done"
+            />
+            <PressableSurface accessibilityLabel="Cancel edit" onPress={() => { setEditing(false); setEditDraft(comment.body); }} style={{ minHeight: 0, padding: 4 }}>
+              <Feather name="x" size={13} color={dim} />
+            </PressableSurface>
+            <PressableSurface accessibilityLabel="Save edit" onPress={submitEdit} style={{ minHeight: 0, padding: 4 }}>
+              <Feather name="check" size={13} color={brand} />
+            </PressableSurface>
+          </View>
+        ) : (
+          <Text style={{ fontFamily: FONTS.sans, fontSize: bodySize, lineHeight: bodyLineHeight, color: text }}>{comment.body}</Text>
+        )}
+
+        {!isDeleted ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 }}>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={hasReacted ? 'Remove heart' : 'Heart this comment'}
+              onPress={() => onReact(comment.id)}
+              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 3 }}
+            >
+              <Feather name="heart" size={11} color={hasReacted ? COLORS.like : dim} />
+              {comment.upvotes > 0 ? (
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10.5, color: hasReacted ? COLORS.like : dim }}>{comment.upvotes}</Text>
+              ) : null}
+            </PressableSurface>
+            {onReply ? (
+              <PressableSurface haptic="selection" onPress={onReply} style={{ minHeight: 0 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Reply</Text>
+              </PressableSurface>
+            ) : null}
+            {isOwn ? (
+              <PressableSurface haptic="selection" accessibilityLabel="Edit comment" onPress={() => setEditing(true)} style={{ minHeight: 0 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Edit</Text>
+              </PressableSurface>
+            ) : null}
+            {isOwn ? (
+              <PressableSurface haptic="selection" accessibilityLabel="Delete comment" onPress={() => onDelete(comment.id)} style={{ minHeight: 0 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Delete</Text>
+              </PressableSurface>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export function PostComments({
   comments,
   expanded,
@@ -31,6 +179,11 @@ export function PostComments({
   userId,
   posting,
   onSubmit,
+  onEditComment,
+  onDeleteComment,
+  onReactComment,
+  onUnreactComment,
+  myReactedCommentIds,
   onViewProfile,
   text,
   dim,
@@ -43,6 +196,11 @@ export function PostComments({
   userId: string;
   posting: boolean;
   onSubmit: (body: string, parentId?: string | null) => void;
+  onEditComment: (commentId: string, body: string) => void;
+  onDeleteComment: (commentId: string) => void;
+  onReactComment: (commentId: string) => void;
+  onUnreactComment: (commentId: string) => void;
+  myReactedCommentIds: Set<string>;
   onViewProfile: (userId: string) => void;
   text: string;
   dim: string;
@@ -80,6 +238,11 @@ export function PostComments({
     setReplyTo(null);
   };
 
+  const toggleReaction = (commentId: string) => {
+    if (myReactedCommentIds.has(commentId)) onUnreactComment(commentId);
+    else onReactComment(commentId);
+  };
+
   return (
     <View style={{ marginTop: 8 }}>
       <PressableSurface
@@ -101,76 +264,49 @@ export function PostComments({
             const isReplying = replyTo === comment.id;
             return (
               <View key={comment.id} style={{ gap: 6 }}>
-                <View style={{ flexDirection: 'row', gap: 7 }}>
-                  <PressableSurface
-                    haptic="selection"
-                    accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
-                    onPress={() => onViewProfile(comment.author_id)}
-                    style={{ minHeight: 0 }}
-                  >
-                    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: text }}>
-                        {(comment.profiles?.full_name ?? comment.profiles?.username ?? '?').charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                  </PressableSurface>
-                  <View style={{ flex: 1, gap: 1 }}>
-                    <PressableSurface
-                      haptic="selection"
-                      accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
-                      onPress={() => onViewProfile(comment.author_id)}
-                      style={{ minHeight: 0, alignSelf: 'flex-start' }}
-                    >
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: text }}>
-                        {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Seeker'}
-                        {comment.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
-                      </Text>
-                    </PressableSurface>
-                    <Text style={{ fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 17, color: text }}>{comment.body}</Text>
-                    <PressableSurface
-                      haptic="selection"
-                      onPress={() => {
-                        setReplyTo((current) => (current === comment.id ? null : comment.id));
-                        setReplyDraft('');
-                      }}
-                      style={{ minHeight: 0, alignSelf: 'flex-start', marginTop: 1 }}
-                    >
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Reply</Text>
-                    </PressableSurface>
-                  </View>
-                </View>
+                <CommentItem
+                  comment={comment}
+                  userId={userId}
+                  onViewProfile={onViewProfile}
+                  onReply={() => {
+                    setReplyTo((current) => (current === comment.id ? null : comment.id));
+                    setReplyDraft('');
+                  }}
+                  onEdit={onEditComment}
+                  onDelete={onDeleteComment}
+                  onReact={toggleReaction}
+                  hasReacted={myReactedCommentIds.has(comment.id)}
+                  text={text}
+                  dim={dim}
+                  border={border}
+                  brand={brand}
+                  avatarSize={22}
+                  nameSize={12}
+                  bodySize={12.5}
+                  bodyLineHeight={17}
+                />
 
                 {replies.length > 0 ? (
                   <View style={{ marginLeft: 29, gap: 6 }}>
                     {replies.map((reply) => (
-                      <View key={reply.id} style={{ flexDirection: 'row', gap: 7 }}>
-                        <PressableSurface
-                          haptic="selection"
-                          accessibilityLabel={`View ${reply.profiles?.full_name ?? reply.profiles?.username ?? 'profile'}`}
-                          onPress={() => onViewProfile(reply.author_id)}
-                          style={{ minHeight: 0 }}
-                        >
-                          <View style={{ width: 19, height: 19, borderRadius: 10, backgroundColor: border, alignItems: 'center', justifyContent: 'center' }}>
-                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: text }}>
-                              {(reply.profiles?.full_name ?? reply.profiles?.username ?? '?').charAt(0).toUpperCase()}
-                            </Text>
-                          </View>
-                        </PressableSurface>
-                        <View style={{ flex: 1, gap: 1 }}>
-                          <PressableSurface
-                            haptic="selection"
-                            accessibilityLabel={`View ${reply.profiles?.full_name ?? reply.profiles?.username ?? 'profile'}`}
-                            onPress={() => onViewProfile(reply.author_id)}
-                            style={{ minHeight: 0, alignSelf: 'flex-start' }}
-                          >
-                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: text }}>
-                              {reply.profiles?.full_name ?? reply.profiles?.username ?? 'Seeker'}
-                              {reply.author_id === userId ? <Text style={{ color: brand }}> · you</Text> : null}
-                            </Text>
-                          </PressableSurface>
-                          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 16, color: text }}>{reply.body}</Text>
-                        </View>
-                      </View>
+                      <CommentItem
+                        key={reply.id}
+                        comment={reply}
+                        userId={userId}
+                        onViewProfile={onViewProfile}
+                        onEdit={onEditComment}
+                        onDelete={onDeleteComment}
+                        onReact={toggleReaction}
+                        hasReacted={myReactedCommentIds.has(reply.id)}
+                        text={text}
+                        dim={dim}
+                        border={border}
+                        brand={brand}
+                        avatarSize={19}
+                        nameSize={11.5}
+                        bodySize={12}
+                        bodyLineHeight={16}
+                      />
                     ))}
                   </View>
                 ) : null}
