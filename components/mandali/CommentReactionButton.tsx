@@ -20,8 +20,8 @@ type CommentReactionButtonProps = {
 };
 
 // Comment-level reaction button matching PostReactionButton's 3-type devotional
-// variety (pranam, love, insightful). Tap toggles the reaction; long-press opens
-// the anchored reaction picker; tapping the count opens the "Who reacted" sheet.
+// variety (pranam, love, insightful) and its exact tap-to-open-picker
+// interaction. Tapping the count opens the "Who reacted" sheet.
 export function CommentReactionButton({
   reaction,
   count,
@@ -56,10 +56,6 @@ export function CommentReactionButton({
     });
   };
 
-  const handlePress = () => {
-    openPicker();
-  };
-
   const pick = (type: ReactionType) => {
     if (type === reaction) {
       onRemove();
@@ -72,13 +68,15 @@ export function CommentReactionButton({
   return (
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-        {/* Reaction Icon Trigger (Tap toggles, Long-press opens picker) */}
+        {/* Reaction Icon Trigger — same interaction as PostReactionButton:
+            a plain tap opens the picker, no separate toggle/long-press
+            behavior, so the control feels identical whether it's attached
+            to a post or a comment. */}
         <View ref={triggerRef} collapsable={false}>
           <PressableSurface
             haptic="selection"
             accessibilityLabel={active ? `Remove ${active.label} reaction` : 'React to this comment'}
-            onPress={handlePress}
-            onLongPress={openPicker}
+            onPress={openPicker}
             style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', padding: 2 }}
           >
             {active ? (
