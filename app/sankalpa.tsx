@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -29,27 +30,6 @@ import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletion
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
-// Native Sankalpa — Home's Sankalpa card was previously display-only
-// (Alert.alert "coming soon" on tap, see app/(tabs)/index.tsx). This screen
-// is the first real native surface: view the active vow, check in for
-// today, mark it complete, or start a new one when none is active.
-//
-// Wired directly to the /api/sankalpa* routes (not /api/native/home-summary)
-// per this task's required reading — those are the actual create/check-in/
-// complete contracts; home-summary only ever read the active row for
-// display. All three routes were cookie-only (createServerSupabaseClient +
-// requireUserNotBanned) and could not authenticate a native Bearer token
-// until this same change also switched them to getApiUser + assertNotBanned
-// (see the web repo commit touching src/app/api/sankalpa/**).
-//
-// day/progress are computed client-side from start_date/target_days using
-// the exact same formula as /api/native/home-summary's buildDayNumber() —
-// ported, not reinvented, so Home and this screen never disagree. "Today"
-// is computed as a UTC date string (`toISOString().slice(0,10)`) to match
-// how the checkin route itself stores `checked_date` and how GET /api/sankalpa
-// computes `todayStr` — using a local-timezone date here would risk a
-// mismatch with what the API considers "today".
-
 const TARGET_DAY_OPTIONS = [11, 21, 40, 108] as const;
 const TEXT_MIN = 10;
 const TEXT_MAX = 200;
@@ -66,6 +46,18 @@ type SankalpaRow = {
   status: SankalpaStatus;
 };
 
+type CompletedSankalpaReceipt = {
+  id: string;
+  text: string;
+  related_practice?: string | null;
+  target_days: number | null;
+  status: 'completed';
+  completed_at?: string;
+  karmaAwarded?: number | null;
+  start_date?: string;
+  end_date?: string;
+};
+
 // Mirrors the shape returned by GET /api/sankalpa/history (web repo).
 type SankalpaHistoryRow = {
   id: string;
@@ -77,6 +69,7 @@ type SankalpaHistoryRow = {
   status: 'completed' | 'abandoned';
   created_at: string;
   updated_at: string;
+  completed_at: string | null;
 };
 
 type SankalpaHistoryStats = {
@@ -86,18 +79,23 @@ type SankalpaHistoryStats = {
   longestDurationDays: number;
 };
 
-// Mirrors GET /api/sankalpa/suggest's `source` field — 'ai' when the
-// personalized model call succeeded, 'fallback' when the static curated
-// bank was used instead (AI unavailable/timed out/malformed). The UI
-// treats both the same functionally; only the label above the chips
-// differs, so the fallback path never reads as broken.
 type SuggestSource = 'ai' | 'fallback';
 
 function todayUtcString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Ported verbatim from /api/native/home-summary/route.ts's buildDayNumber().
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00Z`);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+}
+
 function buildDayNumber(startDate: string, today: string): number {
   const start = new Date(`${startDate}T00:00:00Z`).getTime();
   const current = new Date(`${today}T00:00:00Z`).getTime();
@@ -184,12 +182,14 @@ function SectionLabel({ children, theme }: { children: string; theme: Theme }) {
 function CreateSankalpaButton({
   disabled,
   loading,
+  label = 'Begin Sankalpa',
   onPress,
   theme,
   isDark,
 }: {
   disabled: boolean;
   loading: boolean;
+  label?: string;
   onPress: () => void;
   theme: Theme;
   isDark: boolean;
@@ -219,7 +219,7 @@ function CreateSankalpaButton({
       }}
     >
       <Pressable
-        accessibilityLabel="Begin Sankalpa"
+        accessibilityLabel={label}
         accessibilityState={{ disabled: isInactive, busy: loading }}
         disabled={isInactive}
         onPressIn={() => {
@@ -255,7 +255,7 @@ function CreateSankalpaButton({
                 color: isInactive ? theme.dim : isDark ? COLORS.darkBg : COLORS.creamBg,
               }}
             >
-              Begin Sankalpa
+              {label}
             </Text>
             <Feather name="arrow-right" size={17} color={isInactive ? theme.dim : isDark ? COLORS.darkBg : COLORS.creamBg} />
           </>
@@ -278,6 +278,8 @@ export default function SankalpaScreen() {
   const [checkingIn, setCheckingIn] = useState(false);
   const [completing, setCompleting] = useState(false);
 
+  const [completedReceipt, setCompletedReceipt] = useState<CompletedSankalpaReceipt | null>(null);
+
   const [creating, setCreating] = useState(false);
   const [text, setText] = useState('');
   const [targetDays, setTargetDays] = useState<(typeof TARGET_DAY_OPTIONS)[number]>(21);
@@ -296,12 +298,19 @@ export default function SankalpaScreen() {
   const [history, setHistory] = useState<SankalpaHistoryRow[]>([]);
   const [historyStats, setHistoryStats] = useState<SankalpaHistoryStats | null>(null);
 
+  // Read-only history detail modal state
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<SankalpaHistoryRow | CompletedSankalpaReceipt | null>(null);
+  const [selectedHistoryCheckins, setSelectedHistoryCheckins] = useState<string[] | null>(null);
+  const [loadingHistoryDetails, setLoadingHistoryDetails] = useState(false);
+
   const [reducedMotion, setReducedMotion] = useState(false);
   const historyChevron = useRef(new Animated.Value(0)).current;
   const historyContentOpacity = useRef(new Animated.Value(0)).current;
   const heroOpacity = useRef(new Animated.Value(0)).current;
   const heroTranslateY = useRef(new Animated.Value(14)).current;
   const heroIconScale = useRef(new Animated.Value(1)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const textInputRef = useRef<TextInput>(null);
 
   // Ceremony is purely presentational — see components/home/
   // SankalpaCompletionCeremony.tsx. karmaAwarded comes straight from the
@@ -377,14 +386,44 @@ export default function SankalpaScreen() {
     setCheckedInToday(list.includes(today));
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await apiFetch('/api/sankalpa/history');
+      if (!response.ok) return;
+      const payload = (await response.json()) as {
+        history?: SankalpaHistoryRow[];
+        stats?: SankalpaHistoryStats;
+      };
+      setHistory(payload.history ?? []);
+      setHistoryStats(payload.stats ?? null);
+      setHistoryLoaded(true);
+      const latestCompleted = (payload.history ?? []).find((row) => row.status === 'completed');
+      if (latestCompleted) {
+        setCompletedReceipt((current) => current ?? {
+          id: latestCompleted.id,
+          text: latestCompleted.text,
+          related_practice: latestCompleted.related_practice,
+          target_days: latestCompleted.target_days,
+          status: 'completed',
+          completed_at: latestCompleted.completed_at ?? latestCompleted.updated_at,
+          karmaAwarded: null,
+          start_date: latestCompleted.start_date,
+          end_date: latestCompleted.end_date,
+        });
+      }
+    } catch {
+      // Best-effort — history is supplementary; the section just shows
+      // nothing new if this fails, it doesn't block the rest of the screen.
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
   const loadSankalpa = useCallback(async () => {
     setLoadError(false);
 
     if (await isGuestMode()) {
-      // A Sankalpa is inherently personal (a vow tied to an account) — there
-      // is no generic content to show a guest, so land on the "sign in to
-      // continue" state below instead of hitting the API and following its
-      // 401 straight to the login screen with no explanation.
       setIsGuest(true);
       return;
     }
@@ -404,8 +443,12 @@ export default function SankalpaScreen() {
 
     if (payload.sankalpa) {
       await loadCheckins(payload.sankalpa.id);
+    } else {
+      // Resolve the latest completed receipt before leaving the loading state,
+      // avoiding a misleading creation-only frame on return visits.
+      await loadHistory();
     }
-  }, [loadCheckins, router]);
+  }, [loadCheckins, loadHistory, router]);
 
   useEffect(() => {
     const run = async () => {
@@ -430,40 +473,17 @@ export default function SankalpaScreen() {
       setSuggestions(payload.suggestions ?? []);
       setSuggestionsSource(payload.source ?? null);
     } catch {
-      // Best-effort — suggestions are an enhancement; the create flow works
-      // fine with an empty text field if this fails.
+      // Best-effort
     } finally {
       setLoadingSuggestions(false);
     }
   }, []);
 
-  // Fetch suggestions once the active-vow check resolves to "none" — never
-  // on the active-vow path, and never more than once per empty-state visit.
   useEffect(() => {
     if (!loading && !isGuest && !sankalpa && suggestions.length === 0 && !loadingSuggestions) {
       void loadSuggestions();
     }
   }, [loading, sankalpa, suggestions.length, loadingSuggestions, loadSuggestions]);
-
-  const loadHistory = useCallback(async () => {
-    setHistoryLoading(true);
-    try {
-      const response = await apiFetch('/api/sankalpa/history');
-      if (!response.ok) return;
-      const payload = (await response.json()) as {
-        history?: SankalpaHistoryRow[];
-        stats?: SankalpaHistoryStats;
-      };
-      setHistory(payload.history ?? []);
-      setHistoryStats(payload.stats ?? null);
-      setHistoryLoaded(true);
-    } catch {
-      // Best-effort — history is supplementary; the section just shows
-      // nothing new if this fails, it doesn't block the rest of the screen.
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, []);
 
   const toggleHistory = useCallback(() => {
     const next = !historyExpanded;
@@ -487,6 +507,25 @@ export default function SankalpaScreen() {
     }
   }, [historyExpanded, historyChevron, historyContentOpacity, reducedMotion, historyLoaded, historyLoading, loadHistory]);
 
+  const openHistoryDetail = useCallback(async (item: SankalpaHistoryRow | CompletedSankalpaReceipt) => {
+    setSelectedHistoryItem(item);
+    setSelectedHistoryCheckins(null);
+    setLoadingHistoryDetails(true);
+    try {
+      const response = await apiFetch(`/api/sankalpa/checkin?sankalpa_id=${encodeURIComponent(item.id)}`);
+      if (response.ok) {
+        const payload = (await response.json()) as { checkins?: string[] };
+        setSelectedHistoryCheckins(payload.checkins ?? []);
+      } else {
+        setSelectedHistoryCheckins(null);
+      }
+    } catch {
+      setSelectedHistoryCheckins(null);
+    } finally {
+      setLoadingHistoryDetails(false);
+    }
+  }, []);
+
   const handleCreate = useCallback(async () => {
     const trimmed = text.trim();
     if (trimmed.length < TEXT_MIN || trimmed.length > TEXT_MAX) {
@@ -508,6 +547,7 @@ export default function SankalpaScreen() {
 
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       setText('');
+      setCompletedReceipt(null);
       await loadSankalpa();
     } catch (err) {
       Alert.alert('Sankalpa', err instanceof Error ? err.message : 'Could not create Sankalpa');
@@ -539,11 +579,7 @@ export default function SankalpaScreen() {
   const handleComplete = useCallback(async () => {
     if (!sankalpa || completing) return;
     setCompleting(true);
-    // Captured before loadSankalpa() below resets `sankalpa` back to null —
-    // the ceremony still needs the title/duration of the vow that was just
-    // completed.
-    const completedTitle = sankalpa.text;
-    const completedDurationDays = sankalpa.target_days ?? 0;
+    const completedRecord = { ...sankalpa };
     try {
       const response = await apiFetch('/api/sankalpa/complete', {
         method: 'POST',
@@ -554,24 +590,39 @@ export default function SankalpaScreen() {
         throw new Error(payload?.error ?? 'Could not complete Sankalpa');
       }
 
-      // Karma is already awarded server-side by this point (the POST above
-      // has completed and its response is what we read karmaAwarded from) —
-      // the ceremony that follows is celebratory UI only, not a write.
-      const payload = (await response.json()) as { karmaAwarded?: number };
+      const payload = (await response.json()) as { karmaAwarded?: number; completedAt?: string };
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+
+      const receipt: CompletedSankalpaReceipt = {
+        id: completedRecord.id,
+        text: completedRecord.text,
+        related_practice: completedRecord.related_practice,
+        target_days: completedRecord.target_days,
+        status: 'completed',
+        completed_at: payload.completedAt,
+        karmaAwarded: payload.karmaAwarded ?? null,
+        start_date: completedRecord.start_date,
+        end_date: completedRecord.end_date,
+      };
+      setCompletedReceipt(receipt);
+
       setCeremony({
         open: true,
-        title: completedTitle,
-        durationDays: completedDurationDays,
+        title: completedRecord.text,
+        durationDays: completedRecord.target_days ?? 0,
         karmaAwarded: payload.karmaAwarded ?? null,
       });
-      await loadSankalpa();
+
+      setSankalpa(null);
+      setCheckedInToday(false);
+      setCheckins([]);
+      await loadHistory();
     } catch (err) {
       Alert.alert('Sankalpa', err instanceof Error ? err.message : 'Could not complete Sankalpa');
     } finally {
       setCompleting(false);
     }
-  }, [completing, loadSankalpa, sankalpa]);
+  }, [completing, loadHistory, sankalpa]);
 
   if (loading) {
     return (
@@ -643,7 +694,12 @@ export default function SankalpaScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={{ paddingBottom: 32, gap: 16 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <BackButton
           showLabel={false}
           iconSize={22}
@@ -800,148 +856,252 @@ export default function SankalpaScreen() {
             <Button label="Mark complete" loading={completing} onPress={confirmComplete} />
           </>
         ) : (
-          <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 18, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <SankalpaIconWell theme={theme} isDark={isDark} icon="edit-3" />
-              <View style={{ flex: 1 }}>
-                <SectionLabel theme={theme}>Begin a vow</SectionLabel>
-                <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }}>Choose your intention</Text>
-              </View>
-            </View>
-
-            {loadingSuggestions ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <ActivityIndicator size="small" color={theme.brand} />
-                <Text style={{ ...TYPE.micro, color: theme.dim }}>Finding suggestions for you…</Text>
-              </View>
-            ) : suggestions.length > 0 ? (
-              <View>
-                <Text style={{ ...TYPE.label, color: theme.dim, marginBottom: 10 }}>
-                  {suggestionsSource === 'ai' ? 'Pick a suggested vow' : 'Pick a suggested vow'}
-                </Text>
-                <View style={{ gap: 8 }}>
-                  {suggestions.map((suggestion, i) => (
+          <>
+            {/* 1. Latest completed Sankalpa receipt (when available) */}
+            {completedReceipt ? (
+              <Card
+                tone="auto"
+                elevated
+                style={{
+                  backgroundColor: theme.card,
+                  borderColor: COLORS.successBorder,
+                  gap: 16,
+                  boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <View
-                      key={`${i}-${suggestion.slice(0, 12)}`}
                       style={{
-                        borderRadius: 18,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 14,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: COLORS.successBg,
                         borderWidth: 1,
-                        borderColor: theme.borderSoft,
-                        backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                        borderColor: COLORS.successBorder,
+                      }}
+                    >
+                      <Feather name="check-circle" size={18} color={COLORS.success} />
+                    </View>
+                    <View>
+                      <Text style={{ ...TYPE.chip, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.success }}>
+                        Completed Sankalpa
+                      </Text>
+                      <Text style={{ ...TYPE.cardHeading, color: theme.text, marginTop: 2 }}>
+                        Vow Fulfilled
+                      </Text>
+                    </View>
+                  </View>
+                  {completedReceipt.karmaAwarded ? (
+                    <View
+                      style={{
+                        borderRadius: 999,
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        backgroundColor: `${theme.brand}22`,
+                        borderWidth: 1,
+                        borderColor: `${theme.brand}4d`,
+                      }}
+                    >
+                      <Text style={{ ...TYPE.chip, color: theme.brand, textTransform: 'none' }}>
+                        +{completedReceipt.karmaAwarded} Karma
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                <View
+                  style={{
+                    borderRadius: 18,
+                    padding: 14,
+                    backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                    borderWidth: 1,
+                    borderColor: theme.borderSoft,
+                    gap: 6,
+                  }}
+                >
+                  <Text style={{ ...TYPE.body, fontFamily: FONTS.serif, fontStyle: 'italic', fontSize: 15, color: theme.text }}>
+                    &ldquo;{completedReceipt.text}&rdquo;
+                  </Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                    {completedReceipt.target_days ? `${completedReceipt.target_days} days committed · ` : ''}Fulfilled on {formatDate(completedReceipt.completed_at || completedReceipt.end_date)}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="View journey"
+                      variant="secondary"
+                      onPress={() => {
+                        void openHistoryDetail(completedReceipt);
+                      }}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Begin another"
+                      onPress={() => {
+                        textInputRef.current?.focus();
+                        scrollViewRef.current?.scrollTo({ y: 350, animated: true });
+                      }}
+                    />
+                  </View>
+                </View>
+              </Card>
+            ) : null}
+
+            {/* 2. Begin a vow creation card */}
+            <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 18, boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <SankalpaIconWell theme={theme} isDark={isDark} icon="edit-3" />
+                <View style={{ flex: 1 }}>
+                  <SectionLabel theme={theme}>{completedReceipt ? 'Begin another Sankalpa' : 'Begin a vow'}</SectionLabel>
+                  <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }}>
+                    {completedReceipt ? 'Set your next intention' : 'Choose your intention'}
+                  </Text>
+                </View>
+              </View>
+
+              {loadingSuggestions ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <ActivityIndicator size="small" color={theme.brand} />
+                  <Text style={{ ...TYPE.micro, color: theme.dim }}>Finding suggestions for you…</Text>
+                </View>
+              ) : suggestions.length > 0 ? (
+                <View>
+                  <Text style={{ ...TYPE.label, color: theme.dim, marginBottom: 10 }}>
+                    {suggestionsSource === 'ai' ? 'Pick a suggested vow' : 'Pick a suggested vow'}
+                  </Text>
+                  <View style={{ gap: 8 }}>
+                    {suggestions.map((suggestion, i) => (
+                      <View
+                        key={`${i}-${suggestion.slice(0, 12)}`}
+                        style={{
+                          borderRadius: 18,
+                          borderWidth: 1,
+                          borderColor: theme.borderSoft,
+                          backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                        }}
+                      >
+                        <Pressable
+                          accessibilityLabel={`Use suggestion: ${suggestion}`}
+                          onPress={() => {
+                            void Haptics.selectionAsync().catch(() => {});
+                            setText(suggestion);
+                          }}
+                          style={{ paddingHorizontal: 12, paddingVertical: 9, minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 9 }}
+                        >
+                          <Feather name="plus" size={13} color={theme.brand} />
+                          <Text
+                            numberOfLines={2}
+                            style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 17, color: theme.text }}
+                          >
+                            {suggestion}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+
+              <View>
+                <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 8 }}>
+                  Or write your own
+                </Text>
+                <TextInput
+                  ref={textInputRef}
+                  value={text}
+                  onChangeText={setText}
+                  placeholder="e.g. I will complete my morning japa every day"
+                  placeholderTextColor={theme.dim}
+                  multiline
+                  maxLength={TEXT_MAX}
+                  style={{
+                    minHeight: 104,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                    color: theme.text,
+                    fontFamily: FONTS.sans,
+                    fontSize: 15,
+                    padding: 14,
+                    textAlignVertical: 'top',
+                  }}
+                />
+                <Text style={{ ...TYPE.micro, marginTop: 6, color: theme.dim, textAlign: 'right' }}>
+                  {text.trim().length}/{TEXT_MAX}
+                </Text>
+              </View>
+
+              <View>
+                <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 10 }}>
+                  For how many days
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  {TARGET_DAY_OPTIONS.map((days) => (
+                    <View
+                      key={days}
+                      style={{
+                        flex: 1,
+                        borderRadius: 999,
+                        borderWidth: 1.5,
+                        borderColor: days === targetDays ? theme.brand : theme.borderSoft,
+                        backgroundColor:
+                          days === targetDays
+                            ? theme.brandSoft
+                            : isDark
+                              ? COLORS.selectionWellDark
+                              : COLORS.selectionWellLight,
                       }}
                     >
                       <Pressable
-                        accessibilityLabel={`Use suggestion: ${suggestion}`}
+                        accessibilityLabel={`${days} day Sankalpa`}
+                        accessibilityState={{ selected: days === targetDays }}
                         onPress={() => {
                           void Haptics.selectionAsync().catch(() => {});
-                          setText(suggestion);
+                          setTargetDays(days);
                         }}
-                        style={{ paddingHorizontal: 12, paddingVertical: 9, minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 9 }}
+                        style={{
+                          minHeight: MIN_TOUCH_TARGET,
+                          paddingHorizontal: 8,
+                          paddingVertical: 10,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
                       >
-                        <Feather name="plus" size={13} color={theme.brand} />
                         <Text
-                          numberOfLines={2}
-                          style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12.5, lineHeight: 17, color: theme.text }}
+                          style={{
+                            fontFamily: FONTS.sansSemiBold,
+                            fontSize: 14,
+                            color: days === targetDays ? theme.brand : theme.text,
+                          }}
                         >
-                          {suggestion}
+                          {days}
                         </Text>
                       </Pressable>
                     </View>
                   ))}
                 </View>
               </View>
-            ) : null}
 
-            <View>
-              <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 8 }}>
-                Or write your own
-              </Text>
-              <TextInput
-                value={text}
-                onChangeText={setText}
-                placeholder="e.g. I will complete my morning japa every day"
-                placeholderTextColor={theme.dim}
-                multiline
-                maxLength={TEXT_MAX}
-                style={{
-                  minHeight: 104,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-                  color: theme.text,
-                  fontFamily: FONTS.sans,
-                  fontSize: 15,
-                  padding: 14,
-                  textAlignVertical: 'top',
-                }}
+              <CreateSankalpaButton
+                theme={theme}
+                isDark={isDark}
+                loading={creating}
+                label={completedReceipt ? 'Begin another Sankalpa' : 'Begin Sankalpa'}
+                disabled={text.trim().length < TEXT_MIN}
+                onPress={() => { void handleCreate(); }}
               />
-              <Text style={{ ...TYPE.micro, marginTop: 6, color: theme.dim, textAlign: 'right' }}>
-                {text.trim().length}/{TEXT_MAX}
-              </Text>
-            </View>
-
-            <View>
-              <Text style={{ ...TYPE.label, color: theme.text, marginBottom: 10 }}>
-                For how many days
-              </Text>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {TARGET_DAY_OPTIONS.map((days) => (
-                  <View
-                    key={days}
-                    style={{
-                      flex: 1,
-                      borderRadius: 999,
-                      borderWidth: 1.5,
-                      borderColor: days === targetDays ? theme.brand : theme.borderSoft,
-                      backgroundColor:
-                        days === targetDays
-                          ? theme.brandSoft
-                          : isDark
-                            ? COLORS.selectionWellDark
-                            : COLORS.selectionWellLight,
-                    }}
-                  >
-                    <Pressable
-                      accessibilityLabel={`${days} day Sankalpa`}
-                      accessibilityState={{ selected: days === targetDays }}
-                      onPress={() => {
-                        void Haptics.selectionAsync().catch(() => {});
-                        setTargetDays(days);
-                      }}
-                      style={{
-                        minHeight: MIN_TOUCH_TARGET,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: FONTS.sansSemiBold,
-                          fontSize: 14,
-                          color: days === targetDays ? theme.brand : theme.text,
-                        }}
-                      >
-                        {days}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <CreateSankalpaButton
-              theme={theme}
-              isDark={isDark}
-              loading={creating}
-              disabled={text.trim().length < TEXT_MIN}
-              onPress={() => { void handleCreate(); }}
-            />
-          </Card>
+            </Card>
+          </>
         )}
 
+        {/* 3. History card */}
         <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 0, padding: 0, overflow: 'hidden' }}>
           <PressableSurface
             accessibilityRole="button"
@@ -990,25 +1150,33 @@ export default function SankalpaScreen() {
                     <StatPill label="Completion rate" value={`${historyStats.completionRate}%`} theme={theme} />
                     <StatPill label="Longest" value={`${historyStats.longestDurationDays}d`} theme={theme} />
                   </View>
-                  <View style={{ gap: 4 }}>
+                  <View style={{ gap: 8 }}>
                     {history.map((row) => (
-                      <View
+                      <Pressable
                         key={row.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`View journey for: ${row.text}`}
+                        onPress={() => {
+                          void openHistoryDetail(row);
+                        }}
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
-                          gap: 10,
-                          paddingVertical: 8,
-                          borderBottomWidth: 1,
-                          borderBottomColor: theme.border,
+                          gap: 12,
+                          paddingVertical: 12,
+                          paddingHorizontal: 14,
+                          borderRadius: 18,
+                          backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                          borderWidth: 1,
+                          borderColor: theme.borderSoft,
                         }}
                       >
                         <Feather
                           name={row.status === 'completed' ? 'check-circle' : 'x-circle'}
-                          size={16}
+                          size={18}
                           color={row.status === 'completed' ? COLORS.success : theme.dim}
                         />
-                        <View style={{ flex: 1 }}>
+                        <View style={{ flex: 1, minWidth: 0 }}>
                           <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.text }}>
                             {row.text}
                           </Text>
@@ -1016,7 +1184,8 @@ export default function SankalpaScreen() {
                             {row.target_days ?? '—'} days · {row.status === 'completed' ? 'Completed' : 'Abandoned'}
                           </Text>
                         </View>
-                      </View>
+                        <Feather name="chevron-right" size={14} color={theme.dim} />
+                      </Pressable>
                     ))}
                   </View>
                 </>
@@ -1028,13 +1197,141 @@ export default function SankalpaScreen() {
         </Card>
       </ScrollView>
 
+      {/* Ceremony Overlay */}
       <SankalpaCompletionCeremony
         visible={ceremony.open}
-        onClose={() => setCeremony((prev) => ({ ...prev, open: false }))}
+        onClose={() => {
+          setCeremony((prev) => ({ ...prev, open: false }));
+          setHistoryExpanded(true);
+          historyChevron.setValue(1);
+          historyContentOpacity.setValue(1);
+        }}
         sankalpaTitle={ceremony.title}
         durationDays={ceremony.durationDays}
         karmaAwarded={ceremony.karmaAwarded}
       />
+
+      {/* Read-Only History Detail Modal */}
+      <Modal
+        transparent
+        visible={Boolean(selectedHistoryItem)}
+        animationType="fade"
+        onRequestClose={() => setSelectedHistoryItem(null)}
+      >
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close detail"
+            onPress={() => setSelectedHistoryItem(null)}
+            style={{ position: 'absolute', inset: 0 }}
+          />
+          <View
+            style={{
+              width: '100%',
+              maxWidth: 420,
+              borderRadius: 28,
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              padding: 24,
+              gap: 16,
+              boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <SankalpaIconWell theme={theme} isDark={isDark} size="md" icon={selectedHistoryItem?.status === 'completed' ? 'check-circle' : 'clock'} />
+                <View>
+                  <SectionLabel theme={theme}>Sankalpa Journey</SectionLabel>
+                  <Text style={{ ...TYPE.cardHeading, color: theme.text, marginTop: 2 }}>
+                    {selectedHistoryItem?.status === 'completed' ? 'Fulfilled Vow' : 'Past Vow'}
+                  </Text>
+                </View>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                hitSlop={10}
+                onPress={() => setSelectedHistoryItem(null)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                }}
+              >
+                <Feather name="x" size={18} color={theme.dim} />
+              </Pressable>
+            </View>
+
+            <View
+              style={{
+                borderRadius: 18,
+                padding: 16,
+                backgroundColor: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+                gap: 8,
+              }}
+            >
+              <Text style={{ ...TYPE.body, fontFamily: FONTS.serif, fontSize: 16, fontStyle: 'italic', color: theme.text }}>
+                &ldquo;{selectedHistoryItem?.text}&rdquo;
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <StatPill
+                label="Target"
+                value={`${selectedHistoryItem?.target_days ?? '—'}d`}
+                theme={theme}
+              />
+              <StatPill
+                label="Status"
+                value={selectedHistoryItem?.status === 'completed' ? 'Completed' : 'Ended'}
+                theme={theme}
+              />
+              <StatPill
+                label="Check-ins"
+                value={
+                  loadingHistoryDetails
+                    ? '...'
+                    : selectedHistoryCheckins !== null
+                    ? String(selectedHistoryCheckins.length)
+                    : '—'
+                }
+                theme={theme}
+              />
+            </View>
+
+            <View style={{ gap: 8, marginTop: 4 }}>
+              {selectedHistoryItem?.start_date ? (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>Started</Text>
+                  <Text style={{ ...TYPE.label, color: theme.text }}>{formatDate(selectedHistoryItem.start_date)}</Text>
+                </View>
+              ) : null}
+              {selectedHistoryItem?.completed_at || selectedHistoryItem?.end_date ? (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                    {selectedHistoryItem?.status === 'completed' ? 'Completed' : 'Ended'}
+                  </Text>
+                  <Text style={{ ...TYPE.label, color: theme.text }}>
+                    {formatDate(selectedHistoryItem?.completed_at || selectedHistoryItem?.end_date)}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            <Button
+              label="Close"
+              variant="secondary"
+              onPress={() => setSelectedHistoryItem(null)}
+            />
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }

@@ -5,53 +5,92 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, MIN_TOUCH_TARGET, SHADOWS } from '@/lib/constants';
-import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import {
+  HERO_SIZE_CONFIG,
+  clampFloatingScrollPosition,
+  getFloatingScrollPosition,
+  resolveDefaultFloatingScrollPosition,
+  setFloatingScrollPosition,
+} from '@/lib/heroLayoutPreference';
 import { useReducedMotion } from '@/components/ui/Motion';
 
 const SCROLL_ASSET = require('@/assets/icons/ai-guide-scroll.png');
 const ANCHOR_SIZE = 74;
-// Default resting spot: on the hero image, right side, just below the
-// hero's top icon row (bell/mood/avatar, which end around y=66) and above
-// where the Today's Verse card begins to overlap the hero's bottom edge.
-// Fixed (not screen-size-derived) since it's anchored to the hero, which
-// is itself a fixed height.
-const HERO_ANCHOR_Y = HERO_MIN_HEIGHT - ANCHOR_SIZE - 30;
-function defaultAnchorY() {
-  return HERO_ANCHOR_Y;
-}
-// The furthest down (and still fully on-screen, clear of the bottom nav)
-// the icon is ever allowed to sit — used both to clamp an in-progress
-// drag on release and to re-validate the current position after a screen
-// resize (e.g. rotation). Distinct from defaultAnchorY: that's where the
-// icon starts at rest; this is just the outer bound it can never cross.
-function maxAnchorY(height: number, insetBottom: number) {
-  return Math.max(140, height - ANCHOR_SIZE - insetBottom - NAV_BAR_CLEARANCE);
-}
 
 type FloatingDharmaScrollProps = {
   onOpenChat: (origin: { x: number; y: number }) => void;
+  heroHeight?: number;
 };
 
-export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) {
+export function FloatingDharmaScroll({
+  onOpenChat,
+  heroHeight = HERO_SIZE_CONFIG.standard.height,
+}: FloatingDharmaScrollProps) {
   const isDark = useColorScheme() === 'dark';
   const reducedMotion = useReducedMotion();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [dragging, setDragging] = useState(false);
-  const [position, setPosition] = useState({ x: Math.max(18, width - 112), y: defaultAnchorY() });
+
+  const hasUserMoved = useRef(false);
+  const initialPosition = resolveDefaultFloatingScrollPosition({
+    heroHeight,
+    screenWidth: width,
+    screenHeight: height,
+    insetBottom: insets.bottom,
+    navClearance: NAV_BAR_CLEARANCE,
+    anchorSize: ANCHOR_SIZE,
+  });
+  const [position, setPosition] = useState(initialPosition);
   const float = useRef(new Animated.Value(0)).current;
-  const pan = useRef(new Animated.ValueXY({ x: Math.max(18, width - 112), y: defaultAnchorY() })).current;
-  const lastPosition = useRef({ x: Math.max(18, width - 112), y: defaultAnchorY() });
+  const pan = useRef(new Animated.ValueXY(initialPosition)).current;
+  const lastPosition = useRef(initialPosition);
 
   useEffect(() => {
-    const next = {
-      x: Math.min(lastPosition.current.x, Math.max(18, width - 112)),
-      y: Math.min(lastPosition.current.y, maxAnchorY(height, insets.bottom)),
+    let active = true;
+    void getFloatingScrollPosition().then((saved) => {
+      if (!active || !saved) return;
+      const next = clampFloatingScrollPosition(
+        saved,
+        width,
+        height,
+        insets.bottom,
+        NAV_BAR_CLEARANCE,
+        ANCHOR_SIZE,
+      );
+      hasUserMoved.current = true;
+      lastPosition.current = next;
+      setPosition(next);
+      pan.setValue(next);
+    });
+    return () => {
+      active = false;
     };
+  }, [height, insets.bottom, pan, width]);
+
+  useEffect(() => {
+    const next = hasUserMoved.current
+      ? clampFloatingScrollPosition(
+          lastPosition.current,
+          width,
+          height,
+          insets.bottom,
+          NAV_BAR_CLEARANCE,
+          ANCHOR_SIZE,
+        )
+      : resolveDefaultFloatingScrollPosition({
+          heroHeight,
+          screenWidth: width,
+          screenHeight: height,
+          insetBottom: insets.bottom,
+          navClearance: NAV_BAR_CLEARANCE,
+          anchorSize: ANCHOR_SIZE,
+        });
     lastPosition.current = next;
     setPosition(next);
     pan.setValue(next);
-  }, [height, insets.bottom, pan, width]);
+  }, [height, heroHeight, insets.bottom, pan, width]);
 
   useEffect(() => {
     if (reducedMotion) {
@@ -94,15 +133,22 @@ export function FloatingDharmaScroll({ onOpenChat }: FloatingDharmaScrollProps) 
           pan.setValue(next);
         },
         onPanResponderRelease: (_, gesture) => {
-          const maxX = Math.max(18, width - ANCHOR_SIZE - 18);
-          const maxY = maxAnchorY(height, insets.bottom);
-          const next = {
-            x: Math.min(Math.max(18, lastPosition.current.x + gesture.dx), maxX),
-            y: Math.min(Math.max(120, lastPosition.current.y + gesture.dy), maxY),
-          };
+          hasUserMoved.current = true;
+          const next = clampFloatingScrollPosition(
+            {
+              x: lastPosition.current.x + gesture.dx,
+              y: lastPosition.current.y + gesture.dy,
+            },
+            width,
+            height,
+            insets.bottom,
+            NAV_BAR_CLEARANCE,
+            ANCHOR_SIZE,
+          );
           lastPosition.current = next;
           setPosition(next);
           pan.setValue(next);
+          void setFloatingScrollPosition(next);
           setDragging(false);
         },
         onPanResponderTerminate: () => {

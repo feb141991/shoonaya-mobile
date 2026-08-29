@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
-import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { supabase } from '@/lib/supabase';
@@ -253,10 +252,27 @@ export function SankalpaCard({
         borderWidth: 1,
         borderColor: theme.border,
         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-        opacity: checkedToday ? 0.72 : 1,
+        opacity: checkedToday ? 0.88 : 1,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          checkedToday
+            ? `View Sankalpa: ${sankalpaText}. Honoured today`
+            : `View Sankalpa: ${sankalpaText}. Day ${Math.min(day, targetDays || day)} of ${targetDays}`
+        }
+        accessibilityHint="Navigates to Sankalpa screen"
+        onPress={() => router.push('/sankalpa')}
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          minHeight: 48,
+          minWidth: 0,
+        }}
+      >
         <View
           style={{
             width: 40,
@@ -275,40 +291,49 @@ export function SankalpaCard({
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 19, color: theme.text }} numberOfLines={1}>
             {sankalpaText}
           </Text>
-          <Text style={{ marginTop: 1, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-            {checkedToday ? 'Honoured today' : `Day ${Math.min(day, targetDays || day)} of ${targetDays}`}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}>
+            <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+              {checkedToday ? 'Honoured today · View Sankalpa' : `Day ${Math.min(day, targetDays || day)} of ${targetDays}`}
+            </Text>
+            <Feather name="chevron-right" size={12} color={theme.dim} style={{ opacity: 0.6 }} />
+          </View>
         </View>
+      </Pressable>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <ProgressRing progress={progress} done={progress >= 1} color={theme.brand} track={theme.ring} />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={checkedToday ? 'Sankalpa honoured today' : 'Honour today'}
+          accessibilityState={{ disabled: checkedToday || checkingIn }}
+          onPress={() => {
+            void handleCheckIn();
+          }}
+          disabled={checkedToday || checkingIn}
+          hitSlop={8}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: checkedToday ? `${theme.brand}22` : theme.brand,
+            borderWidth: checkedToday ? 1 : 0,
+            borderColor: `${theme.brand}4d`,
+          }}
+        >
+          {checkingIn ? (
+            <ActivityIndicator size="small" color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+          ) : (
+            <Feather
+              name={checkedToday ? 'check-circle' : 'check'}
+              size={checkedToday ? 16 : 14}
+              color={checkedToday ? theme.brand : isDark ? COLORS.darkBg : COLORS.creamBg}
+            />
+          )}
+        </Pressable>
       </View>
-
-      <ProgressRing progress={progress} done={progress >= 1} color={theme.brand} track={theme.ring} />
-
-      <PressableSurface
-        haptic="none"
-        accessibilityLabel={checkedToday ? 'Sankalpa honoured today' : 'Mark today honoured'}
-        onPress={() => {
-          void handleCheckIn();
-        }}
-        disabled={checkedToday || checkingIn}
-        hitSlop={6}
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: checkedToday ? `${theme.brand}22` : theme.brand,
-          borderWidth: checkedToday ? 1 : 0,
-          borderColor: `${theme.brand}4d`,
-          minHeight: 0,
-        }}
-      >
-        <Feather
-          name={checkedToday ? 'check-circle' : 'check'}
-          size={checkedToday ? 16 : 14}
-          color={checkedToday ? theme.brand : isDark ? COLORS.darkBg : COLORS.creamBg}
-        />
-      </PressableSurface>
     </View>
   );
 }

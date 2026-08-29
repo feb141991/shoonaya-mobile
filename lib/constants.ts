@@ -111,12 +111,18 @@ export const COLORS = {
   homePwaObservanceBg: 'rgba(234,112,48,0.22)',
   homePwaObservanceBorder: 'rgba(255,180,100,0.18)',
   homePwaObservanceText: 'rgba(255,200,140,0.95)',
-  // Mood check-in pill on the Home hero -- sourced from PWA's
-  // HeroSection.tsx mood Link (background/border pair, theme-aware).
-  homeMoodPillBgLight: 'rgba(255,255,255,0.72)',
-  homeMoodPillBgDark: 'rgba(0,0,0,0.40)',
-  homeMoodPillBorderLight: 'rgba(0,0,0,0.08)',
-  homeMoodPillBorderDark: 'rgba(255,255,255,0.12)',
+  // Rashiphal discovery nudge pill on Home hero -- sourced from PWA's
+  // HeroSection.tsx (exact background, text, and arrow colors).
+  homePwaRashiphalBg: 'rgba(139,92,246,0.14)',
+  homePwaRashiphalText: 'rgba(255,240,200,0.92)',
+  homePwaRashiphalArrow: 'rgba(255,240,200,0.68)',
+  // Mood check-in pill on the Home hero -- shares the exact translucent
+  // warm gold glass treatment of the Panchang/date pill (homePwaPillBg /
+  // homePwaPillText) for complete visual parity across all backdrops.
+  homeMoodPillBgLight: 'rgba(197,160,89,0.16)',
+  homeMoodPillBgDark: 'rgba(197,160,89,0.16)',
+  homeMoodPillBorderLight: 'transparent',
+  homeMoodPillBorderDark: 'transparent',
   authGoldWellBg: 'rgba(197,160,89,0.14)',
   selectionWellLight: 'rgba(255,255,255,0.60)',
   selectionWellDark: 'rgba(255,248,225,0.06)',

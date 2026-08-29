@@ -60,8 +60,9 @@ import {
 } from '@/lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
-import { getHeroPick, type HeroPick } from '@/lib/heroPreference';
+import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
+import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -294,8 +295,6 @@ async function fetchHomeLive(): Promise<HomeLiveResponse> {
     return {};
   }
 }
-
-const HERO_READABILITY_HEIGHT = 242;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -551,15 +550,16 @@ function PanchangPill({
         // for every slide/message this pill ever shows, not just this one.
         borderRadius: labelLines.length > 1 ? RADII.lg : RADII.pill,
         paddingHorizontal: 12,
-        paddingVertical: slides.length > 1 ? 5 : 4,
+        paddingVertical: labelLines.length > 1 ? 5 : 3,
+        alignSelf: 'flex-start',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 3,
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        minWidth: 120,
-        maxWidth: 260,
+        minWidth: 104,
+        maxWidth: 232,
         // RN's auto-height measurement for this pill was landing on wildly
         // unstable values across renders (observed 173-195pt for a 2-line
         // label that should only need ~62pt) -- almost certainly a text/
@@ -568,8 +568,8 @@ function PanchangPill({
         // label text was split into lines. Pin the height explicitly per
         // line count instead of trusting auto-sizing here, for every
         // slide/message this pill ever shows, not just this one.
-        minHeight: labelLines.length > 1 ? 58 : MIN_TOUCH_TARGET,
-        maxHeight: labelLines.length > 1 ? 66 : MIN_TOUCH_TARGET,
+        minHeight: labelLines.length > 1 ? 58 : 40,
+        maxHeight: labelLines.length > 1 ? 66 : 40,
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
@@ -630,12 +630,20 @@ function HomeContent() {
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
   const [heroPickerVisible, setHeroPickerVisible] = useState(false);
   const [heroOverride, setHeroOverride] = useState<HeroPick | null>(null);
+  const [heroSize, setHeroSizeState] = useState<HeroSize>('standard');
   const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
   const [greetingOverride, setGreetingOverride] = useState<string | null>(null);
+  const [showRashiphalNudge, setShowRashiphalNudge] = useState(false);
 
   useEffect(() => {
     getHeroPick().then(setHeroOverride).catch(() => {});
+    getHeroSize().then(setHeroSizeState).catch(() => {});
     getGreetingPick().then(setGreetingOverride).catch(() => {});
+    isRashiphalNudgeDismissed().then((dismissed) => {
+      if (!dismissed) {
+        setShowRashiphalNudge(true);
+      }
+    }).catch(() => {});
   }, []);
 
   const scrollRef = useScrollToTop();
@@ -701,6 +709,17 @@ function HomeContent() {
   // server-resolved tradition/festival hero — same precedence PWA's own
   // localStorage-only pick has over its auto-resolved theme.
   const heroImageUrl = heroOverride?.imageUrl ?? resolveAssetUrl(state.hero.imageUrl);
+  const heroImageSource = useMemo(() => {
+    if (heroOverride?.id && LOCAL_HERO_ASSETS[heroOverride.id]) {
+      return LOCAL_HERO_ASSETS[heroOverride.id];
+    }
+    return heroImageUrl ? { uri: heroImageUrl } : null;
+  }, [heroOverride, heroImageUrl]);
+
+  const currentHeroConfig = HERO_SIZE_CONFIG[heroSize] ?? HERO_SIZE_CONFIG.standard;
+  const heroHeight = currentHeroConfig.height;
+  const heroReadabilityHeight = currentHeroConfig.readabilityHeight;
+
   // Pre-existing gap found in review: `objectPosition` (e.g. "58% 25%",
   // tuned per hero image so a face/detail stays in frame) was fetched from
   // the backend but never actually applied to the <Image> below — fixed
@@ -1079,7 +1098,7 @@ function HomeContent() {
   );
 
   if (loading) {
-    return <HomeSkeleton />;
+    return <HomeSkeleton tradition={state.profile.tradition} heroHeight={heroHeight} />;
   }
 
   if (loadError) {
@@ -1122,7 +1141,7 @@ function HomeContent() {
       >
         <View
           style={{
-            height: HERO_MIN_HEIGHT,
+            height: heroHeight,
             width: '100%',
             paddingHorizontal: 20,
             paddingTop: 18,
@@ -1132,9 +1151,9 @@ function HomeContent() {
             justifyContent: 'flex-start',
           }}
         >
-          {heroImageUrl ? (
+          {heroImageSource ? (
             <Image
-              source={{ uri: heroImageUrl }}
+              source={heroImageSource}
               accessibilityIgnoresInvertColors
               style={[StyleSheet.absoluteFill, { zIndex: 0 }]}
               contentFit="cover"
@@ -1172,7 +1191,7 @@ function HomeContent() {
               theme.background,
             ]}
             locations={[0, 0.35, 0.75, 1]}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_READABILITY_HEIGHT, zIndex: 1 }}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: heroReadabilityHeight, zIndex: 1 }}
           />
 
           <Pressable
@@ -1215,86 +1234,83 @@ function HomeContent() {
             ) : null}
           </Pressable>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Check in with your mood"
-            onPress={() => {
-              void Haptics.selectionAsync().catch(() => {});
-              if (isGuest) {
-                setAuthGateVisible(true);
-                return;
-              }
-              navigate('/mood');
-            }}
-            hitSlop={4}
+          <View
+            pointerEvents="box-none"
             style={{
               position: 'absolute',
               zIndex: 3,
               top: 22,
-              left: '50%',
-              marginLeft: -90,
-              minHeight: 36,
-              width: 180,
-              borderRadius: 999,
-              paddingHorizontal: 12,
-              paddingVertical: 4,
+              left: 72,
+              right: 72,
               alignItems: 'center',
               justifyContent: 'center',
-              flexDirection: 'row',
-              gap: 6,
-              backgroundColor: isDark ? COLORS.homeMoodPillBgDark : COLORS.homeMoodPillBgLight,
-              borderWidth: 1,
-              borderColor: isDark ? COLORS.homeMoodPillBorderDark : COLORS.homeMoodPillBorderLight,
             }}
           >
-            {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
-              <>
-                {findMoodConfig(isDark, moodStatus.lastMood) ? (
-                  <View
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Check in with your mood"
+              onPress={() => {
+                void Haptics.selectionAsync().catch(() => {});
+                if (isGuest) {
+                  setAuthGateVisible(true);
+                  return;
+                }
+                navigate('/mood');
+              }}
+              hitSlop={8}
+              style={({ pressed }) => ({
+                borderRadius: RADII.pill,
+                paddingHorizontal: 12,
+                paddingVertical: 5,
+                alignSelf: 'center',
+                flexShrink: 1,
+                maxWidth: '100%',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 6,
+                backgroundColor: COLORS.homePwaPillBg,
+                borderWidth: 0,
+                opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
+                <>
+                  <MoodGlyph
+                    mood={moodStatus.lastMood}
+                    color={COLORS.homePwaPillText}
+                    size={12}
+                  />
+                  <Text
+                    numberOfLines={1}
                     style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 11,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: findMoodConfig(isDark, moodStatus.lastMood)?.bg,
+                      ...TYPE.chip,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      color: COLORS.homePwaPillText,
                     }}
                   >
-                    <MoodGlyph
-                      mood={moodStatus.lastMood}
-                      color={findMoodConfig(isDark, moodStatus.lastMood)?.colour ?? COLORS.homePwaPillText}
-                      size={13}
-                    />
-                  </View>
-                ) : (
-                  <Text style={{ fontSize: 12, lineHeight: 14 }}>✨</Text>
-                )}
-                <Text
-                  style={{
-                    ...TYPE.chip,
-                    fontSize: 11,
-                    lineHeight: 14,
-                    color: findMoodConfig(isDark, moodStatus.lastMood)?.colour || COLORS.homePwaPillText,
-                  }}
-                  numberOfLines={1}
-                >
-                  Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
-                </Text>
-              </>
-            ) : (
-              <Text
-                style={{
-                  ...TYPE.chip,
-                  fontSize: 11,
-                  lineHeight: 14,
-                  color: COLORS.homePwaPillText,
-                }}
-                numberOfLines={1}
-              >
-                How are you feeling?
-              </Text>
-            )}
-          </Pressable>
+                    Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ fontSize: 11, lineHeight: 14 }}>✨</Text>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      ...TYPE.chip,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      color: COLORS.homePwaPillText,
+                    }}
+                  >
+                    How are you feeling?
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
 
           <Pressable
             accessibilityRole="button"
@@ -1358,14 +1374,14 @@ function HomeContent() {
                     contrast-tuned for hero legibility) -- a Sikh/Buddhist/
                     Jain user sees their own path's color here. */}
                 <Feather name="map-pin" size={12} color={theme.traditionAccent} />
-                <Text style={{ ...TYPE.homeHeroLocation, letterSpacing: 1.1, textTransform: 'uppercase', color: theme.dim }}>
+                <Text style={{ ...TYPE.homeHeroLocation, letterSpacing: 1.1, textTransform: 'uppercase', color: 'rgba(255,240,200,0.78)' }}>
                   {state.profile.city}
                 </Text>
               </View>
             ) : null}
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
-              <Text style={{ ...TYPE.homeHeroGreeting, color: theme.text, flexShrink: 1 }} numberOfLines={2}>
+              <Text style={{ ...TYPE.homeHeroGreeting, color: 'rgba(255,248,235,0.96)', flexShrink: 1 }} numberOfLines={2}>
                 {greeting}, {state.profile.firstName}
               </Text>
               <Pressable
@@ -1387,13 +1403,53 @@ function HomeContent() {
                   borderColor: theme.borderSoft,
                 }}
               >
-                <Feather name="chevron-down" size={14} color={theme.dim} />
+                <Feather name="chevron-down" size={14} color="rgba(255,240,200,0.85)" />
               </Pressable>
             </View>
 
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" />
+              {showRashiphalNudge ? (
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityLabel="See your Rashiphal. Tap to open"
+                  onPress={() => {
+                    void setRashiphalNudgeDismissed();
+                    setShowRashiphalNudge(false);
+                    navigate('/rashiphala');
+                  }}
+                  hitSlop={8}
+                  style={{
+                    borderRadius: RADII.pill,
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    minHeight: 34,
+                    maxHeight: 34,
+                    maxWidth: 188,
+                    alignSelf: 'flex-start',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    gap: 5,
+                    backgroundColor: COLORS.homePwaRashiphalBg,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
+                  <Text
+                    style={{
+                      ...TYPE.chip,
+                      fontSize: 11,
+                      fontFamily: FONTS.sansSemiBold,
+                      lineHeight: 14,
+                      color: COLORS.homePwaRashiphalText,
+                    }}
+                  >
+                    See your Rashiphal
+                  </Text>
+                  <Text style={{ fontSize: 10, lineHeight: 13, color: COLORS.homePwaRashiphalArrow }}>→</Text>
+                </PressableSurface>
+              ) : null}
             </View>
           </View>
 
@@ -1898,6 +1954,7 @@ function HomeContent() {
         onLogged={(mood) => setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood })}
       />
       <FloatingDharmaScroll
+        heroHeight={heroHeight}
         onOpenChat={(origin) => {
           setChatOrigin(origin);
           setChatSheetVisible(true);
@@ -1914,6 +1971,8 @@ function HomeContent() {
         onClose={() => setHeroPickerVisible(false)}
         tradition={state.profile.tradition}
         onPickChange={setHeroOverride}
+        currentSize={heroSize}
+        onSizeChange={setHeroSizeState}
       />
       <GreetingPicker
         visible={greetingPickerVisible}

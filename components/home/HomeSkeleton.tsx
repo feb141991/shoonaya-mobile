@@ -3,6 +3,7 @@ import { Animated, Easing, useColorScheme, View, type StyleProp, type ViewStyle 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS } from '@/lib/constants';
+import { HERO_SIZE_CONFIG } from '@/lib/heroPreference';
 import { useReducedMotion } from '@/components/ui/Motion';
 
 // Content-shaped loading placeholder matching the real Home layout (Hero,
@@ -15,10 +16,15 @@ function Block({ style, dark }: { style: StyleProp<ViewStyle>; dark: boolean }) 
   return <View style={[{ backgroundColor: color, borderRadius: 8 }, style]} />;
 }
 
-const HERO_MIN_HEIGHT = 420;
 const HERO_SHLOKA_TOP_SPACE = 42;
 
-export function HomeSkeleton({ tradition: _tradition }: { tradition?: string | null } = {}) {
+export function HomeSkeleton({
+  tradition: _tradition,
+  heroHeight = HERO_SIZE_CONFIG.standard.height,
+}: {
+  tradition?: string | null;
+  heroHeight?: number;
+} = {}) {
   const isDark = useColorScheme() === 'dark';
   const background = isDark ? COLORS.darkBg : COLORS.creamBg;
   const hero = isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight;
@@ -69,7 +75,7 @@ export function HomeSkeleton({ tradition: _tradition }: { tradition?: string | n
     >
       <View style={{ flex: 1 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         {/* Hero */}
-        <View style={{ minHeight: HERO_MIN_HEIGHT, width: '100%', paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'flex-start' }}>
+        <View style={{ minHeight: heroHeight, width: '100%', paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, backgroundColor: hero, justifyContent: 'flex-start' }}>
           <Animated.View style={{ opacity: shimmer }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Block dark={isDark} style={{ width: 44, height: 44, borderRadius: 22 }} />
