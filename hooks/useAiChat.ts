@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api';
+import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { supabase } from '@/lib/supabase';
 
 export type ChatMessage = {
@@ -27,6 +28,11 @@ export const DAILY_LIMITS = {
 } as const;
 
 const DEFAULT_ERROR_MESSAGE = 'Could not reach Dharma Mitra right now.';
+const SAFE_CHAT_ERRORS = new Set([
+  'Please sign in again to use Dharma Mitra.',
+  'Dharma Mitra is temporarily unavailable.',
+  'Daily Dharma Mitra limit reached.',
+]);
 
 type UseAiChatOptions = {
   // Auto-sent once, as soon as the profile finishes loading.
@@ -138,6 +144,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       try {
         const response = await apiFetch('/api/ai/chat', {
           method: 'POST',
+          timeoutMs: AI_CHAT_TIMEOUT_MS,
           body: JSON.stringify({
             message: content,
             history: messages.map((message) => ({
@@ -163,7 +170,16 @@ export function useAiChat(options: UseAiChatOptions = {}) {
         }
 
         if (!response.ok || !response.body) {
-          throw new Error('chat failed');
+          let detail = DEFAULT_ERROR_MESSAGE;
+          try {
+            const errorBody = (await response.json()) as { error?: string };
+            if (response.status === 401) detail = 'Please sign in again to use Dharma Mitra.';
+            else if (response.status === 503) detail = 'Dharma Mitra is temporarily unavailable.';
+            else if (errorBody.error === 'daily_limit_reached') detail = 'Daily Dharma Mitra limit reached.';
+          } catch {
+            // Keep the stable user-facing fallback when the server has no JSON body.
+          }
+          throw new Error(detail);
         }
 
         const reader = response.body.getReader();
@@ -182,10 +198,13 @@ export function useAiChat(options: UseAiChatOptions = {}) {
         }
 
         void refreshUsage();
-      } catch {
+      } catch (error) {
+        const detail = error instanceof Error && SAFE_CHAT_ERRORS.has(error.message)
+          ? error.message
+          : errorMessage;
         setMessages((current) =>
           current.map((message) =>
-            message.id === modelMessageId ? { ...message, text: errorMessage } : message
+            message.id === modelMessageId ? { ...message, text: detail } : message
           )
         );
       } finally {

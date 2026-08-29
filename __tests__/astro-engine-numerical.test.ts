@@ -5,13 +5,18 @@ import path from 'path';
 import {
   isValidAstroChart,
   isValidBirthPanchangSnapshot,
-  deriveDenormalizedBirthProfileFields,
   AstroChart,
 } from '@/lib/kundali-contract';
 
 // Import backend astro-engine directly to execute real numerical calculations
 const BACKEND_ROOT = path.resolve(__dirname, '../../Sanatan Sangam/Shoonaya');
-const { generateAstroChart } = require(path.join(BACKEND_ROOT, 'src/lib/jyotish/astro-engine.ts'));
+const { generateAstroChart, birthLocalToUTC } = require(path.join(BACKEND_ROOT, 'src/lib/jyotish/astro-engine.ts'));
+const { computeAstronomy } = require(path.join(BACKEND_ROOT, 'packages/panchang-engine/src/index.ts'));
+
+function circularResidual(value: number, step: number): number {
+  const mod = ((value % step) + step) % step;
+  return Math.min(mod, step - mod);
+}
 
 describe('Astro Engine Real Numerical Calculations & Invariants', () => {
   // Fixture 1: Ordinary Known-Time Birth (Ujjain, India — Prime meridian of ancient Indian astronomy)
@@ -59,11 +64,28 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     // Must pass native strict validator
     assert.ok(isValidAstroChart(chart), 'Generated chart must pass isValidAstroChart');
 
-    // Denormalization mapper check
-    const summary = deriveDenormalizedBirthProfileFields(chart);
-    assert.strictEqual(summary.nakshatra, chart.nakshatra.name);
-    assert.strictEqual(summary.rashi, chart.planets['Chandra']?.rashiName);
-    assert.strictEqual(summary.lagna, chart.lagna.rashiName);
+    const atBirth = computeAstronomy(new Date(panchang.instantUtc));
+    assert.strictEqual(panchang.tithi.index, Math.floor(atBirth.elongation / 12) + 1);
+    assert.strictEqual(panchang.nakshatra.index, Math.floor(atBirth.moonSidereal / (360 / 27)) % 27);
+    assert.strictEqual(
+      panchang.yoga.index,
+      Math.floor((((atBirth.sunSidereal + atBirth.moonSidereal) % 360) + 360) % 360 / (360 / 27)) % 27,
+    );
+    assert.strictEqual(panchang.karana.index, Math.floor(atBirth.elongation / 6) + 1);
+
+    const boundaryChecks = [
+      [panchang.tithi.endsAtUtc, 12, (d: Date) => computeAstronomy(d).elongation],
+      [panchang.nakshatra.endsAtUtc, 360 / 27, (d: Date) => computeAstronomy(d).moonSidereal],
+      [panchang.yoga.endsAtUtc, 360 / 27, (d: Date) => {
+        const a = computeAstronomy(d);
+        return a.sunSidereal + a.moonSidereal;
+      }],
+      [panchang.karana.endsAtUtc, 6, (d: Date) => computeAstronomy(d).elongation],
+    ] as const;
+    for (const [boundary, step, positionAt] of boundaryChecks) {
+      assert.ok(boundary, 'every known-time limb must expose its solved transition');
+      assert.ok(circularResidual(positionAt(new Date(boundary!)), step) < 0.002, 'boundary residual must be below 0.002 degrees');
+    }
   });
 
   // Fixture 2: UTC / Civil Date Boundary (23:45 in Tokyo, Japan -> Next day in local time vs UTC)
@@ -89,8 +111,8 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     assert.ok(isValidAstroChart(chart));
   });
 
-  // Fixture 3: DST Transition Policy (New York during EDT summer time)
-  it('correctly calculates birth during Daylight Saving Time (New York, EDT)', () => {
+  // Fixture 3: Ordinary DST-season conversion.
+  it('correctly calculates an unambiguous birth during New York daylight time', () => {
     const input = {
       date: '2024-07-15',
       time: '14:30',
@@ -105,6 +127,20 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     assert.strictEqual(chart.birthPanchang?.vara.name, 'Somavara'); // Monday
     assert.strictEqual(chart.birthPanchang?.vara.index, 1);
     assert.ok(isValidAstroChart(chart));
+  });
+
+  it('rejects a nonexistent local time in the New York spring-forward gap', () => {
+    assert.throws(
+      () => birthLocalToUTC('2024-03-10', '02:30', 'America/New_York'),
+      /does not exist.*daylight-saving transition/,
+    );
+  });
+
+  it('rejects an ambiguous local time in the New York fall-back fold', () => {
+    assert.throws(
+      () => birthLocalToUTC('2024-11-03', '01:30', 'America/New_York'),
+      /ambiguous.*daylight-saving transition/,
+    );
   });
 
   // Fixture 4: Unknown Birth Time (timeUnknown = true)
@@ -131,12 +167,8 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     // Pass strict validator
     assert.ok(isValidAstroChart(chart));
 
-    // Summary fields: lagna must be null when timeUnknown=true
-    const summary = deriveDenormalizedBirthProfileFields(chart);
-    assert.strictEqual(summary.lagna, null);
-    assert.strictEqual(summary.lagna_deg, null);
-    assert.ok(summary.rashi !== null);
-    assert.ok(summary.sun_rashi !== null);
+    // Time-dependent Panchanga is withheld rather than estimated.
+    assert.strictEqual(chart.birthPanchang, null);
   });
 
   // Negative Contract Validator Tests
@@ -149,8 +181,8 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
       vara: { index: 4, name: 'Guruvara' },
       tithi: { index: 30, name: 'Amavasya', paksha: 'Krishna' as const, endsAtUtc: '1991-02-14T10:00:00.000Z' },
       nakshatra: { index: 22, name: 'Dhanishta', pada: 2, endsAtUtc: '1991-02-14T12:00:00.000Z' },
-      yoga: { index: 15, name: 'Vajra', endsAtUtc: '1991-02-14T14:00:00.000Z' },
-      karana: { index: 60, name: 'Kimstughna', endsAtUtc: '1991-02-14T08:00:00.000Z' },
+      yoga: { index: 14, name: 'Vajra', endsAtUtc: '1991-02-14T14:00:00.000Z' },
+      karana: { index: 60, name: 'Nagava', endsAtUtc: '1991-02-14T08:00:00.000Z' },
       calculation: { engineVersion: '0.2.4', ayanamsa: 'lahiri' as const, precision: 'high' as const, diagnostics: [] },
     };
 
@@ -220,6 +252,31 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     it('rejects birthPanchang with invalid localTime format', () => {
       const malformed = { ...validPanchangSnapshot, localTime: '6:30 AM' };
       assert.strictEqual(isValidBirthPanchangSnapshot(malformed), false);
+    });
+
+    it('rejects impossible civil dates, out-of-range times, and unknown timezones', () => {
+      assert.strictEqual(isValidBirthPanchangSnapshot({ ...validPanchangSnapshot, localDate: '1991-02-31' }), false);
+      assert.strictEqual(isValidBirthPanchangSnapshot({ ...validPanchangSnapshot, localTime: '99:99' }), false);
+      assert.strictEqual(isValidBirthPanchangSnapshot({ ...validPanchangSnapshot, timezone: 'Not/A_Zone' }), false);
+    });
+
+    it('rejects a local clock that disagrees with instantUtc and timezone', () => {
+      assert.strictEqual(isValidBirthPanchangSnapshot({ ...validPanchangSnapshot, localTime: '07:30' }), false);
+    });
+
+    it('rejects canonical limb names that disagree with their indices', () => {
+      assert.strictEqual(isValidBirthPanchangSnapshot({
+        ...validPanchangSnapshot,
+        nakshatra: { ...validPanchangSnapshot.nakshatra, name: 'Ashwini' },
+      }), false);
+      assert.strictEqual(isValidBirthPanchangSnapshot({
+        ...validPanchangSnapshot,
+        yoga: { ...validPanchangSnapshot.yoga, name: 'Siddhi' },
+      }), false);
+      assert.strictEqual(isValidBirthPanchangSnapshot({
+        ...validPanchangSnapshot,
+        karana: { ...validPanchangSnapshot.karana, name: 'Bava' },
+      }), false);
     });
 
     it('rejects birthPanchang with mismatched tithi index and paksha', () => {

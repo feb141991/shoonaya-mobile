@@ -34,6 +34,7 @@ import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SacredDaysCard } from '@/components/home/SacredDaysCard';
 import { FestivalStoryStack } from '@/components/home/FestivalStoryStack';
 import type { HomeObservanceStoryCard } from '@/lib/observance-story-contract.generated';
+import { getHomeMoodPillStyle, HOME_MOOD_PILL_TEXT_STYLE } from '@/lib/homeHeroPills';
 import { SankalpaCard } from '@/components/home/SankalpaCard';
 import { MoodPulseSheet } from '@/components/home/MoodPulseSheet';
 import { DharmaMitraChatSheet } from '@/components/home/DharmaMitraChatSheet';
@@ -508,20 +509,6 @@ function PanchangPill({
 
   const currentSlide = slides[idx] ?? slides[0] ?? { key: 'tithi', icon: '🌙', label: `${panchang.tithi} · VS ${panchang.samvatYear}`, href: null as string | null };
   const isObservance = kind === 'observance';
-  const splitSentences = (text: string) => text.split(/(?<=\.)\s+/).map((line) => line.trim()).filter(Boolean);
-  // The label and the month label are two separate clauses (e.g. "Tomorrow
-  // is Raksha Bandhan" + "Shravana (purnimanta)") -- joining them with " · "
-  // and letting RN wrap wherever it fits broke mid-clause and, combined with
-  // the fully-rounded pill shape, produced an oversized uneven blob behind
-  // the text. Put the month label on its own explicit line instead so the
-  // line count (and therefore the pill shape below) is always known up
-  // front, for every slide this pill ever shows, not just this one.
-  const labelLines = [
-    // The "·" stays at the END of the first line (where it visually reads as
-    // "...Bandhan ·"), not carried onto the front of the second line.
-    ...splitSentences(currentSlide.monthLabel ? `${currentSlide.label} ·` : currentSlide.label),
-    ...(currentSlide.monthLabel ? splitSentences(currentSlide.monthLabel) : []),
-  ];
   // Slides already auto-cycle on their own timer (the interval effect
   // above) -- tapping the pill used to just manually advance that same
   // cycle, which is why it looked "unclickable": nothing visibly
@@ -543,14 +530,9 @@ function PanchangPill({
       onPress={handleOpen}
       hitSlop={4}
       style={{
-        // A fully-rounded (999) pill only reads correctly at one line tall --
-        // stretched over two sentence-lines it turns into an oversized blob
-        // ("aura") behind the text instead of a tight pill. Fall back to a
-        // normal rounded-rectangle radius once there's more than one line,
-        // for every slide/message this pill ever shows, not just this one.
-        borderRadius: labelLines.length > 1 ? RADII.lg : RADII.pill,
+        borderRadius: RADII.pill,
         paddingHorizontal: 12,
-        paddingVertical: labelLines.length > 1 ? 5 : 3,
+        paddingVertical: 4,
         alignSelf: 'flex-start',
         alignItems: 'center',
         justifyContent: 'center',
@@ -558,29 +540,19 @@ function PanchangPill({
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        minWidth: 104,
-        maxWidth: 232,
-        // RN's auto-height measurement for this pill was landing on wildly
-        // unstable values across renders (observed 173-195pt for a 2-line
-        // label that should only need ~62pt) -- almost certainly a text/
-        // font-metrics remeasure race, not anything content-driven, since
-        // it reproduced identically regardless of border radius or how the
-        // label text was split into lines. Pin the height explicitly per
-        // line count instead of trusting auto-sizing here, for every
-        // slide/message this pill ever shows, not just this one.
-        minHeight: labelLines.length > 1 ? 58 : 40,
-        maxHeight: labelLines.length > 1 ? 66 : 40,
+        minHeight: slides.length > 1 ? 42 : 34,
+        maxWidth: 264,
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
-        <View style={{ flexShrink: 1 }}>
-          {labelLines.map((line, i) => (
-            <Text key={i} style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? COLORS.homePwaObservanceText : COLORS.homePwaPillText }}>
-              {line}
-            </Text>
-          ))}
-        </View>
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? COLORS.homePwaObservanceText : COLORS.homePwaPillText }}
+        >
+          {currentSlide.label}
+        </Text>
       </Animated.View>
 
       {/* Dot indicators — PWA's PanchangPill (HeroSection.tsx) shows these
@@ -1274,34 +1246,18 @@ function HomeContent() {
                 navigate('/mood');
               }}
               hitSlop={8}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                alignSelf: 'center',
-                paddingHorizontal: 12,
-                paddingVertical: 5,
-                borderRadius: RADII.pill,
-                backgroundColor: isDark ? 'rgba(0, 0, 0, 0.40)' : 'rgba(255, 255, 255, 0.72)',
-                borderWidth: 1,
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
-                gap: 6,
-                opacity: pressed ? 0.75 : 1,
-              })}
+              style={({ pressed }) => getHomeMoodPillStyle(pressed)}
             >
               {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
                 <>
                   <MoodGlyph
                     mood={moodStatus.lastMood}
-                    color={isDark ? 'rgba(255,255,255,0.92)' : 'rgba(30,20,5,0.80)'}
+                    color={COLORS.homePwaPillText}
                     size={14}
                   />
                   <Text
                     numberOfLines={1}
-                    style={{
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 11,
-                      color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(30,20,5,0.80)',
-                    }}
+                    style={HOME_MOOD_PILL_TEXT_STYLE}
                   >
                     Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
                   </Text>
@@ -1311,11 +1267,7 @@ function HomeContent() {
                   <Text style={{ fontSize: 11, lineHeight: 13 }}>✨</Text>
                   <Text
                     numberOfLines={1}
-                    style={{
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 11,
-                      color: isDark ? 'rgba(255,240,200,0.90)' : 'rgba(30,20,5,0.80)',
-                    }}
+                    style={HOME_MOOD_PILL_TEXT_STYLE}
                   >
                     How are you feeling?
                   </Text>

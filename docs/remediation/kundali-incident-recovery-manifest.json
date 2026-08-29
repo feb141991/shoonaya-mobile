@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "incidentId": "KUNDALI-DATA-INCIDENT-2026-08-29",
+  "incidentStatus": "containment_complete_recovery_pending",
+  "expectedDeletedAuthenticRowCount": 20,
+  "knownSyntheticIdHashes": [
+    "72d82562a35c5b7bc7293035490a675e29f076eb2cb292c773daafec9fec5847",
+    "e0e7e0d775b923c89f9d63703bfff27f801b4bac2bc75a3a05840b69951f871a",
+    "e4a33610b4bcf296016b33125d900fbc9673ef36ef21c3b4fc74b53c97dc510e",
+    "b4700c0019ccaa0f18b79edb4a5e2c2ea63116cab202e2a3b881042ae0a653b4"
+  ],
+  "recoveryManifestStatus": "pending_backup_restore",
+  "recoveredAuthenticIdHashes": [],
+  "approvedUnexpectedIdHashes": [],
+  "manifestSource": "incident_record",
+  "decisionRecordRef": null,
+  "reviewedAt": null,
+  "reviewedByRole": null
+}

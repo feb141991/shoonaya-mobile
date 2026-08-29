@@ -1,213 +1,96 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * Non-Destructive Birth Profiles Data-Integrity Aggregate Auditor
+ * Non-Destructive Birth Profiles Data-Integrity & Recovery Auditor
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * READ-ONLY auditor that aggregates metrics across `birth_profiles`:
- * - Total birth_profiles count
- * - Schema-version distribution
- * - timeUnknown distribution
- * - Synthetic/test-row indicators
- * - Denormalized-field mismatch counts (rashi, sun_rashi, nakshatra, nakshatra_pada, lagna, lagna_deg, ayanamsa)
- * - Rows where stored summary disagrees with generated_chart
- *
- * HARD SAFETY GUARANTEE:
- * - Emits ONLY aggregate numbers, zero row-level PII (no names, dates, coordinates, user IDs, or chart payloads).
- * - Exits non-zero if discrepancies or legacy/synthetic rows are detected.
- * - Generates machine-readable JSON and Markdown reports.
+ * - Consumes the versioned governance manifest (`docs/remediation/kundali-incident-recovery-manifest.json`)
+ * - Evaluates current state via pure evaluator (`lib/kundali-recovery-evaluator.ts`)
+ * - Enforces separate containment, recovery, cardinality, and chart-integrity ledgers
+ * - Emits ONLY aggregate numbers and SHA-256 fingerprints, zero row-level PII
+ * - Writes reports atomically (`.tmp` -> rename) so partial evaluations cannot corrupt reports
+ * - Fails non-zero while authentic-data recovery remains pending
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import {
+  evaluateRecoveryState,
+  validateManifest,
+  type KundaliIncidentManifest,
+  type KundaliRecoveryAuditResult,
+  type BirthProfileRowForAudit,
+} from '../lib/kundali-recovery-evaluator';
 
-const NATIVE_ROOT = path.resolve(__dirname, '..');
-const BACKEND_ROOT = path.resolve(NATIVE_ROOT, '../Sanatan Sangam/Shoonaya');
+export const MANIFEST_PATH = path.resolve(
+  __dirname,
+  '../docs/remediation/kundali-incident-recovery-manifest.json'
+);
 
-const envPath = path.join(BACKEND_ROOT, '.env.local');
-const envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || envContent.match(/NEXT_PUBLIC_SUPABASE_URL=["']?([^"'\n]+)/)?.[1]?.trim();
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY || envContent.match(/SUPABASE_SERVICE_ROLE_KEY=["']?([^"'\n]+)/)?.[1]?.trim();
-
-if (!url || !key) {
-  console.error('Missing Supabase credentials.');
-  process.exit(1);
-}
-
-const db = createClient(url, key);
-
-export interface AggregateAuditReport {
-  timestamp: string;
-  totalBirthProfiles: number;
-  schemaVersionDistribution: Record<string, number>;
-  timeUnknownDistribution: {
-    known: number;
-    unknown: number;
-    invalidOrMissing: number;
-  };
-  syntheticIndicatorCount: number;
-  denormalizedMismatchCounts: {
-    rashi: number;
-    sun_rashi: number;
-    nakshatra: number;
-    nakshatra_pada: number;
-    lagna: number;
-    lagna_deg: number;
-    ayanamsa: number;
-    totalRowsWithAnyMismatch: number;
-  };
-  storedSummaryDisagreesWithChartCount: number;
-  hasDiscrepancies: boolean;
-}
-
-export async function runAudit(): Promise<AggregateAuditReport> {
-  // Read-only select
-  const { data: rows, error } = await db.from('birth_profiles').select('*');
-  if (error) {
-    throw new Error(`Failed to read birth_profiles: ${error.message}`);
+export function loadManifest(): KundaliIncidentManifest {
+  if (!fs.existsSync(MANIFEST_PATH)) {
+    throw new Error(`Incident recovery manifest not found at ${MANIFEST_PATH}`);
   }
-
-  const report: AggregateAuditReport = {
-    timestamp: new Date().toISOString(),
-    totalBirthProfiles: rows?.length ?? 0,
-    schemaVersionDistribution: {},
-    timeUnknownDistribution: {
-      known: 0,
-      unknown: 0,
-      invalidOrMissing: 0,
-    },
-    syntheticIndicatorCount: 0,
-    denormalizedMismatchCounts: {
-      rashi: 0,
-      sun_rashi: 0,
-      nakshatra: 0,
-      nakshatra_pada: 0,
-      lagna: 0,
-      lagna_deg: 0,
-      ayanamsa: 0,
-      totalRowsWithAnyMismatch: 0,
-    },
-    storedSummaryDisagreesWithChartCount: 0,
-    hasDiscrepancies: false,
-  };
-
-  for (const row of rows ?? []) {
-    const chart = row.chart_data;
-
-    // 1. Schema Version Distribution
-    const sv = chart?.schemaVersion !== undefined ? String(chart.schemaVersion) : 'missing_or_legacy';
-    report.schemaVersionDistribution[sv] = (report.schemaVersionDistribution[sv] || 0) + 1;
-
-    // 2. timeUnknown Distribution
-    if (typeof chart?.timeUnknown === 'boolean') {
-      if (chart.timeUnknown) report.timeUnknownDistribution.unknown++;
-      else report.timeUnknownDistribution.known++;
-    } else {
-      report.timeUnknownDistribution.invalidOrMissing++;
-    }
-
-    // 3. Synthetic/Test-row indicator detection (without emitting row PII)
-    const isSynthetic = Boolean(
-      row.label?.includes('Test') ||
-      row.label?.includes('Synthetic') ||
-      (row.created_at && row.created_at.startsWith('2026-08-29') && rows.length <= 10)
-    );
-    if (isSynthetic) {
-      report.syntheticIndicatorCount++;
-    }
-
-    // 4. Denormalized field comparisons against stored chart_data
-    let rowHasMismatch = false;
-    if (chart) {
-      const chartRashi = chart.planets?.Chandra?.rashiName ?? null;
-      const chartSunRashi = chart.planets?.Surya?.rashiName ?? null;
-      const chartNakshatra = chart.nakshatra?.name ?? null;
-      const chartNakshatraPada = chart.nakshatra?.pada ?? null;
-      const chartLagna = chart.lagna?.rashiName ?? null;
-      const chartLagnaDeg = chart.lagna?.degreeInRashi != null ? Number(chart.lagna.degreeInRashi.toFixed(2)) : null;
-      const chartAyanamsa = chart.ayanamsa != null ? Number(chart.ayanamsa.toFixed(2)) : null;
-
-      const storedLagnaDeg = row.lagna_deg != null ? Number(Number(row.lagna_deg).toFixed(2)) : null;
-      const storedAyanamsa = row.ayanamsa != null ? Number(Number(row.ayanamsa).toFixed(2)) : null;
-
-      if (row.rashi !== chartRashi) {
-        report.denormalizedMismatchCounts.rashi++;
-        rowHasMismatch = true;
-      }
-      if (row.sun_rashi !== chartSunRashi) {
-        report.denormalizedMismatchCounts.sun_rashi++;
-        rowHasMismatch = true;
-      }
-      if (row.nakshatra !== chartNakshatra) {
-        report.denormalizedMismatchCounts.nakshatra++;
-        rowHasMismatch = true;
-      }
-      if (row.nakshatra_pada !== chartNakshatraPada) {
-        report.denormalizedMismatchCounts.nakshatra_pada++;
-        rowHasMismatch = true;
-      }
-      if (row.lagna !== chartLagna) {
-        report.denormalizedMismatchCounts.lagna++;
-        rowHasMismatch = true;
-      }
-      if (storedLagnaDeg !== chartLagnaDeg) {
-        report.denormalizedMismatchCounts.lagna_deg++;
-        rowHasMismatch = true;
-      }
-      if (storedAyanamsa !== chartAyanamsa) {
-        report.denormalizedMismatchCounts.ayanamsa++;
-        rowHasMismatch = true;
-      }
-
-      if (rowHasMismatch) {
-        report.denormalizedMismatchCounts.totalRowsWithAnyMismatch++;
-        report.storedSummaryDisagreesWithChartCount++;
-      }
-    } else {
-      report.denormalizedMismatchCounts.totalRowsWithAnyMismatch++;
-      report.storedSummaryDisagreesWithChartCount++;
-    }
-  }
-
-  // Discrepancy flag
-  const hasLegacy = Object.keys(report.schemaVersionDistribution).some(k => k !== '2');
-  const hasMismatches = report.denormalizedMismatchCounts.totalRowsWithAnyMismatch > 0;
-  const hasInvalidTimeUnknown = report.timeUnknownDistribution.invalidOrMissing > 0;
-  report.hasDiscrepancies = hasLegacy || hasMismatches || hasInvalidTimeUnknown;
-
-  return report;
+  const content = fs.readFileSync(MANIFEST_PATH, 'utf8');
+  const parsed = JSON.parse(content);
+  return validateManifest(parsed);
 }
 
-export function formatReportMarkdown(report: AggregateAuditReport): string {
-  return `# Non-Destructive Birth Profiles Data-Integrity Audit Report
+export function formatReportMarkdown(report: KundaliRecoveryAuditResult, manifest: KundaliIncidentManifest): string {
+  return `# Non-Destructive Birth Profiles Incident Recovery Audit Report
 
 **Timestamp**: ${report.timestamp}
-**Total Birth Profiles**: ${report.totalBirthProfiles}
-**Integrity Status**: ${report.hasDiscrepancies ? 'DISCREPANCIES DETECTED' : 'CLEAN / VERIFIED'}
+**Incident ID**: \`${manifest.incidentId}\`
+**Overall Incident Status**: **\`${report.incidentStatus}\`**
+**Process Exit Code**: **${report.exitCode}**
 
 ---
 
-## 1. Schema Version Distribution
-${Object.entries(report.schemaVersionDistribution)
-  .map(([k, v]) => `- Schema v${k}: **${v}** rows`)
-  .join('\n')}
+## 1. Governance & Recovery Ledgers
+
+| Ledger | Status / Value | Invariant Description |
+| :--- | :--- | :--- |
+| **Synthetic Containment** | **\`${report.syntheticContainmentStatus.toUpperCase()}\`** | Verified 0 synthetic fingerprints in production |
+| **Authentic Data Recovery** | **\`${report.recoveryStatus.toUpperCase()}\`** | Pre-incident authentic row restoration state |
+| **Cardinality Status** | **\`${report.cardinalityStatus}\`** | Expected (${report.expectedRecoverableRowCount}) vs Recovered (${report.recoveredAuthenticRowCount}) |
+| **Chart Data Integrity** | **\`${report.chartIntegrityStatus.toUpperCase()}\`** | Production AstroChart contract and summary agreement; pending until rows are restored |
 
 ---
 
-## 2. Birth Time Accuracy (\`timeUnknown\`) Distribution
-- Known Birth Time (\`timeUnknown=false\`): **${report.timeUnknownDistribution.known}**
-- Unknown Birth Time (\`timeUnknown=true\`): **${report.timeUnknownDistribution.unknown}**
-- Missing / Malformed \`timeUnknown\`: **${report.timeUnknownDistribution.invalidOrMissing}**
+## 2. Row Cardinality Accounting
+
+- **Expected Recoverable Authentic Rows**: **${report.expectedRecoverableRowCount}**
+- **Recovered Authentic Rows**: **${report.recoveredAuthenticRowCount}**
+- **Unresolved Deleted Rows**: **${report.unresolvedDeletedRowCount}**
+- **Unexpected / Unclassified Rows**: **${report.unexpectedRowCount}**
+- **Verified Synthetic Rows Present**: **${report.verifiedSyntheticRowCount}**
+- **Duplicate Primary Keys**: **${report.duplicatePrimaryKeyCount}**
+- **Duplicate Owner Primary Profiles**: **${report.duplicateOwnershipCount}**
+- **Invalid Ownership Rows**: **${report.invalidOwnershipCount}**
 
 ---
 
-## 3. Synthetic / Test-Row Indicators
-- Identified synthetic or test-created rows: **${report.syntheticIndicatorCount}**
+## 3. Schema Version & Accuracy Distribution
+
+- **Schema Version Distribution**:
+${
+  Object.keys(report.schemaVersionDistribution).length > 0
+    ? Object.entries(report.schemaVersionDistribution)
+        .map(([k, v]) => `  - Schema v${k}: **${v}** rows`)
+        .join('\n')
+    : '  - *(None — table currently empty pending pre-incident backup restoration)*'
+}
+- **Birth Time Accuracy (\`timeUnknown\`)**:
+  - Known Birth Time (\`timeUnknown=false\`): **${report.timeUnknownDistribution.known}**
+  - Unknown Birth Time (\`timeUnknown=true\`): **${report.timeUnknownDistribution.unknown}**
+  - Missing / Malformed \`timeUnknown\`: **${report.timeUnknownDistribution.invalidOrMissing}**
 
 ---
 
 ## 4. Denormalized Column Mismatch Summary
+
 - \`rashi\` mismatches: **${report.denormalizedMismatchCounts.rashi}**
 - \`sun_rashi\` mismatches: **${report.denormalizedMismatchCounts.sun_rashi}**
 - \`nakshatra\` mismatches: **${report.denormalizedMismatchCounts.nakshatra}**
@@ -215,32 +98,72 @@ ${Object.entries(report.schemaVersionDistribution)
 - \`lagna\` mismatches: **${report.denormalizedMismatchCounts.lagna}**
 - \`lagna_deg\` mismatches: **${report.denormalizedMismatchCounts.lagna_deg}**
 - \`ayanamsa\` mismatches: **${report.denormalizedMismatchCounts.ayanamsa}**
-- **Total rows with any mismatch**: **${report.denormalizedMismatchCounts.totalRowsWithAnyMismatch}**
-
----
-
-## 5. Engine Agreement
-- Stored summary disagrees with stored chart_data: **${report.storedSummaryDisagreesWithChartCount}**
+- **Total rows with any summary disagreement**: **${report.denormalizedMismatchCounts.totalRowsWithAnyMismatch}**
+- **Stored summary disagrees with stored chart_data**: **${report.storedSummaryDisagreesWithChartCount}**
 `;
+}
+
+export async function runAudit(): Promise<{ report: KundaliRecoveryAuditResult; manifest: KundaliIncidentManifest }> {
+  const manifest = loadManifest();
+
+  const NATIVE_ROOT = path.resolve(__dirname, '..');
+  const BACKEND_ROOT = path.resolve(NATIVE_ROOT, '../Sanatan Sangam/Shoonaya');
+
+  const envPath = path.join(BACKEND_ROOT, '.env.local');
+  const envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || envContent.match(/NEXT_PUBLIC_SUPABASE_URL=["']?([^"'\n]+)/)?.[1]?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || envContent.match(/SUPABASE_SERVICE_ROLE_KEY=["']?([^"'\n]+)/)?.[1]?.trim();
+
+  if (!url || !key) {
+    throw new Error('Missing Supabase credentials.');
+  }
+
+  const db = createClient(url, key);
+  const { deriveDenormalizedBirthProfileFields } = require(
+    path.join(BACKEND_ROOT, 'src/lib/jyotish/astro-engine.ts')
+  );
+
+  const { data: rows, error } = await db.from('birth_profiles').select('*');
+  if (error) {
+    throw new Error(`Failed to read birth_profiles: ${error.message}`);
+  }
+
+  const report = evaluateRecoveryState(manifest, (rows ?? []) as BirthProfileRowForAudit[], deriveDenormalizedBirthProfileFields);
+  return { report, manifest };
+}
+
+export function writeReportAtomically(report: KundaliRecoveryAuditResult, manifest: KundaliIncidentManifest): void {
+  const mdContent = formatReportMarkdown(report, manifest);
+  const jsonContent = JSON.stringify(report, null, 2);
+
+  const mdPath = path.resolve(__dirname, '../audit-birth-profiles-report.md');
+  const jsonPath = path.resolve(__dirname, '../audit-birth-profiles-report.json');
+
+  const tmpMdPath = `${mdPath}.tmp-${Date.now()}`;
+  const tmpJsonPath = `${jsonPath}.tmp-${Date.now()}`;
+
+  fs.writeFileSync(tmpMdPath, mdContent, 'utf8');
+  fs.writeFileSync(tmpJsonPath, jsonContent, 'utf8');
+
+  fs.renameSync(tmpMdPath, mdPath);
+  fs.renameSync(tmpJsonPath, jsonPath);
 }
 
 if (require.main === module) {
   runAudit()
-    .then((report) => {
-      const md = formatReportMarkdown(report);
+    .then(({ report, manifest }) => {
+      const md = formatReportMarkdown(report, manifest);
       console.log(md);
-      fs.writeFileSync(path.resolve(__dirname, '../audit-birth-profiles-report.md'), md);
-      fs.writeFileSync(
-        path.resolve(__dirname, '../audit-birth-profiles-report.json'),
-        JSON.stringify(report, null, 2)
-      );
+      writeReportAtomically(report, manifest);
 
-      if (report.hasDiscrepancies) {
-        console.error('Audit completed with discrepancies.');
-        process.exit(1);
-      } else {
-        console.log('Audit completed cleanly.');
+      if (report.exitCode === 0) {
+        console.log('\n[Auditor Result]: All expected authentic rows verified cleanly. Incident recovery verified.');
         process.exit(0);
+      } else {
+        console.error(
+          `\n[Auditor Result]: Recovery incomplete or discrepancies present. Status: ${report.incidentStatus} (recoveryStatus: ${report.recoveryStatus}, unresolvedDeletedRows: ${report.unresolvedDeletedRowCount}, exitCode: ${report.exitCode})`
+        );
+        process.exit(report.exitCode);
       }
     })
     .catch((err) => {

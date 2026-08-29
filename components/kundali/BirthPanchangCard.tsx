@@ -20,9 +20,9 @@ interface BirthPanchangCardProps {
  * - Panchanga limb names (e.g. "Shukla Pratipada", "Ashwini", "Vishkambha", "Bava")
  *   are canonical astronomical/Sanskrit terms preserved identically across
  *   astronomical software to prevent ambiguity or corrupted liturgical lookups.
- * - All structural titles, descriptions, transitions, limb identifiers (Tithi,
- *   Vara, Nakshatra, Yoga, Karana), and weekday equivalents are fully localized
- *   for English (en), Hindi (hi), and Punjabi (pa).
+ * - Structural UI is localized for English, Hindi, and Punjabi. Canonical limb
+ *   values remain Sanskrit in Latin transliteration and are not presented as
+ *   translated devotional text.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -39,6 +39,10 @@ const LABELS: Record<AppLanguage, {
   precision: string;
   pada: string;
   halfTithi: string;
+  paksha: string;
+  index: string;
+  ayanamsa: string;
+  engine: string;
 }> = {
   en: {
     title: 'Birth Panchanga (5 Sacred Limbs)',
@@ -53,6 +57,7 @@ const LABELS: Record<AppLanguage, {
     precision: 'High Precision Instant',
     pada: 'Pada',
     halfTithi: 'Half-Tithi',
+    paksha: 'Paksha', index: 'Index', ayanamsa: 'Ayanamsha', engine: 'Engine',
   },
   hi: {
     title: 'जन्म पञ्चाङ्ग (पंच पवित्र अंग)',
@@ -67,6 +72,7 @@ const LABELS: Record<AppLanguage, {
     precision: 'उच्च परिशुद्धता क्षण',
     pada: 'पद',
     halfTithi: 'अर्ध-तिथि',
+    paksha: 'पक्ष', index: 'क्रमांक', ayanamsa: 'अयनांश', engine: 'इंजन',
   },
   pa: {
     title: 'ਜਨਮ ਪੰਚਾਂਗ (ਪੰਜ ਪਵਿੱਤਰ ਅੰਗ)',
@@ -81,6 +87,7 @@ const LABELS: Record<AppLanguage, {
     precision: 'ਉੱਚ ਸ਼ੁੱਧਤਾ ਪਲ',
     pada: 'ਪਦ',
     halfTithi: 'ਅੱਧੀ-ਤਿਥੀ',
+    paksha: 'ਪੱਖ', index: 'ਕ੍ਰਮ', ayanamsa: 'ਅਯਨਾਂਸ਼', engine: 'ਇੰਜਣ',
   },
 };
 
@@ -94,19 +101,20 @@ const VARA_TRANSLATIONS: Record<string, Record<AppLanguage, string>> = {
   Shanivara: { en: 'Saturday (Shanivara)', hi: 'शनिवार (स्थिरवसर)', pa: 'ਸ਼ਨਿੱਚਰਵਾਰ (ਸ਼ਨਿਵਾਰ)' },
 };
 
-function formatTransitionTime(isoUtc: string | null, timezone: string): string | null {
+function formatTransitionTime(isoUtc: string | null, timezone: string, language: AppLanguage): string | null {
   if (!isoUtc) return null;
   try {
     const d = new Date(isoUtc);
     if (isNaN(d.getTime())) return null;
 
-    const timeFmt = new Intl.DateTimeFormat('en-US', {
+    const locale = language === 'hi' ? 'hi-IN' : language === 'pa' ? 'pa-IN' : 'en-GB';
+    const timeFmt = new Intl.DateTimeFormat(locale, {
       timeZone: timezone,
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     });
-    const dateFmt = new Intl.DateTimeFormat('en-US', {
+    const dateFmt = new Intl.DateTimeFormat(locale, {
       timeZone: timezone,
       month: 'short',
       day: 'numeric',
@@ -145,10 +153,10 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
   }
 
   const varaDisplay = VARA_TRANSLATIONS[snapshot.vara.name]?.[langKey] ?? snapshot.vara.name;
-  const tithiEnds = formatTransitionTime(snapshot.tithi.endsAtUtc, snapshot.timezone);
-  const nakshatraEnds = formatTransitionTime(snapshot.nakshatra.endsAtUtc, snapshot.timezone);
-  const yogaEnds = formatTransitionTime(snapshot.yoga.endsAtUtc, snapshot.timezone);
-  const karanaEnds = formatTransitionTime(snapshot.karana.endsAtUtc, snapshot.timezone);
+  const tithiEnds = formatTransitionTime(snapshot.tithi.endsAtUtc, snapshot.timezone, langKey);
+  const nakshatraEnds = formatTransitionTime(snapshot.nakshatra.endsAtUtc, snapshot.timezone, langKey);
+  const yogaEnds = formatTransitionTime(snapshot.yoga.endsAtUtc, snapshot.timezone, langKey);
+  const karanaEnds = formatTransitionTime(snapshot.karana.endsAtUtc, snapshot.timezone, langKey);
 
   return (
     <Card
@@ -197,7 +205,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
           <View style={styles.pakshaRow}>
             <View style={[styles.pakshaBadge, { backgroundColor: theme.brandSoft }]}>
               <Text style={[styles.pakshaText, { color: theme.brandStrong }]}>
-                {snapshot.tithi.paksha} Paksha (#{snapshot.tithi.index})
+                {snapshot.tithi.paksha} {t.paksha} ({t.index} {snapshot.tithi.index})
               </Text>
             </View>
           </View>
@@ -220,7 +228,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
           <Text style={[styles.limbKey, { color: theme.dim }]}>{t.nakshatra}</Text>
           <Text style={[styles.limbVal, { color: theme.brandStrong }]}>{snapshot.nakshatra.name}</Text>
           <Text style={[styles.limbSub, { color: theme.dim }]}>
-            {snapshot.nakshatra.pada ? `${t.pada} ${snapshot.nakshatra.pada}` : `Index #${snapshot.nakshatra.index + 1}`}
+            {snapshot.nakshatra.pada ? `${t.pada} ${snapshot.nakshatra.pada}` : `${t.index} ${snapshot.nakshatra.index + 1}`}
           </Text>
           {nakshatraEnds ? (
             <Text style={[styles.transitionText, { color: theme.dim }]}>
@@ -259,7 +267,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
       {/* Diagnostics */}
       <View style={[styles.diagBox, { borderTopColor: theme.premiumBorder }]}>
         <Text style={[styles.diagText, { color: theme.dim }]}>
-          Ayanamsha: {snapshot.calculation.ayanamsa.toUpperCase()} · Engine: v{snapshot.calculation.engineVersion}
+          {t.ayanamsa}: {snapshot.calculation.ayanamsa.toUpperCase()} · {t.engine}: v{snapshot.calculation.engineVersion}
         </Text>
       </View>
     </Card>

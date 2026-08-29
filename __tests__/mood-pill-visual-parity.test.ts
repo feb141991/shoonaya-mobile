@@ -1,7 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { COLORS, RADII, TYPE } from '../lib/constants';
+import { getHomeMoodPillStyle, HOME_MOOD_PILL_TEXT_STYLE } from '../lib/homeHeroPills';
 
 describe('Mood Pill Visual Parity & Surface Token Suite', () => {
   it('1. Mood pill and Date/Panchang pill share identical surface background token', () => {
@@ -50,5 +53,22 @@ describe('Mood Pill Visual Parity & Surface Token Suite', () => {
       moodPillHorizontalInset > profileAvatarLeftBound,
       'Mood pill horizontal margin must clear profile avatar'
     );
+  });
+
+  it('8. production mood pill consumes the canonical translucent surface and stays on one line', () => {
+    const style = getHomeMoodPillStyle(false);
+    assert.equal(style.backgroundColor, COLORS.homePwaPillBg);
+    assert.equal(style.borderWidth, 0);
+    assert.equal(style.flexShrink, 0);
+    assert.equal(style.minHeight, 30);
+    assert.equal(HOME_MOOD_PILL_TEXT_STYLE.flexShrink, 0);
+    assert.equal(HOME_MOOD_PILL_TEXT_STYLE.color, COLORS.homePwaPillText);
+  });
+
+  it('9. Home uses the production helper and keeps observance copy to one rendered line', () => {
+    const homeSource = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
+    assert.match(homeSource, /style=\{\(\{ pressed \}\) => getHomeMoodPillStyle\(pressed\)\}/);
+    assert.doesNotMatch(homeSource, /splitSentences|labelLines/);
+    assert.match(homeSource, /numberOfLines=\{1\}[\s\S]*?currentSlide\.label/);
   });
 });

@@ -2,8 +2,14 @@ import { API_BASE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { isFetchCancelled } from './fetch-error';
+import { DEFAULT_API_TIMEOUT_MS } from './api-policy';
 
 export { isFetchCancelled };
+
+export type ApiFetchOptions = RequestInit & {
+  /** Override the default request deadline for legitimately long-running APIs. */
+  timeoutMs?: number;
+};
 
 let cachedAccessToken: string | null | undefined;
 
@@ -24,7 +30,8 @@ async function getApiAccessToken(): Promise<string | null> {
   return session?.access_token ?? null;
 }
 
-export async function apiFetch(path: string, options: RequestInit = {}) {
+export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
+  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, ...fetchOptions } = options;
   const headers = new Headers(options.headers ?? {});
   const accessToken = await getApiAccessToken();
 
@@ -37,14 +44,14 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const controller = options.signal ? null : new AbortController();
-  const timeout = controller ? setTimeout(() => controller.abort(), 15000) : null;
+  const controller = fetchOptions.signal ? null : new AbortController();
+  const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
   try {
     return await fetch(`${API_BASE}${normalizedPath}`, {
-      ...options,
+      ...fetchOptions,
       headers,
-      signal: options.signal ?? controller?.signal,
+      signal: fetchOptions.signal ?? controller?.signal,
     });
   } finally {
     if (timeout) clearTimeout(timeout);

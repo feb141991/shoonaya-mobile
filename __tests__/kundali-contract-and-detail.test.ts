@@ -169,7 +169,7 @@ const MOCK_VALID_KNOWN_CHART: AstroChart = {
     tithi: { index: 30, name: 'Amavasya', paksha: 'Krishna', endsAtUtc: null },
     nakshatra: { index: 22, name: 'Dhanishtha', pada: 1, endsAtUtc: null },
     yoga: { index: 17, name: 'Variyana', endsAtUtc: null },
-    karana: { index: 9, name: 'Nagava', endsAtUtc: null },
+    karana: { index: 9, name: 'Bava', endsAtUtc: null },
     calculation: {
       engineVersion: '2.0.0-panchang-engine',
       ayanamsa: 'lahiri',
@@ -442,7 +442,7 @@ describe('Native Kundali Contract & Runtime Safety', () => {
     assert.equal(panchang?.nakshatra.name, 'Dhanishtha');
     assert.equal(panchang?.nakshatra.pada, 1);
     assert.equal(panchang?.yoga.name, 'Variyana');
-    assert.equal(panchang?.karana.name, 'Nagava');
+    assert.equal(panchang?.karana.name, 'Bava');
     assert.equal(panchang?.calculation.precision, 'high');
   });
 

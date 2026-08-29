@@ -206,6 +206,29 @@ export const RASHI_NAMES_SA = [
 
 const MAX_LIMB_TRANSITION_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours maximum physical transition window
 
+const CANONICAL_TITHI_NAMES = [
+  'Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi',
+  'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi',
+  'Trayodashi', 'Chaturdashi', 'Purnima', 'Amavasya',
+] as const;
+
+const CANONICAL_NAKSHATRA_NAMES = [
+  'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
+  'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni',
+  'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha',
+  'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana',
+  'Dhanishtha', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati',
+] as const;
+
+const CANONICAL_YOGA_NAMES = [
+  'Vishkamba', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda',
+  'Sukarman', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata',
+  'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyana', 'Parigha', 'Shiva',
+  'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti',
+] as const;
+
+const MOVABLE_KARANA_NAMES = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanija', 'Vishti'] as const;
+
 export const CANONICAL_VARA_NAMES = [
   'Ravivara',
   'Somavara',
@@ -235,9 +258,64 @@ export function isValidGrahaPosition(obj: any): obj is GrahaPosition {
 }
 
 function isValidIsoInstant(val: any): boolean {
-  if (typeof val !== 'string' || !val) return false;
+  if (typeof val !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(val)) return false;
   const ms = Date.parse(val);
-  return !isNaN(ms) && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val);
+  return Number.isFinite(ms);
+}
+
+function isValidCivilDate(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const [, year, month, day] = match.map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function isValidCivilTime(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+  if (!match) return false;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const second = Number(match[3] ?? 0);
+  return hour <= 23 && minute <= 59 && second <= 59;
+}
+
+function isValidIanaTimezone(value: unknown): value is string {
+  if (typeof value !== 'string' || (value !== 'UTC' && !value.includes('/'))) return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value }).format(0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function instantMatchesLocalClock(instantUtc: string, localDate: string, localTime: string, timezone: string): boolean {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
+  const parts = formatter.formatToParts(new Date(instantUtc));
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  const formattedDate = `${get('year')}-${get('month')}-${get('day')}`;
+  const formattedTime = `${String(Number(get('hour')) % 24).padStart(2, '0')}:${get('minute')}:${get('second')}`;
+  return formattedDate === localDate && formattedTime.startsWith(localTime.length === 5 ? `${localTime}:` : localTime);
+}
+
+function expectedTithiName(index: number): string | null {
+  const withinPaksha = ((index - 1) % 15) + 1;
+  if (withinPaksha === 15) return index <= 15 ? 'Purnima' : 'Amavasya';
+  return CANONICAL_TITHI_NAMES[withinPaksha - 1] ?? null;
+}
+
+function expectedKaranaName(index: number): string | null {
+  if (index === 1) return 'Kimstughna';
+  if (index >= 58 && index <= 60) return ['Shakuni', 'Chatushpada', 'Nagava'][index - 58] ?? null;
+  if (index >= 2 && index <= 57) return MOVABLE_KARANA_NAMES[(index - 2) % MOVABLE_KARANA_NAMES.length];
+  return null;
 }
 
 function isValidTransitionBoundary(endsAtUtc: string | null, instantUtcMs: number): boolean {
@@ -259,9 +337,10 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
 
   // 1. Instant and Local Time Syntax
   if (!isValidIsoInstant(obj.instantUtc)) return false;
-  if (typeof obj.localDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(obj.localDate)) return false;
-  if (typeof obj.localTime !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(obj.localTime)) return false;
-  if (typeof obj.timezone !== 'string' || obj.timezone.trim().length < 3) return false;
+  if (!isValidCivilDate(obj.localDate)) return false;
+  if (!isValidCivilTime(obj.localTime)) return false;
+  if (!isValidIanaTimezone(obj.timezone)) return false;
+  if (!instantMatchesLocalClock(obj.instantUtc, obj.localDate, obj.localTime, obj.timezone)) return false;
 
   const instantUtcMs = Date.parse(obj.instantUtc);
 
@@ -283,7 +362,7 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
     typeof obj.tithi.index !== 'number' ||
     obj.tithi.index < 1 ||
     obj.tithi.index > 30 ||
-    typeof obj.tithi.name !== 'string' ||
+    obj.tithi.name !== expectedTithiName(obj.tithi.index) ||
     (obj.tithi.paksha !== 'Shukla' && obj.tithi.paksha !== 'Krishna') ||
     (obj.tithi.index <= 15 && obj.tithi.paksha !== 'Shukla') ||
     (obj.tithi.index > 15 && obj.tithi.paksha !== 'Krishna') ||
@@ -298,7 +377,7 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
     typeof obj.nakshatra.index !== 'number' ||
     obj.nakshatra.index < 0 ||
     obj.nakshatra.index > 26 ||
-    typeof obj.nakshatra.name !== 'string' ||
+    obj.nakshatra.name !== CANONICAL_NAKSHATRA_NAMES[obj.nakshatra.index] ||
     (obj.nakshatra.pada !== null && (typeof obj.nakshatra.pada !== 'number' || obj.nakshatra.pada < 1 || obj.nakshatra.pada > 4)) ||
     !isValidTransitionBoundary(obj.nakshatra.endsAtUtc, instantUtcMs)
   ) {
@@ -311,7 +390,7 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
     typeof obj.yoga.index !== 'number' ||
     obj.yoga.index < 0 ||
     obj.yoga.index > 26 ||
-    typeof obj.yoga.name !== 'string' ||
+    obj.yoga.name !== CANONICAL_YOGA_NAMES[obj.yoga.index] ||
     !isValidTransitionBoundary(obj.yoga.endsAtUtc, instantUtcMs)
   ) {
     return false;
@@ -323,7 +402,7 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
     typeof obj.karana.index !== 'number' ||
     obj.karana.index < 1 ||
     obj.karana.index > 60 ||
-    typeof obj.karana.name !== 'string' ||
+    obj.karana.name !== expectedKaranaName(obj.karana.index) ||
     !isValidTransitionBoundary(obj.karana.endsAtUtc, instantUtcMs)
   ) {
     return false;
@@ -392,60 +471,6 @@ export function isValidAstroChart(chart: any): chart is AstroChart {
   }
 
   return true;
-}
-
-export interface DenormalizedBirthProfileSummary {
-  rashi: string | null;
-  sun_rashi: string | null;
-  nakshatra: string | null;
-  nakshatra_pada: number | null;
-  nakshatra_lord: string | null;
-  lagna: string | null;
-  lagna_deg: number | null;
-  ayanamsa: number | null;
-  current_dasha_planet: string | null;
-  current_dasha_end_date: string | null;
-  next_dasha_planet: string | null;
-}
-
-/**
- * Pure mapper deriving all denormalized birth profile summary columns
- * exclusively and deterministically from a validated AstroChart.
- */
-export function deriveDenormalizedBirthProfileFields(chart: AstroChart): DenormalizedBirthProfileSummary {
-  const currentDasha = chart.dasha?.current ?? null;
-  let nextDashaPlanet: string | null = null;
-
-  if (chart.dasha?.timeline && Array.isArray(chart.dasha.timeline)) {
-    const currentIndex = currentDasha
-      ? chart.dasha.timeline.findIndex(
-          (d) => d.planet === currentDasha.planet && d.startDate === currentDasha.startDate
-        )
-      : -1;
-
-    if (currentIndex >= 0 && currentIndex + 1 < chart.dasha.timeline.length) {
-      nextDashaPlanet = chart.dasha.timeline[currentIndex + 1].planet;
-    } else if (currentDasha?.endDate) {
-      const found = chart.dasha.timeline.find(
-        (d) => d.startDate >= currentDasha.endDate && d.planet !== currentDasha.planet
-      );
-      nextDashaPlanet = found?.planet ?? null;
-    }
-  }
-
-  return {
-    rashi: chart.planets?.['Chandra']?.rashiName ?? null,
-    sun_rashi: chart.planets?.['Surya']?.rashiName ?? null,
-    nakshatra: chart.nakshatra?.name ?? null,
-    nakshatra_pada: chart.nakshatra?.pada ?? null,
-    nakshatra_lord: chart.nakshatra?.lord ?? null,
-    lagna: chart.timeUnknown ? null : (chart.lagna?.rashiName ?? null),
-    lagna_deg: chart.timeUnknown ? null : (chart.lagna?.degreeInRashi != null ? Number(chart.lagna.degreeInRashi.toFixed(2)) : null),
-    ayanamsa: chart.ayanamsa != null ? Number(chart.ayanamsa.toFixed(2)) : null,
-    current_dasha_planet: currentDasha?.planet ?? null,
-    current_dasha_end_date: currentDasha?.endDate ?? null,
-    next_dasha_planet: nextDashaPlanet,
-  };
 }
 
 /**
