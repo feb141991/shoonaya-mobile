@@ -1256,18 +1256,17 @@ function HomeContent() {
             style={{
               position: 'absolute',
               zIndex: 3,
-              top: 20,
+              top: 24,
               left: 0,
               right: 0,
               alignItems: 'center',
-              justifyContent: 'center',
             }}
           >
-            <PressableSurface
-              haptic="selection"
+            <Pressable
               accessibilityRole="button"
               accessibilityLabel="Check in with your mood"
               onPress={() => {
+                void Haptics.selectionAsync().catch(() => {});
                 if (isGuest) {
                   setAuthGateVisible(true);
                   return;
@@ -1275,35 +1274,33 @@ function HomeContent() {
                 navigate('/mood');
               }}
               hitSlop={8}
-              style={{
-                borderRadius: RADII.pill,
-                paddingHorizontal: 14,
-                paddingVertical: 6,
-                height: 34,
-                alignSelf: 'center',
-                alignItems: 'center',
-                justifyContent: 'center',
+              style={({ pressed }) => ({
                 flexDirection: 'row',
-                gap: 6,
-                backgroundColor: isDark ? 'rgba(18,12,8,0.72)' : 'rgba(255,255,255,0.88)',
+                alignItems: 'center',
+                alignSelf: 'center',
+                paddingHorizontal: 12,
+                paddingVertical: 5,
+                borderRadius: RADII.pill,
+                backgroundColor: isDark ? 'rgba(0, 0, 0, 0.40)' : 'rgba(255, 255, 255, 0.72)',
                 borderWidth: 1,
-                borderColor: isDark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.12)',
-              }}
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+                gap: 6,
+                opacity: pressed ? 0.75 : 1,
+              })}
             >
               {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
                 <>
                   <MoodGlyph
                     mood={moodStatus.lastMood}
-                    color={isDark ? '#FFFFFF' : '#1C1A14'}
-                    size={13}
+                    color={isDark ? 'rgba(255,255,255,0.92)' : 'rgba(30,20,5,0.80)'}
+                    size={14}
                   />
                   <Text
                     numberOfLines={1}
                     style={{
                       fontFamily: FONTS.sansSemiBold,
                       fontSize: 11,
-                      lineHeight: 14,
-                      color: isDark ? '#FFFFFF' : '#1C1A14',
+                      color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(30,20,5,0.80)',
                     }}
                   >
                     Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
@@ -1311,21 +1308,20 @@ function HomeContent() {
                 </>
               ) : (
                 <>
-                  <Text style={{ fontSize: 12, lineHeight: 14 }}>✨</Text>
+                  <Text style={{ fontSize: 11, lineHeight: 13 }}>✨</Text>
                   <Text
                     numberOfLines={1}
                     style={{
                       fontFamily: FONTS.sansSemiBold,
                       fontSize: 11,
-                      lineHeight: 14,
-                      color: isDark ? 'rgba(255,240,200,0.95)' : '#1C1A14',
+                      color: isDark ? 'rgba(255,240,200,0.90)' : 'rgba(30,20,5,0.80)',
                     }}
                   >
                     How are you feeling?
                   </Text>
                 </>
               )}
-            </PressableSurface>
+            </Pressable>
           </View>
 
           <Pressable
