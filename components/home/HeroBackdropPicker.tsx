@@ -249,16 +249,24 @@ export function HeroBackdropPicker({
                         : theme.cardSoft,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 5,
-                      padding: 6,
+                      gap: 4,
+                      paddingHorizontal: 4,
+                      paddingVertical: 8,
                     }}
                   >
-                    <Feather name="refresh-cw" size={20} color={theme.brand} />
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: selectedId === null ? theme.brand : theme.text, textAlign: 'center' }}>
+                    <Feather name="refresh-cw" size={18} color={theme.brand} />
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                      style={{
+                        fontFamily: FONTS.sansSemiBold,
+                        fontSize: 11,
+                        color: selectedId === null ? theme.brand : theme.text,
+                        textAlign: 'center',
+                      }}
+                    >
                       Auto Rotate
-                    </Text>
-                    <Text style={{ ...TYPE_MICRO, fontSize: 9.5, color: theme.dim, textAlign: 'center' }}>
-                      Daily Art
                     </Text>
                   </PressableSurface>
 
