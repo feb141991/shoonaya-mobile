@@ -22,8 +22,8 @@ export type ProfileContext = {
 };
 
 export const DAILY_LIMITS = {
-  free: 5,
-  pro: 200,
+  free: 20,
+  pro: 20,
 } as const;
 
 const DEFAULT_ERROR_MESSAGE = 'Could not reach Dharma Mitra right now.';

@@ -1410,46 +1410,42 @@ function HomeContent() {
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" />
-              {showRashiphalNudge ? (
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityLabel="See your Rashiphal. Tap to open"
-                  onPress={() => {
-                    void setRashiphalNudgeDismissed();
-                    setShowRashiphalNudge(false);
-                    navigate('/rashiphala');
-                  }}
-                  hitSlop={8}
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="See your Rashiphal. Tap to open"
+                onPress={() => {
+                  navigate('/rashiphala');
+                }}
+                hitSlop={8}
+                style={{
+                  borderRadius: RADII.pill,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  minHeight: 34,
+                  maxHeight: 34,
+                  maxWidth: 188,
+                  alignSelf: 'flex-start',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 5,
+                  backgroundColor: COLORS.homePwaRashiphalBg,
+                }}
+              >
+                <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
+                <Text
                   style={{
-                    borderRadius: RADII.pill,
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    minHeight: 34,
-                    maxHeight: 34,
-                    maxWidth: 188,
-                    alignSelf: 'flex-start',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'row',
-                    gap: 5,
-                    backgroundColor: COLORS.homePwaRashiphalBg,
+                    ...TYPE.chip,
+                    fontSize: 11,
+                    fontFamily: FONTS.sansSemiBold,
+                    lineHeight: 14,
+                    color: COLORS.homePwaRashiphalText,
                   }}
                 >
-                  <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
-                  <Text
-                    style={{
-                      ...TYPE.chip,
-                      fontSize: 11,
-                      fontFamily: FONTS.sansSemiBold,
-                      lineHeight: 14,
-                      color: COLORS.homePwaRashiphalText,
-                    }}
-                  >
-                    See your Rashiphal
-                  </Text>
-                  <Text style={{ fontSize: 10, lineHeight: 13, color: COLORS.homePwaRashiphalArrow }}>→</Text>
-                </PressableSurface>
-              ) : null}
+                  See your Rashiphal
+                </Text>
+                <Text style={{ fontSize: 10, lineHeight: 13, color: COLORS.homePwaRashiphalArrow }}>→</Text>
+              </PressableSurface>
             </View>
           </View>
 

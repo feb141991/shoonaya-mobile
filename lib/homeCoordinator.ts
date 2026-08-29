@@ -1,6 +1,7 @@
 import { readHomeCache, writeHomeCache, clearHomeCache, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
+import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -242,6 +243,11 @@ export class HomeSummaryCoordinator {
         const canonicalTimezone = safeTimezone(payload.date?.timezone || timezone);
         const canonicalSpiritualDate = spiritualDate(canonicalTimezone);
         void writeHomeCache(cacheIdentity, payload, canonicalTimezone, canonicalSpiritualDate);
+        void syncStartupPreferencesFromProfile(
+          payload.profile,
+          canonicalTimezone,
+          identity.userId
+        );
       }
     } catch (error) {
       if (requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {

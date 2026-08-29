@@ -893,24 +893,6 @@ export default function ProfileScreen() {
             >
               <Feather name="message-square" size={21} color={theme.text} />
             </PressableSurface>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Open settings"
-              onPress={() => router.push('/settings')}
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                backgroundColor: theme.glass,
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-              }}
-            >
-              <Feather name="settings" size={21} color={theme.text} />
-            </PressableSurface>
           </View>
         </View>
 

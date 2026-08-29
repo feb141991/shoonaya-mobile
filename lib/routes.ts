@@ -30,17 +30,19 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // counter under a mislabeled name.
   // Insights is its own native screen (app/japa-insights.tsx), ported from
   // PWA's /japa/insights (which itself redirects to /bhakti/mala/insights)
-  // — must be checked before the general Japa/Bhakti-mala match below.
   if (pathname.startsWith('/japa/insights') || pathname.startsWith('/bhakti/mala/insights')) return '/japa-insights' as Href;
   if (pathname.startsWith('/bhakti/mala') || pathname.startsWith('/japa')) return '/japa';
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala/')) return path as Href;
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/panchang')) return '/panchang';
+  if (pathname.startsWith('/rashiphala') || pathname.startsWith('/rashiphal')) return '/rashiphala' as Href;
   if (pathname.startsWith('/vrat/')) return path as Href;
   if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/festival/')) return path as Href;
   if (pathname.startsWith('/quiz')) return '/quiz';
+  if (pathname.startsWith('/kundali/')) return path as Href;
+  if (pathname.startsWith('/kundali')) return '/kundali';
   // A specific hero (Home's dharmVeer.href, or a shared/deep link) — routes
   // to the dynamic detail screen at app/dharm-veer/[id].tsx, which fetches
   // the same canonical roster the id was drawn from and renders that exact

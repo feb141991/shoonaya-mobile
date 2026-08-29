@@ -23,6 +23,17 @@ import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
 import { RouteTransition } from '@/components/ui/Motion';
+import { ContextualStartupScene } from '@/components/startup/ContextualStartupScene';
+import { selectStartupScene } from '@/lib/startup-scenes/selector';
+import {
+  getStartupPreferences,
+  getDefaultStartupPreferences,
+  clearDeviceStartupPreferences,
+  isStartupPreferenceIdentityCurrent,
+  setStartupPreferenceIdentity,
+} from '@/lib/startup-scenes/preferences';
+import { StartupLifecycleController } from '@/lib/startup-scenes/lifecycle';
+import type { AppLanguage, StartupPreferences, StartupScene } from '@/lib/startup-scenes/types';
 import { trackScreenView } from '@/lib/analytics';
 import { setApiAccessTokenFromSession } from '@/lib/api';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
@@ -33,6 +44,7 @@ import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
+import { Animated, StyleSheet } from 'react-native';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -72,6 +84,75 @@ function RootLayout() {
   const readyToRender = appIsReady && authReady;
   const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined;
 
+  // ── Contextual Startup Scene Orchestration ────────────────────────────
+  const [startupPrefs, setStartupPrefs] = useState<StartupPreferences>(() => getDefaultStartupPreferences());
+  const [selectedScene, setSelectedScene] = useState<StartupScene>(() => selectStartupScene());
+  const [showStartupScene, setShowStartupScene] = useState(false);
+  const startupSceneOpacity = useRef(new Animated.Value(1)).current;
+  const startupLifecycleRef = useRef<StartupLifecycleController | null>(null);
+
+  const applyStartupPreferences = useCallback((prefs: StartupPreferences) => {
+    setStartupPrefs(prefs);
+    setSelectedScene(selectStartupScene({
+      tradition: prefs.tradition,
+      timezone: prefs.timezone,
+    }));
+  }, []);
+
+  // Load identity-safe startup preferences (device or user-specific)
+  useEffect(() => {
+    let mounted = true;
+    const loadIdentitySafePrefs = async () => {
+      try {
+        const prefs = await getStartupPreferences(null);
+        if (mounted) {
+          applyStartupPreferences(prefs);
+        }
+      } catch {
+        // Fallback safely to neutral
+      }
+    };
+    void loadIdentitySafePrefs();
+    return () => {
+      mounted = false;
+    };
+  }, [applyStartupPreferences]);
+
+  useEffect(() => {
+    const controller = new StartupLifecycleController({
+      showScene: () => setShowStartupScene(true),
+      hideNativeSplash: () => {
+        SplashScreen.hideAsync().catch(() => {});
+      },
+      crossfadeScene: (onComplete) => {
+        Animated.timing(startupSceneOpacity, {
+          toValue: 0,
+          duration: 350,
+          useNativeDriver: true,
+        }).start(onComplete);
+      },
+      hideScene: () => setShowStartupScene(false),
+    });
+    startupLifecycleRef.current = controller;
+    controller.start(readyToRender);
+
+    return () => {
+      controller.dispose();
+      if (startupLifecycleRef.current === controller) {
+        startupLifecycleRef.current = null;
+      }
+    };
+    // The controller owns the complete launch lifecycle and must be created once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startupSceneOpacity]);
+
+  useEffect(() => {
+    startupLifecycleRef.current?.updateReady(readyToRender);
+    if (readyToRender) {
+      markInteractive();
+    }
+  }, [readyToRender, markInteractive]);
+
   // routeForSession only actually needs to know the CURRENT segments at the
   // moment it's called (cold start, or a real auth-state event) — it
   // doesn't need to be recreated every time the user navigates. Closing
@@ -97,6 +178,11 @@ function RootLayout() {
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
+        // Invalidate preference writes synchronously before any asynchronous
+        // logout cleanup, then await removal so an old Home response cannot
+        // restore the previous account's tradition after sign-out.
+        setStartupPreferenceIdentity(null);
+        await clearDeviceStartupPreferences();
         // Unbind this device's push token whenever there is no
         // authenticated session — covers explicit sign-out (all 3 call
         // sites: settings.tsx x2, profile.tsx) plus any future one, since
@@ -120,6 +206,14 @@ function RootLayout() {
           router.replace('/(auth)/login');
         }
         return;
+      }
+
+      const preferenceGeneration = setStartupPreferenceIdentity(session.user.id);
+      const authenticatedStartupPrefs = await getStartupPreferences(session.user.id);
+      if (
+        isStartupPreferenceIdentityCurrent(session.user.id, preferenceGeneration)
+      ) {
+        applyStartupPreferences(authenticatedStartupPrefs);
       }
 
       // Real sign-in should clear guest mode after session is established.
@@ -204,7 +298,7 @@ function RootLayout() {
         router.replace('/(tabs)');
       }
     },
-    [router]
+    [applyStartupPreferences, router]
   );
 
   // ── Keep Supabase session refresh alive across backgrounding ─────────
@@ -339,22 +433,7 @@ function RootLayout() {
     };
   }, [fontsLoaded, fontError, routeForSession]);
 
-  // ── Hide Splash Screen when Ready ────────────────────────────────
-  useEffect(() => {
-    if (readyToRender) {
-      SplashScreen.hideAsync().catch(() => {});
-      // Marks Time to Interactive for EAS Observe — this is the moment
-      // fonts are loaded, the initial auth/onboarding route decision has
-      // been made, and the splash screen is gone, i.e. the app is
-      // genuinely usable, not just mounted. Root layout is the one place
-      // every cold start and every deep link passes through, so this
-      // single call covers every entry point (the per-route TTI/TTR
-      // metrics still come from the expo-router integration itself).
-      markInteractive();
-    }
-  }, [readyToRender, markInteractive]);
-
-  if (!readyToRender) {
+  if (!readyToRender && !showStartupScene) {
     return null;
   }
 
@@ -366,6 +445,22 @@ function RootLayout() {
           <Slot />
         </RouteTransition>
         {showBottomNav ? <CollapsibleBottomNav /> : null}
+        {showStartupScene ? (
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { opacity: startupSceneOpacity, zIndex: 9999 },
+            ]}
+            pointerEvents="none"
+          >
+            <ContextualStartupScene
+              scene={selectedScene}
+              tradition={startupPrefs.tradition}
+              timezone={startupPrefs.timezone}
+              language={startupPrefs.language}
+            />
+          </Animated.View>
+        ) : null}
       </View>
     </AppProviders>
   );

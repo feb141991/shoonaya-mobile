@@ -283,7 +283,12 @@ export default function KundaliScreen() {
                 </Text>
               )}
               <View style={{ height: 1, backgroundColor: theme.premiumBorder }} />
-              <PressableSurface style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingRight: 12 }} onPress={() => Alert.alert('Coming Soon', 'Chart visualization will be shipped in Phase 2!')}>
+              <PressableSurface
+                style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingRight: 12 }}
+                onPress={() => router.push(`/kundali/${p.id}` as any)}
+                haptic="selection"
+                accessibilityLabel={`View Chart for ${p.label || p.full_name || 'Profile'}`}
+              >
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>View Chart →</Text>
               </PressableSurface>
             </Card>

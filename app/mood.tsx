@@ -599,14 +599,14 @@ export default function MoodScreen() {
                   styles.moodCard,
                   {
                     width: moodCardWidth,
-                    backgroundColor: theme.glass,
-                    borderColor: `${mood.colour}30`,
+                    backgroundColor: isDark ? 'rgba(255, 248, 225, 0.05)' : COLORS.homeRaisedLight,
+                    borderColor: isDark ? `${mood.colour}30` : COLORS.homeBorderSoftLight,
                     boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                   },
                 ]}
                 onPress={() => handleMoodSelect(mood)}
               >
-                <View pointerEvents="none" style={[styles.moodGlow, { backgroundColor: mood.bg }]} />
+                <View pointerEvents="none" style={[styles.moodGlow, { backgroundColor: isDark ? mood.bg : 'rgba(216,138,28,0.10)' }]} />
                 <Animated.View
                   pointerEvents="none"
                   style={[
@@ -645,7 +645,13 @@ export default function MoodScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Open ${chip.label}`}
                     onPress={() => router.push(resolveNativeRoute(chip.href, '/(tabs)'))}
-                    style={[styles.quickChip, { backgroundColor: theme.brandSoft, borderColor: theme.border }]}
+                    style={[
+                      styles.quickChip,
+                      {
+                        backgroundColor: isDark ? theme.brandSoft : 'rgba(216,138,28,0.12)',
+                        borderColor: isDark ? theme.border : COLORS.homeBorderSoftLight,
+                      },
+                    ]}
                   >
                     <Text style={[styles.quickChipText, { color: theme.brand }]}>{chip.label}</Text>
                   </Pressable>
@@ -663,8 +669,8 @@ export default function MoodScreen() {
                     style={[
                       styles.featureCard,
                       {
-                        backgroundColor: theme.card,
-                        borderColor: theme.border,
+                        backgroundColor: isDark ? COLORS.cardBgDark : COLORS.homeRaisedLight,
+                        borderColor: isDark ? theme.border : COLORS.homeBorderSoftLight,
                         boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                       },
                     ]}
@@ -770,8 +776,8 @@ export default function MoodScreen() {
                         styles.moodCard,
                         {
                           width: moodCardWidth,
-                          backgroundColor: theme.glass,
-                          borderColor: theme.border,
+                          backgroundColor: isDark ? 'rgba(255, 248, 225, 0.05)' : COLORS.homeRaisedLight,
+                          borderColor: isDark ? theme.border : COLORS.homeBorderSoftLight,
                           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                         },
                       ]}

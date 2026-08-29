@@ -193,7 +193,7 @@ export default function RashiphalaScreen() {
     >
       <View style={{ paddingTop: 14 }}>
         {/* Horizontal Rashi Selector */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 9, paddingHorizontal: 16, paddingBottom: 14 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingBottom: 14 }}>
           {RASHI_LIST.map((rashi) => {
             const isSelected = selectedRashi === rashi.key;
             return (
@@ -201,11 +201,14 @@ export default function RashiphalaScreen() {
                 key={rashi.key}
                 onPress={() => setSelectedRashi(rashi.key)}
                 haptic="selection"
+                accessibilityLabel={`${rashi.sa} (${rashi.en})`}
                 style={{
-                  width: 76,
+                  width: 84,
+                  minHeight: 90,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  paddingVertical: 10,
+                  paddingVertical: 12,
+                  paddingHorizontal: 6,
                   borderRadius: 16,
                   borderWidth: 1,
                   backgroundColor: isSelected
@@ -215,9 +218,9 @@ export default function RashiphalaScreen() {
                   boxShadow: isSelected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
                 }}
               >
-                <Text style={{ fontSize: 24 }}>{rashi.symbol}</Text>
-                <Text style={{ marginTop: 7, color: theme.brandStrong, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{rashi.sa}</Text>
-                <Text style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5 }}>{rashi.en}</Text>
+                <Text style={{ fontSize: 24, lineHeight: 28, textAlign: 'center' }}>{rashi.symbol}</Text>
+                <Text numberOfLines={1} style={{ marginTop: 4, color: theme.brandStrong, fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, textAlign: 'center' }}>{rashi.sa}</Text>
+                <Text numberOfLines={1} style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, lineHeight: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>{rashi.en}</Text>
               </PressableSurface>
             );
           })}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   Text,
   TextInput,
   useColorScheme,
@@ -575,27 +576,46 @@ ${moralText}` : '';
             </Text>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {(['gratitude', 'devotion', 'peace', 'courage'] as const).map((option) => {
-                const active = mood === option;
+              {[
+                { key: 'gratitude', label: 'Gratitude', emoji: '✨' },
+                { key: 'devotion', label: 'Devotion', emoji: '🙏' },
+                { key: 'peace', label: 'Peace', emoji: '🕊️' },
+                { key: 'courage', label: 'Courage', emoji: '🦁' },
+              ].map((option) => {
+                const active = mood === option.key;
                 return (
-                  <PressableSurface
-                    key={option}
-                    haptic="selection"
-                    onPress={() => setMood(option)}
+                  <Pressable
+                    key={option.key}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.label}
+                    onPress={() => setMood(option.key as typeof mood)}
                     style={{
                       borderRadius: 999,
-                      paddingHorizontal: 14,
-                      paddingVertical: 8,
+                      paddingHorizontal: 16,
+                      paddingVertical: 10,
                       borderWidth: 1,
-                      borderColor: active ? brand : border,
-                      backgroundColor: active ? brand : cardBg,
-                      minHeight: 0
+                      borderColor: active ? brand : isDark ? border : COLORS.homeBorderSoftLight,
+                      backgroundColor: active
+                        ? brand
+                        : isDark ? COLORS.cardBgDark : COLORS.homeRaisedLight,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
                     }}
                   >
-                    <Text style={{ color: active ? COLORS.ink : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                      {option}
+                    <Text style={{ fontSize: 13 }}>{option.emoji}</Text>
+                    <Text
+                      style={{
+                        color: active
+                          ? (isDark ? COLORS.textOnBrandDark : COLORS.textOnBrandLight)
+                          : text,
+                        fontFamily: FONTS.sansSemiBold,
+                        fontSize: 13,
+                      }}
+                    >
+                      {option.label}
                     </Text>
-                  </PressableSurface>
+                  </Pressable>
                 );
               })}
             </View>
