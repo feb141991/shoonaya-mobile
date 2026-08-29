@@ -24,11 +24,15 @@ import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
  */
 
 const isExpoGo = Constants.appOwnership === 'expo';
-const skipsRemotePushRegistration = __DEV__ && Platform.OS === 'ios';
 type NotificationsModule = typeof import('expo-notifications');
-const Notifications: NotificationsModule | null = isExpoGo || skipsRemotePushRegistration
-  ? null
-  : require('expo-notifications');
+let Notifications: NotificationsModule | null = null;
+if (!isExpoGo) {
+  try {
+    Notifications = require('expo-notifications');
+  } catch {
+    Notifications = null;
+  }
+}
 
 // Real `data.type` values the web repo's push senders actually use —
 // confirmed by a full-repo grep of src/lib/push-server.ts call sites
@@ -135,14 +139,15 @@ function hasNotificationPermission(permission: NotificationPermissionsStatus) {
  * dialog, so this never nags.
  */
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (!Notifications) return false;
+  if (!Notifications) return true;
   try {
     const existing = await Notifications.getPermissionsAsync();
     if (hasNotificationPermission(existing)) return true;
     const requested = await Notifications.requestPermissionsAsync();
-    return hasNotificationPermission(requested);
+    if (hasNotificationPermission(requested)) return true;
+    return __DEV__ && !Constants.isDevice;
   } catch {
-    return false;
+    return __DEV__ && !Constants.isDevice;
   }
 }
 
@@ -150,12 +155,13 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * Reads the current OS notification permission status without showing any prompt.
  */
 export async function checkNotificationPermission(): Promise<boolean> {
-  if (!Notifications) return false;
+  if (!Notifications) return true;
   try {
     const existing = await Notifications.getPermissionsAsync();
-    return hasNotificationPermission(existing);
+    if (hasNotificationPermission(existing)) return true;
+    return __DEV__ && !Constants.isDevice;
   } catch {
-    return false;
+    return __DEV__ && !Constants.isDevice;
   }
 }
 
@@ -170,6 +176,8 @@ export async function checkNotificationPermission(): Promise<boolean> {
  */
 export async function registerPushToken(userId: string) {
   if (!Notifications || !userId) return;
+  // iOS Simulator cannot register for remote APNs tokens
+  if (Platform.OS === 'ios' && !Constants.isDevice) return;
 
   try {
     const existing = await Notifications.getPermissionsAsync();
