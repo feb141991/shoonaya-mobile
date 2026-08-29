@@ -1260,34 +1260,35 @@ function HomeContent() {
               hitSlop={8}
               style={({ pressed }) => ({
                 borderRadius: RADII.pill,
-                paddingHorizontal: 12,
-                paddingVertical: 5,
+                paddingHorizontal: 13,
+                paddingVertical: 6,
+                minHeight: 32,
                 alignSelf: 'center',
-                flexShrink: 1,
-                maxWidth: '100%',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexDirection: 'row',
                 gap: 6,
-                backgroundColor: COLORS.homePwaPillBg,
-                borderWidth: 0,
-                opacity: pressed ? 0.8 : 1,
+                backgroundColor: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,250,240,0.88)',
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(197,160,89,0.28)',
+                opacity: pressed ? 0.82 : 1,
               })}
             >
               {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
                 <>
                   <MoodGlyph
                     mood={moodStatus.lastMood}
-                    color={COLORS.homePwaPillText}
-                    size={12}
+                    color={isDark ? 'rgba(255,245,225,0.95)' : COLORS.ink}
+                    size={13}
                   />
                   <Text
                     numberOfLines={1}
                     style={{
                       ...TYPE.chip,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      color: COLORS.homePwaPillText,
+                      fontSize: 11.5,
+                      fontFamily: FONTS.sansSemiBold,
+                      lineHeight: 15,
+                      color: isDark ? 'rgba(255,245,225,0.95)' : COLORS.ink,
                     }}
                   >
                     Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
@@ -1295,14 +1296,15 @@ function HomeContent() {
                 </>
               ) : (
                 <>
-                  <Text style={{ fontSize: 11, lineHeight: 14 }}>✨</Text>
+                  <Text style={{ fontSize: 12, lineHeight: 14 }}>✨</Text>
                   <Text
                     numberOfLines={1}
                     style={{
                       ...TYPE.chip,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      color: COLORS.homePwaPillText,
+                      fontSize: 11.5,
+                      fontFamily: FONTS.sansSemiBold,
+                      lineHeight: 15,
+                      color: isDark ? 'rgba(255,245,225,0.95)' : COLORS.ink,
                     }}
                   >
                     How are you feeling?
