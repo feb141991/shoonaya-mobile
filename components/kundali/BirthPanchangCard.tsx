@@ -2,8 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { Card } from '@/components/ui/Card';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
-import { BirthPanchangSnapshot } from '@/lib/kundali-contract';
+import { COLORS, FONTS, RADII, TYPE, themeColor } from '@/lib/constants';
+import { BirthPanchangSnapshot, isValidBirthPanchangSnapshot } from '@/lib/kundali-contract';
 import { AppLanguage, normalizeContentLanguage } from '@/lib/language-runtime';
 
 interface BirthPanchangCardProps {
@@ -12,6 +12,19 @@ interface BirthPanchangCardProps {
   timeUnknown?: boolean;
   language?: AppLanguage;
 }
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Canonical Nomenclature & Localization Policy:
+ * 
+ * - Panchanga limb names (e.g. "Shukla Pratipada", "Ashwini", "Vishkambha", "Bava")
+ *   are canonical astronomical/Sanskrit terms preserved identically across
+ *   astronomical software to prevent ambiguity or corrupted liturgical lookups.
+ * - All structural titles, descriptions, transitions, limb identifiers (Tithi,
+ *   Vara, Nakshatra, Yoga, Karana), and weekday equivalents are fully localized
+ *   for English (en), Hindi (hi), and Punjabi (pa).
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 
 const LABELS: Record<AppLanguage, {
   title: string;
@@ -110,7 +123,8 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
   const langKey = normalizeContentLanguage(language);
   const t = LABELS[langKey] ?? LABELS.en;
 
-  if (!snapshot || timeUnknown) {
+  // Defensive fail-closed check: require valid snapshot shape
+  if (!snapshot || timeUnknown || !isValidBirthPanchangSnapshot(snapshot)) {
     return (
       <Card
         tone="auto"
@@ -154,15 +168,15 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
           style={[
             styles.precisionBadge,
             {
-              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(220, 252, 231, 1)',
-              borderColor: isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.6)',
+              backgroundColor: COLORS.successBg,
+              borderColor: COLORS.successBorder,
             },
           ]}
         >
           <Text
             style={[
               styles.precisionText,
-              { color: isDark ? '#34D399' : '#047857' },
+              { color: COLORS.success },
             ]}
           >
             {t.precision}
@@ -177,7 +191,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
       {/* 5 Panchang Limbs Grid */}
       <View style={styles.limbsGrid}>
         {/* 1. Tithi */}
-        <View style={[styles.limbItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: theme.border }]}>
+        <View style={[styles.limbItem, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
           <Text style={[styles.limbKey, { color: theme.dim }]}>{t.tithi}</Text>
           <Text style={[styles.limbVal, { color: theme.text }]}>{snapshot.tithi.name}</Text>
           <View style={styles.pakshaRow}>
@@ -195,14 +209,14 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
         </View>
 
         {/* 2. Vara */}
-        <View style={[styles.limbItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: theme.border }]}>
+        <View style={[styles.limbItem, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
           <Text style={[styles.limbKey, { color: theme.dim }]}>{t.vara}</Text>
           <Text style={[styles.limbVal, { color: theme.text }]}>{snapshot.vara.name}</Text>
           <Text style={[styles.limbSub, { color: theme.dim }]}>{varaDisplay}</Text>
         </View>
 
         {/* 3. Nakshatra */}
-        <View style={[styles.limbItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: theme.border }]}>
+        <View style={[styles.limbItem, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
           <Text style={[styles.limbKey, { color: theme.dim }]}>{t.nakshatra}</Text>
           <Text style={[styles.limbVal, { color: theme.brandStrong }]}>{snapshot.nakshatra.name}</Text>
           <Text style={[styles.limbSub, { color: theme.dim }]}>
@@ -216,7 +230,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
         </View>
 
         {/* 4. Yoga */}
-        <View style={[styles.limbItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: theme.border }]}>
+        <View style={[styles.limbItem, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
           <Text style={[styles.limbKey, { color: theme.dim }]}>{t.yoga}</Text>
           <Text style={[styles.limbVal, { color: theme.text }]}>{snapshot.yoga.name}</Text>
           <Text style={[styles.limbSub, { color: theme.dim }]}>#{snapshot.yoga.index + 1} / 27</Text>
@@ -228,7 +242,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
         </View>
 
         {/* 5. Karana */}
-        <View style={[styles.limbItem, { width: '100%', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: theme.border }]}>
+        <View style={[styles.limbItem, { width: '100%', backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
           <Text style={[styles.limbKey, { color: theme.dim }]}>{t.karana}</Text>
           <Text style={[styles.limbVal, { color: theme.text }]}>{snapshot.karana.name}</Text>
           <Text style={[styles.limbSub, { color: theme.dim }]}>
@@ -255,7 +269,7 @@ export function BirthPanchangCard({ snapshot, isDark, timeUnknown, language }: B
 const styles = StyleSheet.create({
   card: {
     padding: 16,
-    borderRadius: 20,
+    borderRadius: RADII.lg,
     borderWidth: 1,
     gap: 12,
   },
@@ -287,7 +301,7 @@ const styles = StyleSheet.create({
   precisionBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: RADII.xs,
     borderWidth: 1,
   },
   precisionText: {
@@ -304,7 +318,7 @@ const styles = StyleSheet.create({
   limbItem: {
     width: '48%',
     padding: 12,
-    borderRadius: 14,
+    borderRadius: RADII.sm,
     borderWidth: 1,
     gap: 4,
   },
@@ -335,7 +349,7 @@ const styles = StyleSheet.create({
   pakshaBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: RADII.xs,
   },
   pakshaText: {
     ...TYPE.caption,

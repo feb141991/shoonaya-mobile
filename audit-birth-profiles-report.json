@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-08-29T13:49:30.670Z",
+  "totalBirthProfiles": 4,
+  "schemaVersionDistribution": {
+    "2": 4
+  },
+  "timeUnknownDistribution": {
+    "known": 2,
+    "unknown": 2,
+    "invalidOrMissing": 0
+  },
+  "syntheticIndicatorCount": 4,
+  "denormalizedMismatchCounts": {
+    "rashi": 0,
+    "sun_rashi": 0,
+    "nakshatra": 0,
+    "nakshatra_pada": 2,
+    "lagna": 2,
+    "lagna_deg": 4,
+    "ayanamsa": 2,
+    "totalRowsWithAnyMismatch": 4
+  },
+  "storedSummaryDisagreesWithChartCount": 4,
+  "hasDiscrepancies": true
+}

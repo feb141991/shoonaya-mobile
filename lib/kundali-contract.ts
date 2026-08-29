@@ -204,6 +204,18 @@ export const RASHI_NAMES_SA = [
   'Dhanu', 'Makara', 'Kumbha', 'Meena',
 ];
 
+const MAX_LIMB_TRANSITION_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours maximum physical transition window
+
+export const CANONICAL_VARA_NAMES = [
+  'Ravivara',
+  'Somavara',
+  'Mangalavara',
+  'Budhavara',
+  'Guruvara',
+  'Shukravara',
+  'Shanivara',
+] as const;
+
 /**
  * Validates a GrahaPosition object defensively.
  */
@@ -222,21 +234,50 @@ export function isValidGrahaPosition(obj: any): obj is GrahaPosition {
   );
 }
 
+function isValidIsoInstant(val: any): boolean {
+  if (typeof val !== 'string' || !val) return false;
+  const ms = Date.parse(val);
+  return !isNaN(ms) && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val);
+}
+
+function isValidTransitionBoundary(endsAtUtc: string | null, instantUtcMs: number): boolean {
+  if (endsAtUtc === null) return true;
+  if (!isValidIsoInstant(endsAtUtc)) return false;
+  const endsMs = Date.parse(endsAtUtc);
+  // Must be strictly after birth instant
+  if (endsMs <= instantUtcMs) return false;
+  // Must not exceed plausible physical transition bound (48h)
+  if (endsMs - instantUtcMs > MAX_LIMB_TRANSITION_WINDOW_MS) return false;
+  return true;
+}
+
 /**
  * Validates a BirthPanchangSnapshot structure defensively.
  */
 export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnapshot {
   if (!obj || typeof obj !== 'object') return false;
 
-  // Timestamps and strings
-  if (typeof obj.instantUtc !== 'string' || typeof obj.timezone !== 'string') return false;
+  // 1. Instant and Local Time Syntax
+  if (!isValidIsoInstant(obj.instantUtc)) return false;
+  if (typeof obj.localDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(obj.localDate)) return false;
+  if (typeof obj.localTime !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(obj.localTime)) return false;
+  if (typeof obj.timezone !== 'string' || obj.timezone.trim().length < 3) return false;
 
-  // Vara (0-6)
-  if (!obj.vara || typeof obj.vara.index !== 'number' || obj.vara.index < 0 || obj.vara.index > 6 || typeof obj.vara.name !== 'string') {
+  const instantUtcMs = Date.parse(obj.instantUtc);
+
+  // 2. Vara (0-6)
+  if (
+    !obj.vara ||
+    typeof obj.vara.index !== 'number' ||
+    obj.vara.index < 0 ||
+    obj.vara.index > 6 ||
+    typeof obj.vara.name !== 'string' ||
+    !CANONICAL_VARA_NAMES.includes(obj.vara.name as any)
+  ) {
     return false;
   }
 
-  // Tithi (1-30)
+  // 3. Tithi (1-30) & Paksha matching
   if (
     !obj.tithi ||
     typeof obj.tithi.index !== 'number' ||
@@ -244,12 +285,14 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
     obj.tithi.index > 30 ||
     typeof obj.tithi.name !== 'string' ||
     (obj.tithi.paksha !== 'Shukla' && obj.tithi.paksha !== 'Krishna') ||
-    (obj.tithi.endsAtUtc !== null && typeof obj.tithi.endsAtUtc !== 'string')
+    (obj.tithi.index <= 15 && obj.tithi.paksha !== 'Shukla') ||
+    (obj.tithi.index > 15 && obj.tithi.paksha !== 'Krishna') ||
+    !isValidTransitionBoundary(obj.tithi.endsAtUtc, instantUtcMs)
   ) {
     return false;
   }
 
-  // Nakshatra (0-26)
+  // 4. Nakshatra (0-26) & Pada (1-4)
   if (
     !obj.nakshatra ||
     typeof obj.nakshatra.index !== 'number' ||
@@ -257,36 +300,36 @@ export function isValidBirthPanchangSnapshot(obj: any): obj is BirthPanchangSnap
     obj.nakshatra.index > 26 ||
     typeof obj.nakshatra.name !== 'string' ||
     (obj.nakshatra.pada !== null && (typeof obj.nakshatra.pada !== 'number' || obj.nakshatra.pada < 1 || obj.nakshatra.pada > 4)) ||
-    (obj.nakshatra.endsAtUtc !== null && typeof obj.nakshatra.endsAtUtc !== 'string')
+    !isValidTransitionBoundary(obj.nakshatra.endsAtUtc, instantUtcMs)
   ) {
     return false;
   }
 
-  // Yoga (0-26)
+  // 5. Yoga (0-26)
   if (
     !obj.yoga ||
     typeof obj.yoga.index !== 'number' ||
     obj.yoga.index < 0 ||
     obj.yoga.index > 26 ||
     typeof obj.yoga.name !== 'string' ||
-    (obj.yoga.endsAtUtc !== null && typeof obj.yoga.endsAtUtc !== 'string')
+    !isValidTransitionBoundary(obj.yoga.endsAtUtc, instantUtcMs)
   ) {
     return false;
   }
 
-  // Karana (1-60)
+  // 6. Karana (1-60)
   if (
     !obj.karana ||
     typeof obj.karana.index !== 'number' ||
     obj.karana.index < 1 ||
     obj.karana.index > 60 ||
     typeof obj.karana.name !== 'string' ||
-    (obj.karana.endsAtUtc !== null && typeof obj.karana.endsAtUtc !== 'string')
+    !isValidTransitionBoundary(obj.karana.endsAtUtc, instantUtcMs)
   ) {
     return false;
   }
 
-  // Calculation metadata
+  // 7. Calculation metadata
   if (!obj.calculation || typeof obj.calculation.engineVersion !== 'string' || obj.calculation.ayanamsa !== 'lahiri') {
     return false;
   }
@@ -306,10 +349,13 @@ export function isValidAstroChart(chart: any): chart is AstroChart {
     return false;
   }
 
-  const timeUnknown = Boolean(chart.timeUnknown);
+  // timeUnknown must strictly be a boolean
+  if (typeof chart.timeUnknown !== 'boolean') {
+    return false;
+  }
 
   // If time is known: lagna and birthPanchang are mandatory
-  if (!timeUnknown) {
+  if (!chart.timeUnknown) {
     if (!isValidGrahaPosition(chart.lagna)) {
       return false;
     }
@@ -317,8 +363,8 @@ export function isValidAstroChart(chart: any): chart is AstroChart {
       return false;
     }
   } else {
-    // If time is unknown: birthPanchang must strictly be null
-    if (chart.birthPanchang !== null && chart.birthPanchang !== undefined) {
+    // If time is unknown: birthPanchang must strictly be null (undefined is invalid)
+    if (chart.birthPanchang !== null) {
       return false;
     }
   }
@@ -346,6 +392,60 @@ export function isValidAstroChart(chart: any): chart is AstroChart {
   }
 
   return true;
+}
+
+export interface DenormalizedBirthProfileSummary {
+  rashi: string | null;
+  sun_rashi: string | null;
+  nakshatra: string | null;
+  nakshatra_pada: number | null;
+  nakshatra_lord: string | null;
+  lagna: string | null;
+  lagna_deg: number | null;
+  ayanamsa: number | null;
+  current_dasha_planet: string | null;
+  current_dasha_end_date: string | null;
+  next_dasha_planet: string | null;
+}
+
+/**
+ * Pure mapper deriving all denormalized birth profile summary columns
+ * exclusively and deterministically from a validated AstroChart.
+ */
+export function deriveDenormalizedBirthProfileFields(chart: AstroChart): DenormalizedBirthProfileSummary {
+  const currentDasha = chart.dasha?.current ?? null;
+  let nextDashaPlanet: string | null = null;
+
+  if (chart.dasha?.timeline && Array.isArray(chart.dasha.timeline)) {
+    const currentIndex = currentDasha
+      ? chart.dasha.timeline.findIndex(
+          (d) => d.planet === currentDasha.planet && d.startDate === currentDasha.startDate
+        )
+      : -1;
+
+    if (currentIndex >= 0 && currentIndex + 1 < chart.dasha.timeline.length) {
+      nextDashaPlanet = chart.dasha.timeline[currentIndex + 1].planet;
+    } else if (currentDasha?.endDate) {
+      const found = chart.dasha.timeline.find(
+        (d) => d.startDate >= currentDasha.endDate && d.planet !== currentDasha.planet
+      );
+      nextDashaPlanet = found?.planet ?? null;
+    }
+  }
+
+  return {
+    rashi: chart.planets?.['Chandra']?.rashiName ?? null,
+    sun_rashi: chart.planets?.['Surya']?.rashiName ?? null,
+    nakshatra: chart.nakshatra?.name ?? null,
+    nakshatra_pada: chart.nakshatra?.pada ?? null,
+    nakshatra_lord: chart.nakshatra?.lord ?? null,
+    lagna: chart.timeUnknown ? null : (chart.lagna?.rashiName ?? null),
+    lagna_deg: chart.timeUnknown ? null : (chart.lagna?.degreeInRashi != null ? Number(chart.lagna.degreeInRashi.toFixed(2)) : null),
+    ayanamsa: chart.ayanamsa != null ? Number(chart.ayanamsa.toFixed(2)) : null,
+    current_dasha_planet: currentDasha?.planet ?? null,
+    current_dasha_end_date: currentDasha?.endDate ?? null,
+    next_dasha_planet: nextDashaPlanet,
+  };
 }
 
 /**
