@@ -234,7 +234,7 @@ export function HeroBackdropPicker({
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingBottom: 16 }}>
                   <PressableSurface
                     accessibilityRole="button"
-                    accessibilityLabel="Auto Default artwork"
+                    accessibilityLabel="Auto Rotate artwork daily"
                     accessibilityState={{ selected: selectedId === null }}
                     haptic="selection"
                     onPress={() => handleSelect(null)}
@@ -244,14 +244,22 @@ export function HeroBackdropPicker({
                       borderRadius: 16,
                       borderWidth: selectedId === null ? 2 : 1,
                       borderColor: selectedId === null ? theme.brand : theme.border,
-                      backgroundColor: theme.cardSoft,
+                      backgroundColor: selectedId === null
+                        ? isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight
+                        : theme.cardSoft,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 6,
+                      gap: 5,
+                      padding: 6,
                     }}
                   >
                     <Feather name="refresh-cw" size={20} color={theme.brand} />
-                    <Text style={{ ...TYPE_MICRO, color: theme.dim, textAlign: 'center' }}>Auto{'\n'}Default</Text>
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: selectedId === null ? theme.brand : theme.text, textAlign: 'center' }}>
+                      Auto Rotate
+                    </Text>
+                    <Text style={{ ...TYPE_MICRO, fontSize: 9.5, color: theme.dim, textAlign: 'center' }}>
+                      Daily Art
+                    </Text>
                   </PressableSurface>
 
                   {themes.map((item) => {

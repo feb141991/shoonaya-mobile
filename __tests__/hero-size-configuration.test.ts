@@ -200,5 +200,23 @@ describe('Configurable Home Hero Size Invariants & Bounds Suite', () => {
         assert.ok(tall.width === 430);
       }
     });
+
+    it('10. Auto-rotation deterministically resolves themes across traditions', () => {
+      const { resolveAutoRotatedHeroTheme } = require('../lib/heroPreference');
+      const hinduToday = resolveAutoRotatedHeroTheme('hindu', new Date('2026-08-29'));
+      const sikhToday = resolveAutoRotatedHeroTheme('sikh', new Date('2026-08-29'));
+      const jainToday = resolveAutoRotatedHeroTheme('jain', new Date('2026-08-29'));
+      const buddhistToday = resolveAutoRotatedHeroTheme('buddhist', new Date('2026-08-29'));
+
+      assert.ok(hinduToday && hinduToday.heroImage.includes('hindu'));
+      assert.ok(sikhToday && sikhToday.heroImage.includes('sikh'));
+      assert.ok(jainToday && jainToday.heroImage.includes('jain'));
+      assert.ok(buddhistToday && buddhistToday.heroImage.includes('buddhist'));
+
+      // Rotates on subsequent days
+      const day1 = resolveAutoRotatedHeroTheme('jain', new Date('2026-01-01'));
+      const day2 = resolveAutoRotatedHeroTheme('jain', new Date('2026-01-02'));
+      assert.notEqual(day1?.id, day2?.id);
+    });
   });
 });

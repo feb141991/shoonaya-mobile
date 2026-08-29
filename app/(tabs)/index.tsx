@@ -60,7 +60,7 @@ import {
 } from '@/lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
-import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, type HeroPick, type HeroSize } from '@/lib/heroPreference';
+import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -706,15 +706,32 @@ function HomeContent() {
   }, [state.panchang.observance, state.panchang.upcomingObservances]);
 
   // A device-local backdrop pick (lib/heroPreference.ts) overrides the
-  // server-resolved tradition/festival hero — same precedence PWA's own
-  // localStorage-only pick has over its auto-resolved theme.
-  const heroImageUrl = heroOverride?.imageUrl ?? resolveAssetUrl(state.hero.imageUrl);
+  // server-resolved tradition/festival hero. When "Auto Rotate" is active
+  // (heroOverride === null), deterministically auto-rotate across the tradition's
+  // sacred artworks daily.
+  const autoRotatedTheme = useMemo(
+    () => (heroOverride ? null : resolveAutoRotatedHeroTheme(state.profile.tradition)),
+    [heroOverride, state.profile.tradition]
+  );
+
+  const heroImageUrl = heroOverride?.imageUrl ?? (autoRotatedTheme ? resolveAssetUrl(autoRotatedTheme.heroImage) : resolveAssetUrl(state.hero.imageUrl));
   const heroImageSource = useMemo(() => {
+    // 1. Explicit user pick
     if (heroOverride?.id && LOCAL_HERO_ASSETS[heroOverride.id]) {
       return LOCAL_HERO_ASSETS[heroOverride.id];
     }
+    if (heroOverride?.imageUrl) {
+      return { uri: heroOverride.imageUrl };
+    }
+
+    // 2. Auto Default (Auto Rotate active): deterministically rotate based on tradition & day
+    if (autoRotatedTheme?.id && LOCAL_HERO_ASSETS[autoRotatedTheme.id]) {
+      return LOCAL_HERO_ASSETS[autoRotatedTheme.id];
+    }
+
+    // 3. Fallback to state.hero.imageUrl
     return heroImageUrl ? { uri: heroImageUrl } : null;
-  }, [heroOverride, heroImageUrl]);
+  }, [heroOverride, autoRotatedTheme, heroImageUrl]);
 
   const currentHeroConfig = HERO_SIZE_CONFIG[heroSize] ?? HERO_SIZE_CONFIG.standard;
   const heroHeight = currentHeroConfig.height;
@@ -723,8 +740,8 @@ function HomeContent() {
   // Pre-existing gap found in review: `objectPosition` (e.g. "58% 25%",
   // tuned per hero image so a face/detail stays in frame) was fetched from
   // the backend but never actually applied to the <Image> below — fixed
-  // here for both the server-resolved default and the new local override.
-  const heroObjectPosition = parseObjectPosition(heroOverride?.objectPosition ?? state.hero.objectPosition);
+  // here for the local override, auto-rotated theme, and server default.
+  const heroObjectPosition = parseObjectPosition(heroOverride?.objectPosition ?? autoRotatedTheme?.objectPosition ?? state.hero.objectPosition);
   const avatarImageUrl = resolveAssetUrl(state.profile.avatarUrl);
   const relicImageUrl = resolveAssetUrl(state.profile.relicImageUrl);
 

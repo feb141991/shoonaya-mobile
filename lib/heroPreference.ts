@@ -322,3 +322,30 @@ export async function setHeroSize(size: HeroSize): Promise<void> {
     // Best-effort
   }
 }
+
+/**
+ * Deterministically resolves an auto-rotated hero theme for the user's tradition.
+ * Rotates daily based on the day of the year so the sanctuary always feels alive
+ * and fresh every morning, while staying deterministic throughout the day.
+ */
+export function resolveAutoRotatedHeroTheme(
+  tradition: string = 'hindu',
+  date: Date = new Date()
+): { id: string; label: string; heroImage: string; objectPosition?: string } | null {
+  const normTradition = tradition.trim().toLowerCase() || 'hindu';
+  const matchingThemes = BUNDLED_HERO_THEMES.filter(
+    (t) => !t.traditions?.length || t.traditions.includes(normTradition)
+  );
+
+  if (matchingThemes.length === 0) {
+    return BUNDLED_HERO_THEMES[0] ?? null;
+  }
+
+  // Calculate day of the year (0 - 365)
+  const startOfYear = new Date(date.getFullYear(), 0, 1);
+  const diffDays = Math.floor((date.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
+  const index = Math.abs(diffDays) % matchingThemes.length;
+
+  return matchingThemes[index];
+}
+
