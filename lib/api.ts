@@ -11,8 +11,8 @@ export function setApiAccessTokenFromSession(session: Session | null) {
   cachedAccessToken = session?.access_token ?? null;
 }
 
-async function getApiAccessToken() {
-  if (cachedAccessToken !== undefined) {
+async function getApiAccessToken(): Promise<string | null> {
+  if (cachedAccessToken) {
     return cachedAccessToken;
   }
 
@@ -21,7 +21,7 @@ async function getApiAccessToken() {
   } = await supabase.auth.getSession();
 
   setApiAccessTokenFromSession(session);
-  return cachedAccessToken;
+  return session?.access_token ?? null;
 }
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
