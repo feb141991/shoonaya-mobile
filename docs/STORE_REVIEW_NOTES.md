@@ -8,8 +8,11 @@ credentials.
 Shoonaya supports a guest experience, but account-specific functionality
 requires the review account below.
 
-- Email: `[REVIEW_ACCOUNT_EMAIL]`
-- Password: `[REVIEW_ACCOUNT_PASSWORD]`
+- Sign-in method: Google (Sign in with Google) — no app-specific password
+- Email: `phonetest1491@gmail.com`
+- Password: enter the Google account password directly into the console's
+  own reviewer-notes field (App Store Connect / Play Console); never commit
+  it to this repository
 - Account state: onboarding completed, Hindu tradition selected, calendar
   profile configured, sample practice history present, no deletion pending
 
