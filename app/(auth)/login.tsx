@@ -28,6 +28,7 @@ import { GoogleIcon } from '@/components/ui/GoogleIcon';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
+import { transmitAppleAuthorizationCode } from '@/lib/appleAuthToken';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
@@ -708,6 +709,10 @@ export default function LoginScreen() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
         await waitForStoredSession(2800);
+      }
+
+      if (credential.authorizationCode) {
+        void transmitAppleAuthorizationCode(credential.authorizationCode);
       }
     } catch (error) {
       const code = getNativeErrorCode(error);
