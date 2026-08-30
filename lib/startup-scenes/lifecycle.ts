@@ -9,53 +9,53 @@ export type StartupLifecycleDependencies = {
 
 export class StartupLifecycleController {
   private readonly deps: Required<StartupLifecycleDependencies>;
-  private readonly thresholdMs: number;
-  private thresholdTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly artworkFallbackMs: number;
+  private artworkFallbackTimer: ReturnType<typeof setTimeout> | null = null;
   private sceneMounted = false;
+  private sceneReady = false;
   private ready = false;
   private disposed = false;
   private transitionStarted = false;
 
   constructor(
     deps: StartupLifecycleDependencies,
-    options: { thresholdMs?: number } = {}
+    options: { artworkFallbackMs?: number } = {}
   ) {
     this.deps = {
       ...deps,
       setTimeoutFn: deps.setTimeoutFn ?? setTimeout,
       clearTimeoutFn: deps.clearTimeoutFn ?? clearTimeout,
     };
-    this.thresholdMs = options.thresholdMs ?? 400;
+    this.artworkFallbackMs = options.artworkFallbackMs ?? 2000;
   }
 
   start(initiallyReady: boolean): void {
     this.ready = initiallyReady;
-    if (initiallyReady) {
-      this.deps.hideNativeSplash();
-      return;
-    }
+    this.sceneMounted = true;
+    this.deps.showScene();
+    this.artworkFallbackTimer = this.deps.setTimeoutFn(
+      () => this.notifySceneReady(),
+      this.artworkFallbackMs
+    );
+  }
 
-    this.thresholdTimer = this.deps.setTimeoutFn(() => {
-      this.thresholdTimer = null;
-      if (this.disposed || this.ready) return;
-      this.sceneMounted = true;
-      this.deps.showScene();
-      this.deps.hideNativeSplash();
-    }, this.thresholdMs);
+  notifySceneReady(): void {
+    if (this.disposed || this.sceneReady || !this.sceneMounted) return;
+    this.sceneReady = true;
+    this.clearArtworkFallback();
+    this.deps.hideNativeSplash();
+    this.startTransitionIfReady();
   }
 
   updateReady(ready: boolean): void {
     this.ready = ready;
-    if (!ready || this.disposed || this.transitionStarted) return;
+    this.startTransitionIfReady();
+  }
+
+  private startTransitionIfReady(): void {
+    if (!this.ready || !this.sceneReady || this.disposed || this.transitionStarted) return;
 
     this.transitionStarted = true;
-    this.clearThreshold();
-
-    if (!this.sceneMounted) {
-      this.deps.hideNativeSplash();
-      return;
-    }
-
     this.deps.crossfadeScene(() => {
       if (this.disposed) return;
       this.deps.hideScene();
@@ -64,13 +64,13 @@ export class StartupLifecycleController {
 
   dispose(): void {
     this.disposed = true;
-    this.clearThreshold();
+    this.clearArtworkFallback();
   }
 
-  private clearThreshold(): void {
-    if (this.thresholdTimer !== null) {
-      this.deps.clearTimeoutFn(this.thresholdTimer);
-      this.thresholdTimer = null;
+  private clearArtworkFallback(): void {
+    if (this.artworkFallbackTimer !== null) {
+      this.deps.clearTimeoutFn(this.artworkFallbackTimer);
+      this.artworkFallbackTimer = null;
     }
   }
 }

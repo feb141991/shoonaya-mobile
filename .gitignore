@@ -53,3 +53,7 @@ GoogleService-Info.plist
 /android
 android/
 ios/
+
+# scratch
+scratch/
+

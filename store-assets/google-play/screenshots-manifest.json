@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "capturedFrom": {
+    "platform": "android",
+    "easBuildId": "fdc6f461-51f8-42ab-a495-97656f1cf757",
+    "profile": "preview",
+    "appVersion": "1.0.0",
+    "versionCode": 21,
+    "finalSubmissionBuild": false
+  },
+  "requirements": {
+    "format": "PNG",
+    "width": 1080,
+    "height": 1920,
+    "aspectRatio": "9:16",
+    "maxBytes": 8388608
+  },
+  "screenshots": [
+    {
+      "file": "phone-screenshots/01-home.png",
+      "sha256": "eebf176975b596b6067b61cb7f7761e86fb207eb592a5f98ea85f9f975786912",
+      "bytes": 650170,
+      "surface": "Home"
+    },
+    {
+      "file": "phone-screenshots/02-japa.png",
+      "sha256": "834cc36dbab0db115725b834514f2f5e789faa64eea4dcdb62a9b41d3c09e42f",
+      "bytes": 161109,
+      "surface": "Japa"
+    },
+    {
+      "file": "phone-screenshots/03-bhakti.png",
+      "sha256": "59b0da007e79ff83a28d989662200d75caf86af6c8c1331e9135e367c5d5f3f6",
+      "bytes": 278299,
+      "surface": "Bhakti"
+    },
+    {
+      "file": "phone-screenshots/04-dharm-veer.png",
+      "sha256": "c6f708548a2d525d22991530f4eeffc7eaf7e1c44b72097c7d91c3eb324c29e5",
+      "bytes": 197704,
+      "surface": "Dharm Veer"
+    },
+    {
+      "file": "phone-screenshots/05-sacred-days.png",
+      "sha256": "86cae312392c54e18d3084692caae2bb7f3bad49fa42493ec95a7be7c542575f",
+      "bytes": 170388,
+      "surface": "Sacred Days"
+    },
+    {
+      "file": "phone-screenshots/06-panchang.png",
+      "sha256": "6109fa1df613a7b3f9a1bcd6ed7416be1e3b781e043e8dfc58f0e81beef0137d",
+      "bytes": 290626,
+      "surface": "Panchang"
+    },
+    {
+      "file": "phone-screenshots/07-rashiphala.png",
+      "sha256": "30f4ec62bf028b019bd904e5ce189932c3faf08e48aad5de3ac838a8677465a7",
+      "bytes": 652388,
+      "surface": "Rashiphala"
+    },
+    {
+      "file": "phone-screenshots/08-pathshala.png",
+      "sha256": "2bcdd9849ff80ef3c15715d851afdf9adeeb379aefb70f9ee89d5f7efdbb993c",
+      "bytes": 257122,
+      "surface": "Pathshala Explore"
+    }
+  ]
+}

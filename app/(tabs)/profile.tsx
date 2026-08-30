@@ -1292,46 +1292,6 @@ export default function ProfileScreen() {
 
         <PressableSurface
           haptic="selection"
-          accessibilityLabel={profile.kul_id ? `Invite to ${profile.kul_name ?? 'Kul'}` : 'Join your Kul'}
-          onPress={() => Alert.alert('Coming Soon', 'Kul features are coming soon.')}
-          style={{
-            minHeight: 86,
-            borderRadius: 24,
-            borderWidth: 1,
-            borderColor: theme.borderSoft,
-            backgroundColor: theme.card,
-            padding: 18,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 14,
-          }}
-        >
-          <View
-            style={{
-              width: 46,
-              height: 46,
-              borderRadius: 23,
-              backgroundColor: theme.glass,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Feather name="shield" size={20} color={theme.dim} />
-          </View>
-          <View style={{ flex: 1, gap: 3 }}>
-            <Text style={{ ...TYPE.section, color: theme.dim }}>Lineage</Text>
-            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-              {profile.kul_id ? profile.kul_name : 'Join your Kul'}
-            </Text>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>
-              {profile.kul_id ? 'Lineage & community' : 'Connect with your ancestral lineage'}
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={22} color={theme.text} />
-        </PressableSurface>
-
-        <PressableSurface
-          haptic="selection"
           accessibilityLabel={profile.city ? `Location: ${profile.city}. Tap to update.` : 'Set your location'}
           onPress={() => { void updateLocation(); }}
           style={{

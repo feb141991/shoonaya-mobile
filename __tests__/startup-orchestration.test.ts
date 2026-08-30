@@ -133,7 +133,7 @@ describe('Startup Orchestration & Identity Safety Suite (Behavioral)', () => {
     assert.ok(typeof detected === 'string' && detected.length > 0);
   });
 
-  test('6. Production controller fast-path bypasses the startup scene', async () => {
+  test('6. Fast launch still presents one continuous artwork scene', async () => {
     const events: string[] = [];
     const controller = new StartupLifecycleController({
       showScene: () => events.push('show-scene'),
@@ -145,20 +145,15 @@ describe('Startup Orchestration & Identity Safety Suite (Behavioral)', () => {
       hideScene: () => events.push('hide-scene'),
     });
     controller.start(false);
+    assert.deepEqual(events, ['show-scene']);
 
-    // App and Auth become ready in 150ms (before 400ms threshold)
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    controller.notifySceneReady();
     controller.updateReady(true);
-
-    // Wait until 500ms has elapsed
-    await new Promise((resolve) => setTimeout(resolve, 350));
-
-    // Verify Invariants:
-    assert.deepEqual(events, ['hide-splash']);
+    assert.deepEqual(events, ['show-scene', 'hide-splash', 'crossfade', 'hide-scene']);
     controller.dispose();
   });
 
-  test('7. Production controller shows a cold-launch scene and crossfades on readiness', async () => {
+  test('7. Native splash stays until artwork is decoded, then artwork crossfades on readiness', async () => {
     const events: string[] = [];
     const controller = new StartupLifecycleController({
       showScene: () => events.push('show-scene'),
@@ -170,17 +165,36 @@ describe('Startup Orchestration & Identity Safety Suite (Behavioral)', () => {
       hideScene: () => events.push('hide-scene'),
     });
     controller.start(false);
+    assert.deepEqual(events, ['show-scene']);
 
-    // At 450ms, app is still hydrating
-    await new Promise((resolve) => setTimeout(resolve, 450));
+    controller.notifySceneReady();
     assert.deepEqual(events, ['show-scene', 'hide-splash']);
 
-    // At 600ms, app and auth finish hydrating
     controller.updateReady(true);
     assert.deepEqual(events, ['show-scene', 'hide-splash', 'crossfade']);
 
     // At 1000ms (after 350ms crossfade), scene is unmounted
     await new Promise((resolve) => setTimeout(resolve, 400));
+    assert.deepEqual(events, ['show-scene', 'hide-splash', 'crossfade', 'hide-scene']);
+    controller.dispose();
+  });
+
+  test('8. Artwork fallback prevents a failed decode from trapping the native splash', async () => {
+    const events: string[] = [];
+    const controller = new StartupLifecycleController({
+      showScene: () => events.push('show-scene'),
+      hideNativeSplash: () => events.push('hide-splash'),
+      crossfadeScene: (done) => {
+        events.push('crossfade');
+        done();
+      },
+      hideScene: () => events.push('hide-scene'),
+    }, { artworkFallbackMs: 10 });
+
+    controller.start(false);
+    controller.updateReady(true);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
     assert.deepEqual(events, ['show-scene', 'hide-splash', 'crossfade', 'hide-scene']);
     controller.dispose();
   });

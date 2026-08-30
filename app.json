@@ -8,7 +8,7 @@
     "userInterfaceStyle": "automatic",
     "scheme": "shoonaya",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.shoonaya.app",
       "usesAppleSignIn": true,
       "privacyManifests": {
@@ -153,9 +153,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/splash-transparent.png",
           "resizeMode": "contain",
-          "backgroundColor": "#FDF6E3"
+          "backgroundColor": "#9B6837"
         }
       ],
       "expo-web-browser",
@@ -163,7 +163,19 @@
         "expo-image-picker",
         {
           "photosPermission": "Shoonaya uses your photo library so you can update your profile picture.",
+          "cameraPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "locationWhenInUsePermission": "Shoonaya uses your location to calculate local Panchang timings and find sacred places nearby.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
         }
       ],
       "expo-sharing",

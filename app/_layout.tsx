@@ -439,7 +439,7 @@ function RootLayout() {
 
   return (
     <AppProviders>
-      <StatusBar style="dark" />
+      <StatusBar style={showStartupScene ? "light" : "dark"} />
       <View style={{ flex: 1 }}>
         <RouteTransition>
           <Slot />
@@ -458,6 +458,7 @@ function RootLayout() {
               tradition={startupPrefs.tradition}
               timezone={startupPrefs.timezone}
               language={startupPrefs.language}
+              onArtworkReady={() => startupLifecycleRef.current?.notifySceneReady()}
             />
           </Animated.View>
         ) : null}

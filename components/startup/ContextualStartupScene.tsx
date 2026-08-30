@@ -21,6 +21,7 @@ interface ContextualStartupSceneProps {
   timezone?: string | null;
   language?: AppLanguage;
   now?: Date;
+  onArtworkReady?: () => void;
 }
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -42,6 +43,7 @@ export const ContextualStartupScene: React.FC<ContextualStartupSceneProps> = ({
   timezone,
   language = 'en',
   now = new Date(),
+  onArtworkReady,
 }) => {
   const insets = useSafeAreaInsets();
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -127,6 +129,8 @@ export const ContextualStartupScene: React.FC<ContextualStartupSceneProps> = ({
       {/* 1. Edge-to-Edge Local Artwork with Focal Point Framing */}
       <Image
         source={scene.source}
+        onLoad={onArtworkReady}
+        onError={onArtworkReady}
         style={[
           StyleSheet.absoluteFill,
           {
