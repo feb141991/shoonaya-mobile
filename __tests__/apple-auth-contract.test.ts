@@ -1,11 +1,26 @@
+/**
+ * Sign in with Apple — Authorization Code Custody Contract (Native).
+ *
+ * P1 audit fix: expanded from 4 → 8 tests.
+ * New cases cover:
+ *  5. 401 backend response → 'http_error' (session not established)
+ *  6. 503 backend response → 'http_error' (backend env vars absent)
+ *  7. Body never transmitted on guard-fail paths (no_code)
+ *  8. Return type is the expected literal union, not a boolean
+ */
+
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { transmitAppleAuthorizationCode, type ApiFetchLike } from '../lib/appleAuthToken';
+import {
+  transmitAppleAuthorizationCode,
+  type ApiFetchLike,
+  type AppleTransmissionResult,
+} from '../lib/appleAuthToken';
 
 describe('Sign in with Apple Authorization Code Custody Contract (Native)', () => {
   let fetchCalls: { path: string; options?: RequestInit }[] = [];
-  let mockFetchResponse: { ok: boolean; status: number; body?: any } = {
+  let mockFetchResponse: { ok: boolean; status: number; body?: unknown } = {
     ok: true,
     status: 200,
   };
@@ -15,7 +30,7 @@ describe('Sign in with Apple Authorization Code Custody Contract (Native)', () =
     return {
       ok: mockFetchResponse.ok,
       status: mockFetchResponse.status,
-      json: async () => mockFetchResponse.body ?? { success: true },
+      json: async () => mockFetchResponse.body ?? { stored: true },
     } as Response;
   };
 
@@ -24,24 +39,25 @@ describe('Sign in with Apple Authorization Code Custody Contract (Native)', () =
     mockFetchResponse = { ok: true, status: 200 };
   });
 
-  it('1. ignores null, undefined, or empty authorization codes without making network requests', async () => {
-    const r1 = await transmitAppleAuthorizationCode(null, mockFetcher);
-    const r2 = await transmitAppleAuthorizationCode(undefined, mockFetcher);
-    const r3 = await transmitAppleAuthorizationCode('', mockFetcher);
-    const r4 = await transmitAppleAuthorizationCode('   ', mockFetcher);
+  // ── Original 4 ──────────────────────────────────────────────────────────────
 
-    assert.equal(r1, false);
-    assert.equal(r2, false);
-    assert.equal(r3, false);
-    assert.equal(r4, false);
+  it('1. returns no_code and makes no request for null/undefined/empty codes', async () => {
+    const results: AppleTransmissionResult[] = await Promise.all([
+      transmitAppleAuthorizationCode(null, mockFetcher),
+      transmitAppleAuthorizationCode(undefined, mockFetcher),
+      transmitAppleAuthorizationCode('', mockFetcher),
+      transmitAppleAuthorizationCode('   ', mockFetcher),
+    ]);
+
+    for (const r of results) assert.equal(r, 'no_code');
     assert.equal(fetchCalls.length, 0);
   });
 
-  it('2. transmits valid authorizationCode to authenticated backend endpoint', async () => {
+  it('2. transmits valid code to /api/auth/apple/store-token and returns ok', async () => {
     const testCode = 'c1234567890abcdef.test_auth_code';
-    const success = await transmitAppleAuthorizationCode(testCode, mockFetcher);
+    const result = await transmitAppleAuthorizationCode(testCode, mockFetcher);
 
-    assert.equal(success, true);
+    assert.equal(result, 'ok');
     assert.equal(fetchCalls.length, 1);
 
     const call = fetchCalls[0];
@@ -52,20 +68,51 @@ describe('Sign in with Apple Authorization Code Custody Contract (Native)', () =
     assert.equal(body.authorizationCode, testCode);
   });
 
-  it('3. fails safely without throwing when backend endpoint returns an error status', async () => {
+  it('3. returns http_error (not throws) when backend returns 500', async () => {
     mockFetchResponse = { ok: false, status: 500 };
-
-    const success = await transmitAppleAuthorizationCode('c999.error_code', mockFetcher);
-    assert.equal(success, false);
+    const result = await transmitAppleAuthorizationCode('c999.error_code', mockFetcher);
+    assert.equal(result, 'http_error');
     assert.equal(fetchCalls.length, 1);
   });
 
-  it('4. catches network exceptions safely and returns false without interrupting caller', async () => {
+  it('4. returns network_error (not throws) on network exception', async () => {
     const failingFetcher: ApiFetchLike = async () => {
       throw new Error('Network request failed');
     };
+    const result = await transmitAppleAuthorizationCode('c888.network_fail', failingFetcher);
+    assert.equal(result, 'network_error');
+  });
 
-    const success = await transmitAppleAuthorizationCode('c888.network_fail_code', failingFetcher);
-    assert.equal(success, false);
+  // ── P1 additions ────────────────────────────────────────────────────────────
+
+  it('5. returns http_error on 401 — detects missing session before transmission', async () => {
+    mockFetchResponse = { ok: false, status: 401 };
+    const result = await transmitAppleAuthorizationCode('c777.unauthed_code', mockFetcher);
+    assert.equal(result, 'http_error');
+    // Still made exactly one request (no retry with stale one-time code)
+    assert.equal(fetchCalls.length, 1);
+  });
+
+  it('6. returns http_error on 503 — detects backend env vars absent', async () => {
+    mockFetchResponse = { ok: false, status: 503 };
+    const result = await transmitAppleAuthorizationCode('c666.env_missing_code', mockFetcher);
+    assert.equal(result, 'http_error');
+    assert.equal(fetchCalls.length, 1);
+  });
+
+  it('7. no_code paths never transmit any body', async () => {
+    await transmitAppleAuthorizationCode(null, mockFetcher);
+    await transmitAppleAuthorizationCode('', mockFetcher);
+    // Verify no partial body was ever sent
+    assert.equal(fetchCalls.length, 0, 'Guard paths must never reach the network');
+  });
+
+  it('8. return type is the AppleTransmissionResult literal union, not a boolean', async () => {
+    const okResult = await transmitAppleAuthorizationCode('c555.valid_code', mockFetcher);
+    assert.ok(
+      ['ok', 'no_code', 'http_error', 'network_error'].includes(okResult),
+      `Expected a known result literal, got: ${okResult}`,
+    );
+    assert.notEqual(typeof okResult, 'boolean', 'Result must not be a boolean');
   });
 });

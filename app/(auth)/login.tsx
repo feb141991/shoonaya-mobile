@@ -712,7 +712,12 @@ export default function LoginScreen() {
       }
 
       if (credential.authorizationCode) {
-        void transmitAppleAuthorizationCode(credential.authorizationCode);
+        // await so session is confirmed before transmitting; the call is
+        // non-blocking to the user flow — errors are logged, never surfaced.
+        const transmitResult = await transmitAppleAuthorizationCode(credential.authorizationCode);
+        if (__DEV__ && transmitResult !== 'ok' && transmitResult !== 'no_code') {
+          console.warn(`[auth] Apple code transmission result: ${transmitResult}`);
+        }
       }
     } catch (error) {
       const code = getNativeErrorCode(error);
