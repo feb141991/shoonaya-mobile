@@ -137,6 +137,37 @@ export function validateHomeSummaryPayload(payload: unknown): boolean {
 }
 
 /**
+ * Given a cached payload whose spiritualDate no longer matches today,
+ * returns a copy with the date-sensitive sections (Panchang/vrat/
+ * observance data and practice-completion status) reset to a neutral,
+ * unconfirmed state -- identity, hero and sacred-text content pass through
+ * unchanged since those aren't tied to "today". Callers should render this
+ * immediately while a fresh network response is in flight, with the caller
+ * responsible for showing a pending/loading treatment on the reset
+ * sections rather than presenting them as if they were confirmed.
+ */
+export function withDateSensitiveFieldsPending(payload: CachedHomeRenderModel): CachedHomeRenderModel {
+  return {
+    ...payload,
+    panchang: {
+      ...payload.panchang,
+      festivalLabel: null,
+      vratLabel: null,
+      viewedToday: false,
+      observance: null,
+      upcomingObservances: [],
+      series: [],
+      storyCards: [],
+    },
+    practices: payload.practices.map((p) => ({ ...p, done: false, progress: 0 })),
+    nextPractice: {
+      ...payload.nextPractice,
+      progress: 0,
+    },
+  };
+}
+
+/**
  * Sanitizes a full HomeSummary into an explicit CachedHomeRenderModel
  * before writing to AsyncStorage.
  */
@@ -219,15 +250,30 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
 
 /**
  * Read cached home summary for the given identity and timezone.
- * Validates that the stored spiritualDate matches the current spiritualDate
- * for the envelope's canonical timezone.
- * Returns null if cache is absent, corrupt, expired, or belongs to a different identity/date.
+ *
+ * A spiritual-date mismatch (cache was saved on a previous spiritual day)
+ * no longer rejects the whole cache. Identity, hero and navigation content
+ * are safe to show instantly regardless of date -- only Panchang/vrat/
+ * observance data and practice-completion status are actually tied to
+ * "today". Callers get `dateSensitiveStale: true` in that case and are
+ * responsible for withholding just those fields until a fresh network
+ * response lands, per this project's calendar-governance rule against
+ * presenting a stale spiritual date as current.
+ *
+ * Still returns null if the cache is absent, corrupt, or belongs to a
+ * different identity -- those aren't safe to partially show.
  */
 export async function readHomeCache(
   identity: CacheIdentity,
   fallbackTimezone?: string,
   now: Date = new Date()
-): Promise<{ payload: CachedHomeRenderModel; savedAt: number; timezone: string; spiritualDate: string } | null> {
+): Promise<{
+  payload: CachedHomeRenderModel;
+  savedAt: number;
+  timezone: string;
+  spiritualDate: string;
+  dateSensitiveStale: boolean;
+} | null> {
   const key = getHomeCacheKey(identity);
   try {
     const raw = await AsyncStorage.getItem(key);
@@ -264,10 +310,7 @@ export async function readHomeCache(
     // Determine canonical timezone from envelope, falling back safely
     const canonicalTimezone = safeTimezone(envelope.timezone || fallbackTimezone);
     const expectedSpiritualDate = spiritualDate(canonicalTimezone, now);
-
-    if (!envelope.spiritualDate || envelope.spiritualDate !== expectedSpiritualDate) {
-      return null;
-    }
+    const dateSensitiveStale = !envelope.spiritualDate || envelope.spiritualDate !== expectedSpiritualDate;
 
     if (!validateHomeSummaryPayload(envelope.payload)) {
       await AsyncStorage.removeItem(key).catch(() => {});
@@ -279,6 +322,7 @@ export async function readHomeCache(
       savedAt: envelope.savedAt ?? 0,
       timezone: canonicalTimezone,
       spiritualDate: envelope.spiritualDate,
+      dateSensitiveStale,
     };
   } catch (error) {
     console.warn('[HomeCache] read failed', error);

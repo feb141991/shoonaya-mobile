@@ -29,7 +29,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { transmitAppleAuthorizationCode } from '@/lib/appleAuthToken';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
 
@@ -1102,6 +1102,78 @@ export default function LoginScreen() {
                   >
                     Privacy Policy
                   </Text>
+                </PressableSurface>
+              </View>
+
+              {/* ── Social Links ── */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  marginTop: 6,
+                }}
+              >
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityRole="link"
+                  accessibilityLabel="Shoonaya on Instagram"
+                  hitSlop={8}
+                  onPress={() => { void Linking.openURL(SOCIAL_LINKS.instagram); }}
+                  style={{
+                    minWidth: MIN_TOUCH_TARGET,
+                    minHeight: MIN_TOUCH_TARGET,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FontAwesome name="instagram" size={17} color={theme.dim} />
+                </PressableSurface>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityRole="link"
+                  accessibilityLabel="Shoonaya on Facebook"
+                  hitSlop={8}
+                  onPress={() => { void Linking.openURL(SOCIAL_LINKS.facebook); }}
+                  style={{
+                    minWidth: MIN_TOUCH_TARGET,
+                    minHeight: MIN_TOUCH_TARGET,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FontAwesome name="facebook-square" size={17} color={theme.dim} />
+                </PressableSurface>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityRole="link"
+                  accessibilityLabel="Shoonaya on LinkedIn"
+                  hitSlop={8}
+                  onPress={() => { void Linking.openURL(SOCIAL_LINKS.linkedin); }}
+                  style={{
+                    minWidth: MIN_TOUCH_TARGET,
+                    minHeight: MIN_TOUCH_TARGET,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FontAwesome name="linkedin-square" size={17} color={theme.dim} />
+                </PressableSurface>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityRole="link"
+                  accessibilityLabel="Shoonaya Website"
+                  hitSlop={8}
+                  onPress={() => { void Linking.openURL(SOCIAL_LINKS.website); }}
+                  style={{
+                    minWidth: MIN_TOUCH_TARGET,
+                    minHeight: MIN_TOUCH_TARGET,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="globe" size={16} color={theme.dim} />
                 </PressableSurface>
               </View>
             </View>

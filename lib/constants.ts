@@ -461,10 +461,14 @@ export const TYPE = {
   homeHeroMeaning: { fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 22 },
 } as const;
 
-// Minimum touch target per accessibility guidance (WCAG 2.5.5 / Material
-// 44dp) — was already duplicated as a local constant in login.tsx/
-// whatsapp.tsx; promoted here so new primitives (and those screens, in a
-// future pass) share one source of truth.
 export const MIN_TOUCH_TARGET = 44;
 
 export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'https://www.shoonaya.com';
+
+
+export const SOCIAL_LINKS = {
+  instagram: 'https://www.instagram.com/shoonaya.fyi',
+  facebook: 'https://www.facebook.com/profile.php?id=61590436598797',
+  linkedin: 'https://www.linkedin.com/company/120373989',
+  website: 'https://www.shoonaya.com',
+} as const;

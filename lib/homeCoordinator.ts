@@ -1,4 +1,4 @@
-import { readHomeCache, writeHomeCache, clearHomeCache, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
+import { readHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsPending, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
@@ -60,6 +60,15 @@ export type HomeLoaderDependencies = {
   onSetLoading: (loading: boolean) => void;
   onSetError: (error: boolean) => void;
   onRedirectToLogin: () => void;
+  /**
+   * Called with `true` when a cache hit is applied whose spiritualDate no
+   * longer matches today -- Panchang/vrat and practice-status sections in
+   * the applied payload have been reset to a neutral pending state (see
+   * withDateSensitiveFieldsPending) and should render a loading treatment,
+   * not be read as confirmed data. Called with `false` once a fresh network
+   * response (or a fresh-date cache hit) lands.
+   */
+  onSetSectionsPending?: (pending: boolean) => void;
   onPrefetchHeroImage?: (url: string) => void;
   buildGuestPayload: () => any;
   getTimezone?: () => string;
@@ -168,7 +177,10 @@ export class HomeSummaryCoordinator {
     if (!this.state.hasValidState && !isManualRefresh) {
       const cached = await readHomeCache(cacheIdentity, timezone);
       if (cached && requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {
-        this.deps.onApplyPayload(cached.payload);
+        this.deps.onApplyPayload(
+          cached.dateSensitiveStale ? withDateSensitiveFieldsPending(cached.payload) : cached.payload
+        );
+        this.deps.onSetSectionsPending?.(cached.dateSensitiveStale);
         this.state.hasValidState = true;
         this.state.lastLoadedAt = cached.savedAt;
         this.deps.onSetLoading(false);
@@ -184,6 +196,7 @@ export class HomeSummaryCoordinator {
       if (requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {
         const guestPayload = this.deps.buildGuestPayload();
         this.deps.onApplyPayload(guestPayload);
+        this.deps.onSetSectionsPending?.(false);
         this.state.hasValidState = true;
         this.state.lastLoadedAt = Date.now();
         void writeHomeCache(cacheIdentity, guestPayload, timezone);
@@ -242,6 +255,7 @@ export class HomeSummaryCoordinator {
         }
 
         this.deps.onApplyPayload(payload);
+        this.deps.onSetSectionsPending?.(false);
         this.state.hasValidState = true;
         this.state.lastLoadedAt = Date.now();
         this.deps.onSetLoading(false);

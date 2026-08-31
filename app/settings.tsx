@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
@@ -24,7 +25,7 @@ import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { API_BASE, COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { registerPushToken, requestNotificationPermission } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
@@ -604,6 +605,86 @@ export default function SettingsScreen() {
                   ))}
                 </View>
               </View>
+            </SettingsSection>
+
+            {/* ── Community & Socials ─────────────────────────────────── */}
+            <SettingsSection label="Community & Socials" theme={theme}>
+              {[
+                {
+                  id: 'instagram',
+                  icon: 'instagram',
+                  label: 'Instagram',
+                  handle: '@shoonaya.fyi',
+                  url: SOCIAL_LINKS.instagram,
+                },
+                {
+                  id: 'facebook',
+                  icon: 'facebook-square',
+                  label: 'Facebook',
+                  handle: 'Shoonaya',
+                  url: SOCIAL_LINKS.facebook,
+                },
+                {
+                  id: 'linkedin',
+                  icon: 'linkedin-square',
+                  label: 'LinkedIn',
+                  handle: 'Shoonaya',
+                  url: SOCIAL_LINKS.linkedin,
+                },
+                {
+                  id: 'website',
+                  icon: 'globe',
+                  label: 'Official Website',
+                  handle: 'shoonaya.com',
+                  url: SOCIAL_LINKS.website,
+                },
+              ].map((social, index) => (
+                <View key={social.id}>
+                  {index > 0 ? (
+                    <View style={{ height: 1, backgroundColor: theme.borderSoft, marginVertical: 8 }} />
+                  ) : null}
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="link"
+                    accessibilityLabel={social.label}
+                    onPress={() => {
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      void Linking.openURL(social.url);
+                    }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      minHeight: MIN_TOUCH_TARGET,
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 17,
+                          backgroundColor: theme.brandSoft,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <FontAwesome name={social.icon as any} size={17} color={theme.brand} />
+                      </View>
+                      <View>
+                        <Text style={{ ...TYPE.body, color: theme.text, fontFamily: FONTS.sansSemiBold }}>
+                          {social.label}
+                        </Text>
+                        <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                          {social.handle}
+                        </Text>
+                      </View>
+                    </View>
+                    <Feather name="external-link" size={15} color={theme.dim} />
+                  </PressableSurface>
+                </View>
+              ))}
             </SettingsSection>
 
             {/* ── Privacy & data ──────────────────────────────────────── */}

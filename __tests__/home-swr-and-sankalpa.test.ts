@@ -450,6 +450,89 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(receivedTimeout, 30_000);
     });
 
+    it('stale spiritual date: identity renders instantly from cache, but Panchang/vrat/practice status are withheld as pending until the network response lands', async () => {
+      let homeSummaryNetworkRequests = 0;
+      let appliedPayloads: any[] = [];
+      let pendingStates: boolean[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-stale-date-1' };
+      const timezone = 'Europe/London';
+
+      // Seed a cache envelope with YESTERDAY's spiritualDate -- simulates the
+      // user opening the app on a new spiritual day with only an old cache
+      // on disk.
+      await writeHomeCache(
+        { kind: 'authenticated', userId: 'user-stale-date-1' },
+        sampleHomeSummary,
+        timezone,
+        '2020-01-01' // deliberately not today's spiritualDate
+      );
+
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          homeSummaryNetworkRequests++;
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        onSetSectionsPending: (pending) => pendingStates.push(pending),
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      await coordinator.onFocus(userA);
+
+      assert.equal(appliedPayloads.length, 2, 'Cache applied first, then the fresh network response');
+
+      const cacheApplied = appliedPayloads[0];
+      // Identity/hero/sacred-text pass through unchanged from cache -- these
+      // are never tied to "today" and are always safe to show instantly.
+      assert.equal(cacheApplied.profile.name, sampleHomeSummary.profile.name);
+      assert.equal(cacheApplied.hero.imageUrl, sampleHomeSummary.hero.imageUrl);
+      // Date-sensitive Panchang/vrat data must NOT carry over from the stale
+      // cache -- this is the exact bug this fix prevents.
+      assert.equal(cacheApplied.panchang.festivalLabel, null);
+      assert.equal(cacheApplied.panchang.vratLabel, null);
+      assert.deepEqual(cacheApplied.panchang.observance, null);
+      assert.deepEqual(cacheApplied.panchang.upcomingObservances, []);
+      // Practice-completion status must also be withheld, not carried over
+      // from a previous spiritual day.
+      assert.ok(cacheApplied.practices.every((p: any) => p.done === false));
+
+      assert.deepEqual(pendingStates, [true, false], 'Pending flagged true on the stale cache apply, then false once fresh data lands');
+      assert.equal(homeSummaryNetworkRequests, 1);
+    });
+
+    it('fresh spiritual date: cache applies with Panchang/vrat/practice data intact, never marked pending', async () => {
+      let pendingStates: boolean[] = [];
+      let appliedPayloads: any[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-fresh-date-1' };
+      const timezone = 'Europe/London';
+
+      // writeHomeCache without an explicit spiritualDate stamps today's date
+      // for the given timezone -- this is the normal, non-stale case.
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-fresh-date-1' }, sampleHomeSummary, timezone);
+
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => new Response(JSON.stringify(sampleHomeSummary), { status: 200 }),
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        onSetSectionsPending: (pending) => pendingStates.push(pending),
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      await coordinator.onFocus(userA);
+
+      assert.equal(appliedPayloads[0].panchang.tithiLabel, sampleHomeSummary.panchang.tithiLabel, 'Fresh-date cache is applied as-is, not masked');
+      assert.ok(!pendingStates.includes(true), 'A fresh-date cache hit never marks sections pending');
+    });
+
     it('a second cancellation (retry also fails) surfaces the error state -- no infinite retry loop', async () => {
       let attempt = 0;
       let errorStates: boolean[] = [];

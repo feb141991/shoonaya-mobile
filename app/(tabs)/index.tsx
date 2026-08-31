@@ -591,6 +591,12 @@ function HomeContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [state, setState] = useState<HomeSummary>(INITIAL_STATE);
   const [loadError, setLoadError] = useState(false);
+  // True right after a stale-spiritual-date cache hit is applied -- Panchang/
+  // vrat and practice-completion status in `state` have been reset to a
+  // neutral pending state (see withDateSensitiveFieldsPending) and should
+  // not be read as confirmed "nothing today" until the network response
+  // that follows clears this flag.
+  const [sectionsPending, setSectionsPending] = useState(false);
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [moodStatus, setMoodStatus] = useState<HomeLiveMoodStatus | null>(null);
@@ -899,6 +905,7 @@ function HomeContent() {
       onApplyPayload: (payload) => applyPayload(payload),
       onSetLoading: (loading) => setLoading(loading),
       onSetError: (error) => setLoadError(error),
+      onSetSectionsPending: (pending) => setSectionsPending(pending),
       onRedirectToLogin: () => router.replace('/(auth)/login'),
       onPrefetchHeroImage: (url) => {
         const assetUrl = resolveAssetUrl(url);
@@ -1592,7 +1599,7 @@ function HomeContent() {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <Text style={{ ...TYPE.chip, letterSpacing: 1.1, textTransform: 'uppercase', color: sadhanaCtaMeta }} numberOfLines={1}>
-                {completedCount} of {state.practices.length} practices
+                {sectionsPending ? 'Updating today’s practices…' : `${completedCount} of ${state.practices.length} practices`}
               </Text>
               <View
                 style={{
@@ -1646,7 +1653,7 @@ function HomeContent() {
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, color: theme.dim }}>
-                  {completedCount} / {state.practices.length}
+                  {sectionsPending ? '…' : `${completedCount} / ${state.practices.length}`}
                 </Text>
                 <Feather name={practicesOpen ? 'chevron-up' : 'chevron-down'} size={15} color={theme.dim} />
               </View>
