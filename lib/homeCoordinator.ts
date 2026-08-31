@@ -47,7 +47,12 @@ export function getIdentityKey(identity: HomeAuthIdentity): string | null {
   return null;
 }
 
-export type HomeFetchApi = (path: string, options?: RequestInit) => Promise<Response>;
+export type HomeFetchApi = (
+  path: string,
+  options?: RequestInit & { timeoutMs?: number }
+) => Promise<Response>;
+
+export const HOME_SUMMARY_TIMEOUT_MS = 30_000;
 
 export type HomeLoaderDependencies = {
   fetchApi: HomeFetchApi;
@@ -193,7 +198,9 @@ export class HomeSummaryCoordinator {
     if (!inFlight) {
       inFlight = (async () => {
         try {
-          const response = await this.deps.fetchApi('/api/native/home-summary');
+          const response = await this.deps.fetchApi('/api/native/home-summary', {
+            timeoutMs: HOME_SUMMARY_TIMEOUT_MS,
+          });
           if (response.status === 401) {
             await clearHomeCache(cacheIdentity);
             return { unauthorized: true };

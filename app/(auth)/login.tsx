@@ -822,21 +822,16 @@ export default function LoginScreen() {
           <BrandGlow isDark={isDark} />
           <Animated.View
             style={{
-              width: 168,
-              height: 168,
-              borderRadius: 84,
+              width: 176,
+              height: 176,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: isDark ? COLORS.homeShlokaSurfaceDark : COLORS.homeShlokaSurfaceLight,
-              borderWidth: 1,
-              borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               transform: [{ scale: brandScale }],
             }}
           >
             <Image
-              source={require('../../assets/brand/shoonaya-logo-transparent.png')}
-              style={{ width: 148, height: 148 }}
+              source={require('../../assets/brand/shoonaya-emblem-transparent.png')}
+              style={{ width: 164, height: 164 }}
               resizeMode="contain"
               accessibilityLabel="Shoonaya"
             />

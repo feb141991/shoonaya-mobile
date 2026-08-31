@@ -431,6 +431,25 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.ok(!errorStates.includes(true), 'Error state is never set true for a benign cancellation that succeeds on retry');
     });
 
+    it('uses the extended Home deadline for the production summary request', async () => {
+      let receivedTimeout: number | undefined;
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async (_path, options) => {
+          receivedTimeout = options?.timeoutMs;
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
+
+      await coordinator.loadHome({ kind: 'authenticated', userId: 'home-timeout-policy' });
+
+      assert.equal(receivedTimeout, 30_000);
+    });
+
     it('a second cancellation (retry also fails) surfaces the error state -- no infinite retry loop', async () => {
       let attempt = 0;
       let errorStates: boolean[] = [];
