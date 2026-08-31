@@ -22,6 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
+import * as Crypto from 'expo-crypto';
 
 import { Screen } from '@/components/ui/Screen';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
@@ -30,7 +31,7 @@ import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/compone
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
@@ -42,7 +43,13 @@ import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from
 import { getNityaRankProgress } from '@/lib/nitya-rank';
 import { getMalaVolumeMilestone } from '@/lib/mala-milestones';
 import { pickDharmaFact } from '@/lib/dharma-facts';
-import { spiritualDate } from '@/lib/spiritualDate';
+import {
+  normalizeJapaContext,
+  clearJapaContextCache,
+  readJapaContextCache,
+  writeJapaContextCache,
+  type JapaContext,
+} from '@/lib/japaContextCache';
 
 // Native Japa — rebuilt to mirror PWA's src/app/(main)/japa/JapaClient.tsx
 // screen flow (Phase 1 of a phased port; see conversation for phases 2/3):
@@ -68,17 +75,6 @@ import { spiritualDate } from '@/lib/spiritualDate';
 // else, so this screen keeps that rather than introducing a second,
 // screen-local accent system). Japa Insights page is Phase 3.
 
-type ProfileRow = {
-  active_symbol_id: string | null;
-  tradition: string | null;
-  timezone: string | null;
-};
-
-type SadhanaTodayRow = {
-  japa_done: boolean | null;
-  streak_count: number | null;
-};
-
 type ToastState = {
   visible: boolean;
   message: string;
@@ -92,14 +88,18 @@ type JapaLifetimeData = {
 
 const EMPTY_LIFETIME: JapaLifetimeData = { totalBeads: 0, totalRounds: 0, lastPracticed: null };
 
-const SVG_SIZE = 320;
 const PRACTICE_SVG_SIZE = 410;
-const CENTER = SVG_SIZE / 2;
-const RADIUS = 120;
 const PRACTICE_CENTER_X = PRACTICE_SVG_SIZE / 2;
 const PRACTICE_CENTER_Y = 195;
 const PRACTICE_RADIUS_X = 152;
 const PRACTICE_RADIUS_Y = 172;
+const PRACTICE_BEAD_POSITIONS = Array.from({ length: 108 }, (_, index) => {
+  const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
+  return {
+    x: PRACTICE_CENTER_X + Math.cos(angle) * PRACTICE_RADIUS_X,
+    y: PRACTICE_CENTER_Y + Math.sin(angle) * PRACTICE_RADIUS_Y,
+  };
+});
 const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
@@ -107,7 +107,7 @@ const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
 const JAPA_CUSTOM_MANTRA_KEY = 'shoonaya.japa.customMantra';
 const JAPA_MANTRA_KEY = 'shoonaya.japa.mantraKey';
 const JAPA_TARGET_ROUNDS_KEY = 'shoonaya.japa.targetRounds';
-const JAPA_LIFETIME_KEY = 'shoonaya.japa.lifetime';
+const JAPA_GUEST_LIFETIME_KEY = 'shoonaya.japa.guestLifetime';
 
 const BG_SCENES = [
   {
@@ -743,6 +743,8 @@ export default function JapaScreen() {
   const [beginPressed, setBeginPressed] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+  const lastPersistedDurationRef = useRef(0);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
   // (close) button on the practice screen, matching JapaClient.tsx exactly
@@ -861,11 +863,10 @@ export default function JapaScreen() {
       JAPA_SCENE_KEY,
       JAPA_CUSTOM_MANTRA_KEY,
       JAPA_TARGET_ROUNDS_KEY,
-      JAPA_LIFETIME_KEY,
       JAPA_MANTRA_KEY,
     ])
       .then((pairs) => pairs.map(([, v]) => v))
-      .then(([malaId, sceneId, customText, rounds, lifetimeRaw, mantraKey]) => {
+      .then(([malaId, sceneId, customText, rounds, mantraKey]) => {
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
@@ -873,16 +874,6 @@ export default function JapaScreen() {
         const parsedRounds = rounds ? Number(rounds) : 1;
         if (Number.isInteger(parsedRounds) && parsedRounds >= 1 && parsedRounds <= MAX_TARGET_ROUNDS) {
           setTargetRounds(parsedRounds);
-        }
-        if (lifetimeRaw) {
-          try {
-            const parsed = JSON.parse(lifetimeRaw) as Partial<JapaLifetimeData>;
-            setLifetime({
-              totalBeads: typeof parsed.totalBeads === 'number' ? parsed.totalBeads : 0,
-              totalRounds: typeof parsed.totalRounds === 'number' ? parsed.totalRounds : 0,
-              lastPracticed: parsed.lastPracticed ?? null,
-            });
-          } catch {}
         }
       })
       .catch(() => {});
@@ -916,57 +907,83 @@ export default function JapaScreen() {
         totalRounds: prev.totalRounds + (beadsToAdd >= 108 ? 1 : 0),
         lastPracticed: new Date().toISOString(),
       };
-      void AsyncStorage.setItem(JAPA_LIFETIME_KEY, JSON.stringify(next));
+      void AsyncStorage.setItem(JAPA_GUEST_LIFETIME_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
 
+  const applyJapaContext = useCallback((context: JapaContext) => {
+    setActiveSymbolId(context.activeSymbolId);
+    setTradition(context.tradition);
+    setJapaAlreadyDoneToday(context.japaDone);
+    setStreak(context.streak);
+    setLifetime(context.lifetime);
+  }, []);
+
   const loadContext = useCallback(async () => {
-    setLoading(true);
+    let cacheApplied = false;
     try {
-      const guest = await isGuestMode();
+      const [guest, sessionResult] = await Promise.all([
+        isGuestMode(),
+        supabase.auth.getSession(),
+      ]);
       setIsGuest(guest);
 
       if (guest) {
+        userIdRef.current = null;
+        void clearJapaContextCache();
         setTradition('hindu');
         setActiveSymbolId(null);
         setJapaAlreadyDoneToday(false);
         setStreak(0);
+        const guestLifetime = await AsyncStorage.getItem(JAPA_GUEST_LIFETIME_KEY);
+        if (guestLifetime) {
+          try {
+            const parsed = JSON.parse(guestLifetime) as Partial<JapaLifetimeData>;
+            setLifetime({
+              totalBeads: typeof parsed.totalBeads === 'number' ? parsed.totalBeads : 0,
+              totalRounds: typeof parsed.totalRounds === 'number' ? parsed.totalRounds : 0,
+              lastPracticed: typeof parsed.lastPracticed === 'string' ? parsed.lastPracticed : null,
+            });
+          } catch {
+            setLifetime(EMPTY_LIFETIME);
+          }
+        } else {
+          setLifetime(EMPTY_LIFETIME);
+        }
         return;
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const user = session?.user;
+      const user = sessionResult.data.session?.user;
       if (!user) return;
+      userIdRef.current = user.id;
 
-      const profileResult = await supabase.from('profiles').select('active_symbol_id, tradition, timezone').eq('id', user.id).single();
+      const cached = await readJapaContextCache(user.id);
+      if (cached) {
+        applyJapaContext(cached);
+        cacheApplied = true;
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
 
-      const profile = profileResult.data as ProfileRow | null;
-      setActiveSymbolId(profile?.active_symbol_id ?? null);
-      setTradition(profile?.tradition ?? 'hindu');
-
-      const today = spiritualDate(profile?.timezone ?? 'UTC');
-      const { data: sadhanaData } = await supabase
-        .from('daily_sadhana')
-        .select('japa_done, streak_count')
-        .eq('user_id', user.id)
-        .eq('date', today)
-        .maybeSingle();
-      const sadhana = sadhanaData as SadhanaTodayRow | null;
-      setJapaAlreadyDoneToday(Boolean(sadhana?.japa_done));
-      setStreak(sadhana?.streak_count ?? 0);
+      const response = await apiFetch('/api/japa/context');
+      if (!response.ok) throw new Error('japa-context-failed');
+      const context = normalizeJapaContext(await response.json());
+      if (!context) throw new Error('japa-context-invalid');
+      applyJapaContext(context);
+      await writeJapaContextCache(user.id, context);
     } catch {
-      setActiveSymbolId(null);
-      setTradition('hindu');
-      setJapaAlreadyDoneToday(false);
-      setStreak(0);
+      if (!cacheApplied) {
+        setActiveSymbolId(null);
+        setTradition('hindu');
+        setJapaAlreadyDoneToday(false);
+        setStreak(0);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyJapaContext]);
 
   useEffect(() => {
     void loadContext();
@@ -1002,6 +1019,31 @@ export default function JapaScreen() {
       .finally(() => setCompletionInsightLoading(false));
   }, [completionStats, completionVisible, tradition]);
 
+  const persistJapaCompletion = useCallback(async (payload: {
+    mantra: string;
+    count: number;
+    rounds: number;
+    durationSeconds: number;
+    tradition: string | null;
+    practiceType: string | null;
+    activeSymbolId: string | null;
+  }) => {
+    const requestBody = JSON.stringify({
+      clientCompletionId: Crypto.randomUUID(),
+      ...payload,
+    });
+    const send = () => apiFetch('/api/japa/complete', { method: 'POST', body: requestBody });
+
+    let response: Response;
+    try {
+      response = await send();
+    } catch {
+      response = await send();
+    }
+    if (response.status >= 500) response = await send();
+    return response;
+  }, []);
+
   const completeRound = useCallback(async () => {
     setSaving(true);
     const nextRounds = completedRounds + 1;
@@ -1009,7 +1051,6 @@ export default function JapaScreen() {
     const goalComplete = nextRounds >= targetRounds;
     setCompletedRounds(nextRounds);
     setCount(0);
-    void updateLifetime(108);
 
     if (elapsed > 0) {
       setDurationSecs(elapsed);
@@ -1029,6 +1070,7 @@ export default function JapaScreen() {
     // (japa_done/streak_count) upsert, and karma award — see the route's own
     // file header for the full mutation contract.
     if (isGuest) {
+      void updateLifetime(108);
       setSaving(false);
       if (goalComplete) {
         const stats = {
@@ -1045,22 +1087,28 @@ export default function JapaScreen() {
     }
 
     try {
-      const response = await apiFetch('/api/japa/complete', {
-        method: 'POST',
-        body: JSON.stringify({
-          mantra: mantra.label,
-          count: 108,
-          rounds: 1,
-          tradition,
-          practiceType,
-          activeSymbolId,
-        }),
+      const durationDelta = Math.max(0, elapsed - lastPersistedDurationRef.current);
+      const response = await persistJapaCompletion({
+        mantra: mantra.label,
+        count: 108,
+        rounds: 1,
+        durationSeconds: durationDelta,
+        tradition,
+        practiceType,
+        activeSymbolId,
       });
 
       if (!response.ok) {
         const data = (await response.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error ?? 'japa-complete-failed');
       }
+
+      const context = normalizeJapaContext(await response.json());
+      if (context) {
+        applyJapaContext(context);
+        if (userIdRef.current) void writeJapaContextCache(userIdRef.current, context);
+      }
+      lastPersistedDurationRef.current = elapsed;
 
       if (goalComplete) {
         const stats = {
@@ -1074,6 +1122,8 @@ export default function JapaScreen() {
         setConfettiVisible(true);
       }
     } catch (error) {
+      setCompletedRounds(Math.max(0, nextRounds - 1));
+      setCount(107);
       const message = error instanceof Error && error.message !== 'japa-complete-failed'
         ? error.message
         : 'Check your connection and try again.';
@@ -1081,8 +1131,7 @@ export default function JapaScreen() {
     }
 
     setSaving(false);
-    await loadContext();
-  }, [activeSymbolId, completedRounds, isGuest, loadContext, mantra.label, practiceType, sessionStartTime, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
+  }, [activeSymbolId, applyJapaContext, completedRounds, isGuest, mantra.label, persistJapaCompletion, practiceType, sessionStartTime, targetRounds, tradition, triggerRoundCelebration, updateLifetime]);
 
   useEffect(() => {
     if (!completionVisible) return;
@@ -1163,24 +1212,31 @@ export default function JapaScreen() {
       return;
     }
     setStopSaving(true);
+    let saved = count === 0;
     try {
       if (count > 0) {
-        const response = await apiFetch('/api/japa/complete', {
-          method: 'POST',
-          body: JSON.stringify({
-            mantra: mantra.label,
-            count,
-            rounds: 0,
-            tradition,
-            practiceType,
-            activeSymbolId,
-          }),
+        const elapsed = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
+        const durationDelta = Math.max(0, elapsed - lastPersistedDurationRef.current);
+        const response = await persistJapaCompletion({
+          mantra: mantra.label,
+          count,
+          rounds: 0,
+          durationSeconds: durationDelta,
+          tradition,
+          practiceType,
+          activeSymbolId,
         });
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as { error?: string } | null;
           throw new Error(data?.error ?? 'japa-partial-save-failed');
         }
-        void updateLifetime(count);
+        const context = normalizeJapaContext(await response.json());
+        if (context) {
+          applyJapaContext(context);
+          if (userIdRef.current) void writeJapaContextCache(userIdRef.current, context);
+        }
+        lastPersistedDurationRef.current = elapsed;
+        saved = true;
       }
     } catch (error) {
       const message = error instanceof Error && error.message !== 'japa-partial-save-failed'
@@ -1188,30 +1244,28 @@ export default function JapaScreen() {
         : 'Check your connection and try again.';
       Alert.alert('Could not save japa session', message);
     } finally {
-      setCount(0);
-      setCompletedRounds(0);
-      setDurationSecs(0);
-      setSessionStartTime(null);
       setStopSaving(false);
-      setShowStopSheet(false);
-      setScreen('launcher');
-      await loadContext();
+      if (saved) {
+        setCount(0);
+        setCompletedRounds(0);
+        setDurationSecs(0);
+        setSessionStartTime(null);
+        lastPersistedDurationRef.current = 0;
+        setShowStopSheet(false);
+        setScreen('launcher');
+      }
     }
-  }, [activeSymbolId, count, isGuest, loadContext, mantra.label, practiceType, tradition, updateLifetime]);
+  }, [activeSymbolId, applyJapaContext, count, isGuest, mantra.label, persistJapaCompletion, practiceType, sessionStartTime, tradition]);
 
   const handleDiscardAndStop = useCallback(() => {
     setCount(0);
     setCompletedRounds(0);
     setDurationSecs(0);
     setSessionStartTime(null);
+    lastPersistedDurationRef.current = 0;
     setShowStopSheet(false);
     setScreen('launcher');
   }, []);
-
-  function beadPosition(index: number, centerX: number, centerY: number, radiusX: number, radiusY: number) {
-    const angle = (Math.PI * 2 * index) / 108 - Math.PI / 2;
-    return { x: centerX + Math.cos(angle) * radiusX, y: centerY + Math.sin(angle) * radiusY };
-  }
 
   // Three-tier bead state (done / current / upcoming) — previously every
   // non-current bead rendered identically regardless of progress, so the
@@ -1219,10 +1273,9 @@ export default function JapaScreen() {
   // lit with the richer `grad-done` gradient as the current bead moves on,
   // giving the same at-a-glance progress read as PWA's bead-done/bead-un
   // split.
-  function buildBeadElements(centerX: number, centerY: number, radiusX: number, radiusY: number) {
+  function buildBeadElements() {
     const activeIndex = count >= 108 ? 107 : count;
-    return Array.from({ length: 108 }, (_, index) => {
-      const { x, y } = beadPosition(index, centerX, centerY, radiusX, radiusY);
+    return PRACTICE_BEAD_POSITIONS.map(({ x, y }, index) => {
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
       const isSumeru = index === 54;
@@ -1262,8 +1315,8 @@ export default function JapaScreen() {
     });
   }
 
-  const currentBeadPos = useMemo(() => beadPosition(count >= 108 ? 107 : count, PRACTICE_CENTER_X, PRACTICE_CENTER_Y, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [count]);
-  const bloomBeadPos = useMemo(() => beadPosition(bloomIndex ?? 0, PRACTICE_CENTER_X, PRACTICE_CENTER_Y, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y), [bloomIndex]);
+  const currentBeadPos = PRACTICE_BEAD_POSITIONS[count >= 108 ? 107 : count];
+  const bloomBeadPos = PRACTICE_BEAD_POSITIONS[bloomIndex ?? 0];
 
   const pulseRadius = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 22] });
   const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.58, 0] });
@@ -2049,7 +2102,7 @@ export default function JapaScreen() {
                     r={4.2}
                     fill={theme.brand}
                   />
-                  {buildBeadElements(PRACTICE_CENTER_X, PRACTICE_CENTER_Y, PRACTICE_RADIUS_X, PRACTICE_RADIUS_Y)}
+                  {buildBeadElements()}
                   {count < 108 ? (
                     <AnimatedCircle
                       cx={currentBeadPos.x}
