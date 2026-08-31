@@ -194,7 +194,7 @@ function GoogleAuthButton({
             color: textColor,
             fontFamily: FONTS.sansSemiBold,
             fontSize: 15,
-            letterSpacing: 0.1,
+            paddingRight: 2,
           }}
         >
           {loading ? 'Connecting to Google...' : 'Continue with Google'}
@@ -266,7 +266,7 @@ function AppleAuthButton({
             color: textColor,
             fontFamily: FONTS.sansSemiBold,
             fontSize: 15,
-            letterSpacing: 0.1,
+            paddingRight: 2,
           }}
         >
           {loading ? 'Connecting to Apple...' : 'Continue with Apple'}
@@ -400,6 +400,7 @@ function AuthButton({
               color: isGold ? COLORS.cardBgLight : theme.text,
               fontFamily: FONTS.sansSemiBold,
               fontSize: 15.5,
+              paddingRight: 2,
             }}
           >
             {label}
@@ -1027,7 +1028,7 @@ export default function LoginScreen() {
                   opacity: busy ? 0.68 : 1,
                 }}
               >
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 14.5 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 14.5, paddingRight: 2 }}>
                   Continue as Atithi
                 </Text>
               </PressableSurface>
