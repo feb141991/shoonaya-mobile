@@ -86,6 +86,10 @@ export type PostRow = {
   event_date: string | null;
   event_location: string | null;
   profiles?: PostAuthor | null;
+  // Present only from the paginated /api/mandali/feed?cursor/limit path --
+  // undefined on the legacy full-fidelity response.
+  viewerReaction?: ReactionType | null;
+  commentPreview?: CommentRow[];
 };
 
 export type CommentRow = {
@@ -342,6 +346,17 @@ export async function createMandaliComment(payload: { postId: string; userId: st
   return result.id;
 }
 
+// Full comment thread (root + replies) for one post -- fetched lazily when
+// a post's comment section is expanded, rather than upfront for every post
+// in the feed. The feed response itself only carries a 2-comment preview
+// per post (see MandaliFeedPost.commentPreview).
+export async function fetchPostComments(postId: string): Promise<CommentRow[]> {
+  const response = await apiFetch(`/api/mandali/comments?postId=${encodeURIComponent(postId)}`);
+  if (!response.ok) throw new Error('Could not load comments');
+  const result = await response.json() as { comments: CommentRow[] };
+  return result.comments ?? [];
+}
+
 export async function updateMandaliComment(payload: { commentId: string; body: string }): Promise<void> {
   const response = await apiFetch('/api/mandali/comments', {
     method: 'PATCH',
@@ -489,13 +504,14 @@ export type SafetyState = {
   hiddenContentKeys: Set<string>;
 };
 
-export function getHiddenContentKey(contentType: 'mandali_post', contentId: string): string {
-  return `${contentType}:${contentId}`;
-}
-
 export async function fetchSafetyState(userId: string): Promise<SafetyState> {
   const [{ data: blockRows }, { data: muteRows }, { data: hiddenRows }] = await Promise.all([
-    supabase.from('user_blocked_profiles').select('blocker_id, blocked_user_id'),
+    // Scoped to rows involving this user in either direction -- an
+    // unfiltered select() here would read every block relationship in the
+    // table (same bug fixed server-side in the backend repo's
+    // user-safety.ts), and unlike that admin-client query, this one runs
+    // under the client's own RLS-scoped role.
+    supabase.from('user_blocked_profiles').select('blocker_id, blocked_user_id').or(`blocker_id.eq.${userId},blocked_user_id.eq.${userId}`),
     supabase.from('user_muted_profiles').select('muter_id, muted_user_id').eq('muter_id', userId),
     supabase.from('user_hidden_content').select('content_type, content_id').eq('user_id', userId),
   ]);
@@ -512,14 +528,6 @@ export async function fetchSafetyState(userId: string): Promise<SafetyState> {
   );
 
   return { excludedAuthorIds, hiddenContentKeys };
-}
-
-export function filterAuthoredPosts(posts: PostRow[], state: SafetyState): PostRow[] {
-  return posts.filter((post) => !state.excludedAuthorIds.has(post.author_id) && !state.hiddenContentKeys.has(getHiddenContentKey('mandali_post', post.id)));
-}
-
-export function filterMemberRows(members: MemberRow[], state: SafetyState): MemberRow[] {
-  return members.filter((member) => !state.excludedAuthorIds.has(member.id));
 }
 
 // ── Connections (request / accept / reject between two seekers) ────────────

@@ -40,6 +40,7 @@ import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
+import { clearAllMandaliCaches } from '@/lib/mandaliCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
@@ -191,6 +192,7 @@ function RootLayout() {
         // up push identity itself.
         void unregisterPushToken();
         void clearAllHomeCaches();
+        void clearAllMandaliCaches();
         void clearAllOnboardingDrafts();
 
         // If guest mode is active, allow tabs and bypass login

@@ -1,9 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
-  type ListRenderItemInfo,
   Modal,
   RefreshControl,
   Text,
@@ -11,6 +9,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -35,6 +34,7 @@ import { apiFetch } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
 import {
   blockUser,
   cancelConnectionRequest,
@@ -44,6 +44,7 @@ import {
   fetchConnectionStatus,
   fetchNearbySeekers,
   fetchPendingConnectionRequests,
+  fetchPostComments,
   leaveMandali,
   removeCommentReaction,
   reportMandaliMember,
@@ -155,6 +156,7 @@ type MandaliPostCardProps = {
   rsvps: RsvpRow[];
   myReaction: ReactionType | null;
   expanded: boolean;
+  loadingComments: boolean;
   postingComment: boolean;
   theme: MandaliTheme;
   onRsvp: (postId: string, status: RsvpStatus) => void;
@@ -179,6 +181,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   rsvps,
   myReaction,
   expanded,
+  loadingComments,
   postingComment,
   theme,
   onRsvp,
@@ -365,6 +368,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
       <PostComments
         comments={comments}
         expanded={expanded}
+        loadingFull={loadingComments}
         onToggleExpand={() => onToggleComments(post.id)}
         userId={userId ?? ''}
         posting={postingComment}
@@ -431,7 +435,29 @@ export default function MandaliScreen() {
   const [composeEventLoc, setComposeEventLoc] = useState('');
   const [editingPost, setEditingPost] = useState<PostRow | null>(null);
   const [activeFilter, setActiveFilter] = useState<MandaliPostType | 'all'>('all');
+  // Keyset pagination state for the paginated feed endpoint.
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // Posts whose full comment thread has been fetched via fetchPostComments
+  // -- until then, `comments` only holds each post's 2-comment preview from
+  // the feed response, and expanding re-fetches the full thread once.
+  const [fullyLoadedCommentPostIds, setFullyLoadedCommentPostIds] = useState<Set<string>>(new Set());
+  const [loadingCommentsForPostId, setLoadingCommentsForPostId] = useState<string | null>(null);
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
+  // Sorted, joined post-id string used ONLY to scope the reaction/comment/
+  // RSVP realtime subscriptions below (Postgres Changes' `in.()` filter
+  // needs a static string) and as a stable effect dependency -- resubscribes
+  // only when the actual visible-post set changes, not on every render.
+  // Previously these three subscriptions had no filter at all: an upvote or
+  // comment on ANY post in the entire app (not just this mandali) was
+  // pushed to every connected Mandali client and silently discarded by the
+  // visiblePostIdsRef check in each handler. Scoping the subscription
+  // itself removes that unnecessary traffic instead of just discarding it
+  // after delivery.
+  const visiblePostIdsKey = useMemo(
+    () => [...posts, ...blendedPosts].map((p) => p.id).sort().join(','),
+    [posts, blendedPosts]
+  );
   const realtimeReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const theme = useMemo(
@@ -469,7 +495,42 @@ export default function MandaliScreen() {
       return;
     }
 
+    const cacheIdentity: MandaliCacheIdentity = { kind: 'authenticated', userId: user.id };
+
+    // Stale-while-revalidate: render whatever was cached for THIS identity
+    // instantly (if anything), then keep going into the network fetch
+    // below regardless -- this is a bridge to the fresh response, not a
+    // substitute for it, same pattern as Home's homeCoordinator.
+    const cached = await readMandaliCache(cacheIdentity);
+    if (cached) {
+      setProfile({
+        userId: user.id,
+        mandaliId: cached.payload.mandaliId,
+        mandaliName: cached.payload.mandaliName,
+        city: cached.payload.city,
+        country: cached.payload.country,
+        latitude: cached.payload.latitude,
+        longitude: cached.payload.longitude,
+      });
+      setPosts(cached.payload.posts);
+      setBlendedPosts(cached.payload.blendedPosts);
+      setComments(cached.payload.comments);
+      setRsvps(cached.payload.rsvps);
+      setMembers(cached.payload.members);
+      setNextCursor(cached.payload.nextCursor);
+      setMyReactions(
+        Object.fromEntries(
+          [...cached.payload.posts, ...cached.payload.blendedPosts]
+            .filter((post) => post.viewerReaction)
+            .map((post) => [post.id, post.viewerReaction as ReactionType])
+        )
+      );
+      visiblePostIdsRef.current = new Set([...cached.payload.posts, ...cached.payload.blendedPosts].map((p) => p.id));
+      setLoading(false);
+    }
+
     type FeedPayload = {
+      schemaVersion: 1;
       profile: {
         id: string;
         mandali_id: string | null;
@@ -480,12 +541,16 @@ export default function MandaliScreen() {
         mandalis?: { name?: string | null } | Array<{ name?: string | null }> | null;
       } | null;
       posts: PostRow[];
-      comments: CommentRow[];
       rsvps: RsvpRow[];
       members: Array<{ id: string; username: string; avatar_url: string | null; seva_score: number }>;
       blendedPosts: PostRow[];
+      nextCursor: string | null;
     };
-    const feedResponse = await apiFetch('/api/mandali/feed');
+    // Keyset-paginated, bounded-payload path (posts + author + counts +
+    // viewer reaction + comment preview in one response) -- opt-in via
+    // ?limit, see /api/mandali/feed's route handler. First page only here;
+    // loadMorePosts below fetches subsequent pages with ?cursor.
+    const feedResponse = await apiFetch('/api/mandali/feed?limit=20');
     if (!feedResponse.ok) throw new Error('Could not load Mandali.');
     const feed = await feedResponse.json() as FeedPayload;
     const profileRow = feed.profile;
@@ -510,6 +575,9 @@ export default function MandaliScreen() {
       setMembers([]);
       setMyReactions({});
       setMyCommentReactions({});
+      setNextCursor(null);
+      setFullyLoadedCommentPostIds(new Set());
+      void clearMandaliCache(cacheIdentity);
       return;
     }
 
@@ -527,27 +595,33 @@ export default function MandaliScreen() {
     setPosts(visiblePosts);
     setMembers(visibleMembers);
     setBlendedPosts(visibleBlended);
-    setComments(feed.comments);
     setRsvps(feed.rsvps);
+    setNextCursor(feed.nextCursor);
+    // A full page reload (pull-to-refresh, focus, filter reset) invalidates
+    // any previously-expanded full comment threads -- they'll re-fetch on
+    // next expand rather than risk showing a thread that no longer matches
+    // this fresh set of posts.
+    setFullyLoadedCommentPostIds(new Set());
 
-    const allPostIds = [...visiblePosts, ...visibleBlended].map((post) => post.id);
-    const visiblePostIds = new Set(allPostIds);
-    if (allPostIds.length > 0) {
-      const { data: upvoteRows } = await supabase
-        .from('post_upvotes')
-        .select('post_id, reaction_type')
-        .eq('user_id', user.id)
-        .in('post_id', allPostIds);
-      setMyReactions(
-        Object.fromEntries(
-          (upvoteRows ?? []).map((row) => [row.post_id, (row.reaction_type ?? 'pranam') as ReactionType])
-        )
-      );
-    } else {
-      setMyReactions({});
-    }
+    const allPosts = [...visiblePosts, ...visibleBlended];
+    const visiblePostIds = new Set(allPosts.map((post) => post.id));
 
-    const allCommentIds = feed.comments.map((comment) => comment.id);
+    // viewerReaction now arrives inlined per post from the feed response --
+    // no separate post_upvotes round trip needed.
+    setMyReactions(
+      Object.fromEntries(
+        allPosts
+          .filter((post) => post.viewerReaction)
+          .map((post) => [post.id, post.viewerReaction as ReactionType])
+      )
+    );
+
+    // Seed `comments` from each post's 2-comment preview; expanding a post
+    // fetches its full thread separately (see toggleComments).
+    const previewComments = allPosts.flatMap((post) => post.commentPreview ?? []);
+    setComments(previewComments);
+
+    const allCommentIds = previewComments.map((comment) => comment.id);
     if (allCommentIds.length > 0) {
       const { data: commentUpvoteRows } = await supabase
         .from('comment_upvotes')
@@ -564,7 +638,56 @@ export default function MandaliScreen() {
     }
 
     visiblePostIdsRef.current = visiblePostIds;
+
+    void writeMandaliCache(cacheIdentity, {
+      mandaliId: context.mandaliId,
+      mandaliName: context.mandaliName,
+      city: context.city,
+      country: context.country,
+      latitude: context.latitude,
+      longitude: context.longitude,
+      posts: visiblePosts,
+      blendedPosts: visibleBlended,
+      comments: previewComments,
+      rsvps: feed.rsvps,
+      members: visibleMembers,
+      nextCursor: feed.nextCursor,
+    });
   }, [router]);
+
+  // Fetches the next page of the local Mandali feed (blended posts are
+  // first-page-only, so this only ever appends to `posts`). Guarded against
+  // overlapping calls and a missing cursor (either no next page, or the
+  // screen is mid-initial-load).
+  const loadMorePosts = useCallback(async () => {
+    if (loadingMore || !nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const response = await apiFetch(`/api/mandali/feed?cursor=${encodeURIComponent(nextCursor)}&limit=20`);
+      if (!response.ok) return;
+      const page = await response.json() as { posts: PostRow[]; nextCursor: string | null };
+      setPosts((current) => {
+        const seen = new Set(current.map((p) => p.id));
+        return [...current, ...page.posts.filter((p) => !seen.has(p.id))];
+      });
+      setComments((current) => {
+        const seen = new Set(current.map((c) => c.id));
+        const newPreviews = page.posts.flatMap((post) => post.commentPreview ?? []).filter((c) => !seen.has(c.id));
+        return [...current, ...newPreviews];
+      });
+      setMyReactions((current) => {
+        const additions = Object.fromEntries(
+          page.posts.filter((post) => post.viewerReaction).map((post) => [post.id, post.viewerReaction as ReactionType])
+        );
+        return { ...current, ...additions };
+      });
+      setNextCursor(page.nextCursor);
+    } catch (error) {
+      console.error('[MandaliScreen] loadMorePosts failed', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, nextCursor]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -753,20 +876,30 @@ export default function MandaliScreen() {
   useEffect(() => {
     if (!profile?.mandaliId) return;
 
-    const channel = supabase
+    const channelBuilder = supabase
       .channel(`mandali:${profile.mandaliId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_upvotes' }, handleUpvoteRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, handleCommentRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, handleRsvpRealtimeChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload)
-      .subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `mandali_id=eq.${profile.mandaliId}` }, scheduleRealtimeReload);
+
+    // Reaction/comment/RSVP tables have no mandali_id column to filter on
+    // directly, but they do carry post_id -- scope to exactly the posts
+    // currently loaded instead of subscribing unfiltered. Skipped entirely
+    // until at least one post has loaded (nothing to scope to yet).
+    if (visiblePostIdsKey) {
+      const postIdFilter = `post_id=in.(${visiblePostIdsKey})`;
+      channelBuilder
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'post_upvotes', filter: postIdFilter }, handleUpvoteRealtimeChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments', filter: postIdFilter }, handleCommentRealtimeChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps', filter: postIdFilter }, handleRsvpRealtimeChange);
+    }
+
+    const channel = channelBuilder.subscribe();
 
     return () => {
       channel.unsubscribe();
       void supabase.removeChannel(channel);
     };
-  }, [profile?.mandaliId, handleCommentRealtimeChange, handleRsvpRealtimeChange, handleUpvoteRealtimeChange, scheduleRealtimeReload]);
+  }, [profile?.mandaliId, visiblePostIdsKey, handleCommentRealtimeChange, handleRsvpRealtimeChange, handleUpvoteRealtimeChange, scheduleRealtimeReload]);
 
   const filteredPosts = useMemo(
     () => (activeFilter === 'all' ? posts : posts.filter((p) => p.type === activeFilter)),
@@ -1250,8 +1383,33 @@ export default function MandaliScreen() {
   }, [loadMandali, profile]);
 
   const toggleComments = useCallback((postId: string) => {
-    setExpandedPostId((current) => (current === postId ? null : postId));
-  }, []);
+    setExpandedPostId((current) => {
+      const next = current === postId ? null : postId;
+      // Fetch the full thread the first time a post is expanded -- until
+      // now `comments` only holds this post's 2-comment preview from the
+      // feed response. Fire-and-forget: the loading state is tracked via
+      // loadingCommentsForPostId, not awaited here, so the expand itself
+      // isn't blocked on the network.
+      if (next && !fullyLoadedCommentPostIds.has(next)) {
+        setLoadingCommentsForPostId(next);
+        fetchPostComments(next)
+          .then((fullComments) => {
+            setComments((currentComments) => {
+              const withoutThisPost = currentComments.filter((c) => c.post_id !== next);
+              return [...withoutThisPost, ...fullComments];
+            });
+            setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(next));
+          })
+          .catch((error) => {
+            console.error('[MandaliScreen] fetchPostComments failed', error);
+          })
+          .finally(() => {
+            setLoadingCommentsForPostId((current) => (current === next ? null : current));
+          });
+      }
+      return next;
+    });
+  }, [fullyLoadedCommentPostIds]);
 
   const renderPost = useCallback((post: PostRow) => {
     return (
@@ -1263,6 +1421,7 @@ export default function MandaliScreen() {
         rsvps={rsvpsByPost.get(post.id) ?? []}
         myReaction={myReactions[post.id] ?? null}
         expanded={expandedPostId === post.id}
+        loadingComments={loadingCommentsForPostId === post.id}
         postingComment={commenting === post.id}
         theme={theme}
         onRsvp={handleRsvp}
@@ -1280,7 +1439,7 @@ export default function MandaliScreen() {
         myCommentReactions={myCommentReactions}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, handleEditComment, handleDeleteComment, handleSelectCommentReaction, handleRemoveCommentReaction, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, loadingCommentsForPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, handleEditComment, handleDeleteComment, handleSelectCommentReaction, handleRemoveCommentReaction, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
@@ -1351,18 +1510,23 @@ export default function MandaliScreen() {
   ), [members, openMemberInfo, profile?.userId, showMemberOptions, theme]);
 
   const renderFeedItem = useCallback(({ item }: ListRenderItemInfo<MandaliFeedItem>) => {
-    if (item.type === 'post' || item.type === 'blendedPost') return renderPost(item.post);
-    if (item.type === 'empty') {
-      return (
+    // FlashList's recycled item views don't reliably inherit a parent
+    // `contentContainerStyle.gap` the way a plain flex column does --
+    // spacing is applied per-item here instead, same visual result as the
+    // FlatList's previous container gap: 16.
+    let content: ReactNode;
+    if (item.type === 'post' || item.type === 'blendedPost') {
+      content = renderPost(item.post);
+    } else if (item.type === 'empty') {
+      content = (
         <EmptyState
           icon="message-circle"
           title={posts.length === 0 ? 'No posts yet' : 'No posts in this category'}
           subtitle={posts.length === 0 ? 'Be the first to share something with your Mandali.' : 'Try a different filter, or clear it to see everything.'}
         />
       );
-    }
-    if (item.type === 'blendHeader') {
-      return (
+    } else if (item.type === 'blendHeader') {
+      content = (
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: theme.premiumBorder }} />
@@ -1374,8 +1538,10 @@ export default function MandaliScreen() {
           </Text>
         </View>
       );
+    } else {
+      content = renderMembersCard();
     }
-    return renderMembersCard();
+    return <View style={{ marginBottom: 16 }}>{content}</View>;
   }, [posts.length, renderMembersCard, renderPost, theme.dim, theme.premiumBorder]);
 
   const keyExtractor = useCallback((item: MandaliFeedItem) => {
@@ -1493,21 +1659,30 @@ export default function MandaliScreen() {
   ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, pendingRequests.length, posts.length, profile, resetComposeState, router, theme]);
   const feedFooter = useMemo(() => {
     const hasCapturedLocation = profile?.latitude != null && profile.longitude != null;
-    if (!profile?.mandaliId || !hasCapturedLocation) return null;
+    const loadMoreIndicator = loadingMore ? (
+      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={theme.brand} />
+      </View>
+    ) : null;
+
+    if (!profile?.mandaliId || !hasCapturedLocation) return loadMoreIndicator;
 
     return (
-      <SeekersNearYou
-        seekers={seekers}
-        loading={loadingSeekers}
-        text={theme.text}
-        dim={theme.dim}
-        brand={theme.brand}
-        cardBg={theme.card}
-        border={theme.border}
-        onSelectSeeker={openSeekerInfo}
-      />
+      <>
+        {loadMoreIndicator}
+        <SeekersNearYou
+          seekers={seekers}
+          loading={loadingSeekers}
+          text={theme.text}
+          dim={theme.dim}
+          brand={theme.brand}
+          cardBg={theme.card}
+          border={theme.border}
+          onSelectSeeker={openSeekerInfo}
+        />
+      </>
     );
-  }, [loadingSeekers, openSeekerInfo, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
+  }, [loadingMore, loadingSeekers, openSeekerInfo, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
 
   if (loading) {
     return (
@@ -1540,18 +1715,17 @@ export default function MandaliScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <FlatList
+      <FlashList
         data={feedItems}
         renderItem={renderFeedItem}
         keyExtractor={keyExtractor}
         ListHeaderComponent={renderFeedHeader}
         ListFooterComponent={feedFooter}
-        contentContainerStyle={{ paddingBottom: 36, gap: 16 }}
+        contentContainerStyle={{ paddingBottom: 36 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
-        initialNumToRender={6}
-        maxToRenderPerBatch={6}
-        windowSize={7}
+        onEndReached={loadMorePosts}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} colors={[theme.brand]} />
         }

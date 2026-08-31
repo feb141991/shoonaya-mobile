@@ -10,14 +10,17 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { FONTS, TYPE, themeColor } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api';
 
 // Read-only "view another member's public profile" screen — reachable from
 // Mandali's post authors, comment authors, and member list (all previously
 // dead taps; MemberInfoSheet's own doc comment used to note no such screen
-// existed anywhere in the app or the PWA). Only fields already safe to show
-// on a public profile are selected; `profiles` has a public-read RLS policy
-// so no backend change was needed, just this screen and the tap wiring.
+// existed anywhere in the app or the PWA). `profiles`' RLS only allows
+// reading your OWN row (auth.uid() = id) -- there is no public-read policy,
+// so this can't query Supabase directly the way it originally did (that
+// returned "not found" for every profile except your own). Goes through
+// /api/mandali/member-profile instead, which fetches server-side via the
+// admin client -- same trust model the Mandali member list already uses.
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
 type PublicProfile = {
@@ -79,21 +82,19 @@ export default function MemberProfileScreen() {
         return;
       }
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(
-          'id, full_name, username, avatar_url, bio, tradition, sampradaya, ishta_devata, city, country, seva_score, karma_points'
-        )
-        .eq('id', id)
-        .maybeSingle();
-
-      if (cancelled) return;
-      if (error || !data) {
-        setNotFound(true);
-      } else {
-        setProfile(data);
+      try {
+        const response = await apiFetch(`/api/mandali/member-profile?id=${encodeURIComponent(id)}`);
+        if (cancelled) return;
+        if (!response.ok) {
+          setNotFound(true);
+        } else {
+          const result = await response.json() as { profile: PublicProfile };
+          setProfile(result.profile);
+        }
+      } catch {
+        if (!cancelled) setNotFound(true);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
 
     void load();

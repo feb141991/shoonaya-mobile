@@ -219,6 +219,7 @@ function CommentItem({
 export function PostComments({
   comments,
   expanded,
+  loadingFull = false,
   onToggleExpand,
   userId,
   posting,
@@ -238,6 +239,9 @@ export function PostComments({
 }: {
   comments: CommentRow[];
   expanded: boolean;
+  // True while the full thread is being fetched after first expand (the
+  // feed response only carries a 2-comment preview per post upfront).
+  loadingFull?: boolean;
   onToggleExpand: () => void;
   userId: string;
   posting: boolean;
@@ -303,6 +307,12 @@ export function PostComments({
 
       {expanded ? (
         <View style={{ marginTop: 8, gap: 9 }}>
+          {loadingFull ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <ActivityIndicator size="small" color={dim} />
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim }}>Loading comments…</Text>
+            </View>
+          ) : null}
           {rootComments.map((comment) => {
             const replies = repliesByParent.get(comment.id) ?? [];
             const isReplying = replyTo === comment.id;
