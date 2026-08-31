@@ -478,6 +478,32 @@ export function PostComments({
               )}
             </PressableSurface>
           </View>
+
+          {/* Explicit close affordance -- the only way to collapse this
+              thread was previously the small comment-count toggle at the
+              top, which is easy to miss once you've scrolled into a chat-
+              like thread with bubbles and a composer. This gives an
+              unambiguous "done here" action at the point the user's
+              attention naturally ends up. */}
+          <PressableSurface
+            haptic="selection"
+            onPress={onToggleExpand}
+            accessibilityLabel="Hide comments"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              marginTop: 4,
+              paddingVertical: 8,
+              borderRadius: RADII.xs,
+              borderWidth: 1,
+              borderColor: border,
+            }}
+          >
+            <Feather name="chevron-up" size={13} color={dim} />
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: dim }}>Hide comments</Text>
+          </PressableSurface>
         </View>
       ) : null}
 
