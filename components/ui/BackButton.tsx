@@ -1,32 +1,20 @@
-import { Text, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect } from 'react';
+import { BackHandler, Text, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, themeColor } from '@/lib/constants';
 
-// Extracted from the identical "chevron-left + Back text" Pressable
-// duplicated across several screens — none of which set accessibilityRole/
-// Label or a minimum touch-target height. Standardized onto quiz.tsx,
-// vrat.tsx, and sankalpa.tsx (exact-match duplicates); Pathshala's
-// detail/reader screens use the showLabel={false} icon-only variant since
-// their header pairs the icon with its own title text instead of a "Back"
-// label. app/nitya-karma.tsx intentionally NOT touched — it already moved
-// to its own distinct circular/glass back-button treatment as part of an
-// earlier visual pass and standardizing it here would be a regression.
-
 type BackButtonProps = {
   label?: string;
   variant?: 'text' | 'icon' | 'glass' | 'hero';
-  // Icon-only header variant (e.g. Pathshala detail/reader): hides the text
-  // label while keeping the same accessible name, min touch target, and
-  // router.back() default. Added so screens that previously rendered a bare
-  // arrow-left icon next to their own title can standardize on this
-  // component without picking up an unwanted visible "Back" label.
   showLabel?: boolean;
   iconSize?: number;
   iconColor?: string;
   onPress?: () => void;
+  fallbackHref?: string;
+  handleHardwareBack?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -37,6 +25,8 @@ export function BackButton({
   iconSize,
   iconColor,
   onPress,
+  fallbackHref,
+  handleHardwareBack = true,
   style,
 }: BackButtonProps) {
   const router = useRouter();
@@ -49,12 +39,38 @@ export function BackButton({
   const resolvedColor = iconColor ?? (isText ? dim : theme.text);
   const resolvedIconSize = iconSize ?? (isText ? 16 : isHero ? 20 : 19);
 
+  const handleBack = () => {
+    if (onPress) {
+      onPress();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    } else if (fallbackHref) {
+      router.replace(fallbackHref as any);
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
+  useEffect(() => {
+    if (!handleHardwareBack && !fallbackHref) return;
+
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [handleHardwareBack, fallbackHref, onPress]);
+
   return (
     <PressableSurface
       accessibilityLabel={label}
       haptic="selection"
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      onPress={onPress ?? (() => router.back())}
+      onPress={handleBack}
       style={[
         isText
           ? {

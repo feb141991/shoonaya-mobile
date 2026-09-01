@@ -877,8 +877,8 @@ export default function ProfileScreen() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <PressableSurface
               haptic="selection"
-              accessibilityLabel="Open notifications"
-              onPress={() => router.push('/notifications')}
+              accessibilityLabel="Open settings"
+              onPress={() => router.push('/settings')}
               style={{
                 width: 52,
                 height: 52,
@@ -891,7 +891,7 @@ export default function ProfileScreen() {
                 boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
               }}
             >
-              <Feather name="message-square" size={21} color={theme.text} />
+              <Feather name="settings" size={21} color={theme.text} />
             </PressableSurface>
           </View>
         </View>
@@ -1499,26 +1499,6 @@ export default function ProfileScreen() {
             </PressableSurface>
           </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Open settings"
-              onPress={() => router.push('/settings')}
-              style={{
-                flex: 1,
-                minHeight: 56,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: theme.borderSoft,
-                backgroundColor: theme.glass,
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'row',
-                gap: 9,
-              }}
-            >
-              <Feather name="settings" size={18} color={theme.brand} />
-              <Text style={{ ...TYPE.label, color: theme.text }}>Settings</Text>
-            </PressableSurface>
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Download Sadhana report"

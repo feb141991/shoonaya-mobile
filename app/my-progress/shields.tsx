@@ -114,7 +114,7 @@ export default function ShieldsScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
+        header={{ title: 'Shields & Milestones', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
       >
         <EmptyState
           icon="award"
@@ -133,7 +133,7 @@ export default function ShieldsScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
+        header={{ title: 'Shields & Milestones', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
       >
         <EmptyState
           icon="alert-circle"
@@ -156,7 +156,7 @@ export default function ShieldsScreen() {
   return (
     <Screen 
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Shields & Milestones', onBack: () => router.back() }}
+      header={{ title: 'Shields & Milestones', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         

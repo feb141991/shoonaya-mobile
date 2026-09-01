@@ -119,7 +119,7 @@ export default function PersonalDetailsScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <BackButton />
+        <BackButton fallbackHref="/settings" />
 
         <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Personal Details</Text>
 

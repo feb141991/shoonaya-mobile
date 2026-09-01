@@ -85,7 +85,7 @@ export default function LedgerScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Karma Ledger', onBack: () => router.back() }}
+        header={{ title: 'Karma Ledger', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
       >
         <EmptyState
           icon="list"
@@ -104,7 +104,7 @@ export default function LedgerScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Karma Ledger', onBack: () => router.back() }}
+        header={{ title: 'Karma Ledger', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
       >
         <EmptyState
           icon="alert-circle"
@@ -120,7 +120,7 @@ export default function LedgerScreen() {
   return (
     <Screen 
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Karma Ledger', onBack: () => router.back() }}
+      header={{ title: 'Karma Ledger', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
     >
       <FlatList
         data={ledger}

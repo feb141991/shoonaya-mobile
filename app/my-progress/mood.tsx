@@ -85,7 +85,7 @@ export default function MoodInsightsScreen() {
   return (
     <Screen
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Mood Insights', onBack: () => router.back() }}
+      header={{ title: 'Mood Insights', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
     >
       <View pointerEvents="none" style={{ position: 'absolute', top: 70, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
       <View pointerEvents="none" style={{ position: 'absolute', top: 360, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />
