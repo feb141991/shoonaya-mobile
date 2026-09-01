@@ -19,6 +19,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -158,6 +159,7 @@ function AnimatedColumn({ targetHeight, color, index, maxHeight = 56 }: { target
 
 export default function JapaInsightsScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/(tabs)/japa', true);
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
 
@@ -313,7 +315,7 @@ export default function JapaInsightsScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Japa Insights', onBack: () => router.back() }}
+        header={{ title: 'Japa Insights', onBack: handleBack }}
       >
         <EmptyState
           icon="bar-chart-2"
@@ -332,7 +334,7 @@ export default function JapaInsightsScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Japa Insights', onBack: () => router.back() }}
+        header={{ title: 'Japa Insights', onBack: handleBack }}
       >
         <EmptyState
           icon="alert-circle"
@@ -348,7 +350,7 @@ export default function JapaInsightsScreen() {
   return (
     <Screen
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Japa Insights', onBack: () => router.back() }}
+      header={{ title: 'Japa Insights', onBack: handleBack }}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48, gap: 16 }}>
         {/* Time-range pills */}

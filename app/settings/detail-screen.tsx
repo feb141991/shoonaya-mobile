@@ -491,7 +491,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <BackButton fallbackHref="/settings" />
+        <BackButton fallbackHref="/settings" handleHardwareBack />
 
         <View style={{ gap: 2 }}>
           <Text style={{ ...TYPE.screenTitle, color: theme.text }}>{title}</Text>

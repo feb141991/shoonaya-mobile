@@ -10,6 +10,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +30,7 @@ export default function LedgerScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/my-progress', true);
 
   const theme = themeColor(isDark);
 
@@ -85,7 +87,7 @@ export default function LedgerScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Karma Ledger', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+        header={{ title: 'Karma Ledger', onBack: handleBack }}
       >
         <EmptyState
           icon="list"
@@ -104,7 +106,7 @@ export default function LedgerScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Karma Ledger', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+        header={{ title: 'Karma Ledger', onBack: handleBack }}
       >
         <EmptyState
           icon="alert-circle"
@@ -120,7 +122,7 @@ export default function LedgerScreen() {
   return (
     <Screen 
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Karma Ledger', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+      header={{ title: 'Karma Ledger', onBack: handleBack }}
     >
       <FlatList
         data={ledger}

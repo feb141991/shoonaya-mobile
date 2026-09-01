@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { BirthPanchangCard } from '@/components/kundali/BirthPanchangCard';
 import { DashaTimeline } from '@/components/kundali/DashaTimeline';
 import { KundaliIdentity } from '@/components/kundali/KundaliIdentity';
@@ -41,6 +42,7 @@ const TAB_CONFIG: Array<{ key: DetailTab; label: string; icon: keyof typeof Feat
 
 export default function KundaliDetailScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/kundali', true);
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: DetailTab }>();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -129,7 +131,7 @@ export default function KundaliDetailScreen() {
     <Screen
       header={{
         title: profile?.label || 'Vedic Kundali',
-        onBack: () => router.back(),
+        onBack: handleBack,
         rightElement: (
           <View style={styles.headerActions}>
             {/* Text Scale Toggle */}

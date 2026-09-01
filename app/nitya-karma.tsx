@@ -15,6 +15,7 @@ import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg'
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -163,6 +164,7 @@ function ProgressRing({ value, total, brand, track }: { value: number; total: nu
 
 export default function NityaKarmaHubScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/(tabs)', true);
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
 
@@ -312,7 +314,7 @@ export default function NityaKarmaHubScreen() {
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Go back"
-              onPress={() => router.back()}
+              onPress={handleBack}
               style={{
                 width: MIN_TOUCH_TARGET,
                 height: MIN_TOUCH_TARGET,

@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
@@ -44,6 +45,7 @@ type GeocodeResult = {
 
 export default function KundaliScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/(tabs)/profile', true);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
@@ -160,7 +162,7 @@ export default function KundaliScreen() {
     <Screen
       header={{
         title: 'Vedic Kundali',
-        onBack: () => router.back(),
+        onBack: handleBack,
         rightElement: (
           <PressableSurface
             onPress={() => setShowForm(true)}

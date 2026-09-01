@@ -9,6 +9,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
@@ -52,6 +53,7 @@ export default function ShieldsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/my-progress', true);
 
   const theme = themeColor(isDark);
 
@@ -114,7 +116,7 @@ export default function ShieldsScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Shields & Milestones', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+        header={{ title: 'Shields & Milestones', onBack: handleBack }}
       >
         <EmptyState
           icon="award"
@@ -133,7 +135,7 @@ export default function ShieldsScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'Shields & Milestones', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+        header={{ title: 'Shields & Milestones', onBack: handleBack }}
       >
         <EmptyState
           icon="alert-circle"
@@ -156,7 +158,7 @@ export default function ShieldsScreen() {
   return (
     <Screen 
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Shields & Milestones', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+      header={{ title: 'Shields & Milestones', onBack: handleBack }}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         

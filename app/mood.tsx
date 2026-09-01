@@ -18,6 +18,7 @@ import { useRouter, type Href } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { MotionView } from '@/components/ui/Motion';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
@@ -103,6 +104,7 @@ const FEATURED_ITEMS = [
 
 export default function MoodScreen() {
   const router = useRouter();
+  const handleExit = useFallbackBackHandler('/(tabs)', false);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
@@ -408,11 +410,22 @@ export default function MoodScreen() {
     );
   };
 
-  const renderBackButton = (onPress?: () => void) => (
+  const handleStepBack = useCallback(() => {
+    if (step === 3) {
+      setStep(2);
+    } else if (step === 2) {
+      setStep(1);
+    } else {
+      handleExit();
+    }
+  }, [handleExit, step]);
+  useFallbackBackHandler('/(tabs)', true, handleStepBack);
+
+  const renderBackButton = (onPress: () => void = handleStepBack) => (
     <Pressable
       accessibilityLabel="Go back"
       accessibilityRole="button"
-      onPress={onPress ?? (() => router.back())}
+      onPress={onPress}
       style={[
         styles.backButton,
         {
@@ -526,11 +539,7 @@ export default function MoodScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
-          {renderBackButton(() => {
-            if (step === 3) setStep(2);
-            else if (step === 2) setStep(1);
-            else router.back();
-          })}
+          {renderBackButton()}
           {step !== 1 ? (
             <View style={{ borderRadius: 999, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>
               <PressableSurface

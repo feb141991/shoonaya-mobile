@@ -378,7 +378,7 @@ ${moralText}` : '';
     return (
       <Screen style={{ backgroundColor: surface }}>
         <View style={{ padding: 20 }}>
-          <BackButton variant="glass" />
+          <BackButton variant="glass" fallbackHref="/dharm-veer" handleHardwareBack />
           <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30, marginTop: 20 }}>Dharm Veer</Text>
           <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, marginTop: 10 }}>
             {notFound ? 'Story not found.' : 'Failed to load story.'}

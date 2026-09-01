@@ -18,6 +18,7 @@ import { AuthGate } from '@/components/ui/AuthGate';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { isGuestMode } from '@/lib/guestSession';
@@ -76,6 +77,7 @@ function monthRange() {
 
 export default function SevaScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/(tabs)', true);
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
 
@@ -171,7 +173,7 @@ export default function SevaScreen() {
 
   if (loading) {
     return (
-      <Screen header={{ title: 'Seva', onBack: () => router.back() }}>
+      <Screen header={{ title: 'Seva', onBack: handleBack }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={accent} />
         </View>
@@ -180,7 +182,7 @@ export default function SevaScreen() {
   }
 
   return (
-    <Screen header={{ title: 'Seva', onBack: () => router.back() }}>
+    <Screen header={{ title: 'Seva', onBack: handleBack }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

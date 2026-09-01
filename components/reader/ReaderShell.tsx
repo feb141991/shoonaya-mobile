@@ -8,10 +8,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { ReaderIntro } from '@/components/reader/ReaderIntro';
 import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
@@ -102,9 +103,9 @@ export function ReaderShell<LanguageCode extends string = string>({
   children,
   contentContainerStyle,
 }: ReaderShellProps<LanguageCode>) {
-  const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
+  const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack);
 
   useEffect(() => {
     trackReaderEvent('reader_opened', {
@@ -113,16 +114,6 @@ export function ReaderShell<LanguageCode extends string = string>({
       has_meaning: Boolean(showMeaningToggle),
     });
   }, [showMeaningToggle, showTransliterationToggle, title]);
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace(fallbackBackUrl);
-    }
-  };
 
   const bgBase = shellBackgroundColor ?? (isDark ? COLORS.darkBg : COLORS.creamBg);
   const bgCard = shellHeaderBackgroundColor ?? (isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight);

@@ -10,6 +10,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 
@@ -27,6 +28,7 @@ export default function MoodInsightsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/my-progress', true);
 
   const theme = themeColor(isDark);
 
@@ -85,7 +87,7 @@ export default function MoodInsightsScreen() {
   return (
     <Screen
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'Mood Insights', onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-progress')) }}
+      header={{ title: 'Mood Insights', onBack: handleBack }}
     >
       <View pointerEvents="none" style={{ position: 'absolute', top: 70, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft, opacity: 0.72 }} />
       <View pointerEvents="none" style={{ position: 'absolute', top: 360, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight, opacity: 0.66 }} />

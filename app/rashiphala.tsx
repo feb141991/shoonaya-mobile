@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -71,6 +72,7 @@ function toneStyle(tone: RashiHoroscope['transitHighlights'][number]['tone']) {
 
 export default function RashiphalaScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/(tabs)', true);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
@@ -168,7 +170,7 @@ export default function RashiphalaScreen() {
     <Screen
       header={{
         title: 'Your Rashiphala',
-        onBack: () => router.back(),
+        onBack: handleBack,
         rightElement: data ? (
           <PressableSurface
             onPress={shareReading}

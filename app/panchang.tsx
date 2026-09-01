@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -360,6 +361,7 @@ const iconBtnStyle = {
 
 export default function PanchangScreen() {
   const router = useRouter();
+  const handleBack = useFallbackBackHandler('/(tabs)', true);
   const [profileState, setProfileState] = useState<PanchangState>(INITIAL_STATE);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [festivals, setFestivals] = useState<UpcomingFestival[]>([]);
@@ -569,7 +571,7 @@ export default function PanchangScreen() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 110, gap: 12 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable accessibilityLabel="Back" onPress={() => router.back()} hitSlop={8} style={iconBtnStyle}>
+          <Pressable accessibilityLabel="Back" onPress={handleBack} hitSlop={8} style={iconBtnStyle}>
             <Feather name="chevron-left" size={18} color={CREAM} />
           </Pressable>
           <View style={{ flex: 1 }}>

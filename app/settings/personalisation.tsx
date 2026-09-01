@@ -161,7 +161,7 @@ export default function PersonalisationScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <BackButton fallbackHref="/settings" />
+        <BackButton fallbackHref="/settings" handleHardwareBack />
 
         <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Personalisation</Text>
 

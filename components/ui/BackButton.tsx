@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { BackHandler, Text, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, themeColor } from '@/lib/constants';
@@ -13,10 +13,42 @@ type BackButtonProps = {
   iconSize?: number;
   iconColor?: string;
   onPress?: () => void;
-  fallbackHref?: string;
+  fallbackHref?: Href;
   handleHardwareBack?: boolean;
   style?: StyleProp<ViewStyle>;
 };
+
+// Android's default stack behavior is correct for ordinary screens. This is
+// deliberately opt-in for routes that can be opened directly (for example
+// from a notification or deep link) and therefore need a deterministic
+// parent when no stack history exists.
+export function useFallbackBackHandler(fallbackHref?: Href, enabled = false, onPress?: () => void) {
+  const router = useRouter();
+
+  const handleBack = useCallback(() => {
+    if (onPress) {
+      onPress();
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Preserve the BackButton's historical direct-entry behavior for the
+      // many readers that do not declare a more specific parent route.
+      router.replace(fallbackHref ?? '/(tabs)');
+    }
+  }, [fallbackHref, onPress, router]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [enabled, handleBack]);
+
+  return handleBack;
+}
 
 export function BackButton({
   label = 'Back',
@@ -26,10 +58,9 @@ export function BackButton({
   iconColor,
   onPress,
   fallbackHref,
-  handleHardwareBack = true,
+  handleHardwareBack = false,
   style,
 }: BackButtonProps) {
-  const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
@@ -39,31 +70,7 @@ export function BackButton({
   const resolvedColor = iconColor ?? (isText ? dim : theme.text);
   const resolvedIconSize = iconSize ?? (isText ? 16 : isHero ? 20 : 19);
 
-  const handleBack = () => {
-    if (onPress) {
-      onPress();
-      return;
-    }
-    if (router.canGoBack()) {
-      router.back();
-    } else if (fallbackHref) {
-      router.replace(fallbackHref as any);
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
-
-  useEffect(() => {
-    if (!handleHardwareBack && !fallbackHref) return;
-
-    const onBackPress = () => {
-      handleBack();
-      return true;
-    };
-
-    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    return () => subscription.remove();
-  }, [handleHardwareBack, fallbackHref, onPress]);
+  const handleBack = useFallbackBackHandler(fallbackHref, handleHardwareBack, onPress);
 
   return (
     <PressableSurface

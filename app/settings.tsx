@@ -55,7 +55,7 @@ export default function SettingsScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <BackButton fallbackHref="/(tabs)/profile" />
+        <BackButton fallbackHref="/(tabs)/profile" handleHardwareBack />
         <View style={{ gap: 4 }}>
           <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Settings</Text>
           <Text style={{ ...TYPE.body, color: theme.dim }}>Choose what you would like to manage.</Text>
