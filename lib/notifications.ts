@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import type { NotificationPermissionsStatus } from 'expo-notifications';
 import type { Href, useRouter } from 'expo-router';
@@ -7,6 +7,10 @@ import { apiFetch } from '@/lib/api';
 import { API_BASE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
+import {
+  normalizeNotificationPermissionState,
+  type NotificationPermissionState,
+} from '@/lib/notificationPermissionState';
 
 /**
  * Push notifications — migrated off OneSignal to Expo's own push service
@@ -122,8 +126,20 @@ function getExpoProjectId(): string | null {
 }
 
 function hasNotificationPermission(permission: NotificationPermissionsStatus) {
-  const normalized = permission as { granted?: boolean; status?: string };
-  return normalized.granted === true || normalized.status === 'granted';
+  return normalizeNotificationPermissionState(permission) === 'granted';
+}
+
+export async function getNotificationPermissionState(): Promise<NotificationPermissionState> {
+  if (!Notifications) return 'unavailable';
+  try {
+    return normalizeNotificationPermissionState(await Notifications.getPermissionsAsync());
+  } catch {
+    return 'unavailable';
+  }
+}
+
+export async function openNotificationSettings(): Promise<void> {
+  await Linking.openSettings();
 }
 
 /**
@@ -139,7 +155,7 @@ function hasNotificationPermission(permission: NotificationPermissionsStatus) {
  * dialog, so this never nags.
  */
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (!Notifications) return true;
+  if (!Notifications) return __DEV__ && !Constants.isDevice;
   try {
     const existing = await Notifications.getPermissionsAsync();
     if (hasNotificationPermission(existing)) return true;
@@ -155,7 +171,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * Reads the current OS notification permission status without showing any prompt.
  */
 export async function checkNotificationPermission(): Promise<boolean> {
-  if (!Notifications) return true;
+  if (!Notifications) return __DEV__ && !Constants.isDevice;
   try {
     const existing = await Notifications.getPermissionsAsync();
     if (hasNotificationPermission(existing)) return true;

@@ -27,7 +27,11 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { registerPushToken, requestNotificationPermission } from '@/lib/notifications';
+import {
+  openNotificationSettings,
+  registerPushToken,
+  requestNotificationPermission,
+} from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
@@ -349,6 +353,10 @@ export default function SettingsScreen() {
       Alert.alert(
         'Notifications are off',
         'Shoonaya could not enable this reminder without notification permission. You can allow notifications in your device settings and try again.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => { void openNotificationSettings(); } },
+        ],
       );
       return;
     }

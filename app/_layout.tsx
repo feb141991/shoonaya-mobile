@@ -4,7 +4,7 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { AppState, View } from 'react-native';
+import { Alert, AppState, View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -42,7 +42,18 @@ import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllMandaliCaches } from '@/lib/mandaliCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
-import { initPushNotifications, handleNotificationTap, registerPushToken, unregisterPushToken } from '@/lib/notifications';
+import {
+  getNotificationPermissionState,
+  initPushNotifications,
+  handleNotificationTap,
+  registerPushToken,
+  requestNotificationPermission,
+  unregisterPushToken,
+} from '@/lib/notifications';
+import {
+  claimNotificationPermissionPrompt,
+  dismissNotificationPermissionPrompt,
+} from '@/lib/notificationPermissionPrompt';
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
@@ -171,6 +182,38 @@ function RootLayout() {
     segmentsRef.current = { rootSegment, childSegment };
   }, [rootSegment, childSegment]);
 
+  const offerNotificationPermission = useCallback(async (userId: string) => {
+    const permission = await getNotificationPermissionState();
+    if (permission !== 'undetermined') return;
+    if (!(await claimNotificationPermissionPrompt(userId))) return;
+
+    // Let Home become interactive before presenting a contextual explanation.
+    setTimeout(() => {
+      void supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user.id !== userId) return;
+        Alert.alert(
+          'Stay connected to your practice',
+          'Allow Shoonaya to deliver the festival, vrat and practice reminders you choose. You can change each reminder in Settings.',
+          [
+            {
+              text: 'Not now',
+              style: 'cancel',
+              onPress: () => { void dismissNotificationPermissionPrompt(userId); },
+            },
+            {
+              text: 'Enable notifications',
+              onPress: () => {
+                void requestNotificationPermission().then((granted) => {
+                  if (granted) void registerPushToken(userId);
+                });
+              },
+            },
+          ],
+        );
+      });
+    }, 900);
+  }, []);
+
   const routeForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
       setApiAccessTokenFromSession(session);
@@ -276,6 +319,7 @@ function RootLayout() {
               void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
             }
           });
+        void offerNotificationPermission(session.user.id);
         return;
       }
 
@@ -287,6 +331,7 @@ function RootLayout() {
 
       if (profile?.onboarding_completed === true) {
         void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
+        void offerNotificationPermission(session.user.id);
       } else if (profile?.onboarding_completed === false) {
         void AsyncStorage.setItem(cacheKey, 'false').catch(() => {});
       }
@@ -300,7 +345,7 @@ function RootLayout() {
         router.replace('/(tabs)');
       }
     },
-    [applyStartupPreferences, router]
+    [applyStartupPreferences, offerNotificationPermission, router]
   );
 
   // ── Keep Supabase session refresh alive across backgrounding ─────────
