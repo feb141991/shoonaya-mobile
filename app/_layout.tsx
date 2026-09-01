@@ -58,6 +58,7 @@ import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
+import { setAppIdentity } from '@/lib/appIdentity';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -213,6 +214,8 @@ function RootLayout() {
   // routeForSession a stable identity (only `router` remains a real dep)
   // without losing access to the latest segments.
   const segmentsRef = useRef({ rootSegment, childSegment });
+  const authRouteGenerationRef = useRef(0);
+  const lastAuthRouteKeyRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     segmentsRef.current = { rootSegment, childSegment };
   }, [rootSegment, childSegment]);
@@ -253,6 +256,12 @@ function RootLayout() {
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
       setApiAccessTokenFromSession(session);
 
+      const routeKey = session?.user.id ?? null;
+      if (lastAuthRouteKeyRef.current === routeKey) return;
+      lastAuthRouteKeyRef.current = routeKey;
+      const routeGeneration = ++authRouteGenerationRef.current;
+      const isCurrentRoute = () => authRouteGenerationRef.current === routeGeneration;
+
       const { rootSegment, childSegment } = segmentsRef.current;
       const inAuthGroup = rootSegment === '(auth)';
 
@@ -262,6 +271,7 @@ function RootLayout() {
         // restore the previous account's tradition after sign-out.
         setStartupPreferenceIdentity(null);
         await clearDeviceStartupPreferences();
+        if (!isCurrentRoute()) return;
         // Unbind this device's push token whenever there is no
         // authenticated session — covers explicit sign-out (all 3 call
         // sites: settings.tsx x2, profile.tsx) plus any future one, since
@@ -275,21 +285,30 @@ function RootLayout() {
 
         // If guest mode is active, allow tabs and bypass login
         const guest = await isGuestMode();
+        if (!isCurrentRoute()) return;
         if (guest) {
+          setAppIdentity({ kind: 'guest' });
           if (inAuthGroup) {
             router.replace('/(tabs)');
           }
           return;
         }
 
+        setAppIdentity({ kind: 'unauthenticated' });
         if (!inAuthGroup) {
           router.replace('/(auth)/login');
         }
         return;
       }
 
+      // Root is the sole session owner. Publish identity before slower
+      // preference/profile revalidation so mounted screens never need their
+      // own Supabase auth subscriptions or getSession() calls.
+      setAppIdentity({ kind: 'authenticated', userId: session.user.id });
+
       const preferenceGeneration = setStartupPreferenceIdentity(session.user.id);
       const authenticatedStartupPrefs = await getStartupPreferences(session.user.id);
+      if (!isCurrentRoute()) return;
       if (
         isStartupPreferenceIdentityCurrent(session.user.id, preferenceGeneration)
       ) {
@@ -298,6 +317,7 @@ function RootLayout() {
 
       // Real sign-in should clear guest mode after session is established.
       await setGuestMode(false);
+      if (!isCurrentRoute()) return;
 
       // (Re-)register this device's push token against the signed-in user
       // on every authenticated session, not just once at the end of
@@ -335,6 +355,7 @@ function RootLayout() {
       // without blocking cold start on a network round-trip.
       const cacheKey = `shoonaya:onboarding_completed:${session.user.id}`;
       const cached = await AsyncStorage.getItem(cacheKey).catch(() => null);
+      if (!isCurrentRoute()) return;
 
       if (cached === 'true') {
         if (inAuthGroup) {
@@ -363,6 +384,7 @@ function RootLayout() {
         .select('onboarding_completed')
         .eq('id', session.user.id)
         .maybeSingle();
+      if (!isCurrentRoute()) return;
 
       if (profile?.onboarding_completed === true) {
         void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});

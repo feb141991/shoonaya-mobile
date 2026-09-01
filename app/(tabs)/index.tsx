@@ -51,20 +51,18 @@ import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
-import { isGuestMode } from '@/lib/guestSession';
 import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
 import {
   HomeSummaryCoordinator,
-  resolveHomeIdentity,
   getIdentityKey,
   type HomeAuthIdentity,
 } from '@/lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
-import { supabase } from '@/lib/supabase';
 import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
 
@@ -895,6 +893,7 @@ function HomeContent() {
   }), []);
 
   const [currentIdentity, setCurrentIdentity] = useState<HomeAuthIdentity>({ kind: 'unauthenticated' });
+  const appIdentity = useAppIdentity();
   const heroImageUrlRef = useRef<string | null>(null);
   heroImageUrlRef.current = heroImageUrl;
 
@@ -917,34 +916,31 @@ function HomeContent() {
     });
   }
 
-  // Subscribe to auth state changes to immediately invalidate and wipe memory state
-  // when an account switch, sign out, or sign in occurs.
+  // Root owns Supabase session restoration and auth events. Home consumes its
+  // identity snapshot instead of creating a second auth listener and repeating
+  // AsyncStorage/session reads on every focus.
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const guest = await isGuestMode();
-      const nextIdentity = resolveHomeIdentity(guest, session?.user);
-      const nextKey = getIdentityKey(nextIdentity);
+    if (appIdentity.kind === 'loading') return;
 
-      if (coordinatorRef.current?.state.lastIdentityKey !== nextKey) {
-        coordinatorRef.current?.invalidateMemoryState(nextKey);
-        setCurrentIdentity(nextIdentity);
-        setIsGuest(guest);
-        setState(INITIAL_STATE);
+    const nextIdentity: HomeAuthIdentity = appIdentity.kind === 'authenticated'
+      ? { kind: 'authenticated', userId: appIdentity.userId }
+      : { kind: appIdentity.kind };
+    const nextKey = getIdentityKey(nextIdentity);
+    const identityChanged = coordinatorRef.current?.state.lastIdentityKey !== nextKey;
 
-        if (nextIdentity.kind === 'unauthenticated') {
-          router.replace('/(auth)/login');
-        } else {
-          void coordinatorRef.current?.loadHome(nextIdentity);
-        }
-      }
-    });
+    setCurrentIdentity(nextIdentity);
+    setIsGuest(nextIdentity.kind === 'guest');
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [buildGuestPayload, router]);
+    if (!identityChanged) return;
+    coordinatorRef.current?.invalidateMemoryState(nextKey);
+    setState(INITIAL_STATE);
+
+    if (nextIdentity.kind === 'unauthenticated') {
+      router.replace('/(auth)/login');
+    } else {
+      void coordinatorRef.current?.loadHome(nextIdentity);
+    }
+  }, [appIdentity, router]);
 
   // Focus effect: Resolves identity FIRST on every focus before evaluating freshness or reloading
   useFocusEffect(
@@ -952,16 +948,13 @@ function HomeContent() {
       let active = true;
 
       async function handleFocus() {
-        const [guest, sessionRes] = await Promise.all([
-          isGuestMode(),
-          supabase.auth.getSession(),
-        ]);
-
+        if (appIdentity.kind === 'loading') return;
+        const resolved: HomeAuthIdentity = appIdentity.kind === 'authenticated'
+          ? { kind: 'authenticated', userId: appIdentity.userId }
+          : { kind: appIdentity.kind };
         if (!active) return;
-        setIsGuest(guest);
-
-        const resolved = resolveHomeIdentity(guest, sessionRes?.data?.session?.user);
         setCurrentIdentity(resolved);
+        setIsGuest(resolved.kind === 'guest');
 
         if (coordinatorRef.current) {
           coordinatorRef.current.setHeroUrl(heroImageUrlRef.current);
@@ -974,7 +967,7 @@ function HomeContent() {
       return () => {
         active = false;
       };
-    }, [])
+    }, [appIdentity])
   );
 
   // Keeps the bell badge honest without a full app restart. Two parts:
@@ -994,21 +987,18 @@ function HomeContent() {
       let unsubscribe: (() => void) | undefined;
       let active = true;
 
-      Promise.all([isGuestMode(), supabase.auth.getSession()]).then(([guest, sessionRes]) => {
-        if (!active) return;
-        if (guest) {
+      if (appIdentity.kind === 'loading') {
+        return () => {
+          active = false;
+        };
+      }
+
+      if (appIdentity.kind !== 'authenticated') {
+        if (active) {
           setUnreadNotifications(0);
           setMoodStatus(null);
-          return;
         }
-
-        const user = sessionRes?.data?.session?.user;
-        if (!user) {
-          setUnreadNotifications(0);
-          setMoodStatus(null);
-          return;
-        }
-
+      } else {
         void fetchHomeLive().then((live) => {
           if (!active) return;
           if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
@@ -1020,13 +1010,13 @@ function HomeContent() {
             if (active) setUnreadNotifications(count);
           });
         });
-      });
+      }
 
       return () => {
         active = false;
         if (unsubscribe) unsubscribe();
       };
-    }, [])
+    }, [appIdentity])
   );
 
   // Native port of the PWA's auto-popping mood check-in (MoodPulse.tsx):
@@ -1049,16 +1039,15 @@ function HomeContent() {
   }, [moodStatus, isGuest]);
 
   const loadHome = useCallback(async (isManualRefresh = false) => {
-    const [guest, sessionRes] = await Promise.all([
-      isGuestMode(),
-      supabase.auth.getSession(),
-    ]);
-    const resolved = resolveHomeIdentity(guest, sessionRes?.data?.session?.user);
+    if (appIdentity.kind === 'loading') return;
+    const resolved: HomeAuthIdentity = appIdentity.kind === 'authenticated'
+      ? { kind: 'authenticated', userId: appIdentity.userId }
+      : { kind: appIdentity.kind };
     if (coordinatorRef.current) {
       coordinatorRef.current.setHeroUrl(heroImageUrlRef.current);
       await coordinatorRef.current.loadHome(resolved, isManualRefresh);
     }
-  }, []);
+  }, [appIdentity]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -1067,8 +1056,7 @@ function HomeContent() {
     } finally {
       setRefreshing(false);
     }
-    const guest = await isGuestMode();
-    if (!guest) {
+    if (appIdentity.kind === 'authenticated') {
       void fetchHomeLive().then((live) => {
         if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
         if (live.moodStatus) setMoodStatus(live.moodStatus);
@@ -1077,7 +1065,7 @@ function HomeContent() {
       setUnreadNotifications(0);
       setMoodStatus(null);
     }
-  }, [loadHome]);
+  }, [appIdentity.kind, loadHome]);
 
   // Match the PWA Home hero: show only the first verse line in the
   // transitional Home block, with the full text available on /shloka.
