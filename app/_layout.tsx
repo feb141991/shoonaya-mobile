@@ -57,6 +57,7 @@ import {
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
+import { resolveStartupSurface } from '@/lib/startup-visibility';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -93,13 +94,17 @@ function RootLayout() {
 
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
+  const startupStartedAtRef = useRef(Date.now());
   const readyToRender = appIsReady && authReady;
   const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined;
 
   // ── Contextual Startup Scene Orchestration ────────────────────────────
   const [startupPrefs, setStartupPrefs] = useState<StartupPreferences>(() => getDefaultStartupPreferences());
   const [selectedScene, setSelectedScene] = useState<StartupScene>(() => selectStartupScene());
-  const [showStartupScene, setShowStartupScene] = useState(false);
+  // The first React render must already contain an opaque surface. Starting
+  // false created a blank-window interval before the lifecycle effect mounted
+  // the contextual scene.
+  const [showStartupScene, setShowStartupScene] = useState(true);
   const startupSceneOpacity = useRef(new Animated.Value(1)).current;
   const startupLifecycleRef = useRef<StartupLifecycleController | null>(null);
 
@@ -162,8 +167,38 @@ function RootLayout() {
     startupLifecycleRef.current?.updateReady(readyToRender);
     if (readyToRender) {
       markInteractive();
+      void AsyncStorage.setItem('shoonaya:startup:last-receipt', JSON.stringify({
+        status: 'ready',
+        elapsedMs: Date.now() - startupStartedAtRef.current,
+        route: segmentsRef.current.rootSegment ?? 'unknown',
+        recordedAt: new Date().toISOString(),
+      })).catch(() => {});
     }
   }, [readyToRender, markInteractive]);
+
+  // Leaves a privacy-safe local receipt when startup remains unresolved. This
+  // performs no network work and never gates rendering; it exists solely to
+  // distinguish an auth/app readiness stall from a native process crash.
+  useEffect(() => {
+    if (readyToRender) return;
+
+    void AsyncStorage.setItem('shoonaya:startup:last-receipt', JSON.stringify({
+      status: 'starting',
+      elapsedMs: 0,
+      route: rootSegment ?? 'unknown',
+      recordedAt: new Date().toISOString(),
+    })).catch(() => {});
+
+    const timer = setTimeout(() => {
+      void AsyncStorage.setItem('shoonaya:startup:last-receipt', JSON.stringify({
+        status: 'stalled',
+        elapsedMs: Date.now() - startupStartedAtRef.current,
+        route: segmentsRef.current.rootSegment ?? 'unknown',
+        recordedAt: new Date().toISOString(),
+      })).catch(() => {});
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [readyToRender, rootSegment]);
 
   // routeForSession only actually needs to know the CURRENT segments at the
   // moment it's called (cold start, or a real auth-state event) — it
@@ -480,14 +515,21 @@ function RootLayout() {
     };
   }, [fontsLoaded, fontError, routeForSession]);
 
-  if (!readyToRender && !showStartupScene) {
-    return null;
-  }
+  // Startup must never return null. If the scene disappears before auth/app
+  // readiness, retain an opaque branded fallback instead of exposing the
+  // native window's white default.
+  const showStartupFallback = resolveStartupSurface({ readyToRender, showStartupScene }) === 'fallback';
 
   return (
     <AppProviders>
       <StatusBar style={showStartupScene ? "light" : "dark"} />
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: '#FDF6E3' }}>
+        {showStartupFallback ? (
+          <View
+            testID="startup-opaque-fallback"
+            style={[StyleSheet.absoluteFill, { backgroundColor: '#FDF6E3' }]}
+          />
+        ) : null}
         <RouteTransition>
           <Slot />
         </RouteTransition>

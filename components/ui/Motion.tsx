@@ -123,9 +123,20 @@ export function MotionView({
 
 export function RouteTransition({ children }: PropsWithChildren) {
   const pathname = usePathname();
+  const hasMounted = useRef(false);
+
+  useEffect(() => {
+    hasMounted.current = true;
+  }, []);
 
   return (
-    <MotionView animationKey={pathname} distance={6} duration={180} style={{ flex: 1 }}>
+    <MotionView
+      animationKey={pathname}
+      distance={6}
+      duration={180}
+      enabled={hasMounted.current}
+      style={{ flex: 1 }}
+    >
       {children}
     </MotionView>
   );
