@@ -13,7 +13,6 @@ import {
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
@@ -24,7 +23,7 @@ import { decode } from 'base64-arraybuffer';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { type AppLanguage } from '@/lib/language-runtime';
-import { getVisibleProfileSuggestions, type ProfileSuggestion } from '@/lib/profile-suggestions';
+import { type ProfileSuggestion } from '@/lib/profile-suggestions';
 
 import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
@@ -197,125 +196,6 @@ async function readApiError(response: Response) {
     return body.error;
   }
   return `Request failed with status ${response.status}`;
-}
-
-function ProgressRing({
-  label,
-  value,
-  accent,
-  textColor,
-  dimColor,
-}: {
-  label: string;
-  value: number;
-  accent: string;
-  textColor: string;
-  dimColor: string;
-}) {
-  const radius = 24;
-  const circumference = 2 * Math.PI * radius;
-  const pct = Math.max(0, Math.min(100, value));
-  const dash = circumference - (pct / 100) * circumference;
-
-  return (
-    <View style={{ alignItems: 'center', gap: 8 }}>
-      <Svg width={64} height={64}>
-        <Circle cx={32} cy={32} r={radius} stroke={dimColor} strokeWidth={6} fill="none" opacity={0.25} />
-        <Circle
-          cx={32}
-          cy={32}
-          r={radius}
-          stroke={accent}
-          strokeWidth={6}
-          fill="none"
-          strokeDasharray={`${circumference} ${circumference}`}
-          strokeDashoffset={dash}
-          strokeLinecap="round"
-          rotation="-90"
-          origin="32,32"
-        />
-      </Svg>
-      <View style={{ position: 'absolute', top: 18, alignItems: 'center' }}>
-        <Text style={{ color: textColor, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{pct}%</Text>
-      </View>
-      <Text style={{ color: dimColor, fontFamily: FONTS.sansMedium, fontSize: 11 }}>{label}</Text>
-    </View>
-  );
-}
-
-function MetricTile({
-  label,
-  value,
-  icon,
-  onPress,
-  theme,
-}: {
-  label: string;
-  value: string;
-  icon: keyof typeof Feather.glyphMap;
-  onPress?: () => void;
-  theme: ReturnType<typeof themeColor>;
-}) {
-  const content = (
-    <>
-      <View
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 14,
-          backgroundColor: theme.brandSoft,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Feather name={icon} size={14} color={theme.brand} />
-      </View>
-      <Text style={{ ...TYPE.chip, color: theme.dim }}>{label}</Text>
-      <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.text }}>
-        {value}
-      </Text>
-    </>
-  );
-
-  if (!onPress) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          minWidth: 76,
-          borderRadius: 18,
-          borderWidth: 1,
-          borderColor: theme.borderSoft,
-          backgroundColor: theme.glass,
-          padding: 10,
-          alignItems: 'center',
-          gap: 5,
-        }}
-      >
-        {content}
-      </View>
-    );
-  }
-
-  return (
-    <PressableSurface
-      haptic="selection"
-      onPress={onPress}
-      style={{
-        flex: 1,
-        minWidth: 76,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
-        backgroundColor: theme.glass,
-        padding: 10,
-        alignItems: 'center',
-        gap: 5,
-      }}
-    >
-      {content}
-    </PressableSurface>
-  );
 }
 
 export default function ProfileScreen() {
@@ -492,10 +372,6 @@ export default function ProfileScreen() {
   const streak = summary?.progress?.streaks?.shloka ?? 0;
   const progressData = summary?.progress;
   const profileCompletion = summary?.completion;
-  const visibleProfileSuggestions = useMemo(
-    () => getVisibleProfileSuggestions(profileCompletion?.suggestions),
-    [profileCompletion?.suggestions],
-  );
   const sampradayaLabel = profile ? getSampradayaLabel(profile.tradition) : 'Sampradaya';
   const ishtaDevataLabel = profile ? getIshtaDevataLabel(profile.tradition) : 'Ishta Devata';
   const sampradayaOptions = profile ? SAMPRADAYAS_BY_TRADITION[profile.tradition] : [];
@@ -648,7 +524,6 @@ export default function ProfileScreen() {
   };
 
   const inviteCode = useMemo(() => profile ? profile.id.replace(/-/g, '').slice(0, 8).toUpperCase() : '', [profile]);
-  const firstName = profile?.full_name.trim().split(' ')[0] || 'Seeker';
   const inviteLink = profile ? `${API_BASE}/invite/${inviteCode.toLowerCase()}` : API_BASE;
   const pathLabel = profile ? `${TRADITION_META[profile.tradition].label.toUpperCase()} PATH` : 'SHOONAYA PATH';
 
@@ -834,9 +709,6 @@ export default function ProfileScreen() {
   }
 
   const traditionMeta = TRADITION_META[profile.tradition];
-  const practicesPct = progressData?.practices.total
-    ? Math.round((progressData.practices.completed / progressData.practices.total) * 100)
-    : 0;
   const initials = profile.full_name.trim().slice(0, 1).toUpperCase() || 'S';
   const subscriptionLabel = profile.is_pro ? 'Pro Member' : 'Free Plan';
   const username = profile.username || profile.id.replace(/-/g, '').slice(0, 10);
@@ -854,7 +726,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 34, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 34, gap: 12 }}>
         <View style={{ minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackButton showLabel={false} iconSize={24} iconColor={theme.text} fallbackHref="/(tabs)" handleHardwareBack />
 
@@ -880,25 +752,25 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={{ alignItems: 'center', gap: 14, paddingTop: 4, paddingBottom: 6 }}>
-          <View style={{ width: 142, height: 142, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ alignItems: 'center', gap: 10, paddingTop: 2, paddingBottom: 2 }}>
+          <View style={{ width: 108, height: 108, alignItems: 'center', justifyContent: 'center' }}>
             <LinearGradient
               colors={[theme.brand, theme.premiumBorder, theme.brand]}
               start={{ x: 0.05, y: 0.1 }}
               end={{ x: 1, y: 1 }}
               style={{
                 position: 'absolute',
-                width: 140,
-                height: 140,
-                borderRadius: 70,
+                width: 106,
+                height: 106,
+                borderRadius: 53,
                 opacity: isDark ? 0.88 : 1,
               }}
             />
             <View
               style={{
-                width: 124,
-                height: 124,
-                borderRadius: 62,
+                width: 94,
+                height: 94,
+                borderRadius: 47,
                 backgroundColor: theme.card,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -910,12 +782,12 @@ export default function ProfileScreen() {
               {displayAvatarSource ? (
                 <Image
                   source={displayAvatarSource}
-                  style={{ width: 124, height: 124 }}
+                  style={{ width: 94, height: 94 }}
                   contentFit="cover"
                   onError={() => setAvatarFailed(true)}
                 />
               ) : (
-                <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 48 }}>{initials}</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.serifBold, fontSize: 38 }}>{initials}</Text>
               )}
             </View>
             <PressableSurface
@@ -931,11 +803,11 @@ export default function ProfileScreen() {
               disabled={avatarUploading}
               style={{
                 position: 'absolute',
-                right: 2,
-                bottom: 8,
-                width: 48,
-                height: 48,
-                borderRadius: 17,
+                right: -2,
+                bottom: 0,
+                width: 42,
+                height: 42,
+                borderRadius: 15,
                 backgroundColor: theme.brand,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -954,7 +826,7 @@ export default function ProfileScreen() {
 
           <View style={{ alignItems: 'center', gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Text style={{ ...TYPE.display, fontSize: 34, lineHeight: 40, color: theme.text, textAlign: 'center' }}>
+              <Text style={{ ...TYPE.display, fontSize: 30, lineHeight: 36, color: theme.text, textAlign: 'center' }}>
                 {profile.full_name}
               </Text>
               <PressableSurface
@@ -1074,217 +946,80 @@ export default function ProfileScreen() {
           </Card>
         ) : null}
 
-        <Card
-          elevated
-          tone="auto"
-          style={{
-            backgroundColor: theme.glass,
-            borderColor: theme.premiumBorder,
-            gap: 18,
-            boxShadow: isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light,
-          }}
-        >
-          <View style={{ gap: 4 }}>
-            <Text style={{ ...TYPE.section, color: theme.brand }}>Sadhana Highlights</Text>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>Lifelong practice at a glance</Text>
+        <View style={{ gap: 10, paddingHorizontal: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <Text style={{ ...TYPE.section, color: theme.text }}>Practice</Text>
+            <PressableSurface haptic="selection" onPress={() => router.push('/my-progress')} accessibilityLabel="View all progress" style={{ minHeight: 44, justifyContent: 'center' }}>
+              <Text style={{ ...TYPE.label, color: theme.brand }}>View progress</Text>
+            </PressableSurface>
           </View>
-
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
             {[
-              { label: 'Beads', value: String(highlights?.totalBeads ?? 0), route: '/my-progress' as const },
-              { label: 'Day Streak 🔥', value: String(streak), route: '/my-progress' as const },
-              { label: 'Rounds', value: String(highlights?.totalRounds ?? 0), route: '/my-progress' as const },
-              { label: 'In Practice', value: formatMinutes(highlights?.totalMinutes ?? 0), route: '/my-progress' as const },
-              { label: 'Nitya Days', value: `${highlights?.nityaDays ?? 0}/30`, route: '/my-progress' as const },
+              { label: 'Beads', value: String(highlights?.totalBeads ?? 0) },
+              { label: 'Rounds', value: String(highlights?.totalRounds ?? 0) },
+              { label: 'Streak', value: `${streak} days` },
             ].map((item) => (
               <PressableSurface
                 key={item.label}
                 haptic="selection"
                 accessibilityLabel={`${item.label}: ${item.value}`}
-                onPress={() => {
-                  if (isGuest) {
-                    setAuthGateVisible(true);
-                    return;
-                  }
-                  router.push(item.route);
-                }}
+                onPress={() => isGuest ? setAuthGateVisible(true) : router.push('/my-progress')}
                 style={{
-                  width: '47.8%',
-                  minHeight: 92,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                  backgroundColor: theme.glass,
-                  paddingHorizontal: 12,
-                  paddingVertical: 14,
-                  alignItems: 'center',
+                  flex: 1,
+                  minWidth: 0,
+                  minHeight: 72,
+                  borderRadius: 14,
+                  backgroundColor: theme.brandSoft,
+                  paddingHorizontal: 10,
+                  paddingVertical: 10,
                   justifyContent: 'center',
-                  gap: 6,
+                  gap: 3,
                 }}
               >
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 28 }}>{item.value}</Text>
-                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1.4, textAlign: 'center' }}>
-                  {item.label}
-                </Text>
+                <Text numberOfLines={1} style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>{item.value}</Text>
+                <Text numberOfLines={1} style={{ ...TYPE.caption, color: theme.dim }}>{item.label}</Text>
               </PressableSurface>
             ))}
           </View>
-
-          <View style={{ gap: 8 }}>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>
-              Favourite mantra: <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold }}>{highlights?.topMantra ?? traditionMeta.emoji}</Text>
-            </Text>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>
-              Pathshala entries opened: <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold }}>{highlights?.pathshalaEntriesOpened ?? 0}</Text>
-            </Text>
-          </View>
-        </Card>
-
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <MetricTile label="Streak" value={`${streak} 🔥`} icon="zap" onPress={() => router.push('/my-progress')} theme={theme} />
-          <MetricTile label="Seva" value={String(profile.seva_score)} icon="heart" onPress={() => router.push('/my-progress')} theme={theme} />
-          <MetricTile label="Ashrama" value={lifeStageLabel} icon="sun" onPress={() => router.push('/settings')} theme={theme} />
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>
+            {progressData?.practices.completed ?? 0}/{progressData?.practices.total ?? 0} practices today · {formatMinutes(highlights?.totalMinutes ?? 0)} in practice
+          </Text>
         </View>
 
-        {/* ── Personalise Shoonaya (Truthful Progressive Suggestions) ──────── */}
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
-          {profileCompletion?.suggestions && profileCompletion.suggestions.length > 0 ? (
-            <>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ gap: 2, flex: 1 }}>
-                  <Text style={{ ...TYPE.section, color: theme.brand }}>Personalise Shoonaya</Text>
-                  <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                    Optional details to tailor your daily sadhana & panchang
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    backgroundColor: theme.brandSoft,
-                    borderRadius: 12,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <Text style={{ ...TYPE.chip, color: theme.brand }}>
-                    {profileCompletion.suggestions.length} left
-                  </Text>
-                </View>
-              </View>
-
-              <View style={{ gap: 10 }}>
-                {visibleProfileSuggestions.map((item) => (
-                  <View
-                    key={item.key}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      backgroundColor: theme.glass,
-                      borderRadius: 16,
-                      borderWidth: 1,
-                      borderColor: theme.borderSoft,
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      gap: 10,
-                    }}
-                  >
-                    <View style={{ flex: 1, gap: 2 }}>
-                      <Text style={{ ...TYPE.label, color: theme.text }}>{item.label}</Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                        {item.reason}
-                      </Text>
-                    </View>
-
-                    <PressableSurface
-                      haptic="selection"
-                      accessibilityLabel={`Set ${item.label}`}
-                      onPress={() => router.push(item.route as any)}
-                      style={{
-                        minHeight: 44,
-                        minWidth: 64,
-                        borderRadius: 22,
-                        backgroundColor: theme.brand,
-                        paddingHorizontal: 14,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Set</Text>
-                    </PressableSurface>
-                  </View>
-                ))}
-              </View>
-            </>
-          ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: theme.brandSoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Feather name="check" size={22} color={theme.brand} />
-              </View>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ ...TYPE.section, color: theme.brand }}>Your profile is ready</Text>
-                <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                  Core identity & personalisation preferences are set.
-                </Text>
-              </View>
+        {profileCompletion?.suggestions && profileCompletion.suggestions.length > 0 ? (
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Complete personalisation in Settings"
+            onPress={() => router.push('/settings/personalisation')}
+            style={{
+              minHeight: 68,
+              borderRadius: 16,
+              backgroundColor: theme.brandSoft,
+              paddingHorizontal: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <Feather name="sliders" size={19} color={theme.brand} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ ...TYPE.label, color: theme.text }}>Complete your profile</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>{profileCompletion.suggestions.length} optional details remaining</Text>
             </View>
-          )}
-        </Card>
-
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 18 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View>
-              <Text style={{ ...TYPE.section, color: theme.brand }}>Progress Hub</Text>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Sadhana momentum</Text>
-            </View>
-            <Text style={{ ...TYPE.caption, color: theme.dim }}>
-              {progressData?.practices.completed ?? 0}/{progressData?.practices.total ?? 0} today
-            </Text>
-          </View>
-
-          {progressData ? (
-            <View style={{ gap: 14 }}>
-              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-                <ProgressRing label="Daily" value={practicesPct} accent={theme.brand} textColor={theme.text} dimColor={theme.dim} />
-                <View style={{ flex: 1, gap: 8 }}>
-                  {[
-                    ['Best Shloka', `${progressData.streaks.bestShloka} days`],
-                    ['Best Nitya', `${progressData.streaks.bestNitya} days`],
-                    ['Pathshala', `${progressData.pathshala.completedLessons} lessons`],
-                    ['Quiz', progressData.quiz.doneToday ? 'Done today' : 'Not started'],
-                  ].map(([label, value]) => (
-                    <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }}>{label}</Text>
-                      <Text style={{ ...TYPE.label, color: theme.text }}>{value}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </View>
-          ) : (
-            <ActivityIndicator color={theme.brand} />
-          )}
-        </Card>
+            <Feather name="chevron-right" size={20} color={theme.brand} />
+          </PressableSurface>
+        ) : null}
 
         <PressableSurface
           haptic="selection"
           accessibilityLabel={profile.city ? `Location: ${profile.city}. Tap to update.` : 'Set your location'}
           onPress={() => { void updateLocation(); }}
           style={{
-            minHeight: 86,
-            borderRadius: 24,
-            borderWidth: 1,
-            borderColor: theme.borderSoft,
-            backgroundColor: theme.card,
-            padding: 18,
+            minHeight: 68,
+            borderRadius: 16,
+            backgroundColor: theme.glass,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
             flexDirection: 'row',
             alignItems: 'center',
             gap: 14,
@@ -1292,10 +1027,10 @@ export default function ProfileScreen() {
         >
           <View
             style={{
-              width: 46,
-              height: 46,
-              borderRadius: 23,
-              backgroundColor: theme.glass,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: theme.brandSoft,
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -1303,11 +1038,11 @@ export default function ProfileScreen() {
             <Feather name="map-pin" size={20} color={theme.dim} />
           </View>
           <View style={{ flex: 1, gap: 3 }}>
-            <Text style={{ ...TYPE.section, color: theme.dim }}>Location</Text>
-            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
+            <Text style={{ ...TYPE.caption, color: theme.dim }}>Location</Text>
+            <Text style={{ ...TYPE.label, color: theme.text }}>
               {profile.city || 'Not set'}
             </Text>
-            <Text style={{ ...TYPE.body, color: locationError ? COLORS.danger : theme.dim }}>
+            <Text numberOfLines={1} style={{ ...TYPE.caption, color: locationError ? COLORS.danger : theme.dim }}>
               {locationError ?? 'Used for accurate Panchang & sunrise times'}
             </Text>
           </View>
@@ -1318,33 +1053,31 @@ export default function ProfileScreen() {
           )}
         </PressableSurface>
 
-        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
+        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <View
               style={{
-                width: 50,
-                height: 50,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
+              width: 42,
+              height: 42,
+              borderRadius: 16,
                 backgroundColor: theme.brandSoft,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Feather name="user-plus" size={22} color={theme.brand} />
+              <Feather name="user-plus" size={19} color={theme.brand} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{firstName}, bring someone to the path</Text>
-              <Text style={{ ...TYPE.body, color: theme.dim }}>Share Shoonaya with a friend or family member</Text>
+              <Text style={{ ...TYPE.label, color: theme.text }}>Bring someone to the path</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>Share Shoonaya with a friend or family member</Text>
             </View>
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Invite someone to Shoonaya"
               onPress={() => { void shareInviteLink(); }}
               style={{
-                minHeight: 46,
-                borderRadius: 18,
+                minHeight: 44,
+                borderRadius: 16,
                 backgroundColor: theme.brand,
                 paddingHorizontal: 18,
                 flexDirection: 'row',
@@ -1356,101 +1089,53 @@ export default function ProfileScreen() {
               <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Invite</Text>
             </PressableSurface>
           </View>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Copy invite link"
-            onPress={() => { void copyInvite(); }}
-            style={{
-              minHeight: 48,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: theme.borderSoft,
-              backgroundColor: theme.glass,
-              paddingHorizontal: 14,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-            }}
-          >
-            <Text style={{ ...TYPE.body, color: theme.dim }}>Your invite link:</Text>
-            <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.brand, flex: 1 }}>
-              {inviteLink.replace(/^https?:\/\//, '')}
-            </Text>
-          </PressableSurface>
         </Card>
 
-        <Card
-          elevated
-          tone="auto"
-          style={{
-            backgroundColor: theme.glass,
-            borderColor: theme.premiumBorder,
-            alignItems: 'center',
-            gap: 18,
-            paddingVertical: 28,
-          }}
-        >
-          <View
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: 18,
-              backgroundColor: theme.brandSoft,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            }}
-          >
-            <Text style={{ fontSize: 28 }}>{traditionMeta.emoji}</Text>
+        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 21 }}>{traditionMeta.emoji}</Text>
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ ...TYPE.label, color: theme.text }}>Share your journey</Text>
+              <Text numberOfLines={1} style={{ ...TYPE.caption, color: theme.dim }}>{streak}-day streak · {profile.seva_score} seva · {pathLabel}</Text>
+            </View>
           </View>
-          <View style={{ alignItems: 'center', gap: 6 }}>
-            <Text style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>{profile.full_name}</Text>
-            <Text style={{ ...TYPE.section, color: theme.dim, textAlign: 'center' }}>
-              {streak}-day streak · {profile.seva_score} seva · {pathLabel}
-            </Text>
-          </View>
-          <View style={{ width: '100%', height: 1, backgroundColor: theme.borderSoft }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Share journey card"
               onPress={() => { void shareProfileCard(); }}
               disabled={shareLoading}
               style={{
-                width: 76,
-                minHeight: 78,
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: theme.borderSoft,
+                flex: 1,
+                minHeight: 48,
+                borderRadius: 16,
                 backgroundColor: theme.glass,
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
+                gap: 7,
               }}
             >
-              <Feather name="twitter" size={24} color={theme.text} />
-              <Text style={{ ...TYPE.chip, color: theme.dim }}>X / Twitter</Text>
+              <Feather name="share-2" size={18} color={theme.text} />
+              <Text style={{ ...TYPE.label, color: theme.text }}>Share card</Text>
             </PressableSurface>
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Copy profile invite link"
               onPress={() => { void copyInvite(); }}
               style={{
-                width: 76,
-                minHeight: 78,
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
+                flex: 1,
+                minHeight: 48,
+                borderRadius: 16,
                 backgroundColor: theme.brandSoft,
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
+                gap: 7,
               }}
             >
-              <Feather name="link" size={24} color={theme.brand} />
-              <Text style={{ ...TYPE.chip, color: theme.dim }}>Copy Link</Text>
+              <Feather name="link" size={18} color={theme.brand} />
+              <Text style={{ ...TYPE.label, color: theme.brand }}>Copy link</Text>
             </PressableSurface>
           </View>
         </Card>
