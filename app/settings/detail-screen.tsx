@@ -49,6 +49,7 @@ import {
   type SettingsFields,
   type PendingSettingsWrite,
 } from '@/lib/settingsCache';
+import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
 
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
@@ -280,6 +281,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           serverUpdatedAt: json?.updatedAt ?? cached?.serverUpdatedAt ?? null,
           pendingOperations: [],
         });
+        recordMutationRetryOutcome(identity, 'settings', 'success', write.attempts);
         return;
       }
 
@@ -292,6 +294,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed' };
           setPendingWrite(failed);
           await persistPendingWrite(identity, failed);
+          recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', attempts);
           return;
         }
         const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
@@ -299,6 +302,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         await persistPendingWrite(identity, next);
         clearRetryTimer();
         retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
+        recordMutationRetryOutcome(identity, 'settings', 'retry', attempts);
         return;
       }
 
@@ -306,6 +310,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       const failed: PendingSettingsWrite = { ...write, attempts: write.attempts + 1, status: 'failed' };
       setPendingWrite(failed);
       await persistPendingWrite(identity, failed);
+      recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', failed.attempts);
     } catch {
       // Network error -- same retry treatment as 5xx.
       const attempts = write.attempts + 1;
@@ -314,6 +319,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed' };
         setPendingWrite(failed);
         await persistPendingWrite(identity, failed);
+        recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', attempts);
         return;
       }
       const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
@@ -321,6 +327,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       await persistPendingWrite(identity, next);
       clearRetryTimer();
       retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
+      recordMutationRetryOutcome(identity, 'settings', 'retry', attempts);
     } finally {
       setSaving(false);
     }
@@ -433,8 +440,23 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const runLoad = useCallback(() => {
     setLoading(true);
     setLoadError(false);
+    const startedAt = Date.now();
     loadSettings()
-      .catch(() => setLoadError(true))
+      .then(() => {
+        // No cache-first paint here (unlike Home/Mandali's SWR): Settings
+        // waits for the profile fetch + cache read together, so cacheHit
+        // is always false -- this still measures real "how long until
+        // Settings is usable" timing.
+        const identity = identityRef.current;
+        if (identity && identity.kind !== 'guest') {
+          recordRouteOpen(identity, 'settings', { cacheHit: false, durationMs: Date.now() - startedAt });
+        }
+      })
+      .catch(() => {
+        setLoadError(true);
+        const identity = identityRef.current;
+        if (identity && identity.kind !== 'guest') recordRefreshFailure(identity, 'settings');
+      })
       .finally(() => setLoading(false));
   }, [loadSettings]);
 

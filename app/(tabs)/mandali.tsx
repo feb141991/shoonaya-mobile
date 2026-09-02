@@ -42,6 +42,7 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
+import { recordRouteOpen, recordRefreshFailure } from '@/lib/telemetry';
 import {
   blockUser,
   cancelConnectionRequest,
@@ -453,6 +454,13 @@ export default function MandaliScreen() {
   const [fullyLoadedCommentPostIds, setFullyLoadedCommentPostIds] = useState<Set<string>>(new Set());
   const [loadingCommentsForPostId, setLoadingCommentsForPostId] = useState<string | null>(null);
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
+  // Set by loadMandali when the cache-hit branch actually painted, and with
+  // the resolved user id -- read by the mount effect's telemetry after the
+  // promise settles. Reading `profile` state there instead would see the
+  // stale closure from mount, not the setProfile() call loadMandali makes
+  // internally, since this effect's deps don't include `profile`.
+  const routeOpenCacheHitRef = useRef(false);
+  const telemetryUserIdRef = useRef<string | null>(null);
   // Sorted, joined post-id string used ONLY to scope the reaction/comment/
   // RSVP realtime subscriptions below (Postgres Changes' `in.()` filter
   // needs a static string) and as a stable effect dependency -- resubscribes
@@ -504,6 +512,7 @@ export default function MandaliScreen() {
       router.replace('/(auth)/login');
       return;
     }
+    telemetryUserIdRef.current = user.id;
 
     const cacheIdentity: MandaliCacheIdentity = { kind: 'authenticated', userId: user.id };
 
@@ -537,6 +546,7 @@ export default function MandaliScreen() {
       );
       visiblePostIdsRef.current = new Set([...cached.payload.posts, ...cached.payload.blendedPosts].map((p) => p.id));
       setLoading(false);
+      routeOpenCacheHitRef.current = true;
     }
 
     type FeedPayload = {
@@ -832,11 +842,26 @@ export default function MandaliScreen() {
   }, [profile?.userId]);
 
   useEffect(() => {
+    const startedAt = Date.now();
+    routeOpenCacheHitRef.current = false;
     loadMandali()
+      .then(() => {
+        if (telemetryUserIdRef.current) {
+          recordRouteOpen(
+            { kind: 'authenticated', userId: telemetryUserIdRef.current },
+            'mandali',
+            { cacheHit: routeOpenCacheHitRef.current, durationMs: Date.now() - startedAt }
+          );
+        }
+      })
       .catch((error) => {
         console.error('[MandaliScreen] loadMandali failed', error);
+        if (telemetryUserIdRef.current) {
+          recordRefreshFailure({ kind: 'authenticated', userId: telemetryUserIdRef.current }, 'mandali');
+        }
       })
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadMandali]);
 
   useEffect(() => {

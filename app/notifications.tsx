@@ -27,6 +27,7 @@ import {
   type NotificationOutboxAction,
 } from '@/lib/notificationsCache';
 import { classifyFailure, nextBackoffMs, HttpError } from '@/lib/retryPolicy';
+import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
 import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
@@ -154,6 +155,9 @@ export default function NotificationsScreen() {
   const [clearingAll, setClearingAll] = useState(false);
   const [pendingOperations, setPendingOperations] = useState<PendingNotificationOperation[]>([]);
   const userIdRef = useRef<string | null>(null);
+  // Set by load() when the cache-hit branch actually painted -- read by
+  // the mount effect's telemetry after the promise settles.
+  const routeOpenCacheHitRef = useRef(false);
   const retryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const clearRetryTimer = useCallback((id: string) => {
@@ -204,6 +208,7 @@ export default function NotificationsScreen() {
       }
       clearRetryTimer(op.id);
       await settle(pendingOperationsRef.current.filter((item) => item.id !== op.id));
+      recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'notifications', 'success', op.attempts);
     } catch (error) {
       const outcome = error instanceof HttpError
         ? classifyFailure(error.status, error.retryAfterHeader)
@@ -215,17 +220,20 @@ export default function NotificationsScreen() {
         if (backoff === null) {
           const failed = { ...op, attempts, status: 'failed' as const };
           await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? failed : item)));
+          recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'notifications', 'permanent_failure', attempts);
           return;
         }
         const next = { ...op, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' as const };
         await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? next : item)));
         clearRetryTimer(op.id);
         retryTimersRef.current.set(op.id, setTimeout(() => { void attemptOperation(next); }, backoff));
+        recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'notifications', 'retry', attempts);
         return;
       }
 
       const failed = { ...op, attempts: op.attempts + 1, status: 'failed' as const };
       await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? failed : item)));
+      recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'notifications', 'permanent_failure', failed.attempts);
     }
   }, [clearRetryTimer]);
 
@@ -324,6 +332,7 @@ export default function NotificationsScreen() {
       if (cached) {
         setNotifications(cached.notifications);
         setLoading(false);
+        routeOpenCacheHitRef.current = true;
         // Recovery after restart: resume whatever the outbox was mid-retry
         // on when the app was last closed. Only 'pending' entries auto-
         // resume; 'failed' waits for an explicit Retry tap, same split as
@@ -341,11 +350,23 @@ export default function NotificationsScreen() {
   }, [router, attemptOperation]);
 
   useEffect(() => {
+    const startedAt = Date.now();
+    routeOpenCacheHitRef.current = false;
     const run = async () => {
       try {
         await load();
+        if (userIdRef.current) {
+          recordRouteOpen(
+            { kind: 'authenticated', userId: userIdRef.current },
+            'notifications',
+            { cacheHit: routeOpenCacheHitRef.current, durationMs: Date.now() - startedAt }
+          );
+        }
       } catch {
         setLoadError(true);
+        if (userIdRef.current) {
+          recordRefreshFailure({ kind: 'authenticated', userId: userIdRef.current }, 'notifications');
+        }
       } finally {
         setLoading(false);
       }

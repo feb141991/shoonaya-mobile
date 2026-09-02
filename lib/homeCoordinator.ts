@@ -2,6 +2,7 @@ import { readHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsP
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
+import { recordRouteOpen, recordRefreshFailure, type TelemetryIdentity } from './telemetry';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -145,6 +146,18 @@ export class HomeSummaryCoordinator {
   }
 
   public async loadHome(identity: HomeAuthIdentity, isManualRefresh = false, retryCount = 0): Promise<void> {
+    // Telemetry only cares about genuine "screen open" timings, not every
+    // background revalidation -- captured once per call via wasAlreadyValid,
+    // since a call that starts with hasValidState already true is a
+    // refresh, not an open. cacheApplied tracks whether this open resolved
+    // from cache so the eventual network completion doesn't double-count
+    // the same open as a second, cache-miss event.
+    const loadStartedAt = Date.now();
+    const wasAlreadyValid = this.state.hasValidState;
+    let cacheApplied = false;
+    const telemetryIdentity: TelemetryIdentity =
+      identity.kind === 'authenticated' ? { kind: 'authenticated', userId: identity.userId } : { kind: 'guest' };
+
     const currentIdentityKey = getIdentityKey(identity);
 
     if (identity.kind === 'unauthenticated' || !currentIdentityKey) {
@@ -184,6 +197,10 @@ export class HomeSummaryCoordinator {
         this.state.hasValidState = true;
         this.state.lastLoadedAt = cached.savedAt;
         this.deps.onSetLoading(false);
+        cacheApplied = true;
+        if (!wasAlreadyValid) {
+          recordRouteOpen(telemetryIdentity, 'home', { cacheHit: true, durationMs: Date.now() - loadStartedAt });
+        }
       }
     }
 
@@ -202,6 +219,9 @@ export class HomeSummaryCoordinator {
         void writeHomeCache(cacheIdentity, guestPayload, timezone);
         this.deps.onSetLoading(false);
         this.deps.onSetError(false);
+        if (!wasAlreadyValid && !cacheApplied) {
+          recordRouteOpen(telemetryIdentity, 'home', { cacheHit: false, durationMs: Date.now() - loadStartedAt });
+        }
       }
       return;
     }
@@ -269,6 +289,9 @@ export class HomeSummaryCoordinator {
           canonicalTimezone,
           identity.userId
         );
+        if (!wasAlreadyValid && !cacheApplied) {
+          recordRouteOpen(telemetryIdentity, 'home', { cacheHit: false, durationMs: Date.now() - loadStartedAt });
+        }
       }
     } catch (error) {
       if (requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {
@@ -284,6 +307,7 @@ export class HomeSummaryCoordinator {
         }
         if (!this.state.hasValidState) {
           this.deps.onSetError(true);
+          recordRefreshFailure(telemetryIdentity, 'home');
         }
         this.deps.onSetLoading(false);
       }
