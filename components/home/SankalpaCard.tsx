@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, AppState, Pressable, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -16,6 +16,7 @@ import {
   type HomeAuthIdentity,
   type SankalpaStatus,
 } from '@/lib/homeCoordinator';
+import { queueSankalpaCheckin, resumePendingSankalpaCheckins, hasFailedSankalpaCheckin, retryFailedSankalpaCheckins } from '@/lib/sankalpaOutbox';
 
 export type { SankalpaRow };
 
@@ -75,6 +76,8 @@ export function SankalpaCard({
   const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(initialSankalpa ?? null);
   const [checkedToday, setCheckedToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [checkinFailed, setCheckinFailed] = useState(false);
+  const resolvedUserIdRef = useRef<string | null>(null);
 
   const coordinatorRef = useRef<SankalpaCoordinator | null>(null);
   if (!coordinatorRef.current) {
@@ -118,11 +121,25 @@ export function SankalpaCard({
       setStatus('hidden');
       return;
     }
+    resolvedUserIdRef.current = identity.userId;
 
     if (coordinatorRef.current) {
       await coordinatorRef.current.load(identity);
     }
-  }, [propIdentity, propIsGuest, propUserId]);
+
+    // Resume on mount (cold start) -- a killed app loses any in-memory
+    // retry state, so a queued-but-not-yet-confirmed check-in from a
+    // previous session needs to resume here, not wait for another tap.
+    // Re-load afterward so checkedToday reflects server truth regardless
+    // of whether the resume just landed a check-in that predates this
+    // mount's own coordinator.load() call above.
+    void resumePendingSankalpaCheckins(identity.userId, apiFetch).then(() => {
+      void coordinatorRef.current?.load(identity);
+    });
+    if (sankalpa?.id) {
+      hasFailedSankalpaCheckin(identity.userId, sankalpa.id).then(setCheckinFailed).catch(() => {});
+    }
+  }, [propIdentity, propIsGuest, propUserId, sankalpa?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -132,24 +149,68 @@ export function SankalpaCard({
 
   const handleCheckIn = useCallback(async () => {
     if (!sankalpa || checkedToday || checkingIn) return;
+    const userId = resolvedUserIdRef.current;
+    if (!userId) return;
     setCheckingIn(true);
-    const previous = checkedToday;
     setCheckedToday(true);
+    setCheckinFailed(false);
     try {
-      const response = await apiFetch('/api/sankalpa/checkin', {
-        method: 'POST',
-        body: JSON.stringify({ sankalpa_id: sankalpa.id }),
-      });
-      if (!response.ok) throw new Error('check-in-failed');
+      // queueSankalpaCheckin persists to the durable outbox before
+      // attempting, so even if this exact call never resolves (app killed
+      // mid-request), the check-in resumes on next launch instead of being
+      // silently lost -- and the backend's own upsert means a retry can
+      // never create a duplicate check-in for today.
+      await queueSankalpaCheckin(userId, sankalpa.id, apiFetch);
+      const stillFailed = await hasFailedSankalpaCheckin(userId, sankalpa.id);
+      if (stillFailed) {
+        // Previously: silently reverted the optimistic checkmark with zero
+        // explanation. Now surfaces an explicit failed state with Retry,
+        // matching the "never a silent revert" discipline applied to
+        // Settings/Notifications/Mood this session.
+        setCheckedToday(false);
+        setCheckinFailed(true);
+        return;
+      }
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
-    } catch {
-      setCheckedToday(previous);
     } finally {
       setCheckingIn(false);
     }
   }, [checkedToday, checkingIn, sankalpa]);
+
+  const handleRetryCheckIn = useCallback(async () => {
+    const userId = resolvedUserIdRef.current;
+    if (!userId || checkingIn) return;
+    setCheckingIn(true);
+    setCheckedToday(true);
+    try {
+      await retryFailedSankalpaCheckins(userId, apiFetch);
+      const stillFailed = sankalpa ? await hasFailedSankalpaCheckin(userId, sankalpa.id) : false;
+      setCheckinFailed(stillFailed);
+      setCheckedToday(!stillFailed);
+      if (!stillFailed) {
+        try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+      }
+    } finally {
+      setCheckingIn(false);
+    }
+  }, [checkingIn, sankalpa]);
+
+  // Resume on foreground -- per the agreed retry policy, retries happen
+  // when the app is actually in front with network available, never via
+  // unbounded background timers.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const userId = resolvedUserIdRef.current;
+      if (!userId) return;
+      void resumePendingSankalpaCheckins(userId, apiFetch).then(() => {
+        void coordinatorRef.current?.load(propIdentity ?? { kind: 'authenticated', userId });
+      });
+    });
+    return () => subscription.remove();
+  }, [propIdentity]);
 
   if (status === 'hidden') {
     return null;
@@ -292,8 +353,12 @@ export function SankalpaCard({
             {sankalpaText}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}>
-            <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-              {checkedToday ? 'Honoured today · View Sankalpa' : `Day ${Math.min(day, targetDays || day)} of ${targetDays}`}
+            <Text style={{ ...TYPE.caption, color: checkinFailed ? COLORS.danger : theme.dim }} numberOfLines={1}>
+              {checkinFailed
+                ? 'Could not check in · Tap to retry'
+                : checkedToday
+                  ? 'Honoured today · View Sankalpa'
+                  : `Day ${Math.min(day, targetDays || day)} of ${targetDays}`}
             </Text>
             <Feather name="chevron-right" size={12} color={theme.dim} style={{ opacity: 0.6 }} />
           </View>
@@ -305,12 +370,16 @@ export function SankalpaCard({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={checkedToday ? 'Sankalpa honoured today' : 'Honour today'}
-          accessibilityState={{ disabled: checkedToday || checkingIn }}
+          accessibilityLabel={checkinFailed ? 'Retry check-in' : checkedToday ? 'Sankalpa honoured today' : 'Honour today'}
+          accessibilityState={{ disabled: (checkedToday && !checkinFailed) || checkingIn }}
           onPress={() => {
-            void handleCheckIn();
+            if (checkinFailed) {
+              void handleRetryCheckIn();
+            } else {
+              void handleCheckIn();
+            }
           }}
-          disabled={checkedToday || checkingIn}
+          disabled={(checkedToday && !checkinFailed) || checkingIn}
           hitSlop={8}
           style={{
             width: 36,

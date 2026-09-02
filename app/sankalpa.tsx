@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  AppState,
   Modal,
   Pressable,
   ScrollView,
@@ -24,6 +25,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import {
+  queueSankalpaCheckin,
+  resumePendingSankalpaCheckins,
+  retryFailedSankalpaCheckins,
+  hasFailedSankalpaCheckin,
+} from '@/lib/sankalpaOutbox';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
@@ -276,6 +284,8 @@ export default function SankalpaScreen() {
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkins, setCheckins] = useState<string[]>([]);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [checkinFailed, setCheckinFailed] = useState(false);
+  const userIdRef = useRef<string | null>(null);
   const [completing, setCompleting] = useState(false);
 
   const [completedReceipt, setCompletedReceipt] = useState<CompletedSankalpaReceipt | null>(null);
@@ -428,6 +438,11 @@ export default function SankalpaScreen() {
       return;
     }
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    userIdRef.current = user?.id ?? null;
+
     const response = await apiFetch('/api/sankalpa');
 
     if (response.status === 401) {
@@ -440,9 +455,19 @@ export default function SankalpaScreen() {
     setSankalpa(payload.sankalpa);
     setCheckedInToday(false);
     setCheckins([]);
+    setCheckinFailed(false);
 
     if (payload.sankalpa) {
       await loadCheckins(payload.sankalpa.id);
+      // Resume on mount (cold start) -- a killed app loses any in-memory
+      // retry state, so a queued-but-unconfirmed check-in from a previous
+      // session resumes here rather than waiting for another tap.
+      if (userIdRef.current) {
+        const sankalpaId = payload.sankalpa.id;
+        const uid = userIdRef.current;
+        void resumePendingSankalpaCheckins(uid, apiFetch).then(() => loadCheckins(sankalpaId));
+        hasFailedSankalpaCheckin(uid, sankalpaId).then(setCheckinFailed).catch(() => {});
+      }
     } else {
       // Resolve the latest completed receipt before leaving the loading state,
       // avoiding a misleading creation-only frame on return visits.
@@ -558,23 +583,62 @@ export default function SankalpaScreen() {
 
   const handleCheckIn = useCallback(async () => {
     if (!sankalpa || checkedInToday || checkingIn) return;
+    const userId = userIdRef.current;
+    if (!userId) return;
     setCheckingIn(true);
+    setCheckinFailed(false);
     try {
-      const response = await apiFetch('/api/sankalpa/checkin', {
-        method: 'POST',
-        body: JSON.stringify({ sankalpa_id: sankalpa.id }),
-      });
-      if (!response.ok) throw new Error('check-in-failed');
-
+      // queueSankalpaCheckin persists to the same durable outbox
+      // components/home/SankalpaCard.tsx uses -- an app kill mid-request
+      // resumes on next launch instead of silently losing the check-in,
+      // and the backend's own upsert makes a retry safe by construction.
+      await queueSankalpaCheckin(userId, sankalpa.id, apiFetch);
+      const stillFailed = await hasFailedSankalpaCheckin(userId, sankalpa.id);
+      if (stillFailed) {
+        setCheckinFailed(true);
+        Alert.alert('Could not check in', 'Check your connection and try again.');
+        return;
+      }
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       setCheckedInToday(true);
       await loadCheckins(sankalpa.id);
-    } catch {
-      Alert.alert('Could not check in', 'Check your connection and try again.');
     } finally {
       setCheckingIn(false);
     }
   }, [checkedInToday, checkingIn, loadCheckins, sankalpa]);
+
+  const handleRetryCheckIn = useCallback(async () => {
+    const userId = userIdRef.current;
+    if (!userId || !sankalpa || checkingIn) return;
+    setCheckingIn(true);
+    try {
+      await retryFailedSankalpaCheckins(userId, apiFetch);
+      const stillFailed = await hasFailedSankalpaCheckin(userId, sankalpa.id);
+      setCheckinFailed(stillFailed);
+      if (!stillFailed) {
+        setCheckedInToday(true);
+        await loadCheckins(sankalpa.id);
+        try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+      } else {
+        Alert.alert('Could not check in', 'Check your connection and try again.');
+      }
+    } finally {
+      setCheckingIn(false);
+    }
+  }, [checkingIn, loadCheckins, sankalpa]);
+
+  // Resume on foreground -- per the agreed retry policy, retries happen
+  // when the app is actually in front with network available.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const userId = userIdRef.current;
+      if (!userId || !sankalpa) return;
+      const sankalpaId = sankalpa.id;
+      void resumePendingSankalpaCheckins(userId, apiFetch).then(() => loadCheckins(sankalpaId));
+    });
+    return () => subscription.remove();
+  }, [sankalpa, loadCheckins]);
 
   const handleComplete = useCallback(async () => {
     if (!sankalpa || completing) return;
@@ -811,16 +875,16 @@ export default function SankalpaScreen() {
                 style={{
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: checkedInToday ? COLORS.successBorder : theme.borderSoft,
-                  backgroundColor: checkedInToday ? COLORS.successBg : theme.card,
+                  borderColor: checkinFailed ? COLORS.dangerBorder : checkedInToday ? COLORS.successBorder : theme.borderSoft,
+                  backgroundColor: checkinFailed ? COLORS.dangerBg : checkedInToday ? COLORS.successBg : theme.card,
                 }}
               >
                 <PressableSurface
-                  accessibilityLabel={checkedInToday ? 'Sankalpa honoured today' : 'Honour today’s Sankalpa'}
-                  accessibilityState={{ disabled: checkedInToday || checkingIn, busy: checkingIn }}
+                  accessibilityLabel={checkinFailed ? 'Retry check-in' : checkedInToday ? 'Sankalpa honoured today' : 'Honour today’s Sankalpa'}
+                  accessibilityState={{ disabled: (checkedInToday && !checkinFailed) || checkingIn, busy: checkingIn }}
                   haptic="impact"
-                  onPress={() => { void handleCheckIn(); }}
-                  disabled={checkedInToday || checkingIn}
+                  onPress={() => { void (checkinFailed ? handleRetryCheckIn() : handleCheckIn()); }}
+                  disabled={(checkedInToday && !checkinFailed) || checkingIn}
                   style={{
                     minHeight: MIN_TOUCH_TARGET,
                     paddingHorizontal: 16,
@@ -835,19 +899,19 @@ export default function SankalpaScreen() {
                     <ActivityIndicator color={theme.brand} />
                   ) : (
                     <Feather
-                      name={checkedInToday ? 'check-circle' : 'circle'}
+                      name={checkinFailed ? 'alert-circle' : checkedInToday ? 'check-circle' : 'circle'}
                       size={18}
-                      color={checkedInToday ? COLORS.success : theme.brand}
+                      color={checkinFailed ? COLORS.danger : checkedInToday ? COLORS.success : theme.brand}
                     />
                   )}
                   <Text
                     style={{
                       fontFamily: FONTS.sansSemiBold,
                       fontSize: 15,
-                      color: checkedInToday ? COLORS.success : theme.text,
+                      color: checkinFailed ? COLORS.danger : checkedInToday ? COLORS.success : theme.text,
                     }}
                   >
-                    {checkedInToday ? 'Honoured today' : 'Honour today'}
+                    {checkinFailed ? 'Could not check in · Retry' : checkedInToday ? 'Honoured today' : 'Honour today'}
                   </Text>
                 </PressableSurface>
               </View>
