@@ -35,7 +35,7 @@ import {
 import { StartupLifecycleController } from '@/lib/startup-scenes/lifecycle';
 import type { AppLanguage, StartupPreferences, StartupScene } from '@/lib/startup-scenes/types';
 import { trackScreenView } from '@/lib/analytics';
-import { setApiAccessTokenFromSession } from '@/lib/api';
+import { apiFetch, setApiAccessTokenFromSession } from '@/lib/api';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
@@ -345,12 +345,9 @@ function RootLayout() {
       // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md fix. `profiles.onboarding_completed`
       // is `NOT NULL DEFAULT false`, so a successfully read row is always
       // `true`/`false`; only a *definitive* `false` means the user still needs
-      // onboarding. A `null` profile read (RLS/session timing — the row itself
-      // is guaranteed by the `handle_new_user` DB trigger) must NOT be treated
-      // as "needs onboarding": that exact misclassification caused web's
-      // `/home` <-> `/onboarding` redirect loop. Native fails open toward tabs
-      // instead of onboarding on an ambiguous read, since (unlike web's
-      // page-level gates) this function always has to pick a concrete route.
+      // onboarding. Profile bootstrap above repairs historical trigger failures
+      // before this read. A subsequent null is still treated as transient to
+      // avoid a redirect loop during a database outage.
       // Onboarding gate: check local cache first so returning users route immediately
       // without blocking cold start on a network round-trip.
       const cacheKey = `shoonaya:onboarding_completed:${session.user.id}`;
@@ -379,12 +376,34 @@ function RootLayout() {
         return;
       }
 
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', session.user.id)
         .maybeSingle();
       if (!isCurrentRoute()) return;
+
+      // The auth.users trigger should normally create this row. Repair only
+      // historical/OAuth trigger failures. The response is always incomplete
+      // for a newly created profile, so it routes to onboarding rather than a
+      // default Home. Healthy accounts avoid this extra network request.
+      if (!profile) {
+        try {
+          const bootstrapResponse = await apiFetch('/api/native/profile/bootstrap', {
+            method: 'POST',
+            timeoutMs: 5_000,
+          });
+          if (bootstrapResponse.ok) {
+            const payload = await bootstrapResponse.json() as { onboarding_completed?: boolean };
+            profile = { onboarding_completed: payload.onboarding_completed === true };
+          } else {
+            console.warn('[auth-profile] native profile bootstrap unavailable', bootstrapResponse.status);
+          }
+        } catch (error) {
+          console.warn('[auth-profile] native profile bootstrap failed', error);
+        }
+        if (!isCurrentRoute()) return;
+      }
 
       if (profile?.onboarding_completed === true) {
         void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
