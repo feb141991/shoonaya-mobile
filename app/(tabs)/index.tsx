@@ -64,6 +64,15 @@ import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulse
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { useAppIdentity } from '@/lib/appIdentity';
+import {
+  recordHomeFocusSession,
+  isHeroArtworkCueEligible,
+  dismissHeroArtworkCue,
+  markHeroArtworkPickerOpened,
+  createInitialDiscoveryState,
+  resolveIdentityKey,
+  type HomeDiscoveryState,
+} from '@/lib/homeDiscovery';
 
 type PracticeId = 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
 
@@ -586,6 +595,7 @@ function HomeContent() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const appIdentity = useAppIdentity();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [state, setState] = useState<HomeSummary>(INITIAL_STATE);
@@ -611,6 +621,31 @@ function HomeContent() {
   const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
   const [greetingOverride, setGreetingOverride] = useState<string | null>(null);
   const [showRashiphalNudge, setShowRashiphalNudge] = useState(false);
+  const [discoveryState, setDiscoveryState] = useState<HomeDiscoveryState>(() =>
+    createInitialDiscoveryState(resolveIdentityKey(appIdentity))
+  );
+
+  const isContentRendered = !loading && !loadError && Boolean(state.profile.firstName);
+
+  const hasBlockingHomeSurface =
+    moodPulseVisible ||
+    chatSheetVisible ||
+    heroPickerVisible ||
+    greetingPickerVisible ||
+    authGateVisible ||
+    aiAuthGateVisible;
+
+  const showHeroArtworkCue = isHeroArtworkCueEligible(discoveryState, {
+    hasRenderedContent: isContentRendered,
+    isFirstWeek: Boolean(state.firstWeek),
+    hasBlockingHomeSurface,
+  });
+
+  useEffect(() => {
+    if (isContentRendered && appIdentity.kind !== 'loading') {
+      void recordHomeFocusSession(appIdentity, true).then(setDiscoveryState);
+    }
+  }, [isContentRendered, appIdentity]);
 
   useEffect(() => {
     getHeroPick().then(setHeroOverride).catch(() => {});
@@ -621,7 +656,7 @@ function HomeContent() {
         setShowRashiphalNudge(true);
       }
     }).catch(() => {});
-  }, []);
+  }, [appIdentity]);
 
   const scrollRef = useScrollToTop();
 
@@ -894,7 +929,6 @@ function HomeContent() {
   }), []);
 
   const [currentIdentity, setCurrentIdentity] = useState<HomeAuthIdentity>({ kind: 'unauthenticated' });
-  const appIdentity = useAppIdentity();
   const heroImageUrlRef = useRef<string | null>(null);
   heroImageUrlRef.current = heroImageUrl;
 
@@ -957,6 +991,10 @@ function HomeContent() {
         setCurrentIdentity(resolved);
         setIsGuest(resolved.kind === 'guest');
 
+        // Re-read device-local hero & greeting preferences on focus with active guard
+        getHeroPick().then((pick) => { if (active) setHeroOverride(pick); }).catch(() => {});
+        getHeroSize().then((size) => { if (active) setHeroSizeState(size); }).catch(() => {});
+        getGreetingPick().then((pick) => { if (active) setGreetingOverride(pick); }).catch(() => {});
         if (coordinatorRef.current) {
           coordinatorRef.current.setHeroUrl(heroImageUrlRef.current);
           await coordinatorRef.current.onFocus(resolved);
@@ -1354,16 +1392,19 @@ function HomeContent() {
               </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Choose your greeting"
+                accessibilityLabel="Change greeting"
+                accessibilityHint="Opens the greeting picker to choose your preferred greeting"
                 onPress={() => {
                   void Haptics.selectionAsync().catch(() => {});
                   setGreetingPickerVisible(true);
                 }}
                 hitSlop={8}
                 style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
+                  minWidth: MIN_TOUCH_TARGET,
+                  minHeight: MIN_TOUCH_TARGET,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: theme.heroOverlay,
@@ -1371,7 +1412,7 @@ function HomeContent() {
                   borderColor: theme.borderSoft,
                 }}
               >
-                <Feather name="chevron-down" size={14} color="rgba(255,240,200,0.85)" />
+                <Feather name="edit-2" size={14} color="rgba(255,240,200,0.85)" />
               </Pressable>
             </View>
 
@@ -1418,30 +1459,84 @@ function HomeContent() {
           </View>
 
           {/* Matches PWA's "Choose Sanctuary Backdrop" entry point — same
-              bottom-right corner of the hero image. */}
+              bottom-right corner of the hero image with contextual discovery cue. */}
+          {showHeroArtworkCue ? (
+            <View
+              style={{
+                position: 'absolute',
+                zIndex: 4,
+                bottom: 68,
+                right: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: theme.card,
+                borderColor: theme.premiumBorder,
+                borderWidth: 1,
+                borderRadius: 14,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                shadowColor: isDark ? '#000000' : '#493514',
+                shadowOpacity: isDark ? 0.3 : 0.1,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 4,
+              }}
+            >
+              <Pressable
+                onPress={() => {
+                  void markHeroArtworkPickerOpened(appIdentity).then(setDiscoveryState);
+                  setHeroPickerVisible(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Customize sanctuary artwork"
+                accessibilityHint="Opens the backdrop picker"
+                style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 2, flexDirection: 'row', alignItems: 'center', gap: 5 }}
+              >
+                <Feather name="image" size={12} color={theme.brand} />
+                <Text style={{ ...TYPE.caption, color: theme.text, fontFamily: FONTS.sansSemiBold }}>
+                  Change artwork
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => void dismissHeroArtworkCue(appIdentity).then(setDiscoveryState)}
+                accessibilityLabel="Dismiss artwork hint"
+                accessibilityRole="button"
+                style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Feather name="x" size={13} color={theme.dim} />
+              </Pressable>
+            </View>
+          ) : null}
+
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Choose sanctuary backdrop"
+            accessibilityLabel="Change sanctuary backdrop"
+            accessibilityHint="Opens the backdrop picker to choose deity artwork and banner height"
             onPress={() => {
               void Haptics.selectionAsync().catch(() => {});
+              void markHeroArtworkPickerOpened(appIdentity).then(setDiscoveryState);
               setHeroPickerVisible(true);
             }}
+            hitSlop={8}
             style={{
               position: 'absolute',
               zIndex: 3,
               bottom: 16,
               right: 20,
-              width: 38,
-              height: 38,
-              borderRadius: 19,
+              minWidth: MIN_TOUCH_TARGET,
+              minHeight: MIN_TOUCH_TARGET,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: theme.heroOverlay,
-              borderWidth: 1,
-              borderColor: theme.borderSoft,
+              borderWidth: showHeroArtworkCue ? 2 : 1,
+              borderColor: showHeroArtworkCue ? theme.brand : theme.borderSoft,
             }}
           >
-            <Feather name="image" size={16} color={theme.text} />
+            <Feather name="image" size={18} color={theme.text} />
           </Pressable>
         </View>
 

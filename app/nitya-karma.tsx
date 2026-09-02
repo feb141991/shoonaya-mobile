@@ -22,6 +22,8 @@ import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { isGuestMode } from '@/lib/guestSession';
 import { getAshramaDuties, getAshramaMeta, type GenderContext, type LifeStage } from '@/lib/ashrama';
+import { getGreetingPick } from '@/lib/greetingPreference';
+import { getTraditionGreeting } from '@/lib/greetings';
 
 type Phase = 'night' | 'brahma' | 'sunrise' | 'morning' | 'afternoon' | 'evening' | 'dusk';
 
@@ -175,7 +177,7 @@ export default function NityaKarmaHubScreen() {
   const [dincharyaStats, setDincharyaStats] = useState({
     completed: 0,
     total: 0,
-    greeting: 'Suprabhat',
+    greeting: getTraditionGreeting('hindu', new Date().getDate()),
     streak: 0,
   });
 
@@ -201,10 +203,12 @@ export default function NityaKarmaHubScreen() {
     try {
       const guest = await isGuestMode();
       if (guest) {
+        const greetingPick = await getGreetingPick();
+        const guestGreeting = greetingPick || getTraditionGreeting('hindu', new Date().getDate());
         setDincharyaStats({
           completed: 0,
           total: 5,
-          greeting: 'Suprabhat',
+          greeting: guestGreeting,
           streak: 0,
         });
         setAshramaStats({
@@ -223,16 +227,26 @@ export default function NityaKarmaHubScreen() {
         return;
       }
 
-      const nityaResp = await apiFetch('/api/native/nitya-karma');
+      const [nityaResp, greetingPick, { data: profile }] = await Promise.all([
+        apiFetch('/api/native/nitya-karma'),
+        getGreetingPick(),
+        supabase
+          .from('profiles')
+          .select('life_stage, gender_context, tradition, timezone')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ]);
+
+      const tradition = profile?.tradition ?? 'hindu';
+      const greetingText = greetingPick || getTraditionGreeting(tradition, new Date().getDate());
+
       let completedCount = 0;
       let totalSteps = 0;
-      let greetingText = 'Suprabhat';
       let currentStreak = 0;
 
-      if (nityaResp.ok) {
+      if (nityaResp && nityaResp.ok) {
         const payload = (await nityaResp.json()) as NativeNityaKarmaResponse;
         totalSteps = payload.total ?? 0;
-        greetingText = payload.greeting ?? 'Suprabhat';
         currentStreak = payload.streak?.current ?? 0;
 
         const today = spiritualDate(payload.timezone ?? 'UTC');
@@ -253,13 +267,6 @@ export default function NityaKarmaHubScreen() {
         streak: currentStreak,
       });
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('life_stage, gender_context, tradition, timezone')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const tradition = profile?.tradition ?? 'hindu';
       const lifeStage = profile?.life_stage as LifeStage | null;
       const genderCtx = profile?.gender_context ?? null;
 

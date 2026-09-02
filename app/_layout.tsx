@@ -47,6 +47,7 @@ import { clearAllTelemetry } from '@/lib/telemetry';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
+import { clearAllHomeDiscoveryStates } from '@/lib/homeDiscovery';
 import {
   getNotificationPermissionState,
   initPushNotifications,
@@ -292,6 +293,7 @@ function RootLayout() {
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
         void clearAllOnboardingDrafts();
+        void clearAllHomeDiscoveryStates();
 
         // If guest mode is active, allow tabs and bypass login
         const guest = await isGuestMode();

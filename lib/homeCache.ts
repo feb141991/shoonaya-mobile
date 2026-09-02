@@ -2,6 +2,7 @@ import type { ObservanceSeries } from './observance-series-contract.generated';
 import type { HomeObservanceStoryCard } from './observance-story-contract.generated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { safeTimezone, spiritualDate } from './spiritualDate';
+import { clearAllHomeDiscoveryStates } from './homeDiscovery';
 
 export const HOME_CACHE_SCHEMA_VERSION = 2;
 
@@ -389,6 +390,7 @@ export async function clearAllHomeCaches(): Promise<void> {
     if (homeCacheKeys.length > 0) {
       await AsyncStorage.multiRemove(homeCacheKeys);
     }
+    await clearAllHomeDiscoveryStates();
   } catch (error) {
     console.warn('[HomeCache] clearAll failed', error);
   }

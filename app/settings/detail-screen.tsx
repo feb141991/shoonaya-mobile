@@ -50,6 +50,16 @@ import {
   type PendingSettingsWrite,
 } from '@/lib/settingsCache';
 import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
+import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
+import { GreetingPicker } from '@/components/home/GreetingPicker';
+import {
+  getHeroPick,
+  getHeroSize,
+  HERO_SIZE_CONFIG,
+  type HeroPick,
+  type HeroSize,
+} from '@/lib/heroPreference';
+import { getGreetingPick } from '@/lib/greetingPreference';
 
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
@@ -234,6 +244,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
   const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
+  const [profileTradition, setProfileTradition] = useState<string>('hindu');
+  const [heroPickerVisible, setHeroPickerVisible] = useState(false);
+  const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
+  const [heroPick, setHeroPickState] = useState<HeroPick | null>(null);
+  const [heroSize, setHeroSizeState] = useState<HeroSize>('standard');
+  const [greetingPick, setGreetingPickState] = useState<string | null>(null);
 
   // Resolved once per load; used both to key the cache and to know which
   // identity a queued write belongs to, so a cold-start resume never
@@ -349,6 +365,15 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     const guest = await isGuestMode();
     setIsGuest(guest);
 
+    const [hero, size, greeting] = await Promise.all([
+      getHeroPick(),
+      getHeroSize(),
+      getGreetingPick(),
+    ]);
+    setHeroPickState(hero);
+    setHeroSizeState(size);
+    setGreetingPickState(greeting);
+
     if (guest) {
       identityRef.current = { kind: 'guest' };
       clearRetryTimer();
@@ -380,7 +405,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       supabase
         .from('profiles')
         .select(
-          'wants_festival_reminders, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
+          'tradition, wants_festival_reminders, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
         )
         .eq('id', user.id)
         .single(),
@@ -390,6 +415,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     if (profileRes.error) throw profileRes.error;
 
+    setProfileTradition(profileRes.data?.tradition || 'hindu');
     const remote = toSettingsState(profileRes.data ?? INITIAL_SETTINGS);
     const pending = (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
@@ -833,41 +859,101 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
             </SettingsSection> : null}
 
             {/* ── Language / preferences ──────────────────────────────── */}
-            {section === 'appearance' ? <SettingsSection label="Language / Preferences" theme={theme}>
-              {[
-                { label: 'App language', key: 'app_language' as const },
-                { label: 'Meaning language', key: 'meaning_language' as const },
-                { label: 'Transliteration', key: 'transliteration_language' as const },
-              ].map((row) => (
-                <View key={row.key} style={{ gap: 10 }}>
-                  <Text style={{ ...TYPE.caption, color: theme.dim }}>{row.label}</Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {LANGUAGES.map((lang) => (
-                      <Pill
-                        key={lang.key}
-                        label={lang.label}
-                        selected={settings[row.key] === lang.key}
-                        onPress={() => { void persistSettings({ ...settings, [row.key]: lang.key }); }}
-                      />
-                    ))}
-                  </View>
-                </View>
-              ))}
+            {section === 'appearance' ? (
+              <>
+                <SettingsSection label="Home Customisation" theme={theme}>
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Sanctuary backdrop & height. Current: ${heroPick ? heroPick.id : 'Auto-rotating'}, ${HERO_SIZE_CONFIG[heroSize].label}`}
+                    accessibilityHint="Opens the backdrop picker to choose deity artwork and banner height"
+                    onPress={() => setHeroPickerVisible(true)}
+                    style={{
+                      minHeight: 56,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <View style={{ gap: 3, flex: 1, paddingRight: 8 }}>
+                      <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: theme.text }}>Sanctuary Backdrop & Height</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                        {heroPick ? 'Custom artwork selected' : 'Auto-rotating tradition artwork'} • {HERO_SIZE_CONFIG[heroSize].label}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name="image" size={18} color={theme.brand} />
+                      <Feather name="chevron-right" size={18} color={theme.dim} />
+                    </View>
+                  </PressableSurface>
 
-              <View style={{ gap: 10 }}>
-                <Text style={{ ...TYPE.caption, color: theme.dim }}>Appearance</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {THEME_OPTIONS.map((opt) => (
-                    <Pill
-                      key={opt.key}
-                      label={opt.label}
-                      selected={themePref === opt.key}
-                      onPress={() => { void persistTheme(opt.key); }}
-                    />
+                  <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Home greeting. Current: ${greetingPick ?? 'Auto-rotating tradition greeting'}`}
+                    accessibilityHint="Opens the greeting picker to choose your preferred greeting"
+                    onPress={() => setGreetingPickerVisible(true)}
+                    style={{
+                      minHeight: 56,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <View style={{ gap: 3, flex: 1, paddingRight: 8 }}>
+                      <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: theme.text }}>Home Greeting</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                        {greetingPick ? `Locked to "${greetingPick}"` : 'Auto-rotating tradition greeting'}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name="message-circle" size={18} color={theme.brand} />
+                      <Feather name="chevron-right" size={18} color={theme.dim} />
+                    </View>
+                  </PressableSurface>
+                </SettingsSection>
+
+                <SettingsSection label="Language / Preferences" theme={theme}>
+                  {[
+                    { label: 'App language', key: 'app_language' as const },
+                    { label: 'Meaning language', key: 'meaning_language' as const },
+                    { label: 'Transliteration', key: 'transliteration_language' as const },
+                  ].map((row) => (
+                    <View key={row.key} style={{ gap: 10 }}>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>{row.label}</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {LANGUAGES.map((lang) => (
+                          <Pill
+                            key={lang.key}
+                            label={lang.label}
+                            selected={settings[row.key] === lang.key}
+                            onPress={() => { void persistSettings({ ...settings, [row.key]: lang.key }); }}
+                          />
+                        ))}
+                      </View>
+                    </View>
                   ))}
-                </View>
-              </View>
-            </SettingsSection> : null}
+
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ ...TYPE.caption, color: theme.dim }}>Appearance</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      {THEME_OPTIONS.map((opt) => (
+                        <Pill
+                          key={opt.key}
+                          label={opt.label}
+                          selected={themePref === opt.key}
+                          onPress={() => { void persistTheme(opt.key); }}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                </SettingsSection>
+              </>
+            ) : null}
 
             {/* ── Community & Socials ─────────────────────────────────── */}
             {section === 'about' ? <SettingsSection label="Community & Socials" theme={theme}>
@@ -1062,6 +1148,22 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           </>
         )}
       </ScrollView>
+
+      <HeroBackdropPicker
+        visible={heroPickerVisible}
+        onClose={() => setHeroPickerVisible(false)}
+        tradition={profileTradition}
+        currentSize={heroSize}
+        onPickChange={(pick) => setHeroPickState(pick)}
+        onSizeChange={(size) => setHeroSizeState(size)}
+      />
+
+      <GreetingPicker
+        visible={greetingPickerVisible}
+        onClose={() => setGreetingPickerVisible(false)}
+        tradition={profileTradition}
+        onPickChange={(pick) => setGreetingPickState(pick)}
+      />
     </Screen>
   );
 }

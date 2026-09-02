@@ -21,7 +21,7 @@ const DESTINATIONS: SettingsDestination[] = [
   { icon: 'user', title: 'Account & Profile', summary: 'Name, birth details, location and account access.', href: '/settings/account' },
   { icon: 'sliders', title: 'Personalisation', summary: 'Tradition, calendar, practice goals and spiritual details.', href: '/settings/personalisation' },
   { icon: 'bell', title: 'Notifications', summary: 'Reminder choices and device permission.', href: '/settings/notifications' },
-  { icon: 'type', title: 'Language & Appearance', summary: 'App language, translations and light or dark appearance.', href: '/settings/appearance' },
+  { icon: 'type', title: 'Language & Appearance', summary: 'App language, translations, sanctuary backdrop and greeting.', href: '/settings/appearance' },
   { icon: 'shield', title: 'Privacy & Data', summary: 'Personalisation consent, data export and account deletion.', href: '/settings/privacy' },
   { icon: 'heart', title: 'About Shoonaya', summary: 'Support, social channels, terms, privacy and sources.', href: '/settings/about' },
 ];
