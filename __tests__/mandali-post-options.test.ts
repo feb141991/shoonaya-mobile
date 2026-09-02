@@ -5,6 +5,7 @@ import { dedupeNearbyMandalis, mandaliLocationKey } from '../lib/mandaliLocation
 
 const screen = readFileSync(new URL('../app/(tabs)/mandali.tsx', import.meta.url), 'utf8');
 const sheet = readFileSync(new URL('../components/mandali/PostOptionsSheet.tsx', import.meta.url), 'utf8');
+const confetti = readFileSync(new URL('../components/ui/ConfettiOverlay.tsx', import.meta.url), 'utf8');
 
 describe('Mandali post options', () => {
   it('uses the app-owned sheet rather than Android Alert menus for post actions', () => {
@@ -47,5 +48,13 @@ describe('Mandali post options', () => {
         { id: 'cranfield', city: 'Cranfield', country: 'United Kingdom', member_count: 0, distanceKm: 14 },
       ],
     );
+  });
+});
+
+describe('Native celebration palette', () => {
+  it('uses the same sacred confetti palette as the PWA', () => {
+    for (const color of ['#E88C35', '#C5A059', '#F0A830', '#D4784A', '#F2EAD6', '#D4926A', '#FABE5A']) {
+      assert.match(confetti, new RegExp(color));
+    }
   });
 });

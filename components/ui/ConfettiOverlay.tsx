@@ -3,7 +3,7 @@ import { AccessibilityInfo, Animated, Easing, useWindowDimensions, View } from '
 
 import { COLORS } from '@/lib/constants';
 
-type ConfettiShape = 'circle' | 'diamond' | 'petal' | 'streamer' | 'star';
+type ConfettiShape = 'circle' | 'diamond' | 'flower' | 'square';
 
 type ConfettiParticle = {
   id: string;
@@ -26,16 +26,16 @@ type ConfettiOverlayProps = {
 };
 
 const SACRED_COLORS = [
-  COLORS.brandGoldDark,
-  COLORS.brandGoldLight,
-  COLORS.brandPrimaryStrongDark,
-  COLORS.brandEarthDark,
-  COLORS.creamBg,
-  COLORS.sage,
-  COLORS.navy,
+  '#E88C35', // saffron
+  '#C5A059', // gold
+  '#F0A830', // amber
+  '#D4784A', // terracotta
+  '#F2EAD6', // cream
+  '#D4926A', // rose-gold
+  '#FABE5A', // light amber
 ];
 
-const SHAPES: ConfettiShape[] = ['petal', 'diamond', 'streamer', 'circle', 'star'];
+const SHAPES: ConfettiShape[] = ['circle', 'square', 'flower', 'diamond'];
 
 function buildParticles(count: number, density: NonNullable<ConfettiOverlayProps['density']>): ConfettiParticle[] {
   return Array.from({ length: count }, (_, index) => {
@@ -48,7 +48,7 @@ function buildParticles(count: number, density: NonNullable<ConfettiOverlayProps
       color: SACRED_COLORS[index % SACRED_COLORS.length],
       shape,
       leftPct: isBurst && side !== 0 ? (side < 0 ? 12 + ((seed * 5) % 16) : 72 + ((seed * 7) % 16)) : (seed * 37) % 100,
-      size: shape === 'streamer' ? 14 + ((seed * 7) % 18) : shape === 'star' ? 10 + ((seed * 5) % 8) : 7 + ((seed * 11) % 13),
+      size: 6 + ((seed * 11) % 10),
       delay: isBurst ? (seed % 20) * 24 : (seed % 16) * 38,
       drift: side === 0 ? ((seed % 2 === 0 ? 1 : -1) * (24 + ((seed * 13) % 52))) : side * (70 + ((seed * 17) % 110)),
       startY: isBurst ? 42 + ((seed * 19) % 180) : -48 - ((seed * 17) % 90),
@@ -81,11 +81,9 @@ function ConfettiPiece({ particle, progress, height, width }: { particle: Confet
     outputRange: [0, 1, 0.95, 0],
   });
 
-  const isStreamer = particle.shape === 'streamer';
-  const isStar = particle.shape === 'star';
   const baseStyle = {
-    width: isStreamer ? particle.size * 0.42 : particle.size,
-    height: isStreamer ? particle.size * 1.85 : particle.size,
+    width: particle.size,
+    height: particle.size,
     backgroundColor: particle.color,
     opacity,
     transform: [{ translateX }, { translateY }, { rotate }, { scale }],
@@ -105,11 +103,9 @@ function ConfettiPiece({ particle, progress, height, width }: { particle: Confet
           ? { borderRadius: particle.size / 2 }
           : particle.shape === 'diamond'
             ? { transform: [...baseStyle.transform, { rotate: '45deg' }] }
-            : isStreamer
-              ? { borderRadius: particle.size, opacity: opacity }
-              : isStar
-                ? { borderRadius: 2, transform: [...baseStyle.transform, { rotate: '45deg' }] }
-                : { borderTopLeftRadius: particle.size, borderBottomRightRadius: particle.size },
+            : particle.shape === 'flower'
+              ? { borderTopLeftRadius: particle.size, borderBottomRightRadius: particle.size }
+              : undefined,
       ]}
     />
   );
