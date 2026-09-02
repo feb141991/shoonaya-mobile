@@ -18,6 +18,7 @@ import {
   subscribeToNotifications,
   type NotificationRow,
 } from '@/lib/notificationsData';
+import { readNotificationsCache, writeNotificationsCache, patchNotificationsCache } from '@/lib/notificationsCache';
 import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
@@ -158,7 +159,12 @@ export default function NotificationsScreen() {
     [isDark]
   );
 
-  const load = useCallback(async () => {
+  // Stale-while-revalidate: a cache hit paints the list instantly (no
+  // skeleton), then a background fetch reconciles it -- same pattern as
+  // Home/Mandali's own disk caches. The cache is also what Home's bell
+  // badge reads (lib/notificationsCache.ts), so a mark-read/clear done
+  // here is visible there without Home needing its own extra round trip.
+  const load = useCallback(async (options: { skipCache?: boolean } = {}) => {
     setLoadError(false);
 
     if (await isGuestMode()) {
@@ -179,13 +185,22 @@ export default function NotificationsScreen() {
     }
 
     setUserId(user.id);
+
+    if (!options.skipCache) {
+      const cached = await readNotificationsCache(user.id);
+      if (cached) {
+        setNotifications(cached.notifications);
+        setLoading(false);
+      }
+    }
+
     const rows = await fetchNotifications(user.id);
     setNotifications(rows);
+    await writeNotificationsCache(user.id, rows);
   }, [router]);
 
   useEffect(() => {
     const run = async () => {
-      setLoading(true);
       try {
         await load();
       } catch {
@@ -203,14 +218,14 @@ export default function NotificationsScreen() {
   useEffect(() => {
     if (!userId) return undefined;
     return subscribeToNotifications(userId, () => {
-      void load();
+      void load({ skipCache: true });
     });
   }, [userId, load]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await load();
+      await load({ skipCache: true });
     } finally {
       setRefreshing(false);
     }
@@ -226,6 +241,11 @@ export default function NotificationsScreen() {
 
       if (!row.read) {
         setNotifications((current) => current.map((item) => (item.id === row.id ? { ...item, read: true } : item)));
+        if (userId) {
+          void patchNotificationsCache(userId, (current) =>
+            current.map((item) => (item.id === row.id ? { ...item, read: true } : item))
+          );
+        }
         markNotificationRead(row.id).catch(() => {
           // Best-effort — a failed mark-read shouldn't block navigation, and
           // the next load() will reconcile the true server state anyway.
@@ -239,7 +259,7 @@ export default function NotificationsScreen() {
         }
       }
     },
-    [router]
+    [router, userId]
   );
 
   const handleMarkAllRead = useCallback(async () => {
@@ -248,17 +268,20 @@ export default function NotificationsScreen() {
 
     setMarkingAll(true);
     setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+    if (userId) {
+      void patchNotificationsCache(userId, (current) => current.map((item) => ({ ...item, read: true })));
+    }
     try {
       await markAllNotificationsRead(unreadIds);
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
     } catch {
-      await load();
+      await load({ skipCache: true });
     } finally {
       setMarkingAll(false);
     }
-  }, [load, notifications]);
+  }, [load, notifications, userId]);
 
   const handleClearAll = useCallback(() => {
     if (notifications.length === 0 || clearingAll) return;
@@ -275,6 +298,7 @@ export default function NotificationsScreen() {
             setClearingAll(true);
             const previous = notifications;
             setNotifications([]);
+            if (userId) void writeNotificationsCache(userId, []);
             clearNotifications()
               .then(async () => {
                 try {
@@ -283,6 +307,7 @@ export default function NotificationsScreen() {
               })
               .catch((err) => {
                 setNotifications(previous);
+                if (userId) void writeNotificationsCache(userId, previous);
                 Alert.alert(
                   'Could not clear notifications',
                   err instanceof Error ? err.message : 'Check your connection and try again.'
@@ -293,7 +318,7 @@ export default function NotificationsScreen() {
         },
       ]
     );
-  }, [clearingAll, notifications]);
+  }, [clearingAll, notifications, userId]);
 
   const renderNotification = useCallback(
     ({ item }: { item: NotificationRow }) => (

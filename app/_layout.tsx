@@ -42,6 +42,7 @@ import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllMandaliCaches } from '@/lib/mandaliCache';
 import { clearAllSettingsCaches } from '@/lib/settingsCache';
+import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import {
   getNotificationPermissionState,
@@ -283,6 +284,7 @@ function RootLayout() {
         void clearAllHomeCaches();
         void clearAllMandaliCaches();
         void clearAllSettingsCaches();
+        void clearAllNotificationsCaches();
         void clearAllOnboardingDrafts();
 
         // If guest mode is active, allow tabs and bypass login

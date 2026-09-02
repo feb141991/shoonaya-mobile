@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { writeNotificationsCache, deriveUnreadCount } from '@/lib/notificationsCache';
 
 // Native's in-app notification data layer — ported to match the web app's
 // own contract exactly (confirmed by direct read of
@@ -66,7 +67,12 @@ export async function getMyUnreadNotificationCount(): Promise<number> {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return 0;
-    return await fetchUnreadCount(user.id);
+    const rows = await fetchNotifications(user.id);
+    // Reconciles the shared inbox cache as a side effect of this fetch --
+    // the inbox screen (or another badge reader) then sees this same,
+    // just-fetched list instead of a stale one, without a second request.
+    void writeNotificationsCache(user.id, rows);
+    return deriveUnreadCount(rows);
   } catch {
     return 0;
   }

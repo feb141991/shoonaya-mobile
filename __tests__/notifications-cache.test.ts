@@ -1,0 +1,140 @@
+import { describe, it, beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
+
+if (typeof window === 'undefined' || !(window as any).localStorage) {
+  const memoryStore = new Map<string, string>();
+  (globalThis as any).window = {
+    localStorage: {
+      getItem: (key: string) => memoryStore.get(key) ?? null,
+      setItem: (key: string, value: string) => memoryStore.set(key, String(value)),
+      removeItem: (key: string) => memoryStore.delete(key),
+      clear: () => memoryStore.clear(),
+      get length() {
+        return memoryStore.size;
+      },
+      key: (i: number) => Array.from(memoryStore.keys())[i] ?? null,
+    },
+  };
+}
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  readNotificationsCache,
+  writeNotificationsCache,
+  patchNotificationsCache,
+  clearNotificationsCache,
+  clearAllNotificationsCaches,
+  deriveUnreadCount,
+} from '../lib/notificationsCache';
+import type { NotificationRow } from '../lib/notificationsData';
+
+function row(overrides: Partial<NotificationRow> = {}): NotificationRow {
+  return {
+    id: 'notif-1',
+    user_id: 'user-A',
+    title: 'Test',
+    body: 'Body',
+    emoji: null,
+    type: 'festival',
+    read: false,
+    action_url: null,
+    notification_key: null,
+    local_date: null,
+    sent_timezone: null,
+    created_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+describe('Notifications cache -- identity isolation', () => {
+  beforeEach(async () => {
+    await clearAllNotificationsCaches();
+  });
+
+  it('one user cannot read another user\'s cached inbox', async () => {
+    await writeNotificationsCache('user-A', [row({ id: 'a-1', user_id: 'user-A' })]);
+
+    const userB = await readNotificationsCache('user-B');
+    assert.equal(userB, null, 'User B must never see User A\'s cached notifications');
+
+    const userA = await readNotificationsCache('user-A');
+    assert.equal(userA?.notifications[0]?.id, 'a-1');
+  });
+
+  it('logout purge (clearAllNotificationsCaches) removes every identity', async () => {
+    await writeNotificationsCache('user-C', [row({ user_id: 'user-C' })]);
+    await writeNotificationsCache('user-D', [row({ user_id: 'user-D' })]);
+
+    await clearAllNotificationsCaches();
+
+    assert.equal(await readNotificationsCache('user-C'), null);
+    assert.equal(await readNotificationsCache('user-D'), null);
+  });
+
+  it('clearing one identity does not remove another\'s', async () => {
+    await writeNotificationsCache('user-E', [row({ user_id: 'user-E' })]);
+    await writeNotificationsCache('user-F', [row({ user_id: 'user-F' })]);
+
+    await clearNotificationsCache('user-E');
+
+    assert.equal(await readNotificationsCache('user-E'), null);
+    assert.notEqual(await readNotificationsCache('user-F'), null);
+  });
+
+  it('fails safe on a corrupt cache entry', async () => {
+    await AsyncStorage.setItem('shoonaya_notifications_cache_v1_user_user-G', '{{{not json');
+    const result = await readNotificationsCache('user-G');
+    assert.equal(result, null);
+  });
+
+  it('fails safe on a stale schema version', async () => {
+    await AsyncStorage.setItem(
+      'shoonaya_notifications_cache_v1_user_user-H',
+      JSON.stringify({ schemaVersion: 99, userId: 'user-H', savedAt: Date.now(), notifications: [] })
+    );
+    const result = await readNotificationsCache('user-H');
+    assert.equal(result, null);
+  });
+});
+
+describe('Notifications cache -- reconciliation (badge reuse)', () => {
+  beforeEach(async () => {
+    await clearAllNotificationsCaches();
+  });
+
+  it('mark-read reconciliation is visible to a fresh read (Home badge scenario)', async () => {
+    await writeNotificationsCache('user-I', [row({ id: 'n1', read: false }), row({ id: 'n2', read: false })]);
+
+    await patchNotificationsCache('user-I', (current) =>
+      current.map((n) => (n.id === 'n1' ? { ...n, read: true } : n))
+    );
+
+    const after = await readNotificationsCache('user-I');
+    assert.equal(deriveUnreadCount(after?.notifications ?? []), 1, 'Badge-derived count reflects the mark-read without a second fetch');
+  });
+
+  it('clear reconciliation empties the cache the badge reads from', async () => {
+    await writeNotificationsCache('user-J', [row({ id: 'n1' }), row({ id: 'n2' })]);
+    await writeNotificationsCache('user-J', []);
+
+    const after = await readNotificationsCache('user-J');
+    assert.equal(deriveUnreadCount(after?.notifications ?? []), 0);
+  });
+
+  it('patchNotificationsCache on an empty/missing cache starts from an empty list, not a crash', async () => {
+    await patchNotificationsCache('user-K', (current) => [...current, row({ id: 'new', user_id: 'user-K' })]);
+    const after = await readNotificationsCache('user-K');
+    assert.equal(after?.notifications.length, 1);
+  });
+});
+
+describe('deriveUnreadCount', () => {
+  it('counts only unread rows', () => {
+    const rows = [row({ read: true }), row({ read: false }), row({ read: false })];
+    assert.equal(deriveUnreadCount(rows), 2);
+  });
+
+  it('returns 0 for an empty list', () => {
+    assert.equal(deriveUnreadCount([]), 0);
+  });
+});

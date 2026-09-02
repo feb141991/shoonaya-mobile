@@ -47,6 +47,7 @@ import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_AC
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
+import { readNotificationsCache, deriveUnreadCount } from '@/lib/notificationsCache';
 import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
@@ -999,6 +1000,14 @@ function HomeContent() {
           setMoodStatus(null);
         }
       } else {
+        // Instant badge paint from the shared inbox cache (also read/
+        // written by app/notifications.tsx) before the network call below
+        // resolves -- "badge reuse": Home doesn't own a separate source of
+        // truth for unread count, it reads the same cache the inbox
+        // screen reconciles on mark-read/mark-all-read/clear.
+        void readNotificationsCache(appIdentity.userId).then((cached) => {
+          if (active && cached) setUnreadNotifications(deriveUnreadCount(cached.notifications));
+        });
         void fetchHomeLive().then((live) => {
           if (!active) return;
           if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
