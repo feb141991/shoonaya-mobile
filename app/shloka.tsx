@@ -389,23 +389,7 @@ export default function ShlokaScreen() {
       <AmbientBackdrop isDark={isDark} brand={brand} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 34, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: glass,
-              borderWidth: 1,
-              borderColor: border,
-            }}
-          >
-            <Feather name="chevron-left" size={19} color={text} />
-          </PressableSurface>
+          <BackButton showLabel={false} iconSize={19} iconColor={text} fallbackHref="/(tabs)" handleHardwareBack />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <PressableSurface
               haptic="selection"

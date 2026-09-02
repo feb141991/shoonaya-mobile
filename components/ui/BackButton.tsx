@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { BackHandler, Text, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter, type Href } from 'expo-router';
+import { usePathname, useRouter, type Href } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, themeColor } from '@/lib/constants';
@@ -18,14 +18,31 @@ type BackButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+function inferParentFallback(pathname: string): Href {
+  if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
+  if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
+  if (pathname.startsWith('/settings')) return '/settings';
+  if (pathname.startsWith('/kundali')) return '/kundali';
+  if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
+  if (pathname.startsWith('/vrat')) return '/vrat';
+  if (pathname.startsWith('/my-progress/')) return '/my-progress';
+  return '/(tabs)';
+}
+
 // Android's default stack behavior is correct for ordinary screens. This is
 // deliberately opt-in for routes that can be opened directly (for example
 // from a notification or deep link) and therefore need a deterministic
 // parent when no stack history exists.
-export function useFallbackBackHandler(fallbackHref?: Href, enabled = false, onPress?: () => void) {
+export function useFallbackBackHandler(
+  fallbackHref?: Href,
+  enabled = false,
+  onPress?: () => void,
+  onBeforeBack?: () => void | Promise<void>,
+) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  const handleBack = useCallback(() => {
+  const navigateBack = useCallback(() => {
     if (onPress) {
       onPress();
     } else if (router.canGoBack()) {
@@ -33,9 +50,17 @@ export function useFallbackBackHandler(fallbackHref?: Href, enabled = false, onP
     } else {
       // Preserve the BackButton's historical direct-entry behavior for the
       // many readers that do not declare a more specific parent route.
-      router.replace(fallbackHref ?? '/(tabs)');
+      router.replace(fallbackHref ?? inferParentFallback(pathname));
     }
-  }, [fallbackHref, onPress, router]);
+  }, [fallbackHref, onPress, pathname, router]);
+
+  const handleBack = useCallback(() => {
+    if (!onBeforeBack) {
+      navigateBack();
+      return;
+    }
+    void Promise.resolve(onBeforeBack()).finally(navigateBack);
+  }, [navigateBack, onBeforeBack]);
 
   useEffect(() => {
     if (!enabled) return;

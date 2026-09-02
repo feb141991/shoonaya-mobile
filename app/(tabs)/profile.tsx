@@ -27,6 +27,7 @@ import { type AppLanguage } from '@/lib/language-runtime';
 import { getVisibleProfileSuggestions, type ProfileSuggestion } from '@/lib/profile-suggestions';
 
 import { Card } from '@/components/ui/Card';
+import { BackButton } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
@@ -855,24 +856,7 @@ export default function ProfileScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 34, gap: 16 }}>
         <View style={{ minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              backgroundColor: theme.glass,
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            }}
-          >
-            <Feather name="chevron-left" size={24} color={theme.text} />
-          </PressableSurface>
+          <BackButton showLabel={false} iconSize={24} iconColor={theme.text} fallbackHref="/(tabs)" handleHardwareBack />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <PressableSurface

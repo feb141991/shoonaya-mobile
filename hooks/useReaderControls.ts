@@ -78,12 +78,20 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
 
   const [isCopied, setIsCopied] = useState(false);
   const copiedResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const ttsRequestIdRef = useRef(0);
 
   const { loadAndPlay, stop } = useAudioPlayer();
 
-  useEffect(() => () => {
-    if (copiedResetTimerRef.current) clearTimeout(copiedResetTimerRef.current);
-  }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      ttsRequestIdRef.current += 1;
+      if (copiedResetTimerRef.current) clearTimeout(copiedResetTimerRef.current);
+      void stop();
+    };
+  }, [stop]);
 
   const toggleTransliteration = useCallback(() => {
     if (capabilities.canToggleTransliteration) {
@@ -116,8 +124,12 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
   }, [capabilities.canShowMeaning]);
 
   const stopTTS = useCallback(async () => {
+    ttsRequestIdRef.current += 1;
     await stop();
-    setIsSpeaking(false);
+    if (mountedRef.current) {
+      setIsSpeaking(false);
+      setIsGeneratingTTS(false);
+    }
   }, [stop]);
 
   const toggleTTS = useCallback(async (
@@ -133,6 +145,7 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
 
     trackReaderEvent('tts_requested', { language: options?.language });
 
+    const requestId = ++ttsRequestIdRef.current;
     setIsGeneratingTTS(true);
     setTtsError(null);
 
@@ -157,10 +170,12 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
 
       const data = await res.json();
       
+      if (requestId !== ttsRequestIdRef.current || !mountedRef.current) return;
+
       if (data.audioContent) {
         const uri = `data:audio/mp3;base64,${data.audioContent}`;
         await loadAndPlay(uri, false, () => setIsSpeaking(false));
-        setIsSpeaking(true);
+        if (requestId === ttsRequestIdRef.current && mountedRef.current) setIsSpeaking(true);
       } else if (data.error) {
         throw new Error(data.error as string);
       } else {
@@ -168,11 +183,11 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'TTS generation failed';
-      setTtsError(message);
+      if (mountedRef.current && requestId === ttsRequestIdRef.current) setTtsError(message);
       console.error('[useReaderControls] TTS error:', err);
       Alert.alert("Audio failed", "We could not load the audio at this time.");
     } finally {
-      setIsGeneratingTTS(false);
+      if (mountedRef.current && requestId === ttsRequestIdRef.current) setIsGeneratingTTS(false);
     }
   }, [capabilities.canGenerateTTS, isSpeaking, stopTTS, loadAndPlay]);
 

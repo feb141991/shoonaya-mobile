@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TempleCard } from '@/components/tirtha/TempleCard';
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
@@ -650,6 +651,7 @@ export default function TirthaScreen() {
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 36 }}
       >
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
+          <BackButton fallbackHref="/(tabs)" handleHardwareBack />
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Tirtha</Text>
 
           <PressableSurface

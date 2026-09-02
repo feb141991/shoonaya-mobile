@@ -25,6 +25,7 @@ import * as Haptics from 'expo-haptics';
 import * as Crypto from 'expo-crypto';
 
 import { Screen } from '@/components/ui/Screen';
+import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/components/ui/BackgroundParticles';
@@ -1369,26 +1370,7 @@ export default function JapaScreen() {
             scrollEventThrottle={16}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <PressableSurface
-                haptic="selection"
-                accessibilityLabel="Go back"
-                onPress={() => router.back()}
-                hitSlop={16}
-                style={{
-                  width: 44,
-                  height: 44,
-                  minHeight: 44,
-                  borderRadius: 22,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: cardBg,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-                }}
-              >
-                <Feather name="chevron-left" size={20} color={text} />
-              </PressableSurface>
+              <BackButton showLabel={false} fallbackHref="/(tabs)" handleHardwareBack />
 
               <PressableSurface
                 haptic="selection"

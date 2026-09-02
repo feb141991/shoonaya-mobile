@@ -209,7 +209,7 @@ export default function BhaktiScreen() {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.push('/' as Href);
+                  router.replace('/(tabs)' as Href);
                 }
               }}
               hitSlop={12}

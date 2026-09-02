@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Card } from '@/components/ui/Card';
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -196,10 +197,7 @@ export default function NityaAshramaScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-            <Feather name="chevron-left" size={16} color={theme.dim} />
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton fallbackHref="/nitya-karma" handleHardwareBack />
 
           <LinearGradient
             colors={isDark
@@ -343,10 +341,7 @@ export default function NityaAshramaScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-            <Feather name="chevron-left" size={16} color={theme.dim} />
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-          </PressableSurface>
+          <BackButton fallbackHref="/nitya-karma" handleHardwareBack />
 
           <PressableSurface haptic="selection" onPress={handleResetStage} style={{ backgroundColor: COLORS.dangerBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, minHeight: 0 }}>
             <Text style={{ color: COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Change Stage</Text>

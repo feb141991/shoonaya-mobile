@@ -95,7 +95,7 @@ export default function KathaReaderScreen() {
   const [marking, setMarking] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi' | 'pa'>('en');
   const [fontStep, setFontStep] = useState(1); // 'md'
-  const [ttsRate, setTtsRate] = useState(1);
+  const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
 
   const load = useCallback(async () => {
     if (!id) { setLoadError(true); setLoading(false); return; }
@@ -152,7 +152,7 @@ export default function KathaReaderScreen() {
     } finally {
       setMarking(false);
       if (router.canGoBack()) router.back();
-      else router.push('/bhakti/katha' as Href);
+      else router.replace('/(tabs)/bhakti' as Href);
     }
   }, [router]);
 
@@ -231,7 +231,8 @@ export default function KathaReaderScreen() {
     <ReaderShell
       title={titleToShow}
       subtitle={badge}
-      fallbackBackUrl="/bhakti/katha"
+      fallbackBackUrl="/(tabs)/bhakti"
+      onBeforeBack={handlers.stopTTS}
       themeColor={accent}
       ambientGlowColor={accent}
       fontPresets={FONT_PRESETS}
@@ -256,7 +257,7 @@ export default function KathaReaderScreen() {
         },
       })}
       ttsRate={ttsRate}
-      onTTSRateChange={setTtsRate}
+      onTTSRateChange={(rate) => setTtsRate(rate as 0.75 | 1 | 1.25)}
       isSpeaking={state.isSpeaking}
       isTTSGenerating={state.isGeneratingTTS}
       onCopy={() => handlers.copyText(textToCopy, 'Story')}

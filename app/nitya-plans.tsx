@@ -13,6 +13,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -322,23 +323,7 @@ export default function NityaPlansScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: theme.glass,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-            }}
-          >
-            <Feather name="chevron-left" size={20} color={theme.brand} />
-          </PressableSurface>
+          <BackButton showLabel={false} fallbackHref="/nitya-karma" handleHardwareBack />
           <View style={{ flex: 1 }}>
             <Text style={{ color: theme.text, ...TYPE.cardHeading }}>Sadhana Patha</Text>
             <Text style={{ color: theme.dim, ...TYPE.micro }}>7-day and 21-day structured practices</Text>

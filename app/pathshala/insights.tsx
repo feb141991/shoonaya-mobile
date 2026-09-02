@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View, useColorScheme } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 
 import { BackButton } from '@/components/ui/BackButton';
@@ -61,7 +61,6 @@ function StatCard({ label, value, theme, cardBg, border }: { label: string; valu
 }
 
 export default function PathshalaInsightsScreen() {
-  const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -101,7 +100,7 @@ export default function PathshalaInsightsScreen() {
   return (
     <Screen style={{ backgroundColor: bg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <BackButton showLabel={false} iconSize={22} iconColor={text} onPress={() => router.back()} />
+        <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
         <View style={{ flex: 1 }}>
           <Text style={{ ...TYPE.screenTitle, color: text }}>Learning Journey</Text>
           <Text style={{ ...TYPE.caption, color: dim }}>Your Pathshala progress</Text>

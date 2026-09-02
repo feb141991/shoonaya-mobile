@@ -27,6 +27,7 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   subtitle?: string;
   fallbackBackUrl: Href;
   onBack?: () => void;
+  onBeforeBack?: () => void | Promise<void>;
 
   themeColor?: string;
   headerCenterContent?: ReactNode;
@@ -73,6 +74,7 @@ export function ReaderShell<LanguageCode extends string = string>({
   subtitle,
   fallbackBackUrl,
   onBack,
+  onBeforeBack,
   themeColor = COLORS.brandGoldLight,
   headerCenterContent,
   ambientGlowColor,
@@ -105,7 +107,7 @@ export function ReaderShell<LanguageCode extends string = string>({
 }: ReaderShellProps<LanguageCode>) {
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
-  const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack);
+  const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack, onBeforeBack);
 
   useEffect(() => {
     trackReaderEvent('reader_opened', {

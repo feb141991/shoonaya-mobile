@@ -13,6 +13,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { BackButton } from '@/components/ui/BackButton';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { COLORS, FONTS } from '@/lib/constants';
 import { getTraditionPrompts } from '@/lib/dharma-mitra-content';
@@ -107,10 +108,7 @@ export default function AiChatScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
     >
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 12 }}>
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        <BackButton fallbackHref="/(tabs)" handleHardwareBack style={{ marginBottom: 16 }} />
 
         <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharma Mitra</Text>
         <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, marginTop: 4 }}>

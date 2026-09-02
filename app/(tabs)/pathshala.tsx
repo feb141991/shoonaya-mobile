@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 
 import { PathCard } from '@/components/pathshala/PathCard';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { BackButton } from '@/components/ui/BackButton';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -424,26 +425,7 @@ function PathshalaContent() {
         scrollEventThrottle={16}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-            hitSlop={16}
-            style={{
-              width: 44,
-              height: 44,
-              minHeight: 44,
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              backgroundColor: cardBg,
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-            }}
-          >
-            <Feather name="chevron-left" size={23} color={text} />
-          </PressableSurface>
+          <BackButton showLabel={false} iconSize={23} iconColor={text} fallbackHref="/(tabs)" handleHardwareBack />
           <View
             style={{
               width: 40,

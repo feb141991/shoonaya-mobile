@@ -303,7 +303,8 @@ export default function MoodScreen() {
     if (checkinId) {
       await completeMoodSession(checkinId);
     }
-    router.replace('/');
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   };
 
   const handleAfterMoodPick = async (mood: MoodConfig) => {
@@ -318,7 +319,8 @@ export default function MoodScreen() {
   };
 
   const handleReturnDone = () => {
-    router.replace('/');
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   };
 
   const handleReturnRecClick = (rec: Recommendation) => {

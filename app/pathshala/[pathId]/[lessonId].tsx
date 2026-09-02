@@ -90,6 +90,10 @@ const SPEED_OPTIONS: AudioSpeed[] = [0.75, 1.0, 1.25];
 
 export default function LessonReaderScreen() {
   const router = useRouter();
+  const returnToPathshala = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/pathshala');
+  }, [router]);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -422,7 +426,7 @@ export default function LessonReaderScreen() {
     }
 
     if (completedLessons.includes(lessonIndex)) {
-      router.back();
+      returnToPathshala();
       return;
     }
 
@@ -462,8 +466,8 @@ export default function LessonReaderScreen() {
 
     setSaving(false);
     setShowConfetti(true);
-    setTimeout(() => router.back(), 650);
-  }, [completedLessons, lessonIndex, lessons.length, pathId, router, saving, userId]);
+    setTimeout(returnToPathshala, 650);
+  }, [completedLessons, lessonIndex, lessons.length, pathId, returnToPathshala, saving, userId]);
 
   if (fetchState === 'loading' || loadingState) {
     return (
@@ -484,7 +488,7 @@ export default function LessonReaderScreen() {
           Upgrade to Shoonaya Pro to unlock this path.
         </Text>
         <PressableSurface
-          onPress={() => router.back()}
+          onPress={returnToPathshala}
           style={{
             marginTop: 20,
             borderRadius: 18,
@@ -507,7 +511,7 @@ export default function LessonReaderScreen() {
           Could not load this lesson.
         </Text>
         <PressableSurface
-          onPress={() => router.back()}
+          onPress={returnToPathshala}
           style={{
             marginTop: 20,
             borderRadius: 18,
@@ -533,7 +537,7 @@ export default function LessonReaderScreen() {
           Return to Pathshala and choose a lesson.
         </Text>
         <PressableSurface
-          onPress={() => router.back()}
+          onPress={returnToPathshala}
           style={{
             marginTop: 20,
             borderRadius: 18,

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View, useColorScheme } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 
 import { BackButton } from '@/components/ui/BackButton';
@@ -47,7 +47,6 @@ function formatSavedDate(iso: string | null) {
 }
 
 export default function SavedVersesScreen() {
-  const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -87,7 +86,7 @@ export default function SavedVersesScreen() {
   return (
     <Screen style={{ backgroundColor: bg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <BackButton showLabel={false} iconSize={22} iconColor={text} onPress={() => router.back()} />
+        <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
         <View style={{ flex: 1 }}>
           <Text style={{ ...TYPE.screenTitle, color: text }}>Saved Verses</Text>
           <Text style={{ ...TYPE.caption, color: dim }}>Bookmarked from your study</Text>

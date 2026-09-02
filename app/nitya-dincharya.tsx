@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/ui/Card';
+import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -302,10 +303,7 @@ export default function NityaKarmaScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        <BackButton fallbackHref="/(tabs)" handleHardwareBack />
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <EmptyState
             icon="sunrise"
@@ -328,10 +326,7 @@ export default function NityaKarmaScreen() {
     <Screen style={{ backgroundColor: theme.bg }}>
       <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="full" />
       <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }} showsVerticalScrollIndicator={false}>
-        <PressableSurface haptic="selection" onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 0 }}>
-          <Feather name="chevron-left" size={16} color={theme.dim} />
-          <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Back</Text>
-        </PressableSurface>
+        <BackButton fallbackHref="/(tabs)" handleHardwareBack />
 
         <View>
           <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Nitya Karma</Text>

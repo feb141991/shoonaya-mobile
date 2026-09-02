@@ -76,7 +76,7 @@ export default function StotramDetailScreen() {
   const [playing, setPlaying] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi' | 'pa'>('en');
   const [fontStep, setFontStep] = useState(1); // 'md'
-  const [ttsRate, setTtsRate] = useState(1);
+  const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
 
   const audio = useAudioPlayer();
 
@@ -101,8 +101,8 @@ export default function StotramDetailScreen() {
         setLoadError(true);
         return;
       }
-      const hasHindi = loadedStotram.verses.some((verse) => Boolean(verse.meaning_hi));
-      const hasPunjabi = loadedStotram.verses.some((verse) => Boolean(verse.meaning_pa));
+      const hasHindi = loadedStotram.verses.length > 0 && loadedStotram.verses.every((verse) => Boolean(verse.meaning_hi));
+      const hasPunjabi = loadedStotram.verses.length > 0 && loadedStotram.verses.every((verse) => Boolean(verse.meaning_pa));
       const { data: { user } } = await supabase.auth.getUser();
       if (user && (hasHindi || hasPunjabi)) {
         const { data: profile } = await supabase
@@ -145,8 +145,8 @@ export default function StotramDetailScreen() {
   const textToCopy = stotram ? `${stotram.title}\n\n${stotram.verses.map(v => v.sanskrit + '\n' + v.meaning).join('\n\n')}` : '';
   const textToShare = stotram ? `Read the ${stotram.title} on the Shoonaya App! 🙏` : '';
 
-  const hasHindi = Boolean(stotram?.verses.some((verse) => verse.meaning_hi));
-  const hasPunjabi = Boolean(stotram?.verses.some((verse) => verse.meaning_pa));
+  const hasHindi = Boolean(stotram?.verses.length && stotram.verses.every((verse) => verse.meaning_hi));
+  const hasPunjabi = Boolean(stotram?.verses.length && stotram.verses.every((verse) => verse.meaning_pa));
   const capabilities = useMemo(() => buildReadableCapabilities({
     original: stotram?.verses[0]?.sanskrit ?? '',
     transliteration: stotram?.verses[0]?.transliteration,
@@ -207,7 +207,11 @@ export default function StotramDetailScreen() {
     <ReaderShell
       title={stotram.title}
       subtitle={stotram.deityEmoji ? `${stotram.deityEmoji} ${stotram.type}` : stotram.type}
-      fallbackBackUrl="/bhakti/browse"
+      fallbackBackUrl="/(tabs)/bhakti"
+      onBeforeBack={async () => {
+        await handlers.stopTTS();
+        await audio.stop();
+      }}
       themeColor={accent}
       ambientGlowColor={accent}
       fontPresets={FONT_PRESETS}
@@ -248,7 +252,7 @@ export default function StotramDetailScreen() {
         );
       }}
       ttsRate={track ? undefined : ttsRate}
-      onTTSRateChange={track ? undefined : setTtsRate}
+      onTTSRateChange={track ? undefined : (rate) => setTtsRate(rate as 0.75 | 1 | 1.25)}
       isSpeaking={track ? playing : state.isSpeaking}
       isTTSGenerating={state.isGeneratingTTS}
       onCopy={() => handlers.copyText(textToCopy, 'Stotram')}

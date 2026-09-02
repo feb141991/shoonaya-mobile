@@ -403,6 +403,10 @@ export default function MyProgressScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const router = useRouter();
+  const returnToProfile = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/profile');
+  }, [router]);
 
   const theme = themeColor(isDark);
 
@@ -552,7 +556,7 @@ export default function MyProgressScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'My Progress', onBack: () => router.back() }}
+        header={{ title: 'My Progress', onBack: returnToProfile }}
       >
         <EmptyState
           icon="trending-up"
@@ -571,7 +575,7 @@ export default function MyProgressScreen() {
     return (
       <Screen
         style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-        header={{ title: 'My Progress', onBack: () => router.back() }}
+        header={{ title: 'My Progress', onBack: returnToProfile }}
       >
         <EmptyState
           icon="alert-circle"
@@ -606,7 +610,7 @@ export default function MyProgressScreen() {
   return (
     <Screen
       style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}
-      header={{ title: 'My Progress', onBack: () => router.back() }}
+      header={{ title: 'My Progress', onBack: returnToProfile }}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
 

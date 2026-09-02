@@ -23,6 +23,7 @@ import { DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
+import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 
 // New Reader Foundation imports
 import { ReaderShell } from '@/components/reader/ReaderShell';
@@ -67,6 +68,51 @@ const FONT_PRESETS = [
   { label: 'A++', value: 'xl' },
 ];
 
+function getReaderCopy(tradition: DharmVeer['tradition'] | undefined, language: 'en' | 'local') {
+  if (language === 'en') {
+    return {
+      toggleLabel: 'हिंदी',
+      journey: 'The Journey',
+      trial: 'Test of Dharma',
+      wisdom: 'Wisdom',
+      essence: 'Essence',
+      askMore: 'Ask more about this Dharm Veer',
+      questionPlaceholder: 'Ask a question...',
+      asking: 'Asking...',
+      ask: 'Ask Dharma Mitra',
+      shareReflection: 'Share reflection',
+    };
+  }
+
+  if (tradition === 'sikh') {
+    return {
+      toggleLabel: 'ਪੰਜਾਬੀ',
+      journey: 'ਜੀਵਨ ਯਾਤਰਾ',
+      trial: 'ਧਰਮ ਦੀ ਕਸੌਟੀ',
+      wisdom: 'ਸਿੱਖਿਆ',
+      essence: 'ਸਾਰ',
+      askMore: 'ਇਸ ਧਰਮ ਵੀਰ ਬਾਰੇ ਹੋਰ ਪੁੱਛੋ',
+      questionPlaceholder: 'ਕੋਈ ਸਵਾਲ ਪੁੱਛੋ...',
+      asking: 'ਪੁੱਛਿਆ ਜਾ ਰਿਹਾ ਹੈ...',
+      ask: 'ਧਰਮ ਮਿੱਤਰ ਨੂੰ ਪੁੱਛੋ',
+      shareReflection: 'ਵਿਚਾਰ ਸਾਂਝਾ ਕਰੋ',
+    };
+  }
+
+  return {
+    toggleLabel: 'हिंदी',
+    journey: 'जीवन यात्रा',
+    trial: 'धर्म की परीक्षा',
+    wisdom: 'ज्ञान',
+    essence: 'सार',
+    askMore: 'इस धर्म वीर के बारे में और पूछें',
+    questionPlaceholder: 'कोई प्रश्न पूछें...',
+    asking: 'पूछा जा रहा है...',
+    ask: 'धर्म मित्र से पूछें',
+    shareReflection: 'अपना विचार साझा करें',
+  };
+}
+
 export default function DharmVeerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -92,6 +138,7 @@ export default function DharmVeerDetailScreen() {
 
   // Explicit Inspiration state
   const [pendingCheckIn, setPendingCheckIn] = useState(false);
+  const [reflectionCelebrationVisible, setReflectionCelebrationVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [privacyCommunity, setPrivacyCommunity] = useState(false);
   const [intention, setIntention] = useState('');
@@ -276,7 +323,7 @@ export default function DharmVeerDetailScreen() {
       setMood('gratitude');
       setIntention('');
       setPrivacyCommunity(false);
-      Alert.alert("Reflection Saved", "Your reflection has been safely stored.");
+      setReflectionCelebrationVisible(true);
     } catch {
       Alert.alert("Could not save your reflection", "Please try again later.");
     } finally {
@@ -317,7 +364,7 @@ export default function DharmVeerDetailScreen() {
   const title = lang === 'local' && hero?.nameLocal ? hero.nameLocal : hero?.name;
   const era = lang === 'local' && hero?.eraLocal ? hero.eraLocal : hero?.era;
   const region = lang === 'local' && hero?.regionLocal ? hero.regionLocal : hero?.region;
-  const tagline = lang === 'local' && hero?.taglineLocal ? hero.taglineLocal : hero?.tagline;
+  const tagline = lang === 'local' ? hero?.taglineLocal : hero?.tagline;
   const journeyText = lang === 'local' && hero?.journeyLocal ? hero.journeyLocal : hero?.journey;
   const trialText = lang === 'local' && hero?.trialLocal ? hero.trialLocal : hero?.trial;
   const teachingText = lang === 'local' && hero?.teachingLocal ? hero.teachingLocal : hero?.teaching;
@@ -342,7 +389,9 @@ ${moralText}` : '';
 
   const textToShare = hero ? `🙏 Jai Shri Hari! Read this inspiring Dharm Veer story of '${title}' on the Shoonaya App. Download now to grow your Sadhana.` : '';
 
-  const hasCompleteLocalContent = !!hero?.nameLocal && !!hero?.taglineLocal && !!hero?.journeyLocal && !!hero?.trialLocal && !!hero?.teachingLocal && !!hero?.moralLocal;
+  // A missing decorative tagline must not suppress a fully translated reader.
+  const hasCompleteLocalContent = !!hero?.nameLocal && !!hero?.journeyLocal && !!hero?.trialLocal && !!hero?.teachingLocal && !!hero?.moralLocal;
+  const readerCopy = getReaderCopy(hero?.tradition, lang);
   const meta = hero ? TRADITION_META[hero.tradition] : null;
   const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)';
 
@@ -399,7 +448,7 @@ ${moralText}` : '';
         fontPresets={FONT_PRESETS}
         fontStep={fontStep}
         setFontStep={setFontStep}
-        languages={hasCompleteLocalContent ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिं/Local' }] : undefined}
+        languages={hasCompleteLocalContent ? [{ code: 'en', label: 'EN' }, { code: 'local', label: getReaderCopy(hero?.tradition, 'local').toggleLabel }] : undefined}
         currentLanguage={lang}
         setLanguage={setLang}
         onCopy={() => handlers.copyText(textToCopy, 'Story')}
@@ -415,9 +464,11 @@ ${moralText}` : '';
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28, textAlign: 'center' }}>{title}</Text>
             <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2 }}>{era} · {region}</Text>
           </View>
-          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: fs.fontSize, fontStyle: 'italic', textAlign: 'center' }}>
-            "{tagline}"
-          </Text>
+          {tagline ? (
+            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: fs.fontSize, fontStyle: 'italic', textAlign: 'center' }}>
+              "{tagline}"
+            </Text>
+          ) : null}
         </View>
 
         {/* Narrative Sections */}
@@ -426,7 +477,7 @@ ${moralText}` : '';
           <View style={{ gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
               <Feather name="book-open" size={14} color={text} />
-              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>The Journey</Text>
+              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.journey}</Text>
             </View>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{journeyText}</Text>
           </View>
@@ -435,7 +486,7 @@ ${moralText}` : '';
           <View style={{ backgroundColor: 'rgba(197, 160, 89,0.05)', borderColor: 'rgba(197, 160, 89,0.1)', borderWidth: 1, borderRadius: 24, padding: 20, gap: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Feather name="shield" size={14} color={brand} />
-              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>Test of Dharma</Text>
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.trial}</Text>
             </View>
             <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontStyle: 'italic', fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{trialText}</Text>
           </View>
@@ -444,7 +495,7 @@ ${moralText}` : '';
           <View style={{ gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
               <Feather name="target" size={14} color={text} />
-              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>Wisdom</Text>
+              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.wisdom}</Text>
             </View>
             <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{teachingText}</Text>
           </View>
@@ -462,7 +513,7 @@ ${moralText}` : '';
 
           {/* Moral */}
           <View style={{ alignItems: 'center', paddingTop: 16, gap: 12 }}>
-            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 3, opacity: 0.5 }}>Essence</Text>
+            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 3, opacity: 0.5 }}>{readerCopy.essence}</Text>
             <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: fs.fontSize + 2, lineHeight: fs.lineHeight + 4, textAlign: 'center' }}>
               {moralText}
             </Text>
@@ -471,12 +522,12 @@ ${moralText}` : '';
 
         {/* Ask Dharma Mitra */}
         <View style={{ marginTop: 40, borderTopWidth: 1, borderTopColor: border, paddingTop: 24, gap: 16 }}>
-          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>Ask more about this Dharam Veer</Text>
+          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>{readerCopy.askMore}</Text>
           <View style={{ gap: 12 }}>
             <TextInput
               value={askMoreQuery}
               onChangeText={setAskMoreQuery}
-              placeholder="Ask a question..."
+              placeholder={readerCopy.questionPlaceholder}
               placeholderTextColor={textDim}
               style={{
                 backgroundColor: surface,
@@ -502,7 +553,7 @@ ${moralText}` : '';
                 opacity: (askMoreLoading || !askMoreQuery.trim()) ? 0.5 : 1
               }}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{askMoreLoading ? 'Asking...' : 'Ask AI'}</Text>
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{askMoreLoading ? readerCopy.asking : readerCopy.ask}</Text>
             </PressableSurface>
           </View>
           {askMoreResponse ? (
@@ -540,7 +591,7 @@ ${moralText}` : '';
           >
             <Feather name="heart" size={16} color={COLORS.ink} />
             <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-              Share reflection
+              {readerCopy.shareReflection}
             </Text>
           </PressableSurface>
         </View>
@@ -552,6 +603,25 @@ ${moralText}` : '';
         title="Dharm Veer"
         message="Sign in to save your reflections and share with the community."
       />
+
+      <Modal transparent visible={reflectionCelebrationVisible} animationType="fade" onRequestClose={() => setReflectionCelebrationVisible(false)}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: COLORS.celebrationScrim }}>
+          <ConfettiOverlay show={reflectionCelebrationVisible} density="soft" />
+          <Pressable accessibilityLabel="Dismiss reflection celebration" onPress={() => setReflectionCelebrationVisible(false)} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }} />
+          <View style={{ width: '100%', maxWidth: 380, borderRadius: 24, borderWidth: 1, borderColor: `${gold}55`, backgroundColor: COLORS.cardBgDark, padding: 24, alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: `${gold}26`, borderWidth: 1, borderColor: `${gold}55` }}>
+              <Feather name="heart" size={29} color={gold} />
+            </View>
+            <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.serifBold, fontSize: 25, textAlign: 'center' }}>Reflection received</Text>
+            <Text style={{ color: COLORS.textDimDark, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 21, textAlign: 'center' }}>
+              Your reflection on {hero?.name ?? 'today\'s Dharm Veer'} has been saved privately.
+            </Text>
+            <PressableSurface haptic="selection" onPress={() => setReflectionCelebrationVisible(false)} style={{ minHeight: 46, borderRadius: 16, backgroundColor: gold, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
+              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Continue</Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </Modal>
 
       <Modal transparent visible={pendingCheckIn} animationType="slide" onRequestClose={() => setPendingCheckIn(false)}>
         <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>

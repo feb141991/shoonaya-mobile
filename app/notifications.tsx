@@ -22,11 +22,11 @@ import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
-// Native's notification inbox — previously a "coming soon" alert on Home's
-// bell (app/(tabs)/index.tsx). Matches the PWA's notification panel UX
+// Native's notification inbox replaces the Home bell's former alert-only
+// behavior. Matches the PWA's notification panel UX
 // (src/app/(main)/home/HomeDashboard.tsx:1559-1717 in the web repo): emoji
 // avatar, title/body/timestamp, unread gold tint + dot, header "mark all
-// read", empty state with a "Send test notification" action, tap-to-mark-
+// read", an account-aware empty state, tap-to-mark-
 // read-then-navigate. Presented as a full native screen rather than a
 // floating dropdown — a dropdown overlay doesn't translate to a phone-sized
 // viewport, and a full list is the standard, more premium mobile pattern
@@ -141,7 +141,6 @@ export default function NotificationsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
-  const [sendingTest, setSendingTest] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const [clearingAll, setClearingAll] = useState(false);
 
@@ -296,42 +295,6 @@ export default function NotificationsScreen() {
     );
   }, [clearingAll, notifications]);
 
-
-  const handleSendTest = useCallback(async () => {
-    setSendingTest(true);
-    try {
-      const response = await apiFetch('/api/notifications/test', { method: 'POST' });
-      if (!response.ok) {
-        // Surface the server's own error message when it sent one (both
-        // /api/notifications/test's 401 and 500 paths return { error }) so
-        // the alert says something more useful than "it failed".
-        let detail = '';
-        try {
-          const json: unknown = await response.json();
-          if (json && typeof json === 'object' && 'error' in json && typeof json.error === 'string') {
-            detail = json.error;
-          }
-        } catch {
-          // Response wasn't JSON — fall through to the generic status message below.
-        }
-        throw new Error(detail || `Request failed (status ${response.status})`);
-      }
-      await load();
-    } catch (err) {
-      // Previously silent — the empty state just stayed empty, so a 401/500
-      // looked identical to "tap didn't register" from the user's side. Now
-      // the failure is visible, with a one-tap retry (free — apiFetch has no
-      // cooldown on this route).
-      const message = err instanceof Error ? err.message : 'Something went wrong. Check your connection and try again.';
-      Alert.alert('Could not send test notification', message, [
-        { text: 'Retry', onPress: () => { void handleSendTest(); } },
-        { text: 'OK', style: 'cancel' },
-      ]);
-    } finally {
-      setSendingTest(false);
-    }
-  }, [load]);
-
   const renderNotification = useCallback(
     ({ item }: { item: NotificationRow }) => (
       <NotificationListRow row={item} theme={theme} onPress={handleRowPress} />
@@ -447,9 +410,9 @@ export default function NotificationsScreen() {
       icon="bell"
       title="All quiet"
       subtitle="Festival alerts & practice milestones show up here."
-      ctaLabel={sendingTest ? 'Sending...' : 'Send test notification'}
+      ctaLabel="Manage alerts"
       onCta={() => {
-        if (!sendingTest) void handleSendTest();
+        router.push('/settings');
       }}
     />
   );
