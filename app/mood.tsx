@@ -225,6 +225,12 @@ export default function MoodScreen() {
     if (id) {
       setCheckinId(id);
       setStep(2);
+    } else {
+      // Previously silent: a failed check-in left the user stuck on this
+      // screen with no feedback at all and no way to tell the tap even
+      // registered. startMoodCheckin already retries transient failures
+      // internally, so reaching here means it genuinely gave up.
+      Alert.alert('Could not start check-in', 'Check your connection and try again.');
     }
     setLoading(false);
   };
