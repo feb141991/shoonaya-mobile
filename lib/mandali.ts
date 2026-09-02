@@ -23,6 +23,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { dedupeNearbyMandalis } from '@/lib/mandaliLocation';
 
 // Fires-and-forgets a request to the PWA's push bridge
 // (POST /api/native/mandali/notify-push) for a notification_key one of the
@@ -230,10 +231,15 @@ export async function fetchNearbyMandalis(lat: number, lon: number): Promise<Nea
     .lte('longitude', lon + LON_DELTA)
     .limit(20);
 
-  return ((data ?? []) as NearbyMandali[])
+  const nearby = ((data ?? []) as NearbyMandali[])
     .map((m) => (m.latitude != null && m.longitude != null ? { ...m, distanceKm: haversineKm(lat, lon, m.latitude, m.longitude) } : m))
     .filter((m) => (m.distanceKm ?? 0) <= NEARBY_MANDALI_RADIUS_KM)
-    .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+    .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0) || b.member_count - a.member_count);
+
+  // Historical rows can predate the Mandali canonicalization work. The app
+  // must never present those as separate communities while the server-side
+  // merge is being reviewed. Keep the nearest, most populated row per city.
+  return dedupeNearbyMandalis(nearby);
 }
 
 export async function fetchNearbySeekers(userId: string, city: string | null, lat: number | null, lon: number | null): Promise<NearbySeeker[]> {

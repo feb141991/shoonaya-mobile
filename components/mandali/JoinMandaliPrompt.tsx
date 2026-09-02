@@ -6,6 +6,7 @@ import * as Location from 'expo-location';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
+import { mandaliLocationKey } from '@/lib/mandaliLocation';
 
 const LOCATION_TIMEOUT_MS = 10000;
 const CACHED_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
@@ -118,6 +119,9 @@ export function JoinMandaliPrompt({
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [joiningMine, setJoiningMine] = useState(false);
+  const otherNearbyMandalis = detected
+    ? nearby.filter((mandali) => mandaliLocationKey(mandali.city, mandali.country) !== mandaliLocationKey(detected.city, detected.country))
+    : nearby;
 
   const loadNearby = async (lat: number, lon: number) => {
     setLoadingNearby(true);
@@ -350,12 +354,12 @@ export function JoinMandaliPrompt({
 
           {loadingNearby ? (
             <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, textAlign: 'center' }}>Finding nearby mandalis…</Text>
-          ) : nearby.length > 0 ? (
+          ) : otherNearbyMandalis.length > 0 ? (
             <View style={{ gap: 8 }}>
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: dim }}>
                 Mandalis near you
               </Text>
-              {nearby.slice(0, 5).map((m) => (
+              {otherNearbyMandalis.slice(0, 5).map((m) => (
                 <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: surface }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13.5, color: text }}>{m.name || `${m.city} Mandali`}</Text>

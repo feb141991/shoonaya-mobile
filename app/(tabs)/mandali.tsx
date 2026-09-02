@@ -2,8 +2,14 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  PanResponder,
+  Platform,
+  Pressable,
   RefreshControl,
+  ScrollView,
   Text,
   TextInput,
   useColorScheme,
@@ -26,6 +32,7 @@ import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/MemberInfoSheet';
+import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { FilterPicker } from '@/components/mandali/FilterPicker';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
@@ -427,8 +434,10 @@ export default function MandaliScreen() {
   const [connectionBusy, setConnectionBusy] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<ConnectionRequestRow[]>([]);
   const [requestsSheetVisible, setRequestsSheetVisible] = useState(false);
+  const [postOptionsPost, setPostOptionsPost] = useState<PostRow | null>(null);
 
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [composerKeyboardVisible, setComposerKeyboardVisible] = useState(false);
   const [composeBody, setComposeBody] = useState('');
   const [composeType, setComposeType] = useState<MandaliPostType>('update');
   const [composeEventDate, setComposeEventDate] = useState('');
@@ -459,6 +468,7 @@ export default function MandaliScreen() {
     [posts, blendedPosts]
   );
   const realtimeReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const composeBodyRef = useRef<TextInput>(null);
 
   const theme = useMemo(
     () => ({
@@ -1115,44 +1125,20 @@ export default function MandaliScreen() {
     }
   }, [profile]);
 
-  const handleReportPost = useCallback((post: PostRow) => {
+  const blockPostAuthor = useCallback(async (authorId: string) => {
     if (!profile) return;
-    Alert.alert('Report Post', 'Why are you reporting this post?', [
-      { text: 'Spam / Commercial', onPress: () => void submitPostReport(post, 'Spam/Commercial') },
-      { text: 'Harassment / Hate Speech', onPress: () => void submitPostReport(post, 'Harassment/Hate Speech') },
-      { text: 'Inappropriate / Offensive', onPress: () => void submitPostReport(post, 'Inappropriate/Offensive') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }, [profile, submitPostReport]);
-
-  const handleBlockUser = useCallback((authorId: string, userName: string) => {
-    if (!profile) return;
-    Alert.alert('Block User', `Block ${userName}? You will no longer see their posts or members list entries — on any device.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Block',
-        style: 'destructive',
-        onPress: () =>
-          void (async () => {
-            try {
-              await blockUser(profile.userId, authorId);
-              await loadMandali();
-              Alert.alert('User Blocked', 'This user is now hidden from your view.');
-            } catch {
-              Alert.alert('Could not block user', 'Check your connection and try again.');
-            }
-          })(),
-      },
-    ]);
+    try {
+      await blockUser(profile.userId, authorId);
+      await loadMandali();
+      Alert.alert('User Blocked', 'This user is now hidden from your view.');
+    } catch {
+      Alert.alert('Could not block user', 'Check your connection and try again.');
+    }
   }, [loadMandali, profile]);
 
   const showPostOptions = useCallback((post: PostRow) => {
-    Alert.alert('Options', 'Choose an action for this post or user.', [
-      { text: 'Report Post', onPress: () => void handleReportPost(post) },
-      { text: 'Block User', style: 'destructive', onPress: () => handleBlockUser(post.author_id, post.profiles?.full_name ?? 'this user') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }, [handleBlockUser, handleReportPost]);
+    setPostOptionsPost(post);
+  }, []);
 
   const resetComposeState = useCallback(() => {
     setComposeBody('');
@@ -1161,6 +1147,45 @@ export default function MandaliScreen() {
     setComposeEventLoc('');
     setEditingPost(null);
   }, []);
+
+  const discardCompose = useCallback(() => {
+    Keyboard.dismiss();
+    setSheetVisible(false);
+    resetComposeState();
+  }, [resetComposeState]);
+
+  const requestComposerClose = useCallback(() => {
+    if (composerKeyboardVisible) {
+      Keyboard.dismiss();
+      return;
+    }
+    discardCompose();
+  }, [composerKeyboardVisible, discardCompose]);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setComposerKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setComposerKeyboardVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sheetVisible) return;
+    const focusTimer = setTimeout(() => composeBodyRef.current?.focus(), 220);
+    return () => clearTimeout(focusTimer);
+  }, [sheetVisible]);
+
+  const composeSheetPanResponder = useMemo(
+    () => PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dy > 72) requestComposerClose();
+      },
+    }),
+    [requestComposerClose],
+  );
 
   const startEditPost = useCallback((post: PostRow) => {
     setEditingPost(post);
@@ -1182,20 +1207,9 @@ export default function MandaliScreen() {
     }
   }, []);
 
-  const confirmDeletePost = useCallback((post: PostRow) => {
-    Alert.alert('Delete Post', 'This cannot be undone. Delete this post?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => void deletePost(post) },
-    ]);
-  }, [deletePost]);
-
   const showOwnPostOptions = useCallback((post: PostRow) => {
-    Alert.alert('Your Post', 'Choose an action for this post.', [
-      { text: 'Edit', onPress: () => startEditPost(post) },
-      { text: 'Delete', style: 'destructive', onPress: () => confirmDeletePost(post) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }, [confirmDeletePost, startEditPost]);
+    setPostOptionsPost(post);
+  }, []);
 
   const reportMember = useCallback(async (memberId: string) => {
     if (!profile) return;
@@ -1731,10 +1745,15 @@ export default function MandaliScreen() {
         }
       />
 
-      <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => { setSheetVisible(false); resetComposeState(); }}>
-        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, gap: 14, borderWidth: 1, borderColor: theme.premiumBorder }}>
-            <View style={{ alignSelf: 'center', width: 52, height: 4, borderRadius: 999, backgroundColor: theme.premiumBorder, marginBottom: 2 }} />
+      <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={requestComposerClose} statusBarTranslucent>
+        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim }}>
+          <Pressable accessibilityLabel="Dismiss post composer" onPress={requestComposerClose} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }} />
+          <KeyboardAvoidingView style={{ flex: 1, justifyContent: 'flex-end' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
+            <View style={{ maxHeight: '92%', backgroundColor: theme.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: theme.premiumBorder }}>
+              <View {...composeSheetPanResponder.panHandlers} style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+                <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: theme.premiumBorder }} />
+              </View>
+              <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, paddingTop: 12, gap: 14 }} showsVerticalScrollIndicator={false}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
                 <Feather name="edit-3" size={16} color={theme.brand} />
@@ -1743,6 +1762,14 @@ export default function MandaliScreen() {
                 <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 11 }}>Mandali Post</Text>
                 <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 22, lineHeight: 27 }}>{editingPost ? 'Edit post' : 'Create post'}</Text>
               </View>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Discard post draft"
+                onPress={discardCompose}
+                style={{ minWidth: 68, minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Discard</Text>
+              </PressableSurface>
             </View>
 
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
@@ -1754,7 +1781,7 @@ export default function MandaliScreen() {
                     haptic="selection"
                     onPress={() => setComposeType(type)}
                     style={{
-                      minHeight: 0,
+                      minHeight: 44,
                       borderRadius: 999,
                       borderWidth: 1,
                       borderColor: active ? theme.brand : theme.premiumBorder,
@@ -1763,16 +1790,19 @@ export default function MandaliScreen() {
                       paddingVertical: 8,
                     }}
                   >
-                    <Text style={{ color: active ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{type}</Text>
+                <Text style={{ color: active ? theme.brand : theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{type}</Text>
                   </PressableSurface>
                 );
               })}
             </View>
 
             <TextInput
+              ref={composeBodyRef}
               value={composeBody}
               onChangeText={setComposeBody}
               multiline
+              returnKeyType="default"
+              blurOnSubmit={false}
               placeholder="Share something with your Mandali"
               placeholderTextColor={theme.dim}
               style={{
@@ -1797,6 +1827,7 @@ export default function MandaliScreen() {
                   onChangeText={setComposeEventLoc}
                   placeholder="Location (optional)"
                   placeholderTextColor={theme.dim}
+                  returnKeyType="next"
                   style={{ borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text }}
                 />
                 <TextInput
@@ -1804,28 +1835,51 @@ export default function MandaliScreen() {
                   onChangeText={setComposeEventDate}
                   placeholder="Date & time — e.g. 2026-07-12T18:00"
                   placeholderTextColor={theme.dim}
+                  returnKeyType="done"
+                  onSubmitEditing={Keyboard.dismiss}
                   style={{ borderRadius: 14, borderWidth: 1, borderColor: theme.premiumBorder, paddingHorizontal: 14, paddingVertical: 11, fontFamily: FONTS.sans, fontSize: 13.5, color: theme.text }}
                 />
               </>
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <PressableSurface haptic="selection" onPress={() => { setSheetVisible(false); resetComposeState(); }} style={{ minHeight: 0, flex: 1, borderRadius: 16, borderWidth: 1, borderColor: theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}>
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Cancel</Text>
+              <PressableSurface haptic="selection" onPress={discardCompose} style={{ minHeight: 48, flex: 1, borderRadius: 16, borderWidth: 1, borderColor: theme.premiumBorder, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Discard</Text>
               </PressableSurface>
               <PressableSurface
                 onPress={() => void submitPost()}
                 disabled={posting || !composeBody.trim()}
-                style={{ minHeight: 0, flex: 1, borderRadius: 16, backgroundColor: composeBody.trim() ? theme.brand : theme.premiumBorder, paddingVertical: 14, alignItems: 'center' }}
+                style={{ minHeight: 48, flex: 1, borderRadius: 16, backgroundColor: composeBody.trim() ? theme.brand : theme.premiumBorder, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' }}
               >
                 <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                   {posting ? (editingPost ? 'Saving...' : 'Posting...') : (editingPost ? 'Save' : 'Post')}
                 </Text>
               </PressableSurface>
             </View>
-          </View>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <PostOptionsSheet
+        visible={postOptionsPost !== null}
+        isOwnPost={postOptionsPost?.author_id === profile?.userId}
+        authorName={postOptionsPost?.profiles?.full_name ?? postOptionsPost?.profiles?.username ?? 'this user'}
+        onClose={() => setPostOptionsPost(null)}
+        onEdit={() => {
+          if (postOptionsPost) startEditPost(postOptionsPost);
+        }}
+        onDelete={() => {
+          if (postOptionsPost) void deletePost(postOptionsPost);
+        }}
+        onReport={(reason) => {
+          if (postOptionsPost) void submitPostReport(postOptionsPost, reason);
+        }}
+        onBlock={() => {
+          if (postOptionsPost) void blockPostAuthor(postOptionsPost.author_id);
+        }}
+      />
 
       <MemberInfoSheet
         visible={!!selectedMember}

@@ -96,6 +96,7 @@ Notifications?.setNotificationHandler({
 // milliseconds after sign-out, well inside the token's validity window.
 let cachedToken: string | null = null;
 let cachedAccessToken: string | null = null;
+let notificationChannelReady: Promise<void> | null = null;
 
 function logPushWarning(label: string, error: unknown) {
   if (__DEV__) {
@@ -108,15 +109,20 @@ function logPushWarning(label: string, error: unknown) {
  * pushes to display correctly (OneSignal configured this invisibly).
  * Safe/no-op in Expo Go and on iOS.
  */
-export function initPushNotifications() {
-  if (!Notifications) return;
-  if (Platform.OS === 'android') {
-    void Notifications.setNotificationChannelAsync('default', {
+function ensureAndroidNotificationChannel(): Promise<void> {
+  if (!Notifications || Platform.OS !== 'android') return Promise.resolve();
+  if (!notificationChannelReady) {
+    notificationChannelReady = Notifications.setNotificationChannelAsync('default', {
       name: 'Default',
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250, 250, 250],
-    }).catch(() => {});
+    }).then(() => undefined).catch(() => undefined);
   }
+  return notificationChannelReady;
+}
+
+export function initPushNotifications() {
+  void ensureAndroidNotificationChannel();
 }
 
 function getExpoProjectId(): string | null {
@@ -157,6 +163,10 @@ export async function openNotificationSettings(): Promise<void> {
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!Notifications) return __DEV__ && !Constants.isDevice;
   try {
+    // Android 13 does not show its POST_NOTIFICATIONS prompt until at least
+    // one channel exists. Await it here rather than relying on the root
+    // startup effect, which can race a contextual permission request.
+    await ensureAndroidNotificationChannel();
     const existing = await Notifications.getPermissionsAsync();
     if (hasNotificationPermission(existing)) return true;
     const requested = await Notifications.requestPermissionsAsync();
@@ -196,6 +206,7 @@ export async function registerPushToken(userId: string) {
   if (Platform.OS === 'ios' && !Constants.isDevice) return;
 
   try {
+    await ensureAndroidNotificationChannel();
     const existing = await Notifications.getPermissionsAsync();
     if (!hasNotificationPermission(existing)) return;
 

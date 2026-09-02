@@ -136,6 +136,9 @@ function CommentItem({
               onChangeText={setEditDraft}
               autoFocus
               multiline
+              returnKeyType="done"
+              blurOnSubmit
+              onSubmitEditing={submitEdit}
               maxLength={1000}
               style={{
                 flex: 1,
@@ -157,11 +160,11 @@ function CommentItem({
                 setEditing(false);
                 setEditDraft(comment.body);
               }}
-              style={{ minHeight: 0, padding: 4 }}
+              style={{ minHeight: 36, minWidth: 36, alignItems: 'center', justifyContent: 'center' }}
             >
               <Feather name="x" size={13} color={dim} />
             </PressableSurface>
-            <PressableSurface accessibilityLabel="Save edit" onPress={submitEdit} style={{ minHeight: 0, padding: 4 }}>
+            <PressableSurface accessibilityLabel="Save edit" onPress={submitEdit} style={{ minHeight: 36, minWidth: 36, alignItems: 'center', justifyContent: 'center' }}>
               <Feather name="check" size={13} color={brand} />
             </PressableSurface>
           </View>
@@ -382,6 +385,9 @@ export function PostComments({
                       placeholderTextColor={dim}
                       autoFocus
                       multiline
+                      returnKeyType="send"
+                      blurOnSubmit
+                      onSubmitEditing={() => submitReply(comment.id)}
                       maxLength={1000}
                       style={{
                         flex: 1,
@@ -403,7 +409,7 @@ export function PostComments({
                         setReplyTo(null);
                         setReplyDraft('');
                       }}
-                      style={{ minHeight: 0, padding: 5 }}
+                      style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
                     >
                       <Feather name="x" size={13} color={dim} />
                     </PressableSurface>
@@ -412,14 +418,14 @@ export function PostComments({
                       disabled={posting || !replyDraft.trim()}
                       onPress={() => submitReply(comment.id)}
                       style={{
-                        width: 27,
-                        height: 27,
-                        borderRadius: 14,
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: replyDraft.trim() ? brand : border,
                         opacity: posting ? 0.6 : 1,
-                        minHeight: 0,
+                        minHeight: 44,
                       }}
                     >
                       {posting ? (
@@ -441,6 +447,9 @@ export function PostComments({
               placeholder="Write a comment…"
               placeholderTextColor={dim}
               multiline
+              returnKeyType="send"
+              blurOnSubmit
+              onSubmitEditing={submit}
               maxLength={1000}
               style={{
                 flex: 1,
@@ -461,14 +470,14 @@ export function PostComments({
               disabled={posting || !draft.trim()}
               onPress={submit}
               style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: draft.trim() ? brand : border,
                 opacity: posting ? 0.6 : 1,
-                minHeight: 0,
+                minHeight: 44,
               }}
             >
               {posting ? (
