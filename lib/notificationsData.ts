@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 import { writeNotificationsCache, deriveUnreadCount } from '@/lib/notificationsCache';
+import { HttpError } from '@/lib/retryPolicy';
 
 // Native's in-app notification data layer — ported to match the web app's
 // own contract exactly (confirmed by direct read of
@@ -99,7 +100,11 @@ export async function clearNotifications(): Promise<number> {
   }
 
   if (!response.ok) {
-    throw new Error(payload?.error ?? `Clear notifications failed (${response.status})`);
+    throw new HttpError(
+      payload?.error ?? `Clear notifications failed (${response.status})`,
+      response.status,
+      response.headers.get('Retry-After')
+    );
   }
 
   return payload?.cleared ?? 0;

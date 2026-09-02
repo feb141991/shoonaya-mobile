@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, RefreshControl, Text, useColorScheme, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, AppState, FlatList, RefreshControl, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -9,7 +9,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE } from '@/lib/constants';
 import {
   clearNotifications,
   fetchNotifications,
@@ -18,7 +18,15 @@ import {
   subscribeToNotifications,
   type NotificationRow,
 } from '@/lib/notificationsData';
-import { readNotificationsCache, writeNotificationsCache, patchNotificationsCache } from '@/lib/notificationsCache';
+import {
+  readNotificationsCache,
+  writeNotificationsCache,
+  patchNotificationsCache,
+  writePendingNotificationOperations,
+  type PendingNotificationOperation,
+  type NotificationOutboxAction,
+} from '@/lib/notificationsCache';
+import { classifyFailure, nextBackoffMs, HttpError } from '@/lib/retryPolicy';
 import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
@@ -144,6 +152,130 @@ export default function NotificationsScreen() {
   const [isGuest, setIsGuest] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const [clearingAll, setClearingAll] = useState(false);
+  const [pendingOperations, setPendingOperations] = useState<PendingNotificationOperation[]>([]);
+  const userIdRef = useRef<string | null>(null);
+  const retryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const clearRetryTimer = useCallback((id: string) => {
+    const timer = retryTimersRef.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      retryTimersRef.current.delete(id);
+    }
+  }, []);
+
+  useEffect(() => () => {
+    retryTimersRef.current.forEach((timer) => clearTimeout(timer));
+    retryTimersRef.current.clear();
+  }, []);
+
+  // Mutable mirror of pendingOperations for use inside attemptOperation's
+  // closures without re-creating the callback on every state change (it's
+  // referenced from setTimeout callbacks that can fire long after the
+  // render that scheduled them).
+  const pendingOperationsRef = useRef<PendingNotificationOperation[]>([]);
+  useEffect(() => {
+    pendingOperationsRef.current = pendingOperations;
+  }, [pendingOperations]);
+
+  // Runs one queued action against the server. Mark-read/mark-all-read go
+  // through Supabase directly (no HTTP status to classify), so any thrown
+  // error there is treated as retryable -- a bounded cost (RETRY_BACKOFF_MS
+  // has 4 stages before giving up), simpler than trying to distinguish a
+  // permission error from a network blip from a PostgrestError. Clear goes
+  // through apiFetch and throws HttpError, so it gets the full 429/5xx/4xx
+  // classification.
+  const attemptOperation = useCallback(async (op: PendingNotificationOperation) => {
+    const uid = userIdRef.current;
+    if (!uid) return;
+
+    const settle = async (next: PendingNotificationOperation[]) => {
+      setPendingOperations(next);
+      await writePendingNotificationOperations(uid, next);
+    };
+
+    try {
+      if (op.action.kind === 'mark_read') {
+        await markNotificationRead(op.action.notificationId);
+      } else if (op.action.kind === 'mark_all_read') {
+        await markAllNotificationsRead(op.action.notificationIds);
+      } else {
+        await clearNotifications();
+      }
+      clearRetryTimer(op.id);
+      await settle(pendingOperationsRef.current.filter((item) => item.id !== op.id));
+    } catch (error) {
+      const outcome = error instanceof HttpError
+        ? classifyFailure(error.status, error.retryAfterHeader)
+        : ({ kind: 'retry', afterMs: nextBackoffMs(op.attempts) ?? 0 } as const);
+
+      if (outcome.kind === 'retry') {
+        const attempts = op.attempts + 1;
+        const backoff = nextBackoffMs(op.attempts);
+        if (backoff === null) {
+          const failed = { ...op, attempts, status: 'failed' as const };
+          await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? failed : item)));
+          return;
+        }
+        const next = { ...op, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' as const };
+        await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? next : item)));
+        clearRetryTimer(op.id);
+        retryTimersRef.current.set(op.id, setTimeout(() => { void attemptOperation(next); }, backoff));
+        return;
+      }
+
+      const failed = { ...op, attempts: op.attempts + 1, status: 'failed' as const };
+      await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? failed : item)));
+    }
+  }, [clearRetryTimer]);
+
+  const queueOperation = useCallback((action: NotificationOutboxAction) => {
+    const op: PendingNotificationOperation = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      action,
+      attempts: 0,
+      nextAttemptAt: Date.now(),
+      createdAt: Date.now(),
+      status: 'pending',
+    };
+    setPendingOperations((current) => {
+      const next = [...current, op];
+      pendingOperationsRef.current = next;
+      if (userIdRef.current) void writePendingNotificationOperations(userIdRef.current, next);
+      return next;
+    });
+    void attemptOperation(op);
+  }, [attemptOperation]);
+
+  const retryFailedOperations = useCallback(() => {
+    pendingOperations.filter((op) => op.status === 'failed').forEach((op) => {
+      const retried = { ...op, status: 'pending' as const };
+      setPendingOperations((current) => current.map((item) => (item.id === op.id ? retried : item)));
+      void attemptOperation(retried);
+    });
+  }, [pendingOperations, attemptOperation]);
+
+  const discardFailedOperations = useCallback(() => {
+    const uid = userIdRef.current;
+    const failedClears = pendingOperations.filter((op) => op.status === 'failed' && op.action.kind === 'clear');
+    // If a clear permanently failed and is being discarded, restore
+    // whatever the list looked like right before that optimistic clear --
+    // otherwise the user is left staring at an empty inbox that was never
+    // actually cleared server-side.
+    if (failedClears.length > 0) {
+      const lastClear = failedClears[failedClears.length - 1];
+      if (lastClear.action.kind === 'clear') {
+        setNotifications(lastClear.action.previousSnapshot);
+        if (uid) void writeNotificationsCache(uid, lastClear.action.previousSnapshot);
+      }
+    }
+    setPendingOperations((current) => {
+      const next = current.filter((op) => op.status !== 'failed');
+      pendingOperationsRef.current = next;
+      if (uid) void writePendingNotificationOperations(uid, next);
+      return next;
+    });
+  }, [pendingOperations]);
 
   const theme = useMemo(
     () => ({
@@ -185,19 +317,28 @@ export default function NotificationsScreen() {
     }
 
     setUserId(user.id);
+    userIdRef.current = user.id;
 
     if (!options.skipCache) {
       const cached = await readNotificationsCache(user.id);
       if (cached) {
         setNotifications(cached.notifications);
         setLoading(false);
+        // Recovery after restart: resume whatever the outbox was mid-retry
+        // on when the app was last closed. Only 'pending' entries auto-
+        // resume; 'failed' waits for an explicit Retry tap, same split as
+        // Settings' outbox.
+        const resumable = cached.pendingOperations.filter((op) => op.status === 'pending');
+        setPendingOperations(cached.pendingOperations);
+        pendingOperationsRef.current = cached.pendingOperations;
+        resumable.forEach((op) => { void attemptOperation(op); });
       }
     }
 
     const rows = await fetchNotifications(user.id);
     setNotifications(rows);
     await writeNotificationsCache(user.id, rows);
-  }, [router]);
+  }, [router, attemptOperation]);
 
   useEffect(() => {
     const run = async () => {
@@ -211,6 +352,19 @@ export default function NotificationsScreen() {
     };
     void run();
   }, [load]);
+
+  // Resume on foreground -- per the agreed retry policy, retries happen
+  // when the app is actually in front with network available, never via
+  // unbounded background timers iOS would kill anyway.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active' || !userIdRef.current) return;
+      pendingOperationsRef.current.filter((op) => op.status === 'pending').forEach((op) => {
+        void attemptOperation(op);
+      });
+    });
+    return () => subscription.remove();
+  }, [attemptOperation]);
 
   // Live updates while the inbox is actually open — see
   // lib/notificationsData.ts's subscribeToNotifications comment for why
@@ -246,10 +400,10 @@ export default function NotificationsScreen() {
             current.map((item) => (item.id === row.id ? { ...item, read: true } : item))
           );
         }
-        markNotificationRead(row.id).catch(() => {
-          // Best-effort — a failed mark-read shouldn't block navigation, and
-          // the next load() will reconcile the true server state anyway.
-        });
+        // Queued through the durable outbox instead of a fire-and-forget
+        // catch -- a failed mark-read now retries (2s/10s/60s/5m) and
+        // survives an app restart, rather than being silently dropped.
+        queueOperation({ kind: 'mark_read', notificationId: row.id });
       }
 
       if (row.action_url) {
@@ -259,7 +413,7 @@ export default function NotificationsScreen() {
         }
       }
     },
-    [router, userId]
+    [router, userId, queueOperation]
   );
 
   const handleMarkAllRead = useCallback(async () => {
@@ -271,17 +425,12 @@ export default function NotificationsScreen() {
     if (userId) {
       void patchNotificationsCache(userId, (current) => current.map((item) => ({ ...item, read: true })));
     }
+    queueOperation({ kind: 'mark_all_read', notificationIds: unreadIds });
     try {
-      await markAllNotificationsRead(unreadIds);
-      try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch {}
-    } catch {
-      await load({ skipCache: true });
-    } finally {
-      setMarkingAll(false);
-    }
-  }, [load, notifications, userId]);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {}
+    setMarkingAll(false);
+  }, [notifications, userId, queueOperation]);
 
   const handleClearAll = useCallback(() => {
     if (notifications.length === 0 || clearingAll) return;
@@ -299,26 +448,13 @@ export default function NotificationsScreen() {
             const previous = notifications;
             setNotifications([]);
             if (userId) void writeNotificationsCache(userId, []);
-            clearNotifications()
-              .then(async () => {
-                try {
-                  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                } catch {}
-              })
-              .catch((err) => {
-                setNotifications(previous);
-                if (userId) void writeNotificationsCache(userId, previous);
-                Alert.alert(
-                  'Could not clear notifications',
-                  err instanceof Error ? err.message : 'Check your connection and try again.'
-                );
-              })
-              .finally(() => setClearingAll(false));
+            queueOperation({ kind: 'clear', previousSnapshot: previous });
+            setClearingAll(false);
           },
         },
       ]
     );
-  }, [clearingAll, notifications, userId]);
+  }, [clearingAll, notifications, userId, queueOperation]);
 
   const renderNotification = useCallback(
     ({ item }: { item: NotificationRow }) => (
@@ -342,6 +478,33 @@ export default function NotificationsScreen() {
             <Feather name="settings" size={18} color={theme.dim} />
           </PressableSurface>
         </View>
+
+        {/* Explicit failure state for the outbox -- never an indefinite
+            spinner or a silently-dropped mutation past the last retry. */}
+        {pendingOperations.some((op) => op.status === 'failed') ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              borderRadius: RADII.md,
+              borderWidth: 1,
+              borderColor: COLORS.dangerBorder,
+              backgroundColor: COLORS.dangerBg,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+            }}
+          >
+            <Feather name="alert-circle" size={15} color={COLORS.danger} />
+            <Text style={{ ...TYPE.caption, color: COLORS.danger, flex: 1 }}>Could not sync some actions</Text>
+            <PressableSurface haptic="selection" onPress={retryFailedOperations} style={{ minHeight: 0 }}>
+              <Text style={{ ...TYPE.label, fontSize: 12.5, color: COLORS.danger, textDecorationLine: 'underline' }}>Retry</Text>
+            </PressableSurface>
+            <PressableSurface haptic="selection" onPress={discardFailedOperations} style={{ minHeight: 0 }}>
+              <Text style={{ ...TYPE.label, fontSize: 12.5, color: theme.dim, textDecorationLine: 'underline' }}>Discard</Text>
+            </PressableSurface>
+          </View>
+        ) : null}
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

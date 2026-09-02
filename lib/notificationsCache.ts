@@ -1,7 +1,7 @@
 /**
- * Notification inbox's own identity-scoped disk cache -- same low-level
- * envelope shape as lib/homeCache.ts, lib/mandaliCache.ts and
- * lib/settingsCache.ts (schema version, identity-scoped key, read/
+ * Notification inbox's own identity-scoped disk cache + durable outbox --
+ * same low-level envelope shape as lib/homeCache.ts, lib/mandaliCache.ts
+ * and lib/settingsCache.ts (schema version, identity-scoped key, read/
  * validate/remove, logout purge), each with its own feature-local policy
  * rather than a shared generic factory. This feature's policy: the cache
  * is the single source both the Bell badge (Home) and the inbox screen
@@ -10,29 +10,53 @@
  * that's the "badge reuse" and "cache reconciliation" this cache exists
  * for, not just an offline-render nicety.
  *
+ * Notification actions are naturally idempotent -- read=true repeated has
+ * the same effect as once, and clearing an already-cleared inbox is a
+ * no-op -- so, unlike Japa completions or Mandali posts, the outbox here
+ * needs no client-operation-id / backend dedup contract. A queued
+ * operation is just resent as-is on retry.
+ *
  * Guest has no notification inbox at all (see app/notifications.tsx) --
  * there is no guest variant of this cache.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NotificationRow } from './notificationsData';
 
-export const NOTIFICATIONS_CACHE_SCHEMA_VERSION = 1;
+export const NOTIFICATIONS_CACHE_SCHEMA_VERSION = 2;
+
+export type NotificationOutboxAction =
+  | { kind: 'mark_read'; notificationId: string }
+  | { kind: 'mark_all_read'; notificationIds: string[] }
+  // previousSnapshot lets a permanently-failed clear be discarded back to
+  // exactly what the list looked like before the optimistic clear, rather
+  // than needing a fresh network fetch just to know what to restore.
+  | { kind: 'clear'; previousSnapshot: NotificationRow[] };
+
+export type PendingNotificationOperation = {
+  id: string;
+  action: NotificationOutboxAction;
+  attempts: number;
+  nextAttemptAt: number;
+  createdAt: number;
+  status: 'pending' | 'failed';
+};
 
 export type NotificationsCacheEnvelope = {
   schemaVersion: number;
   userId: string;
   savedAt: number;
   notifications: NotificationRow[];
+  pendingOperations: PendingNotificationOperation[];
 };
 
 function getNotificationsCacheKey(userId: string): string {
-  return `shoonaya_notifications_cache_v1_user_${userId}`;
+  return `shoonaya_notifications_cache_v2_user_${userId}`;
 }
 
 function isValidEnvelope(value: unknown): value is NotificationsCacheEnvelope {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
-  return typeof v.userId === 'string' && Array.isArray(v.notifications);
+  return typeof v.userId === 'string' && Array.isArray(v.notifications) && Array.isArray(v.pendingOperations);
 }
 
 export async function readNotificationsCache(userId: string): Promise<NotificationsCacheEnvelope | null> {
@@ -65,13 +89,26 @@ export async function readNotificationsCache(userId: string): Promise<Notificati
   }
 }
 
-export async function writeNotificationsCache(userId: string, notifications: NotificationRow[]): Promise<void> {
+/**
+ * Writes the notification list. If `pendingOperations` is omitted, the
+ * outbox already on disk is preserved (re-read first) rather than wiped --
+ * most callers only ever touch the list (a fresh fetch, a mark-read
+ * patch) and have no business clobbering an in-flight retry queue they
+ * don't know about.
+ */
+export async function writeNotificationsCache(
+  userId: string,
+  notifications: NotificationRow[],
+  pendingOperations?: PendingNotificationOperation[]
+): Promise<void> {
   const key = getNotificationsCacheKey(userId);
+  const preservedPending = pendingOperations ?? (await readNotificationsCache(userId))?.pendingOperations ?? [];
   const envelope: NotificationsCacheEnvelope = {
     schemaVersion: NOTIFICATIONS_CACHE_SCHEMA_VERSION,
     userId,
     savedAt: Date.now(),
     notifications,
+    pendingOperations: preservedPending,
   };
   try {
     await AsyncStorage.setItem(key, JSON.stringify(envelope));
@@ -94,7 +131,16 @@ export async function patchNotificationsCache(
 ): Promise<void> {
   const cached = await readNotificationsCache(userId);
   const next = updater(cached?.notifications ?? []);
-  await writeNotificationsCache(userId, next);
+  await writeNotificationsCache(userId, next, cached?.pendingOperations ?? []);
+}
+
+/** Replaces the outbox queue, leaving the cached notification list untouched. */
+export async function writePendingNotificationOperations(
+  userId: string,
+  pendingOperations: PendingNotificationOperation[]
+): Promise<void> {
+  const cached = await readNotificationsCache(userId);
+  await writeNotificationsCache(userId, cached?.notifications ?? [], pendingOperations);
 }
 
 export async function clearNotificationsCache(userId: string): Promise<void> {
@@ -108,7 +154,13 @@ export async function clearNotificationsCache(userId: string): Promise<void> {
 export async function clearAllNotificationsCaches(): Promise<void> {
   try {
     const keys = await AsyncStorage.getAllKeys();
-    const notifKeys = keys.filter((k) => k.startsWith('shoonaya_notifications_cache_v1_user_'));
+    // Also sweeps the pre-outbox v1 key shape -- never read as a cache hit
+    // (isValidEnvelope/schema-version check on read already rejects it),
+    // but still worth removing on a logout purge rather than leaving it
+    // as permanent dead storage.
+    const notifKeys = keys.filter(
+      (k) => k.startsWith('shoonaya_notifications_cache_v2_user_') || k.startsWith('shoonaya_notifications_cache_v1_user_')
+    );
     if (notifKeys.length > 0) {
       await AsyncStorage.multiRemove(notifKeys);
     }

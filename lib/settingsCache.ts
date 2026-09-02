@@ -18,6 +18,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppLanguage } from './language-runtime';
+import { classifyFailure, nextBackoffMs, RETRY_BACKOFF_MS } from './retryPolicy';
 
 export const SETTINGS_CACHE_SCHEMA_VERSION = 2;
 
@@ -192,9 +193,12 @@ export function mergeServerWithPending(
 }
 
 // ── Retry policy ────────────────────────────────────────────────────────
-// Network errors and 5xx: 2s, 10s, 60s, 5m, then mark failed. 429 honors
-// Retry-After when present. Most 4xx are permanent failures -- no retry.
-export const RETRY_BACKOFF_MS = [2_000, 10_000, 60_000, 300_000];
+// The classification/backoff math itself lives in lib/retryPolicy.ts,
+// shared with the notification-actions outbox -- see that file's comment
+// for why this one piece is a shared extraction and the envelope above is
+// not. Settings' own contribution on top is just the 'success' variant,
+// which carries feature-specific data (persisted settings fields).
+export { nextBackoffMs, RETRY_BACKOFF_MS };
 
 export type WriteOutcome =
   | { kind: 'success'; updatedAt: string; persisted: Partial<SettingsFields> }
@@ -202,19 +206,5 @@ export type WriteOutcome =
   | { kind: 'permanent_failure' };
 
 export function classifyWriteFailure(status: number, retryAfterHeader: string | null): WriteOutcome {
-  if (status === 429) {
-    const parsed = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : NaN;
-    return { kind: 'retry', afterMs: Number.isFinite(parsed) && parsed > 0 ? parsed * 1000 : RETRY_BACKOFF_MS[0] };
-  }
-  if (status >= 500 || status === 0) {
-    return { kind: 'retry', afterMs: RETRY_BACKOFF_MS[0] };
-  }
-  // Most 4xx (400, 401, 403, 422, ...) are permanent -- retrying an
-  // already-rejected request wastes cycles and can't succeed differently.
-  return { kind: 'permanent_failure' };
-}
-
-/** Next backoff stage for a retry-eligible failure; null once exhausted (caller marks 'failed'). */
-export function nextBackoffMs(attempts: number): number | null {
-  return attempts < RETRY_BACKOFF_MS.length ? RETRY_BACKOFF_MS[attempts] : null;
+  return classifyFailure(status, retryAfterHeader);
 }
