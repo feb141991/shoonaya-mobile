@@ -32,7 +32,9 @@ function CommentItem({
   onSelectReaction,
   onRemoveReaction,
   onViewReactors,
+  onRetryReaction,
   myReaction,
+  reactionFailed,
   text,
   dim,
   cardBg,
@@ -53,7 +55,9 @@ function CommentItem({
   onSelectReaction: (commentId: string, reaction: ReactionType) => void;
   onRemoveReaction: (commentId: string) => void;
   onViewReactors: (commentId: string) => void;
+  onRetryReaction: (commentId: string) => void;
   myReaction: ReactionType | null;
+  reactionFailed: boolean;
   text: string;
   dim: string;
   cardBg: string;
@@ -182,6 +186,8 @@ function CommentItem({
               onSelect={(reaction) => onSelectReaction(comment.id, reaction)}
               onRemove={() => onRemoveReaction(comment.id)}
               onViewReactors={() => onViewReactors(comment.id)}
+              failed={reactionFailed}
+              onRetry={() => onRetryReaction(comment.id)}
               dim={dim}
               cardBg={cardBg}
               border={border}
@@ -231,7 +237,9 @@ export function PostComments({
   onDeleteComment,
   onSelectCommentReaction,
   onRemoveCommentReaction,
+  onRetryCommentReaction,
   myCommentReactions,
+  failedCommentReactionIds,
   onViewProfile,
   text,
   dim,
@@ -253,7 +261,10 @@ export function PostComments({
   onDeleteComment: (commentId: string) => void;
   onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
   onRemoveCommentReaction: (commentId: string) => void;
+  onRetryCommentReaction: (commentId: string) => void;
   myCommentReactions: Record<string, ReactionType>;
+  /** Comment ids whose last reaction change failed to sync and is waiting for a retry. */
+  failedCommentReactionIds: Set<string>;
   onViewProfile: (userId: string) => void;
   text: string;
   dim: string;
@@ -334,7 +345,9 @@ export function PostComments({
                   onSelectReaction={onSelectCommentReaction}
                   onRemoveReaction={onRemoveCommentReaction}
                   onViewReactors={(id) => setActiveReactorsCommentId(id)}
+                  onRetryReaction={onRetryCommentReaction}
                   myReaction={myCommentReactions[comment.id] ?? null}
+                  reactionFailed={failedCommentReactionIds.has(comment.id)}
                   text={text}
                   dim={dim}
                   cardBg={cardBg}
@@ -360,7 +373,9 @@ export function PostComments({
                         onSelectReaction={onSelectCommentReaction}
                         onRemoveReaction={onRemoveCommentReaction}
                         onViewReactors={(id) => setActiveReactorsCommentId(id)}
+                        onRetryReaction={onRetryCommentReaction}
                         myReaction={myCommentReactions[reply.id] ?? null}
+                        reactionFailed={failedCommentReactionIds.has(reply.id)}
                         text={text}
                         dim={dim}
                         cardBg={cardBg}

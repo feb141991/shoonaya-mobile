@@ -17,6 +17,9 @@ type CommentReactionButtonProps = {
   cardBg: string;
   border: string;
   scrimColor: string;
+  /** True when this reaction failed to sync and is waiting in the outbox for a retry. Tapping retries instead of opening the picker. */
+  failed?: boolean;
+  onRetry?: () => void;
 };
 
 // Comment-level reaction button matching PostReactionButton's 3-type devotional
@@ -32,6 +35,8 @@ export function CommentReactionButton({
   cardBg,
   border,
   scrimColor,
+  failed,
+  onRetry,
 }: CommentReactionButtonProps) {
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
@@ -75,20 +80,30 @@ export function CommentReactionButton({
         <View ref={triggerRef} collapsable={false}>
           <PressableSurface
             haptic="selection"
-            accessibilityLabel={active ? `Remove ${active.label} reaction` : 'React to this comment'}
-            onPress={openPicker}
+            accessibilityLabel={failed ? 'Reaction could not sync -- tap to retry' : active ? `Remove ${active.label} reaction` : 'React to this comment'}
+            onPress={failed ? onRetry : openPicker}
             style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', padding: 2 }}
           >
             {active ? (
-              <Text style={{ fontSize: 13 }}>{active.emoji}</Text>
+              <Text style={{ fontSize: 13, opacity: failed ? 0.5 : 1 }}>{active.emoji}</Text>
             ) : (
               <Feather name="heart" size={11} color={dim} />
             )}
           </PressableSurface>
         </View>
 
-        {/* Count Button (Tapping opens "Who reacted" sheet) */}
-        {count > 0 ? (
+        {/* Count Button (Tapping opens "Who reacted" sheet); replaced with a
+            Retry label when the last reaction change failed to sync. */}
+        {failed ? (
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Retry syncing this reaction"
+            onPress={onRetry}
+            style={{ minHeight: 0, paddingHorizontal: 2, paddingVertical: 2 }}
+          >
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10.5, color: COLORS.danger }}>Retry</Text>
+          </PressableSurface>
+        ) : count > 0 ? (
           <PressableSurface
             haptic="selection"
             accessibilityLabel={`View all ${count} reactions`}

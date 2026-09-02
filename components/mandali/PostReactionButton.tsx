@@ -4,7 +4,7 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useReducedMotion } from '@/components/ui/Motion';
-import { FONTS } from '@/lib/constants';
+import { COLORS, FONTS } from '@/lib/constants';
 import { type ReactionType, REACTION_META, REACTION_ORDER } from '@/lib/mandali';
 
 export { REACTION_META, REACTION_ORDER };
@@ -18,6 +18,9 @@ type PostReactionButtonProps = {
   cardBg: string;
   border: string;
   scrimColor: string;
+  /** True when this reaction failed to sync and is waiting in the outbox for a retry. Tapping retries instead of opening the picker. */
+  failed?: boolean;
+  onRetry?: () => void;
 };
 
 // Same Facebook reaction-picker mechanism as FilterPicker (tap reveals a
@@ -26,7 +29,7 @@ type PostReactionButtonProps = {
 // removes it; tapping a different one switches. No literal "dislike" --
 // deliberately a devotional set (pranam/love/insightful), not a general
 // social reaction bar.
-export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, cardBg, border, scrimColor }: PostReactionButtonProps) {
+export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, cardBg, border, scrimColor, failed, onRetry }: PostReactionButtonProps) {
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
@@ -67,17 +70,19 @@ export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, c
       <View ref={triggerRef} collapsable={false} style={{ minWidth: 34 }}>
         <PressableSurface
           haptic="selection"
-          accessibilityLabel={active ? `Remove ${active.label} reaction` : 'React to this post'}
-          onPress={openPicker}
+          accessibilityLabel={failed ? 'Reaction could not sync -- tap to retry' : active ? `Remove ${active.label} reaction` : 'React to this post'}
+          onPress={failed ? onRetry : openPicker}
           style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 5 }}
         >
           {active ? (
-            <Text style={{ fontSize: 14 }}>{active.emoji}</Text>
+            <Text style={{ fontSize: 14, opacity: failed ? 0.5 : 1 }}>{active.emoji}</Text>
           ) : (
             <Feather name="smile" size={13} color={dim} />
           )}
-          {count > 0 ? (
-            <Text style={{ color: active ? active.color : dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>{count}</Text>
+          {failed || count > 0 ? (
+            <Text style={{ color: failed ? COLORS.danger : active ? active.color : dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>
+              {failed ? 'Retry' : count}
+            </Text>
           ) : null}
         </PressableSurface>
       </View>

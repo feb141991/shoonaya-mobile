@@ -45,6 +45,7 @@ import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
 import { clearAllTelemetry } from '@/lib/telemetry';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
+import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import {
   getNotificationPermissionState,
@@ -289,6 +290,7 @@ function RootLayout() {
         void clearAllNotificationsCaches();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
+        void clearAllReactionOutboxes();
         void clearAllOnboardingDrafts();
 
         // If guest mode is active, allow tabs and bypass login

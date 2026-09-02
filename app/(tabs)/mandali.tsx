@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -43,6 +44,14 @@ import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
 import { recordRouteOpen, recordRefreshFailure } from '@/lib/telemetry';
+import {
+  queueReactionChange,
+  resumePendingReactionChanges,
+  retryFailedReactionChanges,
+  hasFailedReactionChange,
+  listFailedReactionChanges,
+  type PerformReactionAction,
+} from '@/lib/reactionOutbox';
 import {
   blockUser,
   cancelConnectionRequest,
@@ -174,12 +183,16 @@ type MandaliPostCardProps = {
   onToggleComments: (postId: string) => void;
   onSelectReaction: (postId: string, reaction: ReactionType) => void;
   onRemoveReaction: (postId: string) => void;
+  onRetryReaction: (postId: string) => void;
+  reactionFailed: boolean;
   onViewProfile: (userId: string) => void;
   onEditComment: (commentId: string, body: string) => void;
   onDeleteComment: (commentId: string) => void;
   onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
   onRemoveCommentReaction: (commentId: string) => void;
+  onRetryCommentReaction: (commentId: string) => void;
   myCommentReactions: Record<string, ReactionType>;
+  failedCommentReactionIds: Set<string>;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -199,12 +212,16 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onToggleComments,
   onSelectReaction,
   onRemoveReaction,
+  onRetryReaction,
+  reactionFailed,
   onViewProfile,
   onEditComment,
   onDeleteComment,
   onSelectCommentReaction,
   onRemoveCommentReaction,
+  onRetryCommentReaction,
   myCommentReactions,
+  failedCommentReactionIds,
 }: MandaliPostCardProps) {
   const isOwnPost = post.author_id === userId;
   const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
@@ -351,6 +368,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
               count={post.upvotes}
               onSelect={(reaction) => onSelectReaction(post.id, reaction)}
               onRemove={() => onRemoveReaction(post.id)}
+              failed={reactionFailed}
+              onRetry={() => onRetryReaction(post.id)}
               dim={theme.dim}
               cardBg={theme.card}
               border={theme.premiumBorder}
@@ -385,7 +404,9 @@ const MandaliPostCard = memo(function MandaliPostCard({
         onDeleteComment={onDeleteComment}
         onSelectCommentReaction={onSelectCommentReaction}
         onRemoveCommentReaction={onRemoveCommentReaction}
+        onRetryCommentReaction={onRetryCommentReaction}
         myCommentReactions={myCommentReactions}
+        failedCommentReactionIds={failedCommentReactionIds}
         onViewProfile={onViewProfile}
         text={theme.text}
         dim={theme.dim}
@@ -426,6 +447,9 @@ export default function MandaliScreen() {
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [myReactions, setMyReactions] = useState<Record<string, ReactionType>>({});
   const [myCommentReactions, setMyCommentReactions] = useState<Record<string, ReactionType>>({});
+  // Keys "post:<id>" / "comment:<id>" -- targets whose last reaction change
+  // failed to sync and is waiting in lib/reactionOutbox.ts for a Retry.
+  const [failedReactionTargets, setFailedReactionTargets] = useState<Set<string>>(new Set());
   const [seekers, setSeekers] = useState<NearbySeeker[]>([]);
   const [loadingSeekers, setLoadingSeekers] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
@@ -461,6 +485,10 @@ export default function MandaliScreen() {
   // internally, since this effect's deps don't include `profile`.
   const routeOpenCacheHitRef = useRef(false);
   const telemetryUserIdRef = useRef<string | null>(null);
+  // Resolved as soon as loadMandali knows the user id, independent of
+  // `profile` state -- read by the reaction outbox's resume path (mount and
+  // app-foreground) so it never depends on a possibly-stale profile closure.
+  const resolvedUserIdRef = useRef<string | null>(null);
   // Sorted, joined post-id string used ONLY to scope the reaction/comment/
   // RSVP realtime subscriptions below (Postgres Changes' `in.()` filter
   // needs a static string) and as a stable effect dependency -- resubscribes
@@ -494,6 +522,28 @@ export default function MandaliScreen() {
     }),
     [isDark]
   );
+
+  // Reconstructs the real Supabase write for a queued reaction outbox entry
+  // -- injected into lib/reactionOutbox.ts rather than that module importing
+  // lib/mandali.ts's setPostReaction/etc directly, so the outbox stays
+  // testable with a fake action the way lib/sankalpaOutbox.ts is testable
+  // with a fake fetchImpl.
+  const performReactionAction = useCallback<PerformReactionAction>(async (targetType, targetId, desiredReaction) => {
+    const userId = resolvedUserIdRef.current;
+    if (!userId) throw new Error('No authenticated user for reaction sync');
+    if (targetType === 'post') {
+      if (desiredReaction == null) await removePostReaction(targetId, userId);
+      else await setPostReaction(targetId, userId, desiredReaction);
+    } else {
+      if (desiredReaction == null) await removeCommentReaction(targetId, userId);
+      else await setCommentReaction(targetId, userId, desiredReaction);
+    }
+  }, []);
+
+  const refreshFailedReactionTargets = useCallback(async (userId: string) => {
+    const failed = await listFailedReactionChanges(userId);
+    setFailedReactionTargets(new Set(failed.map((f) => `${f.targetType}:${f.targetId}`)));
+  }, []);
 
   const loadMandali = useCallback(async () => {
     const guest = await isGuestMode();
@@ -585,6 +635,11 @@ export default function MandaliScreen() {
       longitude: profileRow?.longitude ?? null,
     };
     setProfile(context);
+    resolvedUserIdRef.current = context.userId;
+    void resumePendingReactionChanges(context.userId, performReactionAction).then(() =>
+      refreshFailedReactionTargets(context.userId)
+    );
+    void refreshFailedReactionTargets(context.userId);
 
     if (!context.mandaliId) {
       visiblePostIdsRef.current = new Set();
@@ -673,7 +728,7 @@ export default function MandaliScreen() {
       members: visibleMembers,
       nextCursor: feed.nextCursor,
     });
-  }, [router]);
+  }, [router, performReactionAction, refreshFailedReactionTargets]);
 
   // Fetches the next page of the local Mandali feed (blended posts are
   // first-page-only, so this only ever appends to `posts`). Guarded against
@@ -903,6 +958,20 @@ export default function MandaliScreen() {
     loadPendingRequests();
   }, [loadPendingRequests]);
 
+  // Resume queued reaction changes on foreground -- per the agreed retry
+  // policy, retries happen when the app is actually in front with network
+  // available, never via unbounded background timers (same pattern as
+  // components/home/SankalpaCard.tsx).
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const userId = resolvedUserIdRef.current;
+      if (!userId) return;
+      void resumePendingReactionChanges(userId, performReactionAction).then(() => refreshFailedReactionTargets(userId));
+    });
+    return () => subscription.remove();
+  }, [performReactionAction, refreshFailedReactionTargets]);
+
   // Realtime — posts/profiles changes (new post, membership change) stay
   // full, debounced reloads since they change the feed's actual structure
   // (ordering, blend-threshold, visible-post-id set). Upvotes/comments/
@@ -944,6 +1013,13 @@ export default function MandaliScreen() {
     () => (activeFilter === 'all' ? blendedPosts : blendedPosts.filter((p) => p.type === activeFilter)),
     [blendedPosts, activeFilter]
   );
+  const failedCommentReactionIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const key of failedReactionTargets) {
+      if (key.startsWith('comment:')) ids.add(key.slice('comment:'.length));
+    }
+    return ids;
+  }, [failedReactionTargets]);
   const commentsByPost = useMemo(() => {
     const grouped = new Map<string, CommentRow[]>();
     for (const comment of comments) {
@@ -979,32 +1055,35 @@ export default function MandaliScreen() {
     return items;
   }, [filteredBlendedPosts, filteredPosts, profile?.mandaliId]);
 
+  // Post/comment reactions queue through lib/reactionOutbox.ts rather than
+  // writing directly and reverting on failure -- the backend is naturally
+  // idempotent (upsert/delete-by-match), so once the optimistic UI reflects
+  // the user's intent it stays that way; a permanent failure surfaces an
+  // explicit "Retry" state on the reaction control instead of silently
+  // snapping back with no explanation, the same "never a silent failure"
+  // discipline already applied to Settings, Notifications, Mood and
+  // Sankalpa this session.
   const handleSelectReaction = useCallback(async (postId: string, reaction: ReactionType) => {
     if (!profile) return;
     const hadReaction = myReactions[postId] != null;
     const targetList = posts.some((p) => p.id === postId) ? setPosts : setBlendedPosts;
-    const previous = myReactions[postId];
 
     setMyReactions((current) => ({ ...current, [postId]: reaction }));
     if (!hadReaction) {
       targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
     }
+    setFailedReactionTargets((current) => {
+      if (!current.has(`post:${postId}`)) return current;
+      const next = new Set(current);
+      next.delete(`post:${postId}`);
+      return next;
+    });
 
-    try {
-      await setPostReaction(postId, profile.userId, reaction);
-    } catch {
-      setMyReactions((current) => {
-        if (previous == null) {
-          const { [postId]: _removed, ...rest } = current;
-          return rest;
-        }
-        return { ...current, [postId]: previous };
-      });
-      if (!hadReaction) {
-        targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes - 1 } : p)));
-      }
+    await queueReactionChange(profile.userId, 'post', postId, reaction, performReactionAction);
+    if (await hasFailedReactionChange(profile.userId, 'post', postId)) {
+      setFailedReactionTargets((current) => new Set(current).add(`post:${postId}`));
     }
-  }, [posts, profile, myReactions]);
+  }, [posts, profile, myReactions, performReactionAction]);
 
   const handleRemoveReaction = useCallback(async (postId: string) => {
     if (!profile) return;
@@ -1017,14 +1096,24 @@ export default function MandaliScreen() {
       return rest;
     });
     targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: Math.max(0, p.upvotes - 1) } : p)));
+    setFailedReactionTargets((current) => {
+      if (!current.has(`post:${postId}`)) return current;
+      const next = new Set(current);
+      next.delete(`post:${postId}`);
+      return next;
+    });
 
-    try {
-      await removePostReaction(postId, profile.userId);
-    } catch {
-      setMyReactions((current) => ({ ...current, [postId]: previous }));
-      targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
+    await queueReactionChange(profile.userId, 'post', postId, null, performReactionAction);
+    if (await hasFailedReactionChange(profile.userId, 'post', postId)) {
+      setFailedReactionTargets((current) => new Set(current).add(`post:${postId}`));
     }
-  }, [posts, profile, myReactions]);
+  }, [posts, profile, myReactions, performReactionAction]);
+
+  const handleRetryReaction = useCallback(async (postId: string) => {
+    if (!profile) return;
+    await retryFailedReactionChanges(profile.userId, performReactionAction);
+    await refreshFailedReactionTargets(profile.userId);
+  }, [profile, performReactionAction, refreshFailedReactionTargets]);
 
   const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null) => {
     if (!profile) return;
@@ -1042,28 +1131,23 @@ export default function MandaliScreen() {
   const handleSelectCommentReaction = useCallback(async (commentId: string, reaction: ReactionType) => {
     if (!profile) return;
     const hadReaction = myCommentReactions[commentId] != null;
-    const previous = myCommentReactions[commentId];
 
     setMyCommentReactions((current) => ({ ...current, [commentId]: reaction }));
     if (!hadReaction) {
       setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
     }
+    setFailedReactionTargets((current) => {
+      if (!current.has(`comment:${commentId}`)) return current;
+      const next = new Set(current);
+      next.delete(`comment:${commentId}`);
+      return next;
+    });
 
-    try {
-      await setCommentReaction(commentId, profile.userId, reaction);
-    } catch {
-      setMyCommentReactions((current) => {
-        if (previous == null) {
-          const { [commentId]: _removed, ...rest } = current;
-          return rest;
-        }
-        return { ...current, [commentId]: previous };
-      });
-      if (!hadReaction) {
-        setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
-      }
+    await queueReactionChange(profile.userId, 'comment', commentId, reaction, performReactionAction);
+    if (await hasFailedReactionChange(profile.userId, 'comment', commentId)) {
+      setFailedReactionTargets((current) => new Set(current).add(`comment:${commentId}`));
     }
-  }, [profile, myCommentReactions]);
+  }, [profile, myCommentReactions, performReactionAction]);
 
   const handleRemoveCommentReaction = useCallback(async (commentId: string) => {
     if (!profile) return;
@@ -1075,14 +1159,24 @@ export default function MandaliScreen() {
       return rest;
     });
     setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: Math.max(0, c.upvotes - 1) } : c)));
+    setFailedReactionTargets((current) => {
+      if (!current.has(`comment:${commentId}`)) return current;
+      const next = new Set(current);
+      next.delete(`comment:${commentId}`);
+      return next;
+    });
 
-    try {
-      await removeCommentReaction(commentId, profile.userId);
-    } catch {
-      setMyCommentReactions((current) => ({ ...current, [commentId]: previous }));
-      setComments((current) => current.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
+    await queueReactionChange(profile.userId, 'comment', commentId, null, performReactionAction);
+    if (await hasFailedReactionChange(profile.userId, 'comment', commentId)) {
+      setFailedReactionTargets((current) => new Set(current).add(`comment:${commentId}`));
     }
-  }, [profile, myCommentReactions]);
+  }, [profile, myCommentReactions, performReactionAction]);
+
+  const handleRetryCommentReaction = useCallback(async (commentId: string) => {
+    if (!profile) return;
+    await retryFailedReactionChanges(profile.userId, performReactionAction);
+    await refreshFailedReactionTargets(profile.userId);
+  }, [profile, performReactionAction, refreshFailedReactionTargets]);
 
   const handleEditComment = useCallback(async (commentId: string, body: string) => {
     const previous = comments.find((c) => c.id === commentId);
@@ -1470,15 +1564,19 @@ export default function MandaliScreen() {
         onToggleComments={toggleComments}
         onSelectReaction={handleSelectReaction}
         onRemoveReaction={handleRemoveReaction}
+        onRetryReaction={handleRetryReaction}
+        reactionFailed={failedReactionTargets.has(`post:${post.id}`)}
         onViewProfile={handleViewProfile}
         onEditComment={handleEditComment}
         onDeleteComment={handleDeleteComment}
         onSelectCommentReaction={handleSelectCommentReaction}
         onRemoveCommentReaction={handleRemoveCommentReaction}
+        onRetryCommentReaction={handleRetryCommentReaction}
         myCommentReactions={myCommentReactions}
+        failedCommentReactionIds={failedCommentReactionIds}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, loadingCommentsForPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleViewProfile, handleEditComment, handleDeleteComment, handleSelectCommentReaction, handleRemoveCommentReaction, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, loadingCommentsForPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleRetryReaction, failedReactionTargets, handleViewProfile, handleEditComment, handleDeleteComment, handleSelectCommentReaction, handleRemoveCommentReaction, handleRetryCommentReaction, myCommentReactions, failedCommentReactionIds, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
