@@ -41,6 +41,7 @@ import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllMandaliCaches } from '@/lib/mandaliCache';
+import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import {
   getNotificationPermissionState,
@@ -281,6 +282,7 @@ function RootLayout() {
         void unregisterPushToken();
         void clearAllHomeCaches();
         void clearAllMandaliCaches();
+        void clearAllSettingsCaches();
         void clearAllOnboardingDrafts();
 
         // If guest mode is active, allow tabs and bypass login

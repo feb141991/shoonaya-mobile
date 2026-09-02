@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Linking,
   ScrollView,
   Switch,
@@ -37,25 +38,25 @@ import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { SUPPORTED_APP_LANGUAGES, type AppLanguage } from '@/lib/language-runtime';
+import {
+  readSettingsCache,
+  writeSettingsCache,
+  clearAllSettingsCaches,
+  mergeServerWithPending,
+  classifyWriteFailure,
+  nextBackoffMs,
+  type SettingsCacheIdentity,
+  type SettingsFields,
+  type PendingSettingsWrite,
+} from '@/lib/settingsCache';
 
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
 
 // Every field below already exists on `profiles` and is already read/written
 // by the focused settings screens — no new backend columns introduced.
-type SettingsState = {
-  wants_festival_reminders: boolean;
-  wants_shloka_reminders: boolean;
-  wants_nitya_reminders: boolean;
-  wants_community_notifications: boolean;
-  wants_family_notifications: boolean;
-  app_language: AppLanguage;
-  transliteration_language: AppLanguage;
-  meaning_language: AppLanguage;
-  consent_religious_data: boolean;
-};
+type SettingsState = SettingsFields;
 
-const SETTINGS_STORAGE_KEY = 'shoonaya_mobile_settings';
 const THEME_STORAGE_KEY = 'sangam_theme_preference';
 
 const INITIAL_SETTINGS: SettingsState = {
@@ -231,19 +232,125 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
+  const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
+
+  // Resolved once per load; used both to key the cache and to know which
+  // identity a queued write belongs to, so a cold-start resume never
+  // drains another account's outbox (see resumePendingWrite below).
+  const identityRef = useRef<SettingsCacheIdentity | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => clearRetryTimer(), [clearRetryTimer]);
+
+  // Sends the pending write's desired fields to the server. On success,
+  // clears the pending entry and adopts the server's persisted values
+  // (trusting its response over the optimistic local guess). On failure,
+  // classifies the error and either reschedules (network/5xx/429) or marks
+  // the entry permanently failed (most 4xx) -- never retries forever, and
+  // never leaves an indefinite "Saving..." state past the last attempt.
+  const attemptPendingWrite = useCallback(async (write: PendingSettingsWrite) => {
+    const identity = identityRef.current;
+    if (!identity || identity.kind === 'guest') return; // guest writes are local-only, never queued
+
+    setSaving(true);
+    try {
+      const response = await apiFetch('/api/native/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(write.fields),
+      });
+
+      if (response.ok) {
+        const json = await response.json().catch(() => null) as { persisted?: Partial<SettingsState>; updatedAt?: string } | null;
+        clearRetryTimer();
+        setPendingWrite(null);
+        setSettings((current) => ({ ...current, ...(json?.persisted ?? write.fields) }));
+        const cached = await readSettingsCache(identity);
+        await writeSettingsCache({
+          schemaVersion: 2,
+          identity,
+          savedAt: Date.now(),
+          settings: { ...(cached?.settings ?? INITIAL_SETTINGS), ...(json?.persisted ?? write.fields) },
+          serverUpdatedAt: json?.updatedAt ?? cached?.serverUpdatedAt ?? null,
+          pendingOperations: [],
+        });
+        return;
+      }
+
+      const outcome = classifyWriteFailure(response.status, response.headers.get('Retry-After'));
+      if (outcome.kind === 'retry') {
+        const attempts = write.attempts + 1;
+        const backoff = nextBackoffMs(write.attempts) ?? outcome.afterMs;
+        if (backoff === null) {
+          // Backoff table exhausted -- stop auto-retrying, surface failure.
+          const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed' };
+          setPendingWrite(failed);
+          await persistPendingWrite(identity, failed);
+          return;
+        }
+        const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
+        setPendingWrite(next);
+        await persistPendingWrite(identity, next);
+        clearRetryTimer();
+        retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
+        return;
+      }
+
+      // Permanent failure (most 4xx) -- do not retry automatically.
+      const failed: PendingSettingsWrite = { ...write, attempts: write.attempts + 1, status: 'failed' };
+      setPendingWrite(failed);
+      await persistPendingWrite(identity, failed);
+    } catch {
+      // Network error -- same retry treatment as 5xx.
+      const attempts = write.attempts + 1;
+      const backoff = nextBackoffMs(write.attempts);
+      if (backoff === null) {
+        const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed' };
+        setPendingWrite(failed);
+        await persistPendingWrite(identity, failed);
+        return;
+      }
+      const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
+      setPendingWrite(next);
+      await persistPendingWrite(identity, next);
+      clearRetryTimer();
+      retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
+    } finally {
+      setSaving(false);
+    }
+  }, [clearRetryTimer]);
+
+  async function persistPendingWrite(identity: SettingsCacheIdentity, write: PendingSettingsWrite | null) {
+    const cached = await readSettingsCache(identity);
+    await writeSettingsCache({
+      schemaVersion: 2,
+      identity,
+      savedAt: Date.now(),
+      settings: cached?.settings ?? INITIAL_SETTINGS,
+      serverUpdatedAt: cached?.serverUpdatedAt ?? null,
+      pendingOperations: write ? [write] : [],
+    });
+  }
 
   const loadSettings = useCallback(async () => {
     const guest = await isGuestMode();
     setIsGuest(guest);
 
     if (guest) {
-      const [localSettings, localTheme] = await Promise.all([
-        AsyncStorage.getItem(SETTINGS_STORAGE_KEY),
+      identityRef.current = { kind: 'guest' };
+      clearRetryTimer();
+      setPendingWrite(null);
+      const [cached, localTheme] = await Promise.all([
+        readSettingsCache({ kind: 'guest' }),
         AsyncStorage.getItem(THEME_STORAGE_KEY),
       ]);
-      const local = localSettings ? toSettingsState(JSON.parse(localSettings) as Partial<SettingsState>) : {};
-      const merged = toSettingsState({ ...INITIAL_SETTINGS, ...local });
-      setSettings(merged);
+      setSettings(toSettingsState({ ...INITIAL_SETTINGS, ...cached?.settings }));
       if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
         setThemePref(localTheme);
       }
@@ -259,7 +366,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       return;
     }
 
-    const [profileRes, localSettings, localTheme] = await Promise.all([
+    const identity: SettingsCacheIdentity = { kind: 'authenticated', userId: user.id };
+    identityRef.current = identity;
+
+    const [profileRes, cached, localTheme] = await Promise.all([
       supabase
         .from('profiles')
         .select(
@@ -267,21 +377,58 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         )
         .eq('id', user.id)
         .single(),
-      AsyncStorage.getItem(SETTINGS_STORAGE_KEY),
+      readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
     ]);
 
     if (profileRes.error) throw profileRes.error;
 
     const remote = toSettingsState(profileRes.data ?? INITIAL_SETTINGS);
-    const local = localSettings ? toSettingsState(JSON.parse(localSettings) as Partial<SettingsState>) : {};
-    const merged = toSettingsState({ ...remote, ...local });
+    const pending = (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
+    const merged = mergeServerWithPending(remote, pending);
 
     setSettings(merged);
+    setPendingWrite(pending[0] ?? null);
+    await writeSettingsCache({
+      schemaVersion: 2,
+      identity,
+      savedAt: Date.now(),
+      settings: remote,
+      serverUpdatedAt: cached?.serverUpdatedAt ?? null,
+      pendingOperations: pending,
+    });
+
     if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
       setThemePref(localTheme);
     }
-  }, [router]);
+
+    // Resume on cold start (mirrors the foreground-resume effect below) --
+    // a killed app loses any in-memory retry timer, so a queued mutation
+    // must resume here too, not only on the next background->foreground
+    // transition. Only 'pending' entries auto-resume; 'failed' waits for
+    // an explicit user Retry tap.
+    const resumable = pending.find((op) => op.status === 'pending');
+    if (resumable) void attemptPendingWrite(resumable);
+  }, [router, attemptPendingWrite, clearRetryTimer]);
+
+  // Resume a pending write whenever the app returns to the foreground --
+  // per the agreed retry policy, retries happen when foregrounded with
+  // network available, never via unbounded background work/timers that iOS
+  // would kill anyway.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const identity = identityRef.current;
+      if (!identity || identity.kind === 'guest') return;
+      setPendingWrite((current) => {
+        if (current && current.status === 'pending') {
+          void attemptPendingWrite(current);
+        }
+        return current;
+      });
+    });
+    return () => subscription.remove();
+  }, [attemptPendingWrite]);
 
   const runLoad = useCallback(() => {
     setLoading(true);
@@ -323,26 +470,74 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persistSettings = async (nextState: SettingsState) => {
+  // Guest: local-only, no server round trip, no outbox -- settings.ts's
+  // pendingOperations stays permanently empty for a guest identity.
+  const persistGuestSettings = async (nextState: SettingsState) => {
     setSettings(nextState);
-    setSaving(true);
-    try {
-      await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(nextState));
-      if (isGuest) {
-        setSaving(false);
-        return;
-      }
-      const response = await apiFetch('/api/native/profile', {
-        method: 'PATCH',
-        body: JSON.stringify(toSettingsState(nextState)),
-      });
-      if (!response.ok) throw new Error('settings update failed');
-    } catch {
-      Alert.alert('Could not save settings', 'Check your connection and try again.');
-      await loadSettings().catch(() => {});
-    } finally {
-      setSaving(false);
+    await writeSettingsCache({
+      schemaVersion: 2,
+      identity: { kind: 'guest' },
+      savedAt: Date.now(),
+      settings: nextState,
+      serverUpdatedAt: null,
+      pendingOperations: [],
+    });
+  };
+
+  // Authenticated: desired-state write. Only the fields that actually
+  // changed are queued (diffed against current `settings`, not the whole
+  // object) -- re-toggling before the first write resolves overwrites the
+  // same coalesced pending entry rather than queueing a second one, since
+  // Settings tracks "the current desired state," not a log of every toggle.
+  const persistSettings = async (nextState: SettingsState) => {
+    if (isGuest) {
+      await persistGuestSettings(nextState);
+      return;
     }
+    const identity = identityRef.current;
+    if (!identity || identity.kind === 'guest') return;
+
+    const changedFields: Partial<SettingsState> = {};
+    (Object.keys(nextState) as Array<keyof SettingsState>).forEach((key) => {
+      if (settings[key] !== nextState[key]) {
+        (changedFields as Record<string, unknown>)[key] = nextState[key];
+      }
+    });
+    if (Object.keys(changedFields).length === 0) return;
+
+    setSettings(nextState);
+    clearRetryTimer();
+    const write: PendingSettingsWrite = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      fields: { ...(pendingWrite?.status === 'pending' ? pendingWrite.fields : null), ...changedFields },
+      attempts: 0,
+      nextAttemptAt: Date.now(),
+      createdAt: pendingWrite?.status === 'pending' ? pendingWrite.createdAt : Date.now(),
+      status: 'pending',
+    };
+    setPendingWrite(write);
+    await persistPendingWrite(identity, write);
+    await attemptPendingWrite(write);
+  };
+
+  const retryFailedWrite = () => {
+    if (pendingWrite && pendingWrite.status === 'failed') {
+      const retried: PendingSettingsWrite = { ...pendingWrite, status: 'pending' };
+      setPendingWrite(retried);
+      void attemptPendingWrite(retried);
+    }
+  };
+
+  const discardFailedWrite = async () => {
+    const identity = identityRef.current;
+    if (!pendingWrite || !identity || identity.kind === 'guest') return;
+    clearRetryTimer();
+    setPendingWrite(null);
+    await persistPendingWrite(identity, null);
+    // Revert the optimistic UI back to server truth for the discarded
+    // fields -- reload rather than guess, since the server may also have
+    // changed in the meantime.
+    await loadSettings().catch(() => {});
   };
 
   const enableNotificationReminder = async (nextState: SettingsState) => {
@@ -462,7 +657,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
+      clearRetryTimer();
       await clearAllHomeCaches();
+      await clearAllSettingsCaches();
       await clearAllOnboardingDrafts();
       await supabase.auth.signOut();
     } finally {
@@ -495,8 +692,37 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
         <View style={{ gap: 2 }}>
           <Text style={{ ...TYPE.screenTitle, color: theme.text }}>{title}</Text>
-          {saving ? <Text style={{ ...TYPE.caption, color: theme.dim }}>Saving...</Text> : null}
+          {saving ? <Text style={{ ...TYPE.caption, color: theme.dim }}>Sending...</Text> : null}
         </View>
+
+        {/* Explicit failure state -- never an indefinite "Sending..." past
+            the last retry attempt. Retry re-attempts the same desired
+            values; Discard drops the queued write and reloads server
+            truth for the affected fields. */}
+        {pendingWrite?.status === 'failed' ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              borderRadius: RADII.md,
+              borderWidth: 1,
+              borderColor: COLORS.dangerBorder,
+              backgroundColor: COLORS.dangerBg,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+            }}
+          >
+            <Feather name="alert-circle" size={15} color={COLORS.danger} />
+            <Text style={{ ...TYPE.caption, color: COLORS.danger, flex: 1 }}>Could not send</Text>
+            <PressableSurface haptic="selection" onPress={retryFailedWrite} style={{ minHeight: 0 }}>
+              <Text style={{ ...TYPE.label, fontSize: 12.5, color: COLORS.danger, textDecorationLine: 'underline' }}>Retry</Text>
+            </PressableSurface>
+            <PressableSurface haptic="selection" onPress={() => { void discardFailedWrite(); }} style={{ minHeight: 0 }}>
+              <Text style={{ ...TYPE.label, fontSize: 12.5, color: theme.dim, textDecorationLine: 'underline' }}>Discard</Text>
+            </PressableSurface>
+          </View>
+        ) : null}
 
         {loadError ? (
           <EmptyState
