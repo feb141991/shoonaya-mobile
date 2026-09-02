@@ -32,6 +32,8 @@ import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/compone
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
+import { attemptJapaCompleteWithRetry } from '@/lib/japaCompleteRetry';
+import { recordMutationRetryOutcome } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -1033,16 +1035,10 @@ export default function JapaScreen() {
       clientCompletionId: Crypto.randomUUID(),
       ...payload,
     });
-    const send = () => apiFetch('/api/japa/complete', { method: 'POST', body: requestBody });
-
-    let response: Response;
-    try {
-      response = await send();
-    } catch {
-      response = await send();
-    }
-    if (response.status >= 500) response = await send();
-    return response;
+    return attemptJapaCompleteWithRetry(apiFetch, requestBody, (outcome, attempts) => {
+      const userId = userIdRef.current;
+      recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', outcome, attempts);
+    });
   }, []);
 
   const completeRound = useCallback(async () => {
@@ -1099,8 +1095,8 @@ export default function JapaScreen() {
         activeSymbolId,
       });
 
-      if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response || !response.ok) {
+        const data = response ? (await response.json().catch(() => null)) as { error?: string } | null : null;
         throw new Error(data?.error ?? 'japa-complete-failed');
       }
 
@@ -1227,8 +1223,8 @@ export default function JapaScreen() {
           practiceType,
           activeSymbolId,
         });
-        if (!response.ok) {
-          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response || !response.ok) {
+          const data = response ? (await response.json().catch(() => null)) as { error?: string } | null : null;
           throw new Error(data?.error ?? 'japa-partial-save-failed');
         }
         const context = normalizeJapaContext(await response.json());
