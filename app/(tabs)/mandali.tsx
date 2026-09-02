@@ -1491,6 +1491,7 @@ export default function MandaliScreen() {
       } else {
         if (!profile?.mandaliId) return;
         await createMandaliPost({
+          userId: profile.userId,
           content,
           postType: composeType,
           eventDate,

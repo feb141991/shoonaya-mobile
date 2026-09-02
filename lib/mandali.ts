@@ -21,9 +21,13 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+import * as Crypto from 'expo-crypto';
+
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 import { dedupeNearbyMandalis } from '@/lib/mandaliLocation';
+import { attemptMandaliComposeWithRetry } from '@/lib/mandaliComposeRetry';
+import { recordMutationRetryOutcome } from '@/lib/telemetry';
 
 // Fires-and-forgets a request to the PWA's push bridge
 // (POST /api/native/mandali/notify-push) for a notification_key one of the
@@ -306,16 +310,22 @@ export async function leaveMandali(userId: string): Promise<void> {
 }
 
 export async function createMandaliPost(payload: {
+  userId: string;
   content: string;
   postType: 'update' | 'event' | 'question' | 'announcement';
   eventDate?: string | null;
   eventLocation?: string | null;
 }): Promise<void> {
-  const response = await apiFetch('/api/mandali/posts', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw new Error('Could not create post');
+  const { userId, ...postFields } = payload;
+  const clientOperationId = Crypto.randomUUID();
+  const body = JSON.stringify({ ...postFields, clientOperationId });
+  // A client-generated id makes a retried create safe -- POST /api/mandali/posts
+  // returns the original row instead of a duplicate for a repeated id (backend
+  // repo migration 20260902170000_add_mandali_post_comment_idempotency_keys.sql).
+  const response = await attemptMandaliComposeWithRetry(apiFetch, '/api/mandali/posts', body, (outcome, attempts) =>
+    recordMutationRetryOutcome({ kind: 'authenticated', userId }, 'mandali_posts', outcome, attempts)
+  );
+  if (!response || !response.ok) throw new Error('Could not create post');
 }
 
 export async function updateMandaliPost(payload: {
@@ -336,12 +346,14 @@ export async function updateMandaliPost(payload: {
 // directly (a single targeted re-fetch with the profile join) instead of
 // reloading the entire screen for one new comment.
 export async function createMandaliComment(payload: { postId: string; userId: string; body: string; parentId?: string | null }): Promise<string> {
-  void payload.userId;
-  const response = await apiFetch('/api/mandali/comments', {
-    method: 'POST',
-    body: JSON.stringify({ postId: payload.postId, body: payload.body, parentId: payload.parentId }),
-  });
-  if (!response.ok) throw new Error('Could not create comment');
+  const clientOperationId = Crypto.randomUUID();
+  const requestBody = JSON.stringify({ postId: payload.postId, body: payload.body, parentId: payload.parentId, clientOperationId });
+  // Same idempotency guarantee as createMandaliPost above -- a retried
+  // create is safe to resend verbatim.
+  const response = await attemptMandaliComposeWithRetry(apiFetch, '/api/mandali/comments', requestBody, (outcome, attempts) =>
+    recordMutationRetryOutcome({ kind: 'authenticated', userId: payload.userId }, 'mandali_posts', outcome, attempts)
+  );
+  if (!response || !response.ok) throw new Error('Could not create comment');
   const result = await response.json() as { id?: string };
   if (!result.id) throw new Error('Comment response was incomplete');
   // notify_mandali_comment() writes the notifications row (recipient is the
