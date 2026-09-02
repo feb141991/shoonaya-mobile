@@ -28,12 +28,10 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import {
-  getNotificationPermissionState,
   openNotificationSettings,
   registerPushToken,
   requestNotificationPermission,
 } from '@/lib/notifications';
-import type { NotificationPermissionState } from '@/lib/notificationPermissionState';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
@@ -233,10 +231,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionState>('unavailable');
 
   const loadSettings = useCallback(async () => {
-    void getNotificationPermissionState().then(setNotificationPermission);
     const guest = await isGuestMode();
     setIsGuest(guest);
 
@@ -351,7 +347,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
   const enableNotificationReminder = async (nextState: SettingsState) => {
     const allowed = await requestNotificationPermission();
-    void getNotificationPermissionState().then(setNotificationPermission);
     if (!allowed) {
       Alert.alert(
         'Notifications are off',
@@ -375,23 +370,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (session?.user.id) {
       void registerPushToken(session.user.id);
     }
-  };
-
-  const enableDeviceNotifications = async () => {
-    if (notificationPermission === 'denied') {
-      await openNotificationSettings();
-      return;
-    }
-
-    const allowed = await requestNotificationPermission();
-    const currentPermission = await getNotificationPermissionState();
-    setNotificationPermission(currentPermission);
-    if (!allowed || isGuest) return;
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.user.id) void registerPushToken(session.user.id);
   };
 
   const persistTheme = async (nextTheme: ThemePref) => {
@@ -568,32 +546,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
             {/* ── Notifications ───────────────────────────────────────── */}
             {section === 'notifications' ? <SettingsSection label="Notifications" theme={theme}>
-              {notificationPermission !== 'granted' ? (
-                <View style={{ gap: 10, paddingBottom: 4 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                    <Feather name="bell" size={18} color={theme.brand} style={{ marginTop: 2 }} />
-                    <View style={{ flex: 1, gap: 2 }}>
-                      <Text style={{ ...TYPE.label, color: theme.text }}>
-                        {notificationPermission === 'denied' ? 'Notifications are blocked' : 'Allow notifications on this device'}
-                      </Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                        {notificationPermission === 'denied'
-                          ? 'Enable them in device settings to receive the reminders you choose.'
-                          : 'Festival, vrat, and daily-practice reminders need your approval.'}
-                      </Text>
-                    </View>
-                  </View>
-                  <Button
-                    label={notificationPermission === 'denied' ? 'Open device settings' : 'Enable notifications'}
-                    variant="primary"
-                    onPress={() => { void enableDeviceNotifications(); }}
-                  />
-                </View>
-              ) : (
-                <Text style={{ ...TYPE.caption, color: theme.dim }}>Notifications are allowed on this device.</Text>
-              )}
-
-              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
               {NOTIFICATION_TOGGLES.map((item, index) => (
                 <View key={item.key}>
                   {index > 0 ? (
