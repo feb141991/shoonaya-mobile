@@ -1,6 +1,6 @@
 # Expo HAS CHANGED
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.
+Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code. (Upgraded from SDK 56 to 57 in commit 204b759, 2026-09-03 — `docs/PERFORMANCE_AUDIT.md` and other dated documents that state "Expo SDK 56" are historical records of that point in time, not stale instructions; only this line, which is a live instruction, needed updating.)
 
 ## Shoonaya Project Standards
 
