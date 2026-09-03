@@ -19,6 +19,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { decode } from 'base64-arraybuffer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
@@ -39,6 +40,8 @@ import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
 import { AuthGate } from '@/components/ui/AuthGate';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import {
   getIshtaDevataLabel,
   getSampradayaLabel,
@@ -200,6 +203,7 @@ async function readApiError(response: Response) {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const [loading, setLoading] = useState(true);
@@ -726,7 +730,11 @@ export default function ProfileScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 34, gap: 12 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: insets.bottom + NAV_BAR_CLEARANCE, gap: 12 }}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
+      >
         <View style={{ minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackButton showLabel={false} iconSize={24} iconColor={theme.text} fallbackHref="/(tabs)" handleHardwareBack />
 

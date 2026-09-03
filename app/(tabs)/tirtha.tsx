@@ -36,6 +36,8 @@ import {
   type Temple,
 } from '@/lib/overpass';
 import { supabase } from '@/lib/supabase';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { navScrollHandler } from '@/lib/navScrollBus';
 
 type PassportTab = 'map' | 'passport';
 type MoodKey = 'gratitude' | 'devotion' | 'peace' | 'clarity';
@@ -648,7 +650,9 @@ export default function TirthaScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => void initialize(true)} tintColor={brand} />
         }
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 36 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: insets.bottom + NAV_BAR_CLEARANCE }}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
       >
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
           <BackButton fallbackHref="/(tabs)" handleHardwareBack />

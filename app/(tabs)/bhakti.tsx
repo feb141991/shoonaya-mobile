@@ -4,6 +4,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
 import { MotionView } from '@/components/ui/Motion';
@@ -14,6 +15,7 @@ import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
 
 // Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip
@@ -125,6 +127,7 @@ function StatPill({ icon, label, accent }: { icon: keyof typeof Feather.glyphMap
 
 export default function BhaktiScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -184,7 +187,7 @@ export default function BhaktiScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 100, gap: 28 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE, gap: 28 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >

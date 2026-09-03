@@ -180,7 +180,14 @@
       ],
       "expo-sharing",
       "expo-image",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
       "expo-asset"
     ],
     "experiments": {

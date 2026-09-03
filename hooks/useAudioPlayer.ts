@@ -18,7 +18,7 @@ async function configureAudioMode() {
   audioModeConfigured = true;
   await setAudioModeAsync({
     playsInSilentMode: true,
-    shouldPlayInBackground: true,
+    shouldPlayInBackground: false,
     interruptionMode: 'doNotMix',
   });
 }

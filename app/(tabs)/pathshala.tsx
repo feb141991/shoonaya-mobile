@@ -10,6 +10,7 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PathCard } from '@/components/pathshala/PathCard';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -21,6 +22,7 @@ import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { type PathshalaPath } from '@/lib/pathshala-types';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
@@ -158,6 +160,7 @@ const EXPLORE_CARDS = [
 ] as const;
 
 function PathshalaContent() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -420,7 +423,7 @@ function PathshalaContent() {
             tintColor={brand}
           />
         }
-        contentContainerStyle={{ paddingBottom: 28, gap: 18 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE, gap: 18 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >

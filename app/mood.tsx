@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
@@ -25,6 +26,8 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } f
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { resolveNativeRoute } from '@/lib/routes';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { navScrollHandler } from '@/lib/navScrollBus';
 import {
   fetchMoodStatus,
   startMoodCheckin,
@@ -108,6 +111,7 @@ export default function MoodScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
+  const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const moodCardWidth = Math.floor((Math.min(windowWidth, 430) - 72) / 3);
   const MOODS = MOODS_CONFIG[isDark ? 'dark' : 'light'] || MOODS_CONFIG.dark;
@@ -545,7 +549,11 @@ export default function MoodScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + NAV_BAR_CLEARANCE }]}
+        onScroll={navScrollHandler}
+        scrollEventThrottle={16}
+      >
         <View style={styles.headerRow}>
           {renderBackButton()}
           {step !== 1 ? (

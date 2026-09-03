@@ -21,6 +21,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
@@ -40,6 +41,7 @@ import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
@@ -433,6 +435,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
 // updates live without the user pulling to refresh.
 export default function MandaliScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
 
   const [loading, setLoading] = useState(true);
@@ -1859,7 +1862,7 @@ export default function MandaliScreen() {
         keyExtractor={keyExtractor}
         ListHeaderComponent={renderFeedHeader}
         ListFooterComponent={feedFooter}
-        contentContainerStyle={{ paddingBottom: 36 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
         onEndReached={loadMorePosts}
