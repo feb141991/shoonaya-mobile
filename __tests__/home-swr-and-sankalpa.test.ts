@@ -23,6 +23,7 @@ import {
   getHomeCacheKey,
   sanitizeForHomeCache,
   validateHomeSummaryPayload,
+  withDateSensitiveFieldsPending,
   writeHomeCache,
   readHomeCache,
   clearHomeCache,
@@ -33,6 +34,7 @@ import {
 } from '../lib/homeCache';
 import {
   HomeSummaryCoordinator,
+  PanchangRetryController,
   SankalpaCoordinator,
   resolveHomeIdentity,
   getIdentityKey,
@@ -781,6 +783,283 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
 
       assert.equal(earlySpiritualDate, '2026-08-21', 'Before 4 AM belongs to previous spiritual date');
       assert.equal(normalSpiritualDate, '2026-08-22', 'After 4 AM belongs to current date');
+    });
+
+    it('defaults calendarStatus to ready when absent, and passes through pending from the network', () => {
+      const sanitizedDefault = sanitizeForHomeCache(sampleHomeSummary);
+      assert.equal(
+        sanitizedDefault.panchang.calendarStatus,
+        'ready',
+        'An old cached/backend payload with no calendarStatus field must default to ready, not regress into a permanent skeleton'
+      );
+
+      const sanitizedPending = sanitizeForHomeCache({
+        ...sampleHomeSummary,
+        panchang: { ...sampleHomeSummary.panchang, calendarStatus: 'pending' },
+      });
+      assert.equal(sanitizedPending.panchang.calendarStatus, 'pending');
+    });
+
+    it('withDateSensitiveFieldsPending resets calendarStatus to pending on a spiritual-date rollover', () => {
+      const sanitized = sanitizeForHomeCache(sampleHomeSummary);
+      const reset = withDateSensitiveFieldsPending(sanitized);
+      assert.equal(reset.panchang.calendarStatus, 'pending', 'Rolled-over date means today\'s materialization state is unknown again -- render the skeleton, not stale/confirmed data');
+    });
+
+    it('P2 regression: persisting a resolved panchang merge to the cache means a subsequent cold start never sees a stale pending skeleton', async () => {
+      // Mirrors what a successful PanchangRetryController resolution must
+      // do in index.tsx's onMergePanchang: not just update React state, but
+      // also re-persist the FULL current payload (with the resolved
+      // panchang folded in) via writeHomeCache -- otherwise the cache
+      // written by the original loadHome() call (while still pending)
+      // stays stale, and the next cold start's readHomeCache() would show
+      // the skeleton again even though the backend already caught up.
+      const identity: CacheIdentity = { kind: 'authenticated', userId: 'user-cache-coherence-1' };
+      const timezone = 'Europe/London';
+
+      await writeHomeCache(
+        identity,
+        { ...sampleHomeSummary, panchang: { ...sampleHomeSummary.panchang, calendarStatus: 'pending' } },
+        timezone
+      );
+
+      const cachedBefore = await readHomeCache(identity, timezone);
+      assert.equal(cachedBefore?.payload.panchang.calendarStatus, 'pending', 'Sanity check: the original cache write reflects the pending state');
+
+      const resolvedObservance = {
+        name: 'ekadashi-cache-coherence-test',
+        emoji: '🪔',
+        daysLeft: 0,
+        routeKind: 'vrat',
+        routeSlug: 'ekadashi-cache-coherence-test',
+        href: '/vrat/ekadashi-cache-coherence-test',
+        label: 'Today is Ekadashi Vrat',
+        monthLabel: null,
+        description: null,
+      };
+      const merged = {
+        ...cachedBefore!.payload,
+        panchang: { ...cachedBefore!.payload.panchang, calendarStatus: 'ready' as const, observance: resolvedObservance },
+      };
+      await writeHomeCache(identity, merged, timezone);
+
+      const cachedAfter = await readHomeCache(identity, timezone);
+      assert.equal(
+        cachedAfter?.payload.panchang.calendarStatus,
+        'ready',
+        'A cold start after a successful in-session retry must read back ready, not the original pending snapshot'
+      );
+      assert.deepEqual(cachedAfter?.payload.panchang.observance, resolvedObservance);
+    });
+  });
+
+  describe('5. PanchangRetryController -- bounded silent retry for the pending observance pill', () => {
+    it('resolves to ready on the first attempt, merges only panchang, and cancels the remaining attempts', async () => {
+      let fetchCalls = 0;
+      const merged: any[] = [];
+      let exhaustedCalls = 0;
+
+      const controller = new PanchangRetryController({
+        fetchApi: async () => {
+          fetchCalls++;
+          return new Response(
+            JSON.stringify({ panchang: { calendarStatus: 'ready', observance: { name: 'Ekadashi' } } }),
+            { status: 200 }
+          );
+        },
+        onMergePanchang: (p) => merged.push(p),
+        onExhausted: () => { exhaustedCalls++; },
+        delaysMs: [5, 15, 30],
+      });
+
+      controller.start();
+      await new Promise((r) => setTimeout(r, 60));
+
+      assert.equal(fetchCalls, 1, 'Stops calling once the first attempt resolves ready -- the 15ms/30ms attempts never fire');
+      assert.equal(merged.length, 1);
+      assert.equal(merged[0].calendarStatus, 'ready');
+      assert.equal(exhaustedCalls, 0, 'A resolved sequence never reports exhaustion');
+    });
+
+    it('merges only the panchang key -- an unrelated field updated concurrently survives the retry response', async () => {
+      // Mirrors acceptance test 9: /api/native/home-live can update
+      // mood/notification/practice state independently and concurrently
+      // with this retry. The controller must never see or touch that
+      // state -- it only ever hands the caller `panchang`, so a caller
+      // merging solely into its own `panchang` key cannot clobber it.
+      let homeState: any = {
+        panchang: { calendarStatus: 'pending' },
+        moodStatus: { hasLoggedMoodToday: false, lastMood: null },
+      };
+
+      const controller = new PanchangRetryController({
+        fetchApi: async () => {
+          // Simulate a concurrent home-live response landing while this
+          // retry request is still in flight.
+          homeState = { ...homeState, moodStatus: { hasLoggedMoodToday: true, lastMood: 'peaceful' } };
+          return new Response(
+            JSON.stringify({ panchang: { calendarStatus: 'ready', observance: { name: 'Ekadashi' } } }),
+            { status: 200 }
+          );
+        },
+        onMergePanchang: (p) => {
+          homeState = { ...homeState, panchang: { ...homeState.panchang, ...p } };
+        },
+        onExhausted: () => {},
+        delaysMs: [5],
+      });
+
+      controller.start();
+      await new Promise((r) => setTimeout(r, 30));
+
+      assert.equal(homeState.panchang.calendarStatus, 'ready');
+      assert.equal(
+        homeState.moodStatus.hasLoggedMoodToday,
+        true,
+        'The concurrent mood update was not reverted by the scoped panchang merge'
+      );
+      assert.equal(homeState.moodStatus.lastMood, 'peaceful');
+    });
+
+    it('exhausts after every bounded attempt still reports pending, signalling onExhausted exactly once', async () => {
+      let fetchCalls = 0;
+      let exhaustedCalls = 0;
+
+      const controller = new PanchangRetryController({
+        fetchApi: async () => {
+          fetchCalls++;
+          return new Response(JSON.stringify({ panchang: { calendarStatus: 'pending' } }), { status: 200 });
+        },
+        onMergePanchang: () => {},
+        onExhausted: () => { exhaustedCalls++; },
+        delaysMs: [5, 15, 30],
+      });
+
+      controller.start();
+      // Attempts are strictly sequential now (see start()'s doc comment),
+      // so the total wait is the SUM of delaysMs (5+15+30=50ms), not their
+      // max -- a generous multiple of that keeps this deterministic under
+      // CI/parallel-suite load rather than racing a tight margin.
+      await new Promise((r) => setTimeout(r, 300));
+
+      assert.equal(fetchCalls, 3, 'All 3 bounded attempts fire -- no runaway polling beyond the sequence');
+      assert.equal(exhaustedCalls, 1, 'Exhaustion is signalled exactly once, not once per attempt');
+    });
+
+    it('cancel() stops the sequence immediately -- no further attempts fire and exhaustion is never reported', async () => {
+      let fetchCalls = 0;
+      let exhaustedCalls = 0;
+      let resolveFirstFetch: (() => void) | undefined;
+
+      const controller = new PanchangRetryController({
+        fetchApi: async () => {
+          fetchCalls++;
+          if (fetchCalls === 1) {
+            // Deliberately held open until the test explicitly releases it
+            // below -- this decouples "cancel happens after attempt 1
+            // started but before it resolves" from real-clock timing
+            // margins, which would otherwise race against system load.
+            await new Promise<void>((resolve) => { resolveFirstFetch = resolve; });
+          }
+          return new Response(JSON.stringify({ panchang: { calendarStatus: 'pending' } }), { status: 200 });
+        },
+        onMergePanchang: () => {},
+        onExhausted: () => { exhaustedCalls++; },
+        delaysMs: [5, 15, 30],
+      });
+
+      controller.start();
+      // Wait until attempt 1's fetch has definitely started (fetchCalls
+      // incremented) but is still held open.
+      while (fetchCalls < 1) {
+        await new Promise((r) => setTimeout(r, 2));
+      }
+      controller.cancel(); // e.g. unmount, or an identity/profile/location change
+      resolveFirstFetch?.(); // now let attempt 1's held-open response land
+
+      await new Promise((r) => setTimeout(r, 100));
+
+      assert.equal(fetchCalls, 1, 'Cancelling before attempt 1 resolves means attempt 2 is never scheduled');
+      assert.equal(exhaustedCalls, 0, 'A cancelled sequence never reports exhaustion');
+    });
+
+    it('P1 regression: an earlier attempt that resolves slowly can never overwrite a later attempt\'s resolved status', async () => {
+      // Reproduces the exact race a prior version had: attempts were fired
+      // on independent timers, so a slow-to-resolve early attempt's stale
+      // `pending` response could land AFTER a faster later attempt's
+      // `ready` response, silently reviving a skeleton the user had
+      // already watched resolve. With strictly sequential attempts this is
+      // structurally impossible -- attempt N+1 is never even started until
+      // attempt N has fully settled, so there is never more than one
+      // in-flight request to race in the first place.
+      let call = 0;
+      let inFlight = 0;
+      let maxConcurrentRequests = 0;
+      const merged: any[] = [];
+
+      const controller = new PanchangRetryController({
+        fetchApi: async () => {
+          call += 1;
+          const thisCall = call;
+          inFlight += 1;
+          maxConcurrentRequests = Math.max(maxConcurrentRequests, inFlight);
+          // The FIRST attempt is deliberately the slowest and reports
+          // `pending` -- in the old parallel-timers design this response
+          // would still be in flight while later, faster attempts resolved
+          // `ready`, and would land afterward and stomp it back to pending.
+          const latencyMs = thisCall === 1 ? 40 : 5;
+          await new Promise((r) => setTimeout(r, latencyMs));
+          inFlight -= 1;
+          const calendarStatus = thisCall === 1 ? 'pending' : 'ready';
+          return new Response(
+            JSON.stringify({ panchang: { calendarStatus, observance: thisCall === 1 ? null : { name: 'Ekadashi' } } }),
+            { status: 200 }
+          );
+        },
+        onMergePanchang: (p) => merged.push(p),
+        onExhausted: () => {},
+        delaysMs: [5, 5, 5],
+      });
+
+      controller.start();
+      // Sequential timeline: attempt1 timer (5ms) + its 40ms fetch, then
+      // attempt2 timer (5ms) + its 5ms fetch -- roughly 55ms end to end. A
+      // generous multiple avoids racing that estimate under system load.
+      await new Promise((r) => setTimeout(r, 400));
+
+      assert.equal(maxConcurrentRequests, 1, 'Never more than one request in flight at a time -- attempts are strictly sequential, so ordering cannot invert');
+      assert.equal(
+        merged[merged.length - 1].calendarStatus,
+        'ready',
+        'The final applied panchang is the genuinely resolved ready status, never regressed back to a stale pending response from an earlier, slower attempt'
+      );
+    });
+
+    it('re-arms cleanly: calling start() again after exhaustion begins a fresh bounded sequence', async () => {
+      let fetchCalls = 0;
+
+      const controller = new PanchangRetryController({
+        fetchApi: async () => {
+          fetchCalls++;
+          // Resolves ready only once re-armed past the first episode's 3 attempts.
+          return new Response(
+            JSON.stringify({ panchang: { calendarStatus: fetchCalls > 3 ? 'ready' : 'pending' } }),
+            { status: 200 }
+          );
+        },
+        onMergePanchang: () => {},
+        onExhausted: () => {},
+        delaysMs: [5, 10, 15],
+      });
+
+      controller.start(); // e.g. the pill first shows the skeleton
+      // Sequential sum of delaysMs is 5+10+15=30ms -- generous margin under load.
+      await new Promise((r) => setTimeout(r, 250));
+      assert.equal(fetchCalls, 3, 'First episode exhausts after exactly 3 attempts');
+
+      controller.start(); // e.g. a subsequent screen focus or pull-to-refresh
+      await new Promise((r) => setTimeout(r, 150));
+      assert.equal(fetchCalls, 4, 'The re-armed episode issues a fresh attempt and resolves, not blocked by the prior exhaustion');
     });
   });
 });

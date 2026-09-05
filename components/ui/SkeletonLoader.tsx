@@ -30,7 +30,7 @@ function useShimmer() {
 
 // ── Base shimmer block ────────────────────────────────────────────────────────
 
-function ShimmerBlock({ style }: { style?: ViewStyle }) {
+export function ShimmerBlock({ style }: { style?: ViewStyle }) {
   const isDark = useColorScheme() === 'dark';
   const opacity = useShimmer();
   const theme = themeColor(isDark);

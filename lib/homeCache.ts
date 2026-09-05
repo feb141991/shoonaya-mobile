@@ -76,6 +76,10 @@ export type CachedHomeRenderModel = {
     upcomingObservances: CachedObservanceEntry[];
     series?: ObservanceSeries[];
     storyCards?: HomeObservanceStoryCard[];
+    // See HomeSummary['panchang']['calendarStatus'] in app/(tabs)/index.tsx
+    // for the full contract. Optional so a cache entry written before this
+    // field existed still parses; readers default it to 'ready'.
+    calendarStatus?: 'ready' | 'pending' | 'unavailable';
   };
   nextPractice: {
     id: 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -159,6 +163,10 @@ export function withDateSensitiveFieldsPending(payload: CachedHomeRenderModel): 
       upcomingObservances: [],
       series: [],
       storyCards: [],
+      // Stale cache means today's materialization state is simply unknown
+      // until the fresh network response lands -- render the pill's
+      // neutral loading skeleton, not a confirmed-empty pill.
+      calendarStatus: 'pending',
     },
     practices: payload.practices.map((p) => ({ ...p, done: false, progress: 0 })),
     nextPractice: {
@@ -217,6 +225,9 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       upcomingObservances: full.panchang?.upcomingObservances ?? [],
       series: Array.isArray(full.panchang?.series) ? full.panchang.series : [],
       storyCards: Array.isArray(full.panchang?.storyCards) ? full.panchang.storyCards : [],
+      calendarStatus: full.panchang?.calendarStatus === 'pending' || full.panchang?.calendarStatus === 'unavailable'
+        ? full.panchang.calendarStatus
+        : 'ready',
     },
     nextPractice: {
       id: full.nextPractice?.id ?? 'pathshala',

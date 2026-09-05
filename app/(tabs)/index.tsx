@@ -28,6 +28,7 @@ import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
+import { ShimmerBlock } from '@/components/ui/SkeletonLoader';
 import { QuizSparkCard } from '@/components/home/QuizSparkCard';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
@@ -55,6 +56,7 @@ import { useScrollToTop } from '@/lib/useScrollToTop';
 import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
 import {
   HomeSummaryCoordinator,
+  PanchangRetryController,
   getIdentityKey,
   type HomeAuthIdentity,
 } from '@/lib/homeCoordinator';
@@ -238,6 +240,14 @@ type HomeSummary = {
     upcomingObservances: ObservanceEntry[];
     series?: ObservanceSeries[];
     storyCards?: HomeObservanceStoryCard[];
+    // 'ready': reflects actual materialized state (may legitimately be
+    // empty). 'pending': the backend knows materialization for this
+    // profile/location is incomplete -- show a neutral loading pill, never
+    // a confirmed-empty state. 'unavailable': a real error, not a timeout --
+    // don't imply an imminent retry will help. Absent entirely on an old
+    // cached payload predating this field; defaulted to 'ready' below so a
+    // pre-existing cache never regresses into a permanent skeleton.
+    calendarStatus?: 'ready' | 'pending' | 'unavailable';
   };
   nextPractice: {
     id: PracticeId;
@@ -348,6 +358,7 @@ const INITIAL_STATE: HomeSummary = {
     observance: null,
     upcomingObservances: [],
     series: [],
+    calendarStatus: 'ready',
   },
   nextPractice: {
     id: 'pathshala',
@@ -511,7 +522,34 @@ function PanchangPill({
     return () => clearInterval(t);
   }, [fadeAnim, reducedMotion, total]);
 
+  const calendarStatus = summary.calendarStatus ?? 'ready';
+
   if (kind === 'observance' && slides.length === 0) {
+    if (calendarStatus === 'pending') {
+      return (
+        <View
+          accessibilityLabel="Loading today's observance"
+          accessibilityState={{ busy: true }}
+          style={{
+            borderRadius: RADII.pill,
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+            alignSelf: 'flex-start',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
+            backgroundColor: COLORS.homePwaPillBg,
+            minHeight: 34,
+            maxWidth: 264,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <ShimmerBlock style={{ width: 12, height: 12, borderRadius: 3 }} />
+            <ShimmerBlock style={{ width: 96, height: 10, borderRadius: 4 }} />
+          </View>
+        </View>
+      );
+    }
     return null;
   }
 
@@ -931,6 +969,13 @@ function HomeContent() {
   const [currentIdentity, setCurrentIdentity] = useState<HomeAuthIdentity>({ kind: 'unauthenticated' });
   const heroImageUrlRef = useRef<string | null>(null);
   heroImageUrlRef.current = heroImageUrl;
+  // The panchang retry controller below is constructed once (see the
+  // `if (!panchangRetryRef.current)` guard) and its callbacks close over
+  // whatever's in scope at that first construction -- a plain closure over
+  // `currentIdentity` would go stale on every later identity change. Ref
+  // mirror avoids that without recreating the controller.
+  const currentIdentityRef = useRef<HomeAuthIdentity>(currentIdentity);
+  currentIdentityRef.current = currentIdentity;
 
   const coordinatorRef = useRef<HomeSummaryCoordinator | null>(null);
   if (!coordinatorRef.current) {
@@ -1113,6 +1158,77 @@ function HomeContent() {
       setMoodStatus(null);
     }
   }, [appIdentity.kind, loadHome]);
+
+  // Short silent retry while the observance pill's backend materialization
+  // is still catching up (calendarStatus: 'pending') -- without this, the
+  // skeleton would sit until the coordinator's own 5-minute freshness
+  // window naturally refetches, far longer than the backend's `after()`
+  // materialization actually takes. Silent by design: never touches
+  // `loading`/`refreshing`/`loadError`, and merges only the `panchang` key
+  // (see PanchangRetryController's doc comment for why a wholesale state
+  // replace here would be unsafe).
+  const panchangRetryRef = useRef<PanchangRetryController | null>(null);
+  if (!panchangRetryRef.current) {
+    panchangRetryRef.current = new PanchangRetryController({
+      fetchApi: apiFetch,
+      onMergePanchang: (panchang) => {
+        setState((prev) => {
+          const next = { ...prev, panchang: { ...prev.panchang, ...panchang } };
+          // Persist the resolved panchang into the on-disk cache too, not
+          // just React state -- otherwise a successful in-session retry
+          // still leaves the cached payload saying `pending`, and the next
+          // cold start reads that stale cache and briefly shows the
+          // skeleton again even though the backend is already caught up.
+          const identity = currentIdentityRef.current;
+          if (identity.kind === 'authenticated' || identity.kind === 'guest') {
+            const cacheIdentity: CacheIdentity = identity.kind === 'guest'
+              ? { kind: 'guest' }
+              : { kind: 'authenticated', userId: identity.userId };
+            const canonicalTimezone = safeTimezone(next.date.timezone);
+            void writeHomeCache(cacheIdentity, next, canonicalTimezone, spiritualDate(canonicalTimezone));
+          }
+          return next;
+        });
+      },
+      onExhausted: () => {
+        // Deliberately NOT written to cache -- this is a per-session
+        // judgment call ("this mount's 3 attempts didn't catch it"), not an
+        // authoritative server verdict. A fresh cold start should still get
+        // its own honest attempt rather than inheriting this session's
+        // exhaustion.
+        setState((prev) =>
+          prev.panchang.calendarStatus === 'pending'
+            ? { ...prev, panchang: { ...prev.panchang, calendarStatus: 'unavailable' } }
+            : prev
+        );
+      },
+    });
+  }
+
+  const isPanchangPending = state.panchang.calendarStatus === 'pending';
+  // Identifies which (profile, location, timezone, spiritual-date) the
+  // current pending episode belongs to. A profile/location switch (or a
+  // date rollover) while already pending doesn't necessarily flip the
+  // `isPanchangPending` boolean itself -- e.g. the new bucket can
+  // coincidentally also be pending -- so relying on that boolean alone
+  // could let a stale retry episode (targeting the OLD identity) keep
+  // ticking under a new one. Including this key forces cancel+restart on
+  // any identity change regardless of whether the boolean flipped.
+  const calendarIdentityKey = [
+    state.profile.tradition,
+    state.date.latitude,
+    state.date.longitude,
+    state.date.timezone,
+    state.date.iso,
+  ].join('|');
+  useEffect(() => {
+    if (!isPanchangPending || appIdentity.kind !== 'authenticated') {
+      panchangRetryRef.current?.cancel();
+      return;
+    }
+    panchangRetryRef.current?.start();
+    return () => panchangRetryRef.current?.cancel();
+  }, [isPanchangPending, appIdentity.kind, calendarIdentityKey]);
 
   // Match the PWA Home hero: show only the first verse line in the
   // transitional Home block, with the full text available on /shloka.

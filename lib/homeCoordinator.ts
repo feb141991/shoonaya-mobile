@@ -315,6 +315,120 @@ export class HomeSummaryCoordinator {
   }
 }
 
+export type PanchangCalendarStatus = 'ready' | 'pending' | 'unavailable';
+
+export type PanchangRetryDependencies = {
+  fetchApi: HomeFetchApi;
+  // Merges (never replaces) the retry response's `panchang` object into
+  // current Home state -- the caller's merge must be scoped to the
+  // `panchang` key alone. A wholesale state replace here could stomp
+  // other fields (e.g. an optimistic practice-completion toggle, or
+  // mood/notification state updated by the independently-polled
+  // /api/native/home-live) that changed while this retry was in flight.
+  onMergePanchang: (panchang: Record<string, unknown>) => void;
+  // Called once, only after every attempt in the sequence still reports
+  // `calendarStatus: 'pending'` (or fails outright) -- the caller should
+  // locally treat the pill as 'unavailable' rather than leaving a skeleton
+  // rendered indefinitely.
+  onExhausted: () => void;
+  // Defaults to [2000, 5000, 10000]ms (roughly 2s/5s/10s after the
+  // skeleton first appears). Overridable so tests don't have to wait out
+  // real timers.
+  delaysMs?: number[];
+};
+
+/**
+ * Bounded silent retry while Home's observance pill is showing a
+ * `calendarStatus: 'pending'` skeleton. `after()` on the backend may
+ * finish materialization seconds later, but nothing else on Home would
+ * otherwise trigger a refetch until the coordinator's own 5-minute
+ * freshness window lapses -- this closes that gap with a short, bounded
+ * sequence instead, then gives up rather than polling forever.
+ */
+export class PanchangRetryController {
+  private deps: PanchangRetryDependencies;
+  private timers: ReturnType<typeof setTimeout>[] = [];
+  private episodeId = 0;
+  private cancelled = true;
+
+  constructor(deps: PanchangRetryDependencies) {
+    this.deps = deps;
+  }
+
+  /**
+   * Cancels any in-flight episode and starts a fresh one.
+   *
+   * Attempts run strictly one at a time: the timer for attempt N+1 is only
+   * scheduled after attempt N's own response (or failure) has been fully
+   * handled, so there is never more than one request in flight for a given
+   * episode. This is deliberate, not incidental -- an earlier version fired
+   * all `delaysMs` timers independently up front, so a slower earlier
+   * attempt's response (still `pending`) could arrive and get applied
+   * *after* a faster later attempt's `ready` response, silently reviving a
+   * skeleton the user had already seen resolve. Sequencing makes that
+   * ordering bug structurally impossible instead of merely unlikely.
+   * `delaysMs[i]` is therefore the gap after attempt i-1 *settles*, not a
+   * fixed offset from episode start.
+   */
+  public start(): void {
+    this.cancel();
+    this.cancelled = false;
+    const episodeId = ++this.episodeId;
+    const delays = this.deps.delaysMs ?? [2000, 5000, 10000];
+
+    const isCurrentEpisode = () => !this.cancelled && this.episodeId === episodeId;
+
+    const runAttempt = (index: number) => {
+      if (!isCurrentEpisode() || index >= delays.length) return;
+      const isLastAttempt = index === delays.length - 1;
+
+      const timer = setTimeout(() => {
+        void (async () => {
+          if (!isCurrentEpisode()) return;
+          try {
+            const response = await this.deps.fetchApi('/api/native/home-summary', { timeoutMs: 10_000 });
+            if (!isCurrentEpisode()) return;
+            if (!response.ok) {
+              if (isLastAttempt) this.deps.onExhausted();
+              else runAttempt(index + 1);
+              return;
+            }
+            const payload = await response.json();
+            if (!isCurrentEpisode()) return;
+            if (payload?.panchang) {
+              this.deps.onMergePanchang(payload.panchang);
+            }
+            if (payload?.panchang?.calendarStatus === 'pending') {
+              if (isLastAttempt) this.deps.onExhausted();
+              else runAttempt(index + 1);
+            }
+            // Otherwise resolved (ready or unavailable) -- stop, no next attempt.
+          } catch {
+            if (!isCurrentEpisode()) return;
+            if (isLastAttempt) this.deps.onExhausted();
+            else runAttempt(index + 1);
+          }
+        })();
+      }, delays[index]);
+
+      this.timers = [timer];
+    };
+
+    runAttempt(0);
+  }
+
+  private stopTimers(): void {
+    this.timers.forEach(clearTimeout);
+    this.timers = [];
+  }
+
+  /** Stops the current episode (if any) without starting a new one. */
+  public cancel(): void {
+    this.cancelled = true;
+    this.stopTimers();
+  }
+}
+
 export type SankalpaStatus = 'loading' | 'ready' | 'hidden' | 'error';
 
 export type SankalpaLoaderDependencies = {
