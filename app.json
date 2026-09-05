@@ -103,7 +103,11 @@
         "ACCESS_COARSE_LOCATION",
         "INTERNET",
         "RECEIVE_BOOT_COMPLETED",
-        "MODIFY_AUDIO_SETTINGS"
+        "MODIFY_AUDIO_SETTINGS",
+        "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FDF6E3",
