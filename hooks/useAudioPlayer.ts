@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { useFocusEffect } from 'expo-router';
 
 type AudioRate = 0.75 | 1.0 | 1.25;
 
@@ -42,12 +43,20 @@ export function useAudioPlayer(): UseAudioPlayerResult {
     playerRef.current = null;
   }, []);
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      void stop();
-    };
-  }, [stop]);
+  // Focus-scoped, not mount/unmount: React Navigation's native-stack keeps
+  // a screen mounted (not unmounted) once another screen is pushed on top
+  // of it. A plain useEffect's cleanup only ran on genuine unmount, so
+  // narrated audio kept playing in the background if the user navigated
+  // forward to a new screen without this one being popped off the stack
+  // -- e.g. opening a second reader from a link inside this one.
+  // useFocusEffect's cleanup fires on blur AND on unmount, covering both.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        void stop();
+      };
+    }, [stop])
+  );
 
   const loadAndPlay = useCallback(
     async (url: string, loop = false, onComplete?: () => void) => {

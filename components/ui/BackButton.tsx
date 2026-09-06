@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { BackHandler, Text, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { usePathname, useRouter, type Href } from 'expo-router';
+import { usePathname, useRouter, useFocusEffect, type Href } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, themeColor } from '@/lib/constants';
@@ -21,6 +21,7 @@ type BackButtonProps = {
 function inferParentFallback(pathname: string): Href {
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
+  if (pathname.startsWith('/japa')) return '/(tabs)/japa';
   if (pathname.startsWith('/settings')) return '/settings';
   if (pathname.startsWith('/kundali')) return '/kundali';
   if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
@@ -62,15 +63,25 @@ export function useFallbackBackHandler(
     void Promise.resolve(onBeforeBack()).finally(navigateBack);
   }, [navigateBack, onBeforeBack]);
 
-  useEffect(() => {
-    if (!enabled) return;
+  // Focus-scoped, not a plain mount/unmount effect: React Navigation's
+  // native-stack keeps a screen mounted (not unmounted) once something is
+  // pushed on top of it, for the back-swipe animation. A plain useEffect
+  // here would leave this screen's hardware-back listener registered the
+  // whole time it sits underneath another screen -- if that top screen
+  // doesn't register its own listener, Android's back press falls through
+  // to this stale one and navigates as if the press came from the
+  // screen beneath instead of the one actually on screen.
+  useFocusEffect(
+    useCallback(() => {
+      if (!enabled) return;
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBack();
-      return true;
-    });
-    return () => subscription.remove();
-  }, [enabled, handleBack]);
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBack();
+        return true;
+      });
+      return () => subscription.remove();
+    }, [enabled, handleBack])
+  );
 
   return handleBack;
 }

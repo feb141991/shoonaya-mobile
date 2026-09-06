@@ -575,7 +575,20 @@ export default function LessonReaderScreen() {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <BackButton showLabel={false} iconSize={22} iconColor={text} />
+            <BackButton
+              showLabel={false}
+              iconSize={22}
+              iconColor={text}
+              // A lesson's actual parent is its own path's detail screen,
+              // not the Pathshala hub -- the generic BackButton fallback
+              // (components/ui/BackButton.tsx's inferParentFallback) only
+              // prefix-matches "/pathshala" and has no way to know this
+              // specific lesson's pathId, so a direct-entry open with no
+              // navigation history (deep link, notification) would
+              // otherwise fall back to the hub instead of the path the
+              // lesson actually belongs to.
+              fallbackHref={{ pathname: '/pathshala/[pathId]', params: { pathId } }}
+            />
             <Text style={{ flex: 1, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 14, color: dim }}>
               Lesson {lessonIndex + 1} of {lessons.length}
             </Text>
