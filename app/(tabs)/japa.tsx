@@ -33,8 +33,14 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
 import { getAppIdentity } from '@/lib/appIdentity';
-import { attemptJapaCompleteWithRetry } from '@/lib/japaCompleteRetry';
-import { readPendingJapaCompletions, writePendingJapaCompletion, clearPendingJapaCompletion, markPendingJapaCompletionFailed } from '@/lib/japaPendingCompletion';
+import {
+  readPendingJapaCompletions,
+  writePendingJapaCompletion,
+  retryFailedJapaCompletion,
+  discardFailedJapaCompletion,
+  type PendingJapaCompletion,
+} from '@/lib/japaPendingCompletion';
+import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
 import { recordMutationRetryOutcome } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
@@ -925,6 +931,26 @@ export default function JapaScreen() {
     setLifetime(context.lifetime);
   }, []);
 
+  // Drives the "N rounds waiting to sync" / "N rounds couldn't be saved"
+  // banner. Refreshed after the recovery scan and after any manual
+  // retry/discard so the banner never shows stale counts.
+  const [syncQueueItems, setSyncQueueItems] = useState<PendingJapaCompletion[]>([]);
+  const [syncReviewVisible, setSyncReviewVisible] = useState(false);
+  const [retryingCompletionId, setRetryingCompletionId] = useState<string | null>(null);
+
+  const refreshSyncQueue = useCallback(async (userId: string) => {
+    const result = await readPendingJapaCompletions(userId);
+    setSyncQueueItems(result.status === 'ok' ? result.items : []);
+  }, []);
+
+  // 'uncertain' outcomes leave an entry's status as 'pending' -- keeping
+  // it counted here, separate from 'failed' (definitive rejections), is
+  // the whole point: an uncertain save is still just quietly syncing, not
+  // something the user needs to act on.
+  const syncPendingCount = syncQueueItems.filter((item) => item.status === 'pending').length;
+  const syncFailedItems = syncQueueItems.filter((item) => item.status === 'failed');
+  const syncFailedCount = syncFailedItems.length;
+
   const loadContext = useCallback(async () => {
     let cacheApplied = false;
     try {
@@ -937,6 +963,7 @@ export default function JapaScreen() {
       if (guest) {
         userIdRef.current = null;
         void clearJapaContextCache();
+        setSyncQueueItems([]);
         setTradition('hindu');
         setActiveSymbolId(null);
         setJapaAlreadyDoneToday(false);
@@ -1003,30 +1030,15 @@ export default function JapaScreen() {
         // failed-item UI), same convention as reactionOutbox's
         // resumePendingReactionChanges -- they are not auto-retried here.
         for (const pendingCompletion of pendingQueue.items.filter((entry) => entry.status === 'pending')) {
-          const outcome = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: user.id }), pendingCompletion.requestBody, (label, attempts) => {
-            recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', label, attempts);
-          });
+          const outcome = await attemptAndReconcilePendingCompletion(
+            user.id,
+            pendingCompletion,
+            (path, options) => apiFetch(path, { ...options, expectedUserId: user.id }),
+            (label, attempts) => recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', label, attempts)
+          );
           if (outcome.kind === 'success') {
             recovered = true;
-            try {
-              await clearPendingJapaCompletion(user.id, pendingCompletion.clientCompletionId);
-            } catch {
-              // The completion already succeeded server-side; failing to
-              // clear the local marker just means a harmless idempotent
-              // replay next launch, not a lost or duplicated completion.
-            }
-          } else if (outcome.kind === 'definitive_rejection') {
-            // This exact request will never succeed no matter how many
-            // more times it's retried -- quarantine it and keep going so
-            // it can no longer block recovery of independent, still-viable
-            // entries queued after it.
-            try {
-              await markPendingJapaCompletionFailed(user.id, pendingCompletion.clientCompletionId);
-            } catch {
-              // Best-effort: worst case it's retried again (harmlessly,
-              // idempotently) next launch instead of staying quarantined.
-            }
-          } else {
+          } else if (outcome.kind === 'uncertain') {
             // Ambiguous/potentially-recoverable (network exception, or a
             // still-retryable HTTP failure that exhausted this bounded
             // attempt) -- stop for this launch rather than risk reordering
@@ -1034,6 +1046,8 @@ export default function JapaScreen() {
             // the remaining queue, in order, next launch.
             break;
           }
+          // definitive_rejection: already quarantined by the shared
+          // helper -- continue to the next independent entry.
         }
       }
 
@@ -1046,6 +1060,7 @@ export default function JapaScreen() {
           await writeJapaContextCache(user.id, updated);
         }
       }
+      await refreshSyncQueue(user.id);
     } catch {
       if (!cacheApplied) {
         setActiveSymbolId(null);
@@ -1056,11 +1071,66 @@ export default function JapaScreen() {
     } finally {
       setLoading(false);
     }
-  }, [applyJapaContext]);
+  }, [applyJapaContext, refreshSyncQueue]);
 
   useEffect(() => {
     void loadContext();
   }, [loadContext]);
+
+  useEffect(() => {
+    if (syncReviewVisible && syncFailedCount === 0) setSyncReviewVisible(false);
+  }, [syncReviewVisible, syncFailedCount]);
+
+  const handleRetrySyncedCompletion = useCallback(async (item: PendingJapaCompletion) => {
+    const userId = userIdRef.current;
+    if (!userId) return;
+    setRetryingCompletionId(item.clientCompletionId);
+    try {
+      // Re-arms the SAME entry (identical clientCompletionId/requestBody)
+      // rather than generating a fresh operation -- a manual retry must
+      // reuse the original id so the backend's idempotency check still
+      // applies if it turns out the original request had actually landed.
+      await retryFailedJapaCompletion(userId, item.clientCompletionId);
+      const outcome = await attemptAndReconcilePendingCompletion(
+        userId,
+        { ...item, status: 'pending' },
+        (path, options) => apiFetch(path, { ...options, expectedUserId: userId }),
+        (label, attempts) => recordMutationRetryOutcome({ kind: 'authenticated', userId }, 'japa', label, attempts)
+      );
+      if (outcome.kind === 'success') {
+        const latest = await apiFetch('/api/japa/context', { expectedUserId: userId });
+        const updated = latest.ok ? normalizeJapaContext(await latest.json()) : null;
+        const identityNow = getAppIdentity();
+        if (updated && identityNow.kind === 'authenticated' && identityNow.userId === userId) {
+          applyJapaContext(updated);
+          await writeJapaContextCache(userId, updated);
+        }
+      }
+    } finally {
+      setRetryingCompletionId(null);
+      await refreshSyncQueue(userId);
+    }
+  }, [applyJapaContext, refreshSyncQueue]);
+
+  const handleDiscardSyncedCompletion = useCallback((item: PendingJapaCompletion) => {
+    const userId = userIdRef.current;
+    if (!userId) return;
+    const mantraName = parsePendingCompletionMantra(item.requestBody);
+    Alert.alert(
+      'Discard this round?',
+      `${mantraName ? `"${mantraName}"` : 'This round'} could not be saved and will be permanently discarded, including its beads and duration. This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: () => {
+            void discardFailedJapaCompletion(userId, item.clientCompletionId).then(() => refreshSyncQueue(userId));
+          },
+        },
+      ]
+    );
+  }, [refreshSyncQueue]);
 
   useEffect(() => {
     if (!toast.visible) return;
@@ -1113,38 +1183,22 @@ export default function JapaScreen() {
       await writePendingJapaCompletion(userId, { clientCompletionId, requestBody, createdAt: new Date().toISOString() });
       // Queued rounds already own this duration even if delivery fails.
       lastPersistedDurationRef.current += payload.durationSeconds;
+      await refreshSyncQueue(userId);
     }
 
     if (!userId) throw new Error('Sign in to save this session');
-    const outcome = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: userId }), requestBody, (label, attempts) => {
-      recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', label, attempts);
-    });
-
-    if (outcome.kind === 'success') {
-      try {
-        await clearPendingJapaCompletion(userId, clientCompletionId);
-      } catch {
-        // The server already accepted this completion -- a failure to
-        // clear the local marker must not surface as a failed save; it
-        // just means a harmless idempotent replay next time this queue
-        // is read.
-      }
-    } else if (outcome.kind === 'definitive_rejection') {
-      // This exact request will never succeed no matter how many more
-      // times it's retried -- quarantine it (visible, independently
-      // retryable) instead of leaving it to be retried forever.
-      try {
-        await markPendingJapaCompletionFailed(userId, clientCompletionId);
-      } catch {
-        // Best-effort: worst case it's retried again next launch instead
-        // of staying quarantined.
-      }
-    }
+    const outcome = await attemptAndReconcilePendingCompletion(
+      userId,
+      { clientCompletionId, requestBody, createdAt: new Date().toISOString(), status: 'pending' },
+      (path, options) => apiFetch(path, { ...options, expectedUserId: userId }),
+      (label, attempts) => recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', label, attempts)
+    );
     // 'uncertain' is left exactly as queued -- genuinely unsaved work,
     // recovered by the next launch's scan or an in-session retry.
+    await refreshSyncQueue(userId);
 
     return outcome;
-  }, []);
+  }, [refreshSyncQueue]);
 
   const completeRound = useCallback(async () => {
     setSaving(true);
@@ -1518,6 +1572,44 @@ export default function JapaScreen() {
                       Japa complete for today
                     </Text>
                   </LinearGradient>
+                ) : null}
+
+                {syncPendingCount > 0 || syncFailedCount > 0 ? (
+                  <View
+                    style={{
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: syncFailedCount > 0 ? COLORS.dangerBorder : theme.premiumBorder,
+                      backgroundColor: syncFailedCount > 0 ? COLORS.dangerBg : theme.brandSoft,
+                      padding: 14,
+                      gap: 8,
+                    }}
+                  >
+                    {syncPendingCount > 0 ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Feather name="refresh-cw" size={13} color={theme.brand} />
+                        <Text style={{ fontFamily: FONTS.sans, fontSize: 12.5, color: text, flex: 1 }}>
+                          {syncPendingCount} {syncPendingCount === 1 ? 'round is' : 'rounds are'} waiting to sync.
+                        </Text>
+                      </View>
+                    ) : null}
+                    {syncFailedCount > 0 ? (
+                      <PressableSurface
+                        haptic="selection"
+                        accessibilityLabel={`${syncFailedCount} ${syncFailedCount === 1 ? 'round' : 'rounds'} could not be saved. Review`}
+                        onPress={() => setSyncReviewVisible(true)}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                      >
+                        <Feather name="alert-circle" size={13} color={COLORS.danger} />
+                        <Text style={{ fontFamily: FONTS.sans, fontSize: 12.5, color: COLORS.danger, flex: 1 }}>
+                          {syncFailedCount} {syncFailedCount === 1 ? 'round' : 'rounds'} couldn't be saved.
+                        </Text>
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: COLORS.danger, textDecorationLine: 'underline' }}>
+                          Review
+                        </Text>
+                      </PressableSurface>
+                    ) : null}
+                  </View>
                 ) : null}
 
                 {/* Selected Mantra hero card */}
@@ -2670,6 +2762,122 @@ export default function JapaScreen() {
                 <Text style={{ ...TYPE.label, color: bg }}>Save</Text>
               </PressableSurface>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent visible={syncReviewVisible} animationType="slide" onRequestClose={() => setSyncReviewVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1 }} onPress={() => setSyncReviewVisible(false)} />
+          <View
+            style={{
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: border,
+              padding: 24,
+              gap: 16,
+              maxHeight: '80%',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 10,
+                    letterSpacing: 1.6,
+                    textTransform: 'uppercase',
+                    color: COLORS.danger,
+                  }}
+                >
+                  Couldn't save
+                </Text>
+                <Text style={{ ...TYPE.metric, color: text }}>
+                  {syncFailedCount} {syncFailedCount === 1 ? 'round' : 'rounds'}
+                </Text>
+              </View>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Close"
+                onPress={() => setSyncReviewVisible(false)}
+                hitSlop={10}
+                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}
+              >
+                <Feather name="x" size={16} color={dim} />
+              </PressableSurface>
+            </View>
+
+            <ScrollView contentContainerStyle={{ gap: 12 }} showsVerticalScrollIndicator={false}>
+              {syncFailedItems.map((item) => {
+                const mantraName = parsePendingCompletionMantra(item.requestBody);
+                const isRetrying = retryingCompletionId === item.clientCompletionId;
+                const completedAt = item.createdAt ? new Date(item.createdAt) : null;
+                const completedAtLabel = completedAt && !Number.isNaN(completedAt.getTime())
+                  ? completedAt.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                  : null;
+                return (
+                  <View
+                    key={item.clientCompletionId}
+                    style={{
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: border,
+                      padding: 14,
+                      gap: 10,
+                    }}
+                  >
+                    <View style={{ gap: 2 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
+                        {mantraName ?? 'Japa round'}
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                        {completedAtLabel ? `Completed ${completedAtLabel} · ` : ''}Not saved
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      <PressableSurface
+                        haptic="selection"
+                        disabled={isRetrying}
+                        onPress={() => { void handleRetrySyncedCompletion(item); }}
+                        style={{
+                          flex: 1,
+                          borderRadius: 14,
+                          minHeight: 40,
+                          backgroundColor: theme.brand,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: isRetrying ? 0.6 : 1,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                          {isRetrying ? 'Retrying…' : 'Retry'}
+                        </Text>
+                      </PressableSurface>
+                      <PressableSurface
+                        haptic="selection"
+                        disabled={isRetrying}
+                        onPress={() => handleDiscardSyncedCompletion(item)}
+                        style={{
+                          flex: 1,
+                          borderRadius: 14,
+                          minHeight: 40,
+                          borderWidth: 1,
+                          borderColor: COLORS.dangerBorder,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>
+                          Discard
+                        </Text>
+                      </PressableSurface>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>
