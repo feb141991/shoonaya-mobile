@@ -21,6 +21,8 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+import { getAppIdentity } from '@/lib/appIdentity';
+import { identityChanged } from '@/lib/routeOpenAttribution';
 import { requestNotificationPermission, checkNotificationPermission, registerPushToken } from '@/lib/notifications';
 import {
   type Step,
@@ -521,55 +523,83 @@ export default function OnboardingScreen() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
-        // Re-check live OS permission and compute final notification state
-        const osPermissionGranted = await checkNotificationPermission();
-        const finalNotificationsEnabled = computeFinalNotificationState(notificationChoice, osPermissionGranted);
-
-        const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
-        const profilePayload = buildOnboardingProfilePayload({
-          displayName,
-          tradition,
-          language,
-          dateOfBirth,
-          gender,
-          lifeStage,
-          rashi,
-          nakshatra,
-          gotra,
-          calendarProfile,
-          calendarScope,
-          goals,
-          notificationsEnabled: finalNotificationsEnabled,
-        });
-
-        const { data: updatedProfile, error } = await supabase
-          .from('profiles')
-          .update(profilePayload)
-          .eq('id', user.id)
-          .select('id')
-          .maybeSingle();
-
-        if (error) throw error;
-        if (!updatedProfile) {
-          const fallbackUsername = `user_${user.id.replace(/-/g, '').slice(0, 12)}`;
-          const { error: insertError } = await supabase.from('profiles').upsert(
-            {
-              id: user.id,
-              username: fallbackUsername,
-              ...profilePayload,
-            },
-            { onConflict: 'id' }
-          );
-          if (insertError) throw insertError;
-        }
-
-        if (finalNotificationsEnabled) {
-          void registerPushToken(user.id);
-        }
-
-        await clearOnboardingDraft(user.id);
+      if (!user) {
+        // No valid session at save time (expired token, signed out mid-flow,
+        // etc.) -- this must be a visible, retryable failure, not a silent
+        // no-op that still celebrates and navigates on. The draft
+        // (saveOnboardingDraft, already persisted throughout this flow) is
+        // retained since clearOnboardingDraft below is never reached; the
+        // user signs back in and picks up from where they left off.
+        setSaveError(isHindi
+          ? 'आपका सत्र समाप्त हो गया है। जारी रखने के लिए कृपया फिर से साइन इन करें।'
+          : 'Your session has expired. Please sign in again to finish setup.');
+        setSaving(false);
+        return;
       }
+
+      // Captured now so a sign-out or account switch racing the awaits
+      // below can be detected before applying success feedback/navigation
+      // to what could by then be a different (or no) signed-in account.
+      const identityAtStart = getAppIdentity();
+
+      // Re-check live OS permission and compute final notification state
+      const osPermissionGranted = await checkNotificationPermission();
+      const finalNotificationsEnabled = computeFinalNotificationState(notificationChoice, osPermissionGranted);
+
+      const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
+      const profilePayload = buildOnboardingProfilePayload({
+        displayName,
+        tradition,
+        language,
+        dateOfBirth,
+        gender,
+        lifeStage,
+        rashi,
+        nakshatra,
+        gotra,
+        calendarProfile,
+        calendarScope,
+        goals,
+        notificationsEnabled: finalNotificationsEnabled,
+      });
+
+      const { data: updatedProfile, error } = await supabase
+        .from('profiles')
+        .update(profilePayload)
+        .eq('id', user.id)
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!updatedProfile) {
+        const fallbackUsername = `user_${user.id.replace(/-/g, '').slice(0, 12)}`;
+        const { error: insertError } = await supabase.from('profiles').upsert(
+          {
+            id: user.id,
+            username: fallbackUsername,
+            ...profilePayload,
+          },
+          { onConflict: 'id' }
+        );
+        if (insertError) throw insertError;
+      }
+
+      // The write above already committed under `user.id` explicitly (never
+      // a trusted "current" context), so the data is correct regardless of
+      // what happens next -- but success feedback and navigation must never
+      // apply to a now-stale identity: that would celebrate and route
+      // whichever account is *currently* signed in, not the one this save
+      // was actually for.
+      if (identityChanged(identityAtStart, getAppIdentity())) {
+        setSaving(false);
+        return;
+      }
+
+      if (finalNotificationsEnabled) {
+        void registerPushToken(user.id);
+      }
+
+      await clearOnboardingDraft(user.id);
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);
       setSaveError(error instanceof Error ? error.message : (isHindi ? 'ऑनबोर्डिंग सहेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Unable to save onboarding. Please try again.'));

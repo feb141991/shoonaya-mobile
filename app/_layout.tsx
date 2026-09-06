@@ -22,6 +22,8 @@ import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
 import { AppProviders } from '@/components/providers/AppProviders';
 import { CollapsibleBottomNav } from '@/components/ui/CollapsibleBottomNav';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Button } from '@/components/ui/Button';
 import { RouteTransition } from '@/components/ui/Motion';
 import { ContextualStartupScene } from '@/components/startup/ContextualStartupScene';
 import { selectStartupScene } from '@/lib/startup-scenes/selector';
@@ -65,6 +67,7 @@ import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity } from '@/lib/appIdentity';
+import { resolveProfileOutcome } from '@/lib/profileResolution';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -104,6 +107,17 @@ function RootLayout() {
   const startupStartedAtRef = useRef(Date.now());
   const readyToRender = appIsReady && authReady;
   const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined;
+
+  // Explicit profile-resolution failure state -- set only when an
+  // authenticated session's profile row is missing AND the repair
+  // (bootstrap) attempt also failed. Previously a null profile fell
+  // through the onboarding gate as if `onboarding_completed` were true
+  // (only a definitive `=== false` triggered onboarding, so null silently
+  // qualified for Home). This blocks on a recoverable screen instead:
+  // only a confirmed complete or confirmed incomplete profile may
+  // continue past this point.
+  const [profileResolutionFailure, setProfileResolutionFailure] = useState<{ userId: string } | null>(null);
+  const [retryingProfileResolution, setRetryingProfileResolution] = useState(false);
 
   // ── Contextual Startup Scene Orchestration ────────────────────────────
   const [startupPrefs, setStartupPrefs] = useState<StartupPreferences>(() => getDefaultStartupPreferences());
@@ -272,6 +286,10 @@ function RootLayout() {
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
+        // A sign-out or account switch always clears a stale failure
+        // screen from a *previous* user -- it must never persist across
+        // identities.
+        setProfileResolutionFailure(null);
         // Invalidate preference writes synchronously before any asynchronous
         // logout cleanup, then await removal so an old Home response cannot
         // restore the previous account's tradition after sign-out.
@@ -384,6 +402,7 @@ function RootLayout() {
               void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
             }
           });
+        setProfileResolutionFailure(null);
         void offerNotificationPermission(session.user.id);
         return;
       }
@@ -417,14 +436,29 @@ function RootLayout() {
         if (!isCurrentRoute()) return;
       }
 
-      if (profile?.onboarding_completed === true) {
+      // `profile?.onboarding_completed` being `undefined` here (profile
+      // still null after the repair attempt) previously satisfied neither
+      // `needsOnboarding`'s `=== false` check NOR blocked the
+      // `!needsOnboarding` Home-entry branch below, so a missing profile
+      // silently qualified for Home. resolveProfileOutcome makes the three
+      // real states explicit and unit-tested (lib/profileResolution.ts) --
+      // only 'complete' may proceed into Home.
+      const profileOutcome = resolveProfileOutcome(profile);
+
+      if (profileOutcome.kind === 'failed') {
+        setProfileResolutionFailure({ userId: session.user.id });
+        return;
+      }
+      setProfileResolutionFailure(null);
+
+      if (profileOutcome.kind === 'complete') {
         void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
         void offerNotificationPermission(session.user.id);
-      } else if (profile?.onboarding_completed === false) {
+      } else {
         void AsyncStorage.setItem(cacheKey, 'false').catch(() => {});
       }
 
-      const needsOnboarding = profile?.onboarding_completed === false;
+      const needsOnboarding = profileOutcome.kind === 'needs_onboarding';
       const isOnboarding = inAuthGroup && childSegment === 'onboarding';
 
       if (needsOnboarding && !isOnboarding) {
@@ -435,6 +469,33 @@ function RootLayout() {
     },
     [applyStartupPreferences, offerNotificationPermission, router]
   );
+
+  // Explicit re-attempt from the profile-resolution failure screen.
+  // routeForSession's own dedup (lastAuthRouteKeyRef) would otherwise skip
+  // reprocessing the *same* user id, so this deliberately resets it before
+  // calling back in -- the generation counter inside routeForSession still
+  // protects against overlapping attempts (a rapid double-tap starts a new
+  // generation and the stale one's isCurrentRoute() checks abort it, so no
+  // duplicate bootstrap outcome is ever applied).
+  const retryProfileResolution = useCallback(async () => {
+    if (retryingProfileResolution) return;
+    setRetryingProfileResolution(true);
+    try {
+      const { data } = await supabase.auth.getSession();
+      lastAuthRouteKeyRef.current = undefined;
+      await routeForSession(data.session);
+    } finally {
+      setRetryingProfileResolution(false);
+    }
+  }, [retryingProfileResolution, routeForSession]);
+
+  const handleSignOutFromFailure = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('[auth-profile] sign-out from failure screen failed', error);
+    }
+  }, []);
 
   // ── Keep Supabase session refresh alive across backgrounding ─────────
   // supabase-js's `autoRefreshToken: true` (lib/supabase.ts) runs a JS timer
@@ -603,6 +664,28 @@ function RootLayout() {
               onArtworkReady={() => startupLifecycleRef.current?.notifySceneReady()}
             />
           </Animated.View>
+        ) : null}
+        {profileResolutionFailure ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: '#FDF6E3', zIndex: 10000, justifyContent: 'center' },
+            ]}
+          >
+            <EmptyState
+              icon="alert-triangle"
+              title="Couldn't finish setting up your account"
+              subtitle="Your sign-in worked, but we couldn't load your profile. Check your connection and try again."
+              ctaLabel={retryingProfileResolution ? 'Retrying…' : 'Retry'}
+              onCta={() => { void retryProfileResolution(); }}
+            />
+            <Button
+              label="Sign out"
+              variant="secondary"
+              onPress={() => { void handleSignOutFromFailure(); }}
+              style={{ marginHorizontal: 28 }}
+            />
+          </View>
         ) : null}
       </View>
     </AppProviders>
