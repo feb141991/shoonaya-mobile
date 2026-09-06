@@ -80,6 +80,11 @@ export type CachedHomeRenderModel = {
     // for the full contract. Optional so a cache entry written before this
     // field existed still parses; readers default it to 'ready'.
     calendarStatus?: 'ready' | 'pending' | 'unavailable';
+    // See HomeSummary['panchang']['calendarProfile']/['sampradaya'] --
+    // carried through the cache so a cache-hit render still has these for
+    // calendarIdentityKey until a fresh network response lands.
+    calendarProfile?: string;
+    sampradaya?: string | null;
   };
   nextPractice: {
     id: 'japa' | 'nitya' | 'pathshala' | 'quiz' | 'dharmveer';
@@ -228,6 +233,8 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       calendarStatus: full.panchang?.calendarStatus === 'pending' || full.panchang?.calendarStatus === 'unavailable'
         ? full.panchang.calendarStatus
         : 'ready',
+      calendarProfile: typeof full.panchang?.calendarProfile === 'string' ? full.panchang.calendarProfile : undefined,
+      sampradaya: typeof full.panchang?.sampradaya === 'string' ? full.panchang.sampradaya : null,
     },
     nextPractice: {
       id: full.nextPractice?.id ?? 'pathshala',

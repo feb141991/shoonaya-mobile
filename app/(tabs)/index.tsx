@@ -61,6 +61,7 @@ import {
   type HomeAuthIdentity,
 } from '@/lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
+import { buildCalendarIdentityKey } from '@/lib/calendarIdentityKey';
 import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
@@ -248,6 +249,14 @@ type HomeSummary = {
     // cached payload predating this field; defaulted to 'ready' below so a
     // pre-existing cache never regresses into a permanent skeleton.
     calendarStatus?: 'ready' | 'pending' | 'unavailable';
+    // The resolved calendar_profile ('legacy-ujjain' when unset) and
+    // sampradaya actually used to compute this response's observance data.
+    // Absent on an old cached payload predating this field. Included in
+    // calendarIdentityKey below so a backend-side calendar-profile or
+    // sampradaya change is detected directly, not just inferred through
+    // the coarser `tradition` field.
+    calendarProfile?: string;
+    sampradaya?: string | null;
   };
   nextPractice: {
     id: PracticeId;
@@ -427,11 +436,17 @@ function PanchangPill({
   summary,
   theme,
   kind = 'panchang',
+  onRetryUnavailable,
 }: {
   panchang: { tithi: string; paksha: string; nakshatra: string; yoga: string; samvatYear: number };
   summary: HomeSummary['panchang'];
   theme: { heroOverlay: string; borderSoft: string; text: string; brand: string };
   kind?: 'panchang' | 'observance';
+  // Present only for the observance pill -- lets the compact 'unavailable'
+  // state (below) re-arm PanchangRetryController rather than the pill
+  // staying silently hidden, indistinguishable from a genuine "nothing
+  // today" result, for the rest of the mount.
+  onRetryUnavailable?: () => void;
 }) {
   const [idx, setIdx] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -548,6 +563,43 @@ function PanchangPill({
             <ShimmerBlock style={{ width: 96, height: 10, borderRadius: 4 }} />
           </View>
         </View>
+      );
+    }
+    if (calendarStatus === 'unavailable' && onRetryUnavailable) {
+      // Deliberately distinct from both the loading skeleton above and the
+      // silent `return null` below: this is a checked-but-unresolved
+      // failure (retry exhausted or a real backend error), not the same
+      // thing as an authoritative "no observance today". Compact and
+      // static (no shimmer -- nothing is currently loading), with an
+      // explicit tap-to-retry affordance rather than staying permanently
+      // and indistinguishably hidden for the rest of the mount.
+      return (
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel="Today's observance could not be checked. Tap to retry"
+          accessibilityRole="button"
+          onPress={onRetryUnavailable}
+          hitSlop={4}
+          style={{
+            borderRadius: RADII.pill,
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+            alignSelf: 'flex-start',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
+            backgroundColor: COLORS.homePwaPillBg,
+            minHeight: 34,
+            maxWidth: 264,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Feather name="refresh-cw" size={11} color={COLORS.homePwaPillText} />
+            <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }}>
+              Couldn't check today's observance · Retry
+            </Text>
+          </View>
+        </PressableSurface>
       );
     }
     return null;
@@ -1206,21 +1258,35 @@ function HomeContent() {
   }
 
   const isPanchangPending = state.panchang.calendarStatus === 'pending';
-  // Identifies which (profile, location, timezone, spiritual-date) the
-  // current pending episode belongs to. A profile/location switch (or a
-  // date rollover) while already pending doesn't necessarily flip the
-  // `isPanchangPending` boolean itself -- e.g. the new bucket can
+  // Identifies which (account, calendar-profile, sampradaya, location,
+  // timezone, spiritual-date) the current pending episode belongs to. A
+  // switch on any of these while already pending doesn't necessarily flip
+  // the `isPanchangPending` boolean itself -- e.g. the new bucket can
   // coincidentally also be pending -- so relying on that boolean alone
   // could let a stale retry episode (targeting the OLD identity) keep
   // ticking under a new one. Including this key forces cancel+restart on
   // any identity change regardless of whether the boolean flipped.
-  const calendarIdentityKey = [
-    state.profile.tradition,
-    state.date.latitude,
-    state.date.longitude,
-    state.date.timezone,
-    state.date.iso,
-  ].join('|');
+  //
+  // The authenticated user id is included explicitly, not inferred from
+  // state resetting to INITIAL_STATE on an identity change: two different
+  // accounts sharing the exact same tradition/location/timezone/date (a
+  // real, if narrow, case -- e.g. two test accounts, or two people in the
+  // same city on the same calendar profile) would otherwise produce an
+  // IDENTICAL key across the switch, letting a stale response from the
+  // old account merge into the new one's state. calendarProfile/sampradaya
+  // are included too -- a backend-side change to either can alter which
+  // observance rows apply without `tradition` (a much coarser category)
+  // ever changing.
+  const calendarIdentityKey = buildCalendarIdentityKey({
+    accountKey: appIdentity.kind === 'authenticated' ? appIdentity.userId : appIdentity.kind,
+    tradition: state.profile.tradition,
+    calendarProfile: state.panchang.calendarProfile,
+    sampradaya: state.panchang.sampradaya,
+    latitude: state.date.latitude,
+    longitude: state.date.longitude,
+    timezone: state.date.timezone,
+    spiritualDateIso: state.date.iso,
+  });
   useEffect(() => {
     if (!isPanchangPending || appIdentity.kind !== 'authenticated') {
       panchangRetryRef.current?.cancel();
@@ -1229,6 +1295,19 @@ function HomeContent() {
     panchangRetryRef.current?.start();
     return () => panchangRetryRef.current?.cancel();
   }, [isPanchangPending, appIdentity.kind, calendarIdentityKey]);
+
+  // Explicit user-initiated re-arm from the compact "couldn't check, tap
+  // to retry" pill state (PanchangPill, calendarStatus === 'unavailable').
+  // Flips calendarStatus back to 'pending', which the effect above reacts
+  // to by calling panchangRetryRef.current.start() again -- a fresh
+  // bounded 2s/5s/10s episode, not a different retry mechanism.
+  const retryPanchang = useCallback(() => {
+    setState((prev) =>
+      prev.panchang.calendarStatus === 'unavailable'
+        ? { ...prev, panchang: { ...prev.panchang, calendarStatus: 'pending' } }
+        : prev
+    );
+  }, []);
 
   // Match the PWA Home hero: show only the first verse line in the
   // transitional Home block, with the full text available on /shloka.
@@ -1534,7 +1613,7 @@ function HomeContent() {
 
             <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
-              <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" />
+              <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" onRetryUnavailable={retryPanchang} />
               <PressableSurface
                 haptic="selection"
                 accessibilityLabel="See your Rashiphal. Tap to open"
