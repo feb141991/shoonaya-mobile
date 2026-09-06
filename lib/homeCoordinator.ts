@@ -2,7 +2,7 @@ import { readHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsP
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
-import { recordRouteOpen, recordRefreshFailure, type TelemetryIdentity } from './telemetry';
+import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader, type TelemetryIdentity } from './telemetry';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -234,6 +234,16 @@ export class HomeSummaryCoordinator {
           const response = await this.deps.fetchApi('/api/native/home-summary', {
             timeoutMs: HOME_SUMMARY_TIMEOUT_MS,
           });
+          // Measurement only -- this is the one place that issues Home's
+          // initial enrichment fetch, so it's also the one place that can
+          // capture the backend's own Server-Timing breakdown (which section
+          // of home-summary actually took the time) without guessing from
+          // client-observed duration alone. Never allowed to affect whether
+          // the response itself is usable.
+          const serverTimingBreakdown = parseServerTimingHeader(response.headers.get('Server-Timing'));
+          if (serverTimingBreakdown) {
+            recordServerTiming(telemetryIdentity, 'home', serverTimingBreakdown);
+          }
           if (response.status === 401) {
             await clearHomeCache(cacheIdentity);
             return { unauthorized: true };

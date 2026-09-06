@@ -28,6 +28,8 @@ import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch } from '@/lib/api';
+import { useAppIdentity } from '@/lib/appIdentity';
+import { recordRouteOpen } from '@/lib/telemetry';
 
 function parseEnrollmentsResponse(value: unknown): EnrollmentRow[] {
   if (!value || typeof value !== 'object') return [];
@@ -186,6 +188,13 @@ function PathshalaContent() {
 
   const scrollRef = useScrollToTop();
 
+  // Measurement only -- reads the already-restored shared identity purely to
+  // tag telemetry events; does not replace loadData's own getUser() call or
+  // change any fetch behavior (that swap is a separate, later step).
+  const appIdentity = useAppIdentity();
+  const appIdentityRef = useRef(appIdentity);
+  appIdentityRef.current = appIdentity;
+
   const loadData = useCallback(async (refresh = false) => {
     if (refresh || dataLoadedRef.current) {
       setRefreshing(true);
@@ -261,7 +270,21 @@ function PathshalaContent() {
 
   useFocusEffect(
     useCallback(() => {
-      void loadData();
+      // Route-open telemetry only, matching Home's own "genuine open, not
+      // every focus-driven revalidation" distinction: only the very first
+      // load (before dataLoadedRef flips true) counts as an open.
+      const isFirstLoad = !dataLoadedRef.current;
+      const startedAt = Date.now();
+      void loadData().then(() => {
+        const identity = appIdentityRef.current;
+        if (isFirstLoad && identity.kind === 'authenticated') {
+          recordRouteOpen(
+            { kind: 'authenticated', userId: identity.userId },
+            'pathshala',
+            { cacheHit: false, durationMs: Date.now() - startedAt }
+          );
+        }
+      });
     }, [loadData])
   );
 

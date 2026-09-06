@@ -36,7 +36,8 @@ export type RetryOutcome = 'success' | 'retry' | 'permanent_failure';
 export type TelemetryEvent =
   | { type: 'route_open'; route: RouteName; cacheHit: boolean; durationMs: number; timestamp: number }
   | { type: 'refresh_failure'; route: RouteName; timestamp: number }
-  | { type: 'mutation_retry_outcome'; feature: OutboxFeature; outcome: RetryOutcome; attempts: number; timestamp: number };
+  | { type: 'mutation_retry_outcome'; feature: OutboxFeature; outcome: RetryOutcome; attempts: number; timestamp: number }
+  | { type: 'server_timing'; route: RouteName; breakdown: Record<string, number>; timestamp: number };
 
 type TelemetryEnvelope = {
   schemaVersion: number;
@@ -117,6 +118,33 @@ export function recordMutationRetryOutcome(
   void appendEvent(identity, { type: 'mutation_retry_outcome', feature, outcome, attempts, timestamp: Date.now() });
 }
 
+export function recordServerTiming(
+  identity: TelemetryIdentity,
+  route: RouteName,
+  breakdown: Record<string, number>
+): void {
+  void appendEvent(identity, { type: 'server_timing', route, breakdown, timestamp: Date.now() });
+}
+
+// Standard Server-Timing header format: "name;dur=12.34;desc=\"Label\", ...".
+// Parses the backend's ServerTimingCollector output (home-summary/route.ts)
+// into a flat { sectionName: durationMs } map. Returns null for a missing
+// or unparseable header rather than throwing -- this is a measurement aid,
+// never allowed to affect whether the caller's real response is usable.
+export function parseServerTimingHeader(headerValue: string | null | undefined): Record<string, number> | null {
+  if (!headerValue) return null;
+  const breakdown: Record<string, number> = {};
+  for (const part of headerValue.split(',')) {
+    const [rawName, ...params] = part.split(';').map((s) => s.trim());
+    if (!rawName) continue;
+    const durParam = params.find((p) => p.toLowerCase().startsWith('dur='));
+    if (!durParam) continue;
+    const dur = Number(durParam.slice(durParam.indexOf('=') + 1));
+    if (Number.isFinite(dur)) breakdown[rawName] = dur;
+  }
+  return Object.keys(breakdown).length > 0 ? breakdown : null;
+}
+
 export type RouteSummary = {
   route: RouteName;
   opens: number;
@@ -133,9 +161,16 @@ export type OutboxSummary = {
   permanentFailure: number;
 };
 
+export type ServerTimingSummary = {
+  route: RouteName;
+  samples: number;
+  sections: Array<{ name: string; avgDurationMs: number; p95DurationMs: number }>;
+};
+
 export type TelemetrySummary = {
   routes: RouteSummary[];
   outbox: OutboxSummary[];
+  serverTimings: ServerTimingSummary[];
   totalEvents: number;
 };
 
@@ -156,6 +191,7 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
 
   const routeGroups = new Map<RouteName, { durations: number[]; hits: number; opens: number; failures: number }>();
   const outboxGroups = new Map<OutboxFeature, OutboxSummary>();
+  const serverTimingGroups = new Map<RouteName, { samples: number; sections: Map<string, number[]> }>();
 
   for (const event of envelope.events) {
     if (event.type === 'route_open') {
@@ -168,7 +204,16 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
       const group = routeGroups.get(event.route) ?? { durations: [], hits: 0, opens: 0, failures: 0 };
       group.failures += 1;
       routeGroups.set(event.route, group);
-    } else {
+    } else if (event.type === 'server_timing') {
+      const group = serverTimingGroups.get(event.route) ?? { samples: 0, sections: new Map() };
+      group.samples += 1;
+      for (const [name, dur] of Object.entries(event.breakdown)) {
+        const durations = group.sections.get(name) ?? [];
+        durations.push(dur);
+        group.sections.set(name, durations);
+      }
+      serverTimingGroups.set(event.route, group);
+    } else if (event.type === 'mutation_retry_outcome') {
       const group = outboxGroups.get(event.feature) ?? { feature: event.feature, success: 0, retry: 0, permanentFailure: 0 };
       if (event.outcome === 'success') group.success += 1;
       else if (event.outcome === 'retry') group.retry += 1;
@@ -189,9 +234,23 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
     };
   });
 
+  const serverTimings: ServerTimingSummary[] = Array.from(serverTimingGroups.entries()).map(([route, group]) => ({
+    route,
+    samples: group.samples,
+    sections: Array.from(group.sections.entries()).map(([name, durations]) => {
+      const sorted = [...durations].sort((a, b) => a - b);
+      return {
+        name,
+        avgDurationMs: sorted.reduce((a, b) => a + b, 0) / sorted.length,
+        p95DurationMs: percentile(sorted, 95),
+      };
+    }),
+  }));
+
   return {
     routes,
     outbox: Array.from(outboxGroups.values()),
+    serverTimings,
     totalEvents: envelope.events.length,
   };
 }

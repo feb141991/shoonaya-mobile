@@ -22,6 +22,8 @@ import {
   recordRouteOpen,
   recordRefreshFailure,
   recordMutationRetryOutcome,
+  recordServerTiming,
+  parseServerTimingHeader,
   getTelemetrySummary,
   clearTelemetry,
   clearAllTelemetry,
@@ -157,6 +159,84 @@ describe('Telemetry -- aggregation correctness', () => {
     const summary = await getTelemetrySummary({ kind: 'authenticated', userId: 'user-never-opened-anything' });
     assert.deepEqual(summary.routes, []);
     assert.deepEqual(summary.outbox, []);
+    assert.deepEqual(summary.serverTimings, []);
     assert.equal(summary.totalEvents, 0);
+  });
+});
+
+describe('parseServerTimingHeader -- backend ServerTimingCollector format', () => {
+  it('parses the standard "name;dur=X;desc=Y" format into a flat map', () => {
+    const header = 'auth;dur=12.34;desc="Authentication", profile;dur=5.6;desc="Profile Fetch (ready)", total;dur=456.78;desc="Total"';
+    assert.deepEqual(parseServerTimingHeader(header), { auth: 12.34, profile: 5.6, total: 456.78 });
+  });
+
+  it('parses a section with no desc param', () => {
+    assert.deepEqual(parseServerTimingHeader('compose;dur=3.2'), { compose: 3.2 });
+  });
+
+  it('returns null for a missing header', () => {
+    assert.equal(parseServerTimingHeader(null), null);
+    assert.equal(parseServerTimingHeader(undefined), null);
+    assert.equal(parseServerTimingHeader(''), null);
+  });
+
+  it('returns null rather than throwing on an unparseable header', () => {
+    assert.equal(parseServerTimingHeader('not a server-timing header at all'), null);
+  });
+
+  it('skips malformed segments but keeps the parseable ones', () => {
+    assert.deepEqual(parseServerTimingHeader('auth;dur=10, garbage, calendar_batches;dur=750'), {
+      auth: 10,
+      calendar_batches: 750,
+    });
+  });
+});
+
+describe('Telemetry -- server timing capture and aggregation', () => {
+  beforeEach(async () => {
+    await clearAllTelemetry();
+  });
+
+  it('records a server-timing breakdown and surfaces per-section avg/p95 in the summary', async () => {
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-L' };
+    recordServerTiming(identity, 'home', { auth: 10, calendar_batches: 100, total: 200 });
+    recordServerTiming(identity, 'home', { auth: 12, calendar_batches: 900, total: 1000 });
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const homeTiming = summary.serverTimings.find((s) => s.route === 'home');
+    assert.ok(homeTiming);
+    assert.equal(homeTiming!.samples, 2);
+
+    const calendarBatches = homeTiming!.sections.find((s) => s.name === 'calendar_batches');
+    assert.ok(calendarBatches);
+    assert.equal(calendarBatches!.avgDurationMs, (100 + 900) / 2);
+    assert.equal(calendarBatches!.p95DurationMs, 900);
+  });
+
+  it('keeps server-timing samples isolated per identity, same as route-open events', async () => {
+    recordServerTiming({ kind: 'authenticated', userId: 'user-M' }, 'home', { auth: 10 });
+    await flush();
+
+    const otherUserSummary = await getTelemetrySummary({ kind: 'authenticated', userId: 'user-N' });
+    assert.deepEqual(otherUserSummary.serverTimings, []);
+  });
+
+  it('does not let a server_timing event corrupt outbox aggregation (event-type discrimination regression)', async () => {
+    // Regression: the aggregator used to fall through to an `else` branch
+    // that assumed every non-route_open/refresh_failure event was a
+    // mutation_retry_outcome. Adding a 4th event type without an explicit
+    // branch would have made this read `event.feature`/`event.outcome` off
+    // a server_timing event (both undefined) and silently pollute the
+    // outbox summary with bogus permanent-failure entries.
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-O' };
+    recordServerTiming(identity, 'home', { auth: 10 });
+    recordMutationRetryOutcome(identity, 'settings', 'success', 0);
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    assert.equal(summary.outbox.length, 1, 'Only the real mutation_retry_outcome event should produce an outbox entry');
+    assert.equal(summary.outbox[0].feature, 'settings');
+    assert.equal(summary.outbox[0].success, 1);
   });
 });
