@@ -23,7 +23,11 @@ import {
   writePendingJapaCompletion,
   clearPendingJapaCompletion,
   readPendingJapaCompletions,
-  isJapaCompletionAcknowledged,
+  markPendingJapaCompletionFailed,
+  retryFailedJapaCompletion,
+  discardFailedJapaCompletion,
+  listFailedJapaCompletions,
+  hasFailedJapaCompletion,
   type PendingJapaCompletion,
 } from '../lib/japaPendingCompletion';
 
@@ -36,15 +40,15 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
     assert.equal(await readPendingJapaCompletion('user-A'), null);
   });
 
-  it('round-trips a written pending completion', async () => {
-    const pending: PendingJapaCompletion = {
+  it('round-trips a written pending completion, defaulting to pending status', async () => {
+    const pending: Omit<PendingJapaCompletion, 'status'> = {
       clientCompletionId: 'completion-1',
       requestBody: JSON.stringify({ clientCompletionId: 'completion-1', mantra: 'Om Namah Shivaya' }),
       createdAt: '2026-09-06T00:00:00.000Z',
     };
     await writePendingJapaCompletion('user-A', pending);
 
-    assert.deepEqual(await readPendingJapaCompletion('user-A'), pending);
+    assert.deepEqual(await readPendingJapaCompletion('user-A'), { ...pending, status: 'pending' });
   });
 
   it('clearing removes it -- a subsequent read returns null', async () => {
@@ -98,14 +102,6 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
     assert.deepEqual(result.status === 'ok' ? result.items.map((p) => p.clientCompletionId) : null, ['second']);
   });
 
-  it('does not acknowledge exhausted server failures, auth failures or rate limits', () => {
-    for (const status of [400, 401, 403, 429, 500, 503]) {
-      assert.equal(isJapaCompletionAcknowledged(new Response(null, { status })), false);
-    }
-    assert.equal(isJapaCompletionAcknowledged(null), false);
-    assert.equal(isJapaCompletionAcknowledged(new Response(null, { status: 200 })), true);
-  });
-
   it('fails safe (returns null) on a corrupt stored entry instead of throwing', async () => {
     await AsyncStorage.setItem('shoonaya.japa.pending_completion.v1_user_user-A', 'not json{{{');
     assert.equal(await readPendingJapaCompletion('user-A'), null);
@@ -114,6 +110,27 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
   it('fails safe (returns null) on a stored entry missing required fields', async () => {
     await AsyncStorage.setItem('shoonaya.japa.pending_completion.v1_user_user-A', JSON.stringify({ createdAt: 'x' }));
     assert.equal(await readPendingJapaCompletion('user-A'), null);
+  });
+
+  it('accepts a legacy entry with no status field, defaulting it to pending', async () => {
+    await AsyncStorage.setItem(
+      'shoonaya.japa.pending_completion.v1_user_user-A',
+      JSON.stringify([{ clientCompletionId: 'legacy', requestBody: '{}', createdAt: '' }])
+    );
+    const result = await readPendingJapaCompletions('user-A');
+    assert.equal(result.status, 'ok');
+    assert.deepEqual(result.status === 'ok' ? result.items : null, [
+      { clientCompletionId: 'legacy', requestBody: '{}', createdAt: '', status: 'pending' },
+    ]);
+  });
+
+  it('treats an entry with an invalid status value as corrupt, not as a silently-defaulted one', async () => {
+    await AsyncStorage.setItem(
+      'shoonaya.japa.pending_completion.v1_user_user-A',
+      JSON.stringify([{ clientCompletionId: 'x', requestBody: '{}', createdAt: '', status: 'not-a-real-status' }])
+    );
+    const result = await readPendingJapaCompletions('user-A');
+    assert.deepEqual(result, { status: 'unavailable' });
   });
 
   it('readPendingJapaCompletions reports "unavailable" (not an empty queue) on corrupt stored data', async () => {
@@ -171,5 +188,59 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
 
     await assert.rejects(clearPendingJapaCompletion('user-A', 'anything'));
     assert.equal(await AsyncStorage.getItem(key), 'not json{{{');
+  });
+
+  describe('failed-item outbox conventions (mirrors lib/reactionOutbox.ts)', () => {
+    it('markPendingJapaCompletionFailed quarantines an entry -- it stays in the queue, visible, not silently discarded', async () => {
+      await writePendingJapaCompletion('user-A', { clientCompletionId: 'bad', requestBody: '{}', createdAt: '' });
+      await markPendingJapaCompletionFailed('user-A', 'bad');
+
+      const result = await readPendingJapaCompletions('user-A');
+      assert.equal(result.status, 'ok');
+      assert.deepEqual(result.status === 'ok' ? result.items.map((p) => p.status) : null, ['failed']);
+      assert.equal(await hasFailedJapaCompletion('user-A'), true);
+      assert.deepEqual((await listFailedJapaCompletions('user-A')).map((p) => p.clientCompletionId), ['bad']);
+    });
+
+    it('a failed entry does not block an independent pending entry from being listed as pending', async () => {
+      await writePendingJapaCompletion('user-A', { clientCompletionId: 'bad', requestBody: '{}', createdAt: '' });
+      await writePendingJapaCompletion('user-A', { clientCompletionId: 'good', requestBody: '{}', createdAt: '' });
+      await markPendingJapaCompletionFailed('user-A', 'bad');
+
+      const result = await readPendingJapaCompletions('user-A');
+      assert.equal(result.status, 'ok');
+      const byStatus = result.status === 'ok'
+        ? Object.fromEntries(result.items.map((p) => [p.clientCompletionId, p.status]))
+        : {};
+      assert.deepEqual(byStatus, { bad: 'failed', good: 'pending' });
+    });
+
+    it('retryFailedJapaCompletion re-arms a failed entry back to pending', async () => {
+      await writePendingJapaCompletion('user-A', { clientCompletionId: 'bad', requestBody: '{}', createdAt: '' });
+      await markPendingJapaCompletionFailed('user-A', 'bad');
+      await retryFailedJapaCompletion('user-A', 'bad');
+
+      assert.equal(await hasFailedJapaCompletion('user-A'), false);
+      assert.equal((await readPendingJapaCompletion('user-A'))?.status, 'pending');
+    });
+
+    it('discardFailedJapaCompletion removes it permanently', async () => {
+      await writePendingJapaCompletion('user-A', { clientCompletionId: 'bad', requestBody: '{}', createdAt: '' });
+      await markPendingJapaCompletionFailed('user-A', 'bad');
+      await discardFailedJapaCompletion('user-A', 'bad');
+
+      assert.equal(await readPendingJapaCompletion('user-A'), null);
+      assert.equal(await hasFailedJapaCompletion('user-A'), false);
+    });
+
+    it('hasFailedJapaCompletion and listFailedJapaCompletions are isolated per user', async () => {
+      await writePendingJapaCompletion('user-A', { clientCompletionId: 'bad-a', requestBody: '{}', createdAt: '' });
+      await markPendingJapaCompletionFailed('user-A', 'bad-a');
+      await writePendingJapaCompletion('user-B', { clientCompletionId: 'good-b', requestBody: '{}', createdAt: '' });
+
+      assert.equal(await hasFailedJapaCompletion('user-A'), true);
+      assert.equal(await hasFailedJapaCompletion('user-B'), false);
+      assert.deepEqual(await listFailedJapaCompletions('user-B'), []);
+    });
   });
 });

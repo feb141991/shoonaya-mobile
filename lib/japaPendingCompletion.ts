@@ -34,15 +34,28 @@
  *   empty one -- those are different facts ("nothing to recover" vs
  *   "couldn't check"), and collapsing them would make a corrupt/
  *   unreadable queue look identical to a healthy empty one.
+ *
+ * status mirrors lib/reactionOutbox.ts's convention: one persisted queue,
+ * entries carry 'pending' or 'failed' rather than living in two separate
+ * lists. 'failed' is reserved for a definitive rejection (see
+ * japaCompleteRetry.ts's JapaCompleteOutcome) -- a request that will never
+ * succeed no matter how many times it's retried verbatim. It stays queued
+ * (visible, retryable from Settings/Japa's own failed-item UI) rather than
+ * being silently dropped, and -- critically -- no longer sits at the front
+ * of the queue blocking recovery of independent, still-viable entries
+ * after it.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEY_PREFIX = 'shoonaya.japa.pending_completion.v1_user_';
 
+export type PendingJapaCompletionStatus = 'pending' | 'failed';
+
 export type PendingJapaCompletion = {
   clientCompletionId: string;
   requestBody: string;
   createdAt: string;
+  status: PendingJapaCompletionStatus;
 };
 
 export type PendingQueueReadResult =
@@ -53,10 +66,26 @@ function keyFor(userId: string): string {
   return `${KEY_PREFIX}${userId}`;
 }
 
-function isPendingJapaCompletion(item: unknown): item is PendingJapaCompletion {
-  return !!item && typeof item === 'object'
-    && typeof (item as { clientCompletionId?: unknown }).clientCompletionId === 'string'
-    && typeof (item as { requestBody?: unknown }).requestBody === 'string';
+function normalizePendingJapaCompletion(item: unknown): PendingJapaCompletion {
+  if (!item || typeof item !== 'object') {
+    throw new Error('Corrupt pending Japa completion queue entry');
+  }
+  const record = item as Record<string, unknown>;
+  if (typeof record.clientCompletionId !== 'string' || typeof record.requestBody !== 'string') {
+    throw new Error('Corrupt pending Japa completion queue entry');
+  }
+  // Entries written before `status` existed have no such field -- that's a
+  // known, expected legacy shape, not corruption. An explicit value that
+  // isn't one of the two valid ones, on the other hand, is.
+  if (record.status !== undefined && record.status !== 'pending' && record.status !== 'failed') {
+    throw new Error('Corrupt pending Japa completion queue entry');
+  }
+  return {
+    clientCompletionId: record.clientCompletionId,
+    requestBody: record.requestBody,
+    createdAt: typeof record.createdAt === 'string' ? record.createdAt : '',
+    status: record.status === 'failed' ? 'failed' : 'pending',
+  };
 }
 
 async function readQueueStrict(userId: string): Promise<PendingJapaCompletion[]> {
@@ -65,12 +94,12 @@ async function readQueueStrict(userId: string): Promise<PendingJapaCompletion[]>
   const parsed: unknown = JSON.parse(raw);
   // Accept the previous single-slot format without losing an in-flight save.
   const list = Array.isArray(parsed) ? parsed : [parsed];
-  return list.map((item) => {
-    if (!isPendingJapaCompletion(item)) {
-      throw new Error('Corrupt pending Japa completion queue entry');
-    }
-    return item;
-  });
+  return list.map(normalizePendingJapaCompletion);
+}
+
+async function writeQueue(userId: string, queue: PendingJapaCompletion[]): Promise<void> {
+  if (queue.length) await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
+  else await AsyncStorage.removeItem(keyFor(userId));
 }
 
 export async function readPendingJapaCompletions(userId: string): Promise<PendingQueueReadResult> {
@@ -99,24 +128,65 @@ function serialize(userId: string, action: () => Promise<void>): Promise<void> {
   return next;
 }
 
-export async function writePendingJapaCompletion(userId: string, pending: PendingJapaCompletion): Promise<void> {
+export async function writePendingJapaCompletion(
+  userId: string,
+  pending: Omit<PendingJapaCompletion, 'status'>
+): Promise<void> {
   return serialize(userId, async () => {
     // Throws (aborting the write) rather than risk overwriting an
     // unreadable-but-real queue with one built from an assumed-empty read.
     const queue = await readQueueStrict(userId);
-    if (!queue.some((entry) => entry.clientCompletionId === pending.clientCompletionId)) queue.push(pending);
-    await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
+    if (!queue.some((entry) => entry.clientCompletionId === pending.clientCompletionId)) {
+      queue.push({ ...pending, status: 'pending' });
+    }
+    await writeQueue(userId, queue);
   });
 }
 
 export async function clearPendingJapaCompletion(userId: string, completionId: string): Promise<void> {
   return serialize(userId, async () => {
     const queue = (await readQueueStrict(userId)).filter((entry) => entry.clientCompletionId !== completionId);
-    if (queue.length) await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
-    else await AsyncStorage.removeItem(keyFor(userId));
+    await writeQueue(userId, queue);
   });
 }
 
-export function isJapaCompletionAcknowledged(response: Response | null): boolean {
-  return response?.ok === true;
+/**
+ * Quarantines a definitively-rejected completion: stays in the queue
+ * (visible, not silently discarded) but is marked 'failed' so the
+ * recovery loop skips it and moves on to independent, still-viable
+ * entries instead of retrying (and blocking on) the same doomed request
+ * forever.
+ */
+export async function markPendingJapaCompletionFailed(userId: string, completionId: string): Promise<void> {
+  return serialize(userId, async () => {
+    const queue = (await readQueueStrict(userId)).map((entry) =>
+      entry.clientCompletionId === completionId ? { ...entry, status: 'failed' as const } : entry
+    );
+    await writeQueue(userId, queue);
+  });
+}
+
+/** Explicit user Retry on a failed item -- re-arms it for the next recovery pass. */
+export async function retryFailedJapaCompletion(userId: string, completionId: string): Promise<void> {
+  return serialize(userId, async () => {
+    const queue = (await readQueueStrict(userId)).map((entry) =>
+      entry.clientCompletionId === completionId ? { ...entry, status: 'pending' as const } : entry
+    );
+    await writeQueue(userId, queue);
+  });
+}
+
+/** Gives up on a failed item permanently -- the user has seen it and chosen to discard it. */
+export async function discardFailedJapaCompletion(userId: string, completionId: string): Promise<void> {
+  return clearPendingJapaCompletion(userId, completionId);
+}
+
+/** One-shot read of every currently-failed completion, for populating a failed-item UI. */
+export async function listFailedJapaCompletions(userId: string): Promise<PendingJapaCompletion[]> {
+  const result = await readPendingJapaCompletions(userId);
+  return result.status === 'ok' ? result.items.filter((entry) => entry.status === 'failed') : [];
+}
+
+export async function hasFailedJapaCompletion(userId: string): Promise<boolean> {
+  return (await listFailedJapaCompletions(userId)).length > 0;
 }

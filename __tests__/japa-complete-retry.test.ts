@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { attemptJapaCompleteWithRetry, type JapaCompleteFetch } from '../lib/japaCompleteRetry';
+import { attemptJapaCompleteWithRetry, type JapaCompleteFetch, type RetryOutcomeLabel } from '../lib/japaCompleteRetry';
 
 function jsonResponse(status: number, body: Record<string, unknown> = {}, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), { status, headers });
@@ -17,11 +17,11 @@ describe('Japa completion retry', () => {
       return jsonResponse(200, { success: true, sessionId: 'abc' });
     };
 
-    const res = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
+    const outcome = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
 
     assert.equal(calls, 1);
-    assert.ok(res);
-    assert.equal(res!.status, 200);
+    assert.equal(outcome.kind, 'success');
+    assert.equal(outcome.response.status, 200);
   });
 
   it('retries a transient 5xx and succeeds', async () => {
@@ -31,52 +31,64 @@ describe('Japa completion retry', () => {
       return calls === 1 ? jsonResponse(503) : jsonResponse(200, { success: true });
     };
 
-    const res = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
+    const outcome = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
 
     assert.equal(calls, 2);
-    assert.ok(res);
-    assert.equal(res!.ok, true);
+    assert.equal(outcome.kind, 'success');
+    assert.equal(outcome.response.ok, true);
   });
 
-  it('returns the failing response immediately on a permanent 4xx (caller reads the error message)', async () => {
+  it('classifies a permanent 4xx as a definitive rejection, not a retryable failure', async () => {
     let calls = 0;
     const fetchImpl: JapaCompleteFetch = async () => {
       calls++;
       return jsonResponse(400, { error: 'mantra is required' });
     };
+    const labels: RetryOutcomeLabel[] = [];
 
-    const res = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
+    const outcome = await attemptJapaCompleteWithRetry(fetchImpl, '{}', (label) => labels.push(label), noDelay);
 
-    assert.equal(calls, 1);
-    assert.ok(res);
-    assert.equal(res!.status, 400);
+    assert.equal(calls, 1, 'a definitive rejection must not be retried');
+    assert.equal(outcome.kind, 'definitive_rejection');
+    if (outcome.kind === 'definitive_rejection') assert.equal(outcome.response.status, 400);
+    assert.deepEqual(labels, ['permanent_failure']);
   });
 
-  it('returns the last failing response after the bounded retry window on persistent 5xx', async () => {
+  it('classifies an exhausted persistent 5xx as uncertain, not a definitive rejection', async () => {
     let calls = 0;
     const fetchImpl: JapaCompleteFetch = async () => {
       calls++;
       return jsonResponse(500);
     };
+    const labels: RetryOutcomeLabel[] = [];
 
-    const res = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
+    const outcome = await attemptJapaCompleteWithRetry(fetchImpl, '{}', (label) => labels.push(label), noDelay);
 
     assert.equal(calls, 3, 'Initial attempt + 2 retries, then stop');
-    assert.ok(res);
-    assert.equal(res!.status, 500);
+    assert.equal(outcome.kind, 'uncertain', 'a 5xx that was still retryable when attempts ran out is not a rejection');
+    if (outcome.kind === 'uncertain') assert.equal(outcome.response?.status, 500);
+    assert.deepEqual(labels, ['retry'], 'must not be reported as permanent_failure -- it may still succeed later');
   });
 
-  it('returns null after the bounded retry window on persistent network exceptions', async () => {
+  it('classifies exhausted network exceptions as uncertain, never as a definitive rejection', async () => {
+    // This is the exact bug being corrected: a network exception proves
+    // nothing about whether the underlying request is invalid, so it must
+    // never be labeled the same as a genuine, non-retryable HTTP rejection
+    // -- doing so would make a caller permanently quarantine a completion
+    // that may well succeed once the network recovers.
     let calls = 0;
     const fetchImpl: JapaCompleteFetch = async () => {
       calls++;
       throw new Error('network request failed');
     };
+    const labels: RetryOutcomeLabel[] = [];
 
-    const res = await attemptJapaCompleteWithRetry(fetchImpl, '{}', () => {}, noDelay);
+    const outcome = await attemptJapaCompleteWithRetry(fetchImpl, '{}', (label) => labels.push(label), noDelay);
 
     assert.equal(calls, 3);
-    assert.equal(res, null);
+    assert.equal(outcome.kind, 'uncertain');
+    if (outcome.kind === 'uncertain') assert.equal(outcome.response, null);
+    assert.deepEqual(labels, ['retry']);
   });
 
   it('sends the exact same body on every attempt (safe to resend -- backend is idempotent on clientCompletionId)', async () => {

@@ -34,7 +34,7 @@ import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
 import { getAppIdentity } from '@/lib/appIdentity';
 import { attemptJapaCompleteWithRetry } from '@/lib/japaCompleteRetry';
-import { readPendingJapaCompletions, writePendingJapaCompletion, clearPendingJapaCompletion, isJapaCompletionAcknowledged } from '@/lib/japaPendingCompletion';
+import { readPendingJapaCompletions, writePendingJapaCompletion, clearPendingJapaCompletion, markPendingJapaCompletionFailed } from '@/lib/japaPendingCompletion';
 import { recordMutationRetryOutcome } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
@@ -999,12 +999,14 @@ export default function JapaScreen() {
       // nothing to recover -- skip recovery this launch rather than
       // pretending it's confirmed empty; the next launch gets another try.
       if (pendingQueue.status === 'ok') {
-        for (const pendingCompletion of pendingQueue.items) {
-          const resumeResponse = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: user.id }), pendingCompletion.requestBody, (outcome, attempts) => {
-            recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', outcome, attempts);
+        // 'failed' entries wait for an explicit user Retry (Settings/Japa's
+        // failed-item UI), same convention as reactionOutbox's
+        // resumePendingReactionChanges -- they are not auto-retried here.
+        for (const pendingCompletion of pendingQueue.items.filter((entry) => entry.status === 'pending')) {
+          const outcome = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: user.id }), pendingCompletion.requestBody, (label, attempts) => {
+            recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', label, attempts);
           });
-          // A response is not an acknowledgement unless the save succeeded.
-          if (isJapaCompletionAcknowledged(resumeResponse)) {
+          if (outcome.kind === 'success') {
             recovered = true;
             try {
               await clearPendingJapaCompletion(user.id, pendingCompletion.clientCompletionId);
@@ -1013,7 +1015,23 @@ export default function JapaScreen() {
               // clear the local marker just means a harmless idempotent
               // replay next launch, not a lost or duplicated completion.
             }
+          } else if (outcome.kind === 'definitive_rejection') {
+            // This exact request will never succeed no matter how many
+            // more times it's retried -- quarantine it and keep going so
+            // it can no longer block recovery of independent, still-viable
+            // entries queued after it.
+            try {
+              await markPendingJapaCompletionFailed(user.id, pendingCompletion.clientCompletionId);
+            } catch {
+              // Best-effort: worst case it's retried again (harmlessly,
+              // idempotently) next launch instead of staying quarantined.
+            }
           } else {
+            // Ambiguous/potentially-recoverable (network exception, or a
+            // still-retryable HTTP failure that exhausted this bounded
+            // attempt) -- stop for this launch rather than risk reordering
+            // completions past a request that may yet succeed, and retry
+            // the remaining queue, in order, next launch.
             break;
           }
         }
@@ -1098,12 +1116,11 @@ export default function JapaScreen() {
     }
 
     if (!userId) throw new Error('Sign in to save this session');
-    const response = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: userId }), requestBody, (outcome, attempts) => {
-      recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', outcome, attempts);
+    const outcome = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: userId }), requestBody, (label, attempts) => {
+      recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', label, attempts);
     });
 
-    // Never discard unsaved work because retries ended with an HTTP error.
-    if (isJapaCompletionAcknowledged(response)) {
+    if (outcome.kind === 'success') {
       try {
         await clearPendingJapaCompletion(userId, clientCompletionId);
       } catch {
@@ -1112,9 +1129,21 @@ export default function JapaScreen() {
         // just means a harmless idempotent replay next time this queue
         // is read.
       }
+    } else if (outcome.kind === 'definitive_rejection') {
+      // This exact request will never succeed no matter how many more
+      // times it's retried -- quarantine it (visible, independently
+      // retryable) instead of leaving it to be retried forever.
+      try {
+        await markPendingJapaCompletionFailed(userId, clientCompletionId);
+      } catch {
+        // Best-effort: worst case it's retried again next launch instead
+        // of staying quarantined.
+      }
     }
+    // 'uncertain' is left exactly as queued -- genuinely unsaved work,
+    // recovered by the next launch's scan or an in-session retry.
 
-    return response;
+    return outcome;
   }, []);
 
   const completeRound = useCallback(async () => {
@@ -1161,7 +1190,7 @@ export default function JapaScreen() {
 
     try {
       const durationDelta = Math.max(0, elapsed - lastPersistedDurationRef.current);
-      const response = await persistJapaCompletion({
+      const outcome = await persistJapaCompletion({
         mantra: mantra.label,
         count: 108,
         rounds: 1,
@@ -1171,12 +1200,12 @@ export default function JapaScreen() {
         activeSymbolId,
       });
 
-      if (!response || !response.ok) {
-        const data = response ? (await response.json().catch(() => null)) as { error?: string } | null : null;
+      if (outcome.kind !== 'success') {
+        const data = outcome.response ? (await outcome.response.json().catch(() => null)) as { error?: string } | null : null;
         throw new Error(data?.error ?? 'japa-complete-failed');
       }
 
-      const context = normalizeJapaContext(await response.json());
+      const context = normalizeJapaContext(await outcome.response.json());
       if (context) {
         applyJapaContext(context);
         if (userIdRef.current) void writeJapaContextCache(userIdRef.current, context);
@@ -1290,7 +1319,7 @@ export default function JapaScreen() {
       if (count > 0) {
         const elapsed = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
         const durationDelta = Math.max(0, elapsed - lastPersistedDurationRef.current);
-        const response = await persistJapaCompletion({
+        const outcome = await persistJapaCompletion({
           mantra: mantra.label,
           count,
           rounds: 0,
@@ -1299,11 +1328,11 @@ export default function JapaScreen() {
           practiceType,
           activeSymbolId,
         });
-        if (!response || !response.ok) {
-          const data = response ? (await response.json().catch(() => null)) as { error?: string } | null : null;
+        if (outcome.kind !== 'success') {
+          const data = outcome.response ? (await outcome.response.json().catch(() => null)) as { error?: string } | null : null;
           throw new Error(data?.error ?? 'japa-partial-save-failed');
         }
-        const context = normalizeJapaContext(await response.json());
+        const context = normalizeJapaContext(await outcome.response.json());
         if (context) {
           applyJapaContext(context);
           if (userIdRef.current) void writeJapaContextCache(userIdRef.current, context);
