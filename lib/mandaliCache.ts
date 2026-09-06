@@ -19,6 +19,7 @@ export type MandaliCacheIdentity =
   | { kind: 'guest' };
 
 export type CachedMandaliRenderModel = {
+  displayName: string;
   mandaliId: string | null;
   mandaliName: string | null;
   city: string | null;

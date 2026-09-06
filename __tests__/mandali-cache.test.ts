@@ -27,6 +27,7 @@ import {
 
 describe('Mandali disk cache — identity isolation', () => {
   const samplePayload: CachedMandaliRenderModel = {
+    displayName: 'Test Seeker',
     mandaliId: 'mandali-1',
     mandaliName: 'Test Mandali',
     city: 'London',
@@ -87,6 +88,28 @@ describe('Mandali disk cache — identity isolation', () => {
 
     assert.equal(await readMandaliCache({ kind: 'guest' }), null);
     assert.equal(await readMandaliCache({ kind: 'authenticated', userId: 'user-F' }), null);
+  });
+
+  it('accepts an old cached payload that predates displayName, instead of discarding it', async () => {
+    // Simulate a cache entry written before displayName existed on
+    // CachedMandaliRenderModel -- isValidPayload must not start rejecting
+    // these, or every existing user's Mandali cache goes cold on the day
+    // this field ships.
+    const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+    const { displayName: _displayName, ...payloadWithoutDisplayName } = samplePayload;
+    await AsyncStorage.setItem(
+      'shoonaya_mandali_cache_v1_user_user-H',
+      JSON.stringify({
+        schemaVersion: 1,
+        identity: { kind: 'authenticated', userId: 'user-H' },
+        savedAt: Date.now(),
+        payload: payloadWithoutDisplayName,
+      })
+    );
+
+    const read = await readMandaliCache({ kind: 'authenticated', userId: 'user-H' });
+    assert.notEqual(read, null, 'a pre-displayName cache entry must still be accepted');
+    assert.equal(read?.payload.displayName, undefined, 'the field is simply absent, not fabricated');
   });
 
   it('rejects a payload with the wrong schema version instead of returning stale-shaped data', async () => {

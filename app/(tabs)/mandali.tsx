@@ -43,6 +43,7 @@ import { apiFetch } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
+import { resolveDisplayName } from '@/lib/displayName';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
 import { recordRouteOpen, recordRefreshFailure } from '@/lib/telemetry';
@@ -114,6 +115,7 @@ type RealtimeRsvpPayload = {
 
 type ProfileContext = {
   userId: string;
+  displayName: string;
   mandaliId: string | null;
   mandaliName: string | null;
   city: string | null;
@@ -577,6 +579,11 @@ export default function MandaliScreen() {
     if (cached) {
       setProfile({
         userId: user.id,
+        // Old cached payloads predate displayName -- resolveDisplayName's
+        // own fallback only fires on blank input, so an old payload
+        // (undefined) needs this explicit default to avoid literally
+        // rendering "undefined" until the network refetch below lands.
+        displayName: cached.payload.displayName || 'Seeker',
         mandaliId: cached.payload.mandaliId,
         mandaliName: cached.payload.mandaliName,
         city: cached.payload.city,
@@ -606,6 +613,8 @@ export default function MandaliScreen() {
       schemaVersion: 1;
       profile: {
         id: string;
+        full_name: string | null;
+        username: string | null;
         mandali_id: string | null;
         city: string | null;
         country: string | null;
@@ -630,6 +639,7 @@ export default function MandaliScreen() {
     const mandaliRelation = Array.isArray(profileRow?.mandalis) ? profileRow.mandalis[0] : profileRow?.mandalis;
     const context: ProfileContext = {
       userId: user.id,
+      displayName: resolveDisplayName(profileRow?.full_name, profileRow?.username),
       mandaliId: profileRow?.mandali_id ?? null,
       mandaliName: (mandaliRelation as { name?: string } | null)?.name ?? null,
       city: profileRow?.city ?? null,
@@ -662,7 +672,14 @@ export default function MandaliScreen() {
     const visiblePosts = feed.posts;
     const visibleMembers: MemberRow[] = feed.members.map((member) => ({
       ...member,
-      full_name: member.username,
+      // Everyone else's row shows their username -- public_profiles (the
+      // safe cross-user projection this members list is drawn from) never
+      // carries full_name, deliberately, per the profiles RLS lockdown
+      // (supabase/migrations/20260824162430_lock_down_profiles_reads.sql).
+      // The viewer's own row is the one exception: it's their own data,
+      // sourced from the feed response's `profile.full_name` (see
+      // ProfileContext.displayName above), not a cross-user read.
+      full_name: member.id === context.userId ? context.displayName : member.username,
       sampradaya: null,
       ishta_devata: null,
       spiritual_level: null,
@@ -718,6 +735,7 @@ export default function MandaliScreen() {
     visiblePostIdsRef.current = visiblePostIds;
 
     void writeMandaliCache(cacheIdentity, {
+      displayName: context.displayName,
       mandaliId: context.mandaliId,
       mandaliName: context.mandaliName,
       city: context.city,
@@ -799,21 +817,22 @@ export default function MandaliScreen() {
   }, []);
 
   // A new comment's realtime row has no joined profile data (Postgres
-  // changes only carry the raw row), so a single targeted re-fetch with
-  // the same join loadMandali uses is the cheapest way to get a
-  // display-ready CommentRow -- still far cheaper than reloading the
-  // whole screen for one comment.
-  const patchNewComment = useCallback(async (commentId: string) => {
-    const { data } = await supabase
-      .from('post_comments')
-      .select('id, post_id, author_id, body, parent_id, created_at, updated_at, deleted_at, upvotes, profiles!post_comments_author_id_fkey(full_name, username, avatar_url)')
-      .eq('id', commentId)
-      .maybeSingle();
-    if (!data) return;
-    const normalized = {
-      ...data,
-      profiles: Array.isArray(data.profiles) ? data.profiles[0] ?? null : data.profiles ?? null,
-    } as CommentRow;
+  // changes only carry the raw row), so it needs a display-ready author
+  // name/avatar before it can render. This used to join
+  // profiles!post_comments_author_id_fkey directly, which silently
+  // returned a null profile for every comment authored by someone other
+  // than the viewer once profiles reads were locked down to own-row-only
+  // (supabase/migrations/20260824162430_lock_down_profiles_reads.sql) --
+  // exactly the case this handler exists for (its one caller already
+  // skips INSERTs authored by the viewer). fetchPostComments goes through
+  // the server-owned safe DTO (loadPostComments -> loadSafeAuthors, admin
+  // client) the same way the "expand thread" path above already does, so
+  // this reuses that instead of adding a second cross-user profile fetch
+  // path.
+  const patchNewComment = useCallback(async (postId: string, commentId: string) => {
+    const fullComments = await fetchPostComments(postId);
+    const normalized = fullComments.find((c) => c.id === commentId);
+    if (!normalized) return;
     setComments((current) => (current.some((c) => c.id === normalized.id) ? current : [...current, normalized]));
   }, []);
 
@@ -846,7 +865,7 @@ export default function MandaliScreen() {
       return;
     }
     if (payload.eventType === 'INSERT' && authorId !== profile?.userId) {
-      void patchNewComment(commentId);
+      void patchNewComment(postId, commentId);
       return;
     }
     if (payload.eventType === 'UPDATE') {
@@ -1123,7 +1142,7 @@ export default function MandaliScreen() {
     setCommenting(postId);
     try {
       const newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
-      await patchNewComment(newId);
+      await patchNewComment(postId, newId);
     } catch {
       Alert.alert('Could not post comment', 'Check your connection and try again.');
     } finally {

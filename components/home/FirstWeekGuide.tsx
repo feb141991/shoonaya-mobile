@@ -7,6 +7,7 @@ import { useRouter, type Href } from 'expo-router';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
+import { FIRST_WEEK_STORAGE_KEY, FIRST_WEEK_DISMISS_KEY } from '@/lib/firstWeekGuideStorage';
 
 /**
  * FirstWeekGuide — warm cold-start onboarding for brand-new users.
@@ -31,8 +32,8 @@ import { resolveNativeRoute } from '@/lib/routes';
  * disappears once all 5 acts are done or the user dismisses it.
  */
 
-const STORAGE_KEY = 'shoonaya-first-week-guide';
-const DISMISS_KEY = 'shoonaya-first-week-dismissed';
+const STORAGE_KEY = FIRST_WEEK_STORAGE_KEY;
+const DISMISS_KEY = FIRST_WEEK_DISMISS_KEY;
 
 interface GuideAct {
   id: string;

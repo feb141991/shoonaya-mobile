@@ -25,6 +25,7 @@ import {
   isHeroArtworkCueEligible,
   dismissHeroArtworkCue,
   markHeroArtworkPickerOpened,
+  clearHomeDiscoveryState,
   clearAllHomeDiscoveryStates,
   resolveIdentityKey,
   type CueEvaluationContext,
@@ -225,6 +226,34 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
     assert.equal(state.version, 1);
     assert.equal(state.sessionCount, 0);
     assert.equal(state.heroArtworkCueDismissed, false);
+  });
+
+  it('11. clearHomeDiscoveryState ("replay first-use tips") re-arms cue eligibility for one identity without touching another', async () => {
+    // Settings' "Replay first-use tips" action clears one identity's own
+    // discovery state (unlike clearAllHomeDiscoveryStates, which is a
+    // logout-wide wipe) -- a signed-in user replaying tips must not reset
+    // some other identity's progress sharing the same device.
+    const userA: AppIdentity = { kind: 'authenticated', userId: 'user_replay_a' };
+    const userB: AppIdentity = { kind: 'authenticated', userId: 'user_replay_b' };
+    await recordHomeFocusSession(userA, true, 'sess_1');
+    await recordHomeFocusSession(userA, true, 'sess_2');
+    await recordHomeFocusSession(userA, true, 'sess_3');
+    await dismissHeroArtworkCue(userA);
+    await recordHomeFocusSession(userB, true, 'sess_1');
+    await recordHomeFocusSession(userB, true, 'sess_2');
+    await recordHomeFocusSession(userB, true, 'sess_3');
+    await dismissHeroArtworkCue(userB);
+
+    await clearHomeDiscoveryState(userA);
+
+    const stateA = await getHomeDiscoveryState(userA);
+    assert.equal(stateA.sessionCount, 0);
+    assert.equal(stateA.heroArtworkCueDismissed, false);
+    assert.equal(isHeroArtworkCueEligible(stateA, baseContext), false, 'still needs 3 fresh sessions, not instantly eligible');
+
+    const stateB = await getHomeDiscoveryState(userB);
+    assert.equal(stateB.sessionCount, 3, 'user B is untouched by user A replaying their tips');
+    assert.equal(stateB.heroArtworkCueDismissed, true);
   });
 
   it('10. handles unauthenticated identity gracefully without throwing or mutating storage', async () => {
