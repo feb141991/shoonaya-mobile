@@ -9,6 +9,8 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, RADII, TYPE, themeColor } from '@/lib/constants';
+import { getAppIdentity } from '@/lib/appIdentity';
+import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader, type TelemetryIdentity } from '@/lib/telemetry';
 
 // ── Bhakti Phase 5 — native equivalent of the PWA's
 // src/app/(main)/bhakti/browse/page.tsx "Sacred Library". Backs the hub's
@@ -110,15 +112,33 @@ export default function BrowseScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
+    // This is a public, unauthenticated endpoint (browsable by guests), so
+    // identity here is only for scoping telemetry storage, never for the
+    // request itself -- 'loading'/'unauthenticated' record nothing rather
+    // than guessing.
+    const appIdentity = getAppIdentity();
+    const identity: TelemetryIdentity | null =
+      appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId }
+      : appIdentity.kind === 'guest' ? { kind: 'guest' }
+      : null;
+    const startedAt = Date.now();
     try {
       const response = await apiFetch('/api/bhakti/stotram?limit=200');
-      if (!response.ok) { setLoadError(true); return; }
+      const serverTiming = parseServerTimingHeader(response.headers.get('Server-Timing'));
+      if (identity && serverTiming) recordServerTiming(identity, 'bhakti', serverTiming);
+      if (!response.ok) {
+        setLoadError(true);
+        if (identity) recordRefreshFailure(identity, 'bhakti');
+        return;
+      }
       const json = await response.json();
       setAll(Array.isArray(json?.stotrams) ? json.stotrams : []);
       setDeityMeta(json?.deityMeta ?? {});
       setMoodMeta(json?.moodMeta ?? {});
+      if (identity) recordRouteOpen(identity, 'bhakti', { cacheHit: false, durationMs: Date.now() - startedAt });
     } catch {
       setLoadError(true);
+      if (identity) recordRefreshFailure(identity, 'bhakti');
     } finally {
       setLoading(false);
     }

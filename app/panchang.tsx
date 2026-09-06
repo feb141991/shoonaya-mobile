@@ -20,6 +20,13 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
 import { apiFetch } from '@/lib/api';
+import {
+  recordRouteOpen,
+  recordRefreshFailure,
+  recordServerTiming,
+  parseServerTimingHeader,
+  type TelemetryIdentity,
+} from '@/lib/telemetry';
 import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
@@ -403,72 +410,108 @@ export default function PanchangScreen() {
     };
   }, [profileState.rashi, profileState.tradition, userId]);
 
-  const loadPanchangContext = useCallback(async () => {
-    if (await isGuestMode()) {
-      // Guests browse Panchang with INITIAL_STATE's fallback location —
-      // same defaults a signed-in user with no saved location gets. Only
-      // the personal Rashi-save (guarded by `!userId` in saveRashi) and
-      // "mark viewed" actions need an account; isGuest below gates the
-      // latter with a real explanation instead of a misleading "check your
-      // connection" error.
-      setIsGuest(true);
-      const festivalsResponse = await apiFetch(
-        `/api/calendar/upcoming?days=14&tradition=${INITIAL_STATE.tradition}&tz=${encodeURIComponent(INITIAL_STATE.timezone)}`
-      );
-      if (festivalsResponse.ok) {
+  // Returns an explicit outcome plus the identity the load resolved to
+  // (rather than swallowing errors and re-deriving identity a second time
+  // in the caller), so the caller can tell a real failure from a
+  // successful load, and from the "redirected to login, nothing to
+  // measure" case -- matches the same fix already applied to Pathshala's
+  // loadData (a load that throws must not be recorded as a successful
+  // route-open).
+  const loadPanchangContext = useCallback(async (): Promise<
+    { outcome: 'ready' | 'failed'; identity: TelemetryIdentity } | { outcome: 'redirected'; identity: null }
+  > => {
+    const guest = await isGuestMode();
+    // Reassigned to the real authenticated identity as soon as it's known,
+    // so a thrown error further down attributes the failure correctly
+    // instead of always falling back to guest.
+    let identity: TelemetryIdentity = { kind: 'guest' };
+
+    try {
+      if (guest) {
+        // Guests browse Panchang with INITIAL_STATE's fallback location —
+        // same defaults a signed-in user with no saved location gets. Only
+        // the personal Rashi-save (guarded by `!userId` in saveRashi) and
+        // "mark viewed" actions need an account; isGuest below gates the
+        // latter with a real explanation instead of a misleading "check
+        // your connection" error.
+        setIsGuest(true);
+        const festivalsResponse = await apiFetch(
+          `/api/calendar/upcoming?days=14&tradition=${INITIAL_STATE.tradition}&tz=${encodeURIComponent(INITIAL_STATE.timezone)}`
+        );
+        const serverTiming = parseServerTimingHeader(festivalsResponse.headers.get('Server-Timing'));
+        if (serverTiming) recordServerTiming(identity, 'panchang', serverTiming);
+        if (!festivalsResponse.ok) return { outcome: 'failed', identity };
         const payload = (await festivalsResponse.json()) as { observances?: UpcomingFestival[] };
         setFestivals(payload.observances ?? []);
+        return { outcome: 'ready', identity };
       }
-      return;
-    }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
-    }
+      if (!user) {
+        router.replace('/(auth)/login');
+        return { outcome: 'redirected', identity: null };
+      }
+      identity = { kind: 'authenticated', userId: user.id };
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('latitude, longitude, timezone, tradition, rashi, city, neighbourhood')
-      .eq('id', user.id)
-      .single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('latitude, longitude, timezone, tradition, rashi, city, neighbourhood')
+        .eq('id', user.id)
+        .single();
 
-    const nextState: PanchangState = {
-      lat: profile?.latitude ?? INITIAL_STATE.lat,
-      lon: profile?.longitude ?? INITIAL_STATE.lon,
-      timezone: profile?.timezone ?? INITIAL_STATE.timezone,
-      tradition: (profile?.tradition ?? 'hindu') as Tradition,
-      rashi: profile?.rashi ?? null,
-      city: profile?.neighbourhood ?? profile?.city ?? '',
-    };
-    setProfileState(nextState);
-    setUserId(user.id);
+      const nextState: PanchangState = {
+        lat: profile?.latitude ?? INITIAL_STATE.lat,
+        lon: profile?.longitude ?? INITIAL_STATE.lon,
+        timezone: profile?.timezone ?? INITIAL_STATE.timezone,
+        tradition: (profile?.tradition ?? 'hindu') as Tradition,
+        rashi: profile?.rashi ?? null,
+        city: profile?.neighbourhood ?? profile?.city ?? '',
+      };
+      setProfileState(nextState);
+      setUserId(user.id);
 
-    const [festivalsResponse, viewedResponse] = await Promise.all([
-      apiFetch(
-        `/api/calendar/upcoming?days=14&tradition=${nextState.tradition}&tz=${encodeURIComponent(nextState.timezone)}`
-      ),
-      apiFetch('/api/native/panchang-viewed').catch(() => null),
-    ]);
+      const [festivalsResponse, viewedResponse] = await Promise.all([
+        apiFetch(
+          `/api/calendar/upcoming?days=14&tradition=${nextState.tradition}&tz=${encodeURIComponent(nextState.timezone)}`
+        ),
+        apiFetch('/api/native/panchang-viewed').catch(() => null),
+      ]);
 
-    if (festivalsResponse.ok) {
+      const serverTiming = parseServerTimingHeader(festivalsResponse.headers.get('Server-Timing'));
+      if (serverTiming) recordServerTiming(identity, 'panchang', serverTiming);
+
+      if (!festivalsResponse.ok) return { outcome: 'failed', identity };
       const payload = (await festivalsResponse.json()) as { observances?: UpcomingFestival[] };
       setFestivals(payload.observances ?? []);
-    }
 
-    if (viewedResponse?.ok) {
-      const payload = (await viewedResponse.json()) as { viewedToday?: boolean };
-      setViewedToday(Boolean(payload.viewedToday));
+      if (viewedResponse?.ok) {
+        const viewedPayload = (await viewedResponse.json()) as { viewedToday?: boolean };
+        setViewedToday(Boolean(viewedPayload.viewedToday));
+      }
+      return { outcome: 'ready', identity };
+    } catch {
+      // A thrown exception (network error, malformed JSON, etc.) is still a
+      // failed load, not a silently-skipped one. `identity` reflects
+      // whatever was resolved before the throw -- guest by default, or the
+      // real authenticated user if the throw happened after auth.getUser().
+      return { outcome: 'failed', identity };
     }
   }, [router]);
 
   useEffect(() => {
-    loadPanchangContext()
-      .catch(() => {})
+    const startedAt = Date.now();
+    void loadPanchangContext()
+      .then(({ outcome, identity }) => {
+        if (outcome === 'redirected') return;
+        if (outcome === 'ready') {
+          recordRouteOpen(identity, 'panchang', { cacheHit: false, durationMs: Date.now() - startedAt });
+        } else {
+          recordRefreshFailure(identity, 'panchang');
+        }
+      })
       .finally(() => setLoading(false));
   }, [loadPanchangContext]);
 
