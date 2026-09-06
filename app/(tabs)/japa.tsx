@@ -994,17 +994,28 @@ export default function JapaScreen() {
 
       // Recover after rendering usable context, not on the first-paint path.
       let recovered = false;
-      const pendingCompletions = await readPendingJapaCompletions(user.id);
-      for (const pendingCompletion of pendingCompletions) {
-        const resumeResponse = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: user.id }), pendingCompletion.requestBody, (outcome, attempts) => {
-          recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', outcome, attempts);
-        });
-        // A response is not an acknowledgement unless the save succeeded.
-        if (isJapaCompletionAcknowledged(resumeResponse)) {
-          await clearPendingJapaCompletion(user.id, pendingCompletion.clientCompletionId);
-          recovered = true;
-        } else {
-          break;
+      const pendingQueue = await readPendingJapaCompletions(user.id);
+      // 'unavailable' (a corrupt/unreadable queue) is not evidence there's
+      // nothing to recover -- skip recovery this launch rather than
+      // pretending it's confirmed empty; the next launch gets another try.
+      if (pendingQueue.status === 'ok') {
+        for (const pendingCompletion of pendingQueue.items) {
+          const resumeResponse = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: user.id }), pendingCompletion.requestBody, (outcome, attempts) => {
+            recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', outcome, attempts);
+          });
+          // A response is not an acknowledgement unless the save succeeded.
+          if (isJapaCompletionAcknowledged(resumeResponse)) {
+            recovered = true;
+            try {
+              await clearPendingJapaCompletion(user.id, pendingCompletion.clientCompletionId);
+            } catch {
+              // The completion already succeeded server-side; failing to
+              // clear the local marker just means a harmless idempotent
+              // replay next launch, not a lost or duplicated completion.
+            }
+          } else {
+            break;
+          }
         }
       }
 
@@ -1093,7 +1104,14 @@ export default function JapaScreen() {
 
     // Never discard unsaved work because retries ended with an HTTP error.
     if (isJapaCompletionAcknowledged(response)) {
-      await clearPendingJapaCompletion(userId, clientCompletionId);
+      try {
+        await clearPendingJapaCompletion(userId, clientCompletionId);
+      } catch {
+        // The server already accepted this completion -- a failure to
+        // clear the local marker must not surface as a failed save; it
+        // just means a harmless idempotent replay next time this queue
+        // is read.
+      }
     }
 
     return response;

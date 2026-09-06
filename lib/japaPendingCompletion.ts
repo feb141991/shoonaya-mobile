@@ -17,6 +17,23 @@
  *
  * A failed round can be followed by another round. Keep every operation,
  * and acknowledge by ID so an older response cannot clear newer work.
+ *
+ * Two read contracts, deliberately not one:
+ * - readQueueStrict (private): used by writes/clears. Any storage read
+ *   failure, invalid JSON, or entry that doesn't match the expected shape
+ *   throws instead of being treated as "queue is empty" -- a write or
+ *   clear that can't fully trust what it read must abort rather than
+ *   construct a "cleaned" queue and overwrite whatever is actually
+ *   stored. This is what makes the "persist before sending; a storage
+ *   failure must not start an untracked write" comment in japa.tsx's
+ *   persistJapaCompletion actually true: previously the read silently
+ *   returned [] on failure, so a write proceeded anyway and could
+ *   overwrite other still-pending entries with a truncated queue.
+ * - readPendingJapaCompletions (public): for the recovery scan, which
+ *   must never throw but also must not pretend an unreadable queue is an
+ *   empty one -- those are different facts ("nothing to recover" vs
+ *   "couldn't check"), and collapsing them would make a corrupt/
+ *   unreadable queue look identical to a healthy empty one.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -28,26 +45,51 @@ export type PendingJapaCompletion = {
   createdAt: string;
 };
 
+export type PendingQueueReadResult =
+  | { status: 'ok'; items: PendingJapaCompletion[] }
+  | { status: 'unavailable' };
+
 function keyFor(userId: string): string {
   return `${KEY_PREFIX}${userId}`;
 }
 
-export async function readPendingJapaCompletion(userId: string): Promise<PendingJapaCompletion | null> {
-  return (await readPendingJapaCompletions(userId))[0] ?? null;
+function isPendingJapaCompletion(item: unknown): item is PendingJapaCompletion {
+  return !!item && typeof item === 'object'
+    && typeof (item as { clientCompletionId?: unknown }).clientCompletionId === 'string'
+    && typeof (item as { requestBody?: unknown }).requestBody === 'string';
 }
 
-export async function readPendingJapaCompletions(userId: string): Promise<PendingJapaCompletion[]> {
+async function readQueueStrict(userId: string): Promise<PendingJapaCompletion[]> {
+  const raw = await AsyncStorage.getItem(keyFor(userId));
+  if (!raw) return [];
+  const parsed: unknown = JSON.parse(raw);
+  // Accept the previous single-slot format without losing an in-flight save.
+  const list = Array.isArray(parsed) ? parsed : [parsed];
+  return list.map((item) => {
+    if (!isPendingJapaCompletion(item)) {
+      throw new Error('Corrupt pending Japa completion queue entry');
+    }
+    return item;
+  });
+}
+
+export async function readPendingJapaCompletions(userId: string): Promise<PendingQueueReadResult> {
   try {
-    const raw = await AsyncStorage.getItem(keyFor(userId));
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    // Accept the previous single-slot format without losing an in-flight save.
-    return (Array.isArray(parsed) ? parsed : [parsed]).filter((item): item is PendingJapaCompletion =>
-      !!item && typeof item === 'object' && typeof item.clientCompletionId === 'string'
-      && typeof item.requestBody === 'string');
+    return { status: 'ok', items: await readQueueStrict(userId) };
   } catch {
-    return [];
+    return { status: 'unavailable' };
   }
+}
+
+/**
+ * Simplified getter for callers that only need "is there something
+ * pending" and can safely treat "unavailable" the same as "nothing found"
+ * -- e.g. a future display badge. Never use this to decide what to write
+ * back to storage; use readQueueStrict (via write/clear) for that.
+ */
+export async function readPendingJapaCompletion(userId: string): Promise<PendingJapaCompletion | null> {
+  const result = await readPendingJapaCompletions(userId);
+  return result.status === 'ok' ? (result.items[0] ?? null) : null;
 }
 
 const writes = new Map<string, Promise<void>>();
@@ -59,16 +101,17 @@ function serialize(userId: string, action: () => Promise<void>): Promise<void> {
 
 export async function writePendingJapaCompletion(userId: string, pending: PendingJapaCompletion): Promise<void> {
   return serialize(userId, async () => {
-    const queue = await readPendingJapaCompletions(userId);
+    // Throws (aborting the write) rather than risk overwriting an
+    // unreadable-but-real queue with one built from an assumed-empty read.
+    const queue = await readQueueStrict(userId);
     if (!queue.some((entry) => entry.clientCompletionId === pending.clientCompletionId)) queue.push(pending);
-    // Fail before sending when durable persistence is unavailable.
     await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
   });
 }
 
 export async function clearPendingJapaCompletion(userId: string, completionId: string): Promise<void> {
   return serialize(userId, async () => {
-    const queue = (await readPendingJapaCompletions(userId)).filter((entry) => entry.clientCompletionId !== completionId);
+    const queue = (await readQueueStrict(userId)).filter((entry) => entry.clientCompletionId !== completionId);
     if (queue.length) await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
     else await AsyncStorage.removeItem(keyFor(userId));
   });

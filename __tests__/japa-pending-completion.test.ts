@@ -93,7 +93,9 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
     await Promise.all(['first', 'second'].map((clientCompletionId) => writePendingJapaCompletion('user-A', { clientCompletionId, requestBody: '{}', createdAt: '' })));
     await clearPendingJapaCompletion('user-A', 'first');
     await clearPendingJapaCompletion('user-A', 'first');
-    assert.deepEqual((await readPendingJapaCompletions('user-A')).map((p) => p.clientCompletionId), ['second']);
+    const result = await readPendingJapaCompletions('user-A');
+    assert.equal(result.status, 'ok');
+    assert.deepEqual(result.status === 'ok' ? result.items.map((p) => p.clientCompletionId) : null, ['second']);
   });
 
   it('does not acknowledge exhausted server failures, auth failures or rate limits', () => {
@@ -112,5 +114,62 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
   it('fails safe (returns null) on a stored entry missing required fields', async () => {
     await AsyncStorage.setItem('shoonaya.japa.pending_completion.v1_user_user-A', JSON.stringify({ createdAt: 'x' }));
     assert.equal(await readPendingJapaCompletion('user-A'), null);
+  });
+
+  it('readPendingJapaCompletions reports "unavailable" (not an empty queue) on corrupt stored data', async () => {
+    await AsyncStorage.setItem('shoonaya.japa.pending_completion.v1_user_user-A', 'not json{{{');
+    const result = await readPendingJapaCompletions('user-A');
+    assert.deepEqual(result, { status: 'unavailable' });
+  });
+
+  it('readPendingJapaCompletions reports "unavailable" on a stored entry missing required fields', async () => {
+    await AsyncStorage.setItem('shoonaya.japa.pending_completion.v1_user_user-A', JSON.stringify([{ createdAt: 'x' }]));
+    const result = await readPendingJapaCompletions('user-A');
+    assert.deepEqual(result, { status: 'unavailable' });
+  });
+
+  it('a write ABORTS instead of overwriting the queue when the existing stored data is corrupt -- the original bytes survive', async () => {
+    const key = 'shoonaya.japa.pending_completion.v1_user_user-A';
+    // A malformed queue is stored, simulating a read failure at the moment
+    // of a second write -- this used to be silently treated as "empty" and
+    // overwritten with just the new entry, discarding whatever was there.
+    await AsyncStorage.setItem(key, 'not json{{{');
+
+    await assert.rejects(
+      writePendingJapaCompletion('user-A', { clientCompletionId: 'second', requestBody: '{}', createdAt: '' })
+    );
+
+    // The original (corrupt) bytes are untouched -- nothing was overwritten.
+    assert.equal(await AsyncStorage.getItem(key), 'not json{{{');
+  });
+
+  it('reproduces and fixes the exact reported bug: first is never lost when a read fails before the second write', async () => {
+    const key = 'shoonaya.japa.pending_completion.v1_user_user-A';
+    await writePendingJapaCompletion('user-A', { clientCompletionId: 'first', requestBody: '{}', createdAt: '' });
+
+    // Simulate a storage read failure occurring for the second write only,
+    // by corrupting the bytes between the two writes.
+    const goodBytes = await AsyncStorage.getItem(key);
+    await AsyncStorage.setItem(key, 'not json{{{');
+
+    await assert.rejects(
+      writePendingJapaCompletion('user-A', { clientCompletionId: 'second', requestBody: '{}', createdAt: '' }),
+      'a write must abort, not silently succeed, when it cannot read the existing queue'
+    );
+
+    // Restore the good bytes (as if the transient read failure passed) and
+    // confirm "first" is still there -- it must never have been at risk.
+    await AsyncStorage.setItem(key, goodBytes as string);
+    const result = await readPendingJapaCompletions('user-A');
+    assert.equal(result.status, 'ok');
+    assert.deepEqual(result.status === 'ok' ? result.items.map((p) => p.clientCompletionId) : null, ['first']);
+  });
+
+  it('a clear ABORTS instead of writing a possibly-wrong queue when the existing stored data is corrupt', async () => {
+    const key = 'shoonaya.japa.pending_completion.v1_user_user-A';
+    await AsyncStorage.setItem(key, 'not json{{{');
+
+    await assert.rejects(clearPendingJapaCompletion('user-A', 'anything'));
+    assert.equal(await AsyncStorage.getItem(key), 'not json{{{');
   });
 });
