@@ -30,6 +30,7 @@ import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch } from '@/lib/api';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { recordRouteOpen } from '@/lib/telemetry';
+import { LoadGenerationGuard, shouldRecordRouteOpen } from '@/lib/routeOpenAttribution';
 
 function parseEnrollmentsResponse(value: unknown): EnrollmentRow[] {
   if (!value || typeof value !== 'object') return [];
@@ -194,78 +195,90 @@ function PathshalaContent() {
   const appIdentity = useAppIdentity();
   const appIdentityRef = useRef(appIdentity);
   appIdentityRef.current = appIdentity;
+  // Tracks whether a focus-triggered loadData completion is still the most
+  // recent attempt (see the focus effect below for why this matters --
+  // overlapping opens and account switches).
+  const pathshalaLoadGenRef = useRef(new LoadGenerationGuard());
 
-  const loadData = useCallback(async (refresh = false) => {
+  const loadData = useCallback(async (refresh = false): Promise<'ready' | 'failed'> => {
     if (refresh || dataLoadedRef.current) {
       setRefreshing(true);
     } else {
       setLoading(true);
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setEnrollments([]);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-
+    let outcome: 'ready' | 'failed' = 'ready';
     try {
-      const [pathsRes, profileResult, summaryRes, progressRes] = await Promise.all([
-        apiFetch('/api/pathshala/paths'),
-        supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle(),
-        apiFetch('/api/native/home-summary'),
-        // Doesn't actually depend on the paths list — it's the user's own
-        // enrollment rows, not derived from `pathsRes` — so it can join the
-        // same round trip instead of waiting on `fetchedPaths.length > 0`
-        // below and firing a full extra sequential request afterward.
-        apiFetch('/api/pathshala/progress'),
-      ]);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      setTradition(profileResult.data?.tradition ?? 'hindu');
-
-      if (summaryRes.ok) {
-        const summaryJson = (await summaryRes.json()) as {
-          sacredText?: Partial<SacredText>;
-        };
-        if (summaryJson.sacredText?.original) {
-          setSacredText({
-            label: summaryJson.sacredText.label ?? "Today's Verse",
-            icon: summaryJson.sacredText.icon ?? '📖',
-            original: summaryJson.sacredText.original,
-            transliteration: summaryJson.sacredText.transliteration ?? '',
-            meaning: summaryJson.sacredText.meaning ?? '',
-            source: summaryJson.sacredText.source ?? '',
-          });
-        }
+      if (!user) {
+        setEnrollments([]);
+        return outcome;
       }
 
-      if (!pathsRes.ok) {
+      try {
+        const [pathsRes, profileResult, summaryRes, progressRes] = await Promise.all([
+          apiFetch('/api/pathshala/paths'),
+          supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle(),
+          apiFetch('/api/native/home-summary'),
+          // Doesn't actually depend on the paths list — it's the user's own
+          // enrollment rows, not derived from `pathsRes` — so it can join the
+          // same round trip instead of waiting on `fetchedPaths.length > 0`
+          // below and firing a full extra sequential request afterward.
+          apiFetch('/api/pathshala/progress'),
+        ]);
+
+        setTradition(profileResult.data?.tradition ?? 'hindu');
+
+        if (summaryRes.ok) {
+          const summaryJson = (await summaryRes.json()) as {
+            sacredText?: Partial<SacredText>;
+          };
+          if (summaryJson.sacredText?.original) {
+            setSacredText({
+              label: summaryJson.sacredText.label ?? "Today's Verse",
+              icon: summaryJson.sacredText.icon ?? '📖',
+              original: summaryJson.sacredText.original,
+              transliteration: summaryJson.sacredText.transliteration ?? '',
+              meaning: summaryJson.sacredText.meaning ?? '',
+              source: summaryJson.sacredText.source ?? '',
+            });
+          }
+        }
+
+        if (!pathsRes.ok) {
+          setPaths([]);
+          setEnrollments([]);
+          outcome = 'failed';
+        } else {
+          const fetchedPaths = parsePathsResponse(await pathsRes.json());
+          setPaths(fetchedPaths);
+
+          if (fetchedPaths.length > 0 && progressRes.ok) {
+            setEnrollments(parseEnrollmentsResponse(await progressRes.json()));
+          } else {
+            setEnrollments([]);
+          }
+        }
+      } catch (error) {
+        console.error(error);
         setPaths([]);
         setEnrollments([]);
-        return;
+        outcome = 'failed';
       }
 
-      const fetchedPaths = parsePathsResponse(await pathsRes.json());
-      setPaths(fetchedPaths);
-
-      if (fetchedPaths.length > 0 && progressRes.ok) {
-        setEnrollments(parseEnrollmentsResponse(await progressRes.json()));
-      } else {
-        setEnrollments([]);
-      }
-    } catch (error) {
-      console.error(error);
-      setPaths([]);
-      setEnrollments([]);
+      return outcome;
+    } finally {
+      // Always runs, regardless of which return path was taken above --
+      // previously the `!pathsRes.ok` early return (and the `!user` one)
+      // skipped this, which could leave the screen stuck on `loading` and
+      // let dataLoadedRef.current never flip true for a logged-out session.
+      dataLoadedRef.current = true;
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    dataLoadedRef.current = true;
-    setLoading(false);
-    setRefreshing(false);
   }, []);
 
   useFocusEffect(
@@ -275,11 +288,20 @@ function PathshalaContent() {
       // load (before dataLoadedRef flips true) counts as an open.
       const isFirstLoad = !dataLoadedRef.current;
       const startedAt = Date.now();
-      void loadData().then(() => {
-        const identity = appIdentityRef.current;
-        if (isFirstLoad && identity.kind === 'authenticated') {
+      // Captured at request START, not read after completion -- an account
+      // switch while this request is in flight must not attribute the
+      // measurement to whichever account happens to be current by the time
+      // the request resolves. The generation counter additionally discards
+      // this completion if a NEWER focus-triggered load has since started
+      // (e.g. the user left and reopened before this one finished), so an
+      // interrupted load can never double-count as two "first opens".
+      const identityAtStart = appIdentityRef.current;
+      const token = pathshalaLoadGenRef.current.start();
+      void loadData().then((outcome) => {
+        const canRecord = shouldRecordRouteOpen(pathshalaLoadGenRef.current, token, identityAtStart, appIdentityRef.current);
+        if (isFirstLoad && outcome === 'ready' && canRecord && identityAtStart.kind === 'authenticated') {
           recordRouteOpen(
-            { kind: 'authenticated', userId: identity.userId },
+            { kind: 'authenticated', userId: identityAtStart.userId },
             'pathshala',
             { cacheHit: false, durationMs: Date.now() - startedAt }
           );
