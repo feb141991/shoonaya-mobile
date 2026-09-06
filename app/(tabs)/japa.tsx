@@ -33,6 +33,7 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
 import { attemptJapaCompleteWithRetry } from '@/lib/japaCompleteRetry';
+import { readPendingJapaCompletion, writePendingJapaCompletion, clearPendingJapaCompletion } from '@/lib/japaPendingCompletion';
 import { recordMutationRetryOutcome } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
@@ -961,6 +962,29 @@ export default function JapaScreen() {
       if (!user) return;
       userIdRef.current = user.id;
 
+      // Resolve a completion left over from a previous session that never
+      // got acknowledged (e.g. the app was killed after the request was
+      // sent but before the response arrived) before reading fresh context
+      // below -- otherwise this screen could show an unsaved streak for a
+      // round that actually saved, or silently lose a genuinely-unsaved
+      // one. Replays the exact original request (same clientCompletionId),
+      // so a request that already succeeded resolves as idempotentReplay
+      // rather than double-awarding karma/streak. Silent recovery attempt,
+      // never surfaced as an error here; left pending on failure so the
+      // next mount retries again.
+      const pendingCompletion = await readPendingJapaCompletion(user.id);
+      if (pendingCompletion) {
+        const resumeResponse = await attemptJapaCompleteWithRetry(apiFetch, pendingCompletion.requestBody, (outcome, attempts) => {
+          recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', outcome, attempts);
+        });
+        // Clear on any definitive answer (success or a real rejection) --
+        // only a `null` (network exhausted, genuinely ambiguous) leaves it
+        // pending for the next mount to retry again.
+        if (resumeResponse) {
+          void clearPendingJapaCompletion(user.id);
+        }
+      }
+
       const cached = await readJapaContextCache(user.id);
       if (cached) {
         applyJapaContext(cached);
@@ -1031,14 +1055,38 @@ export default function JapaScreen() {
     practiceType: string | null;
     activeSymbolId: string | null;
   }) => {
+    const userId = userIdRef.current;
+    const clientCompletionId = Crypto.randomUUID();
     const requestBody = JSON.stringify({
-      clientCompletionId: Crypto.randomUUID(),
+      clientCompletionId,
       ...payload,
     });
-    return attemptJapaCompleteWithRetry(apiFetch, requestBody, (outcome, attempts) => {
-      const userId = userIdRef.current;
+
+    // Persist BEFORE sending, not after -- a crash between these two lines
+    // just means the resume-on-mount path above finds nothing and this
+    // round is genuinely lost (same as today), which is an acceptable gap;
+    // persisting after sending would leave the exact process-death window
+    // this exists to close unprotected.
+    if (userId) {
+      await writePendingJapaCompletion(userId, { clientCompletionId, requestBody, createdAt: new Date().toISOString() });
+    }
+
+    const response = await attemptJapaCompleteWithRetry(apiFetch, requestBody, (outcome, attempts) => {
       recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', outcome, attempts);
     });
+
+    // Clear on any DEFINITIVE server answer, success or a real rejection
+    // (e.g. a 400 validation failure) -- the server has spoken either way,
+    // and a permanent rejection would just fail identically forever if
+    // resubmitted on every future mount. Only `null` (every attempt
+    // exhausted with a network exception, genuinely ambiguous whether the
+    // server ever saw it) leaves the pending record in place for the
+    // resume-on-mount path to retry.
+    if (userId && response) {
+      void clearPendingJapaCompletion(userId);
+    }
+
+    return response;
   }, []);
 
   const completeRound = useCallback(async () => {
