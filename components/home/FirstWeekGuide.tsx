@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Text, useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter, type Href } from 'expo-router';
+import { useRouter, useFocusEffect, type Href } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE } from '@/lib/constants';
 import { resolveNativeRoute } from '@/lib/routes';
-import { FIRST_WEEK_STORAGE_KEY, FIRST_WEEK_DISMISS_KEY } from '@/lib/firstWeekGuideStorage';
+import { getFirstWeekGuideKeys } from '@/lib/firstWeekGuideStorage';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 /**
  * FirstWeekGuide — warm cold-start onboarding for brand-new users.
@@ -32,8 +33,6 @@ import { FIRST_WEEK_STORAGE_KEY, FIRST_WEEK_DISMISS_KEY } from '@/lib/firstWeekG
  * disappears once all 5 acts are done or the user dismisses it.
  */
 
-const STORAGE_KEY = FIRST_WEEK_STORAGE_KEY;
-const DISMISS_KEY = FIRST_WEEK_DISMISS_KEY;
 
 interface GuideAct {
   id: string;
@@ -130,6 +129,8 @@ interface Props {
 }
 
 export function FirstWeekGuide({ tradition, userName }: Props) {
+  const identity = useAppIdentity();
+  const { progress: STORAGE_KEY, dismissed: DISMISS_KEY } = getFirstWeekGuideKeys(identity);
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
@@ -140,8 +141,10 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
 
   const acts = getTraditionActs(tradition);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let cancelled = false;
+    setLoaded(false);
+    setCompleted(new Set());
     Promise.all([AsyncStorage.getItem(STORAGE_KEY), AsyncStorage.getItem(DISMISS_KEY)])
       .then(([storedProgress, storedDismiss]) => {
         if (cancelled) return;
@@ -161,7 +164,7 @@ export function FirstWeekGuide({ tradition, userName }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [STORAGE_KEY, DISMISS_KEY]));
 
   function markDone(id: string) {
     setCompleted((prev) => {

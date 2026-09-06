@@ -731,11 +731,15 @@ function HomeContent() {
     hasBlockingHomeSurface,
   });
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    let active = true;
     if (isContentRendered && appIdentity.kind !== 'loading') {
-      void recordHomeFocusSession(appIdentity, true).then(setDiscoveryState);
+      void recordHomeFocusSession(appIdentity, true).then((next) => {
+        if (active) setDiscoveryState(next);
+      });
     }
-  }, [isContentRendered, appIdentity]);
+    return () => { active = false; };
+  }, [isContentRendered, appIdentity]));
 
   useEffect(() => {
     getHeroPick().then(setHeroOverride).catch(() => {});

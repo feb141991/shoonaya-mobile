@@ -32,8 +32,9 @@ import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/compone
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { apiFetch } from '@/lib/api';
+import { getAppIdentity } from '@/lib/appIdentity';
 import { attemptJapaCompleteWithRetry } from '@/lib/japaCompleteRetry';
-import { readPendingJapaCompletion, writePendingJapaCompletion, clearPendingJapaCompletion } from '@/lib/japaPendingCompletion';
+import { readPendingJapaCompletions, writePendingJapaCompletion, clearPendingJapaCompletion, isJapaCompletionAcknowledged } from '@/lib/japaPendingCompletion';
 import { recordMutationRetryOutcome } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
@@ -972,34 +973,50 @@ export default function JapaScreen() {
       // rather than double-awarding karma/streak. Silent recovery attempt,
       // never surfaced as an error here; left pending on failure so the
       // next mount retries again.
-      const pendingCompletion = await readPendingJapaCompletion(user.id);
-      if (pendingCompletion) {
-        const resumeResponse = await attemptJapaCompleteWithRetry(apiFetch, pendingCompletion.requestBody, (outcome, attempts) => {
-          recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', outcome, attempts);
-        });
-        // Clear on any definitive answer (success or a real rejection) --
-        // only a `null` (network exhausted, genuinely ambiguous) leaves it
-        // pending for the next mount to retry again.
-        if (resumeResponse) {
-          void clearPendingJapaCompletion(user.id);
-        }
-      }
-
       const cached = await readJapaContextCache(user.id);
+      const cacheOwner = getAppIdentity();
+      if (cacheOwner.kind !== 'authenticated' || cacheOwner.userId !== user.id) return;
       if (cached) {
         applyJapaContext(cached);
         cacheApplied = true;
         setLoading(false);
-      } else {
-        setLoading(true);
       }
-
-      const response = await apiFetch('/api/japa/context');
+      const response = await apiFetch('/api/japa/context', { expectedUserId: user.id });
       if (!response.ok) throw new Error('japa-context-failed');
       const context = normalizeJapaContext(await response.json());
       if (!context) throw new Error('japa-context-invalid');
+      const currentIdentity = getAppIdentity();
+      if (currentIdentity.kind !== 'authenticated' || currentIdentity.userId !== user.id) return;
       applyJapaContext(context);
+      cacheApplied = true;
+      setLoading(false);
       await writeJapaContextCache(user.id, context);
+
+      // Recover after rendering usable context, not on the first-paint path.
+      let recovered = false;
+      const pendingCompletions = await readPendingJapaCompletions(user.id);
+      for (const pendingCompletion of pendingCompletions) {
+        const resumeResponse = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: user.id }), pendingCompletion.requestBody, (outcome, attempts) => {
+          recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', outcome, attempts);
+        });
+        // A response is not an acknowledgement unless the save succeeded.
+        if (isJapaCompletionAcknowledged(resumeResponse)) {
+          await clearPendingJapaCompletion(user.id, pendingCompletion.clientCompletionId);
+          recovered = true;
+        } else {
+          break;
+        }
+      }
+
+      if (recovered) {
+        const latest = await apiFetch('/api/japa/context', { expectedUserId: user.id });
+        const updated = latest.ok ? normalizeJapaContext(await latest.json()) : null;
+        const identityNow = getAppIdentity();
+        if (updated && identityNow.kind === 'authenticated' && identityNow.userId === user.id) {
+          applyJapaContext(updated);
+          await writeJapaContextCache(user.id, updated);
+        }
+      }
     } catch {
       if (!cacheApplied) {
         setActiveSymbolId(null);
@@ -1062,28 +1079,21 @@ export default function JapaScreen() {
       ...payload,
     });
 
-    // Persist BEFORE sending, not after -- a crash between these two lines
-    // just means the resume-on-mount path above finds nothing and this
-    // round is genuinely lost (same as today), which is an acceptable gap;
-    // persisting after sending would leave the exact process-death window
-    // this exists to close unprotected.
+    // Persist before sending; a storage failure must not start an untracked write.
     if (userId) {
       await writePendingJapaCompletion(userId, { clientCompletionId, requestBody, createdAt: new Date().toISOString() });
+      // Queued rounds already own this duration even if delivery fails.
+      lastPersistedDurationRef.current += payload.durationSeconds;
     }
 
-    const response = await attemptJapaCompleteWithRetry(apiFetch, requestBody, (outcome, attempts) => {
+    if (!userId) throw new Error('Sign in to save this session');
+    const response = await attemptJapaCompleteWithRetry((path, options) => apiFetch(path, { ...options, expectedUserId: userId }), requestBody, (outcome, attempts) => {
       recordMutationRetryOutcome(userId ? { kind: 'authenticated', userId } : { kind: 'guest' }, 'japa', outcome, attempts);
     });
 
-    // Clear on any DEFINITIVE server answer, success or a real rejection
-    // (e.g. a 400 validation failure) -- the server has spoken either way,
-    // and a permanent rejection would just fail identically forever if
-    // resubmitted on every future mount. Only `null` (every attempt
-    // exhausted with a network exception, genuinely ambiguous whether the
-    // server ever saw it) leaves the pending record in place for the
-    // resume-on-mount path to retry.
-    if (userId && response) {
-      void clearPendingJapaCompletion(userId);
+    // Never discard unsaved work because retries ended with an HTTP error.
+    if (isJapaCompletionAcknowledged(response)) {
+      await clearPendingJapaCompletion(userId, clientCompletionId);
     }
 
     return response;

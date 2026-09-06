@@ -15,11 +15,8 @@
  * replaying a request that already succeeded safely returns
  * idempotentReplay: true instead of a duplicate.
  *
- * One slot per user, not a queue: app/(tabs)/japa.tsx already serializes
- * completions via its own `saving` state (a second completion cannot start
- * while one is in flight in the same session), so at most one true pending
- * completion can exist for a user at a time. The only way a stale entry
- * survives is a process death mid-request, resolved on the next mount.
+ * A failed round can be followed by another round. Keep every operation,
+ * and acknowledge by ID so an older response cannot clear newer work.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -36,33 +33,47 @@ function keyFor(userId: string): string {
 }
 
 export async function readPendingJapaCompletion(userId: string): Promise<PendingJapaCompletion | null> {
+  return (await readPendingJapaCompletions(userId))[0] ?? null;
+}
+
+export async function readPendingJapaCompletions(userId: string): Promise<PendingJapaCompletion[]> {
   try {
     const raw = await AsyncStorage.getItem(keyFor(userId));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<PendingJapaCompletion>;
-    if (typeof parsed.clientCompletionId !== 'string' || typeof parsed.requestBody !== 'string') return null;
-    return {
-      clientCompletionId: parsed.clientCompletionId,
-      requestBody: parsed.requestBody,
-      createdAt: typeof parsed.createdAt === 'string' ? parsed.createdAt : '',
-    };
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    // Accept the previous single-slot format without losing an in-flight save.
+    return (Array.isArray(parsed) ? parsed : [parsed]).filter((item): item is PendingJapaCompletion =>
+      !!item && typeof item === 'object' && typeof item.clientCompletionId === 'string'
+      && typeof item.requestBody === 'string');
   } catch {
-    return null;
+    return [];
   }
+}
+
+const writes = new Map<string, Promise<void>>();
+function serialize(userId: string, action: () => Promise<void>): Promise<void> {
+  const next = (writes.get(userId) ?? Promise.resolve()).catch(() => {}).then(action);
+  writes.set(userId, next);
+  return next;
 }
 
 export async function writePendingJapaCompletion(userId: string, pending: PendingJapaCompletion): Promise<void> {
-  try {
-    await AsyncStorage.setItem(keyFor(userId), JSON.stringify(pending));
-  } catch {
-    // Best-effort: a failed write only means process-death recovery won't
-    // find this one. The in-memory bounded retry in japaCompleteRetry.ts
-    // still covers the common case where the process survives.
-  }
+  return serialize(userId, async () => {
+    const queue = await readPendingJapaCompletions(userId);
+    if (!queue.some((entry) => entry.clientCompletionId === pending.clientCompletionId)) queue.push(pending);
+    // Fail before sending when durable persistence is unavailable.
+    await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
+  });
 }
 
-export async function clearPendingJapaCompletion(userId: string): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(keyFor(userId));
-  } catch {}
+export async function clearPendingJapaCompletion(userId: string, completionId: string): Promise<void> {
+  return serialize(userId, async () => {
+    const queue = (await readPendingJapaCompletions(userId)).filter((entry) => entry.clientCompletionId !== completionId);
+    if (queue.length) await AsyncStorage.setItem(keyFor(userId), JSON.stringify(queue));
+    else await AsyncStorage.removeItem(keyFor(userId));
+  });
+}
+
+export function isJapaCompletionAcknowledged(response: Response | null): boolean {
+  return response?.ok === true;
 }

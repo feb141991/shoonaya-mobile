@@ -37,7 +37,7 @@ import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { getAppIdentity } from '@/lib/appIdentity';
-import { clearHomeDiscoveryState } from '@/lib/homeDiscovery';
+import { replayHomeDiscovery } from '@/lib/homeDiscovery';
 import { resetFirstWeekGuideCue } from '@/lib/firstWeekGuideStorage';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { SUPPORTED_APP_LANGUAGES, type AppLanguage } from '@/lib/language-runtime';
@@ -971,7 +971,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 variant="secondary"
                 onPress={async () => {
                   await Promise.all([
-                    clearHomeDiscoveryState(getAppIdentity()),
+                    replayHomeDiscovery(getAppIdentity()),
                     resetFirstWeekGuideCue(),
                   ]);
                   Alert.alert('Tips reset', 'You will see onboarding hints again as you use the app.');

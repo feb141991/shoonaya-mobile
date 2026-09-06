@@ -26,11 +26,23 @@ import {
   dismissHeroArtworkCue,
   markHeroArtworkPickerOpened,
   clearHomeDiscoveryState,
+  replayHomeDiscovery,
   clearAllHomeDiscoveryStates,
   resolveIdentityKey,
   type CueEvaluationContext,
 } from '@/lib/homeDiscovery';
 import type { AppIdentity } from '@/lib/appIdentity';
+
+testReplay();
+function testReplay() {
+  it('explicit replay does not require another three cold launches', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'replay-only' };
+    await replayHomeDiscovery(identity);
+    const state = await recordHomeFocusSession(identity, true, 'current');
+    assert.equal(isHeroArtworkCueEligible(state, { hasRenderedContent: true, isFirstWeek: false, hasBlockingHomeSurface: false }), true);
+    assert.equal((await getHomeDiscoveryState({ kind: 'authenticated', userId: 'other-replay-user' })).sessionCount, 0);
+  });
+}
 
 describe('Home Discovery — Identity Scoping & Session Counting', () => {
   const userA: AppIdentity = { kind: 'authenticated', userId: 'user_alpha' };

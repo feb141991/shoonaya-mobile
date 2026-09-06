@@ -164,6 +164,16 @@ export async function clearHomeDiscoveryState(identity: AppIdentity): Promise<vo
   }
 }
 
+export async function replayHomeDiscovery(identity: AppIdentity): Promise<void> {
+  const current = await getHomeDiscoveryState(identity);
+  await persistHomeDiscoveryState({
+    ...current,
+    sessionCount: Math.max(3, current.sessionCount),
+    heroArtworkCueDismissed: false,
+    updatedAt: Date.now(),
+  });
+}
+
 export async function clearAllHomeDiscoveryStates(): Promise<void> {
   try {
     const allKeys = await AsyncStorage.getAllKeys();

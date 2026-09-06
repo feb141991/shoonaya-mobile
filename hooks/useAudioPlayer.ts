@@ -16,22 +16,26 @@ let audioModeConfigured = false;
 
 async function configureAudioMode() {
   if (audioModeConfigured) return;
-  audioModeConfigured = true;
   await setAudioModeAsync({
     playsInSilentMode: true,
     shouldPlayInBackground: false,
     interruptionMode: 'doNotMix',
   });
+  audioModeConfigured = true;
 }
 
 export function useAudioPlayer(): UseAudioPlayerResult {
   const playerRef = useRef<AudioPlayer | null>(null);
   const statusSubscriptionRef = useRef<{ remove: () => void } | null>(null);
+  const generationRef = useRef(0);
+  const focusedRef = useRef(true);
 
   const stop = useCallback(async () => {
+    generationRef.current += 1;
     statusSubscriptionRef.current?.remove();
     statusSubscriptionRef.current = null;
     const player = playerRef.current;
+    playerRef.current = null;
     if (!player) return;
     try {
       player.pause();
@@ -40,7 +44,6 @@ export function useAudioPlayer(): UseAudioPlayerResult {
     } catch {
       // already removed
     }
-    playerRef.current = null;
   }, []);
 
   // Focus-scoped, not mount/unmount: React Navigation's native-stack keeps
@@ -52,7 +55,9 @@ export function useAudioPlayer(): UseAudioPlayerResult {
   // useFocusEffect's cleanup fires on blur AND on unmount, covering both.
   useFocusEffect(
     useCallback(() => {
+      focusedRef.current = true;
       return () => {
+        focusedRef.current = false;
         void stop();
       };
     }, [stop])
@@ -60,14 +65,17 @@ export function useAudioPlayer(): UseAudioPlayerResult {
 
   const loadAndPlay = useCallback(
     async (url: string, loop = false, onComplete?: () => void) => {
-      await stop();
+      const stopping = stop();
+      const generation = generationRef.current;
+      await stopping;
       await configureAudioMode();
+      if (!focusedRef.current || generation !== generationRef.current) return;
 
       const player = createAudioPlayer({ uri: url });
       player.loop = loop;
       player.volume = 1.0;
       const subscription = player.addListener('playbackStatusUpdate', (status) => {
-        if (!loop && status.didJustFinish) {
+        if (!loop && status.didJustFinish && playerRef.current === player) {
           statusSubscriptionRef.current?.remove();
           statusSubscriptionRef.current = null;
           if (playerRef.current === player) {

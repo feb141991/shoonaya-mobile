@@ -22,6 +22,8 @@ import {
   readPendingJapaCompletion,
   writePendingJapaCompletion,
   clearPendingJapaCompletion,
+  readPendingJapaCompletions,
+  isJapaCompletionAcknowledged,
   type PendingJapaCompletion,
 } from '../lib/japaPendingCompletion';
 
@@ -51,7 +53,7 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
       requestBody: '{}',
       createdAt: '2026-09-06T00:00:00.000Z',
     });
-    await clearPendingJapaCompletion('user-A');
+    await clearPendingJapaCompletion('user-A', 'completion-1');
 
     assert.equal(await readPendingJapaCompletion('user-A'), null);
   });
@@ -71,18 +73,35 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
     await writePendingJapaCompletion('user-A', { clientCompletionId: 'a', requestBody: '{}', createdAt: '' });
     await writePendingJapaCompletion('user-B', { clientCompletionId: 'b', requestBody: '{}', createdAt: '' });
 
-    await clearPendingJapaCompletion('user-A');
+    await clearPendingJapaCompletion('user-A', 'a');
 
     assert.equal(await readPendingJapaCompletion('user-A'), null);
     assert.ok(await readPendingJapaCompletion('user-B'));
   });
 
-  it('a fresh write replaces the previous single slot for that user (one true pending completion at a time)', async () => {
+  it('a later round preserves the previous unacknowledged operation', async () => {
     await writePendingJapaCompletion('user-A', { clientCompletionId: 'first', requestBody: '{}', createdAt: '' });
     await writePendingJapaCompletion('user-A', { clientCompletionId: 'second', requestBody: '{}', createdAt: '' });
 
     const pending = await readPendingJapaCompletion('user-A');
-    assert.equal(pending?.clientCompletionId, 'second');
+    assert.equal(pending?.clientCompletionId, 'first');
+    await clearPendingJapaCompletion('user-A', 'first');
+    assert.equal((await readPendingJapaCompletion('user-A'))?.clientCompletionId, 'second');
+  });
+
+  it('serializes parallel writes and ignores duplicate acknowledgements', async () => {
+    await Promise.all(['first', 'second'].map((clientCompletionId) => writePendingJapaCompletion('user-A', { clientCompletionId, requestBody: '{}', createdAt: '' })));
+    await clearPendingJapaCompletion('user-A', 'first');
+    await clearPendingJapaCompletion('user-A', 'first');
+    assert.deepEqual((await readPendingJapaCompletions('user-A')).map((p) => p.clientCompletionId), ['second']);
+  });
+
+  it('does not acknowledge exhausted server failures, auth failures or rate limits', () => {
+    for (const status of [400, 401, 403, 429, 500, 503]) {
+      assert.equal(isJapaCompletionAcknowledged(new Response(null, { status })), false);
+    }
+    assert.equal(isJapaCompletionAcknowledged(null), false);
+    assert.equal(isJapaCompletionAcknowledged(new Response(null, { status: 200 })), true);
   });
 
   it('fails safe (returns null) on a corrupt stored entry instead of throwing', async () => {

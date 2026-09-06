@@ -42,6 +42,10 @@ export class LoadGenerationGuard {
   isCurrent(token: number): boolean {
     return token === this.currentGeneration;
   }
+
+  cancel(): void {
+    this.currentGeneration += 1;
+  }
 }
 
 /** True if two identity snapshots refer to different accounts (or a

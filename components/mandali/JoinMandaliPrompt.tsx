@@ -6,6 +6,7 @@ import * as Location from 'expo-location';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
 import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
+import { mandaliJoinErrorMessage } from '@/lib/mandaliJoinError';
 import { mandaliLocationKey } from '@/lib/mandaliLocation';
 
 const LOCATION_TIMEOUT_MS = 10000;
@@ -207,7 +208,7 @@ export function JoinMandaliPrompt({
       await onJoined();
     } catch (error) {
       console.error('[JoinMandaliPrompt] joinMandaliForLocation failed', error);
-      setGeoError('Could not join your Mandali right now. Please try again.');
+      setGeoError(mandaliJoinErrorMessage(error));
     } finally {
       setJoiningMine(false);
     }
@@ -220,7 +221,7 @@ export function JoinMandaliPrompt({
       await onJoined();
     } catch (error) {
       console.error('[JoinMandaliPrompt] joinExistingMandali failed', error);
-      setGeoError('Could not join that Mandali right now. Please try again.');
+      setGeoError(mandaliJoinErrorMessage(error));
     } finally {
       setJoiningId(null);
     }

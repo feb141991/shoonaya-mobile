@@ -215,7 +215,7 @@ function PathshalaContent() {
 
       if (!user) {
         setEnrollments([]);
-        return outcome;
+        return 'failed';
       }
 
       try {
@@ -270,6 +270,8 @@ function PathshalaContent() {
       }
 
       return outcome;
+    } catch {
+      return 'failed';
     } finally {
       // Always runs, regardless of which return path was taken above --
       // previously the `!pathsRes.ok` early return (and the `!user` one)
@@ -307,6 +309,7 @@ function PathshalaContent() {
           );
         }
       });
+      return () => pathshalaLoadGenRef.current.cancel();
     }, [loadData])
   );
 

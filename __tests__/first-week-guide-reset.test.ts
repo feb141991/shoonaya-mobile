@@ -20,9 +20,10 @@ if (typeof window === 'undefined' || !(window as any).localStorage) {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   resetFirstWeekGuideCue,
-  FIRST_WEEK_STORAGE_KEY as STORAGE_KEY,
-  FIRST_WEEK_DISMISS_KEY as DISMISS_KEY,
+  getFirstWeekGuideKeys,
 } from '@/lib/firstWeekGuideStorage';
+const identity = { kind: 'authenticated', userId: 'guide-test' } as const;
+const { progress: STORAGE_KEY, dismissed: DISMISS_KEY } = getFirstWeekGuideKeys(identity);
 
 describe('resetFirstWeekGuideCue — Settings "replay first-use tips" support', () => {
   beforeEach(async () => {
@@ -33,14 +34,14 @@ describe('resetFirstWeekGuideCue — Settings "replay first-use tips" support', 
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(['sacred_text', 'japa']));
     await AsyncStorage.setItem(DISMISS_KEY, 'true');
 
-    await resetFirstWeekGuideCue();
+    await resetFirstWeekGuideCue(identity);
 
     assert.equal(await AsyncStorage.getItem(STORAGE_KEY), null);
     assert.equal(await AsyncStorage.getItem(DISMISS_KEY), null);
   });
 
   it('is a no-op, not a throw, when nothing was ever stored', async () => {
-    await assert.doesNotReject(resetFirstWeekGuideCue());
+    await assert.doesNotReject(resetFirstWeekGuideCue(identity));
     assert.equal(await AsyncStorage.getItem(STORAGE_KEY), null);
     assert.equal(await AsyncStorage.getItem(DISMISS_KEY), null);
   });

@@ -9,6 +9,8 @@ export { isFetchCancelled };
 export type ApiFetchOptions = RequestInit & {
   /** Override the default request deadline for legitimately long-running APIs. */
   timeoutMs?: number;
+  /** Bind durable private writes to their original owner, including 401 replay. */
+  expectedUserId?: string;
 };
 
 let cachedAccessToken: string | null | undefined;
@@ -36,7 +38,7 @@ function canReplayBody(body: BodyInit | null | undefined): boolean {
 }
 
 export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
-  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, ...fetchOptions } = options;
+  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, expectedUserId, ...fetchOptions } = options;
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Content-Type') && options.body) {
     headers.set('Content-Type', 'application/json');
@@ -47,6 +49,13 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
   const requestWithToken = async (accessToken: string | null) => {
+    if (expectedUserId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user.id !== expectedUserId) {
+        throw new Error('Japa completion owner is no longer signed in');
+      }
+      accessToken = session.access_token;
+    }
     const requestHeaders = new Headers(headers);
     if (accessToken) requestHeaders.set('Authorization', `Bearer ${accessToken}`);
     else requestHeaders.delete('Authorization');

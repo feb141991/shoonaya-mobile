@@ -277,14 +277,21 @@ export async function joinMandaliForLocation(_userId: string, city: string, coun
     p_lon: lon ?? null,
   });
   if (error) throw error;
-  return (data as { mandaliId: string }).mandaliId;
+  return confirmedMandaliId(data);
+}
+
+function confirmedMandaliId(data: unknown): string {
+  if (!data || typeof data !== 'object' || !('mandaliId' in data) || typeof data.mandaliId !== 'string' || !data.mandaliId) {
+    throw new Error('Membership was not confirmed. Please refresh and try again.');
+  }
+  return data.mandaliId;
 }
 
 export async function joinExistingMandali(
   mandaliId: string,
   location?: { city?: string; country?: string; lat?: number; lon?: number } | null
 ): Promise<void> {
-  const { error } = await supabase.rpc('join_mandali', {
+  const { data, error } = await supabase.rpc('join_mandali', {
     p_mandali_id: mandaliId,
     p_city: location?.city ?? null,
     p_country: location?.country ?? null,
@@ -292,6 +299,7 @@ export async function joinExistingMandali(
     p_lon: location?.lon ?? null,
   });
   if (error) throw new Error(parseErrorMessage(error.message, 'Join failed'));
+  confirmedMandaliId(data);
 }
 
 export async function leaveMandali(userId: string): Promise<void> {

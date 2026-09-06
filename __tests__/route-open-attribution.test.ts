@@ -31,6 +31,12 @@ describe('identityChanged', () => {
 });
 
 describe('LoadGenerationGuard', () => {
+  it('discards a completion after leaving without requiring another open', () => {
+    const guard = new LoadGenerationGuard();
+    const token = guard.start();
+    guard.cancel();
+    assert.equal(guard.isCurrent(token), false);
+  });
   it('a single start() token stays current until another start() happens', () => {
     const guard = new LoadGenerationGuard();
     const token = guard.start();

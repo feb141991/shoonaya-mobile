@@ -46,7 +46,7 @@ import { supabase } from '@/lib/supabase';
 import { resolveDisplayName } from '@/lib/displayName';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
-import { recordRouteOpen, recordRefreshFailure } from '@/lib/telemetry';
+import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
 import {
   queueReactionChange,
   resumePendingReactionChanges,
@@ -633,6 +633,10 @@ export default function MandaliScreen() {
     // ?limit, see /api/mandali/feed's route handler. First page only here;
     // loadMorePosts below fetches subsequent pages with ?cursor.
     const feedResponse = await apiFetch('/api/mandali/feed?limit=20');
+    const feedServerTiming = parseServerTimingHeader(feedResponse.headers.get('Server-Timing'));
+    if (feedServerTiming) {
+      recordServerTiming({ kind: 'authenticated', userId: user.id }, 'mandali', feedServerTiming);
+    }
     if (!feedResponse.ok) throw new Error('Could not load Mandali.');
     const feed = await feedResponse.json() as FeedPayload;
     const profileRow = feed.profile;
@@ -865,7 +869,10 @@ export default function MandaliScreen() {
       return;
     }
     if (payload.eventType === 'INSERT' && authorId !== profile?.userId) {
-      void patchNewComment(postId, commentId);
+      void patchNewComment(postId, commentId).catch(() => {
+        // A realtime refresh failure must not become an unhandled rejection.
+        // Expanding the thread can retry through the same safe API.
+      });
       return;
     }
     if (payload.eventType === 'UPDATE') {

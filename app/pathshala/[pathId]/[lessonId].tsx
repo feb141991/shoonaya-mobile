@@ -90,10 +90,6 @@ const SPEED_OPTIONS: AudioSpeed[] = [0.75, 1.0, 1.25];
 
 export default function LessonReaderScreen() {
   const router = useRouter();
-  const returnToPathshala = useCallback(() => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/(tabs)/pathshala');
-  }, [router]);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -104,6 +100,11 @@ export default function LessonReaderScreen() {
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const params = useLocalSearchParams<{ pathId?: string | string[]; lessonId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
+  const returnToPathshala = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else if (pathId) router.replace({ pathname: '/pathshala/[pathId]', params: { pathId } });
+    else router.replace('/(tabs)/pathshala');
+  }, [router, pathId]);
   const lessonId = Array.isArray(params.lessonId) ? params.lessonId[0] : params.lessonId;
   const lessonIndex = Number(lessonId ?? '0');
 
