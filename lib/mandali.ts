@@ -258,50 +258,40 @@ export async function fetchNearbySeekers(userId: string, city: string | null, la
   }));
 }
 
-// Direct RPC — same call PWA's joinMandaliForLocation makes. The RPC itself
-// (find_or_create_mandali) is SECURITY DEFINER but revoked from anon/public
-// and granted only to authenticated (supabase/migrations/20260612000000_
-// mandali_slice0b_radius_fallback.sql) — safe for a direct client call.
-export async function joinMandaliForLocation(userId: string, city: string, country: string, lat?: number, lon?: number): Promise<string> {
-  const { data: mandaliId, error: rpcError } = await supabase.rpc('find_or_create_mandali', {
+// One atomic, server-identity-derived RPC for both location-based and
+// by-id joins (join_mandali, supabase/migrations/20260906002021_repair_
+// mandali_join_privilege_and_member_count.sql). It derives the caller from
+// auth.uid() internally (never trusts a client-supplied user id), checks
+// is_banned, locks the caller's own profile row before comparing/changing
+// membership (idempotent on repeat joins), validates the target/
+// coordinates, and updates member_count correctly regardless of RLS --
+// replacing the previous two-step client flow (a direct find_or_create_
+// mandali RPC call, then a raw, unprotected profiles update) that had no
+// ban check and silently failed to update member_count under RLS.
+export async function joinMandaliForLocation(_userId: string, city: string, country: string, lat?: number, lon?: number): Promise<string> {
+  const { data, error } = await supabase.rpc('join_mandali', {
+    p_mandali_id: null,
     p_city: city.trim(),
     p_country: country.trim(),
     p_lat: lat ?? null,
     p_lon: lon ?? null,
   });
-  if (rpcError) throw rpcError;
-
-  const { error } = await supabase
-    .from('profiles')
-    .update({ city: city.trim(), country: country.trim(), mandali_id: mandaliId })
-    .eq('id', userId);
   if (error) throw error;
-
-  return mandaliId as string;
+  return (data as { mandaliId: string }).mandaliId;
 }
 
-// PWA routes join-by-id through its own API route because that route runs
-// a server-side ban check (assertNotBanned via an admin client) before the
-// write — native reuses the same route rather than duplicating that check
-// client-side without admin access.
 export async function joinExistingMandali(
   mandaliId: string,
   location?: { city?: string; country?: string; lat?: number; lon?: number } | null
 ): Promise<void> {
-  const res = await apiFetch('/api/mandali/join', {
-    method: 'POST',
-    body: JSON.stringify({
-      mandali_id: mandaliId,
-      city: location?.city,
-      country: location?.country,
-      latitude: location?.lat,
-      longitude: location?.lon,
-    }),
+  const { error } = await supabase.rpc('join_mandali', {
+    p_mandali_id: mandaliId,
+    p_city: location?.city ?? null,
+    p_country: location?.country ?? null,
+    p_lat: location?.lat ?? null,
+    p_lon: location?.lon ?? null,
   });
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw new Error(parseErrorMessage(json.error, 'Join failed'));
-  }
+  if (error) throw new Error(parseErrorMessage(error.message, 'Join failed'));
 }
 
 export async function leaveMandali(userId: string): Promise<void> {
