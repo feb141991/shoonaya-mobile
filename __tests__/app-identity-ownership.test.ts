@@ -19,6 +19,7 @@ test('app identity publishes explicit auth states', () => {
 test('Root is the only Supabase auth-event owner and guards stale routing work', () => {
   const root = fs.readFileSync(path.join(process.cwd(), 'app/_layout.tsx'), 'utf8');
   const home = fs.readFileSync(path.join(process.cwd(), 'app/(tabs)/index.tsx'), 'utf8');
+  const login = fs.readFileSync(path.join(process.cwd(), 'app/(auth)/login.tsx'), 'utf8');
 
   assert.match(root, /supabase\.auth\.onAuthStateChange/);
   assert.match(root, /authRouteGenerationRef/);
@@ -27,4 +28,8 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
   assert.doesNotMatch(home, /supabase\.auth\.onAuthStateChange/);
   assert.doesNotMatch(home, /supabase\.auth\.getSession/);
   assert.match(home, /useAppIdentity\(\)/);
+
+  // A guest transition has no Supabase auth event, so it must publish the
+  // identity itself before entering the tab navigator.
+  assert.match(login, /await setGuestMode\(true\);[\s\S]*?setAppIdentity\(\{ kind: 'guest' \}\);\s*router\.replace\('\/\(tabs\)'\);/);
 });

@@ -32,6 +32,7 @@ import { transmitAppleAuthorizationCode } from '@/lib/appleAuthToken';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
+import { setAppIdentity } from '@/lib/appIdentity';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -472,6 +473,10 @@ export default function LoginScreen() {
     setActiveAction('atithi');
     try {
       await setGuestMode(true);
+      // Guest mode does not emit a Supabase auth event. Publish the identity
+      // before navigation so Home cannot treat the unchanged null session as
+      // an unauthenticated redirect.
+      setAppIdentity({ kind: 'guest' });
       router.replace('/(tabs)');
     } catch {
       setErrorMessage('Could not activate Atithi Mode.');
