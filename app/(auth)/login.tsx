@@ -29,8 +29,9 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { transmitAppleAuthorizationCode } from '@/lib/appleAuthToken';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { classifySignInErrorMessage } from '@/lib/authErrorMessages';
 import { setGuestMode } from '@/lib/guestSession';
 import { setAppIdentity } from '@/lib/appIdentity';
 
@@ -50,7 +51,7 @@ if (GOOGLE_WEB_CLIENT_ID) {
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
 
-type AuthAction = 'google' | 'apple' | 'email' | 'atithi' | null;
+type AuthAction = 'google' | 'apple' | 'signin' | 'signup' | 'forgot-password' | 'atithi' | null;
 
 function getNativeErrorCode(error: unknown): string | number | null {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
@@ -464,6 +465,7 @@ export default function LoginScreen() {
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [reduceMotion, setReduceMotion] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(Platform.OS === 'ios');
   const brandScale = useRef(new Animated.Value(1)).current;
@@ -755,7 +757,47 @@ export default function LoginScreen() {
     }
   };
 
-  const handleEmail = async () => {
+  // Sign In and Create Account are two explicit, separate actions -- never
+  // a guess based on how sign-in happened to fail. The previous single
+  // "Continue with email" button attempted signUp whenever
+  // signInWithPassword failed with an "invalid credentials"-shaped error,
+  // which is Supabase's generic response for BOTH "no such account" and
+  // "wrong password" -- so a simple password typo on an existing account
+  // silently triggered an unwanted account-creation attempt instead of a
+  // clear "wrong password, try again."
+  const handleSignIn = async () => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setErrorMessage('Enter your email and password to continue.');
+      return;
+    }
+
+    setActiveAction('signin');
+    setErrorMessage(null);
+    setNoticeMessage(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: trimmedPassword,
+      });
+
+      if (error) {
+        setErrorMessage(classifySignInErrorMessage(error.message));
+      }
+      // On success, _layout.tsx's onAuthStateChange listener is the sole
+      // navigator once the session is actually established -- this screen
+      // never navigates itself, here or in handleSignUp below.
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Sign-in failed. Please try again.');
+    } finally {
+      setActiveAction(null);
+    }
+  };
+
+  const handleSignUp = async () => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
 
@@ -769,29 +811,12 @@ export default function LoginScreen() {
       return;
     }
 
-    setActiveAction('email');
+    setActiveAction('signup');
     setErrorMessage(null);
     setNoticeMessage(null);
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
-        password: trimmedPassword,
-      });
-
-      if (!signInError) {
-        return;
-      }
-
-      const canCreate =
-        signInError.message.toLowerCase().includes('invalid login') ||
-        signInError.message.toLowerCase().includes('invalid credentials');
-
-      if (!canCreate) {
-        throw signInError;
-      }
-
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password: trimmedPassword,
         options: {
@@ -799,16 +824,53 @@ export default function LoginScreen() {
         },
       });
 
-      if (signUpError) {
-        throw signUpError;
+      if (error) {
+        setErrorMessage(error.message);
+        return;
       }
 
-      if (!signUpData.session) {
-        setNoticeMessage('Account created. Check your email to confirm and continue.');
+      // No session yet either way: a genuinely new signup awaiting email
+      // confirmation, or (Supabase's own anti-enumeration behavior for an
+      // already-registered, already-confirmed email) an ambiguous
+      // non-error response. The same non-enumerating copy covers both --
+      // confirming which one this was would leak account existence.
+      if (!data.session) {
+        setNoticeMessage("If that's a new email, check your inbox to confirm your account. Already have one? Sign in instead.");
       }
+      // A session here (project-wide email confirmation disabled) is
+      // handled identically to sign-in success above: this screen still
+      // never navigates itself before that session actually exists.
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Email sign-in failed.';
-      setErrorMessage(message);
+      setErrorMessage(error instanceof Error ? error.message : 'Could not create account. Please try again.');
+    } finally {
+      setActiveAction(null);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      setErrorMessage('Enter your email address above, then tap "Forgot password?" again.');
+      return;
+    }
+
+    setActiveAction('forgot-password');
+    setErrorMessage(null);
+    setNoticeMessage(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: `${API_BASE}/reset-password`,
+      });
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+      // Non-enumerating: Supabase itself does not error for an
+      // unregistered address here, and this copy must not either.
+      setNoticeMessage('If that email has an account, a password reset link is on its way.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Could not send a reset link. Please try again.');
     } finally {
       setActiveAction(null);
     }
@@ -960,6 +1022,53 @@ export default function LoginScreen() {
             <AuthDivider label="or use email" isDark={isDark} />
 
             <View style={{ gap: 8 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: theme.card,
+                  padding: 3,
+                }}
+              >
+                {(['signin', 'signup'] as const).map((mode) => {
+                  const active = authMode === mode;
+                  return (
+                    <PressableSurface
+                      key={mode}
+                      haptic="selection"
+                      disabled={busy}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={mode === 'signin' ? 'Sign in' : 'Create account'}
+                      onPress={() => {
+                        setAuthMode(mode);
+                        setErrorMessage(null);
+                        setNoticeMessage(null);
+                      }}
+                      style={{
+                        flex: 1,
+                        minHeight: 40,
+                        borderRadius: 999,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: active ? theme.brand : 'transparent',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: FONTS.sansSemiBold,
+                          fontSize: 13,
+                          color: active ? (isDark ? COLORS.darkBg : COLORS.creamBg) : theme.dim,
+                        }}
+                      >
+                        {mode === 'signin' ? 'Sign in' : 'Create account'}
+                      </Text>
+                    </PressableSurface>
+                  );
+                })}
+              </View>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -1002,11 +1111,28 @@ export default function LoginScreen() {
                   fontSize: 14,
                 }}
               />
+              {authMode === 'signin' ? (
+                <PressableSurface
+                  haptic="selection"
+                  disabled={busy}
+                  onPress={handleForgotPassword}
+                  accessibilityLabel="Forgot password"
+                  style={{ alignSelf: 'flex-end', minHeight: 32, justifyContent: 'center' }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12.5, color: theme.brand }}>
+                    {activeAction === 'forgot-password' ? 'Sending reset link…' : 'Forgot password?'}
+                  </Text>
+                </PressableSurface>
+              ) : null}
               <AuthButton
-                label={activeAction === 'email' ? 'Continuing with email...' : 'Continue with email'}
-                onPress={handleEmail}
+                label={
+                  authMode === 'signin'
+                    ? (activeAction === 'signin' ? 'Signing in…' : 'Sign in')
+                    : (activeAction === 'signup' ? 'Creating account…' : 'Create account')
+                }
+                onPress={authMode === 'signin' ? handleSignIn : handleSignUp}
                 disabled={busy}
-                loading={activeAction === 'email'}
+                loading={activeAction === 'signin' || activeAction === 'signup'}
                 tone="gold"
                 icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
                 isDark={isDark}
