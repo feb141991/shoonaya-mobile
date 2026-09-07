@@ -1128,7 +1128,11 @@ export default function JapaScreen() {
       // but the user must be told the attempt itself didn't go through,
       // not left assuming a silent no-op meant success.
       console.error('[Japa] retry failed', error);
-      Alert.alert('Could not retry', 'Check your connection and try again.');
+      // What actually throws here is retryFailedJapaCompletion, a pure
+      // on-device storage operation -- not a network call -- so this must
+      // not blame connectivity for what is very likely a local storage
+      // problem instead.
+      Alert.alert('Could not retry', "Something went wrong updating this on your device. Please try again.");
     } finally {
       setRetryingCompletionId(null);
       await refreshSyncQueue(userId);
@@ -1154,7 +1158,9 @@ export default function JapaScreen() {
                 // leaves the item exactly as it was, so it's safe to tell
                 // the user to try again rather than assume it's gone.
                 console.error('[Japa] discard failed', error);
-                Alert.alert('Could not discard', 'This round is still in your review list. Check your connection and try again.');
+                // Same as retry: discardFailedJapaCompletion is a pure
+                // on-device storage operation, not a network call.
+                Alert.alert('Could not discard', 'This round is still in your review list. Something went wrong updating this on your device -- please try again.');
               })
               .finally(() => refreshSyncQueue(userId));
           },
