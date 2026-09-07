@@ -99,12 +99,12 @@
     "android": {
       "package": "com.shoonaya.app",
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "INTERNET",
-        "RECEIVE_BOOT_COMPLETED",
-        "MODIFY_AUDIO_SETTINGS",
-        "POST_NOTIFICATIONS"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"
@@ -203,6 +203,12 @@
         "projectId": "aceb15a9-aa70-4db9-b785-961309a12e3f"
       }
     },
-    "owner": "rds-ventures"
+    "owner": "rds-ventures",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aceb15a9-aa70-4db9-b785-961309a12e3f"
+    }
   }
 }
