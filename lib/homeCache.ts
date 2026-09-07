@@ -32,6 +32,13 @@ export type CachedObservanceEntry = {
   label: string;
   monthLabel: string | null;
   description: string | null;
+  // Absolute ISO date (YYYY-MM-DD, in the profile's spiritual-date terms --
+  // see spiritualDate.ts) this entry is for. Optional so a cache entry
+  // written before this field existed still parses -- entries without it are
+  // simply never eligible for rollover promotion (findObservanceForDate
+  // skips them), falling back to the pre-existing pending-until-fresh-fetch
+  // behavior exactly as before this field existed.
+  date?: string;
 };
 
 export type CachedHomeRenderModel = {
@@ -147,16 +154,113 @@ export function validateHomeSummaryPayload(payload: unknown): boolean {
 }
 
 /**
- * Given a cached payload whose spiritualDate no longer matches today,
- * returns a copy with the date-sensitive sections (Panchang/vrat/
- * observance data and practice-completion status) reset to a neutral,
- * unconfirmed state -- identity, hero and sacred-text content pass through
- * unchanged since those aren't tied to "today". Callers should render this
- * immediately while a fresh network response is in flight, with the caller
- * responsible for showing a pending/loading treatment on the reset
- * sections rather than presenting them as if they were confirmed.
+ * Recomputes daysLeft/label for a cached observance entry relative to a new
+ * target date, using the exact same three-way label wording the backend's
+ * buildObservanceEntry uses (home-summary/route.ts). Only the *arithmetic*
+ * changes here -- the underlying observance identity (name/date/emoji/
+ * routing/description) is untouched, since that's the part that actually
+ * came from the canonical pipeline and this function has no authority to
+ * alter it.
  */
-export function withDateSensitiveFieldsPending(payload: CachedHomeRenderModel): CachedHomeRenderModel {
+function recomputeEntryForDate(entry: CachedObservanceEntry, targetIsoDate: string): CachedObservanceEntry {
+  if (!entry.date) return entry;
+  const daysLeft = Math.round(
+    (new Date(`${entry.date}T00:00:00Z`).getTime() - new Date(`${targetIsoDate}T00:00:00Z`).getTime()) / 86_400_000
+  );
+  const label =
+    daysLeft === 0
+      ? `Today is ${entry.name}`
+      : daysLeft === 1
+        ? `Tomorrow is ${entry.name}`
+        : `${entry.name} in ${daysLeft} days`;
+  return { ...entry, daysLeft, label };
+}
+
+/**
+ * Finds the cached observance (from a previous fetch's `observance` or
+ * `upcomingObservances`) whose absolute date matches `targetIsoDate`. This is
+ * genuine, previously-server-verified data -- it already passed through the
+ * full canonical/withheld/tradition-profile pipeline at fetch time -- not a
+ * client-side derivation, which is what makes promoting it safe (unlike
+ * computing a new observance guess locally, which this project's calendar
+ * governance rules prohibit). Returns null when no cached entry covers this
+ * date (the cache predates this field, or is older than the server's ~16-day
+ * lookahead window) -- callers must fall back to the existing pending state.
+ */
+function findObservanceForDate(
+  payload: CachedHomeRenderModel,
+  targetIsoDate: string
+): CachedObservanceEntry | null {
+  const candidates: CachedObservanceEntry[] = [
+    ...(payload.panchang.observance ? [payload.panchang.observance] : []),
+    ...(payload.panchang.upcomingObservances ?? []),
+  ];
+  return candidates.find((entry) => entry.date === targetIsoDate) ?? null;
+}
+
+/**
+ * Given a cached payload whose spiritualDate no longer matches today, returns
+ * a copy with the date-sensitive sections re-evaluated for `targetIsoDate` --
+ * identity, hero and sacred-text content pass through unchanged since those
+ * aren't tied to "today".
+ *
+ * If the cached fetch's own upcoming-observances window (populated by a
+ * previous day's network response, which already covers ~16 days ahead)
+ * happens to include an entry for `targetIsoDate`, that entry is promoted to
+ * `observance` and rendered immediately as 'ready' -- it is real,
+ * server-verified data, just fetched a little earlier, not a guess. This is
+ * intentionally different from computing anything client-side: the value is
+ * whatever the canonical pipeline already produced, only its daysLeft/label
+ * arithmetic is refreshed for the new date. The caller (HomeSummaryCoordinator)
+ * always issues its normal background fetch right after this regardless of
+ * which branch runs, so if anything changed server-side since the cached
+ * fetch (a council correction, a materialization update), the promoted value
+ * is corrected within one network round-trip -- it is never the last word.
+ *
+ * Falls back to the pre-existing neutral 'pending' skeleton when no matching
+ * date is found in the cached window, or when `targetIsoDate` is omitted.
+ */
+export function withDateSensitiveFieldsPending(
+  payload: CachedHomeRenderModel,
+  targetIsoDate?: string
+): CachedHomeRenderModel {
+  const promoted = targetIsoDate ? findObservanceForDate(payload, targetIsoDate) : null;
+
+  if (promoted && targetIsoDate) {
+    const remainingUpcoming = (payload.panchang.upcomingObservances ?? [])
+      .filter((entry) => entry.date && entry.date > targetIsoDate)
+      .map((entry) => recomputeEntryForDate(entry, targetIsoDate));
+
+    return {
+      ...payload,
+      panchang: {
+        ...payload.panchang,
+        // Not reused for the pill itself (which reads observance/
+        // upcomingObservances directly), but these are still
+        // date-attributed labels from the OLD "today" -- null them out
+        // rather than carry over a value we haven't actually verified is
+        // still accurate for targetIsoDate.
+        festivalLabel: null,
+        vratLabel: null,
+        viewedToday: false,
+        observance: recomputeEntryForDate(promoted, targetIsoDate),
+        upcomingObservances: remainingUpcoming,
+        // A multi-day series/story-card set is tied to the OLD observance's
+        // specific identity -- carrying it over could attach the wrong
+        // series to the promoted entry, so treat as unknown until the fresh
+        // fetch (always issued right after this) confirms it.
+        series: [],
+        storyCards: [],
+        calendarStatus: 'ready',
+      },
+      practices: payload.practices.map((p) => ({ ...p, done: false, progress: 0 })),
+      nextPractice: {
+        ...payload.nextPractice,
+        progress: 0,
+      },
+    };
+  }
+
   return {
     ...payload,
     panchang: {
@@ -168,9 +272,10 @@ export function withDateSensitiveFieldsPending(payload: CachedHomeRenderModel): 
       upcomingObservances: [],
       series: [],
       storyCards: [],
-      // Stale cache means today's materialization state is simply unknown
-      // until the fresh network response lands -- render the pill's
-      // neutral loading skeleton, not a confirmed-empty pill.
+      // Stale cache with no matching cached date means today's
+      // materialization state is simply unknown until the fresh network
+      // response lands -- render the pill's neutral loading skeleton, not a
+      // confirmed-empty pill.
       calendarStatus: 'pending',
     },
     practices: payload.practices.map((p) => ({ ...p, done: false, progress: 0 })),
@@ -226,8 +331,13 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       festivalLabel: full.panchang?.festivalLabel ?? null,
       vratLabel: full.panchang?.vratLabel ?? null,
       viewedToday: Boolean(full.panchang?.viewedToday),
-      observance: full.panchang?.observance ?? null,
-      upcomingObservances: full.panchang?.upcomingObservances ?? [],
+      observance: full.panchang?.observance
+        ? { ...full.panchang.observance, date: typeof full.panchang.observance.date === 'string' ? full.panchang.observance.date : undefined }
+        : null,
+      upcomingObservances: (full.panchang?.upcomingObservances ?? []).map((entry: any) => ({
+        ...entry,
+        date: typeof entry?.date === 'string' ? entry.date : undefined,
+      })),
       series: Array.isArray(full.panchang?.series) ? full.panchang.series : [],
       storyCards: Array.isArray(full.panchang?.storyCards) ? full.panchang.storyCards : [],
       calendarStatus: full.panchang?.calendarStatus === 'pending' || full.panchang?.calendarStatus === 'unavailable'
@@ -292,6 +402,13 @@ export async function readHomeCache(
   timezone: string;
   spiritualDate: string;
   dateSensitiveStale: boolean;
+  // The spiritual date this read was actually evaluated against -- the same
+  // value used internally to decide dateSensitiveStale. Callers passing a
+  // stale cache into withDateSensitiveFieldsPending should use this exact
+  // value as targetIsoDate, not recompute it separately (this function's
+  // envelope.timezone-vs-fallbackTimezone precedence means a naive
+  // recomputation elsewhere could disagree with the one used here).
+  expectedSpiritualDate: string;
 } | null> {
   const key = getHomeCacheKey(identity);
   try {
@@ -342,6 +459,7 @@ export async function readHomeCache(
       timezone: canonicalTimezone,
       spiritualDate: envelope.spiritualDate,
       dateSensitiveStale,
+      expectedSpiritualDate,
     };
   } catch (error) {
     console.warn('[HomeCache] read failed', error);

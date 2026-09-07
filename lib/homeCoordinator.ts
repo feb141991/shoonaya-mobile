@@ -191,7 +191,9 @@ export class HomeSummaryCoordinator {
       const cached = await readHomeCache(cacheIdentity, timezone);
       if (cached && requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {
         this.deps.onApplyPayload(
-          cached.dateSensitiveStale ? withDateSensitiveFieldsPending(cached.payload) : cached.payload
+          cached.dateSensitiveStale
+            ? withDateSensitiveFieldsPending(cached.payload, cached.expectedSpiritualDate)
+            : cached.payload
         );
         this.deps.onSetSectionsPending?.(cached.dateSensitiveStale);
         this.state.hasValidState = true;

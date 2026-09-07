@@ -125,6 +125,10 @@ type ObservanceEntry = {
   label: string;
   monthLabel?: string | null;
   description?: string | null;
+  // Absolute ISO spiritual date (YYYY-MM-DD) this entry is for. Optional so
+  // an old cached/network payload predating this field still parses --
+  // homeCache.ts's rollover promotion simply skips entries without it.
+  date?: string;
 };
 
 type HomeMenuTileItem = {

@@ -125,10 +125,13 @@ export function initPushNotifications() {
   void ensureAndroidNotificationChannel();
 }
 
-function getExpoProjectId(): string | null {
+const DEFAULT_EAS_PROJECT_ID = 'aceb15a9-aa70-4db9-b785-961309a12e3f';
+
+function getExpoProjectId(): string {
   const fromExtra = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId;
   const fromEasConfig = (Constants as unknown as { easConfig?: { projectId?: string } }).easConfig?.projectId;
-  return fromExtra ?? fromEasConfig ?? null;
+  const fromEnv = process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
+  return fromExtra ?? fromEasConfig ?? fromEnv ?? DEFAULT_EAS_PROJECT_ID;
 }
 
 function hasNotificationPermission(permission: NotificationPermissionsStatus) {
