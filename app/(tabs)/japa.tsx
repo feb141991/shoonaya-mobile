@@ -1422,10 +1422,12 @@ export default function JapaScreen() {
       return;
     }
     setStopSaving(true);
-    let saved = count === 0;
+    let saved = count === 0 && completedRounds === 0;
+    const finalCount = count;
+    const finalRounds = completedRounds;
+    const elapsed = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
     try {
       if (count > 0) {
-        const elapsed = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
         const durationDelta = Math.max(0, elapsed - lastPersistedDurationRef.current);
         const outcome = await persistJapaCompletion({
           mantra: mantra.label,
@@ -1447,6 +1449,8 @@ export default function JapaScreen() {
         }
         lastPersistedDurationRef.current = elapsed;
         saved = true;
+      } else if (completedRounds > 0) {
+        saved = true;
       }
     } catch (error) {
       const message = error instanceof Error && error.message !== 'japa-partial-save-failed'
@@ -1456,16 +1460,29 @@ export default function JapaScreen() {
     } finally {
       setStopSaving(false);
       if (saved) {
+        const totalBeads = finalRounds * 108 + finalCount;
+        if (totalBeads > 0) {
+          const stats = {
+            rounds: finalRounds,
+            beads: totalBeads,
+            durationSecs: elapsed,
+            mantraName: mantra.label,
+          };
+          setCompletionStats(stats);
+          setCompletionVisible(true);
+          setConfettiVisible(true);
+        } else {
+          setScreen('launcher');
+        }
         setCount(0);
         setCompletedRounds(0);
         setDurationSecs(0);
         setSessionStartTime(null);
         lastPersistedDurationRef.current = 0;
         setShowStopSheet(false);
-        setScreen('launcher');
       }
     }
-  }, [activeSymbolId, applyJapaContext, count, isGuest, mantra.label, persistJapaCompletion, practiceType, sessionStartTime, tradition]);
+  }, [activeSymbolId, applyJapaContext, completedRounds, count, isGuest, mantra.label, persistJapaCompletion, practiceType, sessionStartTime, tradition]);
 
   const handleDiscardAndStop = useCallback(() => {
     setCount(0);
