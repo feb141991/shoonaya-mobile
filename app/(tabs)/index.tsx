@@ -1603,7 +1603,16 @@ function HomeContent() {
               showsHorizontalScrollIndicator={false}
               bounces={false}
               contentContainerStyle={{ marginTop: 6, alignItems: 'center', gap: 6, paddingRight: 22 }}
-              style={{ maxWidth: '96%', alignSelf: 'flex-start' }}
+              // Explicit height required: this horizontal ScrollView is nested
+              // inside the page's outer vertical ScrollView, and (particularly
+              // on Android) a nested horizontal ScrollView does not reliably
+              // auto-measure its height from content the way a plain View
+              // does -- omitting this collapsed the whole pill row (including
+              // the observance pill) to zero height and made it disappear
+              // entirely, even though the pills' own data/render logic was
+              // unaffected. Sized to PanchangPill's own tallest state
+              // (minHeight: 42 when showing dot indicators) plus headroom.
+              style={{ height: 46, maxWidth: '96%', alignSelf: 'flex-start' }}
             >
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" onRetryUnavailable={retryPanchang} />

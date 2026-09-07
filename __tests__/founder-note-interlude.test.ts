@@ -47,7 +47,7 @@ describe('FounderNoteInterlude Tradition Bridges Test Suite', () => {
   describe('2. Block Resolution & Insertion Verification', () => {
     for (const lang of languages) {
       for (const trad of traditions) {
-        it(`inserts the ${trad} bridge right after the Sanatan origin paragraph in ${lang}`, () => {
+        it(`inserts the ${trad} bridge right after the "families far from home" paragraph in ${lang}`, () => {
           const blocks = getFounderNoteBlocks(lang, trad);
           const bridgeText = TRADITION_BRIDGES[lang][trad];
 
@@ -57,13 +57,13 @@ describe('FounderNoteInterlude Tradition Bridges Test Suite', () => {
           const precedingBlock = blocks[bridgeIndex - 1];
           if (lang === 'en') {
             assert.ok(
-              precedingBlock.text.includes('My own experience began with the Sanatan traditions'),
-              'Preceding block in English must be the founder Sanatan origin paragraph'
+              precedingBlock.text.includes('Many of us are building lives far from where our families began'),
+              'Preceding block in English must be the "families far from home" paragraph'
             );
           } else {
             assert.ok(
-              precedingBlock.text.includes('मेरी अपनी यात्रा उन सनातन परंपराओं से शुरू हुई'),
-              'Preceding block in Hindi must be the founder Sanatan origin paragraph'
+              precedingBlock.text.includes('हममें से बहुत से लोग उस स्थान से दूर अपना जीवन बना रहे हैं'),
+              'Preceding block in Hindi must be the "families far from home" paragraph'
             );
           }
         });
