@@ -38,6 +38,7 @@ import {
   writePendingJapaCompletion,
   retryFailedJapaCompletion,
   discardFailedJapaCompletion,
+  foldSyncQueueItems,
   type PendingJapaCompletion,
 } from '@/lib/japaPendingCompletion';
 import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
@@ -935,12 +936,20 @@ export default function JapaScreen() {
   // banner. Refreshed after the recovery scan and after any manual
   // retry/discard so the banner never shows stale counts.
   const [syncQueueItems, setSyncQueueItems] = useState<PendingJapaCompletion[]>([]);
+  // True only while the queue is genuinely unreadable right now. Kept
+  // separate from syncQueueItems -- a failed read must never be treated
+  // as "confirmed empty" (that would hide real pending/failed indicators
+  // the user already saw), so refreshSyncQueue leaves the last-known
+  // items untouched on failure and this flag alone drives an additional
+  // "Could not check pending saves" notice.
+  const [syncQueueUnavailable, setSyncQueueUnavailable] = useState(false);
   const [syncReviewVisible, setSyncReviewVisible] = useState(false);
   const [retryingCompletionId, setRetryingCompletionId] = useState<string | null>(null);
 
   const refreshSyncQueue = useCallback(async (userId: string) => {
     const result = await readPendingJapaCompletions(userId);
-    setSyncQueueItems(result.status === 'ok' ? result.items : []);
+    setSyncQueueItems((previous) => foldSyncQueueItems(previous, result));
+    setSyncQueueUnavailable(result.status !== 'ok');
   }, []);
 
   // 'uncertain' outcomes leave an entry's status as 'pending' -- keeping
@@ -964,6 +973,7 @@ export default function JapaScreen() {
         userIdRef.current = null;
         void clearJapaContextCache();
         setSyncQueueItems([]);
+        setSyncQueueUnavailable(false);
         setTradition('hindu');
         setActiveSymbolId(null);
         setJapaAlreadyDoneToday(false);
@@ -1098,14 +1108,27 @@ export default function JapaScreen() {
         (label, attempts) => recordMutationRetryOutcome({ kind: 'authenticated', userId }, 'japa', label, attempts)
       );
       if (outcome.kind === 'success') {
-        const latest = await apiFetch('/api/japa/context', { expectedUserId: userId });
-        const updated = latest.ok ? normalizeJapaContext(await latest.json()) : null;
-        const identityNow = getAppIdentity();
-        if (updated && identityNow.kind === 'authenticated' && identityNow.userId === userId) {
-          applyJapaContext(updated);
-          await writeJapaContextCache(userId, updated);
+        try {
+          const latest = await apiFetch('/api/japa/context', { expectedUserId: userId });
+          const updated = latest.ok ? normalizeJapaContext(await latest.json()) : null;
+          const identityNow = getAppIdentity();
+          if (updated && identityNow.kind === 'authenticated' && identityNow.userId === userId) {
+            applyJapaContext(updated);
+            await writeJapaContextCache(userId, updated);
+          }
+        } catch {
+          // The retry itself already succeeded server-side -- a failure to
+          // refresh the dashboard afterward is not a retry failure.
         }
       }
+    } catch (error) {
+      // retryFailedJapaCompletion's strict storage reader aborts rather
+      // than corrupting the queue on a read failure (lib/japaPendingCompletion.ts),
+      // so the item is untouched and still visible in the review sheet --
+      // but the user must be told the attempt itself didn't go through,
+      // not left assuming a silent no-op meant success.
+      console.error('[Japa] retry failed', error);
+      Alert.alert('Could not retry', 'Check your connection and try again.');
     } finally {
       setRetryingCompletionId(null);
       await refreshSyncQueue(userId);
@@ -1125,7 +1148,15 @@ export default function JapaScreen() {
           text: 'Discard',
           style: 'destructive',
           onPress: () => {
-            void discardFailedJapaCompletion(userId, item.clientCompletionId).then(() => refreshSyncQueue(userId));
+            void discardFailedJapaCompletion(userId, item.clientCompletionId)
+              .catch((error) => {
+                // Same strict-storage guarantee as retry: a failed discard
+                // leaves the item exactly as it was, so it's safe to tell
+                // the user to try again rather than assume it's gone.
+                console.error('[Japa] discard failed', error);
+                Alert.alert('Could not discard', 'This round is still in your review list. Check your connection and try again.');
+              })
+              .finally(() => refreshSyncQueue(userId));
           },
         },
       ]
@@ -1574,7 +1605,7 @@ export default function JapaScreen() {
                   </LinearGradient>
                 ) : null}
 
-                {syncPendingCount > 0 || syncFailedCount > 0 ? (
+                {syncPendingCount > 0 || syncFailedCount > 0 || syncQueueUnavailable ? (
                   <View
                     style={{
                       borderRadius: 18,
@@ -1608,6 +1639,14 @@ export default function JapaScreen() {
                           Review
                         </Text>
                       </PressableSurface>
+                    ) : null}
+                    {syncQueueUnavailable ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Feather name="wifi-off" size={13} color={dim} />
+                        <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, flex: 1 }}>
+                          Could not check pending saves.
+                        </Text>
+                      </View>
                     ) : null}
                   </View>
                 ) : null}

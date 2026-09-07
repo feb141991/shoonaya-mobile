@@ -28,6 +28,7 @@ import {
   discardFailedJapaCompletion,
   listFailedJapaCompletions,
   hasFailedJapaCompletion,
+  foldSyncQueueItems,
   type PendingJapaCompletion,
 } from '../lib/japaPendingCompletion';
 
@@ -241,6 +242,25 @@ describe('Japa pending completion -- durable, owner-scoped persistence across pr
       assert.equal(await hasFailedJapaCompletion('user-A'), true);
       assert.equal(await hasFailedJapaCompletion('user-B'), false);
       assert.deepEqual(await listFailedJapaCompletions('user-B'), []);
+    });
+  });
+
+  describe('foldSyncQueueItems -- the UI-refresh fix for "unavailable disappears from the banner"', () => {
+    const sample: PendingJapaCompletion = { clientCompletionId: 'c1', requestBody: '{}', createdAt: '', status: 'pending' };
+
+    it('replaces the display list with fresh items on a successful read', () => {
+      const next = foldSyncQueueItems([sample], { status: 'ok', items: [] });
+      assert.deepEqual(next, []);
+    });
+
+    it('preserves the previously-known items unchanged when the read is unavailable -- never silently empties the banner', () => {
+      const next = foldSyncQueueItems([sample], { status: 'unavailable' });
+      assert.deepEqual(next, [sample]);
+    });
+
+    it('an unavailable read after already having zero items stays empty (nothing to preserve, nothing invented)', () => {
+      const next = foldSyncQueueItems([], { status: 'unavailable' });
+      assert.deepEqual(next, []);
     });
   });
 });

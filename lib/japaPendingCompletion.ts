@@ -111,6 +111,23 @@ export async function readPendingJapaCompletions(userId: string): Promise<Pendin
 }
 
 /**
+ * Folds a read result into the next display list for a UI that shows
+ * pending/failed counts (e.g. Japa's sync banner): on 'ok', the fresh
+ * items; on 'unavailable', the previously-known items, UNCHANGED. A
+ * failed read must never be treated as "confirmed empty" -- that would
+ * hide real pending/failed indicators a user already saw on screen.
+ * Callers should pair this with their own "check failed" flag (simply
+ * `result.status !== 'ok'`) to additionally surface that the check
+ * itself didn't succeed, without discarding what's still known.
+ */
+export function foldSyncQueueItems(
+  previousItems: PendingJapaCompletion[],
+  result: PendingQueueReadResult
+): PendingJapaCompletion[] {
+  return result.status === 'ok' ? result.items : previousItems;
+}
+
+/**
  * Simplified getter for callers that only need "is there something
  * pending" and can safely treat "unavailable" the same as "nothing found"
  * -- e.g. a future display badge. Never use this to decide what to write
