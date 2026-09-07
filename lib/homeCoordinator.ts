@@ -186,6 +186,12 @@ export class HomeSummaryCoordinator {
         ? { kind: 'guest' }
         : { kind: 'authenticated', userId: identity.userId };
 
+    if (isManualRefresh) {
+      this.inFlightRequests.delete(currentIdentityKey);
+      await clearHomeCache(cacheIdentity);
+      this.state.lastLoadedAt = 0;
+    }
+
     // 1. If we don't have valid state rendered yet, read stale-while-revalidate cache
     if (!this.state.hasValidState && !isManualRefresh) {
       const cached = await readHomeCache(cacheIdentity, timezone);

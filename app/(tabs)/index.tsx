@@ -1598,7 +1598,13 @@ function HomeContent() {
               </Pressable>
             </View>
 
-            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '92%' }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              bounces={false}
+              contentContainerStyle={{ marginTop: 6, alignItems: 'center', gap: 6, paddingRight: 22 }}
+              style={{ maxWidth: '96%', alignSelf: 'flex-start' }}
+            >
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} kind="observance" onRetryUnavailable={retryPanchang} />
               <PressableSurface
@@ -1637,7 +1643,7 @@ function HomeContent() {
                 </Text>
                 <Text style={{ fontSize: 10, lineHeight: 13, color: COLORS.homePwaRashiphalArrow }}>→</Text>
               </PressableSurface>
-            </View>
+            </ScrollView>
           </View>
 
           {/* Matches PWA's "Choose Sanctuary Backdrop" entry point — same
