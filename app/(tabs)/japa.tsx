@@ -42,7 +42,7 @@ import {
   type PendingJapaCompletion,
 } from '@/lib/japaPendingCompletion';
 import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
-import { recordMutationRetryOutcome } from '@/lib/telemetry';
+import { recordMutationRetryOutcome, recordRefreshFailure, recordRouteOpen } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -945,6 +945,8 @@ export default function JapaScreen() {
   const [syncQueueUnavailable, setSyncQueueUnavailable] = useState(false);
   const [syncReviewVisible, setSyncReviewVisible] = useState(false);
   const [retryingCompletionId, setRetryingCompletionId] = useState<string | null>(null);
+  const routeOpenStartedAtRef = useRef(Date.now());
+  const routeOpenRecordedRef = useRef(false);
 
   const refreshSyncQueue = useCallback(async (userId: string) => {
     const result = await readPendingJapaCompletions(userId);
@@ -962,6 +964,16 @@ export default function JapaScreen() {
 
   const loadContext = useCallback(async () => {
     let cacheApplied = false;
+    const recordOpen = (identity: { kind: 'guest' } | { kind: 'authenticated'; userId: string }, cacheHit: boolean) => {
+      if (routeOpenRecordedRef.current) return;
+      const currentIdentity = getAppIdentity();
+      const stillSameIdentity = identity.kind === 'guest'
+        ? currentIdentity.kind === 'guest'
+        : currentIdentity.kind === 'authenticated' && currentIdentity.userId === identity.userId;
+      if (!stillSameIdentity) return;
+      routeOpenRecordedRef.current = true;
+      recordRouteOpen(identity, 'japa', { cacheHit, durationMs: Date.now() - routeOpenStartedAtRef.current });
+    };
     try {
       const [guest, sessionResult] = await Promise.all([
         isGuestMode(),
@@ -993,6 +1005,7 @@ export default function JapaScreen() {
         } else {
           setLifetime(EMPTY_LIFETIME);
         }
+        recordOpen({ kind: 'guest' }, Boolean(guestLifetime));
         return;
       }
 
@@ -1017,6 +1030,7 @@ export default function JapaScreen() {
         applyJapaContext(cached);
         cacheApplied = true;
         setLoading(false);
+        recordOpen({ kind: 'authenticated', userId: user.id }, true);
       }
       const response = await apiFetch('/api/japa/context', { expectedUserId: user.id });
       if (!response.ok) throw new Error('japa-context-failed');
@@ -1028,6 +1042,7 @@ export default function JapaScreen() {
       cacheApplied = true;
       setLoading(false);
       await writeJapaContextCache(user.id, context);
+      recordOpen({ kind: 'authenticated', userId: user.id }, false);
 
       // Recover after rendering usable context, not on the first-paint path.
       let recovered = false;
@@ -1072,6 +1087,8 @@ export default function JapaScreen() {
       }
       await refreshSyncQueue(user.id);
     } catch {
+      const identity = getAppIdentity();
+      if (identity.kind === 'authenticated') recordRefreshFailure(identity, 'japa');
       if (!cacheApplied) {
         setActiveSymbolId(null);
         setTradition('hindu');

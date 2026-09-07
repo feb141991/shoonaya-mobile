@@ -29,7 +29,7 @@ const MAX_EVENTS = 500;
 
 export type TelemetryIdentity = { kind: 'guest' } | { kind: 'authenticated'; userId: string };
 
-export type RouteName = 'home' | 'mandali' | 'settings' | 'notifications' | 'bhakti' | 'dharm_veer' | 'pathshala' | 'panchang' | 'vrat';
+export type RouteName = 'home' | 'mandali' | 'settings' | 'notifications' | 'bhakti' | 'dharm_veer' | 'pathshala' | 'panchang' | 'vrat' | 'japa';
 export type OutboxFeature = 'settings' | 'notifications' | 'japa' | 'mandali_posts' | 'mood' | 'sankalpa' | 'reactions';
 export type RetryOutcome = 'success' | 'retry' | 'permanent_failure';
 

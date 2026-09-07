@@ -25,12 +25,22 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { type PathshalaPath } from '@/lib/pathshala-types';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
-import { supabase } from '@/lib/supabase';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch } from '@/lib/api';
 import { useAppIdentity } from '@/lib/appIdentity';
-import { recordRouteOpen } from '@/lib/telemetry';
+import {
+  parseServerTimingHeader,
+  recordRefreshFailure,
+  recordRouteOpen,
+  recordServerTiming,
+} from '@/lib/telemetry';
 import { LoadGenerationGuard, shouldRecordRouteOpen } from '@/lib/routeOpenAttribution';
+import {
+  readPathshalaCache,
+  writePathshalaCache,
+  type PathshalaEnrollment,
+  type PathshalaSacredText,
+} from '@/lib/pathshalaCache';
 
 function parseEnrollmentsResponse(value: unknown): EnrollmentRow[] {
   if (!value || typeof value !== 'object') return [];
@@ -65,20 +75,15 @@ function parseEnrollmentResponse(value: unknown): EnrollmentRow | null {
 type TabKey = 'progress' | 'paths' | 'explore';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
 
-type EnrollmentRow = {
-  path_id: string;
-  current_lesson: number | null;
-  completed_lessons: number[] | null;
-  status: string | null;
-};
+type EnrollmentRow = PathshalaEnrollment;
+type SacredText = PathshalaSacredText;
 
-type SacredText = {
-  label: string;
-  icon: string;
-  original: string;
-  transliteration: string;
-  meaning: string;
-  source: string;
+type PathshalaContext = {
+  tradition: string;
+  sacredText: SacredText;
+  enrollments: EnrollmentRow[];
+  spiritualDate: string;
+  timezone: string;
 };
 
 function isPathshalaPath(value: unknown): value is PathshalaPath {
@@ -108,6 +113,39 @@ function parsePathsResponse(value: unknown): PathshalaPath[] {
 
   const paths = (value as Record<string, unknown>).paths;
   return Array.isArray(paths) ? paths.filter(isPathshalaPath) : [];
+}
+
+function parsePathshalaContext(value: unknown): PathshalaContext | null {
+  if (!value || typeof value !== 'object') return null;
+  const candidate = value as Record<string, unknown>;
+  const profile = candidate.profile;
+  const sacred = candidate.sacredText;
+  if (
+    !profile || typeof profile !== 'object' ||
+    typeof (profile as Record<string, unknown>).tradition !== 'string' ||
+    !sacred || typeof sacred !== 'object' ||
+    typeof (sacred as Record<string, unknown>).original !== 'string' ||
+    typeof candidate.spiritualDate !== 'string' ||
+    typeof candidate.timezone !== 'string'
+  ) {
+    return null;
+  }
+
+  const sacredCandidate = sacred as Record<string, unknown>;
+  return {
+    tradition: (profile as Record<string, unknown>).tradition as string,
+    enrollments: parseEnrollmentsResponse(candidate),
+    spiritualDate: candidate.spiritualDate,
+    timezone: candidate.timezone,
+    sacredText: {
+      label: typeof sacredCandidate.label === 'string' ? sacredCandidate.label : "Today's Verse",
+      icon: typeof sacredCandidate.icon === 'string' ? sacredCandidate.icon : '📖',
+      original: sacredCandidate.original as string,
+      transliteration: typeof sacredCandidate.transliteration === 'string' ? sacredCandidate.transliteration : '',
+      meaning: typeof sacredCandidate.meaning === 'string' ? sacredCandidate.meaning : '',
+      source: typeof sacredCandidate.source === 'string' ? sacredCandidate.source : '',
+    },
+  };
 }
 
 // Mirrors PWA's TRADITION_SEAT map (PathshalaClient.tsx) — the tradition-
@@ -189,9 +227,6 @@ function PathshalaContent() {
 
   const scrollRef = useScrollToTop();
 
-  // Measurement only -- reads the already-restored shared identity purely to
-  // tag telemetry events; does not replace loadData's own getUser() call or
-  // change any fetch behavior (that swap is a separate, later step).
   const appIdentity = useAppIdentity();
   const appIdentityRef = useRef(appIdentity);
   appIdentityRef.current = appIdentity;
@@ -200,7 +235,11 @@ function PathshalaContent() {
   // overlapping opens and account switches).
   const pathshalaLoadGenRef = useRef(new LoadGenerationGuard());
 
-  const loadData = useCallback(async (refresh = false): Promise<'ready' | 'failed'> => {
+  const loadData = useCallback(async (refresh = false): Promise<{
+    outcome: 'ready' | 'failed';
+    cacheHit: boolean;
+    readyAt: number;
+  }> => {
     if (refresh || dataLoadedRef.current) {
       setRefreshing(true);
     } else {
@@ -208,70 +247,86 @@ function PathshalaContent() {
     }
 
     let outcome: 'ready' | 'failed' = 'ready';
+    let cacheHit = false;
+    let readyAt = Date.now();
+    const identity = appIdentityRef.current;
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (identity.kind !== 'authenticated') {
         setEnrollments([]);
-        return 'failed';
+        return { outcome: 'failed', cacheHit: false, readyAt };
+      }
+
+      const cached = await readPathshalaCache(identity.userId);
+      if (cached) {
+        cacheHit = true;
+        setPaths(cached.paths);
+        setEnrollments(cached.enrollments);
+        setTradition(cached.tradition);
+        setSacredText(cached.sacredText);
+        setLoading(false);
+        readyAt = Date.now();
       }
 
       try {
-        const [pathsRes, profileResult, summaryRes, progressRes] = await Promise.all([
+        const [pathsRes, contextRes] = await Promise.all([
           apiFetch('/api/pathshala/paths'),
-          supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle(),
-          apiFetch('/api/native/home-summary'),
-          // Doesn't actually depend on the paths list — it's the user's own
-          // enrollment rows, not derived from `pathsRes` — so it can join the
-          // same round trip instead of waiting on `fetchedPaths.length > 0`
-          // below and firing a full extra sequential request afterward.
-          apiFetch('/api/pathshala/progress'),
+          apiFetch('/api/pathshala/context', { expectedUserId: identity.userId }),
         ]);
 
-        setTradition(profileResult.data?.tradition ?? 'hindu');
-
-        if (summaryRes.ok) {
-          const summaryJson = (await summaryRes.json()) as {
-            sacredText?: Partial<SacredText>;
-          };
-          if (summaryJson.sacredText?.original) {
-            setSacredText({
-              label: summaryJson.sacredText.label ?? "Today's Verse",
-              icon: summaryJson.sacredText.icon ?? '📖',
-              original: summaryJson.sacredText.original,
-              transliteration: summaryJson.sacredText.transliteration ?? '',
-              meaning: summaryJson.sacredText.meaning ?? '',
-              source: summaryJson.sacredText.source ?? '',
-            });
-          }
+        const serverTiming = parseServerTimingHeader(contextRes.headers.get('Server-Timing'));
+        if (serverTiming) {
+          recordServerTiming({ kind: 'authenticated', userId: identity.userId }, 'pathshala', serverTiming);
         }
 
-        if (!pathsRes.ok) {
-          setPaths([]);
-          setEnrollments([]);
-          outcome = 'failed';
-        } else {
-          const fetchedPaths = parsePathsResponse(await pathsRes.json());
-          setPaths(fetchedPaths);
+        const fetchedPaths = pathsRes.ok ? parsePathsResponse(await pathsRes.json()) : null;
+        const context = contextRes.ok ? parsePathshalaContext(await contextRes.json()) : null;
 
-          if (fetchedPaths.length > 0 && progressRes.ok) {
-            setEnrollments(parseEnrollmentsResponse(await progressRes.json()));
-          } else {
-            setEnrollments([]);
-          }
+        if (fetchedPaths) {
+          setPaths(fetchedPaths);
+        } else if (!cacheHit) {
+          setPaths([]);
+        }
+
+        if (context) {
+          setTradition(context.tradition);
+          setSacredText(context.sacredText);
+          setEnrollments(context.enrollments);
+        } else if (!cacheHit) {
+          setEnrollments([]);
+          setSacredText(null);
+        }
+
+        if (fetchedPaths && context) {
+          await writePathshalaCache(identity.userId, {
+            paths: fetchedPaths,
+            enrollments: context.enrollments,
+            tradition: context.tradition,
+            sacredText: context.sacredText,
+            spiritualDate: context.spiritualDate,
+            timezone: context.timezone,
+          });
+        }
+
+        if (!fetchedPaths || !context) {
+          outcome = cacheHit ? 'ready' : 'failed';
+          recordRefreshFailure({ kind: 'authenticated', userId: identity.userId }, 'pathshala');
+        } else if (!cacheHit) {
+          readyAt = Date.now();
         }
       } catch (error) {
         console.error(error);
-        setPaths([]);
-        setEnrollments([]);
-        outcome = 'failed';
+        if (!cacheHit) {
+          setPaths([]);
+          setEnrollments([]);
+          setSacredText(null);
+          outcome = 'failed';
+        }
+        recordRefreshFailure({ kind: 'authenticated', userId: identity.userId }, 'pathshala');
       }
 
-      return outcome;
+      return { outcome, cacheHit, readyAt };
     } catch {
-      return 'failed';
+      return { outcome: 'failed', cacheHit, readyAt };
     } finally {
       // Always runs, regardless of which return path was taken above --
       // previously the `!pathsRes.ok` early return (and the `!user` one)
@@ -285,6 +340,7 @@ function PathshalaContent() {
 
   useFocusEffect(
     useCallback(() => {
+      if (appIdentity.kind === 'loading') return undefined;
       // Route-open telemetry only, matching Home's own "genuine open, not
       // every focus-driven revalidation" distinction: only the very first
       // load (before dataLoadedRef flips true) counts as an open.
@@ -299,18 +355,18 @@ function PathshalaContent() {
       // interrupted load can never double-count as two "first opens".
       const identityAtStart = appIdentityRef.current;
       const token = pathshalaLoadGenRef.current.start();
-      void loadData().then((outcome) => {
+      void loadData().then((result) => {
         const canRecord = shouldRecordRouteOpen(pathshalaLoadGenRef.current, token, identityAtStart, appIdentityRef.current);
-        if (isFirstLoad && outcome === 'ready' && canRecord && identityAtStart.kind === 'authenticated') {
+        if (isFirstLoad && result.outcome === 'ready' && canRecord && identityAtStart.kind === 'authenticated') {
           recordRouteOpen(
             { kind: 'authenticated', userId: identityAtStart.userId },
             'pathshala',
-            { cacheHit: false, durationMs: Date.now() - startedAt }
+            { cacheHit: result.cacheHit, durationMs: result.readyAt - startedAt }
           );
         }
       });
       return () => pathshalaLoadGenRef.current.cancel();
-    }, [loadData])
+    }, [appIdentity, loadData])
   );
 
   const progressMap = useMemo(() => {
@@ -370,11 +426,8 @@ function PathshalaContent() {
 
   const enroll = useCallback(
     async (path: PathshalaPath) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      const identity = appIdentityRef.current;
+      if (identity.kind !== 'authenticated') {
         router.replace('/(auth)/login');
         return;
       }
@@ -397,6 +450,7 @@ function PathshalaContent() {
         const response = await apiFetch('/api/pathshala/enroll', {
           method: 'POST',
           body: JSON.stringify({ pathId: path.id }),
+          expectedUserId: identity.userId,
         });
 
         if (!response.ok) {

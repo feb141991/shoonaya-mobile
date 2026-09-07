@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -28,6 +28,13 @@ import {
 } from '@/lib/progressiveProfiling';
 import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
 import { isConfirmedVratOccurrence } from '@/lib/vrat-observation';
+import { useAppIdentity } from '@/lib/appIdentity';
+import {
+  parseServerTimingHeader,
+  recordRefreshFailure,
+  recordRouteOpen,
+  recordServerTiming,
+} from '@/lib/telemetry';
 
 type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
@@ -89,6 +96,9 @@ export default function VratScreen() {
   const [upcomingError, setUpcomingError] = useState(false);
   const [todayVratOccurrence, setTodayVratOccurrence] = useState<UpcomingVrat | null>(null);
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const appIdentity = useAppIdentity();
+  const routeOpenStartedAtRef = useRef(Date.now());
+  const routeOpenRecordedRef = useRef(false);
 
   // ── Load User Profile ───────────────────────────────────────────────────
   useEffect(() => {
@@ -183,6 +193,7 @@ export default function VratScreen() {
 
   // ── Load Canonical Upcoming & Today Vrats from Server ─────────────────────
   useEffect(() => {
+    if (loading) return;
     let cancelled = false;
     setUpcomingError(false);
 
@@ -199,13 +210,34 @@ export default function VratScreen() {
     }
 
     apiFetch(`/api/calendar/upcoming?${params.toString()}`)
-      .then((res) => (res.ok ? res.json() : null))
+      .then(async (res) => {
+        const identity = appIdentity.kind === 'authenticated'
+          ? { kind: 'authenticated' as const, userId: appIdentity.userId }
+          : appIdentity.kind === 'guest'
+            ? { kind: 'guest' as const }
+            : null;
+        const serverTiming = parseServerTimingHeader(res.headers.get('Server-Timing'));
+        if (identity && serverTiming) recordServerTiming(identity, 'vrat', serverTiming);
+        if (!res.ok) throw new Error(`Upcoming calendar failed with ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         if (cancelled) return;
         if (!data || !Array.isArray(data.observances)) {
           setUpcomingVrats([]);
           setTodayVratOccurrence(null);
+          setUpcomingError(true);
           return;
+        }
+
+        const identity = appIdentity.kind === 'authenticated'
+          ? { kind: 'authenticated' as const, userId: appIdentity.userId }
+          : appIdentity.kind === 'guest'
+            ? { kind: 'guest' as const }
+            : null;
+        if (identity && !routeOpenRecordedRef.current) {
+          routeOpenRecordedRef.current = true;
+          recordRouteOpen(identity, 'vrat', { cacheHit: false, durationMs: Date.now() - routeOpenStartedAtRef.current });
         }
 
         const canonicalToday = data.from; // Server-derived local spiritual date
@@ -281,6 +313,9 @@ export default function VratScreen() {
       })
       .catch(() => {
         if (!cancelled) {
+          if (appIdentity.kind === 'authenticated' || appIdentity.kind === 'guest') {
+            recordRefreshFailure(appIdentity, 'vrat');
+          }
           setUpcomingError(true);
           setTodayVratOccurrence(null);
           setUpcomingVrats([]);
@@ -290,7 +325,7 @@ export default function VratScreen() {
     return () => {
       cancelled = true;
     };
-  }, [selectedTradition, geo.timezone, geo.calendarProfile]);
+  }, [appIdentity, loading, selectedTradition, geo.timezone, geo.calendarProfile]);
 
   const vrats = useMemo(
     () => Object.values(VRAT_DATABASE).filter((vrat) => vratMatchesTradition(vrat, selectedTradition)),

@@ -45,6 +45,7 @@ import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllMandaliCaches } from '@/lib/mandaliCache';
 import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
+import { clearAllPathshalaCaches } from '@/lib/pathshalaCache';
 import { clearAllTelemetry } from '@/lib/telemetry';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
@@ -307,6 +308,7 @@ function RootLayout() {
         void clearAllMandaliCaches();
         void clearAllSettingsCaches();
         void clearAllNotificationsCaches();
+        void clearAllPathshalaCaches();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,7 +20,9 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { selectDharmVeer, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
+import { recordRefreshFailure, recordRouteOpen } from '@/lib/telemetry';
+import { spiritualDate } from '@/lib/spiritualDate';
 
 type TraditionFilter = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
@@ -41,35 +43,6 @@ const TRADITION_ACCENT: Record<string, string> = {
   tribal:   '#3CA05A',
 };
 
-function getLocalSpiritualDate(tz: string, rolloverHour: number = 4): string {
-  try {
-    const d = new Date();
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz,
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: 'numeric', hourCycle: 'h23',
-    }).formatToParts(d);
-
-    const year = parts.find(p => p.type === 'year')?.value;
-    const month = parts.find(p => p.type === 'month')?.value;
-    const dayStr = parts.find(p => p.type === 'day')?.value;
-    const hourStr = parts.find(p => p.type === 'hour')?.value;
-
-    if (year && month && dayStr && hourStr) {
-      let day = parseInt(dayStr, 10);
-      const hour = parseInt(hourStr, 10);
-      if (hour < rolloverHour) {
-         const temp = new Date(`${year}-${month}-${dayStr}T12:00:00Z`);
-         temp.setUTCDate(temp.getUTCDate() - 1);
-         return temp.toISOString().split('T')[0];
-      }
-      return `${year}-${month}-${dayStr}`;
-    }
-  } catch {}
-  const fallback = new Date(Date.now() - rolloverHour * 3600 * 1000);
-  return fallback.toISOString().split('T')[0];
-}
-
 export default function DharmVeerScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -81,6 +54,9 @@ export default function DharmVeerScreen() {
   const [filter, setFilter] = useState<TraditionFilter>('all');
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [liveTodayHero, setLiveTodayHero] = useState<DharmVeer | null>(null);
+  const appIdentity = useAppIdentity();
+  const routeOpenStartedAtRef = useRef(Date.now());
+  const routeOpenRecordedRef = useRef(false);
 
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
@@ -91,37 +67,33 @@ export default function DharmVeerScreen() {
   const gold = brand;
 
   const loadState = useCallback(async () => {
-    const guest = await isGuestMode();
+    const guest = appIdentity.kind === 'guest';
 
     let resolvedTimezone = 'UTC';
     let resolvedTradition = 'hindu';
+    let rosterData: DharmVeer[] = [];
 
     if (!guest) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (appIdentity.kind !== 'authenticated') {
         router.replace('/(auth)/login');
         return;
       }
-      const { data: profileRow } = await supabase
-        .from('profiles')
-        .select('tradition, timezone')
-        .eq('id', user.id)
-        .single();
+      const [profileResult, rosterResponse] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('tradition, timezone')
+          .eq('id', appIdentity.userId)
+          .single(),
+        apiFetch('/api/dharm-veer/roster'),
+      ]);
 
-      resolvedTradition = profileRow?.tradition ?? 'hindu';
-      resolvedTimezone = profileRow?.timezone ?? 'UTC';
-    }
-
-    let rosterData: DharmVeer[] = [];
-    if (guest) {
-      rosterData = DHARM_VEERS;
-    } else {
-      const res = await apiFetch('/api/dharm-veer/roster');
-      if (!res.ok) {
-        throw new Error('Dharm Veer roster unavailable');
-      }
-      const json = await res.json();
+      resolvedTradition = profileResult.data?.tradition ?? 'hindu';
+      resolvedTimezone = profileResult.data?.timezone ?? 'UTC';
+      if (!rosterResponse.ok) throw new Error('Dharm Veer roster unavailable');
+      const json = await rosterResponse.json();
       rosterData = Array.isArray(json?.roster) ? json.roster : [];
+    } else {
+      rosterData = DHARM_VEERS;
     }
 
     if (rosterData.length === 0) {
@@ -139,7 +111,7 @@ export default function DharmVeerScreen() {
         historyArr.forEach(id => ids.add(id));
       }
 
-      const todayDate = getLocalSpiritualDate(resolvedTimezone, 4);
+      const todayDate = spiritualDate(resolvedTimezone);
       // Legacy guest-only fallback from the old local fixture flow.
       if (guest && await AsyncStorage.getItem(`shoonaya-dharmveer-done-${todayDate}`)) {
         const fallbackHero = getDharmVeerOfTheDay(resolvedTradition);
@@ -181,18 +153,35 @@ export default function DharmVeerScreen() {
         await saveSelection(selected);
       }
     } catch (e) {}
-  }, [router]);
+  }, [appIdentity, router]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     setLoading(true);
     loadState()
+      .then(() => {
+        if (routeOpenRecordedRef.current) return;
+        const identity = appIdentity.kind === 'authenticated'
+          ? { kind: 'authenticated' as const, userId: appIdentity.userId }
+          : appIdentity.kind === 'guest'
+            ? { kind: 'guest' as const }
+            : null;
+        if (!identity) return;
+        routeOpenRecordedRef.current = true;
+        recordRouteOpen(identity, 'dharm_veer', {
+          cacheHit: appIdentity.kind === 'guest',
+          durationMs: Date.now() - routeOpenStartedAtRef.current,
+        });
+      })
       .catch(() => {
+        if (appIdentity.kind === 'authenticated') recordRefreshFailure(appIdentity, 'dharm_veer');
+        if (appIdentity.kind === 'guest') recordRefreshFailure(appIdentity, 'dharm_veer');
         Alert.alert('Could not load Dharm Veer');
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [loadState]);
+  }, [appIdentity, loadState]);
 
   const filtered = useMemo(
     () => filter === 'all' ? roster : roster.filter((hero) => hero.tradition === filter),
