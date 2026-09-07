@@ -9,7 +9,7 @@ import {
 
 export const HOME_SACRED_DAYS_WINDOW = 3;
 export const HOME_SACRED_DAYS_LIMIT = 6;
-export const SACRED_DAYS_CARD_HEIGHT = 126;
+export const SACRED_DAYS_CARD_HEIGHT = 100;
 
 export type SacredDaysObservance = {
   name: string;

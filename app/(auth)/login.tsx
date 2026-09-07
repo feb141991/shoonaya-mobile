@@ -575,7 +575,9 @@ export default function LoginScreen() {
 
             const session = await waitForStoredSession();
             if (session) {
-              router.replace('/(tabs)');
+              // Root _layout.tsx onAuthStateChange listener is the sole
+              // navigator once the session is actually established (routing to
+              // onboarding or tabs based on onboarding_completed status).
               return;
             }
           }

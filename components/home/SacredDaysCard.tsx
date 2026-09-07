@@ -74,11 +74,11 @@ export function SacredDaysCard({
     >
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
 
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 }}>
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
         <View
           style={{
-            width: 46,
-            height: 46,
+            width: 42,
+            height: 42,
             borderRadius: RADII.sm,
             alignItems: 'center',
             justifyContent: 'center',
@@ -87,7 +87,7 @@ export function SacredDaysCard({
             borderColor: theme.premiumBorder,
           }}
         >
-          <SacredIcon name={iconName} fallbackGlyph="sun" size={23} color={accent} />
+          <SacredIcon name={iconName} fallbackGlyph="sun" size={21} color={accent} />
         </View>
 
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -111,11 +111,11 @@ export function SacredDaysCard({
             </View>
           </View>
 
-          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 4, lineHeight: 16 }} numberOfLines={2}>
+          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3, lineHeight: 15 }} numberOfLines={2}>
             {entry.description ?? entry.monthLabel ?? entry.label}
           </Text>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 7 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>
             <Text style={{ ...TYPE.chip, color: accent }}>{copy.learnMore}</Text>
             <Feather name="arrow-right" size={13} color={accent} />
           </View>

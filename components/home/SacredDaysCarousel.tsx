@@ -95,7 +95,7 @@ export function SacredDaysCarousel({
   const [exporting, setExporting] = useState(false);
   const copy = COPY[lang];
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-  const cardWidth = Math.min(380, Math.max(256, screenWidth - 64));
+  const cardWidth = Math.min(380, Math.max(280, screenWidth - 48));
 
   const items = useMemo(
     () => buildSacredDaysDeck({ observances, series, spiritualDate }),
@@ -150,8 +150,8 @@ export function SacredDaysCarousel({
   if (calendarStatus === 'ready' && items.length === 0) return null;
 
   return (
-    <View accessibilityLabel={copy.title}>
-      <View style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+    <View accessibilityLabel={copy.title} style={{ marginBottom: 4 }}>
+      <View style={{ minHeight: 34, paddingHorizontal: 4, marginBottom: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 }}>
           <Feather name="calendar" size={15} color={accent} />
           <Text style={{ ...TYPE.section, color: accent }} numberOfLines={1}>
@@ -255,6 +255,7 @@ export function SacredDaysCarousel({
               offset: (cardWidth + CARD_GAP) * index,
               index,
             })}
+            contentContainerStyle={{ paddingHorizontal: 4 }}
           />
 
           {items.length > 1 ? (

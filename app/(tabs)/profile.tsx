@@ -27,10 +27,8 @@ import { type AppLanguage } from '@/lib/language-runtime';
 import { type ProfileSuggestion } from '@/lib/profile-suggestions';
 
 import { Card } from '@/components/ui/Card';
-import { BackButton } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { SacredIcon } from '@/components/ui/SacredIcon';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
@@ -73,6 +71,7 @@ type ProfileData = {
 
 type EditState = {
   fullName: string;
+  username: string;
   sampradaya: string;
   ishtaDevata: string;
   appLanguage: AppLanguage;
@@ -148,6 +147,7 @@ type ReportHeatmapDay = {
 
 const INITIAL_EDIT: EditState = {
   fullName: '',
+  username: '',
   sampradaya: '',
   ishtaDevata: '',
   appLanguage: 'en',
@@ -199,6 +199,10 @@ async function readApiError(response: Response) {
     return body.error;
   }
   return `Request failed with status ${response.status}`;
+}
+
+function isValidUsername(value: string) {
+  return /^[a-z0-9_]{3,24}$/.test(value.trim().toLowerCase());
 }
 
 export default function ProfileScreen() {
@@ -295,6 +299,7 @@ export default function ProfileScreen() {
       setAvatarFailed(false);
       setEditState({
         fullName: 'Atithi Seeker',
+        username: 'atithi',
         sampradaya: '',
         ishtaDevata: '',
         appLanguage: 'en',
@@ -357,6 +362,7 @@ export default function ProfileScreen() {
     if (nextProfile) {
       setEditState({
         fullName: nextProfile.full_name,
+        username: nextProfile.username || nextProfile.id.replace(/-/g, '').slice(0, 10),
         sampradaya: nextProfile.sampradaya,
         ishtaDevata: nextProfile.ishta_devata,
         appLanguage: nextProfile.app_language,
@@ -383,6 +389,11 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     if (!profile) return;
+    const nextUsername = editState.username.trim().toLowerCase();
+    if (!isValidUsername(nextUsername)) {
+      Alert.alert('Check username', 'Use 3-24 lowercase letters, numbers, or underscores.');
+      return;
+    }
     setSaving(true);
     try {
       // tradition is locked at signup — never include it in updates, matching
@@ -396,18 +407,19 @@ export default function ProfileScreen() {
         method: 'PATCH',
         body: JSON.stringify({
           full_name: editState.fullName.trim(),
+          username: nextUsername,
           sampradaya: editState.sampradaya || null,
           ishta_devata: editState.ishtaDevata || null,
           app_language: editState.appLanguage,
         }),
       });
 
-      if (!response.ok) throw new Error('profile update failed');
+      if (!response.ok) throw new Error(await readApiError(response));
 
       await loadProfile();
       setEditVisible(false);
-    } catch {
-      Alert.alert('Could not save profile');
+    } catch (error) {
+      Alert.alert('Could not save profile', error instanceof Error ? error.message : 'Please try again.');
     } finally {
       setSaving(false);
     }
@@ -731,36 +743,48 @@ export default function ProfileScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: insets.bottom + NAV_BAR_CLEARANCE, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 0, paddingBottom: insets.bottom + NAV_BAR_CLEARANCE, gap: 12 }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
       >
-        <View style={{ minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <BackButton showLabel={false} iconSize={24} iconColor={theme.text} fallbackHref="/(tabs)" handleHardwareBack />
+        <LinearGradient
+          colors={isDark
+            ? [COLORS.homeHeroDark, COLORS.cardBgDark, theme.bg]
+            : [COLORS.homeHeroLight, COLORS.cardBgLight, theme.bg]}
+          start={{ x: 0.08, y: 0 }}
+          end={{ x: 0.95, y: 1 }}
+          style={{
+            marginHorizontal: -18,
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: 22,
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel="Open settings"
+            onPress={() => router.push('/settings')}
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 18,
+              width: 48,
+              height: 48,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.glass,
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              zIndex: 2,
+            }}
+          >
+            <Feather name="settings" size={20} color={theme.text} />
+          </PressableSurface>
 
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel="Open settings"
-              onPress={() => router.push('/settings')}
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                backgroundColor: theme.glass,
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
-              }}
-            >
-              <Feather name="settings" size={21} color={theme.text} />
-            </PressableSurface>
-          </View>
-        </View>
-
-        <View style={{ alignItems: 'center', gap: 10, paddingTop: 2, paddingBottom: 2 }}>
           <View style={{ width: 108, height: 108, alignItems: 'center', justifyContent: 'center' }}>
             <LinearGradient
               colors={[theme.brand, theme.premiumBorder, theme.brand]}
@@ -834,7 +858,10 @@ export default function ProfileScreen() {
 
           <View style={{ alignItems: 'center', gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Text style={{ ...TYPE.display, fontSize: 30, lineHeight: 36, color: theme.text, textAlign: 'center' }}>
+              <Text
+                numberOfLines={2}
+                style={{ ...TYPE.display, fontSize: 30, lineHeight: 36, color: theme.text, textAlign: 'center', maxWidth: 270 }}
+              >
                 {profile.full_name}
               </Text>
               <PressableSurface
@@ -862,7 +889,20 @@ export default function ProfileScreen() {
               </PressableSurface>
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
-              <Text style={{ ...TYPE.label, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1.2 }}>@{username}</Text>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Edit username"
+                onPress={() => {
+                  if (isGuest) {
+                    setAuthGateVisible(true);
+                    return;
+                  }
+                  setEditVisible(true);
+                }}
+                style={{ minHeight: 44, justifyContent: 'center' }}
+              >
+                <Text style={{ ...TYPE.label, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1.2 }}>@{username}</Text>
+              </PressableSurface>
               <View
                 style={{
                   borderRadius: 999,
@@ -907,7 +947,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {isGuest ? (
           <Card
@@ -1260,6 +1300,34 @@ export default function ProfileScreen() {
                 fontFamily: FONTS.sans,
               }}
             />
+
+            <View style={{ gap: 6 }}>
+              <TextInput
+                value={editState.username}
+                onChangeText={(value) => setEditState((current) => ({
+                  ...current,
+                  username: value.trim().toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9_]/g, ''),
+                }))}
+                placeholder="Username"
+                placeholderTextColor={theme.dim}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={24}
+                style={{
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.bg,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  color: theme.text,
+                  fontFamily: FONTS.sans,
+                }}
+              />
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                3-24 letters, numbers, or underscores. Shown as @{editState.username || 'username'}.
+              </Text>
+            </View>
 
             {/* Tradition — locked. Matches web's ProfileClient.tsx: chosen once
                 at onboarding, never editable afterward (drives sacred text
