@@ -341,25 +341,6 @@ function AuthButton({
           end={{ x: 1, y: 1 }}
           style={{ position: 'absolute', inset: 0 }}
         />
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: -34,
-            right: -22,
-            width: 110,
-            height: 110,
-            borderRadius: 55,
-            // The gold fill itself (COLORS.brandGold, just above) is a fixed
-            // value regardless of theme, so content rendered on top of it —
-            // this blob, the icon well, and the label below — stays pinned
-            // to its original light-mode value too rather than following
-            // `theme`, which would otherwise flip a white-on-gold button
-            // into a near-black-on-gold one in dark mode.
-            backgroundColor: isGold ? COLORS.cardBgLight : brandAccent,
-            opacity: isGold ? 0.18 : 0.62,
-          }}
-        />
       <PressableSurface
         disabled={disabled}
         onPress={() => {
@@ -1021,15 +1002,13 @@ export default function LoginScreen() {
 
             <AuthDivider label="or use email" isDark={isDark} />
 
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 10 }}>
               <View
                 style={{
                   flexDirection: 'row',
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: theme.card,
-                  padding: 3,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.premiumBorder,
+                  marginBottom: 4,
                 }}
               >
                 {(['signin', 'signup'] as const).map((mode) => {
@@ -1049,18 +1028,20 @@ export default function LoginScreen() {
                       }}
                       style={{
                         flex: 1,
-                        minHeight: 40,
-                        borderRadius: 999,
+                        paddingVertical: 10,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: active ? theme.brand : 'transparent',
+                        borderBottomWidth: active ? 2 : 0,
+                        borderBottomColor: active ? theme.brand : 'transparent',
+                        marginBottom: active ? -1 : 0,
                       }}
                     >
                       <Text
                         style={{
-                          fontFamily: FONTS.sansSemiBold,
-                          fontSize: 13,
-                          color: active ? (isDark ? COLORS.darkBg : COLORS.creamBg) : theme.dim,
+                          fontFamily: active ? FONTS.sansSemiBold : FONTS.sansMedium,
+                          fontSize: 13.5,
+                          color: active ? theme.brand : theme.dim,
+                          letterSpacing: 0.2,
                         }}
                       >
                         {mode === 'signin' ? 'Sign in' : 'Create account'}
