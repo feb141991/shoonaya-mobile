@@ -371,7 +371,7 @@ const INITIAL_STATE: HomeSummary = {
     observance: null,
     upcomingObservances: [],
     series: [],
-    calendarStatus: 'ready',
+    calendarStatus: 'pending',
   },
   nextPractice: {
     id: 'pathshala',
