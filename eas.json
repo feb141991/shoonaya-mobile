@@ -7,6 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE": "https://www.shoonaya.com",
@@ -19,6 +20,7 @@
     "development-simulator": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
       "ios": {
         "simulator": true
       },
@@ -34,6 +36,7 @@
     "preview": {
       "developmentClient": false,
       "distribution": "internal",
+      "channel": "preview",
       "android": {
         "buildType": "apk"
       },
@@ -48,6 +51,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "android": {
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease"
