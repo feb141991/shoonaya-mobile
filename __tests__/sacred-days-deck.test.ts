@@ -7,6 +7,7 @@ import type { ObservanceSeries } from '../lib/observance-series-contract.generat
 import {
   buildSacredDaysDeck,
   HOME_SACRED_DAYS_LIMIT,
+  HOME_SACRED_DAYS_WINDOW,
   type SacredDaysObservance,
 } from '../lib/sacred-days-deck';
 
@@ -89,12 +90,12 @@ test('buildSacredDaysDeck creates one deterministic, bounded Home deck', async (
     const entries = Array.from({ length: 9 }, (_, index) => observance(`Vrat ${index}`, index % 3));
     const items = buildSacredDaysDeck({ observances: entries, series: [], spiritualDate });
     assert.equal(items.length, HOME_SACRED_DAYS_LIMIT);
-    assert.ok(items.every((item) => item.daysLeft <= 1));
+    assert.deepEqual(items.map((item) => item.daysLeft), [0, 0, 0, 1, 1, 1, 2, 2]);
   });
 
   await t.test('keeps an in-window under-review series non-navigable and excludes out-of-window data', () => {
     const items = buildSacredDaysDeck({
-      observances: [observance('Later Vrat', 4)],
+      observances: [observance('Later Vrat', HOME_SACRED_DAYS_WINDOW + 1)],
       series: [activeSeries({ status: 'under_review', diagnostics: ['series_child_under_review'] })],
       spiritualDate,
     });

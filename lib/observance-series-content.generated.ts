@@ -673,14 +673,14 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "sourceRefs": [
               {
                 "sourceName": "Devi Mahatmya (Durga Saptashati)",
-                "pageOrSection": "Devi Kavacham, Verse 4",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Panchamam Skandamate-ti')",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
               },
               {
-                "sourceName": "Skanda Purana",
-                "pageOrSection": "Kaumarika Khanda",
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Navaratra Vrata Vidhi)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -820,14 +820,14 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "sourceRefs": [
               {
                 "sourceName": "Devi Mahatmya (Durga Saptashati)",
-                "pageOrSection": "Chapter 5 and Devi Kavacham, Verse 4",
+                "pageOrSection": "Chapters 2–3 (Manifestation from devas' combined effulgence and slaying of Mahishasura) and Devi Kavacham, Verse 4",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
               },
               {
                 "sourceName": "Vamana Purana",
-                "pageOrSection": "Chapter 18, Verses 1–15",
+                "pageOrSection": "Chapters 18.39–21.52 (Katyayani manifestation in Sage Katyayana's ashram)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1288,21 +1288,21 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "sourceRefs": [
               {
                 "sourceName": "Valmiki Ramayana",
-                "pageOrSection": "Yuddha Kanda (Rama's victory over Ravana)",
+                "pageOrSection": "Yuddha Kanda, Chapters 107–108 (Rama's victory over Ravana)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
               },
               {
                 "sourceName": "Devi Mahatmya (Durga Saptashati)",
-                "pageOrSection": "Chapter 10 (Slaying of Mahishasura on Vijaya Dashami)",
+                "pageOrSection": "Chapters 2–4, esp. Chapter 3 (Slaying of Mahishasura by Durga)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
               },
               {
                 "sourceName": "Bhavishya Purana",
-                "pageOrSection": "Uttara Parva, Chapter 138 (Vijaya Dashami)",
+                "pageOrSection": "Uttara Parva, Chapter 138 (Vijaya Dashami / Aparajita Puja)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1383,7 +1383,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Devi Mahatmya (Durga Saptashati)",
-                "pageOrSection": "Chapter 10, Verses 1–28",
+                "pageOrSection": "Chapters 3–4 (Triumph over Mahishasura and Deva Stuti)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1652,7 +1652,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Padma Purana",
-                "pageOrSection": "Uttara Khanda, Chapter 124, Verses 1–3",
+                "pageOrSection": "Uttara Khanda, Chapter 122 (The Celebration of Dipavali — Tailabhyanga, Yama Tarpana)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1739,7 +1739,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Padma Purana",
-                "pageOrSection": "Uttara Khanda, Chapter 124 (Amavasya Lakshmi Puja)",
+                "pageOrSection": "Uttara Khanda, Chapter 122 (Amavasya Lakshmi Puja)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1781,7 +1781,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Padma Purana",
-                "pageOrSection": "Uttara Khanda, Chapter 124, Verses 4–25",
+                "pageOrSection": "Uttara Khanda, Chapter 122, Verses 4–25 (Lakshmi Puja, Deepotsava)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1808,7 +1808,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Padma Purana",
-                "pageOrSection": "Uttara Khanda, Chapter 124",
+                "pageOrSection": "Uttara Khanda, Chapter 122",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -1994,7 +1994,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Padma Purana",
-                "pageOrSection": "Uttara Khanda, Chapter 125",
+                "pageOrSection": "Uttara Khanda, Chapter 122 (Yamadvitiya / Bhratri Dwitiya section)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -2064,7 +2064,7 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               },
               {
                 "sourceName": "Padma Purana",
-                "pageOrSection": "Uttara Khanda, Chapter 125",
+                "pageOrSection": "Uttara Khanda, Chapter 122 (Yamadvitiya section)",
                 "tier": 1,
                 "confidence": "high",
                 "usagePermitted": "academic_citation"
@@ -3847,6 +3847,1239 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
               "universal": false
             },
             "reviewRef": "council:chhath-series-2026-v1"
+          }
+        }
+      ]
+    },
+    {
+      "definitionKey": "chaitra-navratri",
+      "name": {
+        "value": {
+          "en": "Chaitra Navratri",
+          "hi": "चैत्र नवरात्रि",
+          "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ"
+        },
+        "status": "source_backed",
+        "sourceRefs": [
+          {
+            "sourceName": "Rashtriya Panchang Saka 1948",
+            "pageOrSection": "Chaitra Shukla Paksha, Index #90 (Vasanta Navaratrambha)",
+            "tier": 1,
+            "confidence": "high",
+            "usagePermitted": "academic_citation"
+          },
+          {
+            "sourceName": "Devi Bhagavata Purana",
+            "pageOrSection": "Book 3, Chapter 26, Verses 3–6 (Vasanta Navaratra Mahatmya)",
+            "tier": 1,
+            "confidence": "high",
+            "usagePermitted": "academic_citation"
+          }
+        ],
+        "applicability": {
+          "universal": true
+        },
+        "translationStatus": {
+          "en": "source",
+          "hi": "reviewed_translation",
+          "pa": "reviewed_translation"
+        }
+      },
+      "tradition": "hindu",
+      "children": [
+        {
+          "slug": "chaitra-navratri-day-1-shailaputri",
+          "sequence": 1,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 1 — Shailaputri",
+              "hi": "चैत्र नवरात्रि दिन १ — शैलपुत्री",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੧ — ਸ਼ੈਲਪੁਤਰੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Ashwin/Chaitra Shukla Pratipada (Ghatasthapana, Index #90)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Prathamam Shailaputri cha')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Shailaputri",
+              "hi": "माँ शैलपुत्री",
+              "pa": "ਮਾਂ ਸ਼ੈਲਪੁਤਰੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Prathamam Shailaputri cha')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Navaratra Vrata Vidhi)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Ghatasthapana",
+                "Shailaputri Puja"
+              ],
+              "hi": [
+                "घटस्थापना",
+                "शैलपुत्री पूजा"
+              ],
+              "pa": [
+                "ਘਟਸਥਾਪਨਾ",
+                "ਸ਼ੈਲਪੁਤਰੀ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Pratipada mentions Kalashasthapana",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26, Verses 1–25 (Kalashasthapana and Pratipada Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "First day of Chaitra Navratri marking the Hindu New Year (Nav Samvatsar) and worship of Maa Shailaputri, the daughter of the Himalayas embodying stability and devotion.",
+              "hi": "नव संवत्सर के शुभारंभ पर वसंत नवरात्रि का प्रथम दिवस, जिसमें हिमालय की पुत्री एवं अडिग निष्ठा की प्रतीक माँ शैलपुत्री की आराधना और घटस्थापना की जाती है।",
+              "pa": "ਨਵੇਂ ਸੰਵਤਸਰ ਦੇ ਆਰੰਭ 'ਤੇ ਚੈਤ੍ਰ ਨਰਾਤਿਆਂ ਦਾ ਪਹਿਲਾ ਦਿਨ, ਜਿਸ ਵਿੱਚ ਹਿਮਾਲਿਆ ਦੀ ਧੀ ਅਤੇ ਅਡੋਲ ਭਗਤੀ ਦੇ ਪ੍ਰਤੀਕ ਮਾਂ ਸ਼ੈਲਪੁਤਰੀ ਦੀ ਅਰਾਧਨਾ ਤੇ ਘਟਸਥਾਪਨਾ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Shiva Purana",
+                "pageOrSection": "Rudra Samhita, Parvati Khanda, Chapters 1–2",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26, Verses 3–6",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-2-brahmacharini",
+          "sequence": 2,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 2 — Brahmacharini",
+              "hi": "चैत्र नवरात्रि दिन २ — ब्रह्मचारिणी",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੨ — ਬ੍ਰਹਮਚਾਰਿਣੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Dwitiya",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Dvitiyam Brahmacharini')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Brahmacharini",
+              "hi": "माँ ब्रह्मचारिणी",
+              "pa": "ਮਾਂ ਬ੍ਰਹਮਚਾਰਿਣੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Dvitiyam Brahmacharini')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Brahmacharini Puja"
+              ],
+              "hi": [
+                "ब्रह्मचारिणी पूजा"
+              ],
+              "pa": [
+                "ਬ੍ਰਹਮਚਾਰਿਣੀ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Dwitiya Navaratra Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Second form of Navadurga, personifying ascetic discipline, penance (Tapas), and single-minded spiritual absorption.",
+              "hi": "नवदुर्गा का द्वितीय स्वरूप, जो कठोर तपस्या, संयम, सदाचार और ज्ञान की अधिष्ठात्री देवी हैं।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਦੂਜਾ ਸਰੂਪ, ਜੋ ਕਠਿਨ ਤਪੱਸਿਆ, ਸੰਜਮ ਅਤੇ ਅਧਿਆਤਮਿਕ ਸਾਧਨਾ ਦੀ ਪ੍ਰਤੀਕ ਹਨ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Shiva Purana",
+                "pageOrSection": "Rudra Samhita, Parvati Khanda, Chapters 11–14 (Tapasya of Parvati)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-3-chandraghanta",
+          "sequence": 3,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 3 — Chandraghanta",
+              "hi": "चैत्र नवरात्रि दिन ३ — चंद्रघंटा",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੩ — ਚੰਦਰਘੰਟਾ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Tritiya",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Tritiyam Chandraghanteti')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Chandraghanta",
+              "hi": "माँ चंद्रघंटा",
+              "pa": "ਮਾਂ ਚੰਦਰਘੰਟਾ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Tritiyam Chandraghanteti')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Chandraghanta Puja"
+              ],
+              "hi": [
+                "चंद्रघंटा पूजा"
+              ],
+              "pa": [
+                "ਚੰਦਰਘੰਟਾ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Tritiya Navaratra Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Third form of Navadurga, adorned with a crescent bell-shaped moon, bestowing fearlessness, peace, and readiness for righteous action.",
+              "hi": "नवदुर्गा का तृतीय स्वरूप, जिनके मस्तक पर घंटे के आकार का अर्धचंद्र सुशोभित है; वे निर्भयता, शांति और सौम्यता प्रदान करती हैं।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਤੀਜਾ ਸਰੂਪ, ਜਿਨ੍ਹਾਂ ਦੇ ਮੱਥੇ 'ਤੇ ਘੰਟੀ ਵਰਗਾ ਅੱਧਾ ਚੰਦਰਮਾ ਸਜਿਆ ਹੈ; ਉਹ ਨਿਰਭੈਤਾ ਅਤੇ ਸ਼ਾਂਤੀ ਦੀ ਦਾਤੀ ਹਨ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-4-kushmanda",
+          "sequence": 4,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 4 — Kushmanda",
+              "hi": "चैत्र नवरात्रि दिन ४ — कूष्माण्डा",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੪ — ਕੂਸ਼ਮਾਂਡਾ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Chaturthi",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Kushmandeti Chaturthakam')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Kushmanda",
+              "hi": "माँ कूष्माण्डा",
+              "pa": "ਮਾਂ ਕੂਸ਼ਮਾਂਡਾ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3 ('Kushmandeti Chaturthakam')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Kushmanda Puja"
+              ],
+              "hi": [
+                "कूष्माण्डा पूजा"
+              ],
+              "pa": [
+                "ਕੂਸ਼ਮਾਂਡਾ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Chaturthi Navaratra Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Fourth form of Navadurga whose gentle divine smile manifested the cosmic egg (Brahmanda), dwelling within the core of the Sun.",
+              "hi": "नवदुर्गा का चतुर्थ स्वरूप, जिनके मन्द हास्य से ब्रह्मांड की उत्पत्ति हुई; वे सूर्यमंडल के भीतर निवास कर तेज और ओज प्रदान करती हैं।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਚੌਥਾ ਸਰੂਪ, ਜਿਨ੍ਹਾਂ ਦੀ ਮੁਸਕਾਨ ਨਾਲ ਬ੍ਰਹਿਮੰਡ ਦੀ ਰਚਨਾ ਹੋਈ; ਉਹ ਸੂਰਜ ਮੰਡਲ ਵਿੱਚ ਨਿਵਾਸ ਕਰਦੇ ਹਨ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 3",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 7, Chapter 35 (Devi Gita — Cosmic Manifestation)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-5-skandamata",
+          "sequence": 5,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 5 — Skandamata",
+              "hi": "चैत्र नवरात्रि दिन ५ — स्कन्दमाता",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੫ — ਸਕੰਦਮਾਤਾ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Panchami",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Panchamam Skandamateti')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Skandamata",
+              "hi": "माँ स्कन्दमाता",
+              "pa": "ਮਾਂ ਸਕੰਦਮਾਤਾ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Panchamam Skandamateti')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Skandamata Puja",
+                "Lakshmi Panchami Puja"
+              ],
+              "hi": [
+                "स्कन्दमाता पूजा",
+                "लक्ष्मी पंचमी पूजा"
+              ],
+              "pa": [
+                "ਸਕੰਦਮਾਤਾ ਪੂਜਾ",
+                "ਲਕਸ਼ਮੀ ਪੰਚਮੀ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Panchami Navaratra Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Panchami (Sri Panchami / Lakshmi Panchami)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Fifth form of Navadurga, mother of Lord Skanda (Kartikeya), bestower of maternal grace, salvation, and wisdom.",
+              "hi": "नवदुर्गा का पाँचवाँ स्वरूप, भगवान स्कन्द (कार्तिकेय) की माता, जो वात्सल्य, ज्ञान और मोक्ष प्रदान करती हैं।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਪੰਜਵਾਂ ਸਰੂਪ, ਭਗਵਾਨ ਸਕੰਦ ਦੀ ਮਾਤਾ, ਜੋ ਮਮਤਾ, ਬੁੱਧੀ ਅਤੇ ਮੁਕਤੀ ਦੀ ਦਾਤੀ ਹਨ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-6-katyayani",
+          "sequence": 6,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 6 — Katyayani",
+              "hi": "चैत्र नवरात्रि दिन ६ — कात्यायनी",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੬ — ਕਾਤਿਆਇਨੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Shashthi",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Shashtham Katyayaniti cha')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Katyayani",
+              "hi": "माँ कात्यायनी",
+              "pa": "ਮਾਂ ਕਾਤਿਆਇਨੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Shashtham Katyayaniti cha')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Katyayani Puja",
+                "Yamuna Chhath"
+              ],
+              "hi": [
+                "कात्यायनी पूजा",
+                "यमुना छठ"
+              ],
+              "pa": [
+                "ਕਾਤਿਆਇਨੀ ਪੂਜਾ",
+                "ਯਮੁਨਾ ਛਠ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Shashthi Navaratra Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Shashthi (Yamuna Jayanti / Chaitra Chhath)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Sixth form of Navadurga, manifest from the combined effulgence of the devas in the hermitage of Sage Katyayana to eliminate evil and fulfill righteous desires.",
+              "hi": "नवदुर्गा का छठा स्वरूप, जो देवों के सम्मिलित तेज से महर्षि कात्यायन के आश्रम में प्रकट हुईं और धर्म की रक्षा कर साधकों के मनोरथ पूर्ण करती हैं।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਛੇਵਾਂ ਸਰੂਪ, ਜੋ ਦੇਵਤਿਆਂ ਦੇ ਸਾਂਝੇ ਤੇਜ ਤੋਂ ਰਿਸ਼ੀ ਕਾਤਿਆਇਨ ਦੇ ਆਸ਼ਰਮ ਵਿੱਚ ਪ੍ਰਗਟ ਹੋਏ ਅਤੇ ਧਰਮ ਦੀ ਰੱਖਿਆ ਕਰਦੇ ਹਨ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Chapters 2–3 (Effulgence of Devas and manifestation of Devi) and Devi Kavacham, Verse 4",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Vamana Purana",
+                "pageOrSection": "Chapters 18.39–21.52 (Katyayani manifestation in Sage Katyayana's ashram)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-7-kalaratri",
+          "sequence": 7,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 7 — Kalaratri",
+              "hi": "चैत्र नवरात्रि दिन ७ — कालरात्रि",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੭ — ਕਾਲਰਾਤਰੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Saptami",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Saptamam Kalaratriti')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Kalaratri",
+              "hi": "माँ कालरात्रि",
+              "pa": "ਮਾਂ ਕਾਲਰਾਤਰੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Saptamam Kalaratriti')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Kalaratri Puja",
+                "Maha Saptami Vrata",
+                "Nisha Puja"
+              ],
+              "hi": [
+                "कालरात्रि पूजा",
+                "महा सप्तमी व्रत",
+                "निशा पूजा"
+              ],
+              "pa": [
+                "ਕਾਲਰਾਤਰੀ ਪੂਜਾ",
+                "ਮਹਾ ਸਪਤਮੀ ਵਰਤ",
+                "ਨਿਸ਼ਾ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Saptami Navaratra Puja)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Seventh form of Navadurga, the fiercest destroyer of ignorance, darkness, and demonic forces, known as Shubhankari for always conferring auspicious blessings on devotees.",
+              "hi": "नवदुर्गा का सप्तम स्वरूप, जो अज्ञान और अंधकार का नाश करने वाली घोर संहारक हैं, किंतु भक्तों के लिए सदा शुभ फलदायिनी होने से 'शुभंकरी' कहलाती हैं।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਸੱਤਵਾਂ ਸਰੂਪ, ਜੋ ਅਗਿਆਨ ਅਤੇ ਬਦੀ ਦਾ ਨਾਸ਼ ਕਰਨ ਵਾਲੇ ਹਨ ਅਤੇ ਭਗਤਾਂ ਲਈ ਸਦਾ ਸ਼ੁਭੰਕਰੀ (ਕਲਿਆਣਕਾਰੀ) ਹਨ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-8-mahagauri",
+          "sequence": 8,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 8 — Mahagauri",
+              "hi": "चैत्र नवरात्रि दिन ८ — महागौरी",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੮ — ਮਹਾਗੌਰੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Ashtami (Durga Ashtami)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Mahagauriti Chashtamam')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Mahagauri",
+              "hi": "माँ महागौरी",
+              "pa": "ਮਾਂ ਮਹਾਗੌਰੀ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4 ('Mahagauriti Chashtamam')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Mahagauri Puja",
+                "Chaitra Durga Ashtami",
+                "Kanya Pujan (Kanjak)",
+                "Sandhi Puja"
+              ],
+              "hi": [
+                "महागौरी पूजा",
+                "चैत्र दुर्गाष्टमी",
+                "कन्या पूजन (कंजक)",
+                "संधि पूजा"
+              ],
+              "pa": [
+                "ਮਹਾਗੌਰੀ ਪੂਜਾ",
+                "ਚੈਤ੍ਰ ਦੁਰਗਾ ਅਸ਼ਟਮੀ",
+                "ਕੰਨਿਆ ਪੂਜਨ (ਕੰਜਕ)",
+                "ਸੰਧੀ ਪੂਜਾ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26, Verses 32–45 (Maha Ashtami Vrata and Kumari Puja / Kanya Pujan Vidhi)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Chaitra Shukla Ashtami (Durga Ashtami)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Eighth form of Navadurga, embodying pristine purity, serenity, and compassion, whose worship purifies all past sins and grants divine grace.",
+              "hi": "नवदुर्गा का अष्टम स्वरूप, जो परम पावनता, सौम्यता और करुणा की प्रतिमूर्ति हैं; इनकी उपासना से समस्त पापों का शमन और आत्म-शांति प्राप्त होती है।",
+              "pa": "ਨਵਦੁਰਗਾ ਦਾ ਅੱਠਵਾਂ ਸਰੂਪ, ਜੋ ਪਵਿੱਤਰਤਾ, ਸ਼ਾਂਤੀ ਅਤੇ ਦਇਆ ਦੀ ਮੂਰਤ ਹਨ; ਇਨ੍ਹਾਂ ਦੀ ਪੂਜਾ ਸਾਰੇ ਪਾਪਾਂ ਦਾ ਨਾਸ ਕਰਦੀ ਹੈ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 4",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26, Verses 30–45",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Shiva Purana",
+                "pageOrSection": "Rudra Samhita, Parvati Khanda (Purification and manifestation of Gauri)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          }
+        },
+        {
+          "slug": "chaitra-navratri-day-9-siddhidatri",
+          "sequence": 9,
+          "canonicalTitle": {
+            "value": {
+              "en": "Chaitra Navratri Day 9 — Siddhidatri (Ram Navami)",
+              "hi": "चैत्र नवरात्रि दिन ९ — सिद्धिदात्री (रामनवमी)",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤੇ ਦਿਨ ੯ — ਸਿੱਧੀਦਾਤਰੀ (ਰਾਮ ਨੌਮੀ)"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Entry #98 (Rama Navami / Chaitra Shukla Navami)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 5 ('Navamam Siddhidatri cha Navadurgaah Prakeertitaah')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
+          },
+          "deityOrTheme": {
+            "value": {
+              "en": "Maa Siddhidatri & Bhagavan Sri Rama",
+              "hi": "माँ सिद्धिदात्री एवं भगवान श्रीराम",
+              "pa": "ਮਾਂ ਸਿੱਧੀਦਾਤਰੀ ਅਤੇ ਭਗਵਾਨ ਸ਼੍ਰੀ ਰਾਮ"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 5 ('Navamam Siddhidatri cha')",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26 (Navami Vrata Completion and Navaratra Parana Vidhi)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Valmiki Ramayana",
+                "pageOrSection": "Bala Kanda, Chapter 18, Verses 8–12 (Birth of Sri Rama on Chaitra Shukla Navami)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "rituals": {
+            "value": {
+              "en": [
+                "Siddhidatri Puja",
+                "Ram Navami Puja",
+                "Kanya Pujan",
+                "Navratri Parana",
+                "Chandi Havan"
+              ],
+              "hi": [
+                "सिद्धिदात्री पूजा",
+                "रामनवमी पूजा",
+                "कन्या पूजन",
+                "नवरात्रि पारण",
+                "चंडी हवन"
+              ],
+              "pa": [
+                "ਸਿੱਧੀਦਾਤਰੀ ਪੂਜਾ",
+                "ਰਾਮ ਨੌਮੀ ਪੂਜਾ",
+                "ਕੰਨਿਆ ਪੂਜਨ",
+                "ਨਰਾਤੇ ਪਾਰਣਾ",
+                "ਚੰਡੀ ਹਵਨ"
+              ]
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Rashtriya Panchang Saka 1948",
+                "pageOrSection": "Entry #98 (Rama Navami / Chaitra Shukla Navami)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26, Verses 45–55 (Navami Puja, Homa, and Parana Vidhi)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Valmiki Ramayana",
+                "pageOrSection": "Bala Kanda, Chapter 18 (Rama Janmotsava)",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            }
+          },
+          "significance": {
+            "value": {
+              "en": "Grand culmination of Chaitra Navratri honoring Maa Siddhidatri, granter of all eight Siddhis and spiritual perfections, harmonized with the auspicious descent of Maryada Purushottama Bhagavan Sri Rama.",
+              "hi": "चैत्र नवरात्रि का पावन समापन, जिसमें अष्ट सिद्धियों की दात्री माँ सिद्धिदात्री की आराधना के साथ मर्यादा पुरुषोत्तम भगवान श्रीराम का प्राकट्योत्सव (रामनवमी) श्रद्धापूर्वक मनाया जाता है।",
+              "pa": "ਚੈਤ੍ਰ ਨਰਾਤਿਆਂ ਦਾ ਪਵਿੱਤਰ ਸਮਾਪਨ, ਜਿਸ ਵਿੱਚ ਅੱਠ ਸਿੱਧੀਆਂ ਦੀ ਦਾਤੀ ਮਾਂ ਸਿੱਧੀਦਾਤਰੀ ਦੀ ਅਰਾਧਨਾ ਦੇ ਨਾਲ ਮਰਯਾਦਾ ਪੁਰਸ਼ੋਤਮ ਭਗਵਾਨ ਸ਼੍ਰੀ ਰਾਮ ਦਾ ਪ੍ਰਕਾਸ਼ ਉਤਸਵ (ਰਾਮ ਨੌਮੀ) ਮਨਾਇਆ ਜਾਂਦਾ ਹੈ।"
+            },
+            "status": "source_backed",
+            "sourceRefs": [
+              {
+                "sourceName": "Devi Mahatmya (Durga Saptashati)",
+                "pageOrSection": "Devi Kavacham, Verse 5",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Devi Bhagavata Purana",
+                "pageOrSection": "Book 3, Chapter 26, Verses 45–55",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              },
+              {
+                "sourceName": "Valmiki Ramayana",
+                "pageOrSection": "Bala Kanda, Chapter 18, Verses 8–12",
+                "tier": 1,
+                "confidence": "high",
+                "usagePermitted": "academic_citation"
+              }
+            ],
+            "applicability": {
+              "universal": true
+            },
+            "translationStatus": {
+              "en": "source",
+              "hi": "reviewed_translation",
+              "pa": "reviewed_translation"
+            }
           }
         }
       ]

@@ -21,6 +21,10 @@ test('Native Observance Series Content — Sourced Provenance & Snapshot Integri
     const diwali = getSeriesGroupContent('diwali-five-days');
     assert.ok(diwali, 'Diwali group should exist');
     assert.equal(diwali.children.length, 5);
+
+    const chaitra = getSeriesGroupContent('chaitra-navratri');
+    assert.ok(chaitra, 'Chaitra Navratri group should exist');
+    assert.equal(chaitra.children.length, 9);
   });
 
   await t.test('2. successfully retrieves child content by slug with typed field provenance', () => {
@@ -29,7 +33,7 @@ test('Native Observance Series Content — Sourced Provenance & Snapshot Integri
     assert.equal(day1.sequence, 1);
     assert.equal(day1.canonicalTitle.value.en, 'Navratri Day 1 — Shailaputri');
     assert.equal(day1.deityOrTheme?.value.en, 'Maa Shailaputri');
-    assert.equal(day1.canonicalTitle.status, 'pending_source');
+    assert.equal(day1.canonicalTitle.status, 'source_backed');
 
     const naraka = getSeriesChildContent('naraka-chaturdashi');
     assert.ok(naraka, 'Naraka Chaturdashi should exist');
@@ -46,9 +50,17 @@ test('Native Observance Series Content — Sourced Provenance & Snapshot Integri
 
   await t.test('4. resolves multilingual text with fallback from LocalizedEditorialField', () => {
     const day1 = getSeriesChildContent('navratri-day-1-shailaputri');
-    assert.equal(resolveLocalizedText(day1?.canonicalTitle, 'en'), '');
-    assert.equal(resolveLocalizedText(day1?.canonicalTitle, 'hi'), '');
-    assert.equal(resolveLocalizedText(day1?.canonicalTitle, 'pa'), '');
+    assert.equal(resolveLocalizedText(day1?.canonicalTitle, 'en'), 'Navratri Day 1 — Shailaputri');
+    assert.equal(resolveLocalizedText(day1?.canonicalTitle, 'hi'), 'नवरात्रि दिन १ — शैलपुत्री');
+    assert.equal(resolveLocalizedText(day1?.canonicalTitle, 'pa'), 'ਨਰਾਤੇ ਦਿਨ ੧ — ਸ਼ੈਲਪੁਤਰੀ');
+
+    // Pending field returns empty string (fail-closed)
+    assert.equal(resolveLocalizedText({
+      value: { en: 'Draft title' },
+      status: 'pending_source',
+      sourceRefs: [],
+      applicability: { universal: true },
+    }, 'en'), '');
 
     // Fallback to English if unknown or missing
     assert.equal(resolveLocalizedText({
@@ -62,14 +74,22 @@ test('Native Observance Series Content — Sourced Provenance & Snapshot Integri
   await t.test('5. resolves localized ritual lists with regional applicability', () => {
     const day6 = getSeriesChildContent('navratri-day-6-katyayani');
     const enRituals = resolveLocalizedList(day6?.rituals, 'en', { region: 'Bengal' });
-    assert.deepEqual(enRituals, []);
+    assert.deepEqual(enRituals, ['Bilva Nimantran', 'Sasthi Bodhon', 'Katyayani Puja']);
     assert.equal(day6?.rituals?.applicability.universal, false);
     assert.ok(day6?.rituals?.applicability.regions?.includes('Bengal'));
   });
 
   await t.test('6. fails closed for pending, unratified, and inapplicable editorial fields', () => {
     const day1 = getSeriesChildContent('navratri-day-1-shailaputri');
-    assert.equal(isEditorialFieldDisplayable(day1?.deityOrTheme), false);
+    assert.equal(isEditorialFieldDisplayable(day1?.deityOrTheme), true);
+
+    const pending = {
+      value: { en: 'Draft' },
+      status: 'pending_source' as const,
+      sourceRefs: [],
+      applicability: { universal: true },
+    };
+    assert.equal(isEditorialFieldDisplayable(pending), false);
 
     const unratified = {
       value: { en: 'Draft' },
