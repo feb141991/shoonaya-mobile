@@ -7,8 +7,8 @@ import {
   nativeCalendarDayDistance,
 } from './observance-series-card-helpers';
 
-export const HOME_SACRED_DAYS_WINDOW = 3;
-export const HOME_SACRED_DAYS_LIMIT = 6;
+export const HOME_SACRED_DAYS_WINDOW = 15;
+export const HOME_SACRED_DAYS_LIMIT = 8;
 export const SACRED_DAYS_CARD_HEIGHT = 100;
 
 export type SacredDaysObservance = {
