@@ -19,7 +19,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
+import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -29,7 +29,7 @@ import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
-import { getInitialReaderDisplayMode, resolveReadablePreferences } from '@/lib/readable-preferences';
+import { getInitialReaderDisplayMode, resolveReadablePreferences, resolveLocalContentLanguage } from '@/lib/readable-preferences';
 
 function getLocalSpiritualDate(tz: string, rolloverHour: number = 4): string {
   try {
@@ -68,7 +68,13 @@ const FONT_PRESETS = [
   { label: 'A++', value: 'xl' },
 ];
 
-function getReaderCopy(tradition: DharmVeer['tradition'] | undefined, language: 'en' | 'local') {
+// Keyed to the VIEWER's own resolved local-content language (hi/pa), never
+// to the hero's tradition -- previously this branched on
+// `tradition === 'sikh'`, which showed Punjabi UI copy over Hindi data for
+// Sikh heroes regardless of the viewer's actual language preference, and
+// Hindi regardless of a Punjabi-preferring viewer's choice for every other
+// tradition.
+function getReaderCopy(language: 'en' | 'hi' | 'pa') {
   if (language === 'en') {
     return {
       toggleLabel: 'हिंदी',
@@ -84,7 +90,7 @@ function getReaderCopy(tradition: DharmVeer['tradition'] | undefined, language: 
     };
   }
 
-  if (tradition === 'sikh') {
+  if (language === 'pa') {
     return {
       toggleLabel: 'ਪੰਜਾਬੀ',
       journey: 'ਜੀਵਨ ਯਾਤਰਾ',
@@ -361,16 +367,41 @@ export default function DharmVeerDetailScreen() {
     }
   };
 
-  const title = lang === 'local' && hero?.nameLocal ? hero.nameLocal : hero?.name;
+  const preferences = useMemo(() => resolveReadablePreferences({
+    appLanguage: profile?.appLanguage,
+    meaningLanguage: profile?.meaningLanguage,
+  }), [profile?.appLanguage, profile?.meaningLanguage]);
+  const localContentLanguage = resolveLocalContentLanguage(preferences);
+
+  // namePa has no fallback-to-Hindi step here since a name is a proper noun,
+  // not prose -- Hindi nameLocal is still the right "local" default when no
+  // Punjabi name exists, matching pickDharmVeerLocalizedText's own chain.
+  const title = lang === 'local'
+    ? (localContentLanguage === 'pa' ? hero?.namePa || hero?.nameLocal || hero?.name : hero?.nameLocal || hero?.name)
+    : hero?.name;
   const era = lang === 'local' && hero?.eraLocal ? hero.eraLocal : hero?.era;
   const region = lang === 'local' && hero?.regionLocal ? hero.regionLocal : hero?.region;
-  const tagline = lang === 'local' ? hero?.taglineLocal : hero?.tagline;
-  const journeyText = lang === 'local' && hero?.journeyLocal ? hero.journeyLocal : hero?.journey;
-  const trialText = lang === 'local' && hero?.trialLocal ? hero.trialLocal : hero?.trial;
-  const teachingText = lang === 'local' && hero?.teachingLocal ? hero.teachingLocal : hero?.teaching;
-  const moralText = lang === 'local' && hero?.moralLocal ? hero.moralLocal : hero?.moral;
-  const quoteText = lang === 'local' && hero?.quoteLocal?.text ? hero.quoteLocal.text : hero?.quote?.text;
-  const quoteAttribution = lang === 'local' && hero?.quoteLocal?.attribution ? hero.quoteLocal.attribution : hero?.quote?.attribution;
+  const tagline = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.tagline, hero?.taglineLocal, hero?.taglinePa, localContentLanguage)
+    : hero?.tagline;
+  const journeyText = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.journey, hero?.journeyLocal, hero?.journeyPa, localContentLanguage)
+    : hero?.journey;
+  const trialText = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.trial, hero?.trialLocal, hero?.trialPa, localContentLanguage)
+    : hero?.trial;
+  const teachingText = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.teaching, hero?.teachingLocal, hero?.teachingPa, localContentLanguage)
+    : hero?.teaching;
+  const moralText = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.moral, hero?.moralLocal, hero?.moralPa, localContentLanguage)
+    : hero?.moral;
+  const quoteText = lang === 'local'
+    ? (localContentLanguage === 'pa' ? hero?.quotePa?.text : undefined) || hero?.quoteLocal?.text || hero?.quote?.text
+    : hero?.quote?.text;
+  const quoteAttribution = lang === 'local'
+    ? (localContentLanguage === 'pa' ? hero?.quotePa?.attribution : undefined) || hero?.quoteLocal?.attribution || hero?.quote?.attribution
+    : hero?.quote?.attribution;
 
   const textToCopy = hero ? `${title}
 ${tagline}
@@ -391,7 +422,7 @@ ${moralText}` : '';
 
   // A missing decorative tagline must not suppress a fully translated reader.
   const hasCompleteLocalContent = !!hero?.nameLocal && !!hero?.journeyLocal && !!hero?.trialLocal && !!hero?.teachingLocal && !!hero?.moralLocal;
-  const readerCopy = getReaderCopy(hero?.tradition, lang);
+  const readerCopy = getReaderCopy(lang === 'local' ? localContentLanguage : 'en');
   const meta = hero ? TRADITION_META[hero.tradition] : null;
   const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)';
 
@@ -448,7 +479,7 @@ ${moralText}` : '';
         fontPresets={FONT_PRESETS}
         fontStep={fontStep}
         setFontStep={setFontStep}
-        languages={hasCompleteLocalContent ? [{ code: 'en', label: 'EN' }, { code: 'local', label: getReaderCopy(hero?.tradition, 'local').toggleLabel }] : undefined}
+        languages={hasCompleteLocalContent ? [{ code: 'en', label: 'EN' }, { code: 'local', label: getReaderCopy(localContentLanguage).toggleLabel }] : undefined}
         currentLanguage={lang}
         setLanguage={setLang}
         onCopy={() => handlers.copyText(textToCopy, 'Story')}

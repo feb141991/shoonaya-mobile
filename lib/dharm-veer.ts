@@ -14,6 +14,7 @@ export interface DharmVeer {
   id: string;
   name: string;
   nameLocal?: string;
+  namePa?: string;
   era: string;
   eraLocal?: string;
   tradition: 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'sufi' | 'tribal';
@@ -22,21 +23,27 @@ export interface DharmVeer {
   emoji: string;
   tagline: string;
   taglineLocal?: string;
+  taglinePa?: string;
   /** 2–3 paragraph account of their life and mission */
   journey: string;
   journeyLocal?: string;
+  journeyPa?: string;
   /** The defining test, sacrifice, or trial they endured */
   trial: string;
   trialLocal?: string;
+  trialPa?: string;
   /** Their core teaching in plain language */
   teaching: string;
   teachingLocal?: string;
+  teachingPa?: string;
   /** The moral for a modern seeker */
   moral: string;
   moralLocal?: string;
+  moralPa?: string;
   /** How their legacy shaped the tradition or society */
   legacy?: string;
   legacyLocal?: string;
+  legacyPa?: string;
   /** Scene description for illustration — evokes their most iconic moment */
   illustrationPrompt?: string;
   quote?: {
@@ -47,6 +54,28 @@ export interface DharmVeer {
     text: string;
     attribution: string;
   };
+  quotePa?: {
+    text: string;
+    attribution: string;
+  };
+}
+
+/**
+ * Picks which language's text to show for a given field, given the viewer's
+ * resolved local-content language. Punjabi falls back to Hindi (not English)
+ * when a specific row hasn't been backfilled with Punjabi yet, so a
+ * Punjabi-preferring reader still sees local-script content rather than a
+ * sudden drop to English. Mirrors the backend's identical helper in
+ * src/lib/dharm-veer.ts (Sanatan Sangam/Shoonaya).
+ */
+export function pickDharmVeerLocalizedText(
+  english: string | undefined,
+  hindi: string | undefined,
+  punjabi: string | undefined,
+  contentLanguage: 'hi' | 'pa',
+): string | undefined {
+  if (contentLanguage === 'pa') return punjabi || hindi || english;
+  return hindi || english;
 }
 
 export const DHARM_VEERS: DharmVeer[] = [

@@ -17,7 +17,18 @@ describe('Dharm Veer localized reader', () => {
   });
 
   it('does not show an English tagline while the local reader is active and no local tagline exists', () => {
-    assert.match(screen, /const tagline = lang === 'local' \? hero\?\.taglineLocal : hero\?\.tagline/);
+    assert.doesNotMatch(screen, /const tagline = lang === 'local' \? hero\?\.taglineLocal : hero\?\.tagline/);
+    assert.match(screen, /pickDharmVeerLocalizedText\(hero\?\.tagline, hero\?\.taglineLocal, hero\?\.taglinePa, localContentLanguage\)/);
     assert.match(screen, /\{tagline \? \(/);
+  });
+
+  it('resolves Hindi vs Punjabi from the VIEWER\'s own preference, not hero.tradition', () => {
+    // Previously getReaderCopy(tradition, language) branched on
+    // `tradition === 'sikh'`, showing Punjabi copy over Hindi data for Sikh
+    // heroes regardless of the viewer's own language, and Hindi regardless
+    // of a Punjabi-preferring viewer's choice for every other tradition.
+    assert.doesNotMatch(screen, /getReaderCopy\(hero\?\.tradition/);
+    assert.match(screen, /function getReaderCopy\(language: 'en' \| 'hi' \| 'pa'\)/);
+    assert.match(screen, /resolveLocalContentLanguage\(preferences\)/);
   });
 });
