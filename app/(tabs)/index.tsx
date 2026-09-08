@@ -117,6 +117,10 @@ type PracticeRow = {
 
 type ObservanceEntry = {
   name: string;
+  // Hindi/Punjabi renderings of name/description -- see
+  // pickSacredDayLocalizedText in lib/sacred-days-deck.ts.
+  nameLocal?: string | null;
+  namePa?: string | null;
   emoji: string | null;
   daysLeft: number;
   routeKind: string;
@@ -125,6 +129,8 @@ type ObservanceEntry = {
   label: string;
   monthLabel?: string | null;
   description?: string | null;
+  descriptionLocal?: string | null;
+  descriptionPa?: string | null;
   // Absolute ISO spiritual date (YYYY-MM-DD) this entry is for. Optional so
   // an old cached/network payload predating this field still parses --
   // homeCache.ts's rollover promotion simply skips entries without it.

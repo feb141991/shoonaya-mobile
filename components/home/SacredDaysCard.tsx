@@ -9,6 +9,7 @@ import { COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import { getNativeSeriesCardCopy } from '@/lib/observance-series-card-helpers';
 import { resolveNativeRoute } from '@/lib/routes';
 import {
+  pickSacredDayLocalizedText,
   SACRED_DAYS_CARD_HEIGHT,
   type SacredDaysObservance,
 } from '@/lib/sacred-days-deck';
@@ -52,6 +53,12 @@ export function SacredDaysCard({
   const iconName = ROUTE_ICON[entry.routeKind] ?? 'panchang';
   const isToday = entry.daysLeft === 0;
   const copy = getNativeSeriesCardCopy(lang);
+  const displayName = lang === 'en'
+    ? entry.name
+    : pickSacredDayLocalizedText(entry.name, entry.nameLocal, entry.namePa, lang) ?? entry.name;
+  const displayDescription = lang === 'en'
+    ? entry.description
+    : pickSacredDayLocalizedText(entry.description, entry.descriptionLocal, entry.descriptionPa, lang) ?? entry.description;
   const gradient: readonly [string, string] = isDark
     ? [COLORS.navGlassTopDark, COLORS.navGlassBottomDark]
     : [COLORS.navGlassTopLight, COLORS.navGlassBottomLight];
@@ -60,7 +67,7 @@ export function SacredDaysCard({
   return (
     <PressableSurface
       haptic="selection"
-      accessibilityLabel={`${entry.name}, ${daysBadgeLabel(entry.daysLeft, lang)}${entry.description ? `. ${entry.description}` : ''}`}
+      accessibilityLabel={`${displayName}, ${daysBadgeLabel(entry.daysLeft, lang)}${displayDescription ? `. ${displayDescription}` : ''}`}
       accessibilityHint={copy.learnMore}
       onPress={() => router.push(resolveNativeRoute(entry.href) as Href)}
       style={{
@@ -93,7 +100,7 @@ export function SacredDaysCard({
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <Text style={{ ...TYPE.label, color: theme.text, flex: 1 }} numberOfLines={1}>
-              {entry.name}
+              {displayName}
             </Text>
             <View
               style={{
@@ -112,7 +119,7 @@ export function SacredDaysCard({
           </View>
 
           <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3, lineHeight: 15 }} numberOfLines={2}>
-            {entry.description ?? entry.monthLabel ?? entry.label}
+            {displayDescription ?? entry.monthLabel ?? entry.label}
           </Text>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>

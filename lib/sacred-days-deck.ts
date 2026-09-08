@@ -13,6 +13,10 @@ export const SACRED_DAYS_CARD_HEIGHT = 100;
 
 export type SacredDaysObservance = {
   name: string;
+  // Hindi/Punjabi renderings of name/description. null/undefined until a
+  // given slug's translation is backfilled -- see pickSacredDayLocalizedText.
+  nameLocal?: string | null;
+  namePa?: string | null;
   emoji: string | null;
   daysLeft: number;
   routeKind: string;
@@ -21,7 +25,24 @@ export type SacredDaysObservance = {
   label: string;
   monthLabel?: string | null;
   description?: string | null;
+  descriptionLocal?: string | null;
+  descriptionPa?: string | null;
 };
+
+/**
+ * Same pa -> hi -> en / hi -> en fallback chain as
+ * pickDharmVeerLocalizedText (lib/dharm-veer.ts), applied to the shorter
+ * SacredDaysCard name/description pair instead of a Dharm Veer biography.
+ */
+export function pickSacredDayLocalizedText(
+  english: string | undefined | null,
+  hindi: string | undefined | null,
+  punjabi: string | undefined | null,
+  contentLanguage: 'hi' | 'pa',
+): string | undefined {
+  if (contentLanguage === 'pa') return punjabi || hindi || english || undefined;
+  return hindi || english || undefined;
+}
 
 export type SacredDaysDeckItem =
   | {
