@@ -1235,11 +1235,17 @@ function HomeContent() {
         // authoritative server verdict. A fresh cold start should still get
         // its own honest attempt rather than inheriting this session's
         // exhaustion.
-        setState((prev) =>
-          prev.panchang.calendarStatus === 'pending'
-            ? { ...prev, panchang: { ...prev.panchang, calendarStatus: 'unavailable' } }
-            : prev
-        );
+        setState((prev) => {
+          if (prev.panchang.calendarStatus !== 'pending') return prev;
+          const hasCalendarContent = Boolean(
+            prev.panchang.observance ||
+            prev.panchang.upcomingObservances.length > 0 ||
+            (prev.panchang.series ?? []).length > 0
+          );
+          return hasCalendarContent
+            ? { ...prev, panchang: { ...prev.panchang, calendarStatus: 'ready' } }
+            : prev;
+        });
       },
     });
   }

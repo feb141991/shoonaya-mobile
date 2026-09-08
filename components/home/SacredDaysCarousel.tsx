@@ -147,7 +147,9 @@ export function SacredDaysCarousel({
     }
   }, [copy, exporting]);
 
-  if (calendarStatus === 'ready' && items.length === 0) return null;
+  const hasItems = items.length > 0;
+
+  if (calendarStatus === 'ready' && !hasItems) return null;
 
   return (
     <View accessibilityLabel={copy.title} style={{ marginBottom: 4 }}>
@@ -181,11 +183,11 @@ export function SacredDaysCarousel({
         ) : null}
       </View>
 
-      {calendarStatus === 'pending' ? (
+      {calendarStatus === 'pending' && !hasItems ? (
         <View accessibilityState={{ busy: true }} style={{ height: SACRED_DAYS_CARD_HEIGHT }}>
           <ShimmerBlock style={{ height: SACRED_DAYS_CARD_HEIGHT, width: cardWidth, borderRadius: RADII.xl }} />
         </View>
-      ) : calendarStatus === 'unavailable' ? (
+      ) : calendarStatus === 'unavailable' && !hasItems ? (
         <View
           style={{
             minHeight: SACRED_DAYS_CARD_HEIGHT,
