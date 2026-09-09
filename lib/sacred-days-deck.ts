@@ -53,12 +53,6 @@ export type SacredDaysDeckItem =
       child: ObservanceSeriesChild;
     }
   | {
-      type: 'under_review_series';
-      key: string;
-      daysLeft: number;
-      series: ObservanceSeries;
-    }
-  | {
       type: 'observance';
       key: string;
       daysLeft: number;
@@ -78,7 +72,7 @@ export function buildSacredDaysDeck({
   observances,
   series,
   spiritualDate,
-  windowDays = HOME_SACRED_DAYS_WINDOW,
+  windowDays = 0,
   limit = HOME_SACRED_DAYS_LIMIT,
 }: {
   observances: SacredDaysObservance[];
@@ -91,38 +85,12 @@ export function buildSacredDaysDeck({
   const representedSeriesSlugs = new Set<string>();
 
   for (const candidate of series) {
-    if (candidate.status === 'under_review') {
-      const daysLeft = candidate.startDate
-        ? nativeCalendarDayDistance(spiritualDate, candidate.startDate)
-        : null;
-      if (daysLeft !== null && daysLeft >= 0 && daysLeft <= windowDays) {
-        seriesItems.push({
-          type: 'under_review_series',
-          key: `series-review-${candidate.definitionKey}`,
-          daysLeft,
-          series: candidate,
-        });
-      }
-      continue;
-    }
+    if (candidate.status === 'under_review') continue;
 
     if (!['active', 'upcoming', 'concluding'].includes(candidate.status)) continue;
 
     const children = getNativeSeriesCardChildren(candidate);
-    if (children.length === 0) {
-      const daysLeft = candidate.startDate
-        ? nativeCalendarDayDistance(spiritualDate, candidate.startDate)
-        : null;
-      if (daysLeft !== null && daysLeft >= 0 && daysLeft <= windowDays) {
-        seriesItems.push({
-          type: 'under_review_series',
-          key: `series-invalid-${candidate.seriesKey}`,
-          daysLeft,
-          series: candidate,
-        });
-      }
-      continue;
-    }
+    if (children.length === 0) continue;
 
     for (const child of children) {
       const targetDate = child.civilDate ?? candidate.startDate;

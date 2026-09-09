@@ -68,8 +68,9 @@ test('buildSacredDaysDeck creates one deterministic, bounded Home deck', async (
       spiritualDate,
     });
 
-    assert.deepEqual(items.map((item) => item.type), ['series', 'observance']);
+    assert.deepEqual(items.map((item) => item.type), ['series']);
     assert.equal(items.filter((item) => item.key.includes('diwali')).length, 1);
+    assert.deepEqual(items.map((item) => item.daysLeft), [0]);
   });
 
   await t.test('orders same-day series before standalone items with deterministic ties', () => {
@@ -86,22 +87,28 @@ test('buildSacredDaysDeck creates one deterministic, bounded Home deck', async (
     );
   });
 
-  await t.test('caps the deck after filtering and ordering', () => {
+  await t.test('defaults to today-only cards and can still be widened explicitly', () => {
     const entries = Array.from({ length: 9 }, (_, index) => observance(`Vrat ${index}`, index % 3));
     const items = buildSacredDaysDeck({ observances: entries, series: [], spiritualDate });
-    assert.equal(items.length, HOME_SACRED_DAYS_LIMIT);
-    assert.deepEqual(items.map((item) => item.daysLeft), [0, 0, 0, 1, 1, 1, 2, 2]);
+    assert.equal(items.length, 3);
+    assert.deepEqual(items.map((item) => item.daysLeft), [0, 0, 0]);
+
+    const widenedItems = buildSacredDaysDeck({ observances: entries, series: [], spiritualDate, windowDays: HOME_SACRED_DAYS_WINDOW });
+    assert.equal(widenedItems.length, HOME_SACRED_DAYS_LIMIT);
+    assert.deepEqual(widenedItems.map((item) => item.daysLeft), [0, 0, 0, 1, 1, 1, 2, 2]);
   });
 
-  await t.test('keeps an in-window under-review series non-navigable and excludes out-of-window data', () => {
+  await t.test('hides under-review series and excludes out-of-window data', () => {
     const items = buildSacredDaysDeck({
-      observances: [observance('Later Vrat', HOME_SACRED_DAYS_WINDOW + 1)],
+      observances: [observance('Later Vrat', HOME_SACRED_DAYS_WINDOW + 1), observance('Today Vrat', 0)],
       series: [activeSeries({ status: 'under_review', diagnostics: ['series_child_under_review'] })],
       spiritualDate,
+      windowDays: HOME_SACRED_DAYS_WINDOW,
     });
 
     assert.equal(items.length, 1);
-    assert.equal(items[0]?.type, 'under_review_series');
+    assert.equal(items[0]?.type, 'observance');
+    assert.equal(items[0]?.daysLeft, 0);
   });
 
   await t.test('spiritual-date rollover removes yesterday data without inferring a new date', () => {

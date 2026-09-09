@@ -232,14 +232,6 @@ export function SacredDaysCarousel({
                     lang={lang}
                     spiritualDate={spiritualDate}
                   />
-                ) : item.type === 'under_review_series' ? (
-                  <ObservanceSeriesCard
-                    series={item.series}
-                    theme={theme}
-                    isDark={isDark}
-                    lang={lang}
-                    spiritualDate={spiritualDate}
-                  />
                 ) : (
                   <SacredDaysCard entry={item.entry} theme={theme} isDark={isDark} lang={lang} />
                 )}
