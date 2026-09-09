@@ -8,7 +8,7 @@ export function getHomeMoodPillStyle(pressed: boolean, isDark = false) {
     alignItems: 'center' as const,
     alignSelf: 'center' as const,
     flexShrink: 1,
-    minHeight: 44,
+    minHeight: 30,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADII.pill,

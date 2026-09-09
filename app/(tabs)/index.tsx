@@ -573,8 +573,8 @@ function PanchangPill({
             justifyContent: 'center',
             gap: 3,
             backgroundColor: COLORS.homePwaPillBg,
-            minHeight: MIN_TOUCH_TARGET,
-            maxWidth: '100%',
+            minHeight: 34,
+            maxWidth: 264,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -608,8 +608,8 @@ function PanchangPill({
             justifyContent: 'center',
             gap: 3,
             backgroundColor: COLORS.homePwaPillBg,
-            minHeight: MIN_TOUCH_TARGET,
-            maxWidth: '100%',
+            minHeight: 34,
+            maxWidth: 264,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -657,8 +657,8 @@ function PanchangPill({
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        minHeight: MIN_TOUCH_TARGET,
-        maxWidth: '100%',
+        minHeight: slides.length > 1 ? 42 : 34,
+        maxWidth: 264,
       }}
     >
       <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
@@ -1388,7 +1388,7 @@ function HomeContent() {
             ) : null}
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
-              <Text style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }}>
+              <Text style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }} numberOfLines={2}>
                 {greeting}, {state.profile.firstName}
               </Text>
               <Pressable

@@ -60,7 +60,7 @@ describe('Mood Pill Visual Parity & Surface Token Suite', () => {
     assert.equal(style.backgroundColor, COLORS.homePwaPillBg);
     assert.equal(style.borderWidth, 0);
     assert.equal(style.flexShrink, 1);
-    assert.equal(style.minHeight, 44);
+    assert.equal(style.minHeight, 30);
     assert.equal(HOME_MOOD_PILL_TEXT_STYLE.flexShrink, 1);
     assert.equal(HOME_MOOD_PILL_TEXT_STYLE.color, COLORS.homePwaPillText);
   });
