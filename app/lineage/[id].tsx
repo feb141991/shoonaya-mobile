@@ -52,13 +52,13 @@ export default function LineageDetailScreen() {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
         <View style={styles.headerRow}>
-          <BackButton />
+          <BackButton fallbackHref="/(tabs)/pathshala" handleHardwareBack />
         </View>
         <EmptyState
           title="Lineage Not Found"
           subtitle="The requested sacred lineage could not be located."
           ctaLabel="Return to Pathshala"
-          onCta={() => router.back()}
+          onCta={() => router.replace('/(tabs)/pathshala')}
         />
       </SafeAreaView>
     );
@@ -69,7 +69,7 @@ export default function LineageDetailScreen() {
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]} edges={['top', 'left', 'right']}>
         {/* Top App Bar */}
         <View style={[styles.headerRow, { borderBottomColor: theme.borderSoft }]}>
-          <BackButton />
+          <BackButton fallbackHref="/(tabs)/pathshala" handleHardwareBack />
           <View style={styles.headerTitleContainer}>
             <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
               {lineage.title}

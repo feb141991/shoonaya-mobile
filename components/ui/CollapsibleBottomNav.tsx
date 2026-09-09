@@ -173,7 +173,7 @@ export function CollapsibleBottomNav() {
         key: 'pathshala',
         href: '/pathshala',
         label: 'Pathshala',
-        match: (p) => matchesAny(p, ['/pathshala']),
+        match: (p) => matchesAny(p, ['/pathshala', '/lineage']),
         renderIcon: (color, size) => <SacredIcon name="pathshala" fallbackGlyph="book-open" color={color} size={size} />,
       },
       {

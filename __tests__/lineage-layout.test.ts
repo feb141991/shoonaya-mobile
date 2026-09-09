@@ -58,4 +58,27 @@ describe('Lineage Data & Layout Engine', () => {
     assert.strictEqual(angad?.level, 1);
     assert.ok((angad?.y ?? 0) > (nanak?.y ?? 0), 'Child level y-coordinate must be below parent');
   });
+
+  it('guarantees back navigation returns to Pathshala rather than Home', () => {
+    const fs = require('node:fs');
+    const backButtonSrc = fs.readFileSync(new URL('../components/ui/BackButton.tsx', import.meta.url), 'utf8');
+    const bottomNavSrc = fs.readFileSync(new URL('../components/ui/CollapsibleBottomNav.tsx', import.meta.url), 'utf8');
+    const lineageDetailSrc = fs.readFileSync(new URL('../app/lineage/[id].tsx', import.meta.url), 'utf8');
+
+    assert.match(
+      backButtonSrc,
+      /pathname\.startsWith\('\/lineage'\)\) return '\/\(tabs\)\/pathshala'/,
+      'BackButton inferParentFallback must return /(tabs)/pathshala for lineage'
+    );
+    assert.match(
+      bottomNavSrc,
+      /matchesAny\(p, \['\/pathshala', '\/lineage'\]\)/,
+      'CollapsibleBottomNav must associate lineage with pathshala tab'
+    );
+    assert.match(
+      lineageDetailSrc,
+      /<BackButton fallbackHref="\/\(tabs\)\/pathshala" handleHardwareBack \/>/,
+      'Lineage detail screen must pass explicit fallbackHref and handleHardwareBack'
+    );
+  });
 });
