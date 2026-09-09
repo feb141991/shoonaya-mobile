@@ -1592,21 +1592,17 @@ function HomeContent() {
                   void Haptics.selectionAsync().catch(() => {});
                   setGreetingPickerVisible(true);
                 }}
-                hitSlop={8}
-                style={{
-                  minWidth: MIN_TOUCH_TARGET,
-                  minHeight: MIN_TOUCH_TARGET,
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
+                hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+                style={({ pressed }) => ({
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: theme.heroOverlay,
-                  borderWidth: 1,
-                  borderColor: theme.borderSoft,
-                }}
+                  backgroundColor: pressed ? 'rgba(197,160,89,0.32)' : COLORS.homePwaPillBg,
+                })}
               >
-                <Feather name="edit-2" size={14} color="rgba(255,240,200,0.85)" />
+                <Feather name="edit-2" size={10} color={COLORS.homePwaPillText} />
               </Pressable>
             </View>
 
