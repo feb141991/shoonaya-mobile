@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   ScrollView,
   Text,
   useColorScheme,
@@ -19,6 +20,7 @@ import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { selectDharmVeer, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
+import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { recordRefreshFailure, recordRouteOpen } from '@/lib/telemetry';
@@ -300,18 +302,36 @@ export default function DharmVeerScreen() {
               }}
             >
               <View style={{ flexDirection: 'row', gap: 16 }}>
-                <View style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 16,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: TRADITION_META[liveTodayHero.tradition]?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)',
-                  borderColor: 'rgba(197,160,89,0.3)',
-                  borderWidth: 1,
-                }}>
-                  <Text style={{ fontSize: 32 }}>{liveTodayHero.emoji}</Text>
-                </View>
+                {getDharmVeerArtworkSource(liveTodayHero.id) ? (
+                  <View style={{
+                    width: 68,
+                    height: 68,
+                    borderRadius: 18,
+                    overflow: 'hidden',
+                    borderColor: 'rgba(197,160,89,0.35)',
+                    borderWidth: 1,
+                    backgroundColor: '#0a0908',
+                  }}>
+                    <Image
+                      source={getDharmVeerArtworkSource(liveTodayHero.id)!}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                ) : (
+                  <View style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: TRADITION_META[liveTodayHero.tradition]?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)',
+                    borderColor: 'rgba(197,160,89,0.3)',
+                    borderWidth: 1,
+                  }}>
+                    <Text style={{ fontSize: 32 }}>{liveTodayHero.emoji}</Text>
+                  </View>
+                )}
                 <View style={{ flex: 1, gap: 4 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
@@ -397,18 +417,36 @@ export default function DharmVeerScreen() {
                 borderWidth: 1,
               }}
             >
-              <View style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: meta?.color.replace('0.12', '0.22') ?? 'rgba(197,160,89,0.15)',
-                borderColor: meta?.color.replace('0.12', '0.32') ?? 'rgba(197,160,89,0.2)',
-                borderWidth: 1,
-              }}>
-                <Text style={{ fontSize: 24 }}>{hero.emoji}</Text>
-              </View>
+              {getDharmVeerArtworkSource(hero.id) ? (
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  borderColor: isToday ? 'rgba(197,160,89,0.45)' : 'rgba(197,160,89,0.2)',
+                  borderWidth: 1,
+                  backgroundColor: '#0a0908',
+                }}>
+                  <Image
+                    source={getDharmVeerArtworkSource(hero.id)!}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: meta?.color.replace('0.12', '0.22') ?? 'rgba(197,160,89,0.15)',
+                  borderColor: meta?.color.replace('0.12', '0.32') ?? 'rgba(197,160,89,0.2)',
+                  borderWidth: 1,
+                }}>
+                  <Text style={{ fontSize: 24 }}>{hero.emoji}</Text>
+                </View>
+              )}
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <Text style={{ color: accent, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>

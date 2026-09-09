@@ -24,6 +24,7 @@ import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
+import { DharmVeerHeroBanner } from '@/components/dharm-veer/DharmVeerHeroBanner';
 
 // New Reader Foundation imports
 import { ReaderShell } from '@/components/reader/ReaderShell';
@@ -486,21 +487,27 @@ ${moralText}` : '';
         isCopied={state.isCopied}
         onShare={() => handlers.share(textToShare)}
       >
-        {/* Identity Section */}
-        <View style={{ alignItems: 'center', gap: 16, marginBottom: 32 }}>
-          <View style={{ width: 80, height: 80, borderRadius: 24, backgroundColor: accent, borderColor: brand, borderWidth: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 40 }}>{hero.emoji}</Text>
-          </View>
-          <View style={{ alignItems: 'center', gap: 4 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 28, textAlign: 'center' }}>{title}</Text>
-            <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2 }}>{era} · {region}</Text>
-          </View>
-          {tagline ? (
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: fs.fontSize, fontStyle: 'italic', textAlign: 'center' }}>
-              "{tagline}"
-            </Text>
-          ) : null}
-        </View>
+        {/* Hero Banner with Classical Artwork */}
+        {tagline ? (
+          <DharmVeerHeroBanner
+            hero={hero}
+            title={title ?? 'Dharm Veer'}
+            era={era}
+            region={region}
+            tagline={tagline}
+            accentColor={accent}
+            brandColor={brand}
+          />
+        ) : (
+          <DharmVeerHeroBanner
+            hero={hero}
+            title={title ?? 'Dharm Veer'}
+            era={era}
+            region={region}
+            accentColor={accent}
+            brandColor={brand}
+          />
+        )}
 
         {/* Narrative Sections */}
         <View style={{ gap: 24 }}>
