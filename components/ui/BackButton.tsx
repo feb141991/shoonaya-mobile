@@ -20,6 +20,7 @@ type BackButtonProps = {
 
 function inferParentFallback(pathname: string): Href {
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
+  if (pathname.startsWith('/mantras')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/lineage')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/japa')) return '/(tabs)/japa';

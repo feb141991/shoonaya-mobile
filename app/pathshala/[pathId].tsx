@@ -171,7 +171,7 @@ export default function PathLessonListScreen() {
     return (
       <Screen style={{ backgroundColor: bg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-          <BackButton showLabel={false} iconSize={22} iconColor={text} />
+          <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>{path.title}</Text>
         </View>
         <View style={{ alignItems: 'center', marginTop: 40, gap: 12, paddingHorizontal: 24 }}>
@@ -188,7 +188,7 @@ export default function PathLessonListScreen() {
   return (
     <Screen style={{ backgroundColor: bg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-        <BackButton showLabel={false} iconSize={22} iconColor={text} />
+        <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
         <View style={{ flex: 1 }}>
           <Text style={{ ...TYPE.hero, color: text }}>{path.title}</Text>
           <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>

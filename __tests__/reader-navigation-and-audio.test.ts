@@ -47,4 +47,13 @@ describe('reader navigation and audio lifecycle', () => {
     assert.match(pathshalaLesson, /else router\.replace\('\/\(tabs\)\/pathshala'\);/);
     assert.match(pathshalaLesson, /setTimeout\(returnToPathshala, 650\)/);
   });
+
+  it('guarantees Mantras and Pathshala path details return to their respective hubs with hardware back support', () => {
+    const mantrasSrc = readFileSync(new URL('../app/mantras.tsx', import.meta.url), 'utf8');
+    const pathDetailSrc = readFileSync(new URL('../app/pathshala/[pathId].tsx', import.meta.url), 'utf8');
+
+    assert.match(backButton, /pathname\.startsWith\('\/mantras'\)\) return '\/\(tabs\)\/bhakti'/);
+    assert.match(mantrasSrc, /<BackButton fallbackHref="\/\(tabs\)\/bhakti" handleHardwareBack/);
+    assert.match(pathDetailSrc, /<BackButton showLabel=\{false\} iconSize=\{22\} iconColor=\{text\} fallbackHref="\/\(tabs\)\/pathshala" handleHardwareBack \/>/);
+  });
 });

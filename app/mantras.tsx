@@ -102,7 +102,7 @@ export default function MantrasScreen() {
   if (loading) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
+        <BackButton fallbackHref="/(tabs)/bhakti" handleHardwareBack style={{ marginBottom: 4 }} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={AMBER} />
         </View>
@@ -113,7 +113,7 @@ export default function MantrasScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
+        <BackButton fallbackHref="/(tabs)/bhakti" handleHardwareBack style={{ marginBottom: 4 }} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 24 }}>
           <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>Could not load mantras.</Text>
           <Button label="Retry" onPress={() => void load()} />
@@ -132,7 +132,7 @@ export default function MantrasScreen() {
         ListHeaderComponent={
           <View style={{ paddingHorizontal: 20, paddingTop: 16, gap: 14 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <BackButton showLabel={false} />
+              <BackButton showLabel={false} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
               <Text style={{ ...TYPE.title, color: theme.text }}>Mantras</Text>
             </View>
 
