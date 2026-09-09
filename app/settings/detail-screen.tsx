@@ -26,7 +26,7 @@ import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import {
   openNotificationSettings,
@@ -1002,6 +1002,13 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   label: 'LinkedIn',
                   handle: 'Shoonaya',
                   url: SOCIAL_LINKS.linkedin,
+                },
+                {
+                  id: 'email',
+                  icon: 'envelope',
+                  label: 'Official Email',
+                  handle: OFFICIAL_EMAIL,
+                  url: SOCIAL_LINKS.email,
                 },
                 {
                   id: 'website',

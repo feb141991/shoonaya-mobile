@@ -1277,6 +1277,21 @@ export default function LoginScreen() {
                 <PressableSurface
                   haptic="selection"
                   accessibilityRole="link"
+                  accessibilityLabel="Email Shoonaya Support"
+                  hitSlop={8}
+                  onPress={() => { void Linking.openURL(SOCIAL_LINKS.email); }}
+                  style={{
+                    minWidth: MIN_TOUCH_TARGET,
+                    minHeight: MIN_TOUCH_TARGET,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="mail" size={16} color={theme.dim} />
+                </PressableSurface>
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityRole="link"
                   accessibilityLabel="Shoonaya Website"
                   hitSlop={8}
                   onPress={() => { void Linking.openURL(SOCIAL_LINKS.website); }}
