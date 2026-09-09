@@ -105,6 +105,31 @@ function logPushWarning(label: string, error: unknown) {
 }
 
 /**
+ * Best-effort diagnostic beacon for a registerPushToken failure -- posted to
+ * the same endpoint a successful registration uses, distinguished by having
+ * `failureReason` instead of `token`. Fixes a real blind spot: this failure
+ * class previously only reached __DEV__-gated console.warn, so a production
+ * build could fail token registration on every single launch with zero
+ * visibility anywhere -- confirmed happening for every iOS user until this
+ * was added (push_tokens/push_token_events showed zero iOS rows, ever).
+ * Never throws, never awaited by callers -- must not add latency or a new
+ * failure mode to the already-failing path it's reporting on.
+ */
+function reportPushRegistrationFailure(stage: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  void apiFetch('/api/notifications/register-token', {
+    method: 'POST',
+    body: JSON.stringify({
+      platform: Platform.OS,
+      failureStage: stage,
+      failureReason: message.slice(0, 200),
+    }),
+  }).catch(() => {
+    // best-effort telemetry; a failure here must never cascade
+  });
+}
+
+/**
  * One-time setup: Android requires an explicit notification channel for
  * pushes to display correctly (OneSignal configured this invisibly).
  * Safe/no-op in Expo Go and on iOS.
@@ -208,20 +233,27 @@ export async function registerPushToken(userId: string) {
   // iOS Simulator cannot register for remote APNs tokens
   if (Platform.OS === 'ios' && !Constants.isDevice) return;
 
+  let stage = 'ensure_android_channel';
   try {
     await ensureAndroidNotificationChannel();
+
+    stage = 'check_permission';
     const existing = await Notifications.getPermissionsAsync();
     if (!hasNotificationPermission(existing)) return;
 
+    stage = 'resolve_project_id';
     const projectId = getExpoProjectId();
     if (!projectId) {
       console.warn('registerPushToken: missing EAS projectId — cannot fetch Expo push token');
+      reportPushRegistrationFailure(stage, new Error('missing EAS projectId'));
       return;
     }
 
+    stage = 'fetch_expo_push_token';
     const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
     if (!expoPushToken || expoPushToken === cachedToken) return;
 
+    stage = 'post_register_token';
     const response = await apiFetch('/api/notifications/register-token', {
       method: 'POST',
       body: JSON.stringify({ token: expoPushToken, platform: Platform.OS }),
@@ -235,6 +267,7 @@ export async function registerPushToken(userId: string) {
       cachedAccessToken = session?.access_token ?? null;
     } else {
       console.warn('registerPushToken: server rejected token registration', response.status);
+      reportPushRegistrationFailure(stage, new Error(`server rejected: ${response.status}`));
     }
   } catch (error) {
     // Token registration is best-effort. iOS simulator/dev builds can throw
@@ -242,6 +275,7 @@ export async function registerPushToken(userId: string) {
     // registration; surfacing that as console.error blocks the app behind
     // LogBox even though auth and normal navigation can continue.
     logPushWarning('registerPushToken skipped:', error);
+    reportPushRegistrationFailure(stage, error);
   }
 }
 
