@@ -1492,42 +1492,53 @@ export default function OnboardingScreen() {
       </ScrollView>
 
       {step !== 'notifications' && step !== 'ready' ? (
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-          {stepIndex > 0 ? <Button label={language === 'hi' ? 'पीछे' : 'Back'} variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
-          <Button
-            label={
-              (() => {
-                const stepHasValue =
-                  step === 'nakshatra'
-                    ? Boolean(nakshatra || rashi || gotra.trim())
-                    : step === 'calendarProfile'
-                    ? Boolean(calendarProfile)
-                    : step === 'calendarScope'
-                    ? Boolean(calendarScope)
-                    : step === 'goals'
-                    ? goals.length > 0
-                    : step === 'name'
-                    ? Boolean(name.trim())
-                    : true;
+        (() => {
+          // Optional steps get a separate, subordinate "Skip for now" affordance
+          // instead of the primary button's own label flip-flopping between
+          // "Continue" and "Skip for now" -- a stable primary label always means
+          // the same thing. `stepHasValue === null` marks a step (e.g.
+          // `preferences`) as not optional at all, so no skip affordance shows.
+          // Skip only ever appears when there is nothing entered yet, so it can
+          // never discard an existing answer -- it's functionally identical to
+          // Continue in that state, just a lower-commitment-sounding label.
+          const stepHasValue: boolean | null =
+            step === 'personal'
+              ? Boolean(dateOfBirth || lifeStage || gender || rashi || gotra.trim())
+              : step === 'nakshatra'
+              ? Boolean(nakshatra || rashi || gotra.trim())
+              : step === 'calendarProfile'
+              ? Boolean(calendarProfile)
+              : step === 'calendarScope'
+              ? Boolean(calendarScope)
+              : step === 'goals'
+              ? goals.length > 0
+              : step === 'name'
+              ? Boolean(name.trim())
+              : null;
+          const showSkip = stepHasValue === false;
 
-                if (
-                  step === 'nakshatra' ||
-                  step === 'calendarProfile' ||
-                  step === 'calendarScope' ||
-                  step === 'goals' ||
-                  step === 'name'
-                ) {
-                  if (isHindi) return stepHasValue ? 'आगे बढ़ें' : 'अभी छोड़ें';
-                  return stepHasValue ? 'Continue' : 'Skip for now';
-                }
-                return isHindi ? 'आगे बढ़ें' : 'Continue';
-              })()
-            }
-            onPress={() => { void goNext(); }}
-            disabled={step === 'preferences' && (!tradition || !language)}
-            style={{ flex: 1 }}
-          />
-        </View>
+          return (
+            <View style={{ marginTop: 16, gap: 10 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {stepIndex > 0 ? <Button label={translated('Back', 'पीछे')} variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
+                <Button
+                  label={translated('Continue', 'आगे बढ़ें')}
+                  onPress={() => { void goNext(); }}
+                  disabled={step === 'preferences' && (!tradition || !language)}
+                  style={{ flex: 1 }}
+                />
+              </View>
+              {showSkip ? (
+                <View style={{ alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, color: dim, textAlign: 'center' }}>
+                    {translated('Optional · You can add this later in Profile', 'वैकल्पिक · आप इसे बाद में प्रोफ़ाइल में जोड़ सकते हैं')}
+                  </Text>
+                  <Button label={translated('Skip for now', 'अभी छोड़ें')} variant="ghost" size="sm" onPress={() => { void goNext(); }} />
+                </View>
+              ) : null}
+            </View>
+          );
+        })()
       ) : null}
     </Screen>
   );
