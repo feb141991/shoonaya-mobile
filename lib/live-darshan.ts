@@ -1,5 +1,3 @@
-import { apiFetch } from '@/lib/api';
-
 // Data layer for the native Live Darshan screen (app/live-darshan.tsx).
 //
 // This intentionally does NOT duplicate the web repo's ~150-entry static
@@ -46,7 +44,35 @@ export function youtubeWatchUrl(videoId: string) {
   return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
+/**
+ * Sorts live darshan streams so that streams matching the user's tradition appear first,
+ * followed by all other streams in their original relative ranking.
+ * If userTradition is null, 'all', or 'neutral', streams are returned in original order.
+ */
+export function sortLiveStreamsByTradition(
+  streams: LiveStream[],
+  userTradition?: string | null
+): LiveStream[] {
+  if (!userTradition || userTradition === 'all' || userTradition === 'neutral') {
+    return streams;
+  }
+  const norm = userTradition.toLowerCase().trim();
+  const matching: LiveStream[] = [];
+  const nonMatching: LiveStream[] = [];
+
+  for (const stream of streams) {
+    if (stream.tradition?.toLowerCase().trim() === norm) {
+      matching.push(stream);
+    } else {
+      nonMatching.push(stream);
+    }
+  }
+
+  return [...matching, ...nonMatching];
+}
+
 export async function fetchLiveDarshanStreams(): Promise<LiveStream[]> {
+  const { apiFetch } = await import('@/lib/api');
   const response = await apiFetch('/api/native/live-darshan');
   if (!response.ok) {
     throw new Error(`Request failed (${response.status})`);
@@ -54,3 +80,4 @@ export async function fetchLiveDarshanStreams(): Promise<LiveStream[]> {
   const payload = (await response.json()) as { streams?: LiveStream[] };
   return payload.streams ?? [];
 }
+

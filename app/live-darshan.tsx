@@ -13,8 +13,11 @@ import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
+import { getStartupPreferences } from '@/lib/startup-scenes/preferences';
 import {
   fetchLiveDarshanStreams,
+  sortLiveStreamsByTradition,
   youtubeThumbnailUrl,
   youtubeWatchUrl,
   type LiveStream,
@@ -68,6 +71,7 @@ function LiveDarshanContent() {
 
   const [status, setStatus] = useState<ScreenStatus>('loading');
   const [streams, setStreams] = useState<LiveStream[]>([]);
+  const [userTradition, setUserTradition] = useState<string>('hindu');
   const [filter, setFilter] = useState<TraditionFilter>('all');
   const [openError, setOpenError] = useState<{ id: string; message: string } | null>(null);
 
@@ -80,7 +84,37 @@ function LiveDarshanContent() {
     setStatus('loading');
     setOpenError(null);
     try {
-      const result = await fetchLiveDarshanStreams();
+      const [result, resolvedTradition] = await Promise.all([
+        fetchLiveDarshanStreams(),
+        (async () => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('tradition')
+                .eq('id', user.id)
+                .maybeSingle();
+              if (data?.tradition) {
+                return data.tradition.toLowerCase();
+              }
+              const prefs = await getStartupPreferences(user.id);
+              if (prefs.tradition && prefs.tradition !== 'neutral') {
+                return prefs.tradition.toLowerCase();
+              }
+            } else {
+              const prefs = await getStartupPreferences(null);
+              if (prefs.tradition && prefs.tradition !== 'neutral') {
+                return prefs.tradition.toLowerCase();
+              }
+            }
+          } catch {
+            // fallback
+          }
+          return 'hindu';
+        })(),
+      ]);
+      setUserTradition(resolvedTradition);
       setStreams(result);
       setStatus('ready');
     } catch {
@@ -93,8 +127,8 @@ function LiveDarshanContent() {
   }, [load]);
 
   const filtered = useMemo(
-    () => (filter === 'all' ? streams : streams.filter((s) => s.tradition === filter)),
-    [streams, filter]
+    () => (filter === 'all' ? sortLiveStreamsByTradition(streams, userTradition) : streams.filter((s) => s.tradition === filter)),
+    [streams, filter, userTradition]
   );
 
   const openExternally = useCallback(async (stream: LiveStream) => {
@@ -122,17 +156,26 @@ function LiveDarshanContent() {
     setPlaying(false);
   }, []);
 
-  // "Smart suggestions" — other streams, same tradition as the one playing
-  // first (most relevant), then everything else, capped at 5. Reuses the
-  // exact same server-filtered list already fetched for the grid, no extra
-  // request.
+  // "Smart suggestions" — other streams:
+  // 1. Same tradition as the currently active stream (most relevant)
+  // 2. Same tradition as user's spiritual preference (if different)
+  // 3. Everything else, capped at 5.
+  // Reuses the exact same server-filtered list already fetched for the grid.
   const suggestions = useMemo(() => {
     if (!activeStream) return [];
     const others = streams.filter((s) => s.id !== activeStream.id);
-    const sameTradition = others.filter((s) => s.tradition === activeStream.tradition);
-    const rest = others.filter((s) => s.tradition !== activeStream.tradition);
-    return [...sameTradition, ...rest].slice(0, 5);
-  }, [activeStream, streams]);
+    const activeTrad = activeStream.tradition?.toLowerCase();
+    const userTrad = userTradition?.toLowerCase();
+
+    const sameTradition = others.filter((s) => s.tradition?.toLowerCase() === activeTrad);
+    const userTraditionRemaining = others.filter(
+      (s) => s.tradition?.toLowerCase() !== activeTrad && s.tradition?.toLowerCase() === userTrad
+    );
+    const rest = others.filter(
+      (s) => s.tradition?.toLowerCase() !== activeTrad && s.tradition?.toLowerCase() !== userTrad
+    );
+    return [...sameTradition, ...userTraditionRemaining, ...rest].slice(0, 5);
+  }, [activeStream, streams, userTradition]);
 
   const goToNext = useCallback(() => {
     if (!activeStream) return;
