@@ -234,6 +234,7 @@ export default function VratDetailScreen() {
   const selectedPractice = lang === 'local' && vrat.practiceLocal ? vrat.practiceLocal : vrat.practice;
   const selectedMantra = lang === 'local' && vrat.mantraLocal ? vrat.mantraLocal : vrat.mantra;
   const hasLocalVrat = Boolean(vrat.nameLocal && vrat.taglineLocal && vrat.significanceLocal && vrat.practiceLocal);
+  const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   return (
     <ReaderShell
@@ -511,13 +512,13 @@ export default function VratDetailScreen() {
         {/* Significance */}
         <Card style={{ padding: 16, marginBottom: 16 }}>
           <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Significance</Text>
-          <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 22 }}>{selectedSignificance}</Text>
+          <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedSignificance}</Text>
         </Card>
 
         {/* Fasting & Practice */}
         <Card style={{ padding: 16, marginBottom: 16 }}>
           <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Practice & Fasting Rules</Text>
-          <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 22 }}>{selectedPractice}</Text>
+          <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedPractice}</Text>
 
           {vrat.fastingType ? (
             <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -545,7 +546,7 @@ export default function VratDetailScreen() {
             {vrat.dos.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
+                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
               </View>
             ))}
           </Card>
@@ -557,7 +558,7 @@ export default function VratDetailScreen() {
             {vrat.donts.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
+                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
               </View>
             ))}
           </Card>
@@ -566,7 +567,7 @@ export default function VratDetailScreen() {
         {/* Sacred Mantra */}
         <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
           <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>Sacred Mantra</Text>
-          <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
             {selectedMantra}
           </Text>
         </Card>
