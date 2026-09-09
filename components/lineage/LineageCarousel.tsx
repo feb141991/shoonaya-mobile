@@ -41,10 +41,10 @@ export function LineageCarousel() {
           </View>
           <View>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Sacred Lineages & Paramparas
+              Sacred Trees & Paramparas
             </Text>
             <Text style={[styles.sectionSubtitle, { color: theme.dim }]}>
-              Interactive teacher-disciple knowledge trees
+              Interactive lineage, scripture & dincharya maps
             </Text>
           </View>
         </View>

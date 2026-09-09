@@ -59,6 +59,28 @@ describe('Lineage Data & Layout Engine', () => {
     assert.ok((angad?.y ?? 0) > (nanak?.y ?? 0), 'Child level y-coordinate must be below parent');
   });
 
+  it('computes valid layout for Sanatana Shastra Map and Dincharya & Ashrama Tree', () => {
+    const shastra = getLineageById('sanatana-shastra-map');
+    assert.ok(shastra, 'Sanatana Shastra Map must exist');
+    if (shastra) {
+      const shastraLayout = computeLineageLayout(shastra);
+      assert.strictEqual(shastraLayout.nodes.length, 6);
+      assert.ok(shastraLayout.edges.length >= 5);
+      const vedas = shastraLayout.nodes.find((n) => n.data.id === 'four-vedas');
+      assert.strictEqual(vedas?.level, 0, 'Vedas must be the root level 0 node');
+    }
+
+    const dincharya = getLineageById('dincharya-ashrama-tree');
+    assert.ok(dincharya, 'Dincharya & Ashrama Tree must exist');
+    if (dincharya) {
+      const dincharyaLayout = computeLineageLayout(dincharya);
+      assert.strictEqual(dincharyaLayout.nodes.length, 6);
+      assert.ok(dincharyaLayout.edges.length >= 5);
+      const brahma = dincharyaLayout.nodes.find((n) => n.data.id === 'brahma-muhurta');
+      assert.strictEqual(brahma?.level, 0, 'Brahma Muhurta must be the root level 0 node');
+    }
+  });
+
   it('guarantees back navigation returns to Pathshala rather than Home', () => {
     const fs = require('node:fs');
     const backButtonSrc = fs.readFileSync(new URL('../components/ui/BackButton.tsx', import.meta.url), 'utf8');
