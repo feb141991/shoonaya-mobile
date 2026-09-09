@@ -13,9 +13,17 @@ export type Step =
   | 'goals'
   | 'name'
   | 'notifications'
+  | 'location'
   | 'ready';
 
 export type NotificationChoice = 'enabled' | 'disabled' | 'unset';
+
+export type OnboardingLocation = {
+  latitude: number;
+  longitude: number;
+  city: string;
+  country: string | null;
+};
 
 export type ReadyPracticeCta = {
   route: string;
@@ -34,6 +42,7 @@ export function buildSteps(tradition: TraditionKey | null): Step[] {
       'goals',
       'name',
       'notifications',
+      'location',
       'ready',
     ];
   }
@@ -43,6 +52,7 @@ export function buildSteps(tradition: TraditionKey | null): Step[] {
     'goals',
     'name',
     'notifications',
+    'location',
     'ready',
   ];
 }
@@ -118,6 +128,7 @@ export function buildOnboardingProfilePayload({
   calendarScope,
   goals,
   notificationsEnabled,
+  location,
 }: {
   displayName: string;
   tradition: TraditionKey;
@@ -132,6 +143,7 @@ export function buildOnboardingProfilePayload({
   calendarScope: CalendarScopeSlug | '';
   goals: string[];
   notificationsEnabled: boolean;
+  location?: OnboardingLocation | null;
 }) {
   const isHinduProfile = tradition === 'hindu';
   return {
@@ -149,6 +161,15 @@ export function buildOnboardingProfilePayload({
     calendar_scope: isHinduProfile ? calendarScope || null : null,
     onboarding_goal: goals.join(','),
     ...getNotificationPersistencePayload(notificationsEnabled),
+    // Omitted entirely (not written as null) when the user skipped or denied
+    // location during onboarding -- never overwrite an existing value with
+    // nothing, and never substitute a default location here either; a
+    // missing value should mean "unknown", handled explicitly downstream
+    // (e.g. by skipping location-dependent notifications), not silently
+    // computed as if the user were somewhere else.
+    ...(location
+      ? { latitude: location.latitude, longitude: location.longitude, city: location.city, country: location.country }
+      : {}),
     onboarding_completed: true,
   };
 }

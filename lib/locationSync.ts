@@ -19,7 +19,11 @@ import { supabase } from '@/lib/supabase';
 // permission is already granted (e.g. previously granted for Tirtha or
 // Mandali) -- it never itself prompts. `requestAndSyncDeviceLocation` is
 // the one path allowed to prompt, meant to be called from an explicit user
-// action (Profile's "Update location" row).
+// action (Profile's "Update location" row). `captureDeviceLocation` is a
+// third, read-only path for onboarding: it prompts and captures coordinates
+// the same way, but never writes -- onboarding's profile row doesn't exist
+// yet at that point in the flow, so the caller folds the result into the
+// same initial profile write instead of a follow-up `.update()`.
 
 const LOCATION_TIMEOUT_MS = 8000;
 const CACHED_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
@@ -35,6 +39,47 @@ async function getPosition(): Promise<Location.LocationObject | null> {
     ]);
   } catch {
     return Location.getLastKnownPositionAsync({ maxAge: CACHED_LOCATION_MAX_AGE_MS });
+  }
+}
+
+export type CapturedLocation = { latitude: number; longitude: number; city: string; country: string | null };
+
+// Requests the OS permission prompt, reads a position, and reverse-geocodes
+// it -- but never writes anything. Exists so a caller with no existing
+// profile row yet (onboarding, before the profile is first created) can
+// still capture real coordinates and fold them into that first write,
+// instead of needing a separate `.update()` against a row that doesn't
+// exist yet.
+export async function captureDeviceLocation(): Promise<
+  { ok: true; location: CapturedLocation } | { ok: false; reason: string }
+> {
+  try {
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (permission.status !== 'granted') {
+      return { ok: false, reason: 'Location permission denied.' };
+    }
+
+    const position = await getPosition();
+    if (!position) {
+      return { ok: false, reason: 'Could not get your current location.' };
+    }
+
+    const geocoded = await reverseGeocode(position.coords.latitude, position.coords.longitude).catch(() => null);
+    if (!geocoded?.city) {
+      return { ok: false, reason: 'Could not determine your city from that location.' };
+    }
+
+    return {
+      ok: true,
+      location: {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        city: geocoded.city,
+        country: geocoded.country || null,
+      },
+    };
+  } catch {
+    return { ok: false, reason: 'Location lookup failed. Please try again.' };
   }
 }
 

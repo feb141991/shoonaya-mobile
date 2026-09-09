@@ -186,6 +186,44 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(profile.wants_community_notifications, true);
       assert.equal(profile.onboarding_completed, true);
     });
+
+    it('includes captured location fields only when location was actually granted', () => {
+      const base = {
+        displayName: 'Prince',
+        tradition: 'hindu' as const,
+        language: 'en' as const,
+        dateOfBirth: '1990-01-01',
+        gender: 'male' as const,
+        lifeStage: 'grihastha' as const,
+        rashi: 'Karka',
+        nakshatra: 'Pushya',
+        gotra: 'Kashyap',
+        calendarProfile: 'north_indian_purnimanta' as const,
+        calendarScope: 'all_observances' as const,
+        goals: ['peace'],
+        notificationsEnabled: true,
+      };
+
+      const withLocation = buildOnboardingProfilePayload({
+        ...base,
+        location: { latitude: 41.3275, longitude: 19.8189, city: 'Tirana', country: 'Albania' },
+      });
+      assert.equal(withLocation.latitude, 41.3275);
+      assert.equal(withLocation.longitude, 19.8189);
+      assert.equal(withLocation.city, 'Tirana');
+      assert.equal(withLocation.country, 'Albania');
+
+      // Skipped/denied: the keys must be absent entirely, never written as
+      // null -- an onboarding skip must never overwrite an existing value.
+      const skipped = buildOnboardingProfilePayload({ ...base, location: null });
+      assert.equal('latitude' in skipped, false);
+      assert.equal('longitude' in skipped, false);
+      assert.equal('city' in skipped, false);
+      assert.equal('country' in skipped, false);
+
+      const omitted = buildOnboardingProfilePayload(base);
+      assert.equal('latitude' in omitted, false);
+    });
   });
 
   describe('3. Production User-Scoped OnboardingDraftStore Invariants', () => {
@@ -567,16 +605,18 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(suggestedLifeStage('1940-01-01'), 'sannyasa');
     });
 
-    it('calculates active step count accurately (8 for Hindu, 5 for non-Hindu)', () => {
+    it('calculates active step count accurately (9 for Hindu, 6 for non-Hindu)', () => {
       const hinduSteps = buildSteps('hindu');
       const nonHinduSteps = buildSteps('sikh');
 
-      assert.equal(getActiveSteps(hinduSteps).length, 8);
-      assert.equal(getActiveSteps(nonHinduSteps).length, 5);
+      assert.equal(getActiveSteps(hinduSteps).length, 9);
+      assert.equal(getActiveSteps(nonHinduSteps).length, 6);
 
-      assert.equal(stepEyebrow('preferences', hinduSteps, 'en'), 'Step 1 of 8');
-      assert.equal(stepEyebrow('notifications', hinduSteps, 'en'), 'Step 8 of 8');
-      assert.equal(stepEyebrow('notifications', nonHinduSteps, 'en'), 'Step 5 of 5');
+      assert.equal(stepEyebrow('preferences', hinduSteps, 'en'), 'Step 1 of 9');
+      assert.equal(stepEyebrow('notifications', hinduSteps, 'en'), 'Step 8 of 9');
+      assert.equal(stepEyebrow('location', hinduSteps, 'en'), 'Step 9 of 9');
+      assert.equal(stepEyebrow('notifications', nonHinduSteps, 'en'), 'Step 5 of 6');
+      assert.equal(stepEyebrow('location', nonHinduSteps, 'en'), 'Step 6 of 6');
     });
   });
 });

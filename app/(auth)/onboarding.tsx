@@ -24,9 +24,11 @@ import { supabase } from '@/lib/supabase';
 import { getAppIdentity } from '@/lib/appIdentity';
 import { identityChanged } from '@/lib/routeOpenAttribution';
 import { requestNotificationPermission, checkNotificationPermission, registerPushToken } from '@/lib/notifications';
+import { captureDeviceLocation } from '@/lib/locationSync';
 import {
   type Step,
   type NotificationChoice,
+  type OnboardingLocation,
   buildSteps,
   getActiveSteps,
   stepEyebrow,
@@ -193,6 +195,7 @@ const STEP_TITLES: Record<Step, string> = {
   goals: 'What calls you here?',
   name: 'Your name',
   notifications: 'Daily reminders',
+  location: 'Your location',
   ready: 'Ready',
 };
 
@@ -205,6 +208,7 @@ const STEP_TITLES_HI: Record<Step, string> = {
   goals: 'आप यहाँ किसलिए आए हैं?',
   name: 'आपका नाम',
   notifications: 'दैनिक स्मरण',
+  location: 'आपका स्थान',
   ready: 'तैयार',
 };
 
@@ -263,6 +267,14 @@ export default function OnboardingScreen() {
   const [notificationChoice, setNotificationChoice] = useState<NotificationChoice>('unset');
   const [notificationsDenied, setNotificationsDenied] = useState(false);
   const [requestingNotifications, setRequestingNotifications] = useState(false);
+  const [locationChoice, setLocationChoice] = useState<NotificationChoice>('unset');
+  const [locationDenied, setLocationDenied] = useState(false);
+  const [requestingLocation, setRequestingLocation] = useState(false);
+  // Captured coordinates live only in memory, never in the persisted draft
+  // (see onboardingDraft.ts's privacy invariants) -- if the app is killed
+  // mid-flow after granting location, the user re-grants rather than this
+  // raw GPS data sitting in local storage unnecessarily.
+  const [capturedLocation, setCapturedLocation] = useState<OnboardingLocation | null>(null);
   const [nameStory, setNameStory] = useState<NameStory | null>(null);
   const [nameStoryLoading, setNameStoryLoading] = useState(false);
   const [nameStoryError, setNameStoryError] = useState('');
@@ -329,6 +341,12 @@ export default function OnboardingScreen() {
           if (draft.deniedNotificationPromptShown) {
             setNotificationsDenied(true);
           }
+          if (draft.locationChoice) {
+            setLocationChoice(draft.locationChoice);
+          }
+          if (draft.deniedLocationPromptShown) {
+            setLocationDenied(true);
+          }
           if (draft.step) setStep(draft.step);
         }
       } catch {}
@@ -360,6 +378,8 @@ export default function OnboardingScreen() {
         name,
         notificationChoice,
         deniedNotificationPromptShown: notificationsDenied,
+        locationChoice,
+        deniedLocationPromptShown: locationDenied,
         ...overrides,
       });
     } catch {}
@@ -481,7 +501,7 @@ export default function OnboardingScreen() {
       if (granted) {
         setNotificationChoice('enabled');
         setNotificationsDenied(false);
-        goToStep('ready', { notificationChoice: 'enabled' });
+        goToStep('location', { notificationChoice: 'enabled' });
       } else {
         setNotificationChoice('disabled');
         setNotificationsDenied(true);
@@ -506,7 +526,44 @@ export default function OnboardingScreen() {
     if (requestingNotifications || saving) return;
     setNotificationChoice('disabled');
     setNotificationsDenied(false);
-    goToStep('ready', { notificationChoice: 'disabled' });
+    goToStep('location', { notificationChoice: 'disabled' });
+  };
+
+  const handleAllowLocation = async () => {
+    if (requestingLocation || saving) return;
+    setRequestingLocation(true);
+    try {
+      const result = await captureDeviceLocation();
+      if (result.ok) {
+        setCapturedLocation(result.location);
+        setLocationChoice('enabled');
+        setLocationDenied(false);
+        goToStep('ready', { locationChoice: 'enabled' });
+      } else {
+        setLocationChoice('disabled');
+        setLocationDenied(true);
+        void syncDraft('location', {
+          locationChoice: 'disabled',
+          deniedLocationPromptShown: true,
+        });
+      }
+    } catch {
+      setLocationChoice('disabled');
+      setLocationDenied(true);
+      void syncDraft('location', {
+        locationChoice: 'disabled',
+        deniedLocationPromptShown: true,
+      });
+    } finally {
+      setRequestingLocation(false);
+    }
+  };
+
+  const handleSkipLocation = () => {
+    if (requestingLocation || saving) return;
+    setLocationChoice('disabled');
+    setLocationDenied(false);
+    goToStep('ready', { locationChoice: 'disabled' });
   };
 
   const complete = async (destination?: Href) => {
@@ -561,6 +618,7 @@ export default function OnboardingScreen() {
         calendarScope,
         goals,
         notificationsEnabled: finalNotificationsEnabled,
+        location: capturedLocation,
       });
 
       const { data: updatedProfile, error } = await supabase
@@ -1398,7 +1456,7 @@ export default function OnboardingScreen() {
                   label={translated('Continue', 'आगे बढ़ें')}
                   onPress={() => {
                     setNotificationChoice('disabled');
-                    goToStep('ready', { notificationChoice: 'disabled' });
+                    goToStep('location', { notificationChoice: 'disabled' });
                   }}
                   disabled={saving || requestingNotifications}
                 />
@@ -1415,6 +1473,73 @@ export default function OnboardingScreen() {
                     variant="ghost"
                     onPress={() => { void handleNotNow(); }}
                     disabled={saving || requestingNotifications}
+                  />
+                </>
+              )}
+            </View>
+          </>
+        )}
+
+        {step === 'location' && (
+          <>
+            <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
+              {translated(
+                'Your city keeps Panchang, sunrise-based timings and Brahma Muhurta reminders accurate to where you actually are. You can change this anytime in Settings.',
+                'आपका शहर पंचांग, सूर्योदय-आधारित समय और ब्रह्म मुहूर्त स्मरण को आपके वास्तविक स्थान के अनुसार सटीक रखता है। इसे कभी भी सेटिंग्स में बदला जा सकता है।'
+              )}
+            </Text>
+            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 20, gap: 16 }}>
+              {[
+                { icon: 'sunrise' as const, label: translated('Accurate sunrise, sunset and Panchang timings', 'सटीक सूर्योदय, सूर्यास्त और पंचांग समय') },
+                { icon: 'sun' as const, label: translated('Brahma Muhurta wake-up reminder at your real dawn', 'आपके वास्तविक भोर पर ब्रह्म मुहूर्त स्मरण') },
+                { icon: 'calendar' as const, label: translated('Festival and sacred day dates for your region', 'आपके क्षेत्र के लिए पर्व और पावन दिवस') },
+              ].map((item) => (
+                <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
+                    <Feather name={item.icon} size={16} color={accent} />
+                  </View>
+                  <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium, fontSize: 14, color: text }}>
+                    {item.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            {locationDenied ? (
+              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14, gap: 4 }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>
+                  {translated('Location not enabled', 'स्थान अनुमति नहीं मिली')}
+                </Text>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger }}>
+                  {translated(
+                    'Permission was not granted, or your city could not be determined. Sunrise-based timings will use a default until you add your city in Settings.',
+                    'अनुमति नहीं मिली, या आपका शहर निर्धारित नहीं हो सका। जब तक आप सेटिंग्स में अपना शहर नहीं जोड़ते, सूर्योदय-आधारित समय एक डिफ़ॉल्ट का उपयोग करेंगे।'
+                  )}
+                </Text>
+              </View>
+            ) : null}
+            <View style={{ gap: 10 }}>
+              {locationDenied ? (
+                <Button
+                  label={translated('Continue', 'आगे बढ़ें')}
+                  onPress={() => {
+                    setLocationChoice('disabled');
+                    goToStep('ready', { locationChoice: 'disabled' });
+                  }}
+                  disabled={saving || requestingLocation}
+                />
+              ) : (
+                <>
+                  <Button
+                    label={translated('Allow location', 'स्थान अनुमति दें')}
+                    onPress={() => { void handleAllowLocation(); }}
+                    disabled={saving || requestingLocation}
+                    loading={requestingLocation}
+                  />
+                  <Button
+                    label={translated('Not now', 'अभी नहीं')}
+                    variant="ghost"
+                    onPress={() => { void handleSkipLocation(); }}
+                    disabled={saving || requestingLocation}
                   />
                 </>
               )}
@@ -1491,7 +1616,7 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      {step !== 'notifications' && step !== 'ready' ? (
+      {step !== 'notifications' && step !== 'location' && step !== 'ready' ? (
         (() => {
           // Optional steps get a separate, subordinate "Skip for now" affordance
           // instead of the primary button's own label flip-flopping between

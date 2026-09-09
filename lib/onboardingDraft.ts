@@ -66,6 +66,10 @@ export type OnboardingDraftData = {
   name: string;
   notificationChoice?: NotificationChoice;
   deniedNotificationPromptShown?: boolean;
+  // Intent only, mirroring notificationChoice -- the actual captured
+  // latitude/longitude/city are never persisted here (see invariant 2).
+  locationChoice?: NotificationChoice;
+  deniedLocationPromptShown?: boolean;
 };
 
 export type OnboardingDraftEnvelope = {
