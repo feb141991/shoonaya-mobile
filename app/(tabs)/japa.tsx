@@ -55,6 +55,13 @@ import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from
 import { getNityaRankProgress } from '@/lib/nitya-rank';
 import { getMalaVolumeMilestone } from '@/lib/mala-milestones';
 import { pickDharmaFact } from '@/lib/dharma-facts';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import {
+  JAPA_SOUND_OPTIONS,
+  DEFAULT_JAPA_SOUND_ID,
+  getJapaSoundById,
+  type JapaSoundTrack,
+} from '@/lib/japa-audio';
 import {
   normalizeJapaContext,
   clearJapaContextCache,
@@ -116,6 +123,7 @@ const TARGET_OPTIONS = [1, 3, 5, 11] as const;
 const MAX_TARGET_ROUNDS = 108;
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
 const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
+const JAPA_SOUND_KEY = 'shoonaya.japa.sound';
 const JAPA_CUSTOM_MANTRA_KEY = 'shoonaya.japa.customMantra';
 const JAPA_MANTRA_KEY = 'shoonaya.japa.mantraKey';
 const JAPA_TARGET_ROUNDS_KEY = 'shoonaya.japa.targetRounds';
@@ -339,6 +347,9 @@ const MALA_TAGLINES: Record<string, string> = {
   'brahma-lotus': 'Soft focus · universal',
   'the-sage-halo': 'Radiant · festival practice',
   'bodhi-leaf': 'Grounding · meditation',
+  'sphatik-crystal': 'Luminous · Saraswati & Shakti',
+  'vaijayanti-bead': 'Victory · Krishna & Rama',
+  'navaratna-gems': 'Cosmic · 9 Planetary Gems',
 };
 type CompletionStats = {
   rounds: number;
@@ -745,9 +756,12 @@ export default function JapaScreen() {
   const [roundCelebrateVisible, setRoundCelebrateVisible] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [customMantraOpen, setCustomMantraOpen] = useState(false);
+  const [soundSheetOpen, setSoundSheetOpen] = useState(false);
   const [selectedMalaId, setSelectedMalaId] = useState<string | null>(null);
   const [selectedSceneId, setSelectedSceneId] = useState<JapaSceneId>('midnight');
+  const [selectedSoundId, setSelectedSoundId] = useState<string>(DEFAULT_JAPA_SOUND_ID);
   const [customMantraText, setCustomMantraText] = useState('');
+  const audio = useAudioPlayer();
   const [completionInsight, setCompletionInsight] = useState<string | null>(null);
   const [completionInsightLoading, setCompletionInsightLoading] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
@@ -867,7 +881,7 @@ export default function JapaScreen() {
   const volume = useMemo(() => getMalaVolumeMilestone(lifetime.totalBeads), [lifetime.totalBeads]);
   const fact = useMemo(() => pickDharmaFact(tradition), [tradition]);
 
-  // Load saved local preferences (mala/scene/custom mantra/target rounds/
+  // Load saved local preferences (mala/scene/sound/custom mantra/target rounds/
   // lifetime totals) in a single native bridge call via multiGet.
   useEffect(() => {
     AsyncStorage.multiGet([
@@ -876,13 +890,15 @@ export default function JapaScreen() {
       JAPA_CUSTOM_MANTRA_KEY,
       JAPA_TARGET_ROUNDS_KEY,
       JAPA_MANTRA_KEY,
+      JAPA_SOUND_KEY,
     ])
       .then((pairs) => pairs.map(([, v]) => v))
-      .then(([malaId, sceneId, customText, rounds, mantraKey]) => {
+      .then(([malaId, sceneId, customText, rounds, mantraKey, soundId]) => {
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
         if (customText) setCustomMantraText(customText);
         if (mantraKey) setSavedMantraKey(mantraKey);
+        if (soundId && JAPA_SOUND_OPTIONS.some((item) => item.id === soundId)) setSelectedSoundId(soundId);
         const parsedRounds = rounds ? Number(rounds) : 1;
         if (Number.isInteger(parsedRounds) && parsedRounds >= 1 && parsedRounds <= MAX_TARGET_ROUNDS) {
           setTargetRounds(parsedRounds);
@@ -890,6 +906,23 @@ export default function JapaScreen() {
       })
       .catch(() => {});
   }, []);
+
+  const activeSound = useMemo(() => getJapaSoundById(selectedSoundId), [selectedSoundId]);
+
+  // Ambient sound lifecycle — plays seamless loop during active practice,
+  // pauses when stop sheet opens, and unloads on exit or screen blur.
+  useEffect(() => {
+    if (screen !== 'practice' || showStopSheet || selectedSoundId === 'off' || !activeSound.audioUrl) {
+      void audio.stop();
+      return;
+    }
+
+    void audio.loadAndPlay(activeSound.audioUrl, true);
+
+    return () => {
+      void audio.stop();
+    };
+  }, [screen, showStopSheet, selectedSoundId, activeSound.audioUrl, audio]);
 
   useEffect(() => {
     if (mantraIndex >= mantraOptions.length) setMantraIndex(0);
@@ -2528,6 +2561,47 @@ export default function JapaScreen() {
                 </View>
               </Animated.View>
             ) : null}
+
+            {/* ── Minimal Floating Sacred Sound Pill ─────────────────── */}
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={`Sacred ambient sound: ${activeSound.label}`}
+              onPress={() => setSoundSheetOpen(true)}
+              hitSlop={8}
+              style={{
+                position: 'absolute',
+                bottom: Math.max(18, insets.bottom + 12),
+                alignSelf: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 7,
+                paddingHorizontal: 14,
+                paddingVertical: 9,
+                minHeight: MIN_TOUCH_TARGET,
+                borderRadius: 999,
+                backgroundColor: isDark ? 'rgba(8,6,4,0.64)' : 'rgba(255,253,248,0.84)',
+                borderWidth: 1,
+                borderColor: selectedSoundId !== 'off' ? theme.brand : `${theme.brand}35`,
+                boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+              }}
+            >
+              <Feather
+                name={selectedSoundId !== 'off' ? 'music' : 'volume-x'}
+                size={13}
+                color={selectedSoundId !== 'off' ? theme.brand : practiceMutedColor}
+              />
+              <Text
+                style={{
+                  fontFamily: FONTS.sansMedium,
+                  fontSize: 12,
+                  letterSpacing: 0.3,
+                  color: selectedSoundId !== 'off' ? practiceTextColor : practiceMutedColor,
+                }}
+              >
+                {selectedSoundId !== 'off' ? activeSound.label : 'Sound: Off'}
+              </Text>
+              <Feather name="chevron-up" size={12} color={practiceMutedColor} />
+            </PressableSurface>
           </LinearGradient>
         </View>
       )}
@@ -2751,6 +2825,85 @@ export default function JapaScreen() {
                   })}
                 </View>
               </View>
+
+              {/* Sacred Ambient Sound section inside customize sheet */}
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.section, color: theme.brand }}>Sacred Ambient Sound</Text>
+                <View style={{ gap: 10 }}>
+                  {JAPA_SOUND_OPTIONS.map((item) => {
+                    const selected = selectedSoundId === item.id;
+                    return (
+                      <PressableSurface
+                        key={item.id}
+                        haptic="selection"
+                        accessibilityState={{ selected }}
+                        onPress={() => {
+                          setSelectedSoundId(item.id);
+                          void AsyncStorage.setItem(JAPA_SOUND_KEY, item.id);
+                        }}
+                        style={{
+                          borderRadius: 18,
+                          borderWidth: 1,
+                          borderColor: selected ? theme.brand : theme.premiumBorder,
+                          backgroundColor: selected ? theme.brandSoft : cardBg,
+                          overflow: 'hidden',
+                          boxShadow: selected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
+                        }}
+                      >
+                        <View
+                          style={{
+                            minHeight: 58,
+                            paddingHorizontal: 14,
+                            paddingVertical: 10,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                            <View
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: selected ? theme.brand : (isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight),
+                              }}
+                            >
+                              <Feather
+                                name={item.id === 'off' ? 'volume-x' : 'music'}
+                                size={16}
+                                color={selected ? (isDark ? COLORS.darkBg : COLORS.creamBg) : theme.brand}
+                              />
+                            </View>
+                            <View style={{ flex: 1, gap: 1 }}>
+                              <Text style={{ ...TYPE.label, color: text }}>{item.label}</Text>
+                              <Text style={{ ...TYPE.caption, color: dim }} numberOfLines={1}>
+                                {item.subtitle}
+                              </Text>
+                            </View>
+                          </View>
+                          {selected ? (
+                            <View
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 14,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: theme.brand,
+                              }}
+                            >
+                              <Feather name="check" size={15} color={COLORS.ink} />
+                            </View>
+                          ) : null}
+                        </View>
+                      </PressableSurface>
+                    );
+                  })}
+                </View>
+              </View>
             </ScrollView>
             <PressableSurface
               haptic="selection"
@@ -2764,6 +2917,143 @@ export default function JapaScreen() {
               }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: bg }}>Done</Text>
+            </PressableSurface>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Dedicated Sacred Ambient Sound Sheet Modal ───────────────── */}
+      <Modal transparent visible={soundSheetOpen} animationType="slide" onRequestClose={() => setSoundSheetOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1 }} onPress={() => setSoundSheetOpen(false)} />
+          <View
+            style={{
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              backgroundColor: cardBg,
+              borderWidth: 1,
+              borderColor: border,
+              padding: 22,
+              gap: 16,
+              maxHeight: '82%',
+            }}
+          >
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ gap: 2, flex: 1 }}>
+                <Text style={{ ...TYPE.screenTitle, color: text }}>Sacred Ambient Sound</Text>
+                <Text style={{ ...TYPE.caption, color: dim }}>
+                  Continuous harmonic drone to anchor your chanting
+                </Text>
+              </View>
+              <PressableSurface
+                haptic="selection"
+                onPress={() => setSoundSheetOpen(false)}
+                hitSlop={10}
+                style={{
+                  width: 32,
+                  height: 32,
+                  minHeight: 32,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                }}
+              >
+                <Feather name="x" size={16} color={dim} />
+              </PressableSurface>
+            </View>
+
+            <ScrollView contentContainerStyle={{ gap: 10 }} showsVerticalScrollIndicator={false}>
+              {JAPA_SOUND_OPTIONS.map((item) => {
+                const selected = selectedSoundId === item.id;
+                return (
+                  <PressableSurface
+                    key={item.id}
+                    haptic="selection"
+                    accessibilityState={{ selected }}
+                    onPress={() => {
+                      setSelectedSoundId(item.id);
+                      void AsyncStorage.setItem(JAPA_SOUND_KEY, item.id);
+                    }}
+                    style={{
+                      borderRadius: 18,
+                      borderWidth: selected ? 1.5 : 1,
+                      borderColor: selected ? theme.brand : theme.premiumBorder,
+                      backgroundColor: selected ? theme.brandSoft : cardBg,
+                      padding: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      boxShadow: selected ? (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) : undefined,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                      <View
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: selected ? theme.brand : (isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight),
+                        }}
+                      >
+                        <Feather
+                          name={item.id === 'off' ? 'volume-x' : 'music'}
+                          size={18}
+                          color={selected ? (isDark ? COLORS.darkBg : COLORS.creamBg) : theme.brand}
+                        />
+                      </View>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ ...TYPE.label, color: text }}>{item.label}</Text>
+                          {item.sanskritLabel ? (
+                            <Text style={{ fontFamily: FONTS.serif, fontSize: 13, color: theme.brand }}>
+                              · {item.sanskritLabel}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <Text style={{ ...TYPE.caption, color: dim }} numberOfLines={1}>
+                          {item.subtitle}
+                        </Text>
+                      </View>
+                    </View>
+                    {selected ? (
+                      <View
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 13,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: theme.brand,
+                        }}
+                      >
+                        <Feather name="check" size={14} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
+                      </View>
+                    ) : null}
+                  </PressableSurface>
+                );
+              })}
+            </ScrollView>
+
+            <PressableSurface
+              haptic="selection"
+              onPress={() => setSoundSheetOpen(false)}
+              style={{
+                borderRadius: 18,
+                backgroundColor: theme.brand,
+                minHeight: MIN_TOUCH_TARGET,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: isDark ? COLORS.darkBg : COLORS.creamBg }}>
+                Done
+              </Text>
             </PressableSurface>
           </View>
         </View>

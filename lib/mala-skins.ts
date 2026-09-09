@@ -4,7 +4,7 @@ export type MalaSkin = {
   threadColor: string;
   glowColor: string;
   label: string;
-  pendant: 'rishi' | 'trishul' | 'flute' | 'leaf' | 'lotus' | 'halo' | 'bodhi';
+  pendant: 'rishi' | 'trishul' | 'flute' | 'leaf' | 'lotus' | 'halo' | 'bodhi' | 'moon' | 'peacock' | 'sun';
 };
 
 export const MALA_SKINS: Record<string, MalaSkin> = {
@@ -63,6 +63,30 @@ export const MALA_SKINS: Record<string, MalaSkin> = {
     glowColor: 'rgba(139,115,85,0.7)',
     label: 'Bodhi',
     pendant: 'bodhi',
+  },
+  'sphatik-crystal': {
+    beadColor: '#E6F2F8',
+    beadBorder: 'rgba(160,205,230,0.85)',
+    threadColor: '#88C0D0',
+    glowColor: 'rgba(200,235,255,0.85)',
+    label: 'Sphatik',
+    pendant: 'moon',
+  },
+  'vaijayanti-bead': {
+    beadColor: '#FAF8F0',
+    beadBorder: 'rgba(215,195,150,0.85)',
+    threadColor: '#D4AF37',
+    glowColor: 'rgba(245,225,160,0.85)',
+    label: 'Vaijayanti',
+    pendant: 'peacock',
+  },
+  'navaratna-gems': {
+    beadColor: '#B22222',
+    beadBorder: 'rgba(218,165,32,0.9)',
+    threadColor: '#FFD700',
+    glowColor: 'rgba(255,215,0,0.9)',
+    label: 'Navaratna',
+    pendant: 'sun',
   },
 };
 

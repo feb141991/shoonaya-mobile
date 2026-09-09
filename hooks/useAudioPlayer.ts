@@ -10,6 +10,7 @@ type UseAudioPlayerResult = {
   resume: () => Promise<void>;
   stop: () => Promise<void>;
   setRate: (rate: AudioRate) => Promise<void>;
+  setVolume: (volume: number) => Promise<void>;
 };
 
 let audioModeConfigured = false;
@@ -122,5 +123,15 @@ export function useAudioPlayer(): UseAudioPlayerResult {
     }
   }, []);
 
-  return { loadAndPlay, pause, resume, stop, setRate };
+  const setVolume = useCallback(async (volume: number) => {
+    try {
+      const player = playerRef.current;
+      if (!player) return;
+      player.volume = Math.max(0, Math.min(1, volume));
+    } catch {
+      // not supported or removed
+    }
+  }, []);
+
+  return { loadAndPlay, pause, resume, stop, setRate, setVolume };
 }

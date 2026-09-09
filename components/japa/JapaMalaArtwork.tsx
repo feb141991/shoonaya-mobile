@@ -84,6 +84,54 @@ function PendantGlyph({ skin, center, y, scale }: { skin: MalaSkin; center: numb
     );
   }
 
+  if (skin.pendant === 'moon') {
+    return (
+      <>
+        <Path
+          d={`M ${center + 4 * scale} ${y - 14 * scale} A 13 ${13 * scale} 0 1 0 ${center + 4 * scale} ${y + 14 * scale} A 10 ${10 * scale} 0 1 1 ${center + 4 * scale} ${y - 14 * scale} Z`}
+          fill={gold}
+          opacity={0.88}
+        />
+        <Circle cx={center - 3 * scale} cy={y} r={2.5 * scale} fill={COLORS.onMediaWhite} opacity={0.9} />
+      </>
+    );
+  }
+
+  if (skin.pendant === 'peacock') {
+    return (
+      <>
+        <Ellipse cx={center} cy={y - 2 * scale} rx={11 * scale} ry={16 * scale} fill={gold} opacity={0.72} />
+        <Ellipse cx={center} cy={y - 4 * scale} rx={6.5 * scale} ry={9.5 * scale} fill={dark} opacity={0.85} />
+        <Circle cx={center} cy={y - 4 * scale} r={3.2 * scale} fill={COLORS.onMediaWhite} opacity={0.9} />
+        <Line x1={center} y1={y + 12 * scale} x2={center} y2={y + 20 * scale} stroke={dark} strokeWidth={2 * scale} strokeLinecap="round" />
+      </>
+    );
+  }
+
+  if (skin.pendant === 'sun') {
+    return (
+      <>
+        <Circle cx={center} cy={y} r={8.5 * scale} fill={gold} opacity={0.88} />
+        <Circle cx={center} cy={y} r={4 * scale} fill={dark} opacity={0.8} />
+        {Array.from({ length: 12 }).map((_, ray) => {
+          const angle = (Math.PI * 2 * ray) / 12;
+          return (
+            <Line
+              key={ray}
+              x1={center + Math.cos(angle) * 10 * scale}
+              y1={y + Math.sin(angle) * 10 * scale}
+              x2={center + Math.cos(angle) * 17 * scale}
+              y2={y + Math.sin(angle) * 17 * scale}
+              stroke={gold}
+              strokeWidth={1.6 * scale}
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </>
+    );
+  }
+
   return (
     <>
       <Circle cx={center} cy={y - 7 * scale} r={7 * scale} fill={dark} opacity={0.8} />
