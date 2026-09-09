@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { TempleSanctumNode } from '@/lib/yatra-data';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { FlowerShowerOverlay } from '@/components/ui/FlowerShowerOverlay';
 
 interface VirtualSanctumModalProps {
   temple: TempleSanctumNode | null;
@@ -31,6 +32,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
   const [flowersCount, setFlowersCount] = useState(0);
   const [bellRungCount, setBellRungCount] = useState(0);
   const [parikramaCount, setParikramaCount] = useState(0);
+  const [showFlowerShower, setShowFlowerShower] = useState(false);
 
   if (!temple) return null;
 
@@ -42,6 +44,10 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
   const handleOfferFlower = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setFlowersCount((prev) => prev + 1);
+    setShowFlowerShower(false);
+    requestAnimationFrame(() => {
+      setShowFlowerShower(true);
+    });
   };
 
   const handleRingBell = () => {
@@ -307,6 +313,13 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               <Text style={styles.liveDarshanBtnText}>Watch Live Shrines on Shoonaya</Text>
             </PressableSurface>
           </ScrollView>
+
+          {/* Pushpa Vrishti — Sacred Flower Petal Shower */}
+          <FlowerShowerOverlay
+            show={showFlowerShower}
+            onComplete={() => setShowFlowerShower(false)}
+            count={36}
+          />
         </Pressable>
       </Pressable>
     </Modal>
