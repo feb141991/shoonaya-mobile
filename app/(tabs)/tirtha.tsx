@@ -24,6 +24,7 @@ import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/SkeletonLoader';
+import { YatraCircuitsSection } from '@/components/tirtha/YatraCircuitsSection';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { DIASPORA_TEMPLES, getCuratedNearbyTemples } from '@/lib/diaspora-temples';
@@ -39,7 +40,7 @@ import { supabase } from '@/lib/supabase';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 
-type PassportTab = 'map' | 'passport';
+type PassportTab = 'map' | 'yatras' | 'passport';
 type MoodKey = 'gratitude' | 'devotion' | 'peace' | 'clarity';
 
 type TirthaPlaceSummary = {
@@ -696,7 +697,8 @@ export default function TirthaScreen() {
             }}
           >
             {([
-              ['map', 'Nearby'],
+              ['map', 'Nearby (GPS)'],
+              ['yatras', 'Sacred Yatras'],
               ['passport', 'Passport'],
             ] as const).map(([key, label]) => {
               const active = passportTab === key;
@@ -713,7 +715,7 @@ export default function TirthaScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: active ? brand : dim }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: active ? brand : dim }} numberOfLines={1}>
                     {label}
                   </Text>
                 </PressableSurface>
@@ -722,7 +724,11 @@ export default function TirthaScreen() {
           </View>
         </View>
 
-        {passportTab === 'map' ? (
+        {passportTab === 'yatras' ? (
+          <View style={{ gap: 14 }}>
+            <YatraCircuitsSection />
+          </View>
+        ) : passportTab === 'map' ? (
           <View style={{ gap: 16 }}>
             <View style={{ paddingHorizontal: 20, marginTop: 4, gap: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
