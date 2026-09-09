@@ -1432,6 +1432,8 @@ function HomeContent() {
               >
                 <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
                 <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                   style={{
                     ...TYPE.chip,
                     flexShrink: 1,

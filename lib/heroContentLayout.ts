@@ -40,7 +40,13 @@ export function resolveHeroContentLayout(
     ? artworkId === 'krishna-yamuna-sunrise' ? 'right' : 'below'
     : preference;
   const availableColumn = (width - 60) / 2;
-  const minimumColumn = 264 * Math.max(1, fontScale) + 32;
+  // A phone side column tops out around 150-185pt (iPhone SE through Pro
+  // Max) -- the previous 296pt minimum could never be satisfied by any
+  // phone, so 'left'/'right' silently never fired outside tablet widths.
+  // 150 covers mainstream phone widths (>=375) while still falling back
+  // to 'below' on the smallest/oldest screens (320pt) and at larger
+  // accessibility text scales, where a stacked layout reads better anyway.
+  const minimumColumn = 150 * Math.max(1, fontScale);
   if (preferred === 'below' || availableColumn < minimumColumn || fontScale > 1.3) {
     return { position: 'below', columnWidth: Math.max(0, width - 40) };
   }
