@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { LineageCarousel } from '@/components/lineage/LineageCarousel';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -919,6 +920,8 @@ function PathshalaContent() {
                 </PressableSurface>
               </View>
             )}
+
+            <LineageCarousel />
 
             <View
               style={{

@@ -35,6 +35,8 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala/')) return path as Href;
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
+  if (pathname.startsWith('/lineage/')) return path as Href;
+  if (pathname.startsWith('/lineage')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/panchang')) return '/panchang';
   if (pathname.startsWith('/rashiphala') || pathname.startsWith('/rashiphal')) return '/rashiphala' as Href;
   if (pathname.startsWith('/vrat/')) return path as Href;

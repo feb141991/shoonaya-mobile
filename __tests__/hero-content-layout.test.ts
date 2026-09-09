@@ -8,10 +8,10 @@ describe('backdrop content avoids artwork and narrow columns', () => {
       assert.equal(resolveHeroContentLayout('auto', 'krishna-yamuna-sunrise', width, 1).position, 'below');
     }
   });
-  it('uses the reviewed right side on mainstream phone widths, not just tablets', () => {
+  it('uses the reviewed left side on mainstream phone widths, not just tablets', () => {
     for (const width of [375, 390, 414, 430, 820]) {
       const layout = resolveHeroContentLayout('auto', 'krishna-yamuna-sunrise', width, 1);
-      assert.equal(layout.position, 'right');
+      assert.equal(layout.position, 'left');
       assert.ok(layout.columnWidth >= 150, `columnWidth ${layout.columnWidth} at width ${width} is narrower than the floor`);
       assert.ok(layout.columnWidth < width / 2);
     }

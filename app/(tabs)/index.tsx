@@ -44,7 +44,7 @@ import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { GreetingPicker } from '@/components/home/GreetingPicker';
 import { getHeroContentPosition, resolveHeroContentLayout, type HeroContentPosition } from '@/lib/heroContentLayout';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
-import { HomeFeatureTipsSheet } from '@/components/home/HomeFeatureTipsSheet';
+import { HeroTip, useHeroTipVisible } from '@/components/home/HeroTip';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
@@ -732,7 +732,7 @@ function HomeContent() {
   const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
   const [greetingOverride, setGreetingOverride] = useState<string | null>(null);
   const [showRashiphalNudge, setShowRashiphalNudge] = useState(false);
-  const [featureTipsVisible, setFeatureTipsVisible] = useState(false);
+  const heroTip = useHeroTipVisible();
   const [discoveryState, setDiscoveryState] = useState<HomeDiscoveryState>(() =>
     createInitialDiscoveryState(resolveIdentityKey(appIdentity))
   );
@@ -744,7 +744,6 @@ function HomeContent() {
     chatSheetVisible ||
     heroPickerVisible ||
     greetingPickerVisible ||
-    featureTipsVisible ||
     authGateVisible ||
     aiAuthGateVisible;
 
@@ -1811,6 +1810,8 @@ function HomeContent() {
               first-week guidance for brand-new users, then upcoming sacred
               days — all ahead of the existing next-practice card so the
               time-sensitive nudge surfaces first, same as PWA. ── */}
+          {heroTip.visible ? <HeroTip lang={state.profile.appLanguage} onDismiss={heroTip.dismiss} /> : null}
+
           {panchang.brahmaMuhurta && panchang.sunrise ? (
             <BrahmaMuhurtaPrompt
               brahmaMuhurta={panchang.brahmaMuhurta}
@@ -1833,41 +1834,6 @@ function HomeContent() {
             spiritualDate={state.date.iso}
             onRetryUnavailable={retryPanchang}
           />
-
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel={
-              state.profile.appLanguage === 'hi'
-                ? 'अपना होम एक्सप्लोर करें'
-                : state.profile.appLanguage === 'pa'
-                  ? 'ਆਪਣਾ ਹੋਮ ਐਕਸਪਲੋਰ ਕਰੋ'
-                  : 'Explore your Home'
-            }
-            accessibilityHint={
-              state.profile.appLanguage === 'hi'
-                ? "होम की सुविधाओं के बारे में एक छोटी गाइड खोलता है"
-                : state.profile.appLanguage === 'pa'
-                  ? 'ਹੋਮ ਦੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਬਾਰੇ ਇੱਕ ਛੋਟੀ ਗਾਈਡ ਖੋਲ੍ਹਦਾ ਹੈ'
-                  : "Opens a short guide to Home's features"
-            }
-            onPress={() => setFeatureTipsVisible(true)}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              minHeight: MIN_TOUCH_TARGET,
-            }}
-          >
-            <Feather name="compass" size={14} color={theme.brand} />
-            <Text style={{ ...TYPE.chip, color: theme.brand }}>
-              {state.profile.appLanguage === 'hi'
-                ? 'अपना होम एक्सप्लोर करें'
-                : state.profile.appLanguage === 'pa'
-                  ? 'ਆਪਣਾ ਹੋਮ ਐਕਸਪਲੋਰ ਕਰੋ'
-                  : 'Explore your Home'}
-            </Text>
-          </PressableSurface>
 
           <FestivalStoryStack cards={state.panchang.storyCards} theme={theme} isDark={isDark} />
 
@@ -2286,12 +2252,6 @@ function HomeContent() {
         onClose={() => setGreetingPickerVisible(false)}
         tradition={state.profile.tradition}
         onPickChange={setGreetingOverride}
-      />
-      <HomeFeatureTipsSheet
-        visible={featureTipsVisible}
-        onClose={() => setFeatureTipsVisible(false)}
-        lang={state.profile.appLanguage}
-        showSacredDays={sacredDayObservances.length > 0}
       />
     </SafeAreaView>
   );
