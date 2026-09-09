@@ -986,7 +986,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   id: 'instagram',
                   icon: 'instagram',
                   label: 'Instagram',
-                  handle: '@shoonaya.fyi',
+                  handle: '@shoonayaapp',
                   url: SOCIAL_LINKS.instagram,
                 },
                 {
