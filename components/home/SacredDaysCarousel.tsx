@@ -27,6 +27,7 @@ import {
 } from '@/lib/sacred-days-deck';
 import { ObservanceSeriesCard } from './ObservanceSeriesCard';
 import { SacredDaysCard } from './SacredDaysCard';
+import { SacredCalendarSheet } from './SacredCalendarSheet';
 
 type Theme = {
   card: string;
@@ -40,7 +41,7 @@ type Theme = {
 const COPY = {
   en: {
     title: 'Sacred Days',
-    export: 'Export calendar',
+    export: 'Sacred Calendar',
     exportBusy: 'Preparing',
     unavailable: 'Sacred days could not be refreshed.',
     retry: 'Retry',
@@ -49,7 +50,7 @@ const COPY = {
   },
   hi: {
     title: 'पवित्र दिन',
-    export: 'कैलेंडर निर्यात करें',
+    export: 'पवित्र कैलेंडर',
     exportBusy: 'तैयार हो रहा है',
     unavailable: 'पवित्र दिनों की जानकारी रीफ़्रेश नहीं हो सकी।',
     retry: 'पुनः प्रयास',
@@ -58,7 +59,7 @@ const COPY = {
   },
   pa: {
     title: 'ਪਵਿੱਤਰ ਦਿਨ',
-    export: 'ਕੈਲੰਡਰ ਨਿਰਯਾਤ ਕਰੋ',
+    export: 'ਪਵਿੱਤਰ ਕੈਲੰਡਰ',
     exportBusy: 'ਤਿਆਰ ਹੋ ਰਿਹਾ ਹੈ',
     unavailable: 'ਪਵਿੱਤਰ ਦਿਨਾਂ ਦੀ ਜਾਣਕਾਰੀ ਤਾਜ਼ਾ ਨਹੀਂ ਹੋ ਸਕੀ।',
     retry: 'ਮੁੜ ਕੋਸ਼ਿਸ਼',
@@ -93,6 +94,8 @@ export function SacredDaysCarousel({
   const listRef = useRef<FlatList<SacredDaysDeckItem>>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const closeCalendar = useCallback(() => setCalendarOpen(false), []);
   const copy = COPY[lang];
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const cardWidth = Math.min(380, Math.max(280, screenWidth - 48));
@@ -149,10 +152,11 @@ export function SacredDaysCarousel({
 
   const hasItems = items.length > 0;
 
-  if (calendarStatus === 'ready' && !hasItems) return null;
+
 
   return (
     <View accessibilityLabel={copy.title} style={{ marginBottom: 4 }}>
+      {calendarOpen ? <SacredCalendarSheet lang={lang} onClose={closeCalendar} downloading={exporting} onDownload={() => void exportCalendar()} /> : null}
       <View style={{ minHeight: 34, paddingHorizontal: 4, marginBottom: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 }}>
           <Feather name="calendar" size={15} color={accent} />
@@ -172,10 +176,10 @@ export function SacredDaysCarousel({
             accessibilityLabel={copy.export}
             accessibilityState={{ busy: exporting, disabled: exporting }}
             disabled={exporting}
-            onPress={() => void exportCalendar()}
+            onPress={() => setCalendarOpen(true)}
             style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 5 }}
           >
-            <Feather name="download" size={14} color={accent} />
+            <Feather name="calendar" size={14} color={accent} />
             <Text style={{ ...TYPE.chip, color: accent }} numberOfLines={1}>
               {exporting ? copy.exportBusy : copy.export}
             </Text>
