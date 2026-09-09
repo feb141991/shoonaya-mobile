@@ -1,12 +1,14 @@
-import { COLORS, RADII, TYPE } from './constants';
+import { COLORS, RADII, SHADOWS, TYPE } from './constants';
 
-export function getHomeMoodPillStyle(pressed: boolean) {
+export function getHomeMoodPillStyle(pressed: boolean, isDark = false) {
   return {
     flexDirection: 'row' as const,
+    flexWrap: 'nowrap' as const,
+    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
     alignItems: 'center' as const,
     alignSelf: 'center' as const,
-    flexShrink: 0,
-    minHeight: 30,
+    flexShrink: 1,
+    minHeight: 44,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADII.pill,
@@ -20,6 +22,6 @@ export function getHomeMoodPillStyle(pressed: boolean) {
 
 export const HOME_MOOD_PILL_TEXT_STYLE = {
   ...TYPE.chip,
-  flexShrink: 0,
+  flexShrink: 1,
   color: COLORS.homePwaPillText,
 };

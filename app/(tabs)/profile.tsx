@@ -1272,13 +1272,16 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal visible={editVisible} transparent animationType="slide" onRequestClose={() => setEditVisible(false)}>
-        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end' }}>
-          <View
-            style={{
+        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end', paddingTop: insets.top }}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{
               backgroundColor: theme.card,
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
               padding: 20,
+              paddingBottom: Math.max(insets.bottom, 20),
               gap: 14,
             }}
           >
@@ -1450,12 +1453,15 @@ export default function ProfileScreen() {
               </View>
             </View>
 
+            <Text accessibilityRole="header" style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Language</Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               {(['en', 'hi', 'pa'] as AppLanguage[]).map((language) => {
                 const active = editState.appLanguage === language;
                 return (
                   <PressableSurface
                     key={language}
+                    accessibilityLabel={{ en: 'English', hi: 'Hindi', pa: 'Punjabi' }[language]}
+                    accessibilityState={{ selected: active }}
                     haptic="selection"
                     onPress={() => setEditState((current) => ({ ...current, appLanguage: language }))}
                     style={{
@@ -1509,7 +1515,7 @@ export default function ProfileScreen() {
                 </Text>
               </PressableSurface>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
 

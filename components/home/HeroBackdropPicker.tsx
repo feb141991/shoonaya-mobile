@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { HERO_CONTENT_POSITIONS, getHeroContentPosition, setHeroContentPosition, type HeroContentPosition } from '@/lib/heroContentLayout';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { API_BASE, COLORS, FONTS, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import {
   getHeroPick,
@@ -36,6 +37,8 @@ type HeroBackdropPickerProps = {
   onClose: () => void;
   tradition: string;
   onPickChange: (pick: HeroPick | null) => void;
+  currentContentPosition?: HeroContentPosition;
+  onContentPositionChange?: (position: HeroContentPosition) => void;
   currentSize?: HeroSize;
   onSizeChange?: (size: HeroSize) => void;
 };
@@ -53,10 +56,14 @@ export function HeroBackdropPicker({
   tradition,
   onPickChange,
   currentSize,
+  currentContentPosition,
+  onContentPositionChange,
   onSizeChange,
 }: HeroBackdropPickerProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
+  const [selectedPosition, setSelectedPosition] = useState<HeroContentPosition>(currentContentPosition ?? 'auto');
+  const [savingPosition, setSavingPosition] = useState(false);
   const [loading, setLoading] = useState(false);
   const [themes, setThemes] = useState<HeroTheme[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -64,6 +71,7 @@ export function HeroBackdropPicker({
 
   const load = useCallback(async () => {
     setLoading(true);
+    setSelectedPosition(await getHeroContentPosition());
     try {
       const [pick, sizePref, response] = await Promise.all([
         getHeroPick(),
@@ -141,9 +149,9 @@ export function HeroBackdropPicker({
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
               <Feather name="image" size={20} color={theme.brand} />
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: theme.text }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20, color: theme.text, flexShrink: 1 }}>
                 Choose Sanctuary Backdrop
               </Text>
             </View>
@@ -151,15 +159,42 @@ export function HeroBackdropPicker({
               haptic="selection"
               onPress={onClose}
               accessibilityLabel="Close"
-              style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.cardSoft }}
+              style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.cardSoft }}
             >
               <Feather name="x" size={16} color={theme.dim} />
             </PressableSurface>
           </View>
 
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 18 }} style={{ flexShrink: 1 }}>
+          <View style={{ gap: 8 }}>
+            <Text accessibilityRole="header" style={{ ...TYPE.heroPickerMicro, color: theme.dim }}>Greeting and pills</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {HERO_CONTENT_POSITIONS.map(({ value, label }) => (
+                <PressableSurface
+                  key={value}
+                  accessibilityLabel={`Greeting position: ${label}`}
+                  accessibilityState={{ selected: selectedPosition === value, disabled: savingPosition }}
+                  disabled={savingPosition}
+                  onPress={() => {
+                    setSavingPosition(true);
+                    void setHeroContentPosition(value).then(() => { setSelectedPosition(value); onContentPositionChange?.(value); }).catch(() => {
+                      Alert.alert('Could not save layout', 'Please try again.');
+                    }).finally(() => setSavingPosition(false));
+                  }}
+                  style={{ flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16, borderWidth: 1, borderColor: selectedPosition === value ? theme.brand : theme.border, backgroundColor: selectedPosition === value ? theme.brandSoft : theme.cardSoft }}
+                >
+                  <Text style={{ ...TYPE.heroPickerMicro, color: selectedPosition === value ? theme.brand : theme.text }}>{label}</Text>
+                </PressableSurface>
+              ))}
+            </View>
+            <Text style={{ ...TYPE.heroPickerMicro, color: theme.dim }}>
+              On smaller screens, details sit below the artwork to keep the image clear and text readable.
+            </Text>
+          </View>
+
           {/* Hero Size Segmented Selector */}
           <View style={{ gap: 8 }}>
-            <Text style={{ ...TYPE_MICRO, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+            <Text style={{ ...TYPE.heroPickerMicro, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1.2 }}>
               Sanctuary View Size
             </Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -227,10 +262,10 @@ export function HeroBackdropPicker({
             </View>
           ) : (
             <View style={{ gap: 8, flexShrink: 1 }}>
-              <Text style={{ ...TYPE_MICRO, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+              <Text style={{ ...TYPE.heroPickerMicro, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1.2 }}>
                 Sacred Artwork
               </Text>
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingBottom: 16 }}>
                   <PressableSurface
                     accessibilityRole="button"
@@ -305,7 +340,7 @@ export function HeroBackdropPicker({
                             backgroundColor: 'rgba(0,0,0,0.45)',
                           }}
                         >
-                          <Text style={{ ...TYPE_MICRO, color: '#fff' }} numberOfLines={1}>
+                          <Text style={{ ...TYPE.heroPickerMicro, color: '#fff' }} numberOfLines={1}>
                             {item.label}
                           </Text>
                         </View>
@@ -330,13 +365,13 @@ export function HeroBackdropPicker({
                     );
                   })}
                 </View>
-              </ScrollView>
+              </View>
             </View>
           )}
+          </ScrollView>
         </View>
       </View>
     </Modal>
   );
 }
 
-const TYPE_MICRO = { fontFamily: FONTS.sansMedium, fontSize: 10.5, lineHeight: 13 } as const;

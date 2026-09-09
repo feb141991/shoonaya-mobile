@@ -459,6 +459,10 @@ export const TYPE = {
   homeHeroGreeting: { fontFamily: FONTS.serifBold, fontSize: 20, lineHeight: 24 }, // PWA Home HeroSection text-xl/leading-tight
   homeHeroLocation: { fontFamily: FONTS.sansSemiBold, fontSize: 11, lineHeight: 14 },
   homeHeroMeaning: { fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 22 },
+  // HeroBackdropPicker's compact row labels/hints — deliberately smaller and
+  // heavier than TYPE.micro (12px sans) to stay legible at 10.5px inside the
+  // picker's tight rows without competing with section headings.
+  heroPickerMicro: { fontFamily: FONTS.sansMedium, fontSize: 10.5, lineHeight: 13 },
 } as const;
 
 export const MIN_TOUCH_TARGET = 44;
