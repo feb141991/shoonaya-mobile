@@ -1364,8 +1364,16 @@ function HomeContent() {
   const heroDetails = (
           <View style={{
       ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 20 } : { left: 20 }), width: heroLayout.columnWidth }),
-      padding: 16, borderRadius: RADII.xl, backgroundColor: heroDetailsBelow ? theme.card : COLORS.heroBgDark,
-      borderWidth: 1, borderColor: theme.borderSoft, boxShadow: theme.shadow,
+      padding: 16, borderRadius: RADII.xl,
+      // Below the artwork this is its own card on flat theme.background and
+      // needs a real surface. Over the artwork (top/left/right) it goes back
+      // to the original transparent treatment -- floating text relying on
+      // the hero's own gradient scrim for legibility, not a boxed panel --
+      // since that scrim already covers the full image width, not just
+      // where the panel historically sat.
+      backgroundColor: heroDetailsBelow ? theme.card : 'transparent',
+      borderWidth: heroDetailsBelow ? 1 : 0, borderColor: theme.borderSoft,
+      boxShadow: heroDetailsBelow ? theme.shadow : undefined,
       alignItems: 'flex-start', gap: 8,
     }}>
             {state.profile.city ? (
