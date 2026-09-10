@@ -65,13 +65,13 @@ describe('Mood Pill Visual Parity & Surface Token Suite', () => {
     assert.equal(HOME_MOOD_PILL_TEXT_STYLE.color, COLORS.homePwaPillText);
   });
 
-  it('9. Home uses the production helper and lets observance copy wrap to two lines instead of truncating', () => {
+  it('9. Home uses the production helper and keeps observance copy on one auto-shrinking line', () => {
     const homeSource = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
     assert.match(homeSource, /style=\{\(\{ pressed \}\) => getHomeMoodPillStyle\(pressed, isDark\)\}/);
     assert.doesNotMatch(homeSource, /splitSentences|labelLines/);
-    // Allowed to wrap onto a second line (narrow left/right hero columns can't
-    // always fit a full Panchang label on one line) rather than ellipsizing --
-    // "text should be completely in the pills", not cut off with "...".
-    assert.match(homeSource, /numberOfLines=\{2\}\s*\n\s*ellipsizeMode="tail"\s*\n\s*style=\{\{ \.\.\.TYPE\.chip[\s\S]*?currentSlide\.label/);
+    // Single line, shrinking the font to fit rather than wrapping or
+    // ellipsizing -- "text should be completely in the pills" on one line,
+    // per explicit request, not cut off with "..." and not wrapped.
+    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*adjustsFontSizeToFit\s*\n\s*minimumFontScale=\{0\.75\}\s*\n\s*style=\{\{ \.\.\.TYPE\.chip[\s\S]*?currentSlide\.label/);
   });
 });

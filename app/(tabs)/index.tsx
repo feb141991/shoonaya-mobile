@@ -673,8 +673,9 @@ function PanchangPill({
       <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
         <Text
-          numberOfLines={2}
-          ellipsizeMode="tail"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
           style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
           {currentSlide.label}
@@ -1405,7 +1406,17 @@ function HomeContent() {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
               <Text
-                style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }}
+                style={{
+                  ...TYPE.homeHeroGreeting,
+                  // +2pt for Home's hero specifically, per explicit request --
+                  // nitya-karma.tsx uses the same shared TYPE.homeHeroGreeting
+                  // token and keeps its original size, so this is a local
+                  // override rather than a change to the token itself.
+                  fontSize: TYPE.homeHeroGreeting.fontSize + 2,
+                  lineHeight: TYPE.homeHeroGreeting.lineHeight + 2,
+                  color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText,
+                  flexShrink: 1,
+                }}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.6}
