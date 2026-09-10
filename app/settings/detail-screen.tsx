@@ -85,12 +85,12 @@ const INITIAL_SETTINGS: SettingsState = {
   consent_religious_data: false,
 };
 
-const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string }[] = [
+const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; badge?: string }[] = [
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
   { key: 'wants_festival_reminders', label: 'Festival reminders', subtitle: 'Vrat, tithi & observance alerts' },
   { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
-  { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity' },
+  { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', disabled: true, badge: 'Coming soon' },
 ];
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
@@ -146,20 +146,31 @@ function ToggleRow({
   value,
   onChange,
   theme,
+  disabled,
+  badge,
 }: {
   label: string;
   subtitle?: string;
   value: boolean;
   onChange: (next: boolean) => void;
   theme: ReturnType<typeof themeColor>;
+  disabled?: boolean;
+  badge?: string;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: disabled ? 0.6 : 1 }}>
       <View style={{ flex: 1 }}>
-        <Text style={{ ...TYPE.label, color: theme.text }}>{label}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ ...TYPE.label, color: theme.text }}>{label}</Text>
+          {badge ? (
+            <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder }}>
+              <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 10, color: theme.brand, letterSpacing: 0.3 }}>{badge}</Text>
+            </View>
+          ) : null}
+        </View>
         {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text> : null}
       </View>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: theme.brand }} />
+      <Switch value={value} onValueChange={onChange} disabled={disabled} trackColor={{ true: theme.brand }} />
     </View>
   );
 }
@@ -832,7 +843,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     label={item.label}
                     subtitle={item.subtitle}
                     value={settings[item.key] as boolean}
+                    disabled={item.disabled}
+                    badge={item.badge}
                     onChange={(value) => {
+                      if (item.disabled) return;
                       // Turning a reminder ON is exactly the "contextual"
                       // moment to (re-)ask for OS push permission — mirrors
                       // the web app's own contextual push-permission

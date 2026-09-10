@@ -1,3 +1,5 @@
+export type MalaBeadStyle = 'standard' | 'sphatik' | 'vaijayanti' | 'navaratna';
+
 export type MalaSkin = {
   beadColor: string;
   beadBorder: string;
@@ -5,6 +7,8 @@ export type MalaSkin = {
   glowColor: string;
   label: string;
   pendant: 'rishi' | 'trishul' | 'flute' | 'leaf' | 'lotus' | 'halo' | 'bodhi' | 'moon' | 'peacock' | 'sun';
+  beadStyle?: MalaBeadStyle;
+  hasMeruCrown?: boolean;
 };
 
 export const MALA_SKINS: Record<string, MalaSkin> = {
@@ -71,6 +75,8 @@ export const MALA_SKINS: Record<string, MalaSkin> = {
     glowColor: 'rgba(200,235,255,0.85)',
     label: 'Sphatik',
     pendant: 'moon',
+    beadStyle: 'sphatik',
+    hasMeruCrown: true,
   },
   'vaijayanti-bead': {
     beadColor: '#FAF8F0',
@@ -79,6 +85,8 @@ export const MALA_SKINS: Record<string, MalaSkin> = {
     glowColor: 'rgba(245,225,160,0.85)',
     label: 'Vaijayanti',
     pendant: 'peacock',
+    beadStyle: 'vaijayanti',
+    hasMeruCrown: true,
   },
   'navaratna-gems': {
     beadColor: '#B22222',
@@ -87,6 +95,8 @@ export const MALA_SKINS: Record<string, MalaSkin> = {
     glowColor: 'rgba(255,215,0,0.9)',
     label: 'Navaratna',
     pendant: 'sun',
+    beadStyle: 'navaratna',
+    hasMeruCrown: true,
   },
 };
 

@@ -20,7 +20,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop, Path, G, Line, Ellipse } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import * as Crypto from 'expo-crypto';
 
@@ -1527,19 +1527,229 @@ export default function JapaScreen() {
     setScreen('launcher');
   }, []);
 
-  // Three-tier bead state (done / current / upcoming) — previously every
-  // non-current bead rendered identically regardless of progress, so the
-  // ring never visibly "filled in" as rounds advanced. Done beads now stay
-  // lit with the richer `grad-done` gradient as the current bead moves on,
-  // giving the same at-a-glance progress read as PWA's bead-done/bead-un
-  // split.
+  const NAVARATNA_GEMS = [
+    { id: 'ruby', name: 'Manikya', color: '#E11D48', dark: '#881337', light: '#FDA4AF', rim: '#FFD700' },
+    { id: 'pearl', name: 'Mukta', color: '#F8FAFC', dark: '#94A3B8', light: '#FFFFFF', rim: '#E2E8F0' },
+    { id: 'coral', name: 'Moonga', color: '#F97316', dark: '#9A3412', light: '#FED7AA', rim: '#FFD700' },
+    { id: 'emerald', name: 'Marakata', color: '#10B981', dark: '#064E3B', light: '#A7F3D0', rim: '#FFD700' },
+    { id: 'topaz', name: 'Pukhraj', color: '#FBBF24', dark: '#B45309', light: '#FEF08A', rim: '#FFD700' },
+    { id: 'diamond', name: 'Heera', color: '#E0F2FE', dark: '#0284C7', light: '#FFFFFF', rim: '#BAE6FD' },
+    { id: 'sapphire', name: 'Neelam', color: '#2563EB', dark: '#1E3A8A', light: '#BFDBFE', rim: '#FFD700' },
+    { id: 'hessonite', name: 'Gomed', color: '#D97706', dark: '#78350F', light: '#FDE68A', rim: '#FFD700' },
+    { id: 'catseye', name: 'Vaidurya', color: '#84CC16', dark: '#365314', light: '#D9F99D', rim: '#FFD700' },
+  ] as const;
+
+  function MeruCrownApex({
+    cx,
+    cy,
+    glowColor,
+    threadColor,
+  }: {
+    cx: number;
+    cy: number;
+    glowColor: string;
+    threadColor: string;
+  }) {
+    const r = 20;
+    const rays = Array.from({ length: 12 }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / 12;
+      const rInner = r + 3;
+      const rOuter = r + 12;
+      return {
+        x1: cx + Math.cos(angle) * rInner,
+        y1: cy + Math.sin(angle) * rInner,
+        x2: cx + Math.cos(angle) * rOuter,
+        y2: cy + Math.sin(angle) * rOuter,
+      };
+    });
+
+    return (
+      <G>
+        {/* Radiant Golden Rays */}
+        {rays.map((ray, i) => (
+          <Line
+            key={`meru-ray-${i}`}
+            x1={ray.x1}
+            y1={ray.y1}
+            x2={ray.x2}
+            y2={ray.y2}
+            stroke="#FFD700"
+            strokeWidth={i % 2 === 0 ? 2 : 1.2}
+            strokeOpacity={i % 2 === 0 ? 0.9 : 0.6}
+            strokeLinecap="round"
+          />
+        ))}
+
+        {/* Luminous aura glow */}
+        <Circle cx={cx} cy={cy} r={r + 8} fill={glowColor} opacity={0.42} />
+
+        {/* Drop shadow */}
+        <Circle cx={cx + 2} cy={cy + 3} r={r} fill="rgba(120,53,15,0.45)" />
+
+        {/* 3D Filigree Meru Sphere */}
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="url(#grad-meru-gold)"
+          stroke="#FFE58F"
+          strokeWidth={1.6}
+        />
+
+        {/* Sacred Filigree Yantra Lattice */}
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r * 0.72}
+          fill="none"
+          stroke="#FFF8DC"
+          strokeWidth={0.9}
+          strokeDasharray="3,2"
+          opacity={0.88}
+        />
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r * 0.44}
+          fill="none"
+          stroke="#FFF8DC"
+          strokeWidth={0.8}
+          opacity={0.92}
+        />
+
+        {/* Filigree Petal Arches */}
+        <Path
+          d={`M ${cx - r * 0.6} ${cy} Q ${cx} ${cy - r * 0.6} ${cx + r * 0.6} ${cy} Q ${cx} ${cy + r * 0.6} ${cx - r * 0.6} ${cy}`}
+          fill="none"
+          stroke="#FFF8DC"
+          strokeWidth={0.8}
+          opacity={0.75}
+        />
+        <Path
+          d={`M ${cx} ${cy - r * 0.6} Q ${cx - r * 0.6} ${cy} ${cx} ${cy + r * 0.6} Q ${cx + r * 0.6} ${cy} ${cx} ${cy - r * 0.6}`}
+          fill="none"
+          stroke="#FFF8DC"
+          strokeWidth={0.8}
+          opacity={0.75}
+        />
+
+        {/* Top Bindu & Crown Specular Sparkle */}
+        <Circle cx={cx - r * 0.3} cy={cy - r * 0.32} r={r * 0.24} fill="#FFFFFF" opacity={0.95} />
+        <Circle cx={cx} cy={cy} r={2.8} fill="#FFFFFF" stroke="#D97706" strokeWidth={0.8} />
+
+        {/* Left/Right Thread Connectors */}
+        <Circle cx={cx - r - 2} cy={cy} r={3.2} fill={threadColor} stroke="#FFD700" strokeWidth={0.8} />
+        <Circle cx={cx + r + 2} cy={cy} r={3.2} fill={threadColor} stroke="#FFD700" strokeWidth={0.8} />
+      </G>
+    );
+  }
+
+  // Three-tier bead state (done / current / upcoming) with specialized 3D tactile
+  // rendering for Sphatik, Vaijayanti, and Navaratna malas.
   function buildBeadElements() {
     const activeIndex = count >= 108 ? 107 : count;
+    const beadStyle = malaSkin.beadStyle ?? 'standard';
+
     return PRACTICE_BEAD_POSITIONS.map(({ x, y }, index) => {
       const isDone = index < activeIndex;
       const isCurrent = index === activeIndex;
-      const isSumeru = index === 54;
+      const isSumeru = !malaSkin.hasMeruCrown && index === 54;
 
+      // 💎 Sphatik Crystal: 3D translucent prism facets & specular glints
+      if (beadStyle === 'sphatik') {
+        const r = isCurrent ? 14.5 : isDone ? 10.2 : 9.2;
+        const gradientId = isCurrent ? 'grad-sphatik-active' : isDone ? 'grad-sphatik-done' : 'grad-sphatik-inactive';
+        return (
+          <Fragment key={`bead-${index}`}>
+            {isCurrent || isDone ? (
+              <Circle cx={x} cy={y} r={r + 3.5} fill="rgba(186,230,253,0.32)" />
+            ) : null}
+            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill="rgba(30,80,120,0.35)" />
+            <Circle
+              cx={x}
+              cy={y}
+              r={r}
+              fill={`url(#${gradientId})`}
+              stroke={isCurrent ? '#38BDF8' : isDone ? 'rgba(255,255,255,0.9)' : 'rgba(186,230,253,0.75)'}
+              strokeWidth={isCurrent ? 1.6 : 0.9}
+            />
+            <Path
+              d={`M ${x - r * 0.4} ${y} L ${x} ${y - r * 0.4} L ${x + r * 0.4} ${y} L ${x} ${y + r * 0.4} Z`}
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth={0.65}
+              opacity={isDone || isCurrent ? 0.75 : 0.45}
+            />
+            <Circle cx={x - r * 0.35} cy={y - r * 0.36} r={Math.max(1.2, r * 0.28)} fill="#FFFFFF" opacity={0.95} />
+            <Ellipse cx={x + r * 0.24} cy={y + r * 0.28} rx={r * 0.24} ry={r * 0.12} fill="#E0F2FE" opacity={0.55} />
+          </Fragment>
+        );
+      }
+
+      // 🌿 Vaijayanti Seed: 3D organic seed luster, striations & warm amber shadow
+      if (beadStyle === 'vaijayanti') {
+        const r = isCurrent ? 14.2 : isDone ? 10.0 : 9.0;
+        const gradientId = isCurrent ? 'grad-vaijayanti-active' : isDone ? 'grad-vaijayanti-done' : 'grad-vaijayanti-inactive';
+        return (
+          <Fragment key={`bead-${index}`}>
+            {isCurrent || isDone ? (
+              <Circle cx={x} cy={y} r={r + 3} fill="rgba(245,225,160,0.38)" />
+            ) : null}
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(120,80,30,0.36)" />
+            <Circle
+              cx={x}
+              cy={y}
+              r={r}
+              fill={`url(#${gradientId})`}
+              stroke={isCurrent ? '#F59E0B' : isDone ? '#D4AF37' : 'rgba(180,140,60,0.7)'}
+              strokeWidth={isCurrent ? 1.6 : 0.9}
+            />
+            <Path
+              d={`M ${x} ${y - r * 0.7} Q ${x + r * 0.35} ${y} ${x} ${y + r * 0.7}`}
+              fill="none"
+              stroke="#D4AF37"
+              strokeWidth={0.65}
+              opacity={0.5}
+            />
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.1, r * 0.26)} fill="#FFFFFF" opacity={0.9} />
+            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.26} ry={r * 0.13} fill="#FEF08A" opacity={0.45} />
+          </Fragment>
+        );
+      }
+
+      // 👑 Navaratna 9 Gems: 9 Vedic gemstones cycle with brilliant diamond cuts
+      if (beadStyle === 'navaratna') {
+        const gem = NAVARATNA_GEMS[index % 9];
+        const r = isCurrent ? 14.2 : isDone ? 10.0 : 9.0;
+        const gradientId = `grad-gem-${index % 9}`;
+        return (
+          <Fragment key={`bead-${index}`}>
+            {isCurrent || isDone ? (
+              <Circle cx={x} cy={y} r={r + 3.2} fill={gem.light} opacity={0.36} />
+            ) : null}
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(0,0,0,0.4)" />
+            <Circle
+              cx={x}
+              cy={y}
+              r={r}
+              fill={`url(#${gradientId})`}
+              stroke={isCurrent ? '#FFFFFF' : '#FFD700'}
+              strokeWidth={isCurrent ? 1.8 : 1.1}
+              opacity={isDone || isCurrent ? 1 : 0.65}
+            />
+            <Path
+              d={`M ${x - r * 0.45} ${y} L ${x} ${y - r * 0.45} L ${x + r * 0.45} ${y} L ${x} ${y + r * 0.45} Z`}
+              fill="none"
+              stroke="rgba(255,255,255,0.7)"
+              strokeWidth={0.6}
+              opacity={isDone || isCurrent ? 0.85 : 0.5}
+            />
+            <Circle cx={x - r * 0.34} cy={y - r * 0.36} r={Math.max(1.1, r * 0.26)} fill="#FFFFFF" opacity={0.95} />
+          </Fragment>
+        );
+      }
+
+      // Standard prayer beads
       const r = isSumeru ? 17.5 : isCurrent ? 13.8 : isDone ? 9.4 : 8.4;
       const gradientId = isSumeru ? 'grad-guru' : isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
       const shadowOpacity = isCurrent || isSumeru ? 0.4 : isDone ? 0.3 : 0.22;
@@ -1594,6 +1804,7 @@ export default function JapaScreen() {
 
   const beadGradientDefs = (
     <Defs>
+      {/* Standard Gradients */}
       <RadialGradient id="grad-inactive" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.42" />
         <Stop offset="42%" stopColor={malaSkin.beadColor} stopOpacity="0.5" />
@@ -1614,6 +1825,67 @@ export default function JapaScreen() {
         <Stop offset="36%" stopColor={malaSkin.threadColor} stopOpacity="1" />
         <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
       </RadialGradient>
+
+      {/* Radiant Meru Crown 3D Gold */}
+      <RadialGradient id="grad-meru-gold" cx="26%" cy="22%" r="80%">
+        <Stop offset="0%" stopColor="#FFFDF0" stopOpacity="1" />
+        <Stop offset="22%" stopColor="#FFE066" stopOpacity="1" />
+        <Stop offset="50%" stopColor="#F59E0B" stopOpacity="1" />
+        <Stop offset="82%" stopColor="#D97706" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#78350F" stopOpacity="1" />
+      </RadialGradient>
+
+      {/* 3D Tactile Sphatik Crystal Gradients */}
+      <RadialGradient id="grad-sphatik-inactive" cx="26%" cy="22%" r="82%">
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+        <Stop offset="28%" stopColor="#F0F9FF" stopOpacity="0.7" />
+        <Stop offset="68%" stopColor="#BAE6FD" stopOpacity="0.55" />
+        <Stop offset="100%" stopColor="#7DD3FC" stopOpacity="0.75" />
+      </RadialGradient>
+      <RadialGradient id="grad-sphatik-done" cx="26%" cy="22%" r="82%">
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+        <Stop offset="26%" stopColor="#F0F9FF" stopOpacity="0.92" />
+        <Stop offset="64%" stopColor="#BAE6FD" stopOpacity="0.8" />
+        <Stop offset="90%" stopColor="#7DD3FC" stopOpacity="0.95" />
+        <Stop offset="100%" stopColor="#38BDF8" stopOpacity="1" />
+      </RadialGradient>
+      <RadialGradient id="grad-sphatik-active" cx="26%" cy="22%" r="82%">
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+        <Stop offset="24%" stopColor="#E0F2FE" stopOpacity="1" />
+        <Stop offset="58%" stopColor="#38BDF8" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#0284C7" stopOpacity="1" />
+      </RadialGradient>
+
+      {/* 3D Tactile Vaijayanti Seed Gradients */}
+      <RadialGradient id="grad-vaijayanti-inactive" cx="28%" cy="24%" r="78%">
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+        <Stop offset="32%" stopColor="#FEF9C3" stopOpacity="0.75" />
+        <Stop offset="70%" stopColor="#FDE68A" stopOpacity="0.65" />
+        <Stop offset="100%" stopColor="#D4AF37" stopOpacity="0.8" />
+      </RadialGradient>
+      <RadialGradient id="grad-vaijayanti-done" cx="28%" cy="24%" r="78%">
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+        <Stop offset="28%" stopColor="#FEF9C3" stopOpacity="1" />
+        <Stop offset="62%" stopColor="#FDE68A" stopOpacity="1" />
+        <Stop offset="88%" stopColor="#D4AF37" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#92400E" stopOpacity="1" />
+      </RadialGradient>
+      <RadialGradient id="grad-vaijayanti-active" cx="28%" cy="24%" r="78%">
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+        <Stop offset="25%" stopColor="#FEF08A" stopOpacity="1" />
+        <Stop offset="60%" stopColor="#F59E0B" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#B45309" stopOpacity="1" />
+      </RadialGradient>
+
+      {/* 3D Tactile Navaratna 9-Gem Gradients */}
+      {NAVARATNA_GEMS.map((gem, idx) => (
+        <RadialGradient key={`grad-gem-${idx}`} id={`grad-gem-${idx}`} cx="26%" cy="22%" r="80%">
+          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+          <Stop offset="26%" stopColor={gem.light} stopOpacity="1" />
+          <Stop offset="65%" stopColor={gem.color} stopOpacity="1" />
+          <Stop offset="100%" stopColor={gem.dark} stopOpacity="1" />
+        </RadialGradient>
+      ))}
     </Defs>
   );
 
@@ -2377,19 +2649,78 @@ export default function JapaScreen() {
               >
                 <Svg width={PRACTICE_SVG_SIZE} height={PRACTICE_SVG_SIZE} style={{ position: 'absolute', top: 0 }}>
                   {beadGradientDefs}
-                  <Circle
-                    cx={PRACTICE_CENTER_X}
-                    cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 16}
-                    r={6.2}
-                    fill={malaSkin.threadColor}
-                  />
-                  <Circle
-                    cx={PRACTICE_CENTER_X}
-                    cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 24}
-                    r={4.2}
-                    fill={theme.brand}
-                  />
+                  {malaSkin.hasMeruCrown ? (
+                    <G>
+                      {/* Sacred Golden Knot / Tassel Connector at bottom */}
+                      <Circle
+                        cx={PRACTICE_CENTER_X}
+                        cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 12}
+                        r={7.5}
+                        fill="url(#grad-meru-gold)"
+                        stroke="#FFD700"
+                        strokeWidth={1.2}
+                      />
+                      <Circle
+                        cx={PRACTICE_CENTER_X}
+                        cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 22}
+                        r={4.5}
+                        fill="#D4AF37"
+                      />
+                      {/* Sacred silk tassel strands */}
+                      <Line
+                        x1={PRACTICE_CENTER_X}
+                        y1={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 26}
+                        x2={PRACTICE_CENTER_X}
+                        y2={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 74}
+                        stroke={malaSkin.threadColor}
+                        strokeWidth={3}
+                        strokeLinecap="round"
+                      />
+                      <Line
+                        x1={PRACTICE_CENTER_X - 5}
+                        y1={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 28}
+                        x2={PRACTICE_CENTER_X - 10}
+                        y2={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 68}
+                        stroke={malaSkin.threadColor}
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
+                      <Line
+                        x1={PRACTICE_CENTER_X + 5}
+                        y1={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 28}
+                        x2={PRACTICE_CENTER_X + 10}
+                        y2={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 68}
+                        stroke={malaSkin.threadColor}
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
+                    </G>
+                  ) : (
+                    <>
+                      <Circle
+                        cx={PRACTICE_CENTER_X}
+                        cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 16}
+                        r={6.2}
+                        fill={malaSkin.threadColor}
+                      />
+                      <Circle
+                        cx={PRACTICE_CENTER_X}
+                        cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 24}
+                        r={4.2}
+                        fill={theme.brand}
+                      />
+                    </>
+                  )}
                   {buildBeadElements()}
+                  {/* Radiant Golden Filigree Meru Crown Bead at Top Apex */}
+                  {malaSkin.hasMeruCrown ? (
+                    <MeruCrownApex
+                      cx={PRACTICE_CENTER_X}
+                      cy={PRACTICE_CENTER_Y - PRACTICE_RADIUS_Y}
+                      glowColor={malaSkin.glowColor}
+                      threadColor={malaSkin.threadColor}
+                    />
+                  ) : null}
                   {count < 108 ? (
                     <AnimatedCircle
                       cx={currentBeadPos.x}
@@ -2413,27 +2744,21 @@ export default function JapaScreen() {
                     />
                   ) : null}
                 </Svg>
-                {/* guru-pendant.png already renders its own connector loop,
-                    ball, and full tassel with proper shading — this used to
-                    be followed by a flat, unshaded theme.brand ring View and
-                    a 5-bar flat tassel View layered right on top of/next to
-                    that same art. Two mismatched rendering styles stacked at
-                    the exact join is what made the connection look pasted
-                    on rather than part of the mala; removed rather than
-                    fixed in place, since the PNG's own art already covers
-                    both. */}
-                <Image
-                  source={require('../../assets/japa/guru-pendant.png')}
-                  contentFit="contain"
-                  pointerEvents="none"
-                  style={{
-                    position: 'absolute',
-                    top: PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 14,
-                    left: PRACTICE_CENTER_X - 46,
-                    width: 92,
-                    height: 198,
-                  }}
-                />
+                {/* For malas without top crown, render classic guru-pendant PNG at bottom */}
+                {!malaSkin.hasMeruCrown ? (
+                  <Image
+                    source={require('../../assets/japa/guru-pendant.png')}
+                    contentFit="contain"
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      top: PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 14,
+                      left: PRACTICE_CENTER_X - 46,
+                      width: 92,
+                      height: 198,
+                    }}
+                  />
+                ) : null}
               </Animated.View>
               <Animated.View
                 pointerEvents="none"

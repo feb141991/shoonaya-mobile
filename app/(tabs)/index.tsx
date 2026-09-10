@@ -653,14 +653,20 @@ function PanchangPill({
         borderRadius: RADII.pill,
         paddingHorizontal: 12,
         paddingVertical: 4,
-        alignSelf: 'flex-start',
+        // Stretch both the tithi and observance pill to the same width as
+        // their shared parent, instead of each shrinking to its own text
+        // length -- two differently-sized pills stacked directly on top of
+        // each other read as visually inconsistent.
+        alignSelf: 'stretch',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 3,
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        minHeight: slides.length > 1 ? 42 : 34,
+        // Same fixed height for both regardless of dot-indicator presence
+        // (minHeight, not height, so it still grows if content needs it).
+        minHeight: 34,
         maxWidth: 264,
       }}
     >
@@ -1398,7 +1404,12 @@ function HomeContent() {
             ) : null}
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
-              <Text style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }}>
+              <Text
+                style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
                 {greeting}, {state.profile.firstName}
               </Text>
               <Pressable
@@ -1820,15 +1831,6 @@ function HomeContent() {
               first-week guidance for brand-new users, then upcoming sacred
               days — all ahead of the existing next-practice card so the
               time-sensitive nudge surfaces first, same as PWA. ── */}
-          {showHomeHeroGuide ? (
-            <HomeHeroGuide
-              lang={state.profile.appLanguage}
-              step={discoveryState.guidedTourStep}
-              onNext={advanceHomeHeroGuide}
-              onSkip={skipHomeHeroGuide}
-            />
-          ) : null}
-
           {panchang.brahmaMuhurta && panchang.sunrise ? (
             <BrahmaMuhurtaPrompt
               brahmaMuhurta={panchang.brahmaMuhurta}
@@ -2222,6 +2224,23 @@ function HomeContent() {
           </View>
         </View>
       </ScrollView>
+
+      {showHomeHeroGuide ? (
+        // Fixed overlay, not part of the scrollable content -- the tour is
+        // meant to be visible the instant Home loads, and a card embedded
+        // in the scroll flow can land exactly where the floating tab bar
+        // covers it depending on how tall the hero renders. Same
+        // NAV_BAR_CLEARANCE already used for the ScrollView's own bottom
+        // padding, so it never fights the tab bar for space.
+        <View style={{ position: 'absolute', left: 20, right: 20, bottom: insets.bottom + NAV_BAR_CLEARANCE + 12 }}>
+          <HomeHeroGuide
+            lang={state.profile.appLanguage}
+            step={discoveryState.guidedTourStep}
+            onNext={advanceHomeHeroGuide}
+            onSkip={skipHomeHeroGuide}
+          />
+        </View>
+      ) : null}
 
       <AuthGate
         visible={authGateVisible}
