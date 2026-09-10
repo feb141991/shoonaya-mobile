@@ -239,7 +239,16 @@ export async function registerPushToken(userId: string) {
 
     stage = 'check_permission';
     const existing = await Notifications.getPermissionsAsync();
-    if (!hasNotificationPermission(existing)) return;
+    if (!hasNotificationPermission(existing)) {
+      // This branch had zero diagnostic coverage -- every other early
+      // return/failure in this function reports, but this one just bailed
+      // silently. If the OS permission check disagrees with what Settings
+      // shows the user, this was previously invisible anywhere.
+      reportPushRegistrationFailure(stage, new Error(
+        `permission not granted: ${JSON.stringify(existing)}`
+      ));
+      return;
+    }
 
     stage = 'resolve_project_id';
     const projectId = getExpoProjectId();
