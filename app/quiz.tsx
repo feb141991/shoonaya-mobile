@@ -12,7 +12,6 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -20,13 +19,20 @@ import { Screen } from '@/components/ui/Screen';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
+
+const TRADITION_EMOJI: Record<Tradition, string> = {
+  hindu: '🕉️',
+  sikh: '☬',
+  buddhist: '☸️',
+  jain: '🤲',
+};
 
 type DailyQuiz = {
   question: string;
@@ -72,11 +78,12 @@ const DEFAULT_STATE: QuizState = {
   userName: 'Seeker',
 };
 
-
 export default function QuizScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const theme = themeColor(isDark);
+
   const [state, setState] = useState<QuizState>(DEFAULT_STATE);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [saveData, setSaveData] = useState<QuizSaveData | null>(null);
@@ -200,6 +207,7 @@ export default function QuizScreen() {
   const correctIndex = state.todayResponse?.correct_index ?? activeQuiz?.answerIndex ?? null;
   const isCorrect = correctIndex !== null && selectedAnswer === correctIndex;
   const traditionLabel = state.tradition.charAt(0).toUpperCase() + state.tradition.slice(1);
+  const traditionEmoji = TRADITION_EMOJI[state.tradition] ?? '🕉️';
 
   const handleAnswer = async (index: number) => {
     if (isGuest) {
@@ -287,20 +295,86 @@ export default function QuizScreen() {
   return (
     <Screen style={{ backgroundColor: surface }}>
       <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
+      
+      {/* Ambient Top Glow Backdrop */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: -30,
+          alignSelf: 'center',
+          width: 320,
+          height: 180,
+          borderRadius: 160,
+          backgroundColor: isDark ? 'rgba(165,148,224,0.08)' : 'rgba(165,148,224,0.12)',
+          transform: [{ scaleX: 1.5 }],
+        }}
+      />
+
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 32, gap: 18 }}
+        contentContainerStyle={{ paddingBottom: 40, gap: 18 }}
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={brand} />}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <BackButton />
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: text, ...TYPE.screenTitle }}>Daily Quiz</Text>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }}>
-              One spark for today&apos;s dharmic reflection.
+        {/* Sleek Top Navigation Bar with Cross Button */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+          <PressableSurface
+            accessibilityRole="button"
+            accessibilityLabel="Close Daily Quiz"
+            haptic="selection"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(tabs)');
+              }
+            }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.glass,
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+            }}
+          >
+            <Feather name="x" size={19} color={theme.text} />
+          </PressableSurface>
+
+          <View style={{ flex: 1, alignItems: 'center', marginHorizontal: 10 }}>
+            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 18, textAlign: 'center' }}>
+              Daily Spark
+            </Text>
+            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
+              Jñāna Sadhana · ज्ञान साधना
+            </Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 16,
+              backgroundColor: quizSoft,
+              borderWidth: 1,
+              borderColor: quizBorder,
+            }}
+          >
+            <Feather name="zap" size={13} color={quizAccent} />
+            <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+              +10 Seva
             </Text>
           </View>
         </View>
 
+        {/* Question Card */}
         {activeQuiz ? (
           <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border, gap: 18, overflow: 'hidden' }}>
             <LinearGradient
@@ -319,8 +393,8 @@ export default function QuizScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                 <View
                   style={{
-                    width: 48,
-                    height: 48,
+                    width: 46,
+                    height: 46,
                     borderRadius: 20,
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -329,7 +403,7 @@ export default function QuizScreen() {
                     borderColor: quizBorder,
                   }}
                 >
-                  <Feather name="help-circle" size={24} color={quizAccent} />
+                  <Feather name="help-circle" size={22} color={quizAccent} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
@@ -343,8 +417,8 @@ export default function QuizScreen() {
                   >
                     Daily Spark
                   </Text>
-                  <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13 }} numberOfLines={1}>
-                    {traditionLabel} · Daily Shastra
+                  <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 13 }} numberOfLines={1}>
+                    {traditionEmoji} {traditionLabel} · Daily Shastra
                   </Text>
                 </View>
               </View>
@@ -353,7 +427,7 @@ export default function QuizScreen() {
                   style={{
                     borderRadius: 999,
                     paddingHorizontal: 11,
-                    paddingVertical: 7,
+                    paddingVertical: 6,
                     backgroundColor: isCorrect ? COLORS.successBg : COLORS.dangerBg,
                     borderWidth: 1,
                     borderColor: isCorrect ? COLORS.successBorder : COLORS.dangerBorder,
@@ -366,17 +440,17 @@ export default function QuizScreen() {
                       fontSize: 12,
                     }}
                   >
-                    {isCorrect ? 'Correct' : 'Answered'}
+                    {isCorrect ? 'Correct · +10' : 'Answered · +2'}
                   </Text>
                 </View>
               ) : null}
             </View>
 
             <View style={{ gap: 10 }}>
-              <Text style={{ color: text, ...TYPE.hero, lineHeight: 34 }}>{activeQuiz.question}</Text>
+              <Text style={{ color: text, ...TYPE.hero, lineHeight: 32 }}>{activeQuiz.question}</Text>
               <View
                 style={{
-                  height: 7,
+                  height: 6,
                   borderRadius: 999,
                   backgroundColor: quizSoft,
                   overflow: 'hidden',
@@ -390,12 +464,19 @@ export default function QuizScreen() {
                   }}
                 />
               </View>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase' }}>
-                Question 1 of 1
-              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase' }}>
+                  Question 1 of 1
+                </Text>
+                {!answeredToday ? (
+                  <Text style={{ color: quizAccent, fontFamily: FONTS.sansMedium, fontSize: 11 }}>
+                    Earn +10 Karma points
+                  </Text>
+                ) : null}
+              </View>
             </View>
 
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 11 }}>
               {activeQuiz.options.map((option, index) => {
                 const wasChosen = selectedAnswer === index;
                 const isAnswerCorrect = correctIndex === index;
@@ -433,12 +514,12 @@ export default function QuizScreen() {
                     disabled={answeredToday || saving}
                     haptic="selection"
                     style={{
-                      borderRadius: 20,
+                      borderRadius: 18,
                       borderWidth: 1,
                       borderColor,
                       backgroundColor,
                       paddingHorizontal: 14,
-                      paddingVertical: 14,
+                      paddingVertical: 13,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -447,9 +528,9 @@ export default function QuizScreen() {
                   >
                     <View
                       style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 17,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: letterBg,
@@ -474,7 +555,7 @@ export default function QuizScreen() {
             {answeredToday ? (
               <View
                 style={{
-                  borderRadius: 22,
+                  borderRadius: 20,
                   borderWidth: 1,
                   borderColor: isCorrect ? COLORS.successBorder : quizBorder,
                   backgroundColor: isCorrect ? COLORS.successBg : quizSoft,
@@ -482,22 +563,27 @@ export default function QuizScreen() {
                   gap: 10,
                 }}
               >
-                <Text style={{ color: isCorrect ? COLORS.success : quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' }}>
-                  Today&apos;s Wisdom
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Feather name="book-open" size={14} color={isCorrect ? COLORS.success : quizAccent} />
+                  <Text style={{ color: isCorrect ? COLORS.success : quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' }}>
+                    Today&apos;s Wisdom
+                  </Text>
+                </View>
                 {activeQuiz.fact ? (
-                  <Text style={{ color: text, ...TYPE.cardHeading, lineHeight: 25 }}>
+                  <Text style={{ color: text, ...TYPE.cardHeading, lineHeight: 24 }}>
                     {activeQuiz.fact}
                   </Text>
                 ) : null}
-                <Text style={{ color: isCorrect ? COLORS.success : text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>
-                  {isCorrect ? 'Sadhu! Your dharma holds.' : 'The question stays with you. That is the teaching.'}
+                <Text style={{ color: isCorrect ? COLORS.success : text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  {isCorrect ? 'Sadhu! Your reflection holds true.' : 'The question stays with you. That is the teaching.'}
                 </Text>
                 <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>
                   {state.todayResponse?.explanation ?? activeQuiz.explanation ?? 'Your answer has been recorded for today.'}
                 </Text>
                 {activeQuiz.source ? (
-                  <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>{activeQuiz.source}</Text>
+                  <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
+                    Source: {activeQuiz.source}
+                  </Text>
                 ) : null}
               </View>
             ) : null}
@@ -508,6 +594,7 @@ export default function QuizScreen() {
           </Card>
         )}
 
+        {/* Post-Answer Result & Score Card */}
         {answeredToday ? (
           <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border, gap: 14, overflow: 'hidden' }}>
             <LinearGradient
@@ -519,9 +606,9 @@ export default function QuizScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View
                 style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 27,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 25,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: isCorrect ? COLORS.successBg : quizSoft,
@@ -529,14 +616,14 @@ export default function QuizScreen() {
                   borderColor: isCorrect ? COLORS.successBorder : quizBorder,
                 }}
               >
-                <Feather name={isCorrect ? 'check' : 'book-open'} size={23} color={isCorrect ? COLORS.success : quizAccent} />
+                <Feather name={isCorrect ? 'award' : 'book-open'} size={22} color={isCorrect ? COLORS.success : quizAccent} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: text, ...TYPE.title }}>Today&apos;s score</Text>
+                <Text style={{ color: text, ...TYPE.title }}>Today&apos;s Sadhana Score</Text>
                 <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 19 }}>
                   {saveData?.karma_earned === 0
                     ? 'Points already claimed for today'
-                    : `${saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2)} points earned`}
+                    : `${saveData?.karma_earned ?? (state.todayResponse?.is_correct ? 10 : 2)} Seva Karma earned`}
                 </Text>
               </View>
             </View>
@@ -544,7 +631,7 @@ export default function QuizScreen() {
               <View
                 style={{
                   flex: 1,
-                  borderRadius: 18,
+                  borderRadius: 16,
                   padding: 12,
                   backgroundColor: quizSoft,
                   borderWidth: 1,
@@ -561,7 +648,7 @@ export default function QuizScreen() {
               <View
                 style={{
                   flex: 1,
-                  borderRadius: 18,
+                  borderRadius: 16,
                   padding: 12,
                   backgroundColor: isCorrect ? COLORS.successBg : COLORS.dangerBg,
                   borderWidth: 1,
@@ -583,10 +670,10 @@ export default function QuizScreen() {
                 void handleShare();
               }}
               style={{
-                marginTop: 4,
-                borderRadius: 18,
+                marginTop: 2,
+                borderRadius: 16,
                 backgroundColor: brand,
-                paddingVertical: 14,
+                paddingVertical: 13,
                 alignItems: 'center',
               }}
             >
@@ -594,6 +681,275 @@ export default function QuizScreen() {
             </PressableSurface>
           </Card>
         ) : null}
+
+        {/* Sadhana Rewards & Streak Overview Card */}
+        <Card tone="auto" style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Feather name="award" size={17} color={brand} />
+              <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 16 }}>
+                Jñāna Sadhana Benefits
+              </Text>
+            </View>
+            <View
+              style={{
+                borderRadius: 12,
+                backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.18)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Daily Karma</Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View
+              style={{
+                flex: 1,
+                padding: 12,
+                borderRadius: 16,
+                backgroundColor: isDark ? COLORS.surfaceSoftDark : COLORS.surfaceSoftLight,
+                borderWidth: 1,
+                borderColor: isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight,
+                gap: 4,
+              }}
+            >
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 17 }}>+10</Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Seva Karma</Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                padding: 12,
+                borderRadius: 16,
+                backgroundColor: isDark ? COLORS.surfaceSoftDark : COLORS.surfaceSoftLight,
+                borderWidth: 1,
+                borderColor: isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight,
+                gap: 4,
+              }}
+            >
+              <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 17 }}>
+                {saveData?.streak ?? (answeredToday ? 1 : 0)}
+              </Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Day Streak</Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                padding: 12,
+                borderRadius: 16,
+                backgroundColor: isDark ? COLORS.surfaceSoftDark : COLORS.surfaceSoftLight,
+                borderWidth: 1,
+                borderColor: isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight,
+                gap: 4,
+              }}
+            >
+              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }} numberOfLines={1}>
+                {traditionLabel}
+              </Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Tradition</Text>
+            </View>
+          </View>
+        </Card>
+
+        {/* Sacred Scriptural Wisdom & Reflection (Shastra Vichar) */}
+        <Card
+          tone="auto"
+          style={{
+            backgroundColor: isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight,
+            borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+            gap: 10,
+            overflow: 'hidden',
+          }}
+        >
+          <LinearGradient
+            colors={
+              isDark
+                ? ['rgba(197,160,89,0.12)', 'rgba(28,26,22,0.4)']
+                : ['rgba(197,160,89,0.14)', 'rgba(255,253,249,0.8)']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
+          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Feather name="book-open" size={15} color={brand} />
+            <Text
+              style={{
+                color: brand,
+                fontFamily: FONTS.sansSemiBold,
+                fontSize: 11,
+                letterSpacing: 1.2,
+                textTransform: 'uppercase',
+              }}
+            >
+              Sacred Reflection · शास्त्र विचार
+            </Text>
+          </View>
+          <Text
+            style={{
+              color: text,
+              fontFamily: FONTS.serifBold,
+              fontSize: 16,
+              fontStyle: 'italic',
+              lineHeight: 24,
+            }}
+          >
+            &ldquo;न हि ज्ञानेन सदृशं पवित्रमिह विद्यते&rdquo;
+          </Text>
+          <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20 }}>
+            In this world, there is nothing as purifying as knowledge. Daily contemplation on sacred shastra awakens
+            inner clarity and steadfast dharma.
+          </Text>
+          <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, alignSelf: 'flex-end' }}>
+            — Shrimad Bhagavad Gita 4.38
+          </Text>
+        </Card>
+
+        {/* Connected Sadhana Pathways */}
+        <View style={{ gap: 12 }}>
+          <Text
+            style={{
+              color: textDim,
+              fontFamily: FONTS.sansSemiBold,
+              fontSize: 12,
+              letterSpacing: 1.2,
+              textTransform: 'uppercase',
+              paddingHorizontal: 4,
+            }}
+          >
+            Continue Today&apos;s Sadhana
+          </Text>
+
+          <View style={{ gap: 10 }}>
+            {/* 1. Japa Sadhana */}
+            <PressableSurface
+              accessibilityRole="button"
+              accessibilityLabel="Open Japa Sadhana"
+              haptic="selection"
+              onPress={() => router.push('/(tabs)/japa')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 14,
+                borderRadius: 20,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: border,
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: isDark ? COLORS.homeSoftDark : COLORS.homeSoftLight,
+                  borderWidth: 1,
+                  borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="disc" size={20} color={brand} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  108 Japa Sadhana
+                </Text>
+                <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12 }}>
+                  Chant sacred mantras with 3D tactile mala beads
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={textDim} />
+            </PressableSurface>
+
+            {/* 2. Dharm Veer */}
+            <PressableSurface
+              accessibilityRole="button"
+              accessibilityLabel="Open Dharm Veer"
+              haptic="selection"
+              onPress={() => router.push('/dharm-veer')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 14,
+                borderRadius: 20,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: border,
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: isDark ? COLORS.tilePurpleBgDark : COLORS.tilePurpleBgLight,
+                  borderWidth: 1,
+                  borderColor: COLORS.tilePurpleBorder,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="shield" size={20} color={COLORS.tilePurple} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  Dharm Veer
+                </Text>
+                <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12 }}>
+                  Read sacred stories of timeless heroes & defenders
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={textDim} />
+            </PressableSurface>
+
+            {/* 3. Virtual Sanctum */}
+            <PressableSurface
+              accessibilityRole="button"
+              accessibilityLabel="Open Virtual Sanctum"
+              haptic="selection"
+              onPress={() => router.push('/tirtha')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 14,
+                borderRadius: 20,
+                backgroundColor: cardBg,
+                borderWidth: 1,
+                borderColor: border,
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: COLORS.sageBg,
+                  borderWidth: 1,
+                  borderColor: COLORS.sageBorder,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="sun" size={20} color={COLORS.sage} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+                  Virtual Sanctum & Tirtha
+                </Text>
+                <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12 }}>
+                  Enter the Garbhagriha & offer Pushpa Vrishti
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={textDim} />
+            </PressableSurface>
+          </View>
+        </View>
       </ScrollView>
 
       {answeredToday && activeQuiz ? (
