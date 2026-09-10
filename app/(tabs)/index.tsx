@@ -664,7 +664,7 @@ function PanchangPill({
       <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           ellipsizeMode="tail"
           style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
@@ -1362,7 +1362,7 @@ function HomeContent() {
 
   const heroDetails = (
           <View style={{
-      ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 20 } : { left: 20 }), width: heroLayout.columnWidth }),
+      ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 0 } : { left: 0 }), width: heroLayout.columnWidth }),
       padding: 16, borderRadius: RADII.xl,
       // Below the artwork this is its own card on flat theme.background and
       // needs a real surface. Over the artwork (top/left/right) it goes back
