@@ -16,9 +16,9 @@ describe('backdrop content avoids artwork and narrow columns', () => {
       assert.ok(layout.columnWidth < width / 2);
     }
   });
-  it('never guesses composition for unknown or centered artworks', () => {
+  it('defaults to left overlay for all artworks on wide screens', () => {
     for (const id of [undefined, 'admin-new-artwork', 'shiva-cosmic-dhyana']) {
-      assert.equal(resolveHeroContentLayout('auto', id, 1024, 1).position, 'below');
+      assert.equal(resolveHeroContentLayout('auto', id, 1024, 1).position, 'left');
     }
   });
   it('honors manual sides on ordinary phone widths, not just tablets', () => {
