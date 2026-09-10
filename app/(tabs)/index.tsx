@@ -1388,7 +1388,7 @@ function HomeContent() {
             ) : null}
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
-              <Text style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }} numberOfLines={2}>
+              <Text style={{ ...TYPE.homeHeroGreeting, color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText, flexShrink: 1 }}>
                 {greeting}, {state.profile.firstName}
               </Text>
               <Pressable
