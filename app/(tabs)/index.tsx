@@ -1408,18 +1408,23 @@ function HomeContent() {
               <Text
                 style={{
                   ...TYPE.homeHeroGreeting,
-                  // +2pt for Home's hero specifically, per explicit request --
-                  // nitya-karma.tsx uses the same shared TYPE.homeHeroGreeting
-                  // token and keeps its original size, so this is a local
-                  // override rather than a change to the token itself.
-                  fontSize: TYPE.homeHeroGreeting.fontSize + 2,
-                  lineHeight: TYPE.homeHeroGreeting.lineHeight + 2,
+                  // 50% larger than the prior +2pt Home-only size (22 -> 33),
+                  // per explicit request -- nitya-karma.tsx uses the same
+                  // shared TYPE.homeHeroGreeting token and keeps its
+                  // original size, so this is a local override, not a
+                  // change to the token itself.
+                  fontSize: (TYPE.homeHeroGreeting.fontSize + 2) * 1.5,
+                  lineHeight: (TYPE.homeHeroGreeting.lineHeight + 2) * 1.5,
                   color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText,
                   flexShrink: 1,
                 }}
-                numberOfLines={1}
+                // Shrinks toward a 28px floor (0.85 of the 33px base) before
+                // falling back to a second line -- never smaller than that,
+                // unlike the previous 0.6 floor which could shrink an
+                // unusually long name well below the intended larger size.
+                numberOfLines={2}
                 adjustsFontSizeToFit
-                minimumFontScale={0.6}
+                minimumFontScale={0.85}
               >
                 {greeting}, {state.profile.firstName}
               </Text>
