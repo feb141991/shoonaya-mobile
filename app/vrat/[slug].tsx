@@ -257,6 +257,8 @@ export default function VratDetailScreen() {
         dialogTitle: `Share ${selectedName}`,
         fallbackMessage: `${selectedName}\n\n${selectedTagline}`,
       });
+    } catch {
+      // sharing cancelled or failed silently
     } finally {
       setSharing(false);
     }

@@ -1645,7 +1645,7 @@ export default function JapaScreen() {
   }
 
   // Three-tier bead state (done / current / upcoming) with specialized 3D tactile
-  // rendering for Sphatik, Vaijayanti, and Navaratna malas.
+  // rendering for Sphatik, Vaijayanti, Navaratna, and standard beads.
   function buildBeadElements() {
     const activeIndex = count >= 108 ? 107 : count;
     const beadStyle = malaSkin.beadStyle ?? 'standard';
@@ -1657,53 +1657,59 @@ export default function JapaScreen() {
 
       // 💎 Sphatik Crystal: 3D translucent prism facets & specular glints
       if (beadStyle === 'sphatik') {
-        const r = isCurrent ? 14.5 : isDone ? 10.2 : 9.2;
+        const r = isCurrent ? 12.5 : isDone ? 6.5 : 5.6;
         const gradientId = isCurrent ? 'grad-sphatik-active' : isDone ? 'grad-sphatik-done' : 'grad-sphatik-inactive';
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 3.5} fill="rgba(186,230,253,0.32)" />
+              <Circle cx={x} cy={y} r={r + 2.5} fill="rgba(186,230,253,0.32)" />
             ) : null}
-            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill="rgba(30,80,120,0.35)" />
+            {/* Ambient drop shadow for 3D sphere elevation */}
+            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill="rgba(15,23,42,0.55)" />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
               stroke={isCurrent ? '#38BDF8' : isDone ? 'rgba(255,255,255,0.9)' : 'rgba(186,230,253,0.75)'}
-              strokeWidth={isCurrent ? 1.6 : 0.9}
+              strokeWidth={isCurrent ? 1.6 : 0.8}
             />
+            {/* Prismatic facet reflections */}
             <Path
-              d={`M ${x - r * 0.4} ${y} L ${x} ${y - r * 0.4} L ${x + r * 0.4} ${y} L ${x} ${y + r * 0.4} Z`}
+              d={`M ${x - r * 0.42} ${y} L ${x} ${y - r * 0.42} L ${x + r * 0.42} ${y} L ${x} ${y + r * 0.42} Z`}
               fill="none"
               stroke="#FFFFFF"
               strokeWidth={0.65}
-              opacity={isDone || isCurrent ? 0.75 : 0.45}
+              opacity={isDone || isCurrent ? 0.8 : 0.45}
             />
-            <Circle cx={x - r * 0.35} cy={y - r * 0.36} r={Math.max(1.2, r * 0.28)} fill="#FFFFFF" opacity={0.95} />
-            <Ellipse cx={x + r * 0.24} cy={y + r * 0.28} rx={r * 0.24} ry={r * 0.12} fill="#E0F2FE" opacity={0.55} />
+            {/* Specular pinpoint gleam */}
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.28)} fill="#FFFFFF" opacity={0.95} />
+            {/* Internal crystal refraction bounce */}
+            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.24} ry={r * 0.12} fill="#E0F2FE" opacity={0.55} />
           </Fragment>
         );
       }
 
       // 🌿 Vaijayanti Seed: 3D organic seed luster, striations & warm amber shadow
       if (beadStyle === 'vaijayanti') {
-        const r = isCurrent ? 14.2 : isDone ? 10.0 : 9.0;
+        const r = isCurrent ? 12.5 : isDone ? 6.5 : 5.6;
         const gradientId = isCurrent ? 'grad-vaijayanti-active' : isDone ? 'grad-vaijayanti-done' : 'grad-vaijayanti-inactive';
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 3} fill="rgba(245,225,160,0.38)" />
+              <Circle cx={x} cy={y} r={r + 2.2} fill="rgba(245,225,160,0.38)" />
             ) : null}
-            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(120,80,30,0.36)" />
+            {/* Ambient warm drop shadow */}
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(69,26,3,0.55)" />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
               stroke={isCurrent ? '#F59E0B' : isDone ? '#D4AF37' : 'rgba(180,140,60,0.7)'}
-              strokeWidth={isCurrent ? 1.6 : 0.9}
+              strokeWidth={isCurrent ? 1.6 : 0.8}
             />
+            {/* Sacred seed striation curve */}
             <Path
               d={`M ${x} ${y - r * 0.7} Q ${x + r * 0.35} ${y} ${x} ${y + r * 0.7}`}
               fill="none"
@@ -1711,8 +1717,9 @@ export default function JapaScreen() {
               strokeWidth={0.65}
               opacity={0.5}
             />
-            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.1, r * 0.26)} fill="#FFFFFF" opacity={0.9} />
-            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.26} ry={r * 0.13} fill="#FEF08A" opacity={0.45} />
+            {/* Specular glint */}
+            <Circle cx={x - r * 0.3} cy={y - r * 0.32} r={Math.max(1.0, r * 0.26)} fill="#FFFFFF" opacity={0.9} />
+            <Ellipse cx={x + r * 0.2} cy={y + r * 0.22} rx={r * 0.26} ry={r * 0.13} fill="#FEF08A" opacity={0.45} />
           </Fragment>
         );
       }
@@ -1720,48 +1727,51 @@ export default function JapaScreen() {
       // 👑 Navaratna 9 Gems: 9 Vedic gemstones cycle with brilliant diamond cuts
       if (beadStyle === 'navaratna') {
         const gem = NAVARATNA_GEMS[index % 9];
-        const r = isCurrent ? 14.2 : isDone ? 10.0 : 9.0;
+        const r = isCurrent ? 12.5 : isDone ? 6.5 : 5.6;
         const gradientId = `grad-gem-${index % 9}`;
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 3.2} fill={gem.light} opacity={0.36} />
+              <Circle cx={x} cy={y} r={r + 2.4} fill={gem.light} opacity={0.36} />
             ) : null}
-            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(0,0,0,0.4)" />
+            {/* Deep drop shadow */}
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(0,0,0,0.55)" />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
               stroke={isCurrent ? '#FFFFFF' : '#FFD700'}
-              strokeWidth={isCurrent ? 1.8 : 1.1}
-              opacity={isDone || isCurrent ? 1 : 0.65}
+              strokeWidth={isCurrent ? 1.6 : 0.9}
+              opacity={isDone || isCurrent ? 1 : 0.72}
             />
+            {/* Brilliant diamond cut table facet */}
             <Path
-              d={`M ${x - r * 0.45} ${y} L ${x} ${y - r * 0.45} L ${x + r * 0.45} ${y} L ${x} ${y + r * 0.45} Z`}
+              d={`M ${x - r * 0.42} ${y} L ${x} ${y - r * 0.42} L ${x + r * 0.42} ${y} L ${x} ${y + r * 0.42} Z`}
               fill="none"
-              stroke="rgba(255,255,255,0.7)"
+              stroke="rgba(255,255,255,0.75)"
               strokeWidth={0.6}
               opacity={isDone || isCurrent ? 0.85 : 0.5}
             />
-            <Circle cx={x - r * 0.34} cy={y - r * 0.36} r={Math.max(1.1, r * 0.26)} fill="#FFFFFF" opacity={0.95} />
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.26)} fill="#FFFFFF" opacity={0.95} />
           </Fragment>
         );
       }
 
-      // Standard prayer beads
-      const r = isSumeru ? 17.5 : isCurrent ? 13.8 : isDone ? 9.4 : 8.4;
+      // Standard prayer beads (Rudraksha, Tulsi, Sandalwood, Lotus Seed, Bodhi Seed, etc.)
+      const r = isSumeru ? 16.0 : isCurrent ? 12.5 : isDone ? 6.5 : 5.6;
       const gradientId = isSumeru ? 'grad-guru' : isCurrent ? 'grad-active' : isDone ? 'grad-done' : 'grad-inactive';
-      const shadowOpacity = isCurrent || isSumeru ? 0.4 : isDone ? 0.3 : 0.22;
-      const highlightOpacity = isCurrent || isSumeru ? 0.78 : isDone ? 0.54 : 0.38;
+      const shadowOpacity = isCurrent || isSumeru ? 0.55 : isDone ? 0.45 : 0.38;
+      const highlightOpacity = isCurrent || isSumeru ? 0.85 : isDone ? 0.65 : 0.48;
 
       return (
         <Fragment key={`bead-${index}`}>
+          {/* Ambient 3D sphere drop shadow */}
           <Circle
-            cx={x + r * 0.18}
-            cy={y + r * 0.22}
+            cx={x + r * 0.2}
+            cy={y + r * 0.24}
             r={r}
-            fill={malaSkin.beadBorder}
+            fill="rgba(0,0,0,0.55)"
             opacity={shadowOpacity}
           />
           <Circle
@@ -1770,15 +1780,25 @@ export default function JapaScreen() {
             r={r}
             fill={`url(#${gradientId})`}
             stroke={isCurrent ? theme.brand : isSumeru ? malaSkin.threadColor : isDone ? malaSkin.beadColor : malaSkin.beadBorder}
-            strokeWidth={isCurrent ? 1.8 : isSumeru ? 1.6 : 0.8}
+            strokeWidth={isCurrent ? 1.6 : isSumeru ? 1.4 : 0.8}
             strokeOpacity={isDone || isCurrent || isSumeru ? 0.95 : 0.72}
           />
+          {/* 3D Top-left specular glint */}
           <Circle
-            cx={x - r * 0.34}
-            cy={y - r * 0.38}
-            r={Math.max(1.1, r * 0.24)}
+            cx={x - r * 0.32}
+            cy={y - r * 0.34}
+            r={Math.max(1.0, r * 0.25)}
             fill={COLORS.onMediaWhite}
             opacity={highlightOpacity}
+          />
+          {/* Bottom-right rim reflection */}
+          <Ellipse
+            cx={x + r * 0.22}
+            cy={y + r * 0.24}
+            rx={r * 0.22}
+            ry={r * 0.11}
+            fill={isDone || isCurrent ? COLORS.onMediaWhite : malaSkin.beadColor}
+            opacity={isDone || isCurrent ? 0.35 : 0.2}
           />
         </Fragment>
       );
@@ -1806,24 +1826,28 @@ export default function JapaScreen() {
     <Defs>
       {/* Standard Gradients */}
       <RadialGradient id="grad-inactive" cx="28%" cy="24%" r="78%">
-        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.42" />
-        <Stop offset="42%" stopColor={malaSkin.beadColor} stopOpacity="0.5" />
-        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="0.58" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.75" />
+        <Stop offset="30%" stopColor={malaSkin.beadColor} stopOpacity="0.85" />
+        <Stop offset="75%" stopColor={malaSkin.beadBorder} stopOpacity="0.95" />
+        <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.8" />
       </RadialGradient>
       <RadialGradient id="grad-done" cx="28%" cy="24%" r="78%">
-        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
-        <Stop offset="38%" stopColor={malaSkin.beadColor} stopOpacity="1" />
-        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
+        <Stop offset="28%" stopColor={malaSkin.beadColor} stopOpacity="1" />
+        <Stop offset="72%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+        <Stop offset="100%" stopColor="rgba(0,0,0,0.5)" stopOpacity="0.7" />
       </RadialGradient>
       <RadialGradient id="grad-active" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
-        <Stop offset="32%" stopColor={theme.brand} stopOpacity="1" />
+        <Stop offset="25%" stopColor={theme.brand} stopOpacity="1" />
+        <Stop offset="70%" stopColor={theme.brand} stopOpacity="0.9" />
         <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-guru" cx="28%" cy="24%" r="80%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
-        <Stop offset="36%" stopColor={malaSkin.threadColor} stopOpacity="1" />
-        <Stop offset="100%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+        <Stop offset="30%" stopColor={malaSkin.threadColor} stopOpacity="1" />
+        <Stop offset="75%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
+        <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.8" />
       </RadialGradient>
 
       {/* Radiant Meru Crown 3D Gold */}
@@ -1837,53 +1861,58 @@ export default function JapaScreen() {
 
       {/* 3D Tactile Sphatik Crystal Gradients */}
       <RadialGradient id="grad-sphatik-inactive" cx="26%" cy="22%" r="82%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
-        <Stop offset="28%" stopColor="#F0F9FF" stopOpacity="0.7" />
-        <Stop offset="68%" stopColor="#BAE6FD" stopOpacity="0.55" />
-        <Stop offset="100%" stopColor="#7DD3FC" stopOpacity="0.75" />
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+        <Stop offset="24%" stopColor="#F0F9FF" stopOpacity="0.85" />
+        <Stop offset="60%" stopColor="#BAE6FD" stopOpacity="0.75" />
+        <Stop offset="85%" stopColor="#7DD3FC" stopOpacity="0.85" />
+        <Stop offset="100%" stopColor="#0369A1" stopOpacity="0.75" />
       </RadialGradient>
       <RadialGradient id="grad-sphatik-done" cx="26%" cy="22%" r="82%">
         <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="26%" stopColor="#F0F9FF" stopOpacity="0.92" />
-        <Stop offset="64%" stopColor="#BAE6FD" stopOpacity="0.8" />
-        <Stop offset="90%" stopColor="#7DD3FC" stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="#38BDF8" stopOpacity="1" />
+        <Stop offset="22%" stopColor="#F0F9FF" stopOpacity="0.95" />
+        <Stop offset="55%" stopColor="#BAE6FD" stopOpacity="0.9" />
+        <Stop offset="82%" stopColor="#38BDF8" stopOpacity="0.95" />
+        <Stop offset="100%" stopColor="#0284C7" stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-sphatik-active" cx="26%" cy="22%" r="82%">
         <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="24%" stopColor="#E0F2FE" stopOpacity="1" />
-        <Stop offset="58%" stopColor="#38BDF8" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#0284C7" stopOpacity="1" />
+        <Stop offset="20%" stopColor="#E0F2FE" stopOpacity="1" />
+        <Stop offset="52%" stopColor="#38BDF8" stopOpacity="1" />
+        <Stop offset="85%" stopColor="#0284C7" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#075985" stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Vaijayanti Seed Gradients */}
       <RadialGradient id="grad-vaijayanti-inactive" cx="28%" cy="24%" r="78%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
-        <Stop offset="32%" stopColor="#FEF9C3" stopOpacity="0.75" />
-        <Stop offset="70%" stopColor="#FDE68A" stopOpacity="0.65" />
-        <Stop offset="100%" stopColor="#D4AF37" stopOpacity="0.8" />
+        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+        <Stop offset="26%" stopColor="#FEF9C3" stopOpacity="0.9" />
+        <Stop offset="60%" stopColor="#FDE68A" stopOpacity="0.9" />
+        <Stop offset="85%" stopColor="#D4AF37" stopOpacity="0.95" />
+        <Stop offset="100%" stopColor="#78350F" stopOpacity="0.8" />
       </RadialGradient>
       <RadialGradient id="grad-vaijayanti-done" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="28%" stopColor="#FEF9C3" stopOpacity="1" />
-        <Stop offset="62%" stopColor="#FDE68A" stopOpacity="1" />
-        <Stop offset="88%" stopColor="#D4AF37" stopOpacity="1" />
+        <Stop offset="24%" stopColor="#FEF9C3" stopOpacity="1" />
+        <Stop offset="58%" stopColor="#FDE68A" stopOpacity="1" />
+        <Stop offset="84%" stopColor="#D4AF37" stopOpacity="1" />
         <Stop offset="100%" stopColor="#92400E" stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-vaijayanti-active" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="25%" stopColor="#FEF08A" stopOpacity="1" />
-        <Stop offset="60%" stopColor="#F59E0B" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#B45309" stopOpacity="1" />
+        <Stop offset="22%" stopColor="#FEF08A" stopOpacity="1" />
+        <Stop offset="55%" stopColor="#F59E0B" stopOpacity="1" />
+        <Stop offset="85%" stopColor="#B45309" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#78350F" stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Navaratna 9-Gem Gradients */}
       {NAVARATNA_GEMS.map((gem, idx) => (
         <RadialGradient key={`grad-gem-${idx}`} id={`grad-gem-${idx}`} cx="26%" cy="22%" r="80%">
           <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
-          <Stop offset="26%" stopColor={gem.light} stopOpacity="1" />
-          <Stop offset="65%" stopColor={gem.color} stopOpacity="1" />
-          <Stop offset="100%" stopColor={gem.dark} stopOpacity="1" />
+          <Stop offset="24%" stopColor={gem.light} stopOpacity="1" />
+          <Stop offset="60%" stopColor={gem.color} stopOpacity="1" />
+          <Stop offset="85%" stopColor={gem.dark} stopOpacity="1" />
+          <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.75" />
         </RadialGradient>
       ))}
     </Defs>
@@ -2711,6 +2740,17 @@ export default function JapaScreen() {
                       />
                     </>
                   )}
+                  {/* Sacred continuous thread looping underneath the beads */}
+                  <Ellipse
+                    cx={PRACTICE_CENTER_X}
+                    cy={PRACTICE_CENTER_Y}
+                    rx={PRACTICE_RADIUS_X}
+                    ry={PRACTICE_RADIUS_Y}
+                    fill="none"
+                    stroke={malaSkin.threadColor}
+                    strokeWidth={2}
+                    opacity={0.65}
+                  />
                   {buildBeadElements()}
                   {/* Radiant Golden Filigree Meru Crown Bead at Top Apex */}
                   {malaSkin.hasMeruCrown ? (
@@ -2744,6 +2784,7 @@ export default function JapaScreen() {
                     />
                   ) : null}
                 </Svg>
+
                 {/* For malas without top crown, render classic guru-pendant PNG at bottom */}
                 {!malaSkin.hasMeruCrown ? (
                   <Image
