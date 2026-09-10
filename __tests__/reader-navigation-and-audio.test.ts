@@ -35,7 +35,7 @@ describe('reader navigation and audio lifecycle', () => {
   });
 
   it('makes Tirtha navigable when it was opened outside its tab history', () => {
-    assert.match(tirtha, /<BackButton fallbackHref="\/\(tabs\)" handleHardwareBack \/>/);
+    assert.match(tirtha, /<BackButton[^>]*fallbackHref="\/\(tabs\)"[^>]*handleHardwareBack/);
   });
 
   it('returns a completed Mood flow to the previous screen before using Home as a fallback', () => {

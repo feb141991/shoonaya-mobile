@@ -24,6 +24,8 @@ function inferParentFallback(pathname: string): Href {
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/lineage')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/yatra')) return '/(tabs)/tirtha';
+  if (pathname.startsWith('/live-darshan')) return '/(tabs)/tirtha';
+  if (pathname.startsWith('/tirtha')) return '/(tabs)/tirtha';
   if (pathname.startsWith('/japa')) return '/(tabs)/japa';
   if (pathname.startsWith('/settings')) return '/settings';
   if (pathname.startsWith('/kundali')) return '/kundali';

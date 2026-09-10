@@ -656,7 +656,11 @@ export default function TirthaScreen() {
         scrollEventThrottle={16}
       >
         <View style={{ paddingHorizontal: 20, gap: 16 }}>
-          <BackButton fallbackHref="/(tabs)" handleHardwareBack />
+          <BackButton
+            fallbackHref="/(tabs)"
+            handleHardwareBack
+            onPress={passportTab !== 'map' ? () => setPassportTab('map') : undefined}
+          />
           <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>Tirtha</Text>
 
           <PressableSurface

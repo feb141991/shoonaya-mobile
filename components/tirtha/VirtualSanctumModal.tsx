@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
+  Animated,
   Modal,
   Pressable,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 
@@ -33,12 +35,23 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
   const [bellRungCount, setBellRungCount] = useState(0);
   const [parikramaCount, setParikramaCount] = useState(0);
   const [showFlowerShower, setShowFlowerShower] = useState(false);
+  const [activeTab, setActiveTab] = useState<'darshan' | 'purana' | 'rituals'>('darshan');
+
+  // Animation values for Bell & Diya Glow
+  const bellAnim = useRef(new Animated.Value(0)).current;
+  const diyaGlowAnim = useRef(new Animated.Value(0)).current;
 
   if (!temple) return null;
 
   const handleLightDiya = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setDiyaLit((prev) => !prev);
+    const nextState = !diyaLit;
+    setDiyaLit(nextState);
+    Animated.timing(diyaGlowAnim, {
+      toValue: nextState ? 1 : 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleOfferFlower = () => {
@@ -53,12 +66,31 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
   const handleRingBell = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setBellRungCount((prev) => prev + 1);
+
+    // Bell swing animation sequence
+    bellAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(bellAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: -1, duration: 160, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: 0.5, duration: 120, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: -0.5, duration: 120, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+    ]).start();
   };
 
   const handleParikrama = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setParikramaCount((prev) => prev + 1);
   };
+
+  const bellRotation = bellAnim.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-18deg', '0deg', '18deg'],
+  });
+
+  const goldAccent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const cardSurface = isDark ? 'rgba(30, 26, 20, 0.95)' : 'rgba(255, 255, 255, 0.98)';
+  const sanctumBg: [string, string] = isDark ? ['#1a120b', '#0d0a07'] : ['#2c1a0e', '#150d07'];
 
   return (
     <Modal
@@ -72,28 +104,31 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
           style={[
             styles.sheetContainer,
             {
-              backgroundColor: isDark ? '#111827' : '#FFFFFF',
-              borderColor: theme.border,
+              backgroundColor: cardSurface,
+              borderColor: isDark ? 'rgba(197, 160, 89, 0.3)' : 'rgba(197, 160, 89, 0.4)',
             },
           ]}
           onPress={(e) => e.stopPropagation()}
         >
           {/* Handle bar */}
           <View style={styles.handleBarContainer}>
-            <View style={[styles.handleBar, { backgroundColor: isDark ? '#374151' : '#E5E7EB' }]} />
+            <View style={[styles.handleBar, { backgroundColor: isDark ? '#4A3B2C' : '#D1C4B2' }]} />
           </View>
 
           {/* Header Row */}
           <View style={styles.headerRow}>
             <View style={styles.titleColumn}>
+              <View style={styles.traditionTag}>
+                <Feather name="shield" size={11} color={goldAccent} />
+                <Text style={[styles.traditionTagText, { color: goldAccent }]}>
+                  {temple.stateOrRegion.toUpperCase()} · SACRED TIRTHA
+                </Text>
+              </View>
               <Text style={[styles.nodeTitle, { color: theme.text }]}>
                 {temple.name}
               </Text>
-              <Text style={[styles.sanskritSubtitle, { color: theme.brand }]}>
+              <Text style={[styles.sanskritSubtitle, { color: goldAccent }]}>
                 {temple.sanskritName}
-              </Text>
-              <Text style={[styles.deityText, { color: theme.dim }]}>
-                {temple.deity} · {temple.stateOrRegion}
               </Text>
             </View>
             <Pressable
@@ -101,7 +136,10 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               hitSlop={12}
               style={[
                 styles.closeButton,
-                { backgroundColor: isDark ? '#1F2937' : '#F3F4F6', borderColor: theme.borderSoft },
+                {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                  borderColor: theme.borderSoft,
+                },
               ]}
               accessibilityLabel="Close temple darshan"
             >
@@ -114,202 +152,297 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* Virtual Sanctum Interactive Ritual Bar */}
-            <View
-              style={[
-                styles.sanctumRitualCard,
-                {
-                  backgroundColor: isDark ? 'rgba(217, 119, 6, 0.1)' : '#FEF3C7',
-                  borderColor: theme.brandSoft,
-                },
-              ]}
-            >
-              <View style={styles.ritualHeaderRow}>
-                <View style={styles.ritualBadge}>
-                  <Feather name="sun" size={13} color={theme.brand} />
-                  <Text style={[styles.ritualBadgeText, { color: theme.brand }]}>
-                    VIRTUAL SANCTUM OFFERINGS
+            {/* ══════════════════════════════════════════════════════════════ */}
+            {/* MAJESTIC VIRTUAL SANCTUM (GARBHAGRIHA) SHRINE EXPERIENCE       */}
+            {/* ══════════════════════════════════════════════════════════════ */}
+            <View style={styles.sanctumOuterFrame}>
+              <LinearGradient
+                colors={sanctumBg}
+                style={styles.sanctumStage}
+              >
+                {/* Temple Hanging Bell (Interactive) */}
+                <Animated.View
+                  style={[
+                    styles.hangingBellContainer,
+                    { transform: [{ rotate: bellRotation }] },
+                  ]}
+                >
+                  <Pressable
+                    onPress={handleRingBell}
+                    hitSlop={10}
+                    accessibilityLabel="Ring sanctum bell"
+                    style={styles.bellTouchArea}
+                  >
+                    <View style={styles.bellChain} />
+                    <View style={styles.bellDome}>
+                      <Text style={styles.bellGlyph}>🔔</Text>
+                    </View>
+                  </Pressable>
+                </Animated.View>
+
+                {/* Cosmic Sanctum Aura & Halo */}
+                <View style={styles.deityAuraRing}>
+                  <View style={styles.deityInnerGlow}>
+                    <Text style={styles.deitySymbolGlyph}>🕉️</Text>
+                    <Text style={styles.deityTitleText}>{temple.deity}</Text>
+                  </View>
+                </View>
+
+                {/* Left & Right Brass Ghee Diyas */}
+                <View style={styles.diyasRow}>
+                  {/* Left Diya */}
+                  <Pressable
+                    onPress={handleLightDiya}
+                    style={styles.diyaTouchTarget}
+                    accessibilityLabel="Light left temple diya"
+                  >
+                    <View style={styles.diyaBase}>
+                      <Text style={styles.diyaFlameEmoji}>{diyaLit ? '🔥' : '🪔'}</Text>
+                      {diyaLit ? (
+                        <View style={styles.diyaGlowCircle} />
+                      ) : null}
+                    </View>
+                    <Text style={styles.diyaLabel}>{diyaLit ? 'Deepam' : 'Tap to Light'}</Text>
+                  </Pressable>
+
+                  {/* Center Parikrama Counter Ring */}
+                  <View style={styles.parikramaRing}>
+                    <Text style={styles.parikramaLabel}>PARIKRAMA</Text>
+                    <Text style={styles.parikramaCountNumber}>{parikramaCount}</Text>
+                  </View>
+
+                  {/* Right Diya */}
+                  <Pressable
+                    onPress={handleLightDiya}
+                    style={styles.diyaTouchTarget}
+                    accessibilityLabel="Light right temple diya"
+                  >
+                    <View style={styles.diyaBase}>
+                      <Text style={styles.diyaFlameEmoji}>{diyaLit ? '🔥' : '🪔'}</Text>
+                      {diyaLit ? (
+                        <View style={styles.diyaGlowCircle} />
+                      ) : null}
+                    </View>
+                    <Text style={styles.diyaLabel}>{diyaLit ? 'Deepam' : 'Tap to Light'}</Text>
+                  </Pressable>
+                </View>
+
+                {/* Sanctum Floor Floral Border */}
+                <View style={styles.sanctumFloor}>
+                  <Text style={styles.sanctumFloorMantra}>
+                    ✦ ॐ नमः शिवाय ✦ हर हर महादेव ✦
                   </Text>
                 </View>
-                {parikramaCount > 0 ? (
-                  <View style={styles.parikramaBadge}>
-                    <Text style={[styles.parikramaBadgeText, { color: theme.brand }]}>
-                      {parikramaCount} {parikramaCount === 1 ? 'Parikrama' : 'Parikramas'}
+              </LinearGradient>
+            </View>
+
+            {/* ══════════════════════════════════════════════════════════════ */}
+            {/* SACRED ACTION CONTROLS                                        */}
+            {/* ══════════════════════════════════════════════════════════════ */}
+            <View style={styles.actionPillsGrid}>
+              {/* Light Diya */}
+              <PressableSurface
+                onPress={handleLightDiya}
+                style={[
+                  styles.sanctumActionBtn,
+                  {
+                    backgroundColor: diyaLit
+                      ? isDark
+                        ? 'rgba(217, 119, 6, 0.25)'
+                        : 'rgba(217, 119, 6, 0.15)'
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.03)',
+                    borderColor: diyaLit ? goldAccent : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  },
+                ]}
+                accessibilityLabel="Light Ghee Diya"
+              >
+                <Text style={styles.actionIcon}>{diyaLit ? '🔥' : '🪔'}</Text>
+                <Text style={[styles.actionBtnText, { color: diyaLit ? goldAccent : theme.text }]}>
+                  {diyaLit ? 'Diya Lit' : 'Light Diya'}
+                </Text>
+              </PressableSurface>
+
+              {/* Offer Pushpam */}
+              <PressableSurface
+                onPress={handleOfferFlower}
+                style={[
+                  styles.sanctumActionBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    borderColor: flowersCount > 0 ? '#EC4899' : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  },
+                ]}
+                accessibilityLabel="Offer Sacred Flowers"
+              >
+                <Text style={styles.actionIcon}>🌸</Text>
+                <Text style={[styles.actionBtnText, { color: theme.text }]}>
+                  Offer Pushpam {flowersCount > 0 ? `(${flowersCount})` : ''}
+                </Text>
+              </PressableSurface>
+
+              {/* Ring Bell */}
+              <PressableSurface
+                onPress={handleRingBell}
+                style={[
+                  styles.sanctumActionBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    borderColor: bellRungCount > 0 ? goldAccent : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  },
+                ]}
+                accessibilityLabel="Ring Temple Bell"
+              >
+                <Text style={styles.actionIcon}>🔔</Text>
+                <Text style={[styles.actionBtnText, { color: theme.text }]}>
+                  Ring Bell {bellRungCount > 0 ? `(${bellRungCount})` : ''}
+                </Text>
+              </PressableSurface>
+
+              {/* Parikrama */}
+              <PressableSurface
+                onPress={handleParikrama}
+                style={[
+                  styles.sanctumActionBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                    borderColor: parikramaCount > 0 ? '#10B981' : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  },
+                ]}
+                accessibilityLabel="Perform Sacred Parikrama"
+              >
+                <Text style={styles.actionIcon}>🔄</Text>
+                <Text style={[styles.actionBtnText, { color: theme.text }]}>
+                  +1 Parikrama
+                </Text>
+              </PressableSurface>
+            </View>
+
+            {/* ══════════════════════════════════════════════════════════════ */}
+            {/* SEGMENTED CONTENT TABS                                         */}
+            {/* ══════════════════════════════════════════════════════════════ */}
+            <View style={styles.tabsRow}>
+              {[
+                { key: 'darshan', label: 'Darshan' },
+                { key: 'purana', label: 'Sthala Purana' },
+                { key: 'rituals', label: 'Offerings' },
+              ].map((tab) => {
+                const active = activeTab === tab.key;
+                return (
+                  <Pressable
+                    key={tab.key}
+                    onPress={() => setActiveTab(tab.key as any)}
+                    style={[
+                      styles.tabPill,
+                      {
+                        backgroundColor: active
+                          ? goldAccent
+                          : isDark
+                          ? 'rgba(255, 255, 255, 0.05)'
+                          : 'rgba(0, 0, 0, 0.04)',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.tabPillText,
+                        { color: active ? COLORS.ink : theme.dim },
+                      ]}
+                    >
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* Tab 1: Darshan & Sacred Geography */}
+            {activeTab === 'darshan' ? (
+              <View style={styles.tabContentBlock}>
+                <View style={styles.tagsRow}>
+                  <View style={[styles.tag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: theme.borderSoft }]}>
+                    <Feather name="map-pin" size={12} color={goldAccent} />
+                    <Text style={[styles.tagText, { color: theme.text }]}>{temple.location}</Text>
+                  </View>
+                  {temple.sacredRiverOrKund ? (
+                    <View style={[styles.tag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: theme.borderSoft }]}>
+                      <Feather name="droplet" size={12} color="#3B82F6" />
+                      <Text style={[styles.tagText, { color: theme.text }]}>{temple.sacredRiverOrKund}</Text>
+                    </View>
+                  ) : null}
+                  {temple.architecturalStyle ? (
+                    <View style={[styles.tag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: theme.borderSoft }]}>
+                      <Feather name="shield" size={12} color={goldAccent} />
+                      <Text style={[styles.tagText, { color: theme.text }]}>{temple.architecturalStyle}</Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                {/* Significance Card */}
+                <View style={[styles.significanceCard, { backgroundColor: isDark ? 'rgba(197, 160, 89, 0.06)' : 'rgba(197, 160, 89, 0.08)', borderColor: 'rgba(197, 160, 89, 0.2)' }]}>
+                  <Text style={[styles.significanceLabel, { color: goldAccent }]}>
+                    SPIRITUAL SIGNIFICANCE
+                  </Text>
+                  <Text style={[styles.significanceText, { color: theme.text }]}>
+                    {temple.significance}
+                  </Text>
+                </View>
+
+                {/* Stotra / Audio Section */}
+                {temple.stotraOrChant ? (
+                  <View style={[styles.stotraCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)', borderColor: theme.borderSoft }]}>
+                    <View style={styles.stotraHeader}>
+                      <Feather name="volume-2" size={18} color={goldAccent} />
+                      <Text style={[styles.stotraTitle, { color: theme.text }]}>
+                        {temple.stotraOrChant.title}
+                      </Text>
+                    </View>
+                    <Text style={[styles.stotraDesc, { color: theme.dim }]}>
+                      {temple.stotraOrChant.description}
                     </Text>
                   </View>
                 ) : null}
               </View>
+            ) : null}
 
-              <View style={styles.ritualButtonsRow}>
-                {/* Diya Lighting */}
-                <PressableSurface
-                  onPress={handleLightDiya}
-                  style={[
-                    styles.actionPill,
-                    {
-                      backgroundColor: diyaLit
-                        ? isDark
-                          ? 'rgba(217, 119, 6, 0.35)'
-                          : '#FDE68A'
-                        : isDark
-                        ? '#1F2937'
-                        : '#FFFFFF',
-                      borderColor: diyaLit ? COLORS.brandGold : theme.borderSoft,
-                    },
-                  ]}
-                  accessibilityLabel="Light Ghee Diya"
-                >
-                  <Feather
-                    name="sun"
-                    size={16}
-                    color={diyaLit ? COLORS.brandGold : theme.dim}
-                  />
-                  <Text
-                    style={[
-                      styles.actionPillText,
-                      { color: diyaLit ? theme.brand : theme.text },
-                    ]}
-                  >
-                    {diyaLit ? 'Diya Lit ✦' : 'Light Diya'}
-                  </Text>
-                </PressableSurface>
-
-                {/* Flower Offering */}
-                <PressableSurface
-                  onPress={handleOfferFlower}
-                  style={[
-                    styles.actionPill,
-                    {
-                      backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                      borderColor: flowersCount > 0 ? COLORS.brandGold : theme.borderSoft,
-                    },
-                  ]}
-                  accessibilityLabel="Offer Flowers"
-                >
-                  <Feather name="heart" size={15} color="#EC4899" />
-                  <Text style={[styles.actionPillText, { color: theme.text }]}>
-                    Offer Pushpam {flowersCount > 0 ? `(${flowersCount})` : ''}
-                  </Text>
-                </PressableSurface>
-
-                {/* Ring Bell */}
-                <PressableSurface
-                  onPress={handleRingBell}
-                  style={[
-                    styles.actionPill,
-                    {
-                      backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                      borderColor: bellRungCount > 0 ? COLORS.brandGold : theme.borderSoft,
-                    },
-                  ]}
-                  accessibilityLabel="Ring Temple Bell"
-                >
-                  <Feather name="bell" size={15} color={theme.brand} />
-                  <Text style={[styles.actionPillText, { color: theme.text }]}>
-                    Ring Bell {bellRungCount > 0 ? `(${bellRungCount})` : ''}
-                  </Text>
-                </PressableSurface>
-
-                {/* Parikrama */}
-                <PressableSurface
-                  onPress={handleParikrama}
-                  style={[
-                    styles.actionPill,
-                    {
-                      backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                      borderColor: parikramaCount > 0 ? COLORS.brandGold : theme.borderSoft,
-                    },
-                  ]}
-                  accessibilityLabel="Perform Parikrama"
-                >
-                  <Feather name="rotate-cw" size={15} color="#10B981" />
-                  <Text style={[styles.actionPillText, { color: theme.text }]}>
-                    +1 Parikrama
-                  </Text>
-                </PressableSurface>
+            {/* Tab 2: Sthala Purana & History */}
+            {activeTab === 'purana' ? (
+              <View style={styles.tabContentBlock}>
+                <Text style={[styles.sectionHeading, { color: goldAccent }]}>
+                  STHALA PURANA & SACRED ORIGINS
+                </Text>
+                <Text style={[styles.puranaParagraph, { color: theme.text }]}>
+                  {temple.sthalaPurana}
+                </Text>
               </View>
-            </View>
+            ) : null}
 
-            {/* Geographical & Architectural Tags */}
-            <View style={styles.tagsRow}>
-              <View style={[styles.tag, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: theme.borderSoft }]}>
-                <Feather name="map-pin" size={12} color={theme.brand} />
-                <Text style={[styles.tagText, { color: theme.text }]}>{temple.location}</Text>
-              </View>
-              {temple.sacredRiverOrKund ? (
-                <View style={[styles.tag, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: theme.borderSoft }]}>
-                  <Feather name="droplet" size={12} color="#3B82F6" />
-                  <Text style={[styles.tagText, { color: theme.text }]}>{temple.sacredRiverOrKund}</Text>
-                </View>
-              ) : null}
-              {temple.architecturalStyle ? (
-                <View style={[styles.tag, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: theme.borderSoft }]}>
-                  <Feather name="shield" size={12} color={theme.brand} />
-                  <Text style={[styles.tagText, { color: theme.text }]}>{temple.architecturalStyle}</Text>
-                </View>
-              ) : null}
-            </View>
-
-            {/* Sthala Purana Card */}
-            <View style={styles.sectionBlock}>
-              <Text style={[styles.sectionHeading, { color: theme.brand }]}>
-                STHALA PURANA & SACRED HISTORY
-              </Text>
-              <Text style={[styles.summaryText, { color: theme.text }]}>
-                {temple.sthalaPurana}
-              </Text>
-            </View>
-
-            {/* Spiritual Significance */}
-            <View style={[styles.significanceCard, { backgroundColor: isDark ? '#1F2937' : '#F9FAFB', borderColor: theme.borderSoft }]}>
-              <Text style={[styles.significanceLabel, { color: theme.brand }]}>
-                SPIRITUAL SIGNIFICANCE
-              </Text>
-              <Text style={[styles.significanceText, { color: theme.text }]}>
-                {temple.significance}
-              </Text>
-            </View>
-
-            {/* Traditional Offerings */}
-            {temple.offerings.length > 0 ? (
-              <View style={styles.sectionBlock}>
-                <Text style={[styles.sectionHeading, { color: theme.brand }]}>
-                  SACRED OFFERINGS & RITUALS
+            {/* Tab 3: Offerings & Traditional Rituals */}
+            {activeTab === 'rituals' ? (
+              <View style={styles.tabContentBlock}>
+                <Text style={[styles.sectionHeading, { color: goldAccent }]}>
+                  TRADITIONAL OFFERINGS & RITUALS
                 </Text>
                 {temple.offerings.map((item, idx) => (
-                  <View key={idx} style={styles.bulletRow}>
-                    <View style={[styles.bulletDot, { backgroundColor: theme.brand }]} />
-                    <Text style={[styles.bulletText, { color: theme.text }]}>{item}</Text>
+                  <View key={idx} style={styles.offeringRow}>
+                    <View style={[styles.bulletDot, { backgroundColor: goldAccent }]} />
+                    <Text style={[styles.offeringItemText, { color: theme.text }]}>{item}</Text>
                   </View>
                 ))}
               </View>
             ) : null}
 
-            {/* Stotra / Audio Section */}
-            {temple.stotraOrChant ? (
-              <View style={[styles.stotraCard, { backgroundColor: isDark ? '#1F2937' : '#F9FAFB', borderColor: theme.border }]}>
-                <View style={styles.stotraHeader}>
-                  <Feather name="volume-2" size={18} color={theme.brand} />
-                  <Text style={[styles.stotraTitle, { color: theme.text }]}>
-                    {temple.stotraOrChant.title}
-                  </Text>
-                </View>
-                <Text style={[styles.stotraDesc, { color: theme.dim }]}>
-                  {temple.stotraOrChant.description}
-                </Text>
-              </View>
-            ) : null}
-
             {/* Live Darshan CTA */}
             <PressableSurface
-              style={[styles.liveDarshanBtn, { backgroundColor: theme.brand }]}
+              style={[styles.liveDarshanBtn, { backgroundColor: goldAccent }]}
               onPress={() => {
                 onClose();
                 router.push('/live-darshan');
               }}
               accessibilityLabel="Open Live Darshan Stream"
             >
-              <Feather name="tv" size={16} color="#FFFFFF" />
+              <Feather name="tv" size={16} color={COLORS.ink} />
               <Text style={styles.liveDarshanBtnText}>Watch Live Shrines on Shoonaya</Text>
             </PressableSurface>
           </ScrollView>
@@ -318,7 +451,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
           <FlowerShowerOverlay
             show={showFlowerShower}
             onComplete={() => setShowFlowerShower(false)}
-            count={36}
+            count={40}
           />
         </Pressable>
       </Pressable>
@@ -329,22 +462,23 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
     borderTopLeftRadius: RADII.xl,
     borderTopRightRadius: RADII.xl,
     borderWidth: 1,
-    maxHeight: '84%',
+    maxHeight: '90%',
     paddingBottom: 28,
+    overflow: 'hidden',
   },
   handleBarContainer: {
     alignItems: 'center',
     paddingVertical: 10,
   },
   handleBar: {
-    width: 36,
+    width: 38,
     height: 4,
     borderRadius: 2,
   },
@@ -353,26 +487,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 10,
   },
   titleColumn: {
     flex: 1,
     paddingRight: 12,
   },
+  traditionTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 4,
+  },
+  traditionTagText: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 10,
+    letterSpacing: 1.5,
+  },
   nodeTitle: {
     fontFamily: FONTS.serifBold,
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 22,
+    lineHeight: 28,
   },
   sanskritSubtitle: {
     fontFamily: FONTS.serif,
     fontSize: 14,
     marginTop: 2,
-  },
-  deityText: {
-    fontFamily: FONTS.sans,
-    fontSize: 12,
-    marginTop: 4,
   },
   closeButton: {
     width: 32,
@@ -389,62 +529,203 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 24,
   },
-  sanctumRitualCard: {
-    borderRadius: RADII.lg,
+
+  /* ── Sanctum Shrine Stage ── */
+  sanctumOuterFrame: {
+    borderRadius: 24,
+    overflow: 'hidden',
     borderWidth: 1,
-    padding: 14,
+    borderColor: 'rgba(197, 160, 89, 0.4)',
     marginVertical: 10,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
   },
-  ritualHeaderRow: {
+  sanctumStage: {
+    paddingTop: 16,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    minHeight: 210,
+    justifyContent: 'space-between',
+  },
+  hangingBellContainer: {
+    alignItems: 'center',
+  },
+  bellTouchArea: {
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  bellChain: {
+    width: 2,
+    height: 18,
+    backgroundColor: '#C5A059',
+  },
+  bellDome: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(197, 160, 89, 0.25)',
+    borderWidth: 1,
+    borderColor: '#C5A059',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellGlyph: {
+    fontSize: 20,
+  },
+  deityAuraRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(197, 160, 89, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#C5A059',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
+  },
+  deityInnerGlow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  deitySymbolGlyph: {
+    fontSize: 32,
+  },
+  deityTitleText: {
+    fontFamily: FONTS.serifBold,
+    fontSize: 11,
+    color: '#FDE68A',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  diyasRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    width: '100%',
+    paddingHorizontal: 10,
   },
-  ritualBadge: {
-    flexDirection: 'row',
+  diyaTouchTarget: {
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
-  ritualBadgeText: {
+  diyaBase: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: '#C5A059',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  diyaFlameEmoji: {
+    fontSize: 22,
+  },
+  diyaGlowCircle: {
+    position: 'absolute',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+  },
+  diyaLabel: {
     fontFamily: FONTS.sansSemiBold,
-    fontSize: 10.5,
-    letterSpacing: 0.6,
+    fontSize: 10,
+    color: '#D1C4B2',
   },
-  parikramaBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADII.pill,
-    backgroundColor: 'rgba(217, 119, 6, 0.2)',
+  parikramaRing: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.3)',
   },
-  parikramaBadgeText: {
+  parikramaLabel: {
     fontFamily: FONTS.sansSemiBold,
-    fontSize: 10.5,
+    fontSize: 9,
+    color: '#C5A059',
+    letterSpacing: 1,
   },
-  ritualButtonsRow: {
+  parikramaCountNumber: {
+    fontFamily: FONTS.serifBold,
+    fontSize: 18,
+    color: '#FFFFFF',
+  },
+  sanctumFloor: {
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(197, 160, 89, 0.25)',
+    width: '100%',
+    alignItems: 'center',
+  },
+  sanctumFloorMantra: {
+    fontFamily: FONTS.serif,
+    fontSize: 11,
+    color: '#C5A059',
+    letterSpacing: 1.5,
+    opacity: 0.85,
+  },
+
+  /* ── Action Pills Grid ── */
+  actionPillsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginVertical: 12,
   },
-  actionPill: {
+  sanctumActionBtn: {
+    flex: 1,
+    minWidth: '47%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: RADII.pill,
+    borderRadius: 16,
     borderWidth: 1,
-    minHeight: 36,
+    minHeight: 44,
   },
-  actionPillText: {
+  actionIcon: {
+    fontSize: 16,
+  },
+  actionBtnText: {
     fontFamily: FONTS.sansSemiBold,
-    fontSize: 11.5,
+    fontSize: 12,
   },
+
+  /* ── Segmented Tabs ── */
+  tabsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 10,
+  },
+  tabPill: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabPillText: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 12,
+  },
+  tabContentBlock: {
+    marginTop: 8,
+    gap: 12,
+  },
+
+  /* ── Detail Content Styles ── */
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginVertical: 10,
   },
   tag: {
     flexDirection: 'row',
@@ -459,42 +740,36 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.sansMedium,
     fontSize: 11,
   },
-  sectionBlock: {
-    marginTop: 12,
-  },
   sectionHeading: {
     fontFamily: FONTS.sansSemiBold,
     fontSize: 11,
-    letterSpacing: 0.6,
-    marginBottom: 6,
+    letterSpacing: 1.2,
   },
-  summaryText: {
+  puranaParagraph: {
     fontFamily: FONTS.sans,
     fontSize: 13.5,
-    lineHeight: 21,
+    lineHeight: 22,
   },
   significanceCard: {
-    padding: 12,
-    borderRadius: RADII.md,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    marginVertical: 10,
+    gap: 6,
   },
   significanceLabel: {
     fontFamily: FONTS.sansSemiBold,
     fontSize: 10,
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    letterSpacing: 1,
   },
   significanceText: {
     fontFamily: FONTS.sans,
-    fontSize: 12.5,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 19,
   },
-  bulletRow: {
+  offeringRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    marginBottom: 6,
   },
   bulletDot: {
     width: 6,
@@ -502,17 +777,17 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginTop: 6,
   },
-  bulletText: {
+  offeringItemText: {
     flex: 1,
     fontFamily: FONTS.sans,
-    fontSize: 12.5,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 19,
   },
   stotraCard: {
-    marginTop: 12,
     padding: 14,
-    borderRadius: RADII.lg,
+    borderRadius: 16,
     borderWidth: 1,
+    gap: 6,
   },
   stotraHeader: {
     flexDirection: 'row',
@@ -525,22 +800,21 @@ const styles = StyleSheet.create({
   },
   stotraDesc: {
     fontFamily: FONTS.sans,
-    fontSize: 11.5,
-    lineHeight: 16,
-    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17,
   },
   liveDarshanBtn: {
-    marginTop: 16,
+    marginTop: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
-    borderRadius: RADII.pill,
+    paddingVertical: 14,
+    borderRadius: 18,
   },
   liveDarshanBtnText: {
     fontFamily: FONTS.sansSemiBold,
-    fontSize: 13,
-    color: '#FFFFFF',
+    fontSize: 13.5,
+    color: COLORS.ink,
   },
 });
