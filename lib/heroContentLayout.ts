@@ -34,13 +34,12 @@ export function resolveHeroContentLayout(
   width: number,
   fontScale: number,
 ): { position: Exclude<HeroContentPosition, 'auto'>; columnWidth: number } {
-  // Reviewed artwork: Krishna stands on the left of this landscape image.
-  // Placed left rather than right per explicit product preference, restoring
-  // the panel's original (pre-positioning-feature) left-anchored placement.
-  // Unreviewed artwork uses a separate details surface until its composition is known.
-  const preferred = preference === 'auto'
-    ? artworkId === 'krishna-yamuna-sunrise' ? 'left' : 'below'
-    : preference;
+  // Left-anchored overlay per explicit product preference (originally scoped
+  // to the reviewed Krishna artwork only; extended to every artwork -- the
+  // "unreviewed composition" caution wasn't worth every other artwork
+  // defaulting to the separate below-image surface).
+  void artworkId;
+  const preferred = preference === 'auto' ? 'left' : preference;
   const availableColumn = (width - 60) / 2;
   // A phone side column tops out around 150-185pt (iPhone SE through Pro
   // Max) -- the previous 296pt minimum could never be satisfied by any
