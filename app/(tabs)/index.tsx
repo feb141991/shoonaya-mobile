@@ -1434,7 +1434,7 @@ function HomeContent() {
               </Pressable>
             </View>
 
-            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '96%' }}>
+            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '96%', alignSelf: 'stretch' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} kind="observance" onRetryUnavailable={retryPanchang} />
               <PressableSurface
