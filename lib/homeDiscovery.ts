@@ -7,6 +7,8 @@ export type HomeDiscoveryState = {
   sessionCount: number;
   lastCountedSessionId: string | null;
   heroArtworkCueDismissed: boolean;
+  guidedTourStep: number;
+  guidedTourFinished: boolean;
   updatedAt: number;
 };
 
@@ -38,6 +40,8 @@ export function createInitialDiscoveryState(identityKey: string): HomeDiscoveryS
     sessionCount: 0,
     lastCountedSessionId: null,
     heroArtworkCueDismissed: false,
+    guidedTourStep: 0,
+    guidedTourFinished: false,
     updatedAt: Date.now(),
   };
 }
@@ -55,6 +59,8 @@ function parseDiscoveryState(raw: string | null, identityKey: string): HomeDisco
       sessionCount: typeof parsed.sessionCount === 'number' && parsed.sessionCount >= 0 ? parsed.sessionCount : 0,
       lastCountedSessionId: typeof parsed.lastCountedSessionId === 'string' ? parsed.lastCountedSessionId : null,
       heroArtworkCueDismissed: Boolean(parsed.heroArtworkCueDismissed),
+      guidedTourStep: typeof parsed.guidedTourStep === 'number' && parsed.guidedTourStep >= 0 ? parsed.guidedTourStep : 0,
+      guidedTourFinished: Boolean(parsed.guidedTourFinished),
       updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : Date.now(),
     };
   } catch {
@@ -131,11 +137,57 @@ export function isHeroArtworkCueEligible(
   context: CueEvaluationContext
 ): boolean {
   if (state.heroArtworkCueDismissed) return false;
+  // The guided tour's last step already covers backdrop selection -- don't
+  // compete with it for screen space while it's still running.
+  if (!state.guidedTourFinished) return false;
   if (state.sessionCount < 3) return false;
   if (!context.hasRenderedContent) return false;
   if (context.isFirstWeek) return false;
   if (context.hasBlockingHomeSurface) return false;
   return true;
+}
+
+export const GUIDED_TOUR_STEP_COUNT = 4;
+
+/**
+ * Pure evaluation helper for the "explore your Home" guided tour.
+ * Unlike the artwork cue (which waits for session 3+), this runs on the
+ * very first qualifying render -- it exists specifically to orient a user
+ * before they've had to discover anything the hard way.
+ */
+export function isGuidedTourEligible(
+  state: HomeDiscoveryState,
+  context: CueEvaluationContext
+): boolean {
+  if (state.guidedTourFinished) return false;
+  if (!context.hasRenderedContent) return false;
+  if (context.hasBlockingHomeSurface) return false;
+  return true;
+}
+
+export async function advanceGuidedTour(identity: AppIdentity): Promise<HomeDiscoveryState> {
+  const current = await getHomeDiscoveryState(identity);
+  const nextStep = current.guidedTourStep + 1;
+  const finished = nextStep >= GUIDED_TOUR_STEP_COUNT;
+  const nextState: HomeDiscoveryState = {
+    ...current,
+    guidedTourStep: nextStep,
+    guidedTourFinished: finished,
+    updatedAt: Date.now(),
+  };
+  await persistHomeDiscoveryState(nextState);
+  return nextState;
+}
+
+export async function finishGuidedTour(identity: AppIdentity): Promise<HomeDiscoveryState> {
+  const current = await getHomeDiscoveryState(identity);
+  const nextState: HomeDiscoveryState = {
+    ...current,
+    guidedTourFinished: true,
+    updatedAt: Date.now(),
+  };
+  await persistHomeDiscoveryState(nextState);
+  return nextState;
 }
 
 export async function dismissHeroArtworkCue(identity: AppIdentity): Promise<HomeDiscoveryState> {
@@ -170,6 +222,13 @@ export async function replayHomeDiscovery(identity: AppIdentity): Promise<void> 
     ...current,
     sessionCount: Math.max(3, current.sessionCount),
     heroArtworkCueDismissed: false,
+    // Restart the guided tour from the top too -- "Replay first-use tips"
+    // should bring back everything, not just the artwork cue. Single
+    // read-modify-write covering both fields: the caller (Settings' Replay
+    // button) must not fire two separate replay calls concurrently against
+    // this same stored blob, or one write would silently clobber the other.
+    guidedTourStep: 0,
+    guidedTourFinished: false,
     updatedAt: Date.now(),
   });
 }

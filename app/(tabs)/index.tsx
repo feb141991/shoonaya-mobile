@@ -44,7 +44,7 @@ import { FloatingDharmaScroll } from '@/components/home/FloatingDharmaScroll';
 import { GreetingPicker } from '@/components/home/GreetingPicker';
 import { getHeroContentPosition, resolveHeroContentLayout, type HeroContentPosition } from '@/lib/heroContentLayout';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
-import { HeroTip, useHeroTipVisible } from '@/components/home/HeroTip';
+import { HomeHeroGuide } from '@/components/home/HomeHeroGuide';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
@@ -75,6 +75,9 @@ import {
   isHeroArtworkCueEligible,
   dismissHeroArtworkCue,
   markHeroArtworkPickerOpened,
+  isGuidedTourEligible,
+  advanceGuidedTour,
+  finishGuidedTour,
   createInitialDiscoveryState,
   resolveIdentityKey,
   type HomeDiscoveryState,
@@ -732,7 +735,6 @@ function HomeContent() {
   const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
   const [greetingOverride, setGreetingOverride] = useState<string | null>(null);
   const [showRashiphalNudge, setShowRashiphalNudge] = useState(false);
-  const heroTip = useHeroTipVisible();
   const [discoveryState, setDiscoveryState] = useState<HomeDiscoveryState>(() =>
     createInitialDiscoveryState(resolveIdentityKey(appIdentity))
   );
@@ -752,6 +754,14 @@ function HomeContent() {
     isFirstWeek: Boolean(state.firstWeek),
     hasBlockingHomeSurface,
   });
+
+  const showHomeHeroGuide = isGuidedTourEligible(discoveryState, {
+    hasRenderedContent: isContentRendered,
+    isFirstWeek: Boolean(state.firstWeek),
+    hasBlockingHomeSurface,
+  });
+  const advanceHomeHeroGuide = () => { void advanceGuidedTour(appIdentity).then(setDiscoveryState); };
+  const skipHomeHeroGuide = () => { void finishGuidedTour(appIdentity).then(setDiscoveryState); };
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -1810,7 +1820,14 @@ function HomeContent() {
               first-week guidance for brand-new users, then upcoming sacred
               days — all ahead of the existing next-practice card so the
               time-sensitive nudge surfaces first, same as PWA. ── */}
-          {heroTip.visible ? <HeroTip lang={state.profile.appLanguage} onDismiss={heroTip.dismiss} /> : null}
+          {showHomeHeroGuide ? (
+            <HomeHeroGuide
+              lang={state.profile.appLanguage}
+              step={discoveryState.guidedTourStep}
+              onNext={advanceHomeHeroGuide}
+              onSkip={skipHomeHeroGuide}
+            />
+          ) : null}
 
           {panchang.brahmaMuhurta && panchang.sunrise ? (
             <BrahmaMuhurtaPrompt

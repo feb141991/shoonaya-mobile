@@ -29,17 +29,33 @@ import {
   replayHomeDiscovery,
   clearAllHomeDiscoveryStates,
   resolveIdentityKey,
+  isGuidedTourEligible,
+  advanceGuidedTour,
+  finishGuidedTour,
+  GUIDED_TOUR_STEP_COUNT,
   type CueEvaluationContext,
 } from '@/lib/homeDiscovery';
 import type { AppIdentity } from '@/lib/appIdentity';
 
 testReplay();
 function testReplay() {
-  it('explicit replay does not require another three cold launches', async () => {
+  const ctx = { hasRenderedContent: true, isFirstWeek: false, hasBlockingHomeSurface: false };
+
+  it('explicit replay restarts the guided tour, and the artwork cue does not require another three cold launches once the tour is done', async () => {
     const identity: AppIdentity = { kind: 'authenticated', userId: 'replay-only' };
     await replayHomeDiscovery(identity);
-    const state = await recordHomeFocusSession(identity, true, 'current');
-    assert.equal(isHeroArtworkCueEligible(state, { hasRenderedContent: true, isFirstWeek: false, hasBlockingHomeSurface: false }), true);
+
+    // The tour comes back first, from the top -- not straight to the cue.
+    const restarted = await recordHomeFocusSession(identity, true, 'current');
+    assert.equal(restarted.guidedTourStep, 0);
+    assert.equal(isGuidedTourEligible(restarted, ctx), true);
+    assert.equal(isHeroArtworkCueEligible(restarted, ctx), false, 'cue must wait for the replayed tour to finish, same as the first time');
+
+    // Once the (replayed) tour is finished, the cue is immediately
+    // reachable -- session count was preserved by replay, not reset.
+    const afterTour = await finishGuidedTour(identity);
+    assert.equal(isHeroArtworkCueEligible(afterTour, ctx), true);
+
     assert.equal((await getHomeDiscoveryState({ kind: 'authenticated', userId: 'other-replay-user' })).sessionCount, 0);
   });
 }
@@ -131,6 +147,8 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
       sessionCount: 2,
       lastCountedSessionId: 'sess_2',
       heroArtworkCueDismissed: false,
+      guidedTourStep: 0,
+      guidedTourFinished: true,
       updatedAt: Date.now(),
     };
     assert.equal(isHeroArtworkCueEligible(state, baseContext), false);
@@ -143,6 +161,8 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
       sessionCount: 3,
       lastCountedSessionId: 'sess_3',
       heroArtworkCueDismissed: false,
+      guidedTourStep: 0,
+      guidedTourFinished: true,
       updatedAt: Date.now(),
     };
     assert.equal(isHeroArtworkCueEligible(state, baseContext), true);
@@ -155,6 +175,8 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
       sessionCount: 5,
       lastCountedSessionId: 'sess_5',
       heroArtworkCueDismissed: false,
+      guidedTourStep: 0,
+      guidedTourFinished: true,
       updatedAt: Date.now(),
     };
     assert.equal(isHeroArtworkCueEligible(state, { ...baseContext, isFirstWeek: true }), false);
@@ -167,6 +189,8 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
       sessionCount: 5,
       lastCountedSessionId: 'sess_5',
       heroArtworkCueDismissed: false,
+      guidedTourStep: 0,
+      guidedTourFinished: true,
       updatedAt: Date.now(),
     };
     assert.equal(isHeroArtworkCueEligible(state, { ...baseContext, hasBlockingHomeSurface: true }), false);
@@ -179,6 +203,8 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
       sessionCount: 5,
       lastCountedSessionId: 'sess_5',
       heroArtworkCueDismissed: false,
+      guidedTourStep: 0,
+      guidedTourFinished: true,
       updatedAt: Date.now(),
     };
     assert.equal(isHeroArtworkCueEligible(state, { ...baseContext, hasRenderedContent: false }), false);
@@ -186,6 +212,7 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
 
   it('6. dismissHeroArtworkCue marks dismissed permanently and prevents cue eligibility', async () => {
     const user: AppIdentity = { kind: 'authenticated', userId: 'user_1' };
+    await finishGuidedTour(user);
     await recordHomeFocusSession(user, true, 'sess_1');
     await recordHomeFocusSession(user, true, 'sess_2');
     await recordHomeFocusSession(user, true, 'sess_3');
@@ -278,5 +305,81 @@ describe('Home Discovery — Cue Eligibility & Overlay Suppression', () => {
 
     const afterDismiss = await dismissHeroArtworkCue(unauth);
     assert.equal(afterDismiss.heroArtworkCueDismissed, true);
+  });
+});
+
+describe('Home Hero Guided Tour', () => {
+  const baseContext: CueEvaluationContext = {
+    hasRenderedContent: true,
+    isFirstWeek: false,
+    hasBlockingHomeSurface: false,
+  };
+
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+  });
+
+  it('12. is eligible on the very first render, unlike the artwork cue which waits for 3 sessions', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_1' };
+    const state = await getHomeDiscoveryState(identity);
+    assert.equal(state.sessionCount, 0);
+    assert.equal(isGuidedTourEligible(state, baseContext), true);
+  });
+
+  it('13. advances one step at a time and finishes automatically after the last step', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_2' };
+    let state = await getHomeDiscoveryState(identity);
+    for (let i = 0; i < GUIDED_TOUR_STEP_COUNT - 1; i++) {
+      state = await advanceGuidedTour(identity);
+      assert.equal(state.guidedTourStep, i + 1);
+      assert.equal(state.guidedTourFinished, false, `should not finish before step ${GUIDED_TOUR_STEP_COUNT - 1}`);
+      assert.equal(isGuidedTourEligible(state, baseContext), true);
+    }
+    state = await advanceGuidedTour(identity);
+    assert.equal(state.guidedTourStep, GUIDED_TOUR_STEP_COUNT);
+    assert.equal(state.guidedTourFinished, true);
+    assert.equal(isGuidedTourEligible(state, baseContext), false);
+  });
+
+  it('14. skipping via finishGuidedTour ends it immediately regardless of current step', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_3' };
+    await advanceGuidedTour(identity);
+    const state = await finishGuidedTour(identity);
+    assert.equal(state.guidedTourFinished, true);
+    assert.equal(isGuidedTourEligible(state, baseContext), false);
+  });
+
+  it('15. never re-eligible after finishing, even across a fresh state read', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_4' };
+    await finishGuidedTour(identity);
+    const reloaded = await getHomeDiscoveryState(identity);
+    assert.equal(isGuidedTourEligible(reloaded, baseContext), false);
+  });
+
+  it("16. the artwork cue never shows while the tour hasn't finished, even at session 3+", async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_5' };
+    await recordHomeFocusSession(identity, true, 'sess_1');
+    await recordHomeFocusSession(identity, true, 'sess_2');
+    const state = await recordHomeFocusSession(identity, true, 'sess_3');
+    assert.equal(state.sessionCount, 3);
+    assert.equal(state.guidedTourFinished, false);
+    assert.equal(isHeroArtworkCueEligible(state, baseContext), false, 'artwork cue must wait for the tour to finish, not just session count');
+  });
+
+  it('17. the artwork cue becomes reachable again once the tour finishes and session count is met', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_6' };
+    await recordHomeFocusSession(identity, true, 'sess_1');
+    await recordHomeFocusSession(identity, true, 'sess_2');
+    await recordHomeFocusSession(identity, true, 'sess_3');
+    const state = await finishGuidedTour(identity);
+    assert.equal(isHeroArtworkCueEligible(state, baseContext), true);
+  });
+
+  it('18. suppressed by the same blockers as the artwork cue (first week, blocking surface, no content)', async () => {
+    const identity: AppIdentity = { kind: 'authenticated', userId: 'tour_user_7' };
+    const state = await getHomeDiscoveryState(identity);
+    assert.equal(isGuidedTourEligible(state, { ...baseContext, isFirstWeek: true }), true, 'unlike the artwork cue, the tour is meant for brand-new first-week users');
+    assert.equal(isGuidedTourEligible(state, { ...baseContext, hasBlockingHomeSurface: true }), false);
+    assert.equal(isGuidedTourEligible(state, { ...baseContext, hasRenderedContent: false }), false);
   });
 });
