@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -28,12 +28,17 @@ import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { ReaderShell } from '@/components/reader/ReaderShell';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 
+// Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
+// screens share the same ReaderShell toolbar component, this is just the
+// label set each passes in, per explicit request to bring the two in line.
 const FONT_PRESETS = [
-  { label: 'Standard', value: 0 },
-  { label: 'Comfortable', value: 1 },
-  { label: 'Spacious', value: 2 },
-  { label: 'Large', value: 3 },
+  { label: 'A-', value: 0 },
+  { label: 'A', value: 1 },
+  { label: 'A+', value: 2 },
+  { label: 'A++', value: 3 },
 ];
 
 export default function VratDetailScreen() {
@@ -64,6 +69,8 @@ export default function VratDetailScreen() {
   type ToastState = { visible: boolean; message: string };
   const [toast, setToast] = useState<ToastState>({ visible: false, message: '' });
   const insets = useSafeAreaInsets();
+  const shareCardRef = useRef<View | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   // "Around the World" global stats -- ported from the PWA's
   // GET /api/vrat/stats (public, no auth).
@@ -236,6 +243,25 @@ export default function VratDetailScreen() {
   const hasLocalVrat = Boolean(vrat.nameLocal && vrat.taglineLocal && vrat.significanceLocal && vrat.practiceLocal);
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
+  // Same rendered-image-card approach as app/shloka.tsx's share (via
+  // ShoonayaShareCard + shareCapturedShoonayaCard/react-native-view-shot),
+  // per explicit request to match that style rather than a plain-text
+  // Share.share() call.
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      await shareCapturedShoonayaCard(shareCardRef, {
+        fileName: `shoonaya-vrat-${slug}.png`,
+        dialogTitle: `Share ${selectedName}`,
+        fallbackMessage: `${selectedName}\n\n${selectedTagline}`,
+      });
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <ReaderShell
       title={selectedName}
@@ -246,8 +272,9 @@ export default function VratDetailScreen() {
       fontPresets={FONT_PRESETS}
       fontStep={fontStep}
       setFontStep={setFontStep}
-      languages={hasLocalVrat ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिं/Local' }] : undefined}
+      languages={hasLocalVrat ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिंदी' }] : undefined}
       currentLanguage={lang}
+      onShare={handleShare}
       setLanguage={setLang}
     >
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -591,6 +618,28 @@ export default function VratDetailScreen() {
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>{toast.message}</Text>
         </View>
       ) : null}
+
+      {/* Off-screen, rasterized by shareCapturedShoonayaCard via
+          react-native-view-shot -- same pattern as app/shloka.tsx. */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: -10000, top: 0, width: 360, height: 640 }}>
+        <View collapsable={false}>
+          <ShoonayaShareCard
+            ref={shareCardRef}
+            data={{
+              tradition: 'universal',
+              layout: 'sacredText',
+              headlineValue: selectedMantra || selectedTagline,
+              title: selectedName,
+              subtitle: selectedTagline,
+              caption: selectedSignificance,
+              date: canonicalToday ?? undefined,
+              footer: globalStats && globalStats.today_count > 0
+                ? `${globalStats.today_count.toLocaleString()} seekers observing today`
+                : undefined,
+            }}
+          />
+        </View>
+      </View>
     </ReaderShell>
   );
 }

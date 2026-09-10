@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams } from 'expo-router';
@@ -10,6 +10,18 @@ import { lookupFestivalContent } from '@/lib/festival-content.generated';
 import { resolveFestivalText, resolveFestivalList, isFestivalPublishable } from '@/lib/festival-content-helpers';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { ReaderShell } from '@/components/reader/ReaderShell';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
+
+// Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
+// screens share the same ReaderShell toolbar component, this is just the
+// label set each passes in, per explicit request to bring the two in line.
+const FONT_PRESETS = [
+  { label: 'A-', value: 0 },
+  { label: 'A', value: 1 },
+  { label: 'A+', value: 2 },
+  { label: 'A++', value: 3 },
+];
 
 export default function FestivalDetailScreen() {
   const params = useLocalSearchParams<{ slug: string }>();
@@ -21,6 +33,12 @@ export default function FestivalDetailScreen() {
 
   const [occurrence, setOccurrence] = useState<ClientObservanceResult | null>(null);
   const [occurrenceLoading, setOccurrenceLoading] = useState(true);
+  const [lang, setLang] = useState<'en' | 'local'>('en');
+  const [fontStep, setFontStep] = useState(1);
+  const [sharing, setSharing] = useState(false);
+  const shareCardRef = useRef<View | null>(null);
+  const resolvedLang: 'en' | 'hi' = lang === 'local' ? 'hi' : 'en';
+  const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   const festival = useMemo(() => lookupFestivalContent(slug), [slug]);
 
@@ -64,15 +82,35 @@ export default function FestivalDetailScreen() {
     );
   }
 
-  const name = resolveFestivalText(festival.name) || festival.definitionKey;
-  const tagline = resolveFestivalText(festival.tagline);
-  const significance = resolveFestivalText(festival.significance);
-  const rituals = resolveFestivalList(festival.rituals);
-  const dos = resolveFestivalList(festival.dos);
-  const donts = resolveFestivalList(festival.donts);
-  const pujaItems = resolveFestivalList(festival.pujaItems);
-  const mantraTranslation = festival.mantra ? resolveFestivalText(festival.mantra.translation) : '';
+  const name = resolveFestivalText(festival.name, resolvedLang) || festival.definitionKey;
+  const tagline = resolveFestivalText(festival.tagline, resolvedLang);
+  const significance = resolveFestivalText(festival.significance, resolvedLang);
+  const rituals = resolveFestivalList(festival.rituals, resolvedLang);
+  const dos = resolveFestivalList(festival.dos, resolvedLang);
+  const donts = resolveFestivalList(festival.donts, resolvedLang);
+  const pujaItems = resolveFestivalList(festival.pujaItems, resolvedLang);
+  const mantraTranslation = festival.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : '';
   const publishable = isFestivalPublishable(festival);
+  // Only offer the toggle when real Hindi content actually exists --
+  // never a switch to a language that silently falls back to English.
+  const hasLocalFestival = Boolean(
+    resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi')
+  );
+
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      await shareCapturedShoonayaCard(shareCardRef, {
+        fileName: `shoonaya-festival-${slug}.png`,
+        dialogTitle: `Share ${name}`,
+        fallbackMessage: `${name}\n\n${tagline}`,
+      });
+    } finally {
+      setSharing(false);
+    }
+  };
 
   return (
     <ReaderShell
@@ -81,6 +119,13 @@ export default function FestivalDetailScreen() {
       fallbackBackUrl="/(tabs)"
       themeColor={theme.brand}
       ambientGlowColor={theme.brand}
+      fontPresets={FONT_PRESETS}
+      fontStep={fontStep}
+      setFontStep={setFontStep}
+      languages={hasLocalFestival ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिंदी' }] : undefined}
+      currentLanguage={lang}
+      setLanguage={setLang}
+      onShare={handleShare}
     >
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {!publishable ? (
@@ -146,7 +191,7 @@ export default function FestivalDetailScreen() {
         {significance ? (
           <Card style={{ padding: 16, marginBottom: 16 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Significance</Text>
-            <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 22 }}>{significance}</Text>
+            <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{significance}</Text>
           </Card>
         ) : null}
 
@@ -156,7 +201,7 @@ export default function FestivalDetailScreen() {
             {rituals.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="circle" size={6} color={theme.brand} style={{ marginTop: 8 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
+                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
               </View>
             ))}
           </Card>
@@ -168,7 +213,7 @@ export default function FestivalDetailScreen() {
             {dos.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
+                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
               </View>
             ))}
           </Card>
@@ -180,7 +225,7 @@ export default function FestivalDetailScreen() {
             {donts.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 }}>{item}</Text>
+                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
               </View>
             ))}
           </Card>
@@ -189,23 +234,42 @@ export default function FestivalDetailScreen() {
         {pujaItems.length > 0 ? (
           <Card style={{ padding: 16, marginBottom: 16 }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Puja Items</Text>
-            <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 20 }}>{pujaItems.join(', ')}</Text>
+            <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 20 * fsScale }}>{pujaItems.join(', ')}</Text>
           </Card>
         ) : null}
 
         {festival.mantra && mantraTranslation ? (
           <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>Sacred Mantra</Text>
-            <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
+            <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
               {festival.mantra.sanskrit}
             </Text>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, textAlign: 'center' }}>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 12 * fsScale, lineHeight: 16 * fsScale, color: theme.dim, textAlign: 'center' }}>
               {festival.mantra.transliteration}
             </Text>
-            <Text style={{ ...TYPE.body, color: theme.text, textAlign: 'center', marginTop: 6 }}>{mantraTranslation}</Text>
+            <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: TYPE.body.lineHeight * fsScale, textAlign: 'center', marginTop: 6 }}>{mantraTranslation}</Text>
           </Card>
         ) : null}
       </ScrollView>
+
+      {/* Off-screen, rasterized by shareCapturedShoonayaCard via
+          react-native-view-shot -- same pattern as app/shloka.tsx. */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: -10000, top: 0, width: 360, height: 640 }}>
+        <View collapsable={false}>
+          <ShoonayaShareCard
+            ref={shareCardRef}
+            data={{
+              tradition: 'universal',
+              layout: 'sacredText',
+              headlineValue: (festival.mantra ? festival.mantra.sanskrit : '') || tagline,
+              title: name,
+              subtitle: tagline,
+              caption: significance,
+              footer: occurrence?.civilDate ?? occurrence?.date ?? undefined,
+            }}
+          />
+        </View>
+      </View>
     </ReaderShell>
   );
 }
