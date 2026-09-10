@@ -58,3 +58,7 @@ ios/
 scratch/
 graphify-out/
 
+# python
+__pycache__/
+*.pyc
+
