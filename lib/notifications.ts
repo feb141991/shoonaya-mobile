@@ -189,7 +189,7 @@ export async function openNotificationSettings(): Promise<void> {
  * dialog, so this never nags.
  */
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (!Notifications) return __DEV__ && !Constants.isDevice;
+  if (!Notifications) return false;
   try {
     // Android 13 does not show its POST_NOTIFICATIONS prompt until at least
     // one channel exists. Await it here rather than relying on the root
@@ -199,9 +199,9 @@ export async function requestNotificationPermission(): Promise<boolean> {
     if (hasNotificationPermission(existing)) return true;
     const requested = await Notifications.requestPermissionsAsync();
     if (hasNotificationPermission(requested)) return true;
-    return __DEV__ && !Constants.isDevice;
+    return false;
   } catch {
-    return __DEV__ && !Constants.isDevice;
+    return false;
   }
 }
 
@@ -209,13 +209,13 @@ export async function requestNotificationPermission(): Promise<boolean> {
  * Reads the current OS notification permission status without showing any prompt.
  */
 export async function checkNotificationPermission(): Promise<boolean> {
-  if (!Notifications) return __DEV__ && !Constants.isDevice;
+  if (!Notifications) return false;
   try {
     const existing = await Notifications.getPermissionsAsync();
     if (hasNotificationPermission(existing)) return true;
-    return __DEV__ && !Constants.isDevice;
+    return false;
   } catch {
-    return __DEV__ && !Constants.isDevice;
+    return false;
   }
 }
 
@@ -230,8 +230,9 @@ export async function checkNotificationPermission(): Promise<boolean> {
  */
 export async function registerPushToken(userId: string) {
   if (!Notifications || !userId) return;
-  // iOS Simulator cannot register for remote APNs tokens
-  if (Platform.OS === 'ios' && !Constants.isDevice) return;
+  // Let expo-notifications determine device support. Constants.isDevice was
+  // removed from expo-constants; testing its absence silently skipped every
+  // physical iPhone as well. Unsupported runtimes are reported by the catch below.
 
   let stage = 'ensure_android_channel';
   try {
