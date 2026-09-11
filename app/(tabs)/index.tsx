@@ -1415,7 +1415,7 @@ function HomeContent() {
               </Pressable>
             </View>
 
-            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '96%' }}>
+            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '100%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} kind="observance" onRetryUnavailable={retryPanchang} />
               <PressableSurface
@@ -1442,7 +1442,8 @@ function HomeContent() {
                 <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
                 <Text
                   numberOfLines={1}
-                  ellipsizeMode="tail"
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
                   style={{
                     ...TYPE.chip,
                     flexShrink: 1,
