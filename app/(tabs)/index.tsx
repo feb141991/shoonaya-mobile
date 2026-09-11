@@ -653,20 +653,14 @@ function PanchangPill({
         borderRadius: RADII.pill,
         paddingHorizontal: 12,
         paddingVertical: 4,
-        // Stretch both the tithi and observance pill to the same width as
-        // their shared parent, instead of each shrinking to its own text
-        // length -- two differently-sized pills stacked directly on top of
-        // each other read as visually inconsistent.
-        alignSelf: 'stretch',
+        alignSelf: 'flex-start',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 3,
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        // Same fixed height for both regardless of dot-indicator presence
-        // (minHeight, not height, so it still grows if content needs it).
-        minHeight: 34,
+        minHeight: 32,
         maxWidth: 264,
         overflow: 'hidden',
       }}
@@ -1448,7 +1442,7 @@ function HomeContent() {
               </Pressable>
             </View>
 
-            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '96%', alignSelf: 'stretch' }}>
+            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '96%' }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} kind="observance" onRetryUnavailable={retryPanchang} />
               <PressableSurface
@@ -1460,35 +1454,34 @@ function HomeContent() {
                 hitSlop={8}
                 style={{
                   borderRadius: RADII.pill,
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
-                  minHeight: 34,
-                  maxWidth: 264,
-                  alignSelf: 'stretch',
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  minHeight: MIN_TOUCH_TARGET,
+                  maxWidth: '100%',
+                  alignSelf: 'flex-start',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexDirection: 'row',
-                  gap: 6,
+                  gap: 5,
                   backgroundColor: COLORS.homePwaRashiphalBg,
-                  overflow: 'hidden',
                 }}
               >
-                <Text style={{ fontSize: 12, lineHeight: 15 }}>🔮</Text>
+                <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
                 <Text
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   style={{
                     ...TYPE.chip,
                     flexShrink: 1,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontFamily: FONTS.sansSemiBold,
-                    lineHeight: 15,
+                    lineHeight: 14,
                     color: heroDetailsBelow ? theme.text : COLORS.homePwaRashiphalText,
                   }}
                 >
                   See your Rashiphal
                 </Text>
-                <Text style={{ fontSize: 11, lineHeight: 15, color: heroDetailsBelow ? theme.dim : COLORS.homePwaRashiphalArrow }}>→</Text>
+                <Text style={{ fontSize: 10, lineHeight: 13, color: heroDetailsBelow ? theme.dim : COLORS.homePwaRashiphalArrow }}>→</Text>
               </PressableSurface>
             </View>
           </View>
