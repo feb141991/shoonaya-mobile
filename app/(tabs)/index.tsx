@@ -576,7 +576,7 @@ function PanchangPill({
             justifyContent: 'center',
             gap: 3,
             backgroundColor: COLORS.homePwaPillBg,
-            minHeight: 34,
+            minHeight: 32,
             maxWidth: 264,
           }}
         >
@@ -585,43 +585,6 @@ function PanchangPill({
             <ShimmerBlock style={{ width: 96, height: 10, borderRadius: 4 }} />
           </View>
         </View>
-      );
-    }
-    if (calendarStatus === 'unavailable' && onRetryUnavailable) {
-      // Deliberately distinct from both the loading skeleton above and the
-      // silent `return null` below: this is a checked-but-unresolved
-      // failure (retry exhausted or a real backend error), not the same
-      // thing as an authoritative "no observance today". Compact and
-      // static (no shimmer -- nothing is currently loading), with an
-      // explicit tap-to-retry affordance rather than staying permanently
-      // and indistinguishably hidden for the rest of the mount.
-      return (
-        <PressableSurface
-          haptic="selection"
-          accessibilityLabel="Today's observance could not be checked. Tap to retry"
-          accessibilityRole="button"
-          onPress={onRetryUnavailable}
-          hitSlop={4}
-          style={{
-            borderRadius: RADII.pill,
-            paddingHorizontal: 12,
-            paddingVertical: 4,
-            alignSelf: 'flex-start',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 3,
-            backgroundColor: COLORS.homePwaPillBg,
-            minHeight: 34,
-            maxWidth: 264,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Feather name="refresh-cw" size={11} color={pillText} />
-            <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: pillText }}>
-              Couldn't check today's observance · Retry
-            </Text>
-          </View>
-        </PressableSurface>
       );
     }
     return null;
