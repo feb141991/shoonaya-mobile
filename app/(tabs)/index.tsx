@@ -668,10 +668,11 @@ function PanchangPill({
         // (minHeight, not height, so it still grows if content needs it).
         minHeight: 34,
         maxWidth: 264,
+        overflow: 'hidden',
       }}
     >
-      <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, opacity: fadeAnim }}>
-        <Text style={{ fontSize: 12, lineHeight: 14 }}>{currentSlide.icon}</Text>
+      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim, maxWidth: '100%' }}>
+        <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
         <Text
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -1418,13 +1419,10 @@ function HomeContent() {
                   color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText,
                   flexShrink: 1,
                 }}
-                // Shrinks toward a 28px floor (0.85 of the 33px base) before
-                // falling back to a second line -- never smaller than that,
-                // unlike the previous 0.6 floor which could shrink an
-                // unusually long name well below the intended larger size.
-                numberOfLines={2}
+                numberOfLines={1}
+                ellipsizeMode="tail"
                 adjustsFontSizeToFit
-                minimumFontScale={0.85}
+                minimumFontScale={0.75}
               >
                 {greeting}, {state.profile.firstName}
               </Text>
@@ -1462,34 +1460,35 @@ function HomeContent() {
                 hitSlop={8}
                 style={{
                   borderRadius: RADII.pill,
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  minHeight: MIN_TOUCH_TARGET,
-                  maxWidth: '100%',
-                  alignSelf: 'flex-start',
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  minHeight: 34,
+                  maxWidth: 264,
+                  alignSelf: 'stretch',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexDirection: 'row',
-                  gap: 5,
+                  gap: 6,
                   backgroundColor: COLORS.homePwaRashiphalBg,
+                  overflow: 'hidden',
                 }}
               >
-                <Text style={{ fontSize: 11, lineHeight: 13 }}>🔮</Text>
+                <Text style={{ fontSize: 12, lineHeight: 15 }}>🔮</Text>
                 <Text
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   style={{
                     ...TYPE.chip,
                     flexShrink: 1,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontFamily: FONTS.sansSemiBold,
-                    lineHeight: 14,
+                    lineHeight: 15,
                     color: heroDetailsBelow ? theme.text : COLORS.homePwaRashiphalText,
                   }}
                 >
                   See your Rashiphal
                 </Text>
-                <Text style={{ fontSize: 10, lineHeight: 13, color: heroDetailsBelow ? theme.dim : COLORS.homePwaRashiphalArrow }}>→</Text>
+                <Text style={{ fontSize: 11, lineHeight: 15, color: heroDetailsBelow ? theme.dim : COLORS.homePwaRashiphalArrow }}>→</Text>
               </PressableSurface>
             </View>
           </View>
