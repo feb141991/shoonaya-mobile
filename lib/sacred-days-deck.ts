@@ -60,8 +60,8 @@ export type SacredDaysDeckItem =
     };
 
 function normalizedEntryIdentity(entry: SacredDaysObservance): string {
-  const routeIdentity = entry.routeSlug.trim() || entry.href.trim();
-  return (routeIdentity || entry.name.trim()).toLocaleLowerCase();
+  const routeIdentity = entry.routeSlug?.trim() || entry.href?.trim() || '';
+  return (routeIdentity || entry.name?.trim() || '').toLocaleLowerCase();
 }
 
 /**
@@ -99,7 +99,9 @@ export function buildSacredDaysDeck({
         : null;
       if (daysLeft === null || daysLeft < 0 || daysLeft > windowDays) continue;
 
-      representedSeriesSlugs.add(child.slug.trim().toLocaleLowerCase());
+      if (child.slug) {
+        representedSeriesSlugs.add(child.slug.trim().toLocaleLowerCase());
+      }
       seriesItems.push({
         type: 'series',
         key: `series-${candidate.seriesKey}-${child.occurrenceId ?? child.slug}`,
