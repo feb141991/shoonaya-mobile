@@ -505,7 +505,7 @@ function PanchangPill({
         key: 'observance',
         icon: summary.observance.emoji ?? '🪔',
         label: summary.observance.label,
-        dedupeKey: summary.observance.name.trim().toLowerCase(),
+        dedupeKey: summary.observance.name ? summary.observance.name.trim().toLowerCase() : undefined,
         monthLabel: summary.observance.monthLabel,
         href: summary.observance.href,
       } : null);
@@ -519,11 +519,21 @@ function PanchangPill({
           key: `upcoming-${i}`,
           icon: entry.emoji ?? '🪔',
           label: entry.label,
-          dedupeKey: entry.name.trim().toLowerCase(),
+          dedupeKey: entry.name ? entry.name.trim().toLowerCase() : undefined,
           monthLabel: entry.monthLabel,
           href: entry.href,
         });
       });
+      if (rows.length === 0 && (summary.vratLabel || summary.festivalLabel)) {
+        const fallbackLabel = summary.vratLabel || summary.festivalLabel!;
+        add({
+          key: 'fallback-observance',
+          icon: '🪔',
+          label: fallbackLabel,
+          dedupeKey: fallbackLabel.trim().toLowerCase(),
+          href: '/panchang',
+        });
+      }
       return rows;
     }
 
@@ -534,7 +544,7 @@ function PanchangPill({
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
 
     return rows;
-  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.observance, summary.upcomingObservances]);
+  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.festivalLabel, summary.observance, summary.upcomingObservances, summary.vratLabel]);
   const total = slides.length;
 
   useEffect(() => {
