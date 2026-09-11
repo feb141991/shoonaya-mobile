@@ -20,7 +20,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE } from '@/lib/constants';
 import type { ObservanceSeries } from '@/lib/observance-series-contract.generated';
 import {
-  buildSacredDaysDeck,
+  buildSacredDaysSections,
   SACRED_DAYS_CARD_HEIGHT,
   type SacredDaysDeckItem,
   type SacredDaysObservance,
@@ -40,6 +40,9 @@ type Theme = {
 
 const COPY = {
   en: {
+    today: 'Today',
+    upcoming: 'Upcoming · next 15 days',
+    empty: 'No verified sacred days are available for today or the next 15 days for your calendar settings. Events awaiting review stay hidden.',
     title: 'Sacred Days',
     export: 'Sacred Calendar',
     exportBusy: 'Preparing',
@@ -49,6 +52,9 @@ const COPY = {
     exportFailed: 'The calendar could not be exported. Please try again.',
   },
   hi: {
+    today: 'आज',
+    upcoming: 'आगामी · अगले 15 दिन',
+    empty: 'आपकी कैलेंडर सेटिंग के लिए आज या अगले 15 दिनों में कोई सत्यापित पवित्र दिन उपलब्ध नहीं है। समीक्षा की प्रतीक्षा वाले आयोजन छिपे रहते हैं।',
     title: 'पवित्र दिन',
     export: 'पवित्र कैलेंडर',
     exportBusy: 'तैयार हो रहा है',
@@ -58,6 +64,9 @@ const COPY = {
     exportFailed: 'कैलेंडर निर्यात नहीं हो सका। कृपया फिर प्रयास करें।',
   },
   pa: {
+    today: 'ਅੱਜ',
+    upcoming: 'ਆਉਣ ਵਾਲੇ · ਅਗਲੇ 15 ਦਿਨ',
+    empty: 'ਤੁਹਾਡੀਆਂ ਕੈਲੰਡਰ ਸੈਟਿੰਗਾਂ ਲਈ ਅੱਜ ਜਾਂ ਅਗਲੇ 15 ਦਿਨਾਂ ਵਿੱਚ ਕੋਈ ਤਸਦੀਕ ਕੀਤਾ ਪਵਿੱਤਰ ਦਿਨ ਉਪਲਬਧ ਨਹੀਂ ਹੈ। ਸਮੀਖਿਆ ਦੀ ਉਡੀਕ ਵਾਲੇ ਸਮਾਗਮ ਲੁਕੇ ਰਹਿੰਦੇ ਹਨ।',
     title: 'ਪਵਿੱਤਰ ਦਿਨ',
     export: 'ਪਵਿੱਤਰ ਕੈਲੰਡਰ',
     exportBusy: 'ਤਿਆਰ ਹੋ ਰਿਹਾ ਹੈ',
@@ -90,39 +99,17 @@ export function SacredDaysCarousel({
   onRetryUnavailable?: () => void;
 }) {
   const { width: screenWidth } = useWindowDimensions();
-  const reducedMotion = useReducedMotion();
-  const listRef = useRef<FlatList<SacredDaysDeckItem>>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const closeCalendar = useCallback(() => setCalendarOpen(false), []);
   const copy = COPY[lang];
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-  const cardWidth = Math.min(380, Math.max(280, screenWidth - 48));
+  const cardWidth = Math.min(380, Math.max(240, screenWidth - 48));
 
-  const items = useMemo(
-    () => buildSacredDaysDeck({ observances, series, spiritualDate }),
+  const sections = useMemo(
+    () => buildSacredDaysSections({ observances, series, spiritualDate }),
     [observances, series, spiritualDate],
   );
-
-  useEffect(() => {
-    setActiveIndex((current) => items.length === 0 ? 0 : Math.min(current, items.length - 1));
-  }, [items.length]);
-
-  const scrollTo = useCallback((index: number) => {
-    if (items.length === 0) return;
-    const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
-    listRef.current?.scrollToOffset({
-      offset: boundedIndex * (cardWidth + CARD_GAP),
-      animated: !reducedMotion,
-    });
-    setActiveIndex(boundedIndex);
-  }, [cardWidth, items.length, reducedMotion]);
-
-  const handleMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(event.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP));
-    setActiveIndex(Math.max(0, Math.min(index, items.length - 1)));
-  }, [cardWidth, items.length]);
 
   const exportCalendar = useCallback(async () => {
     if (exporting) return;
@@ -150,7 +137,8 @@ export function SacredDaysCarousel({
     }
   }, [copy, exporting]);
 
-  const hasItems = items.length > 0;
+  const itemCount = sections.today.length + sections.upcoming.length;
+  const hasItems = itemCount > 0;
 
 
 
@@ -165,7 +153,7 @@ export function SacredDaysCarousel({
           </Text>
           {calendarStatus === 'ready' ? (
             <View style={{ minWidth: 24, paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADII.pill, backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight }}>
-              <Text style={{ ...TYPE.chip, color: accent, textAlign: 'center' }}>{items.length}</Text>
+              <Text style={{ ...TYPE.chip, color: accent, textAlign: 'center' }}>{itemCount}</Text>
             </View>
           ) : null}
         </View>
@@ -218,8 +206,58 @@ export function SacredDaysCarousel({
             </PressableSurface>
           ) : null}
         </View>
+      ) : !hasItems ? (
+        <View style={{ padding: 16, borderRadius: RADII.xl, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, gap: 8 }}>
+          <Feather name="calendar" size={20} color={theme.dim} />
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.empty}</Text>
+        </View>
       ) : (
         <>
+          {sections.today.length > 0 ? <SacredDaysRow title={copy.today} items={sections.today} theme={theme} isDark={isDark} lang={lang} spiritualDate={spiritualDate} /> : null}
+          {sections.upcoming.length > 0 ? <SacredDaysRow title={copy.upcoming} items={sections.upcoming} theme={theme} isDark={isDark} lang={lang} spiritualDate={spiritualDate} /> : null}
+
+        </>
+      )}
+    </View>
+  );
+}
+
+function SacredDaysRow({ title, items, theme, isDark, lang, spiritualDate }: {
+  title: string;
+  items: SacredDaysDeckItem[];
+  theme: Theme;
+  isDark: boolean;
+  lang: 'en' | 'hi' | 'pa';
+  spiritualDate: string;
+}) {
+  const { width: screenWidth } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
+  const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const cardWidth = Math.min(380, Math.max(240, screenWidth - 48));
+  const listRef = useRef<FlatList<SacredDaysDeckItem>>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  useEffect(() => {
+    setActiveIndex((current) => items.length === 0 ? 0 : Math.min(current, items.length - 1));
+  }, [items.length]);
+
+  const scrollTo = useCallback((index: number) => {
+    if (items.length === 0) return;
+    const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
+    listRef.current?.scrollToOffset({
+      offset: boundedIndex * (cardWidth + CARD_GAP),
+      animated: !reducedMotion,
+    });
+    setActiveIndex(boundedIndex);
+  }, [cardWidth, items.length, reducedMotion]);
+
+  const handleMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP));
+    setActiveIndex(Math.max(0, Math.min(index, items.length - 1)));
+  }, [cardWidth, items.length]);
+
+  return (
+    <View style={{ marginTop: 12, gap: 8 }}>
+      <Text accessibilityRole="header" style={{ ...TYPE.chip, color: theme.text, paddingHorizontal: 4 }}>{title}</Text>
           <FlatList
             ref={listRef}
             horizontal
@@ -257,12 +295,12 @@ export function SacredDaysCarousel({
           />
 
           {items.length > 1 ? (
-            <View style={{ minHeight: MIN_TOUCH_TARGET, marginTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ minHeight: MIN_TOUCH_TARGET, marginTop: 4, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
               {items.map((item, index) => (
                 <Pressable
                   key={item.key}
                   accessibilityRole="button"
-                  accessibilityLabel={`${copy.title}, ${index + 1} of ${items.length}`}
+                  accessibilityLabel={`${title}, ${index + 1} of ${items.length}`}
                   accessibilityState={{ selected: index === activeIndex }}
                   onPress={() => scrollTo(index)}
                   style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
@@ -279,8 +317,6 @@ export function SacredDaysCarousel({
               ))}
             </View>
           ) : null}
-        </>
-      )}
     </View>
   );
 }

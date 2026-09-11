@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import type { ObservanceSeries } from '../lib/observance-series-contract.generated';
 import {
   buildSacredDaysDeck,
+  buildSacredDaysSections,
   HOME_SACRED_DAYS_LIMIT,
   HOME_SACRED_DAYS_WINDOW,
   type SacredDaysObservance,
@@ -135,4 +136,37 @@ test('Sacred Days Home integration does not add a calendar data request', () => 
   assert.match(carouselSource, /calendarStatus === 'unavailable'/);
   assert.match(carouselSource, /पवित्र दिन/);
   assert.match(carouselSource, /ਪਵਿੱਤਰ ਦਿਨ/);
+});
+
+
+test('sections split today from days 1 through 15 inclusively', () => {
+  const sections = buildSacredDaysSections({ spiritualDate, series: [], observances: [
+    observance('Past', -1), observance('Today', 0), observance('Tomorrow', 1),
+    observance('Last included day', 15), observance('Too far', 16),
+  ] });
+  assert.deepEqual(sections.today.map(item => item.daysLeft), [0]);
+  assert.deepEqual(sections.upcoming.map(item => item.daysLeft), [1, 15]);
+});
+
+test('today limit cannot crowd upcoming events out of their section', () => {
+  const sections = buildSacredDaysSections({ spiritualDate, series: [], observances: [
+    ...Array.from({ length: 10 }, (_, i) => observance(`Today ${i}`, 0)), observance('Tomorrow', 1),
+  ] });
+  assert.equal(sections.today.length, HOME_SACRED_DAYS_LIMIT);
+  assert.equal(sections.upcoming.length, 1);
+});
+
+test('upcoming series preserve review checks and deduplicate their standalone entry', () => {
+  const approved = activeSeries({ status: 'upcoming', startDate: '2026-11-09',
+    children: [{ ...activeSeries().children[0], civilDate: '2026-11-09' }] });
+  const sections = buildSacredDaysSections({ spiritualDate, series: [approved], observances: [observance('Diwali', 1, 'diwali')] });
+  assert.equal(sections.today.length, 0);
+  assert.equal(sections.upcoming.length, 1);
+  assert.equal(sections.upcoming[0].type, 'series');
+  const withheld = buildSacredDaysSections({ spiritualDate, series: [{ ...approved, status: 'under_review' }], observances: [] });
+  assert.deepEqual(withheld, { today: [], upcoming: [] });
+});
+
+test('no eligible entries leaves both sections empty for the explanatory state', () => {
+  assert.deepEqual(buildSacredDaysSections({ spiritualDate, series: [], observances: [observance('Past', -1), observance('Later', 16)] }), { today: [], upcoming: [] });
 });

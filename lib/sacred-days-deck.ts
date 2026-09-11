@@ -137,3 +137,16 @@ export function buildSacredDaysDeck({
     })
     .slice(0, Math.max(0, limit));
 }
+
+/** Keep each section independently bounded so a busy today cannot hide upcoming days. */
+export function buildSacredDaysSections(input: {
+  observances: SacredDaysObservance[];
+  series: ObservanceSeries[];
+  spiritualDate: string;
+}) {
+  const eligible = buildSacredDaysDeck({ ...input, windowDays: HOME_SACRED_DAYS_WINDOW, limit: Number.POSITIVE_INFINITY });
+  return {
+    today: eligible.filter(item => item.daysLeft === 0).slice(0, HOME_SACRED_DAYS_LIMIT),
+    upcoming: eligible.filter(item => item.daysLeft > 0).slice(0, HOME_SACRED_DAYS_LIMIT),
+  };
+}
