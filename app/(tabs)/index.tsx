@@ -656,7 +656,9 @@ function PanchangPill({
         <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
         <Text
           numberOfLines={1}
-          style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
           {currentSlide.label}
         </Text>
