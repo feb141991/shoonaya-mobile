@@ -5,7 +5,7 @@ import { lookupFestivalContent, FESTIVAL_CONTENT_SNAPSHOT } from '../lib/festiva
 import { resolveFestivalText, resolveFestivalList, isFestivalPublishable } from '../lib/festival-content-helpers';
 import { LOCAL_HERO_ASSETS, BUNDLED_HERO_THEMES } from '../lib/heroPreference';
 
-const ALL_AUTHORED_SLUGS = [
+const ALL_HINDU_SLUGS = [
   // Batch 1 + established
   'raksha-bandhan',
   'ganesh-chaturthi',
@@ -35,15 +35,38 @@ const ALL_AUTHORED_SLUGS = [
   'gita-jayanti',
 ];
 
-describe('Batch 1 & Batch 2 Festival Content & Hero Integration Suite', () => {
-  it('contains all 25 authored festival entries in snapshot', () => {
-    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 25);
-    for (const slug of ALL_AUTHORED_SLUGS) {
+const ALL_SIKH_SLUGS = [
+  'baisakhi',
+  'guru-nanak-gurpurab',
+  'guru-gobind-singh-gurpurab',
+  'bandhi-chhor-divas',
+  'holla-mohalla',
+  'lohri',
+  'guru-arjan-dev-martyrdom',
+  'guru-tegh-bahadur-martyrdom',
+  'sahibzade-shaheedi-diwas',
+  'guru-ravidas-jayanti',
+];
+
+const ALL_AUTHORED_SLUGS = [...ALL_HINDU_SLUGS, ...ALL_SIKH_SLUGS];
+
+describe('Batch 1, 2 & 3 Festival Content & Hero Integration Suite', () => {
+  it('contains all 35 authored festival entries in snapshot', () => {
+    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 35);
+    for (const slug of ALL_HINDU_SLUGS) {
       const festival = lookupFestivalContent(slug);
       assert.ok(festival, `Expected festival content for "${slug}"`);
       assert.equal(festival.definitionKey, slug);
       assert.equal(festival.tradition, 'hindu');
       assert.ok(festival.emoji.length > 0);
+    }
+    for (const slug of ALL_SIKH_SLUGS) {
+      const festival = lookupFestivalContent(slug);
+      assert.ok(festival, `Expected festival content for "${slug}"`);
+      assert.equal(festival.definitionKey, slug);
+      assert.equal(festival.tradition, 'sikh');
+      assert.ok(festival.emoji.length > 0);
+      assert.ok(resolveFestivalText(festival.name, 'pa').length > 0, `Missing Gurmukhi name for ${slug}`);
     }
   });
 
@@ -77,11 +100,11 @@ describe('Batch 1 & Batch 2 Festival Content & Hero Integration Suite', () => {
     }
   });
 
-  it('verifies authentic Sanskrit mantra and translations for all 25 festivals', () => {
+  it('verifies authentic Sanskrit/Gurbani mantra and translations for all 35 festivals', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       assert.ok(festival.mantra, `Expected mantra for ${slug}`);
-      assert.ok(festival.mantra.sanskrit.length > 10, `Mantra sanskrit too short for ${slug}`);
+      assert.ok(festival.mantra.sanskrit.length > 10, `Mantra text too short for ${slug}`);
       assert.ok(festival.mantra.transliteration.length > 10, `Transliteration too short for ${slug}`);
 
       const transEn = resolveFestivalText(festival.mantra.translation, 'en');
@@ -119,6 +142,17 @@ describe('Batch 1 & Batch 2 Festival Content & Hero Integration Suite', () => {
       'hartalika-teej-forest-tapasya',
       'karva-chauth-moonrise-serenity',
       'gita-jayanti-kurukshetra-darshan',
+      // Batch 3
+      'sikh-baisakhi-khalsa-saajna',
+      'sikh-guru-nanak-gurpurab',
+      'sikh-guru-gobind-singh-ji',
+      'sikh-bandhi-chhor-divas',
+      'sikh-hola-mohalla',
+      'sikh-lohri-bonfire',
+      'sikh-guru-arjan-dev-shaheedi',
+      'sikh-guru-tegh-bahadur-shaheedi',
+      'sikh-chaar-sahibzade-shaheedi',
+      'sikh-guru-ravidas-jayanti',
     ];
 
     for (const heroId of requiredHeroIds) {
