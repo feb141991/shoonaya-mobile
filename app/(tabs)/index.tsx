@@ -629,63 +629,64 @@ function PanchangPill({
   };
 
   return (
-    <PressableSurface
-      haptic="selection"
-      accessibilityLabel={`${isObservance ? 'Sacred observance' : 'Panchang info'}: ${currentSlide.label}. Tap to open`}
-      onPress={handleOpen}
-      hitSlop={4}
-      style={{
-        borderRadius: RADII.pill,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        alignSelf: 'flex-start',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: 2,
-        backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
-        borderWidth: isObservance ? 1 : 0,
-        borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        minHeight: 28,
-        maxHeight: 34,
-        maxWidth: 280,
-        overflow: 'hidden',
-      }}
-    >
-      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
-        <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
-        <Text
-          numberOfLines={1}
-          style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
-        >
-          {currentSlide.label}
-        </Text>
-      </Animated.View>
+    <View style={{ width: 260, alignItems: 'flex-start' }}>
+      <PressableSurface
+        haptic="selection"
+        accessibilityLabel={`${isObservance ? 'Sacred observance' : 'Panchang info'}: ${currentSlide.label}. Tap to open`}
+        onPress={handleOpen}
+        hitSlop={4}
+        style={{
+          borderRadius: RADII.pill,
+          paddingHorizontal: 12,
+          paddingVertical: 4,
+          alignSelf: 'flex-start',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 2,
+          backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
+          borderWidth: isObservance ? 1 : 0,
+          borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
+          minHeight: 28,
+          maxHeight: 34,
+          overflow: 'hidden',
+        }}
+      >
+        <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
+          <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
+          <Text
+            numberOfLines={1}
+            style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
+          >
+            {currentSlide.label}
+          </Text>
+        </Animated.View>
 
-      {/* Dot indicators — PWA's PanchangPill (HeroSection.tsx) shows these
-          so the pill visibly reads as "showing 1 of N things, auto-rotating"
-          instead of just looking like a static label. Colors are the warm
-          cream PWA uses verbatim (rgba(255,240,200,*)) rather than
-          theme-flipped — the pill always sits over the hero's darkened
-          image area in both light and dark mode, same as in PWA. */}
-      {slides.length > 1 ? (
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, alignSelf: 'center' }}>
-        {slides.slice(0, 5).map((s, i) => (
-          <View
-            key={s.key}
-            style={{
-              width: i === (idx % Math.min(slides.length, 5)) ? 10 : 4,
-              height: 4,
-              borderRadius: 99,
-              backgroundColor: i === (idx % Math.min(slides.length, 5))
-                ? (isObservance ? observanceText : dotActive)
-                : (isObservance ? COLORS.homePwaObservanceBorder : dotInactive),
-            }}
-          />
-        ))}
-      </View>
-      ) : null}
-    </PressableSurface>
+        {/* Dot indicators — PWA's PanchangPill (HeroSection.tsx) shows these
+            so the pill visibly reads as "showing 1 of N things, auto-rotating"
+            instead of just looking like a static label. Colors are the warm
+            cream PWA uses verbatim (rgba(255,240,200,*)) rather than
+            theme-flipped — the pill always sits over the hero's darkened
+            image area in both light and dark mode, same as in PWA. */}
+        {slides.length > 1 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, alignSelf: 'center' }}>
+          {slides.slice(0, 5).map((s, i) => (
+            <View
+              key={s.key}
+              style={{
+                width: i === (idx % Math.min(slides.length, 5)) ? 10 : 4,
+                height: 4,
+                borderRadius: 99,
+                backgroundColor: i === (idx % Math.min(slides.length, 5))
+                  ? (isObservance ? observanceText : dotActive)
+                  : (isObservance ? COLORS.homePwaObservanceBorder : dotInactive),
+              }}
+            />
+          ))}
+        </View>
+        ) : null}
+      </PressableSurface>
+    </View>
   );
 }
 
@@ -1359,7 +1360,7 @@ function HomeContent() {
 
   const heroDetails = (
           <View style={{
-      ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 0 } : { left: 0 }), minWidth: heroLayout.columnWidth, maxWidth: Math.min(heroViewportWidth - 32, 290) }),
+      ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 0 } : { left: 0 }), width: heroLayout.columnWidth }),
       padding: 16, borderRadius: RADII.xl,
       // Below the artwork this is its own card on flat theme.background and
       // needs a real surface. Over the artwork (top/left/right) it goes back
@@ -1428,7 +1429,7 @@ function HomeContent() {
               </Pressable>
             </View>
 
-            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6, maxWidth: '100%' }}>
+            <View style={{ marginTop: 6, alignItems: 'flex-start', gap: 6 }}>
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} />
               <PanchangPill panchang={panchang} summary={state.panchang} theme={theme} onSurface={heroDetailsBelow} kind="observance" onRetryUnavailable={retryPanchang} />
               <PressableSurface
