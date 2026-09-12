@@ -5,7 +5,8 @@ import { lookupFestivalContent, FESTIVAL_CONTENT_SNAPSHOT } from '../lib/festiva
 import { resolveFestivalText, resolveFestivalList, isFestivalPublishable } from '../lib/festival-content-helpers';
 import { LOCAL_HERO_ASSETS, BUNDLED_HERO_THEMES } from '../lib/heroPreference';
 
-const BATCH_1_SLUGS = [
+const ALL_AUTHORED_SLUGS = [
+  // Batch 1 + established
   'raksha-bandhan',
   'ganesh-chaturthi',
   'krishna-janmashtami',
@@ -19,12 +20,25 @@ const BATCH_1_SLUGS = [
   'holi',
   'ram-navami',
   'hanuman-jayanti',
+  // Batch 2
+  'makar-sankranti',
+  'vasant-panchami',
+  'gudi-padwa',
+  'ugadi',
+  'akshaya-tritiya',
+  'narasimha-jayanti',
+  'shani-jayanti',
+  'jagannath-rath-yatra',
+  'nag-panchami',
+  'hartalika-teej',
+  'karva-chauth',
+  'gita-jayanti',
 ];
 
-describe('Batch 1 Festival Content & Hero Integration Suite', () => {
-  it('contains all 13 Batch 1 and established festival entries in snapshot', () => {
-    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 13);
-    for (const slug of BATCH_1_SLUGS) {
+describe('Batch 1 & Batch 2 Festival Content & Hero Integration Suite', () => {
+  it('contains all 25 authored festival entries in snapshot', () => {
+    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 25);
+    for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug);
       assert.ok(festival, `Expected festival content for "${slug}"`);
       assert.equal(festival.definitionKey, slug);
@@ -34,7 +48,7 @@ describe('Batch 1 Festival Content & Hero Integration Suite', () => {
   });
 
   it('verifies bilingual content integrity (EN & HI) for every festival', () => {
-    for (const slug of BATCH_1_SLUGS) {
+    for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       const nameEn = resolveFestivalText(festival.name, 'en');
       const nameHi = resolveFestivalText(festival.name, 'hi');
@@ -63,8 +77,8 @@ describe('Batch 1 Festival Content & Hero Integration Suite', () => {
     }
   });
 
-  it('verifies authentic Sanskrit mantra and translations for all 13 festivals', () => {
-    for (const slug of BATCH_1_SLUGS) {
+  it('verifies authentic Sanskrit mantra and translations for all 25 festivals', () => {
+    for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       assert.ok(festival.mantra, `Expected mantra for ${slug}`);
       assert.ok(festival.mantra.sanskrit.length > 10, `Mantra sanskrit too short for ${slug}`);
@@ -77,8 +91,9 @@ describe('Batch 1 Festival Content & Hero Integration Suite', () => {
     }
   });
 
-  it('verifies all registered hero assets exist in LOCAL_HERO_ASSETS', () => {
+  it('verifies all registered hero assets exist in LOCAL_HERO_ASSETS and BUNDLED_HERO_THEMES', () => {
     const requiredHeroIds = [
+      // Batch 1
       'ganesha-divine-dhyana',
       'chhath-surya-arghya',
       'dhanteras-deepam-kuber',
@@ -91,6 +106,19 @@ describe('Batch 1 Festival Content & Hero Integration Suite', () => {
       'krishna-cosmic-flute',
       'shiva-moonlit-kedar',
       'hanuman-sita-ram-darshan',
+      // Batch 2
+      'makar-sankranti-uttarayan-dawn',
+      'vasant-panchami-saraswati-amber',
+      'gudi-padwa-chaitra-sunrise',
+      'ugadi-pachadi-mango-dawn',
+      'akshaya-tritiya-udaka-kumbha',
+      'narasimha-twilight-protection',
+      'shani-peepal-deepam-dhyana',
+      'jagannath-puri-rath-yatra',
+      'nag-panchami-shesha-dhyana',
+      'hartalika-teej-forest-tapasya',
+      'karva-chauth-moonrise-serenity',
+      'gita-jayanti-kurukshetra-darshan',
     ];
 
     for (const heroId of requiredHeroIds) {
