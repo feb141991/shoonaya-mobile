@@ -45,7 +45,8 @@ describe('reader navigation and audio lifecycle', () => {
   it('returns direct Pathshala lesson entries to the Pathshala hub, including after completion', () => {
     assert.match(backButton, /pathname\.startsWith\('\/pathshala'\)\) return '\/\(tabs\)\/pathshala'/);
     assert.match(pathshalaLesson, /else router\.replace\('\/\(tabs\)\/pathshala'\);/);
-    assert.match(pathshalaLesson, /setTimeout\(returnToPathshala, 650\)/);
+    assert.match(pathshalaLesson, /PathshalaCompletionModal/);
+    assert.match(pathshalaLesson, /returnToPathshala/);
   });
 
   it('guarantees Mantras and Pathshala path details return to their respective hubs with hardware back support', () => {

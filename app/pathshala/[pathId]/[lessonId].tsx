@@ -18,12 +18,14 @@ import * as Haptics from 'expo-haptics';
 import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
+import { PathshalaCompletionModal } from '@/components/pathshala/PathshalaCompletionModal';
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
@@ -125,6 +127,11 @@ export default function LessonReaderScreen() {
   const [loadingState, setLoadingState] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
+  const [completionModalVisible, setCompletionModalVisible] = useState(false);
+  const [completionReward, setCompletionReward] = useState<{
+    karmaEarned: number;
+    dailySadhanaUpdated: boolean;
+  }>({ karmaEarned: 8, dailySadhanaUpdated: true });
 
   // ── AI verse explanation (real /api/pathshala/explain wiring) ──────────
   const [explainStatus, setExplainStatus] = useState<ExplainStatus>('idle');
@@ -442,6 +449,20 @@ export default function LessonReaderScreen() {
     [audioPlayer, audioState]
   );
 
+  const handleContinueNextLesson = useCallback(() => {
+    setCompletionModalVisible(false);
+    setShowConfetti(false);
+    const nextIndex = lessonIndex + 1;
+    if (pathId && nextIndex < lessons.length) {
+      router.replace({
+        pathname: '/pathshala/[pathId]/[lessonId]',
+        params: { pathId, lessonId: String(nextIndex) },
+      });
+    } else {
+      returnToPathshala();
+    }
+  }, [lessonIndex, lessons.length, pathId, returnToPathshala, router]);
+
   const handleDone = useCallback(async () => {
     if (isGuest) {
       setAuthGateVisible(true);
@@ -452,7 +473,7 @@ export default function LessonReaderScreen() {
     }
 
     if (completedLessons.includes(lessonIndex)) {
-      returnToPathshala();
+      setCompletionModalVisible(true);
       return;
     }
 
@@ -469,6 +490,9 @@ export default function LessonReaderScreen() {
       completed: nextCompleted.length >= lessons.length,
     };
 
+    let earned = 8;
+    let sadhanaUpdated = true;
+
     try {
       const response = await apiFetch('/api/pathshala/progress', {
         method: 'POST',
@@ -479,6 +503,13 @@ export default function LessonReaderScreen() {
         const errorBody = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(errorBody?.error ?? 'Could not save progress');
       }
+
+      const data = (await response.json().catch(() => ({}))) as {
+        karmaEarned?: number;
+        dailySadhanaUpdated?: boolean;
+      };
+      if (typeof data.karmaEarned === 'number') earned = data.karmaEarned;
+      if (typeof data.dailySadhanaUpdated === 'boolean') sadhanaUpdated = data.dailySadhanaUpdated;
     } catch (error) {
       setCompletedLessons(completedLessons);
       Alert.alert(error instanceof Error ? error.message : 'Could not save progress');
@@ -491,14 +522,20 @@ export default function LessonReaderScreen() {
     } catch {}
 
     setSaving(false);
+    setCompletionReward({ karmaEarned: earned, dailySadhanaUpdated: sadhanaUpdated });
     setShowConfetti(true);
-    setTimeout(returnToPathshala, 650);
-  }, [completedLessons, lessonIndex, lessons.length, pathId, returnToPathshala, saving, userId]);
+    setCompletionModalVisible(true);
+  }, [completedLessons, isGuest, lessonIndex, lessons.length, pathId, saving, userId]);
 
   if (fetchState === 'loading' || loadingState) {
     return (
-      <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={brand} />
+      <View style={{ flex: 1, backgroundColor: bg }}>
+        <SacredLoader
+          icon="pathshala"
+          title="Opening Sacred Lesson"
+          subtitle="Illuminating verse wisdom and deep contemplation..."
+          showBack={true}
+        />
       </View>
     );
   }
@@ -1051,6 +1088,24 @@ export default function LessonReaderScreen() {
           </View>
         </View>
       </Modal>
+
+      <PathshalaCompletionModal
+        visible={completionModalVisible}
+        onClose={() => setCompletionModalVisible(false)}
+        lessonTitle={lesson?.title ?? `Lesson ${lessonIndex + 1}`}
+        lessonNumber={lessonIndex + 1}
+        totalLessons={lessons.length}
+        pathTitle={path?.title ?? 'Pathshala'}
+        tradition={path?.tradition ?? 'hindu'}
+        karmaEarned={completionReward.karmaEarned}
+        dailySadhanaUpdated={completionReward.dailySadhanaUpdated}
+        hasNextLesson={lessonIndex + 1 < lessons.length}
+        onContinueNextLesson={handleContinueNextLesson}
+        onReturnToPath={() => {
+          setCompletionModalVisible(false);
+          returnToPathshala();
+        }}
+      />
     </View>
   );
 }

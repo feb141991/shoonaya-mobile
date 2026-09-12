@@ -6,6 +6,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import type { PathshalaPath } from '@/lib/pathshala-types';
@@ -140,8 +141,13 @@ export default function PathLessonListScreen() {
 
   if (fetchState === 'loading') {
     return (
-      <Screen style={{ backgroundColor: bg }}>
-        <ActivityIndicator color={brand} style={{ marginTop: 40 }} />
+      <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="pathshala"
+          title="Loading Sacred Path"
+          subtitle="Preparing chapters and scriptural commentary..."
+          showBack={true}
+        />
       </Screen>
     );
   }
