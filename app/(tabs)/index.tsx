@@ -648,7 +648,7 @@ function PanchangPill({
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
         minHeight: 28,
         maxHeight: 34,
-        maxWidth: '100%',
+        maxWidth: 280,
         overflow: 'hidden',
       }}
     >
@@ -656,9 +656,7 @@ function PanchangPill({
         <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
         <Text
           numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.75}
-          style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
+          style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
           {currentSlide.label}
         </Text>
@@ -1361,7 +1359,7 @@ function HomeContent() {
 
   const heroDetails = (
           <View style={{
-      ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 0 } : { left: 0 }), width: heroLayout.columnWidth }),
+      ...(heroDetailsBelow ? { marginHorizontal: 20, marginBottom: 24 } : { position: 'absolute' as const, zIndex: 2, top: 78, ...(heroLayout.position === 'right' ? { right: 0 } : { left: 0 }), minWidth: heroLayout.columnWidth, maxWidth: Math.min(heroViewportWidth - 32, 290) }),
       padding: 16, borderRadius: RADII.xl,
       // Below the artwork this is its own card on flat theme.background and
       // needs a real surface. Over the artwork (top/left/right) it goes back

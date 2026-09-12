@@ -65,8 +65,8 @@ describe('Mood Pill Visual Parity & Surface Token Suite', () => {
     assert.equal(HOME_MOOD_PILL_TEXT_STYLE.color, COLORS.homePwaPillText);
   });
 
-  it('9. Home uses the production helper and keeps observance copy on one auto-fitting line', () => {
+  it('9. Home uses the production helper and keeps observance copy on one line at full 12px font size', () => {
     const homeSource = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
-    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*adjustsFontSizeToFit[\s\S]*?style=\{\{ \.\.\.TYPE\.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance \? observanceText : pillText \}\}[\s\S]*?currentSlide\.label/);
+    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*style=\{\{ \.\.\.TYPE\.chip, fontSize: 12, lineHeight: 15, color: isObservance \? observanceText : pillText \}\}[\s\S]*?currentSlide\.label/);
   });
 });
