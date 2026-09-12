@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -230,9 +231,11 @@ export default function RashiphalaScreen() {
       </View>
 
       {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+        <SacredLoader
+          icon="rashiphala"
+          title="Reading Planetary Transits"
+          subtitle="Aligning with your celestial signs and cosmic movements..."
+        />
       ) : !data ? (
         <View style={{ paddingHorizontal: 16, paddingTop: 80 }}>
           <Card tone="auto" style={{ alignItems: 'center', gap: 14 }}>

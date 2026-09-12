@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, type DharmVeer } from '@/lib/dharm-veer';
@@ -83,6 +84,8 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
       trial: 'Test of Dharma',
       wisdom: 'Wisdom',
       essence: 'Essence',
+      legacy: 'Living Legacy',
+      sources: 'Canonical Sources & References',
       askMore: 'Ask more about this Dharm Veer',
       questionPlaceholder: 'Ask a question...',
       asking: 'Asking...',
@@ -98,6 +101,8 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
       trial: 'ਧਰਮ ਦੀ ਕਸੌਟੀ',
       wisdom: 'ਸਿੱਖਿਆ',
       essence: 'ਸਾਰ',
+      legacy: 'ਇਤਿਹਾਸਕ ਵਿਰਾਸਤ',
+      sources: 'ਪ੍ਰਮਾਣਿਕ ਸਰੋਤ ਤੇ ਇਤਿਹਾਸਕ ਹਵਾਲੇ',
       askMore: 'ਇਸ ਧਰਮ ਵੀਰ ਬਾਰੇ ਹੋਰ ਪੁੱਛੋ',
       questionPlaceholder: 'ਕੋਈ ਸਵਾਲ ਪੁੱਛੋ...',
       asking: 'ਪੁੱਛਿਆ ਜਾ ਰਿਹਾ ਹੈ...',
@@ -112,6 +117,8 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
     trial: 'धर्म की परीक्षा',
     wisdom: 'ज्ञान',
     essence: 'सार',
+    legacy: 'युगांतरकारी प्रभाव',
+    sources: 'प्रामाणिक शास्त्र एवं ऐतिहासिक संदर्भ',
     askMore: 'इस धर्म वीर के बारे में और पूछें',
     questionPlaceholder: 'कोई प्रश्न पूछें...',
     asking: 'पूछा जा रहा है...',
@@ -205,24 +212,30 @@ export default function DharmVeerDetailScreen() {
       setProfile({ userId: uid, timezone: tz, appLanguage, meaningLanguage });
 
       let roster: DharmVeer[] = [];
-      if (guest) {
-        roster = DHARM_VEERS;
-      } else {
-        const response = await apiFetch('/api/dharm-veer/roster');
-        if (!response.ok) {
-          setLoadError(true);
-          return;
+      if (!guest) {
+        try {
+          const response = await apiFetch('/api/dharm-veer/roster');
+          if (response.ok) {
+            const json = await response.json();
+            if (Array.isArray(json?.roster) && json.roster.length > 0) {
+              roster = json.roster;
+            }
+          }
+        } catch {
+          // Offline or network error: proceed with offline cornerstone roster
         }
-        const json = await response.json();
-        roster = Array.isArray(json?.roster) ? json.roster : [];
       }
 
-      if (roster.length === 0) {
-        setLoadError(true);
-        return;
-      }
+      // Check local offline cornerstone roster and remote roster
+      const offlineMatch = DHARM_VEERS.find((candidate) => candidate.id === id) ?? null;
+      let match = roster.find((candidate) => candidate.id === id) ?? null;
 
-      const match = roster.find((candidate) => candidate.id === id) ?? null;
+      // Prefer the offline cornerstone version if it has the 500+ word canonical expansion
+      if (offlineMatch && (!match || offlineMatch.journey.length > (match.journey?.length || 0))) {
+        match = { ...match, ...offlineMatch };
+      } else if (!match) {
+        match = offlineMatch;
+      }
 
       if (!match) {
         setNotFound(true);
@@ -397,6 +410,12 @@ export default function DharmVeerDetailScreen() {
   const moralText = lang === 'local'
     ? pickDharmVeerLocalizedText(hero?.moral, hero?.moralLocal, hero?.moralPa, localContentLanguage)
     : hero?.moral;
+  const legacyText = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.legacy, hero?.legacyLocal, hero?.legacyPa, localContentLanguage)
+    : hero?.legacy;
+  const sourceText = lang === 'local'
+    ? pickDharmVeerLocalizedText(hero?.source, hero?.sourceLocal, hero?.sourcePa, localContentLanguage)
+    : hero?.source;
   const quoteText = lang === 'local'
     ? (localContentLanguage === 'pa' ? hero?.quotePa?.text : undefined) || hero?.quoteLocal?.text || hero?.quote?.text
     : hero?.quote?.text;
@@ -417,7 +436,9 @@ ${trialText}
 ${teachingText}
 
 [Moral]
-${moralText}` : '';
+${moralText}
+${legacyText ? `\n[Legacy]\n${legacyText}` : ''}
+${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
 
   const textToShare = hero ? `🙏 Jai Shri Hari! Read this inspiring Dharm Veer story of '${title}' on the Shoonaya App. Download now to grow your Sadhana.` : '';
 
@@ -447,10 +468,13 @@ ${moralText}` : '';
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: surface }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={brand} />
-        </View>
+      <Screen style={{ backgroundColor: surface, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="dharmveer"
+          title="Invoking the Veer Gatha"
+          subtitle="Illuminating eternal courage and sacred sacrifice..."
+          showBack={true}
+        />
       </Screen>
     );
   }
@@ -556,6 +580,37 @@ ${moralText}` : '';
               {moralText}
             </Text>
           </View>
+
+          {/* Legacy */}
+          {legacyText ? (
+            <View style={{ gap: 8, marginTop: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+                <Feather name="award" size={14} color={text} />
+                <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.legacy}</Text>
+              </View>
+              <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{legacyText}</Text>
+            </View>
+          ) : null}
+
+          {/* Canonical Sources & Citations */}
+          {sourceText || (hero?.sourceCitations && hero.sourceCitations.length > 0) ? (
+            <View style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: border, borderWidth: 1, borderRadius: 20, padding: 18, gap: 10, marginTop: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.75 }}>
+                <Feather name="book" size={13} color={brand} />
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.sources}</Text>
+              </View>
+              {sourceText ? (
+                <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 19 }}>
+                  {sourceText}
+                </Text>
+              ) : null}
+              {hero?.sourceCitations?.map((c, idx) => (
+                <Text key={idx} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}>
+                  • {c.sourceName}{c.sourceRef ? ` — ${c.sourceRef}` : ''}
+                </Text>
+              ))}
+            </View>
+          ) : null}
         </View>
 
         {/* Ask Dharma Mitra */}

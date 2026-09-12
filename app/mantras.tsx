@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -103,9 +104,11 @@ export default function MantrasScreen() {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
         <BackButton fallbackHref="/(tabs)/bhakti" handleHardwareBack style={{ marginBottom: 4 }} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={AMBER} />
-        </View>
+        <SacredLoader
+          icon="bhakti"
+          title="Tuning Sacred Mantras"
+          subtitle="Awakening divine sonic frequencies and inner peace..."
+        />
       </Screen>
     );
   }

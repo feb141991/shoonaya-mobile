@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
 import { selectDharmVeer, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
@@ -93,7 +94,19 @@ export default function DharmVeerScreen() {
       resolvedTimezone = profileResult.data?.timezone ?? 'UTC';
       if (!rosterResponse.ok) throw new Error('Dharm Veer roster unavailable');
       const json = await rosterResponse.json();
-      rosterData = Array.isArray(json?.roster) ? json.roster : [];
+      const rawRoster: DharmVeer[] = Array.isArray(json?.roster) ? json.roster : [];
+      rosterData = rawRoster.map((serverHero: DharmVeer) => {
+        const offline = DHARM_VEERS.find((h) => h.id === serverHero.id);
+        if (offline && offline.journey.length > (serverHero.journey?.length || 0)) {
+          return { ...serverHero, ...offline };
+        }
+        return serverHero;
+      });
+      for (const cornerstone of DHARM_VEERS) {
+        if (!rosterData.some((h) => h.id === cornerstone.id)) {
+          rosterData.push(cornerstone);
+        }
+      }
     } else {
       rosterData = DHARM_VEERS;
     }
@@ -192,10 +205,13 @@ export default function DharmVeerScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: surface }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={brand} />
-        </View>
+      <Screen style={{ backgroundColor: surface, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="dharmveer"
+          title="Assembling the Dharm Veers"
+          subtitle="Awakening timeless courage and righteous action..."
+          showBack={true}
+        />
       </Screen>
     );
   }

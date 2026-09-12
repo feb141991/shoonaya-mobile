@@ -21,6 +21,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
@@ -348,9 +349,12 @@ export default function ShlokaScreen() {
     return (
       <Screen style={{ backgroundColor: background, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
         <AmbientBackdrop isDark={isDark} brand={brand} />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={brand} />
-        </View>
+        <SacredLoader
+          icon="shloka"
+          title="Invoking Today's Shloka"
+          subtitle="Connecting with timeless scriptural wisdom..."
+          showBack={true}
+        />
       </Screen>
     );
   }

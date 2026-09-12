@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import {
   recordRouteOpen,
@@ -598,9 +599,12 @@ export default function PanchangScreen() {
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.darkBg }} edges={['top']}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={GOLD} />
-        </View>
+        <SacredLoader
+          icon="panchang"
+          title="Calculating Sacred Panchang"
+          subtitle="Aligning with celestial positions and cosmic rhythms..."
+          showBack={true}
+        />
       </SafeAreaView>
     );
   }
