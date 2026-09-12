@@ -643,13 +643,6 @@ function PanchangPill({
         <Text
           numberOfLines={1}
           ellipsizeMode="tail"
-          // Auto-shrink only for the observance pill, whose labels are
-          // dynamic festival/vrat names of unpredictable length -- the
-          // panchang pill's tithi/nakshatra labels are short enough to
-          // always fit at the fixed size, and shrinking them made slides
-          // read as inconsistently sized as they cycled. Fixed size here
-          // keeps every panchang-pill message the same text size.
-          {...(isObservance ? { adjustsFontSizeToFit: true, minimumFontScale: 0.75 } : null)}
           style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
           {currentSlide.label}

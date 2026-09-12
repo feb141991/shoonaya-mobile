@@ -69,13 +69,6 @@ describe('Mood Pill Visual Parity & Surface Token Suite', () => {
     const homeSource = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
     assert.match(homeSource, /style=\{\(\{ pressed \}\) => getHomeMoodPillStyle\(pressed, isDark\)\}/);
     assert.doesNotMatch(homeSource, /splitSentences|labelLines/);
-    // Single line, shrinking the font to fit rather than wrapping or
-    // ellipsizing -- "text should be completely in the pills" on one line,
-    // per explicit request, not cut off with "..." and not wrapped. Only
-    // the observance pill auto-shrinks (its labels are dynamic
-    // festival/vrat names of unpredictable length); the panchang pill's
-    // tithi/nakshatra labels stay a fixed size across every cycling slide,
-    // per explicit request that they not read as inconsistently sized.
-    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*ellipsizeMode="tail"[\s\S]*?isObservance \? \{ adjustsFontSizeToFit: true, minimumFontScale: 0\.75 \} : null[\s\S]*?style=\{\{ \.\.\.TYPE\.chip[\s\S]*?currentSlide\.label/);
+    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*ellipsizeMode="tail"[\s\S]*?style=\{\{ \.\.\.TYPE\.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance \? observanceText : pillText \}\}[\s\S]*?currentSlide\.label/);
   });
 });
