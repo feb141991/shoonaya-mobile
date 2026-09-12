@@ -500,11 +500,23 @@ function PanchangPill({
       rows.push({ key: row.key, icon: row.icon, label: row.label, monthLabel: row.monthLabel, href: row.href });
     };
 
+    const formatObservancePillLabel = (label: string, name?: string | null, daysLeft?: number) => {
+      if (name) {
+        if (daysLeft === 0) return name;
+        if (daysLeft === 1) return `${name} · Tomorrow`;
+        if (typeof daysLeft === 'number' && daysLeft > 1) return `${name} · in ${daysLeft}d`;
+      }
+      return label
+        .replace(/^(today is|tomorrow is)\s+/i, '')
+        .replace(/\s+today$/i, '')
+        .replace(/\s+in\s+(\d+)\s+days$/i, ' · in $1d');
+    };
+
     if (kind === 'observance') {
       add(summary.observance ? {
         key: 'observance',
         icon: summary.observance.emoji ?? '🪔',
-        label: summary.observance.label,
+        label: formatObservancePillLabel(summary.observance.label, summary.observance.name, summary.observance.daysLeft),
         dedupeKey: summary.observance.name ? summary.observance.name.trim().toLowerCase() : undefined,
         monthLabel: summary.observance.monthLabel,
         href: summary.observance.href,
@@ -518,7 +530,7 @@ function PanchangPill({
         add({
           key: `upcoming-${i}`,
           icon: entry.emoji ?? '🪔',
-          label: entry.label,
+          label: formatObservancePillLabel(entry.label, entry.name, entry.daysLeft),
           dedupeKey: entry.name ? entry.name.trim().toLowerCase() : undefined,
           monthLabel: entry.monthLabel,
           href: entry.href,
@@ -529,7 +541,7 @@ function PanchangPill({
         add({
           key: 'fallback-observance',
           icon: '🪔',
-          label: fallbackLabel,
+          label: formatObservancePillLabel(fallbackLabel),
           dedupeKey: fallbackLabel.trim().toLowerCase(),
           href: '/panchang',
         });
@@ -629,21 +641,22 @@ function PanchangPill({
         alignSelf: 'flex-start',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 3,
+        flexDirection: 'column',
+        gap: 2,
         backgroundColor: isObservance ? COLORS.homePwaObservanceBg : COLORS.homePwaPillBg,
         borderWidth: isObservance ? 1 : 0,
         borderColor: isObservance ? COLORS.homePwaObservanceBorder : 'transparent',
-        minHeight: 32,
-        maxWidth: 264,
+        minHeight: 28,
+        maxHeight: 34,
+        maxWidth: '100%',
         overflow: 'hidden',
       }}
     >
-      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim, maxWidth: '100%' }}>
+      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: fadeAnim }}>
         <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
         <Text
           numberOfLines={1}
-          ellipsizeMode="tail"
-          style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
+          style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
           {currentSlide.label}
         </Text>
@@ -657,14 +670,14 @@ function PanchangPill({
           image area in both light and dark mode, same as in PWA. */}
       {slides.length > 1 ? (
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, alignSelf: 'center' }}>
-        {slides.map((s, i) => (
+        {slides.slice(0, 5).map((s, i) => (
           <View
             key={s.key}
             style={{
-              width: i === idx ? 10 : 4,
+              width: i === (idx % Math.min(slides.length, 5)) ? 10 : 4,
               height: 4,
               borderRadius: 99,
-              backgroundColor: i === idx
+              backgroundColor: i === (idx % Math.min(slides.length, 5))
                 ? (isObservance ? observanceText : dotActive)
                 : (isObservance ? COLORS.homePwaObservanceBorder : dotInactive),
             }}
