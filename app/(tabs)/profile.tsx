@@ -31,6 +31,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
@@ -1268,6 +1269,7 @@ export default function ProfileScreen() {
             </PressableSurface>
           </View>
           <Text style={{ ...TYPE.caption, color: theme.dim }}>Shoonaya · Find your infinity</Text>
+          <Text style={{ ...TYPE.caption, fontSize: 11, color: theme.dim, opacity: 0.65 }}>{APP_VERSION_LABEL}</Text>
         </View>
       </ScrollView>
 

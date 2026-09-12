@@ -27,6 +27,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
+import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import {
   openNotificationSettings,
@@ -1152,44 +1153,51 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
               </View>
             ) : null}
 
-            {(section === 'privacy' || section === 'about') ? <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 }}>
-              <PressableSurface
-                haptic="selection"
-                accessibilityRole="link"
-                accessibilityLabel="Terms of Service"
-                hitSlop={10}
-                onPress={() => { void openLegalUrl('/terms'); }}
-                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
-              >
-                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Terms
+            {(section === 'privacy' || section === 'about') ? (
+              <View style={{ alignItems: 'center', gap: 8, marginTop: 4 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20 }}>
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="link"
+                    accessibilityLabel="Terms of Service"
+                    hitSlop={10}
+                    onPress={() => { void openLegalUrl('/terms'); }}
+                    style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+                  >
+                    <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Terms
+                    </Text>
+                  </PressableSurface>
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="link"
+                    accessibilityLabel="Privacy Policy"
+                    hitSlop={10}
+                    onPress={() => { void openLegalUrl('/privacy'); }}
+                    style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+                  >
+                    <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Privacy
+                    </Text>
+                  </PressableSurface>
+                  <PressableSurface
+                    haptic="selection"
+                    accessibilityRole="link"
+                    accessibilityLabel="Content Sources"
+                    hitSlop={10}
+                    onPress={() => { void openLegalUrl('/sources'); }}
+                    style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+                  >
+                    <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Sources
+                    </Text>
+                  </PressableSurface>
+                </View>
+                <Text style={{ ...TYPE.caption, fontSize: 11, color: theme.dim, opacity: 0.65 }}>
+                  Shoonaya {APP_VERSION_LABEL}
                 </Text>
-              </PressableSurface>
-              <PressableSurface
-                haptic="selection"
-                accessibilityRole="link"
-                accessibilityLabel="Privacy Policy"
-                hitSlop={10}
-                onPress={() => { void openLegalUrl('/privacy'); }}
-                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
-              >
-                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Privacy
-                </Text>
-              </PressableSurface>
-              <PressableSurface
-                haptic="selection"
-                accessibilityRole="link"
-                accessibilityLabel="Content Sources"
-                hitSlop={10}
-                onPress={() => { void openLegalUrl('/sources'); }}
-                style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
-              >
-                <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Sources
-                </Text>
-              </PressableSurface>
-            </View> : null}
+              </View>
+            ) : null}
           </>
         )}
       </ScrollView>

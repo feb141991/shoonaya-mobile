@@ -642,8 +642,14 @@ function PanchangPill({
         <Text style={{ fontSize: 12, lineHeight: 15 }}>{currentSlide.icon}</Text>
         <Text
           numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.75}
+          ellipsizeMode="tail"
+          // Auto-shrink only for the observance pill, whose labels are
+          // dynamic festival/vrat names of unpredictable length -- the
+          // panchang pill's tithi/nakshatra labels are short enough to
+          // always fit at the fixed size, and shrinking them made slides
+          // read as inconsistently sized as they cycled. Fixed size here
+          // keeps every panchang-pill message the same text size.
+          {...(isObservance ? { adjustsFontSizeToFit: true, minimumFontScale: 0.75 } : null)}
           style={{ ...TYPE.chip, flexShrink: 1, fontSize: 12, lineHeight: 15, color: isObservance ? observanceText : pillText }}
         >
           {currentSlide.label}
@@ -1377,12 +1383,13 @@ function HomeContent() {
                 style={{
                   ...TYPE.homeHeroGreeting,
                   // 50% larger than the prior +2pt Home-only size (22 -> 33),
-                  // per explicit request -- nitya-karma.tsx uses the same
-                  // shared TYPE.homeHeroGreeting token and keeps its
-                  // original size, so this is a local override, not a
-                  // change to the token itself.
-                  fontSize: (TYPE.homeHeroGreeting.fontSize + 2) * 1.5,
-                  lineHeight: (TYPE.homeHeroGreeting.lineHeight + 2) * 1.5,
+                  // then a further explicit 30% bump (33 -> ~43) -- per
+                  // explicit request -- nitya-karma.tsx uses the same shared
+                  // TYPE.homeHeroGreeting token and keeps its original size,
+                  // so this is a local override, not a change to the token
+                  // itself.
+                  fontSize: (TYPE.homeHeroGreeting.fontSize + 2) * 1.5 * 1.3,
+                  lineHeight: (TYPE.homeHeroGreeting.lineHeight + 2) * 1.5 * 1.3,
                   color: heroDetailsBelow ? theme.text : COLORS.homePwaPillText,
                   flexShrink: 1,
                 }}

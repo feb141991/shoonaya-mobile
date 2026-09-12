@@ -71,7 +71,11 @@ describe('Mood Pill Visual Parity & Surface Token Suite', () => {
     assert.doesNotMatch(homeSource, /splitSentences|labelLines/);
     // Single line, shrinking the font to fit rather than wrapping or
     // ellipsizing -- "text should be completely in the pills" on one line,
-    // per explicit request, not cut off with "..." and not wrapped.
-    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*adjustsFontSizeToFit\s*\n\s*minimumFontScale=\{0\.75\}\s*\n\s*style=\{\{ \.\.\.TYPE\.chip[\s\S]*?currentSlide\.label/);
+    // per explicit request, not cut off with "..." and not wrapped. Only
+    // the observance pill auto-shrinks (its labels are dynamic
+    // festival/vrat names of unpredictable length); the panchang pill's
+    // tithi/nakshatra labels stay a fixed size across every cycling slide,
+    // per explicit request that they not read as inconsistently sized.
+    assert.match(homeSource, /numberOfLines=\{1\}\s*\n\s*ellipsizeMode="tail"[\s\S]*?isObservance \? \{ adjustsFontSizeToFit: true, minimumFontScale: 0\.75 \} : null[\s\S]*?style=\{\{ \.\.\.TYPE\.chip[\s\S]*?currentSlide\.label/);
   });
 });
