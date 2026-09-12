@@ -4655,7 +4655,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "reviewRef": "council-verified-2026-09",
         "sourceRefs": [
           {
-            "sourceName": "Mahabharata / Gita Mahatmya (Varaha Purana)",
+            "sourceName": "Mahabharata / Gita Mahatmya (Padma Purana, Uttara Khanda)",
             "tier": 1,
             "usagePermitted": "public_domain"
           }
@@ -5804,7 +5804,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "reviewRef": "council-verified-2026-09",
         "sourceRefs": [
           {
-            "sourceName": "Sri Guru Granth Sahib Ji (Poh Mahatmya) / Punjabi heritage",
+            "sourceName": "Sri Guru Granth Sahib Ji (Barahmaha, Raag Majh) / Punjabi heritage",
             "tier": 1,
             "usagePermitted": "public_domain"
           }
@@ -11010,7 +11010,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       "name": {
         "value": {
           "en": "Paryushana Day 6",
-          "hi": "पर्युषण दिवस ६ ( barsa सूत्र / अंतर-शुद्धि)"
+          "hi": "पर्युषण दिवस ६ (बारसा सूत्र / अंतर-शुद्धि)"
         },
         "status": "council_reviewed_editorial",
         "reviewRef": "council-verified-2026-09",
