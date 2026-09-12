@@ -142,9 +142,18 @@ export function SacredDaysCarousel({
 
 
 
+  const SHOW_CALENDAR_SUBSCRIPTION = false; // Put on hold as requested
+
   return (
     <View accessibilityLabel={copy.title} style={{ marginBottom: 4 }}>
-      {calendarOpen ? <SacredCalendarSheet lang={lang} onClose={closeCalendar} downloading={exporting} onDownload={() => void exportCalendar()} /> : null}
+      {SHOW_CALENDAR_SUBSCRIPTION && calendarOpen ? (
+        <SacredCalendarSheet
+          lang={lang}
+          onClose={closeCalendar}
+          downloading={exporting}
+          onDownload={() => void exportCalendar()}
+        />
+      ) : null}
       <View style={{ minHeight: 34, paddingHorizontal: 4, marginBottom: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 }}>
           <Feather name="calendar" size={15} color={accent} />
@@ -158,7 +167,7 @@ export function SacredDaysCarousel({
           ) : null}
         </View>
 
-        {calendarStatus === 'ready' ? (
+        {SHOW_CALENDAR_SUBSCRIPTION && calendarStatus === 'ready' ? (
           <PressableSurface
             haptic="selection"
             accessibilityLabel={copy.export}
