@@ -111,8 +111,10 @@ export default function LessonReaderScreen() {
   const [fetchState, setFetchState] = useState<FetchState>('loading');
   const [path, setPath] = useState<PathshalaPath | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [verseIndex, setVerseIndex] = useState(0);
   const lesson = lessons[lessonIndex];
-  const entry = lesson?.entries[0];
+  const totalVerses = lesson?.entries.length ?? 0;
+  const entry = lesson?.entries[verseIndex] ?? lesson?.entries[0];
 
   const [fontSize, setFontSize] = useState<ReaderFontSize>('normal');
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
@@ -135,6 +137,21 @@ export default function LessonReaderScreen() {
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(1.0);
   const audioPlayer = useAudioPlayer();
   const currentAudioUrl = useRef<string | null>(null);
+
+  // Reset verse index and audio when lesson changes
+  useEffect(() => {
+    setVerseIndex(0);
+    setAudioState('idle');
+    currentAudioUrl.current = null;
+    void audioPlayer.stop();
+  }, [lessonIndex, audioPlayer]);
+
+  // Reset audio when verse changes within lesson
+  useEffect(() => {
+    setAudioState('idle');
+    currentAudioUrl.current = null;
+    void audioPlayer.stop();
+  }, [verseIndex, audioPlayer]);
 
   const localizedMeaning = useLocalizedMeaning({
     entryId: entry?.id ?? null,
@@ -346,12 +363,20 @@ export default function LessonReaderScreen() {
         .failOffsetY([-20, 20])
         .onEnd((event) => {
           if (event.translationX < -60) {
-            goToLesson(lessonIndex + 1);
+            if (verseIndex < totalVerses - 1) {
+              setVerseIndex((v) => v + 1);
+            } else {
+              goToLesson(lessonIndex + 1);
+            }
           } else if (event.translationX > 60) {
-            goToLesson(lessonIndex - 1);
+            if (verseIndex > 0) {
+              setVerseIndex((v) => v - 1);
+            } else {
+              goToLesson(lessonIndex - 1);
+            }
           }
         }),
-    [goToLesson, lessonIndex]
+    [goToLesson, lessonIndex, totalVerses, verseIndex]
   );
 
   // ── TTS: fetch and play ───────────────────────────────────────────
@@ -564,45 +589,83 @@ export default function LessonReaderScreen() {
       : 'play';
 
   return (
-    <GestureDetector gesture={swipeGesture}>
-      <View style={{ flex: 1, backgroundColor: bg }}>
-        <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
-        <ScrollView
-          contentContainerStyle={{
-            paddingTop: 64,
-            paddingHorizontal: 20,
-            paddingBottom: 36,
-            gap: 18,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <BackButton
-              showLabel={false}
-              iconSize={22}
-              iconColor={text}
-              // A lesson's actual parent is its own path's detail screen,
-              // not the Pathshala hub -- the generic BackButton fallback
-              // (components/ui/BackButton.tsx's inferParentFallback) only
-              // prefix-matches "/pathshala" and has no way to know this
-              // specific lesson's pathId, so a direct-entry open with no
-              // navigation history (deep link, notification) would
-              // otherwise fall back to the hub instead of the path the
-              // lesson actually belongs to.
-              fallbackHref={{ pathname: '/pathshala/[pathId]', params: { pathId } }}
-            />
-            <Text style={{ flex: 1, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 14, color: dim }}>
-              Lesson {lessonIndex + 1} of {lessons.length}
-            </Text>
-            <View style={{ width: 22 }} />
-          </View>
+    <View style={{ flex: 1, backgroundColor: bg }}>
+      <GestureDetector gesture={swipeGesture}>
+        <View style={{ flex: 1 }}>
+          <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
+          <ScrollView
+            contentContainerStyle={{
+              paddingTop: 64,
+              paddingHorizontal: 20,
+              paddingBottom: 36,
+              gap: 18,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <BackButton
+                showLabel={false}
+                iconSize={22}
+                iconColor={text}
+                // A lesson's actual parent is its own path's detail screen,
+                // not the Pathshala hub -- the generic BackButton fallback
+                // (components/ui/BackButton.tsx's inferParentFallback) only
+                // prefix-matches "/pathshala" and has no way to know this
+                // specific lesson's pathId, so a direct-entry open with no
+                // navigation history (deep link, notification) would
+                // otherwise fall back to the hub instead of the path the
+                // lesson actually belongs to.
+                fallbackHref={{ pathname: '/pathshala/[pathId]', params: { pathId } }}
+              />
+              <Text style={{ flex: 1, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 14, color: dim }}>
+                Lesson {lessonIndex + 1} of {lessons.length}
+              </Text>
+              <View style={{ width: 22 }} />
+            </View>
 
-          <View style={{ gap: 8 }}>
-            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>{lesson.title}</Text>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>{entry.source}</Text>
-          </View>
+            <View style={{ gap: 8 }}>
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>{lesson.title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>{entry.source}</Text>
+                {totalVerses > 1 ? (
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: brand }}>
+                    Verse {verseIndex + 1} of {totalVerses}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
 
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            {(['en', 'hi'] as const).map((option) => (
+            {totalVerses > 1 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
+                {lesson.entries.map((_, vIdx) => (
+                  <PressableSurface
+                    key={vIdx}
+                    onPress={() => setVerseIndex(vIdx)}
+                    haptic="selection"
+                    style={{
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderWidth: 1,
+                      borderColor: vIdx === verseIndex ? brand : border,
+                      backgroundColor: vIdx === verseIndex ? brand : cardBg,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: FONTS.sansSemiBold,
+                        fontSize: 12,
+                        color: vIdx === verseIndex ? COLORS.ink : text,
+                      }}
+                    >
+                      Verse {vIdx + 1}
+                    </Text>
+                  </PressableSurface>
+                ))}
+              </ScrollView>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {(['en', 'hi'] as const).map((option) => (
               <PressableSurface
                 key={option}
                 onPress={() => setLanguage(option)}
@@ -802,8 +865,14 @@ export default function LessonReaderScreen() {
 
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <PressableSurface
-              onPress={() => goToLesson(lessonIndex - 1)}
-              disabled={lessonIndex === 0}
+              onPress={() => {
+                if (verseIndex > 0) {
+                  setVerseIndex(verseIndex - 1);
+                } else {
+                  goToLesson(lessonIndex - 1);
+                }
+              }}
+              disabled={lessonIndex === 0 && verseIndex === 0}
               haptic="selection"
               style={{
                 flex: 1,
@@ -812,15 +881,23 @@ export default function LessonReaderScreen() {
                 borderColor: border,
                 paddingVertical: 14,
                 alignItems: 'center',
-                opacity: lessonIndex === 0 ? 0.5 : 1,
+                opacity: lessonIndex === 0 && verseIndex === 0 ? 0.5 : 1,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Previous</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
+                {verseIndex > 0 ? 'Prev Verse' : 'Prev Lesson'}
+              </Text>
             </PressableSurface>
 
             <PressableSurface
-              onPress={() => goToLesson(lessonIndex + 1)}
-              disabled={lessonIndex >= lessons.length - 1}
+              onPress={() => {
+                if (verseIndex < totalVerses - 1) {
+                  setVerseIndex(verseIndex + 1);
+                } else {
+                  goToLesson(lessonIndex + 1);
+                }
+              }}
+              disabled={lessonIndex >= lessons.length - 1 && verseIndex >= totalVerses - 1}
               haptic="selection"
               style={{
                 flex: 1,
@@ -829,10 +906,12 @@ export default function LessonReaderScreen() {
                 borderColor: border,
                 paddingVertical: 14,
                 alignItems: 'center',
-                opacity: lessonIndex >= lessons.length - 1 ? 0.5 : 1,
+                opacity: lessonIndex >= lessons.length - 1 && verseIndex >= totalVerses - 1 ? 0.5 : 1,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>Next</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
+                {verseIndex < totalVerses - 1 ? 'Next Verse' : 'Next Lesson'}
+              </Text>
             </PressableSurface>
           </View>
 
@@ -858,6 +937,7 @@ export default function LessonReaderScreen() {
           </PressableSurface>
         </ScrollView>
       </View>
+    </GestureDetector>
 
       <AuthGate
         visible={authGateVisible}
@@ -971,6 +1051,6 @@ export default function LessonReaderScreen() {
           </View>
         </View>
       </Modal>
-    </GestureDetector>
+    </View>
   );
 }

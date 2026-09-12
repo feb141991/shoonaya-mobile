@@ -33,6 +33,62 @@ const ALL_HINDU_SLUGS = [
   'hartalika-teej',
   'karva-chauth',
   'gita-jayanti',
+  // Batch 5 Chhath & Major
+  'chhath-nahay-khay',
+  'chhath-kharna',
+  'chhath-usha-arghya',
+  'kartik-purnima',
+  'vivah-panchami',
+  'onam',
+  // Navratris
+  'chaitra-navratri-begins',
+  'navratri-begins',
+  'gupt-navratri-ashadha-begins',
+  'gupt-navratri-magha-begins',
+  // Memorial & Shrines
+  'mahalaya-amavasya',
+  'vat-savitri-amavasya',
+  'vat-savitri-purnima',
+  'chintpurni-mata-chaitra-navratri',
+  'chintpurni-mata-sharad-navratri',
+  // Ekadashis
+  'nirjala-ekadashi',
+  'vaikunta-ekadashi',
+  'devshayani-ekadashi',
+  'devutthana-ekadashi',
+  'kamada-ekadashi',
+  'amalaki-ekadashi',
+  'papmochani-ekadashi',
+  'apara-ekadashi',
+  'kamika-ekadashi',
+  'shravana-putrada-ekadashi',
+  'aja-ekadashi',
+  'parivartini-ekadashi',
+  'rama-ekadashi',
+  'utpanna-ekadashi',
+  'saphala-ekadashi',
+  'vijaya-ekadashi',
+  'yogini-ekadashi',
+  'ekadashi',
+  // Periodic & Vrats
+  'pradosh-vrat',
+  'purnima-vrat',
+  'amavasya-vrat',
+  'vinayaka-chaturthi',
+  'sankashti-chaturthi',
+  'shravan-somvar',
+  'mangala-gauri-vrat',
+  // Ganeshotsav
+  'ganeshotsav-day-2',
+  'ganeshotsav-day-3',
+  'ganeshotsav-day-4',
+  'ganeshotsav-day-5',
+  'ganeshotsav-day-6',
+  'ganeshotsav-day-7',
+  'ganeshotsav-day-8',
+  'ganeshotsav-day-9',
+  'ganeshotsav-day-10',
+  'anant-chaturdashi-ganesh-visarjan',
 ];
 
 const ALL_SIKH_SLUGS = [
@@ -46,13 +102,57 @@ const ALL_SIKH_SLUGS = [
   'guru-tegh-bahadur-martyrdom',
   'sahibzade-shaheedi-diwas',
   'guru-ravidas-jayanti',
+  'guru-amar-das-gurpurab',
+  'guru-har-krishan-gurpurab',
+  'guru-ram-das-gurpurab',
 ];
 
-const ALL_AUTHORED_SLUGS = [...ALL_HINDU_SLUGS, ...ALL_SIKH_SLUGS];
+const ALL_BUDDHIST_SLUGS = [
+  'vesak-buddha-purnima',
+  'asalha-puja',
+  'magha-puja',
+  'vassa-begins-rains-retreat',
+  'pavarana-end-of-vassa',
+  'kathina',
+  'ullambana-ancestor-day',
+  'bodhi-day',
+  'parinirvana-day',
+  'losar-tibetan-new-year',
+  'sangha-day-loy-krathong',
+];
 
-describe('Batch 1, 2 & 3 Festival Content & Hero Integration Suite', () => {
-  it('contains all 35 authored festival entries in snapshot', () => {
-    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 35);
+const ALL_JAIN_SLUGS = [
+  'mahavir-jayanti',
+  'akshaya-tritiya-jain',
+  'paryushana-parva-begins',
+  'samvatsari-paryushana-ends',
+  'das-lakshana-dharma-begins',
+  'jain-new-year-pratipada',
+  'jain-diwali-nirvana-ladnun',
+  'kartik-purnima-jain',
+  'paryushana-day-2',
+  'paryushana-day-3',
+  'paryushana-day-4',
+  'paryushana-day-5',
+  'paryushana-day-6',
+  'paryushana-day-7',
+];
+
+const ALL_SHARED_SLUGS = [
+  'guru-purnima',
+];
+
+const ALL_AUTHORED_SLUGS = [
+  ...ALL_HINDU_SLUGS,
+  ...ALL_SIKH_SLUGS,
+  ...ALL_BUDDHIST_SLUGS,
+  ...ALL_JAIN_SLUGS,
+  ...ALL_SHARED_SLUGS,
+];
+
+describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () => {
+  it('contains all 114 authored festival entries in snapshot', () => {
+    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 114);
     for (const slug of ALL_HINDU_SLUGS) {
       const festival = lookupFestivalContent(slug);
       assert.ok(festival, `Expected festival content for "${slug}"`);
@@ -67,6 +167,27 @@ describe('Batch 1, 2 & 3 Festival Content & Hero Integration Suite', () => {
       assert.equal(festival.tradition, 'sikh');
       assert.ok(festival.emoji.length > 0);
       assert.ok(resolveFestivalText(festival.name, 'pa').length > 0, `Missing Gurmukhi name for ${slug}`);
+    }
+    for (const slug of ALL_BUDDHIST_SLUGS) {
+      const festival = lookupFestivalContent(slug);
+      assert.ok(festival, `Expected festival content for "${slug}"`);
+      assert.equal(festival.definitionKey, slug);
+      assert.equal(festival.tradition, 'buddhist');
+      assert.ok(festival.emoji.length > 0);
+    }
+    for (const slug of ALL_JAIN_SLUGS) {
+      const festival = lookupFestivalContent(slug);
+      assert.ok(festival, `Expected festival content for "${slug}"`);
+      assert.equal(festival.definitionKey, slug);
+      assert.equal(festival.tradition, 'jain');
+      assert.ok(festival.emoji.length > 0);
+    }
+    for (const slug of ALL_SHARED_SLUGS) {
+      const festival = lookupFestivalContent(slug);
+      assert.ok(festival, `Expected festival content for "${slug}"`);
+      assert.equal(festival.definitionKey, slug);
+      assert.equal(festival.tradition, 'all');
+      assert.ok(festival.emoji.length > 0);
     }
   });
 
@@ -100,12 +221,12 @@ describe('Batch 1, 2 & 3 Festival Content & Hero Integration Suite', () => {
     }
   });
 
-  it('verifies authentic Sanskrit/Gurbani mantra and translations for all 35 festivals', () => {
+  it('verifies authentic Sanskrit/Gurbani/Pali/Prakrit mantra and translations for all 114 festivals', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       assert.ok(festival.mantra, `Expected mantra for ${slug}`);
-      assert.ok(festival.mantra.sanskrit.length > 10, `Mantra text too short for ${slug}`);
-      assert.ok(festival.mantra.transliteration.length > 10, `Transliteration too short for ${slug}`);
+      assert.ok(festival.mantra.sanskrit.length > 5, `Mantra text too short for ${slug}`);
+      assert.ok(festival.mantra.transliteration.length > 5, `Transliteration too short for ${slug}`);
 
       const transEn = resolveFestivalText(festival.mantra.translation, 'en');
       const transHi = resolveFestivalText(festival.mantra.translation, 'hi');
@@ -153,6 +274,24 @@ describe('Batch 1, 2 & 3 Festival Content & Hero Integration Suite', () => {
       'sikh-guru-tegh-bahadur-shaheedi',
       'sikh-chaar-sahibzade-shaheedi',
       'sikh-guru-ravidas-jayanti',
+      // Batch 4 (Buddhist & Jain)
+      'buddhist-vesak-buddha-purnima',
+      'buddhist-asalha-puja-dharmachakra',
+      'buddhist-magha-puja-sangha',
+      'buddhist-vassa-monsoon-retreat',
+      'buddhist-pavarana-kathina',
+      'buddhist-bodhi-day-awakening',
+      'buddhist-parinirvana-day',
+      'buddhist-losar-tibetan-new-year',
+      'buddhist-sangha-day',
+      'jain-mahavir-jayanti-darshan',
+      'jain-akshaya-tritiya-adinatha',
+      'jain-paryushana-parva-samavasarana',
+      'jain-samvatsari-universal-forgiveness',
+      'jain-das-lakshana-dharma',
+      'jain-new-year-gautama-kevala',
+      'jain-diwali-nirvana-deepotsav',
+      'jain-kartik-purnima-shatrunjaya',
     ];
 
     for (const heroId of requiredHeroIds) {

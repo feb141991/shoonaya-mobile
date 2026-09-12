@@ -149,7 +149,17 @@ export default function PathLessonListScreen() {
   if (fetchState === 'not_found' || !path || !pathId) {
     return (
       <Screen style={{ backgroundColor: bg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
+          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: text }}>Pathshala</Text>
+        </View>
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>Path not found.</Text>
+        <PressableSurface
+          onPress={() => router.replace('/(tabs)/pathshala')}
+          style={{ marginTop: 16, alignSelf: 'flex-start' }}
+        >
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>Return to Pathshala</Text>
+        </PressableSurface>
       </Screen>
     );
   }
@@ -157,6 +167,10 @@ export default function PathLessonListScreen() {
   if (fetchState === 'error') {
     return (
       <Screen style={{ backgroundColor: bg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
+          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: text }}>Pathshala</Text>
+        </View>
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>
           Could not load this path.
         </Text>

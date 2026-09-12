@@ -500,7 +500,7 @@ export default function NityaKarmaScreen() {
                   {step.id === 'shloka_done' && !step.done && (
                     <PressableSurface
                       haptic="selection"
-                      onPress={() => router.push('/pathshala')}
+                      onPress={() => router.push('/(tabs)/pathshala')}
                       style={{ marginTop: 8, minHeight: 0 }}
                       hitSlop={8}
                     >
