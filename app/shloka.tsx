@@ -136,6 +136,7 @@ export default function ShlokaScreen() {
   const [marking, setMarking] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [celebration, setCelebration] = useState<{ streak: number; milestone: boolean; first: boolean } | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const celebrationScale = useRef(new Animated.Value(0.86)).current;
   const celebrationOpacity = useRef(new Animated.Value(0)).current;
@@ -298,6 +299,7 @@ export default function ShlokaScreen() {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
 
+      setShowConfetti(true);
       setCelebration({ streak: newStreak, milestone: Boolean(result.milestone) || newStreak % 7 === 0, first: newStreak === 1 });
       celebrationScale.setValue(0.86);
       celebrationOpacity.setValue(0);
@@ -386,6 +388,7 @@ export default function ShlokaScreen() {
 
   return (
     <Screen style={{ backgroundColor: background, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+      <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density={celebration?.milestone ? 'full' : 'soft'} />
       <AmbientBackdrop isDark={isDark} brand={brand} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 34, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
@@ -622,7 +625,6 @@ export default function ShlokaScreen() {
             opacity: celebrationOpacity,
           }}
         >
-          <ConfettiOverlay show={Boolean(celebration)} density={celebration.milestone ? 'full' : 'soft'} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Dismiss celebration"
