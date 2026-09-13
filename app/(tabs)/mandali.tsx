@@ -78,6 +78,7 @@ import {
   updateMandaliComment,
   updateMandaliRsvp,
   updateMandaliPost,
+  formatRelativeTime,
   type CommentRow,
   type ConnectionRequestRow,
   type ConnectionStatus,
@@ -274,48 +275,56 @@ const MandaliPostCard = memo(function MandaliPostCard({
           )}
         </PressableSurface>
 
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5, marginBottom: 3 }}>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel={`View ${post.profiles?.full_name ?? post.profiles?.username ?? 'profile'}`}
-              onPress={() => onViewProfile(post.author_id)}
-              style={{ minHeight: 0 }}
-            >
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
-                {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1, minWidth: 0, flexShrink: 1 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel={`View ${post.profiles?.full_name ?? post.profiles?.username ?? 'profile'}`}
+                onPress={() => onViewProfile(post.author_id)}
+                style={{ minHeight: 0, flexShrink: 1 }}
+              >
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}
+                >
+                  {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
+                </Text>
+              </PressableSurface>
+              <Text style={{ color: theme.dim, fontSize: 9, opacity: 0.5, flexShrink: 0 }}>•</Text>
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, flexShrink: 0 }}>
+                {formatRelativeTime(post.created_at)}
               </Text>
-            </PressableSurface>
-            <Text style={{ color: theme.dim, fontSize: 9, opacity: 0.5 }}>•</Text>
-            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
-              {new Date(post.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-            </Text>
-            <View style={{ flex: 1 }} />
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: theme.premiumBorder,
-                backgroundColor: theme.surface,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-              }}
-            >
-              <Feather name={postTypeMeta.icon} size={9} color={theme.brand} />
-              <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9 }}>{postTypeMeta.label}</Text>
             </View>
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel={`More options for ${isOwnPost ? 'your post' : (post.profiles?.full_name ?? post.profiles?.username ?? 'this post')}`}
-              onPress={() => (isOwnPost ? onShowOwnOptions(post) : onShowOptions(post))}
-              style={{ minHeight: 0, paddingLeft: 4 }}
-              hitSlop={10}
-            >
-              <Feather name="more-horizontal" size={16} color={theme.dim} />
-            </PressableSurface>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: theme.surface,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                }}
+              >
+                <Feather name={postTypeMeta.icon} size={9} color={theme.brand} />
+                <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 9 }}>{postTypeMeta.label}</Text>
+              </View>
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel={`More options for ${isOwnPost ? 'your post' : (post.profiles?.full_name ?? post.profiles?.username ?? 'this post')}`}
+                onPress={() => (isOwnPost ? onShowOwnOptions(post) : onShowOptions(post))}
+                style={{ minHeight: 0, paddingLeft: 2 }}
+                hitSlop={10}
+              >
+                <Feather name="more-horizontal" size={16} color={theme.dim} />
+              </PressableSurface>
+            </View>
           </View>
 
           <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 20 }}>{post.content}</Text>
@@ -388,8 +397,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
               style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 5 }}
               hitSlop={10}
             >
-              <Feather name="message-square" size={12} color={theme.dim} />
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11.5 }}>
+              <Feather name="message-square" size={12} color={expanded ? theme.brand : theme.dim} />
+              <Text style={{ color: expanded ? theme.brand : theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11.5 }}>
                 {post.comment_count > 0 ? post.comment_count : 'Comment'}
               </Text>
             </PressableSurface>

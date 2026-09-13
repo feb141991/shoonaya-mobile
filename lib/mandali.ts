@@ -62,6 +62,8 @@ export const REACTION_META: Record<ReactionType, { emoji: string; label: string;
 
 export const REACTION_ORDER: ReactionType[] = ["pranam", "love", "insightful"];
 
+export { formatRelativeTime } from './formatRelativeTime';
+
 export type ConnectionStatus = 'none' | 'pending_sent' | 'pending_received' | 'connected';
 
 export type ConnectionRequestRow = {

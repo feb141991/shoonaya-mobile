@@ -305,22 +305,10 @@ export function PostComments({
     setReplyTo(null);
   };
 
-  return (
-    <View style={{ marginTop: 8 }}>
-      <PressableSurface
-        haptic="selection"
-        onPress={onToggleExpand}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 0 }}
-      >
-        <Feather name="message-circle" size={13} color={dim} />
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: dim }}>
-          {comments.length > 0 ? `${comments.length} comment${comments.length === 1 ? '' : 's'}` : 'Comment'}
-        </Text>
-        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={13} color={dim} />
-      </PressableSurface>
+  if (!expanded) return null;
 
-      {expanded ? (
-        <View style={{ marginTop: 8, gap: 9 }}>
+  return (
+    <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: border, gap: 9 }}>
           {loadingFull ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <ActivityIndicator size="small" color={dim} />
@@ -528,17 +516,15 @@ export function PostComments({
             <Feather name="chevron-up" size={13} color={dim} />
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: dim }}>Hide comments</Text>
           </PressableSurface>
-        </View>
-      ) : null}
 
-      {/* Who Reacted Bottom Sheet */}
-      <CommentReactorsSheet
-        visible={!!activeReactorsCommentId}
-        commentId={activeReactorsCommentId}
-        currentUserId={userId}
-        onClose={() => setActiveReactorsCommentId(null)}
-        onViewProfile={onViewProfile}
-      />
-    </View>
-  );
+          {/* Who Reacted Bottom Sheet */}
+          <CommentReactorsSheet
+            visible={!!activeReactorsCommentId}
+            commentId={activeReactorsCommentId}
+            currentUserId={userId}
+            onClose={() => setActiveReactorsCommentId(null)}
+            onViewProfile={onViewProfile}
+          />
+        </View>
+      );
 }
