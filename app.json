@@ -92,7 +92,8 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and temples nearby."
+        "NSLocationWhenInUseUsageDescription": "Shoonaya uses your location to find sacred places and Mandali groups near you, and to calculate accurate sunrise/moonrise timings and Panchang for your city.",
+        "NSPhotoLibraryUsageDescription": "Shoonaya needs access to your photos so you can choose a picture for your profile."
       },
       "buildNumber": "7"
     },
