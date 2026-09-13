@@ -107,7 +107,8 @@ function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
   const startupStartedAtRef = useRef(Date.now());
   const readyToRender = appIsReady && authReady;
-  const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined;
+  const isReaderScreen = rootSegment === 'pathshala' && segments.length >= 3;
+  const showBottomNav = readyToRender && rootSegment !== '(auth)' && rootSegment !== 'auth' && rootSegment !== undefined && !isReaderScreen;
 
   // Explicit profile-resolution failure state -- set only when an
   // authenticated session's profile row is missing AND the repair

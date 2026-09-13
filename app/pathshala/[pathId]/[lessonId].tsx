@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
@@ -92,6 +93,7 @@ const SPEED_OPTIONS: AudioSpeed[] = [0.75, 1.0, 1.25];
 
 export default function LessonReaderScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
@@ -136,6 +138,7 @@ export default function LessonReaderScreen() {
   // ── AI verse explanation (real /api/pathshala/explain wiring) ──────────
   const [explainStatus, setExplainStatus] = useState<ExplainStatus>('idle');
   const [explainVisible, setExplainVisible] = useState(false);
+  const [explainExpanded, setExplainExpanded] = useState(false);
   const [explainResult, setExplainResult] = useState<ExplainResult | null>(null);
   const [explainMeta, setExplainMeta] = useState<{ tradition?: string; teacher?: string } | null>(null);
 
@@ -143,22 +146,28 @@ export default function LessonReaderScreen() {
   const [audioState, setAudioState] = useState<AudioState>('idle');
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(1.0);
   const audioPlayer = useAudioPlayer();
+  const audioPlayerRef = useRef(audioPlayer);
+  audioPlayerRef.current = audioPlayer;
   const currentAudioUrl = useRef<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
-  // Reset verse index and audio when lesson changes
+  // Reset verse index and audio ONLY when lesson index actually changes
   useEffect(() => {
     setVerseIndex(0);
     setAudioState('idle');
+    setExplainExpanded(false);
     currentAudioUrl.current = null;
-    void audioPlayer.stop();
-  }, [lessonIndex, audioPlayer]);
+    void audioPlayerRef.current.stop();
+  }, [lessonIndex]);
 
-  // Reset audio when verse changes within lesson
+  // Reset audio and scroll to top when verse changes within lesson
   useEffect(() => {
     setAudioState('idle');
+    setExplainExpanded(false);
     currentAudioUrl.current = null;
-    void audioPlayer.stop();
-  }, [verseIndex, audioPlayer]);
+    void audioPlayerRef.current.stop();
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [verseIndex]);
 
   const localizedMeaning = useLocalizedMeaning({
     entryId: entry?.id ?? null,
@@ -284,14 +293,17 @@ export default function LessonReaderScreen() {
   // Calls the real, structured, RAG-backed explain endpoint the PWA reader
   // uses — replaces the previous behaviour of deep-linking to the generic
   // /ai-chat screen with a canned prompt string.
-  const runExplain = useCallback(async () => {
+  const runExplain = useCallback(async (openModal = false) => {
     if (!entry || !path) return;
     if (isGuest) {
       setAuthGateVisible(true);
       return;
     }
 
-    setExplainVisible(true);
+    if (openModal) {
+      setExplainVisible(true);
+    }
+    setExplainExpanded(true);
     setExplainStatus('loading');
     setExplainResult(null);
     setExplainMeta(null);
@@ -357,33 +369,17 @@ export default function LessonReaderScreen() {
   const swipeGesture = useMemo(
     () =>
       Gesture.Pan()
-        // Unconstrained, this claimed every touch on the screen — including
-        // vertical drags meant for the ScrollView below — because Pan()
-        // recognizes movement in any direction by default and only checked
-        // translationX at onEnd, by which point it had already blocked the
-        // ScrollView's own pan responder from ever engaging. That's why
-        // scrolling didn't work: this gesture, not the ScrollView, was the
-        // bug. activeOffsetX requires 20px of horizontal movement before
-        // this gesture activates at all; failOffsetY releases it to the
-        // ScrollView immediately if the drag turns out to be vertical.
+        .runOnJS(true)
         .activeOffsetX([-20, 20])
-        .failOffsetY([-20, 20])
+        .failOffsetY([-40, 40])
         .onEnd((event) => {
-          if (event.translationX < -60) {
-            if (verseIndex < totalVerses - 1) {
-              setVerseIndex((v) => v + 1);
-            } else {
-              goToLesson(lessonIndex + 1);
-            }
-          } else if (event.translationX > 60) {
-            if (verseIndex > 0) {
-              setVerseIndex((v) => v - 1);
-            } else {
-              goToLesson(lessonIndex - 1);
-            }
+          if (event.translationX < -40) {
+            setVerseIndex((v) => (v < totalVerses - 1 ? v + 1 : v));
+          } else if (event.translationX > 40) {
+            setVerseIndex((v) => (v > 0 ? v - 1 : v));
           }
         }),
-    [goToLesson, lessonIndex, totalVerses, verseIndex]
+    [totalVerses]
   );
 
   // ── TTS: fetch and play ───────────────────────────────────────────
@@ -618,6 +614,15 @@ export default function LessonReaderScreen() {
   const originalFontFamily =
     path.tradition === 'sikh' ? undefined : FONTS.serif;
 
+  const traditionGlyph =
+    path.tradition === 'sikh'
+      ? 'ੴ'
+      : path.tradition === 'jain'
+      ? '卐'
+      : path.tradition === 'buddhist'
+      ? '☸'
+      : 'ॐ';
+
   const audioIcon =
     audioState === 'loading'
       ? null
@@ -631,10 +636,11 @@ export default function LessonReaderScreen() {
         <View style={{ flex: 1 }}>
           <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={{
               paddingTop: 64,
               paddingHorizontal: 20,
-              paddingBottom: 36,
+              paddingBottom: Math.max(insets.bottom, 16) + 90,
               gap: 18,
             }}
           >
@@ -659,322 +665,670 @@ export default function LessonReaderScreen() {
               <View style={{ width: 22 }} />
             </View>
 
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text }}>{lesson.title}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>{entry.source}</Text>
-                {totalVerses > 1 ? (
-                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: brand }}>
-                    Verse {verseIndex + 1} of {totalVerses}
+            {/* ── Sacred Header & Source Pill Badge ── */}
+            <View style={{ gap: 10, alignItems: 'center' }}>
+              {entry.source ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                    borderRadius: 999,
+                    backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : '#FFF4E0',
+                    borderWidth: 1,
+                    borderColor: border,
+                  }}
+                >
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: brand }} />
+                  <Text
+                    style={{
+                      fontFamily: FONTS.sansSemiBold,
+                      fontSize: 11,
+                      letterSpacing: 1.5,
+                      color: brand,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {entry.source}
                   </Text>
-                ) : null}
-              </View>
+                </View>
+              ) : null}
+
+              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text, textAlign: 'center' }}>
+                {lesson.title}
+              </Text>
+
+              {totalVerses > 1 ? (
+                <View style={{ alignItems: 'center', gap: 10, marginVertical: 4 }}>
+                  {/* Progress Capsules — standard Pressable with hitSlop so they render as sleek 7px pills */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    {lesson.entries.map((_, i) => {
+                      const isActive = i === verseIndex;
+                      const isRead = i < verseIndex;
+                      return (
+                        <Pressable
+                          key={i}
+                          onPress={() => setVerseIndex(i)}
+                          hitSlop={{ top: 16, bottom: 16, left: 6, right: 6 }}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Go to verse ${i + 1}`}
+                          style={{
+                            height: 7,
+                            width: isActive ? 28 : 8,
+                            borderRadius: 4,
+                            backgroundColor: isActive ? brand : isRead ? 'rgba(197,160,89,0.45)' : border,
+                          }}
+                        />
+                      );
+                    })}
+                    <Text style={{ marginLeft: 6, fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>
+                      {verseIndex + 1}/{totalVerses}
+                    </Text>
+                  </View>
+
+                  {/* Quick Verse Pills — instant one-tap verse jump */}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ flexGrow: 0, height: 34 }}
+                    contentContainerStyle={{ gap: 6, paddingHorizontal: 4, alignItems: 'center' }}
+                  >
+                    {lesson.entries.map((_, i) => {
+                      const isActive = i === verseIndex;
+                      return (
+                        <Pressable
+                          key={i}
+                          onPress={() => setVerseIndex(i)}
+                          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Verse ${i + 1}`}
+                          style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 5,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: isActive ? brand : border,
+                            backgroundColor: isActive ? (isDark ? 'rgba(197,160,89,0.2)' : '#F2D9A8') : cardBg,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: FONTS.sansSemiBold,
+                              fontSize: 11,
+                              color: isActive ? (isDark ? brand : COLORS.ink) : dim,
+                            }}
+                          >
+                            Verse {i + 1}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ) : null}
             </View>
 
-            {totalVerses > 1 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
-                {lesson.entries.map((_, vIdx) => (
+            {/* ── Subheader Controls Ribbon ── */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {(['en', 'hi'] as const).map((option) => (
                   <PressableSurface
-                    key={vIdx}
-                    onPress={() => setVerseIndex(vIdx)}
+                    key={option}
+                    onPress={() => setLanguage(option)}
                     haptic="selection"
                     style={{
                       borderRadius: 999,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
+                      paddingHorizontal: 14,
+                      paddingVertical: 7,
                       borderWidth: 1,
-                      borderColor: vIdx === verseIndex ? brand : border,
-                      backgroundColor: vIdx === verseIndex ? brand : cardBg,
+                      borderColor: option === language ? brand : border,
+                      backgroundColor: option === language ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
                     }}
                   >
-                    <Text
-                      style={{
-                        fontFamily: FONTS.sansSemiBold,
-                        fontSize: 12,
-                        color: vIdx === verseIndex ? COLORS.ink : text,
-                      }}
-                    >
-                      Verse {vIdx + 1}
+                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? (isDark ? brand : COLORS.ink) : dim }}>
+                      {option.toUpperCase()}
                     </Text>
                   </PressableSurface>
                 ))}
-              </ScrollView>
-            ) : null}
+              </View>
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {(['en', 'hi'] as const).map((option) => (
-              <PressableSurface
-                key={option}
-                onPress={() => setLanguage(option)}
-                haptic="selection"
-                style={{
-                  borderRadius: 999,
-                  paddingHorizontal: 14,
-                  paddingVertical: 10,
-                  borderWidth: 1,
-                  borderColor: option === language ? brand : border,
-                  backgroundColor: option === language ? cardBg : 'transparent',
-                }}
-              >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? brand : dim }}>
-                  {option.toUpperCase()}
-                </Text>
-              </PressableSurface>
-            ))}
-          </View>
-
-          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            {(['small', 'normal', 'large', 'xl'] as const).map((option) => (
-              <PressableSurface
-                key={option}
-                onPress={() => saveFontSize(option)}
-                haptic="selection"
-                style={{
-                  borderRadius: 999,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderWidth: 1,
-                  borderColor: option === fontSize ? brand : border,
-                  backgroundColor: option === fontSize ? cardBg : 'transparent',
-                }}
-              >
-                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: option === fontSize ? brand : dim }}>
-                  {option === 'small' ? 'Small' : option === 'normal' ? 'Normal' : option === 'large' ? 'Large' : 'XL'}
-                </Text>
-              </PressableSurface>
-            ))}
-          </View>
-
-          <View
-            style={{
-              borderRadius: 28,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: cardBg,
-              padding: 22,
-              gap: 18,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: FONT_SCALE[fontSize].original,
-                lineHeight: FONT_SCALE[fontSize].original * 1.45,
-                color: text,
-                textAlign: 'center',
-                fontFamily: originalFontFamily,
-              }}
-            >
-              {entry.original}
-            </Text>
-
-            <Text
-              style={{
-                fontSize: 15,
-                lineHeight: 24,
-                color: dim,
-                textAlign: 'center',
-                fontFamily: FONTS.sans,
-              }}
-            >
-              {entry.transliteration}
-            </Text>
-          </View>
-
-          {/* ── TTS Audio Panel ─────────────────────────────── */}
-          <View
-            style={{
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: cardBg,
-              padding: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 14,
-            }}
-          >
-            <PressableSurface
-              onPress={() => { void handlePlayPause(); }}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: brand,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {audioState === 'loading' ? (
-                <ActivityIndicator color={COLORS.ink} size="small" />
-              ) : (
-                <Feather name={audioIcon ?? 'play'} size={20} color={COLORS.ink} />
-              )}
-            </PressableSurface>
-
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
-                {audioState === 'loading'
-                  ? 'Preparing recitation…'
-                  : audioState === 'playing'
-                  ? 'Playing recitation'
-                  : audioState === 'paused'
-                  ? 'Paused'
-                  : audioState === 'error'
-                  ? 'Audio unavailable'
-                  : 'Listen to recitation'}
-              </Text>
               <View style={{ flexDirection: 'row', gap: 6 }}>
-                {SPEED_OPTIONS.map((speed) => (
+                {(['small', 'normal', 'large', 'xl'] as const).map((option) => (
                   <PressableSurface
-                    key={speed}
-                    onPress={() => { void handleSpeedChange(speed); }}
+                    key={option}
+                    onPress={() => saveFontSize(option)}
                     haptic="selection"
                     style={{
-                      borderRadius: 8,
+                      borderRadius: 999,
                       paddingHorizontal: 10,
-                      paddingVertical: 5,
+                      paddingVertical: 7,
                       borderWidth: 1,
-                      borderColor: audioSpeed === speed ? brand : border,
-                      backgroundColor: audioSpeed === speed ? cardBg : 'transparent',
+                      borderColor: option === fontSize ? brand : border,
+                      backgroundColor: option === fontSize ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
                     }}
                   >
-                    <Text
-                      style={{
-                        fontFamily: FONTS.sansMedium,
-                        fontSize: 11,
-                        color: audioSpeed === speed ? brand : dim,
-                      }}
-                    >
-                      {speed}×
+                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: option === fontSize ? (isDark ? brand : COLORS.ink) : dim }}>
+                      {option === 'small' ? 'A-' : option === 'normal' ? 'A' : option === 'large' ? 'A+' : 'A++'}
                     </Text>
                   </PressableSurface>
                 ))}
               </View>
             </View>
-          </View>
 
-          <View
-            style={{
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: cardBg,
-              padding: 18,
-              gap: 10,
-            }}
-          >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>
-              {localizedMeaning.label}
+            {/* ── Sacred Tradition Glyph ── */}
+            <Text style={{ fontFamily: FONTS.serif, fontSize: 34, color: brand, textAlign: 'center', marginVertical: 4 }}>
+              {traditionGlyph}
             </Text>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: FONT_SCALE[fontSize].meaning, lineHeight: FONT_SCALE[fontSize].meaning * 1.55, color: text }}>
-              {localizedMeaning.meaning}
-            </Text>
-            {localizedMeaning.isLoading ? <ActivityIndicator color={brand} /> : null}
-          </View>
 
-          {/* AI verse explanation — calls the real, RAG-backed, structured
-              /api/pathshala/explain endpoint the PWA reader uses. */}
-          <PressableSurface
-            accessibilityRole="button"
-            accessibilityLabel="Explain this verse"
-            onPress={() => {
-              void runExplain();
-            }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: cardBg,
-              minHeight: 44,
-              padding: 16,
-              gap: 12,
-              marginTop: 4,
-            }}
-          >
-            <Feather name="zap" size={16} color={brand} />
-            <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
-              Explain this verse
-            </Text>
-            <Feather name="chevron-right" size={16} color={dim} />
-          </PressableSurface>
-
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <PressableSurface
-              onPress={() => {
-                if (verseIndex > 0) {
-                  setVerseIndex(verseIndex - 1);
-                } else {
-                  goToLesson(lessonIndex - 1);
-                }
-              }}
-              disabled={lessonIndex === 0 && verseIndex === 0}
-              haptic="selection"
+            {/* ── 1. Sanskrit / Devanagari Centerpiece Card ── */}
+            <View
               style={{
-                flex: 1,
-                borderRadius: 20,
+                borderRadius: 24,
                 borderWidth: 1,
                 borderColor: border,
-                paddingVertical: 14,
+                backgroundColor: cardBg,
+                padding: 24,
                 alignItems: 'center',
-                opacity: lessonIndex === 0 && verseIndex === 0 ? 0.5 : 1,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isDark ? 0.25 : 0.06,
+                shadowRadius: 8,
+                elevation: 2,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
-                {verseIndex > 0 ? 'Prev Verse' : 'Prev Lesson'}
+              <Text
+                style={{
+                  fontSize: FONT_SCALE[fontSize].original,
+                  lineHeight: FONT_SCALE[fontSize].original * 1.5,
+                  color: isDark ? '#F0EDE6' : '#2C1A0E',
+                  textAlign: 'center',
+                  fontFamily: originalFontFamily,
+                }}
+              >
+                {entry.original}
               </Text>
-            </PressableSurface>
+            </View>
 
-            <PressableSurface
-              onPress={() => {
-                if (verseIndex < totalVerses - 1) {
-                  setVerseIndex(verseIndex + 1);
-                } else {
-                  goToLesson(lessonIndex + 1);
-                }
-              }}
-              disabled={lessonIndex >= lessons.length - 1 && verseIndex >= totalVerses - 1}
-              haptic="selection"
+            {/* ── 2. Transliteration Card (Amber Tinted) ── */}
+            {entry.transliteration ? (
+              <View
+                style={{
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(197,160,89,0.2)' : '#DEC89A',
+                  backgroundColor: isDark ? 'rgba(197,160,89,0.08)' : '#FFF4E0',
+                  paddingVertical: 16,
+                  paddingHorizontal: 20,
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 10,
+                    letterSpacing: 2,
+                    color: brand,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Transliteration
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 15,
+                    lineHeight: 24,
+                    color: isDark ? 'rgba(240,220,180,0.85)' : '#7A5C3A',
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                  }}
+                >
+                  {entry.transliteration}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* ── 3. Audio Recitation Panel ── */}
+            <View
               style={{
-                flex: 1,
-                borderRadius: 20,
+                borderRadius: 22,
                 borderWidth: 1,
                 borderColor: border,
-                paddingVertical: 14,
+                backgroundColor: cardBg,
+                padding: 16,
+                flexDirection: 'row',
                 alignItems: 'center',
-                opacity: lessonIndex >= lessons.length - 1 && verseIndex >= totalVerses - 1 ? 0.5 : 1,
+                gap: 14,
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
-                {verseIndex < totalVerses - 1 ? 'Next Verse' : 'Next Lesson'}
-              </Text>
-            </PressableSurface>
-          </View>
+              <PressableSurface
+                onPress={() => { void handlePlayPause(); }}
+                haptic="selection"
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: brand,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {audioState === 'loading' ? (
+                  <ActivityIndicator color={COLORS.ink} size="small" />
+                ) : (
+                  <Feather name={audioIcon ?? 'play'} size={20} color={COLORS.ink} />
+                )}
+              </PressableSurface>
 
-          <PressableSurface
-            onPress={() => { void handleDone(); }}
-            disabled={saving}
-            style={{
-              borderRadius: 24,
-              backgroundColor: brand,
-              paddingVertical: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: saving ? 0.7 : 1,
-            }}
-          >
-            {saving ? (
-              <ActivityIndicator color={bg} />
-            ) : (
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: bg }}>
-                Done
+              <View style={{ flex: 1, gap: 6 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
+                  {audioState === 'loading'
+                    ? 'Preparing recitation…'
+                    : audioState === 'playing'
+                    ? 'Playing recitation'
+                    : audioState === 'paused'
+                    ? 'Paused'
+                    : audioState === 'error'
+                    ? 'Audio unavailable'
+                    : 'Listen to recitation'}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {SPEED_OPTIONS.map((speed) => (
+                    <PressableSurface
+                      key={speed}
+                      onPress={() => { void handleSpeedChange(speed); }}
+                      haptic="selection"
+                      style={{
+                        borderRadius: 8,
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderWidth: 1,
+                        borderColor: audioSpeed === speed ? brand : border,
+                        backgroundColor: audioSpeed === speed ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: FONTS.sansMedium,
+                          fontSize: 11,
+                          color: audioSpeed === speed ? (isDark ? brand : COLORS.ink) : dim,
+                        }}
+                      >
+                        {speed}×
+                      </Text>
+                    </PressableSurface>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            {/* ── 4. Meaning Card ── */}
+            <View
+              style={{
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: border,
+                backgroundColor: cardBg,
+                padding: 20,
+                gap: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: FONTS.sansSemiBold,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  color: brand,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {localizedMeaning.label}
               </Text>
-            )}
-          </PressableSurface>
+              <Text
+                style={{
+                  fontFamily: FONTS.sans,
+                  fontSize: FONT_SCALE[fontSize].meaning,
+                  lineHeight: FONT_SCALE[fontSize].meaning * 1.65,
+                  color: text,
+                }}
+              >
+                {localizedMeaning.meaning}
+              </Text>
+              {localizedMeaning.isLoading ? <ActivityIndicator color={brand} /> : null}
+            </View>
+
+            {/* ── 5. AI Verse Explanation (PWA Inline Wisdom) ── */}
+            <View
+              style={{
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: border,
+                backgroundColor: cardBg,
+                overflow: 'hidden',
+              }}
+            >
+              <PressableSurface
+                accessibilityRole="button"
+                accessibilityLabel="Explain this verse"
+                onPress={() => {
+                  if (!explainResult && explainStatus === 'idle') {
+                    void runExplain(false);
+                  } else {
+                    setExplainExpanded((prev) => !prev);
+                  }
+                }}
+                haptic="selection"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  minHeight: 48,
+                  paddingHorizontal: 18,
+                  paddingVertical: 14,
+                  gap: 12,
+                  backgroundColor: explainExpanded ? (isDark ? 'rgba(197,160,89,0.1)' : '#FFF4E0') : cardBg,
+                }}
+              >
+                <Feather name="zap" size={16} color={brand} />
+                <Text style={{ flex: 1, fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
+                  {explainStatus === 'loading'
+                    ? 'Reflecting on verse wisdom…'
+                    : explainExpanded
+                    ? 'Hide Explanation'
+                    : 'Explain this verse'}
+                </Text>
+                {explainStatus === 'loading' ? (
+                  <ActivityIndicator size="small" color={brand} />
+                ) : (
+                  <Feather
+                    name={explainExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={dim}
+                  />
+                )}
+              </PressableSurface>
+
+              {explainExpanded ? (
+                <View style={{ padding: 18, gap: 16, borderTopWidth: 1, borderColor: border }}>
+                  {explainStatus === 'upgrade_required' ? (
+                    <View style={{ gap: 8, paddingVertical: 8 }}>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
+                        ✨ Zenith Wisdom
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, lineHeight: 20 }}>
+                        Upgrade to Zenith to unlock deep tradition commentary, word-by-word meaning, and daily application.
+                      </Text>
+                    </View>
+                  ) : explainStatus === 'error' ? (
+                    <View style={{ gap: 10, paddingVertical: 8 }}>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
+                        Could not retrieve verse wisdom right now.
+                      </Text>
+                      <PressableSurface
+                        onPress={() => { void runExplain(false); }}
+                        haptic="selection"
+                        style={{
+                          alignSelf: 'flex-start',
+                          paddingHorizontal: 14,
+                          paddingVertical: 8,
+                          borderRadius: 12,
+                          backgroundColor: isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8',
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
+                          Retry
+                        </Text>
+                      </PressableSurface>
+                    </View>
+                  ) : explainResult ? (
+                    <>
+                      {/* Teacher attribution */}
+                      {explainMeta?.teacher || explainMeta?.tradition ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ fontSize: 16 }}>🪔</Text>
+                          <View>
+                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.5, color: brand, textTransform: 'uppercase' }}>
+                              {explainMeta?.tradition ?? path.tradition}
+                            </Text>
+                            <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: dim }}>
+                              In the spirit of {explainMeta?.teacher ?? 'traditional masters'}
+                            </Text>
+                          </View>
+                        </View>
+                      ) : null}
+
+                      {/* Commentary */}
+                      {explainResult.commentary ? (
+                        <View style={{ gap: 6 }}>
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.5, color: brand, textTransform: 'uppercase' }}>
+                            Commentary
+                          </Text>
+                          <Text style={{ fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22, color: text }}>
+                            {explainResult.commentary}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {/* Daily Application highlight */}
+                      {explainResult.daily_application ? (
+                        <View
+                          style={{
+                            borderRadius: 16,
+                            padding: 14,
+                            backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : '#FFF4E0',
+                            borderWidth: 1,
+                            borderColor: border,
+                            gap: 4,
+                          }}
+                        >
+                          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.5, color: brand, textTransform: 'uppercase' }}>
+                            Today&apos;s Practice
+                          </Text>
+                          <Text style={{ fontFamily: FONTS.sans, fontSize: 13, lineHeight: 20, color: text }}>
+                            {explainResult.daily_application}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {/* Contemplation quote */}
+                      {explainResult.contemplation ? (
+                        <Text
+                          style={{
+                            fontFamily: FONTS.serif,
+                            fontSize: 14,
+                            fontStyle: 'italic',
+                            lineHeight: 22,
+                            color: dim,
+                            textAlign: 'center',
+                            paddingTop: 8,
+                            borderTopWidth: 1,
+                            borderColor: border,
+                          }}
+                        >
+                          &ldquo;{explainResult.contemplation}&rdquo;
+                        </Text>
+                      ) : null}
+                    </>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+
+            {/* ── 6. Cross-Lesson Navigation Grid (PWA Parity) ── */}
+            {lessons.length > 1 ? (
+              <View style={{ marginTop: 12, paddingTop: 18, borderTopWidth: 1, borderColor: border, gap: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.5, color: dim, textTransform: 'uppercase' }}>
+                    Chapters ({lessons.length})
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: brand }}>
+                    {completedLessons.length} of {lessons.length} Completed
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                  {lessons.map((_, idx) => {
+                    const isCurrent = idx === lessonIndex;
+                    const isDone = completedLessons.includes(idx);
+                    return (
+                      <PressableSurface
+                        key={idx}
+                        onPress={() => goToLesson(idx)}
+                        haptic="selection"
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isCurrent ? brand : isDone ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
+                          borderWidth: 1,
+                          borderColor: isCurrent ? brand : isDone ? brand : border,
+                        }}
+                      >
+                        {isDone && !isCurrent ? (
+                          <Feather name="check" size={16} color={brand} />
+                        ) : (
+                          <Text
+                            style={{
+                              fontFamily: FONTS.sansSemiBold,
+                              fontSize: 13,
+                              color: isCurrent ? COLORS.ink : isDone ? brand : dim,
+                            }}
+                          >
+                            {idx + 1}
+                          </Text>
+                        )}
+                      </PressableSurface>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+
         </ScrollView>
       </View>
     </GestureDetector>
+
+    {/* ── Fixed Floating Bottom Navigation Dock (PWA CanonicalReader Parity) ── */}
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        elevation: 10,
+        backgroundColor: bg,
+        borderTopWidth: 1,
+        borderTopColor: border,
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        paddingBottom: Math.max(insets.bottom, 12) + 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: isDark ? 0.35 : 0.08,
+        shadowRadius: 10,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, maxWidth: 540, alignSelf: 'center', width: '100%' }}>
+        {verseIndex > 0 ? (
+          <PressableSurface
+            onPress={() => {
+              setVerseIndex((v) => Math.max(0, v - 1));
+            }}
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel="Previous verse"
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: border,
+              backgroundColor: cardBg,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="chevron-left" size={22} color={text} />
+          </PressableSurface>
+        ) : null}
+
+        {verseIndex < totalVerses - 1 ? (
+          <PressableSurface
+            onPress={() => {
+              setVerseIndex((v) => Math.min(v + 1, totalVerses - 1));
+            }}
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel={`Next verse, verse ${verseIndex + 2} of ${totalVerses}`}
+            style={{
+              flex: 1,
+              height: 52,
+              borderRadius: 16,
+              backgroundColor: brand,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 8,
+              shadowColor: brand,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 6,
+              elevation: 3,
+            }}
+          >
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
+              Next Verse ({verseIndex + 2}/{totalVerses})
+            </Text>
+            <Feather name="chevron-right" size={18} color={COLORS.ink} />
+          </PressableSurface>
+        ) : (
+          <PressableSurface
+            onPress={() => {
+              void handleDone();
+            }}
+            disabled={saving}
+            haptic="impact"
+            accessibilityRole="button"
+            accessibilityLabel="Complete lesson"
+            style={{
+              flex: 1,
+              height: 52,
+              borderRadius: 16,
+              backgroundColor: brand,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 8,
+              shadowColor: brand,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            {saving ? (
+              <ActivityIndicator color={COLORS.ink} size="small" />
+            ) : (
+              <>
+                <Feather name="check-circle" size={18} color={COLORS.ink} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
+                  {completedLessons.includes(lessonIndex)
+                    ? lessonIndex < lessons.length - 1
+                      ? 'Next Lesson'
+                      : 'Path Completed ✓'
+                    : 'Complete Lesson & Earn Karma'}
+                </Text>
+                <Feather name="arrow-right" size={16} color={COLORS.ink} />
+              </>
+            )}
+          </PressableSurface>
+        )}
+      </View>
+    </View>
 
       <AuthGate
         visible={authGateVisible}

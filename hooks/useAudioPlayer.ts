@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { useFocusEffect } from 'expo-router';
 
@@ -133,5 +133,8 @@ export function useAudioPlayer(): UseAudioPlayerResult {
     }
   }, []);
 
-  return { loadAndPlay, pause, resume, stop, setRate, setVolume };
+  return useMemo(
+    () => ({ loadAndPlay, pause, resume, stop, setRate, setVolume }),
+    [loadAndPlay, pause, resume, stop, setRate, setVolume]
+  );
 }
