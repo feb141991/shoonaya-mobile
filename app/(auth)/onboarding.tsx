@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  Share,
   Text,
   TextInput,
   useColorScheme,
@@ -11,6 +12,7 @@ import {
 import { useRouter, type Href } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { FounderNoteInterlude } from '@/components/onboarding/FounderNoteInterlude';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
@@ -20,6 +22,8 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
+import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
+import { isFetchCancelled } from '@/lib/fetch-error';
 import { supabase } from '@/lib/supabase';
 import { getAppIdentity } from '@/lib/appIdentity';
 import { identityChanged } from '@/lib/routeOpenAttribution';
@@ -56,6 +60,7 @@ const TRADITIONS = [
   { key: 'sikh', label: 'Sikh', labelHi: 'सिख', icon: 'book-open' as const, emoji: '☬', description: 'Gurbani, nitnem and daily practice', descriptionHi: 'गुरबाणी, नितनेम और दैनिक अभ्यास' },
   { key: 'buddhist', label: 'Buddhist', labelHi: 'बौद्ध', icon: 'circle' as const, emoji: '☸️', description: 'Sutras, mindfulness and daily practice', descriptionHi: 'सूत्र, सजगता और दैनिक अभ्यास' },
   { key: 'jain', label: 'Jain', labelHi: 'जैन', icon: 'droplet' as const, emoji: '🤲', description: 'Sutras, tattva and daily practice', descriptionHi: 'सूत्र, तत्त्व और दैनिक अभ्यास' },
+  { key: 'none', label: 'Universal / Exploring', labelHi: 'सार्वभौमिक / अन्वेषण', icon: 'compass' as const, emoji: '✨', description: 'Wisdom, meditation and open contemplation', descriptionHi: 'ज्ञान, ध्यान और खुला चिंतन' },
 ] as const;
 
 type TraditionKey = (typeof TRADITIONS)[number]['key'];
@@ -161,6 +166,7 @@ const READY_COPY: Record<TraditionKey, { heading: string; body: string; bodyHi: 
   sikh: { heading: '☬ Waheguru Ji', body: 'Your nitnem awaits. Begin your practice.', bodyHi: 'आपका नितनेम तैयार है। अपना अभ्यास शुरू करें।' },
   buddhist: { heading: '☸️ Namo Buddhaya', body: 'Your meditation path is ready.', bodyHi: 'आपका ध्यान मार्ग तैयार है।' },
   jain: { heading: '🤲 Jai Jinendra', body: 'Your samayika path begins now.', bodyHi: 'आपका सामायिक मार्ग अब प्रारंभ होता है।' },
+  none: { heading: '✨ Welcome Seeker', body: 'Your mindful journey begins now. Explore universal wisdom.', bodyHi: 'आपकी ध्यान यात्रा प्रारंभ होती है। सार्वभौमिक ज्ञान की खोज करें।' },
 };
 
 const READY_FEATURES: Record<TraditionKey, ReadonlyArray<{ emoji: string; label: string; labelHi: string; description: string; descriptionHi: string }>> = {
@@ -183,6 +189,11 @@ const READY_FEATURES: Record<TraditionKey, ReadonlyArray<{ emoji: string; label:
     { emoji: '🧘', label: 'Samayika', labelHi: 'सामायिक', description: 'Daily equanimity', descriptionHi: 'दैनिक समता' },
     { emoji: '📖', label: 'Agamas', labelHi: 'आगम', description: 'Read & reflect', descriptionHi: 'पढ़ें और चिंतन करें' },
     { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Your community', descriptionHi: 'आपका समुदाय' },
+  ],
+  none: [
+    { emoji: '🧘', label: 'Meditation & Stillness', labelHi: 'ध्यान और शांति', description: 'Daily inner calm', descriptionHi: 'दैनिक आंतरिक शांति' },
+    { emoji: '✨', label: 'Universal Wisdom', labelHi: 'सार्वभौमिक ज्ञान', description: 'Timeless reflections', descriptionHi: 'कालातीत चिंतन' },
+    { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Open community', descriptionHi: 'खुला समुदाय' },
   ],
 };
 
@@ -222,6 +233,7 @@ type NameStory = {
   scripture_original?: string | null;
   scripture_translation?: string | null;
   scripture_source?: string | null;
+  share_slug?: string | null;
 };
 
 function normalizeFirstName(value: string) {
@@ -469,6 +481,7 @@ export default function OnboardingScreen() {
     try {
       const response = await apiFetch('/api/name-story/generate', {
         method: 'POST',
+        timeoutMs: AI_CHAT_TIMEOUT_MS,
         body: JSON.stringify({
           name,
           displayName: name,
@@ -484,13 +497,53 @@ export default function OnboardingScreen() {
         throw new Error(body?.error ?? (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.'));
       }
 
-      setNameStory((body?.data ?? null) as NameStory | null);
+      const storyData = (body?.data ?? null) as NameStory | null;
+      setNameStory(storyData);
+      if (storyData) {
+        AsyncStorage.setItem('shoonaya:last_name_story', JSON.stringify(storyData)).catch(() => {});
+      }
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
     } catch (error) {
-      setNameStoryError(error instanceof Error ? error.message : (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.'));
+      if (isFetchCancelled(error)) {
+        setNameStoryError(
+          isHindi
+            ? 'नाम कथा तैयार करने में अधिक समय लगा। कृपया पुनः प्रयास करें।'
+            : 'Generating your Name Story took a little longer than expected. Please tap Retry.'
+        );
+      } else {
+        setNameStoryError(
+          error instanceof Error
+            ? error.message
+            : (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.')
+        );
+      }
     } finally {
       setNameStoryLoading(false);
     }
+  };
+
+  const handleShareNameStory = async () => {
+    if (!nameStory) return;
+    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    const firstName = name.trim().split(' ')[0] || name.trim();
+    const storyUrl = nameStory.share_slug
+      ? `https://www.shoonaya.com/name/${nameStory.share_slug}`
+      : 'https://www.shoonaya.com';
+
+    const cardLines = [
+      `✨ ${translated('Sacred Meaning of', 'पावन अर्थ:')} ${firstName || name}`,
+      nameStory.sacred_meaning ? `"${nameStory.sacred_meaning}"` : null,
+      nameStory.name_mantra ? `\n🪔 ${translated('Name Mantra', 'नाम मंत्र')}:\n${nameStory.name_mantra}` : null,
+      nameStory.name_story ? `\n📖 ${translated('Spiritual Reflection', 'आध्यात्मिक चिंतन')}:\n${nameStory.name_story}` : null,
+      `\n${translated('Discover your Dharmic Name Story on Shoonaya', 'शून्या पर अपने नाम की आध्यात्मिक कथा जानें')}:\n${storyUrl}`,
+    ].filter(Boolean);
+
+    try {
+      await Share.share({
+        title: `${firstName || name} — ${translated('Dharmic Name Story', 'धार्मिक नाम कथा')}`,
+        message: cardLines.join('\n'),
+      });
+    } catch {}
   };
 
   const handleAllowNotifications = async () => {
@@ -1398,6 +1451,28 @@ export default function OnboardingScreen() {
                         {nameStory.practice_suggestion}
                       </Text>
                     ) : null}
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityLabel={translated('Share Name Story Card', 'नाम कथा कार्ड शेयर करें')}
+                      onPress={() => { void handleShareNameStory(); }}
+                      style={{
+                        minHeight: 44,
+                        borderRadius: RADII.pill,
+                        backgroundColor: theme.brand,
+                        paddingHorizontal: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        marginTop: 4,
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      <Feather name="share-2" size={15} color={isDark ? COLORS.darkBg : COLORS.ink} />
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: isDark ? COLORS.darkBg : COLORS.ink }}>
+                        {translated('Share Story Card', 'कथा कार्ड शेयर करें')}
+                      </Text>
+                    </PressableSurface>
                   </View>
                 ) : !nameStoryLoading ? (
                   <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: 19, color: dim }}>

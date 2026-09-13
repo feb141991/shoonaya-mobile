@@ -1,7 +1,7 @@
 import type { GenderKey, LifeStageKey, CalendarProfileSlug, CalendarScopeSlug } from './profile-constants';
 import { genderContext } from './profile-constants';
 
-export type TraditionKey = 'hindu' | 'sikh' | 'buddhist' | 'jain';
+export type TraditionKey = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'none';
 export type LanguageKey = 'en' | 'hi';
 
 export type Step =
@@ -83,7 +83,7 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
       labelHi: 'ध्यान शुरू करें',
     };
   }
-  // For Sikh and Jain traditions, no dedicated first-practice screen currently exists.
+  // For Sikh, Jain, and Universal/None seekers, no single prescribed ritual practice is forced.
   // Returning null tells the Ready screen to cleanly omit the primary practice button
   // and offer 'Explore Shoonaya' as the single, clear entry point.
   return null;

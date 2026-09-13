@@ -1,4 +1,4 @@
-export type FounderTradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
+export type FounderTradition = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'none';
 export type FounderLanguage = 'en' | 'hi';
 
 export type NoteBlock = {
@@ -37,6 +37,8 @@ export const TRADITION_BRIDGES: Record<FounderLanguage, Record<FounderTradition,
       'For Buddhist practitioners and families, that means sustaining core teachings, sacred observances, meditation, and a connection with sangha across distance.',
     jain:
       'For Jain families, that means upholding ahimsa, samayika, sacred observances, and the careful spiritual discipline passed down through generations.',
+    none:
+      'For all seekers exploring Dharma, that means discovering universal wisdom, timeless stillness, and open contemplation without boundaries.',
   },
   hi: {
     hindu:
@@ -47,6 +49,8 @@ export const TRADITION_BRIDGES: Record<FounderLanguage, Record<FounderTradition,
       'बौद्ध साधकों और परिवारों के लिए इसका अर्थ है मूल शिक्षाओं, पावन अवसरों, ध्यान और संघ से दूरी के बावजूद जुड़े रहना।',
     jain:
       'जैन परिवारों के लिए इसका अर्थ है अहिंसा, सामायिक, पावन पर्वों और पीढ़ियों से मिले सूक्ष्म आध्यात्मिक अनुशासन को सँजोना।',
+    none:
+      'धर्म और ज्ञान के सभी साधकों के लिए इसका अर्थ है सार्वभौमिक ज्ञान, कालातीत शांति और सीमाओं से परे सहज चिंतन की खोज।',
   },
 };
 
@@ -57,6 +61,7 @@ export const FOUNDER_COPY: Record<FounderLanguage, FounderCopy> = {
       sikh: 'Sat Sri Akaal',
       buddhist: 'Namo Buddhaya',
       jain: 'Jai Jinendra',
+      none: 'Namaste',
     },
     welcome: 'Welcome to Shoonaya',
     tagline: 'From zero to infinity.',
@@ -108,6 +113,7 @@ export const FOUNDER_COPY: Record<FounderLanguage, FounderCopy> = {
       sikh: 'सत श्री अकाल',
       buddhist: 'नमो बुद्धाय',
       jain: 'जय जिनेन्द्र',
+      none: 'नमस्ते',
     },
     welcome: 'Shoonaya में आपका स्वागत है',
     tagline: 'शून्य से अनंत तक।',

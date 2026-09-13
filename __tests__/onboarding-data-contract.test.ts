@@ -97,6 +97,19 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(sikhCta, null, 'Sikh has no appropriate dedicated first-practice screen yet');
       assert.equal(jainCta, null, 'Jain has no appropriate dedicated first-practice screen yet');
     });
+
+    it('returns null for Universal / None tradition (cleanly retains Explore Shoonaya)', () => {
+      const noneCta = getOnboardingReadyPracticeCta('none');
+      assert.equal(noneCta, null, 'Universal seeker has unforced Explore Shoonaya entry point');
+    });
+
+    it('builds standard steps for Universal / None tradition without Hindu-specific steps', () => {
+      const steps = buildSteps('none');
+      assert.equal(steps.length, 7);
+      assert.equal(steps.includes('nakshatra'), false);
+      assert.equal(steps.includes('calendarProfile'), false);
+      assert.equal(steps.includes('ready'), true);
+    });
   });
 
   describe('2. Notification Decision Table & Intent Invariants', () => {

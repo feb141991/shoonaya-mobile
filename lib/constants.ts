@@ -285,6 +285,7 @@ export const TRADITION_ACCENT = {
   buddhist: '#7C5CBF',
   jain: '#2D9E4A',
   all: '#8B9E6E',
+  none: '#8B9E6E',
 } as const;
 
 // Katha-specific view-key accents — puranic/bani/dhamma/jain/panchatantra

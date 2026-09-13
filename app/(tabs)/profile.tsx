@@ -45,11 +45,14 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import {
   getIshtaDevataLabel,
   getSampradayaLabel,
+  getSampradayasForTradition,
+  fetchTraditionsCatalog,
   ISHTA_DEVATAS_BY_TRADITION,
   SAMPRADAYAS_BY_TRADITION,
+  type TraditionKey,
 } from '@/lib/traditions';
 
-type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
+type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'none';
 
 type ProfileData = {
   id: string;
@@ -160,6 +163,7 @@ const TRADITION_META: Record<Tradition, { label: string; emoji: string }> = {
   sikh: { label: 'Sikh', emoji: '☬' },
   buddhist: { label: 'Buddhist', emoji: '☸️' },
   jain: { label: 'Jain', emoji: '🤲' },
+  none: { label: 'Universal / Exploring', emoji: '✨' },
 };
 
 const LIFE_STAGE_LABELS: Record<string, string> = {
@@ -229,6 +233,7 @@ export default function ProfileScreen() {
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [locationSyncing, setLocationSyncing] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [catalog, setCatalog] = useState<any[] | null>(null);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -374,6 +379,7 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     setLoadError(false);
+    fetchTraditionsCatalog().then(setCatalog).catch(() => {});
     loadProfile()
       .catch(() => {
         setLoadError(true);
@@ -386,7 +392,7 @@ export default function ProfileScreen() {
   const profileCompletion = summary?.completion;
   const sampradayaLabel = profile ? getSampradayaLabel(profile.tradition) : 'Sampradaya';
   const ishtaDevataLabel = profile ? getIshtaDevataLabel(profile.tradition) : 'Ishta Devata';
-  const sampradayaOptions = profile ? SAMPRADAYAS_BY_TRADITION[profile.tradition] : [];
+  const sampradayaOptions = profile ? getSampradayasForTradition(profile.tradition, catalog) : [];
   const ishtaDevataOptions = profile ? ISHTA_DEVATAS_BY_TRADITION[profile.tradition] : [];
 
   const handleSave = async () => {
@@ -1063,6 +1069,46 @@ export default function ProfileScreen() {
             <Feather name="chevron-right" size={20} color={theme.brand} />
           </PressableSurface>
         ) : null}
+
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel="Dharmic Name Story"
+          onPress={() => router.push('/name-story' as any)}
+          style={{
+            minHeight: 68,
+            borderRadius: 16,
+            backgroundColor: theme.glass,
+            borderWidth: 1,
+            borderColor: theme.borderSoft,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+          }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: theme.brandSoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="book-open" size={20} color={theme.brand} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ ...TYPE.label, color: theme.text }}>
+              {profile.full_name ? `${profile.full_name}'s Name Story` : 'Dharmic Name Story'}
+            </Text>
+            <Text style={{ ...TYPE.caption, color: theme.dim }}>
+              Sacred meaning, root sound & custom name mantra
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={theme.dim} />
+        </PressableSurface>
 
         <PressableSurface
           haptic="selection"

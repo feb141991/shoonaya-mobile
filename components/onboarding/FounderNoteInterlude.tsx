@@ -44,6 +44,7 @@ const ARTWORK: Record<FounderTradition, ImageSource> = {
   sikh: require('@/assets/onboarding/founder-sikh.webp'),
   buddhist: require('@/assets/onboarding/founder-buddhist.webp'),
   jain: require('@/assets/onboarding/founder-jain.webp'),
+  none: require('@/assets/onboarding/founder-hindu.webp'),
 };
 
 function FontSizeControl({

@@ -56,6 +56,12 @@ const SEVA_ORGS: Record<TraditionKey, SevaOrg[]> = {
     { title: 'Jain Vishwa Bharati', description: 'Support Jain learning, ahimsa work, and spiritual education initiatives.', url: 'https://www.jvbharati.org', emoji: '🤲' },
     { title: 'Paryushana Seva Fund', description: 'Contribute to Jain seva and community support around Paryushana observance.', url: 'https://jainsocialgroup.org', emoji: '🌿' },
   ],
+  none: [
+    { title: 'Akshaya Patra Annadaan', description: 'Fund daily meals for children and families through a large-scale annadaan initiative.', url: 'https://www.akshayapatra.org', emoji: '🍲' },
+    { title: 'Pingalwara Trust', description: 'Serve those in need through medical, shelter, and humanitarian seva.', url: 'https://pingalwara.org', emoji: '🫶' },
+    { title: 'Khalsa Aid', description: 'Support disaster relief and humanitarian seva rooted in universal compassion.', url: 'https://www.khalsaaid.org', emoji: '🌍' },
+    { title: 'Jain Vishwa Bharati', description: 'Support ahimsa, compassionate care, and spiritual education initiatives.', url: 'https://www.jvbharati.org', emoji: '🤲' },
+  ],
 };
 
 const SEVA_TYPES = ['Annadaan', 'Gau Seva', 'Shram Daan', 'Daan', 'Rakt Daan', 'Vriksha Ropan', 'Other'] as const;
