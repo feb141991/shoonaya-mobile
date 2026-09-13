@@ -340,6 +340,10 @@ async function fetchHomeLive(): Promise<HomeLiveResponse> {
   }
 }
 
+// Delay automatic mood check-in popup by 4.5 seconds so the user can
+// absorb the sacred greeting, hero darshan, and panchang without abrupt interruption.
+const MOOD_PULSE_AUTO_POPUP_DELAY_MS = 4500;
+
 const INITIAL_STATE: HomeSummary = {
   profile: {
     name: 'Seeker',
@@ -1170,10 +1174,28 @@ function HomeContent() {
     }, [appIdentity])
   );
 
+  const moodPulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isHomeFocusedRef = useRef(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      isHomeFocusedRef.current = true;
+      return () => {
+        isHomeFocusedRef.current = false;
+        if (moodPulseTimerRef.current) {
+          clearTimeout(moodPulseTimerRef.current);
+          moodPulseTimerRef.current = null;
+        }
+      };
+    }, [])
+  );
+
   // Native port of the PWA's auto-popping mood check-in (MoodPulse.tsx):
   // once per spiritual day, the first time Home has real mood status to
   // show, pop the sheet open unprompted rather than waiting for a tap on
-  // the passive MoodCheckin card below. Re-checks the AsyncStorage
+  // the passive MoodCheckin card below. Delayed by 4.5s so the seeker can
+  // first absorb the sacred greeting, hero artwork, and daily panchang
+  // without an immediate popup intrusion. Re-checks the AsyncStorage
   // dismissed-date on every fire (not just once) so it stays correctly
   // closed after Done/dismiss even though those actions replace
   // `moodStatus` with a new object and re-trigger this effect -- same
@@ -1182,10 +1204,23 @@ function HomeContent() {
     if (isGuest || !moodStatus) return;
     let cancelled = false;
     getMoodPulseDismissedDate().then((dismissedOn) => {
-      if (!cancelled && dismissedOn !== getMoodSpiritualDate()) setMoodPulseVisible(true);
+      if (!cancelled && dismissedOn !== getMoodSpiritualDate()) {
+        if (moodPulseTimerRef.current) {
+          clearTimeout(moodPulseTimerRef.current);
+        }
+        moodPulseTimerRef.current = setTimeout(() => {
+          if (!cancelled && isHomeFocusedRef.current) {
+            setMoodPulseVisible(true);
+          }
+        }, MOOD_PULSE_AUTO_POPUP_DELAY_MS);
+      }
     });
     return () => {
       cancelled = true;
+      if (moodPulseTimerRef.current) {
+        clearTimeout(moodPulseTimerRef.current);
+        moodPulseTimerRef.current = null;
+      }
     };
   }, [moodStatus, isGuest]);
 
