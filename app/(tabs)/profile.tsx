@@ -25,6 +25,7 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { type AppLanguage } from '@/lib/language-runtime';
 import { type ProfileSuggestion } from '@/lib/profile-suggestions';
+import { recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -321,6 +322,11 @@ export default function ProfileScreen() {
       apiFetch('/api/native/progress-summary'),
       supabase.auth.getUser(),
     ]);
+
+    const profileServerTiming = parseServerTimingHeader(response.headers.get('Server-Timing'));
+    if (profileServerTiming && authData.user?.id) {
+      recordServerTiming({ kind: 'authenticated', userId: authData.user.id }, 'profile', profileServerTiming);
+    }
 
     if (response.status === 401) {
       router.replace('/(auth)/login');

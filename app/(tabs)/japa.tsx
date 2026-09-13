@@ -43,7 +43,7 @@ import {
   type PendingJapaCompletion,
 } from '@/lib/japaPendingCompletion';
 import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
-import { recordMutationRetryOutcome, recordRefreshFailure, recordRouteOpen } from '@/lib/telemetry';
+import { recordMutationRetryOutcome, recordRefreshFailure, recordRouteOpen, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -1067,6 +1067,8 @@ export default function JapaScreen() {
         recordOpen({ kind: 'authenticated', userId: user.id }, true);
       }
       const response = await apiFetch('/api/japa/context', { expectedUserId: user.id });
+      const japaServerTiming = parseServerTimingHeader(response.headers.get('Server-Timing'));
+      if (japaServerTiming) recordServerTiming({ kind: 'authenticated', userId: user.id }, 'japa', japaServerTiming);
       if (!response.ok) throw new Error('japa-context-failed');
       const context = normalizeJapaContext(await response.json());
       if (!context) throw new Error('japa-context-invalid');
