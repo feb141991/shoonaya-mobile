@@ -42,7 +42,7 @@ const COPY = {
   en: {
     today: 'Today',
     upcoming: 'Upcoming · next 15 days',
-    empty: 'No verified sacred days are available for today or the next 15 days for your calendar settings. Events awaiting review stay hidden.',
+    empty: 'No sacred days in the next 15 days.',
     title: 'Sacred Days',
     export: 'Sacred Calendar',
     exportBusy: 'Preparing',
@@ -54,7 +54,7 @@ const COPY = {
   hi: {
     today: 'आज',
     upcoming: 'आगामी · अगले 15 दिन',
-    empty: 'आपकी कैलेंडर सेटिंग के लिए आज या अगले 15 दिनों में कोई सत्यापित पवित्र दिन उपलब्ध नहीं है। समीक्षा की प्रतीक्षा वाले आयोजन छिपे रहते हैं।',
+    empty: 'अगले 15 दिनों में कोई पवित्र दिन नहीं है।',
     title: 'पवित्र दिन',
     export: 'पवित्र कैलेंडर',
     exportBusy: 'तैयार हो रहा है',
@@ -66,7 +66,7 @@ const COPY = {
   pa: {
     today: 'ਅੱਜ',
     upcoming: 'ਆਉਣ ਵਾਲੇ · ਅਗਲੇ 15 ਦਿਨ',
-    empty: 'ਤੁਹਾਡੀਆਂ ਕੈਲੰਡਰ ਸੈਟਿੰਗਾਂ ਲਈ ਅੱਜ ਜਾਂ ਅਗਲੇ 15 ਦਿਨਾਂ ਵਿੱਚ ਕੋਈ ਤਸਦੀਕ ਕੀਤਾ ਪਵਿੱਤਰ ਦਿਨ ਉਪਲਬਧ ਨਹੀਂ ਹੈ। ਸਮੀਖਿਆ ਦੀ ਉਡੀਕ ਵਾਲੇ ਸਮਾਗਮ ਲੁਕੇ ਰਹਿੰਦੇ ਹਨ।',
+    empty: 'ਅਗਲੇ 15 ਦਿਨਾਂ ਵਿੱਚ ਕੋਈ ਪਵਿੱਤਰ ਦਿਨ ਨਹੀਂ ਹੈ।',
     title: 'ਪਵਿੱਤਰ ਦਿਨ',
     export: 'ਪਵਿੱਤਰ ਕੈਲੰਡਰ',
     exportBusy: 'ਤਿਆਰ ਹੋ ਰਿਹਾ ਹੈ',
@@ -160,7 +160,7 @@ export function SacredDaysCarousel({
           <Text style={{ ...TYPE.section, color: accent }} numberOfLines={1}>
             {copy.title}
           </Text>
-          {calendarStatus === 'ready' ? (
+          {calendarStatus === 'ready' && itemCount > 0 ? (
             <View style={{ minWidth: 24, paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADII.pill, backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight }}>
               <Text style={{ ...TYPE.chip, color: accent, textAlign: 'center' }}>{itemCount}</Text>
             </View>
@@ -216,9 +216,22 @@ export function SacredDaysCarousel({
           ) : null}
         </View>
       ) : !hasItems ? (
-        <View style={{ padding: 16, borderRadius: RADII.xl, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, gap: 8 }}>
-          <Feather name="calendar" size={20} color={theme.dim} />
-          <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.empty}</Text>
+        <View
+          style={{
+            minHeight: 48,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
+            borderRadius: RADII.xl,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            backgroundColor: theme.card,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <Feather name="calendar" size={16} color={theme.dim} />
+          <Text style={{ ...TYPE.caption, color: theme.dim, flexShrink: 1 }}>{copy.empty}</Text>
         </View>
       ) : (
         <>

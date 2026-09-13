@@ -10,7 +10,6 @@ import type { ObservanceSeries, ObservanceSeriesChild } from '@/lib/observance-s
 import {
   getNativeSeriesCardChildren,
   getNativeSeriesCardCopy,
-  getNativeSeriesReviewMessage,
   getSafeNativeEditorialCopy,
   getSafeNativeSeriesName,
   nativeCalendarDayDistance,
@@ -52,40 +51,12 @@ export function ObservanceSeriesCard({
   const router = useRouter();
   const targetChildren = getNativeSeriesCardChildren(series);
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-  const warning = isDark ? COLORS.warningDark : COLORS.warningLight;
   const copy = getNativeSeriesCardCopy(lang);
   const context = { calendarProfile: series.profile.calendar, tradition: series.tradition };
   const seriesName = getSafeNativeSeriesName(series, lang, context);
 
   if (series.status === 'under_review' || targetChildren.length === 0) {
-    const reviewMessage = getNativeSeriesReviewMessage(series, lang);
-    return (
-      <View
-        accessibilityLabel={`${seriesName}. ${copy.reviewPending}. ${reviewMessage}`}
-        style={{
-          height: SACRED_DAYS_CARD_HEIGHT,
-          borderRadius: RADII.xl,
-          borderWidth: 1,
-          borderColor: isDark ? COLORS.warningBorderDark : COLORS.warningBorderLight,
-          borderStyle: 'dashed',
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          backgroundColor: theme.card,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <Feather name="alert-circle" size={20} color={warning} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }} numberOfLines={1}>{seriesName}</Text>
-          <Text style={{ ...TYPE.chip, color: warning, marginTop: 3 }}>{copy.reviewPending}</Text>
-          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 4, lineHeight: 16 }} numberOfLines={2}>
-            {reviewMessage}
-          </Text>
-        </View>
-      </View>
-    );
+    return null;
   }
 
   const activeChild = child ?? targetChildren[0];

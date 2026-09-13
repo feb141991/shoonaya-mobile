@@ -170,3 +170,19 @@ test('upcoming series preserve review checks and deduplicate their standalone en
 test('no eligible entries leaves both sections empty for the explanatory state', () => {
   assert.deepEqual(buildSacredDaysSections({ spiritualDate, series: [], observances: [observance('Past', -1), observance('Later', 16)] }), { today: [], upcoming: [] });
 });
+
+test('SacredDaysCarousel empty state displays minimal customer-facing copy without internal review jargon', () => {
+  const root = join(__dirname, '..');
+  const carouselSource = readFileSync(join(root, 'components/home/SacredDaysCarousel.tsx'), 'utf8');
+
+  // Customer-facing copy must be minimal and concise
+  assert.match(carouselSource, /empty:\s*'No sacred days in the next 15 days\.'/);
+  assert.match(carouselSource, /empty:\s*'अगले 15 दिनों में कोई पवित्र दिन नहीं है।'/);
+  assert.match(carouselSource, /empty:\s*'ਅਗਲੇ 15 ਦਿਨਾਂ ਵਿੱਚ ਕੋਈ ਪਵਿੱਤਰ ਦਿਨ ਨਹੀਂ ਹੈ।'/);
+
+  // Must not expose internal governance/review pipeline concepts to customer
+  assert.doesNotMatch(carouselSource, /awaiting review/i);
+  assert.doesNotMatch(carouselSource, /stay hidden/i);
+  assert.doesNotMatch(carouselSource, /समीक्षा की प्रतीक्षा/);
+  assert.doesNotMatch(carouselSource, /ਸਮੀਖਿਆ ਦੀ ਉਡੀਕ/);
+});
