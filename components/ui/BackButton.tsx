@@ -32,6 +32,7 @@ function inferParentFallback(pathname: string): Href {
   if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
   if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/my-progress/')) return '/my-progress';
+  if (pathname.startsWith('/name-story')) return '/(tabs)/profile';
   return '/(tabs)';
 }
 
