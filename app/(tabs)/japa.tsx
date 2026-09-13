@@ -31,6 +31,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/components/ui/BackgroundParticles';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { getAppIdentity } from '@/lib/appIdentity';
 import {
@@ -1955,7 +1956,11 @@ export default function JapaScreen() {
             </View>
 
             {loading ? (
-              <ActivityIndicator color={theme.brand} style={{ marginTop: 40 }} />
+              <SacredLoader
+                icon="japa"
+                title="Preparing Sacred Japa Mala"
+                subtitle="Centering your breath and intention..."
+              />
             ) : (
               <>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: theme.brand }}>

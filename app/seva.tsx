@@ -20,6 +20,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { SacredIcon } from '@/components/ui/SacredIcon';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { isGuestMode } from '@/lib/guestSession';
 import { supabase } from '@/lib/supabase';
@@ -173,10 +174,13 @@ export default function SevaScreen() {
 
   if (loading) {
     return (
-      <Screen header={{ title: 'Seva', onBack: handleBack }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={accent} />
-        </View>
+      <Screen style={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="seva"
+          title="Recording Sacred Seva"
+          subtitle="Selfless service dissolves the ego and purifies karma..."
+          showBack={true}
+        />
       </Screen>
     );
   }

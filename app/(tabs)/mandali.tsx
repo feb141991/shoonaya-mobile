@@ -29,6 +29,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { JoinMandaliPrompt } from '@/components/mandali/JoinMandaliPrompt';
 import { EventRsvpBar } from '@/components/mandali/EventRsvpBar';
 import { PostComments } from '@/components/mandali/PostComments';
@@ -1853,10 +1854,12 @@ export default function MandaliScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="mandali"
+          title="Gathering Sacred Mandali"
+          subtitle="Connecting with seekers of the shared path..."
+        />
       </Screen>
     );
   }

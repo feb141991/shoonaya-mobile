@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
@@ -292,10 +293,13 @@ export default function NityaKarmaScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="nitya"
+          title="Aligning Sacred Dinacharya"
+          subtitle="Awakening your daily spiritual rhythm..."
+          showBack={true}
+        />
       </Screen>
     );
   }

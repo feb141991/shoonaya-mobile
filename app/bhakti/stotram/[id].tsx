@@ -6,6 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -181,11 +182,13 @@ export default function StotramDetailScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={theme.brand} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="bhakti"
+          title="Invoking Sacred Stotram"
+          subtitle="Preparing verses, audio, and devotional recitation..."
+          showBack={true}
+        />
       </Screen>
     );
   }

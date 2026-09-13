@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -690,10 +691,13 @@ export default function SankalpaScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="nitya"
+          title="Anchoring Sacred Sankalpa"
+          subtitle="Aligning your daily resolve with spiritual discipline..."
+          showBack={true}
+        />
       </Screen>
     );
   }

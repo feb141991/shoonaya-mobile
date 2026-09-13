@@ -15,6 +15,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { apiFetch } from '@/lib/api';
@@ -138,11 +139,13 @@ export default function KathaListScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={meta.accent} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="bhakti"
+          title={meta ? `Opening ${meta.heading}` : 'Opening Sacred Kathas'}
+          subtitle={meta?.sub ?? 'Immersing in divine narratives and spiritual inspiration...'}
+          showBack={true}
+        />
       </Screen>
     );
   }

@@ -13,6 +13,7 @@ import { useRouter, type Href } from 'expo-router';
 import Svg, { Rect } from 'react-native-svg';
 
 import { Card } from '@/components/ui/Card';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -545,9 +546,12 @@ export default function MyProgressScreen() {
   if (loading) {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+        <SacredLoader
+          icon="progress"
+          title="Calculating Spiritual Progress"
+          subtitle="Honoring your sacred karma, sadhana, and consistency..."
+          showBack={true}
+        />
       </Screen>
     );
   }

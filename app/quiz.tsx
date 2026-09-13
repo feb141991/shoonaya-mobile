@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/Card';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
@@ -284,10 +285,13 @@ export default function QuizScreen() {
 
   if (loading) {
     return (
-      <Screen style={{ backgroundColor: surface }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={brand} />
-        </View>
+      <Screen style={{ backgroundColor: surface, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="quiz"
+          title="Preparing Daily Dharma Quiz"
+          subtitle="Testing wisdom across scriptures and timeless traditions..."
+          showBack={true}
+        />
       </Screen>
     );
   }

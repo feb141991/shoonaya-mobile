@@ -30,6 +30,7 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
@@ -718,7 +719,11 @@ export default function ProfileScreen() {
               }}
             />
           ) : (
-            <ActivityIndicator color={theme.brand} />
+            <SacredLoader
+              icon="profile"
+              title="Reflecting Sacred Profile"
+              subtitle="Retrieving your spiritual milestones and sadhana..."
+            />
           )}
         </View>
       </Screen>

@@ -10,6 +10,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
@@ -76,9 +77,12 @@ export default function LedgerScreen() {
   if (loading) {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+        <SacredLoader
+          icon="progress"
+          title="Loading Karma Ledger"
+          subtitle="Compiling your spiritual transactions and blessings..."
+          showBack={true}
+        />
       </Screen>
     );
   }

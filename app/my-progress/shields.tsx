@@ -9,6 +9,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -105,9 +106,12 @@ export default function ShieldsScreen() {
   if (loading) {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+        <SacredLoader
+          icon="dharmveer"
+          title="Loading Sacred Shields"
+          subtitle="Gathering your earned spiritual armor and virtues..."
+          showBack={true}
+        />
       </Screen>
     );
   }

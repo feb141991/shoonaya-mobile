@@ -18,6 +18,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { MotionView } from '@/components/ui/Motion';
@@ -453,13 +454,13 @@ export default function MoodScreen() {
 
   if (loading && step === 1) {
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={styles.headerRow}>
-          {renderBackButton()}
-        </View>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={theme.brand} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="mood"
+          title="Listening to Your Inner State"
+          subtitle="Tuning into emotional tides and conscious reflection..."
+          showBack={true}
+        />
       </Screen>
     );
   }

@@ -8,6 +8,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { FONTS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
@@ -105,10 +106,13 @@ export default function MemberProfileScreen() {
 
   if (loading) {
     return (
-      <Screen>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={theme.brand} />
-        </View>
+      <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="profile"
+          title="Visiting Sacred Profile"
+          subtitle="Connecting with fellow seeker's journey..."
+          showBack={true}
+        />
       </Screen>
     );
   }
