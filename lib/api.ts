@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { isFetchCancelled } from './fetch-error';
 import { DEFAULT_API_TIMEOUT_MS } from './api-policy';
+import { waitForAuthReady } from './authReadyGate';
 
 export { isFetchCancelled };
 
@@ -38,6 +39,13 @@ function canReplayBody(body: BodyInit | null | undefined): boolean {
 }
 
 export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
+  // Cold start: every screen mounts before app/_layout.tsx has finished
+  // determining whether a session exists, so an unguarded call here can
+  // race Supabase's session restore and fire without a token. Resolves
+  // immediately once _layout.tsx calls markAuthReady() -- a one-time wait
+  // per app launch, not a per-request cost.
+  await waitForAuthReady();
+
   const { timeoutMs = DEFAULT_API_TIMEOUT_MS, expectedUserId, ...fetchOptions } = options;
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Content-Type') && options.body) {

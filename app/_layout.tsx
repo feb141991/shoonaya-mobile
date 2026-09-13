@@ -38,6 +38,7 @@ import { StartupLifecycleController } from '@/lib/startup-scenes/lifecycle';
 import type { AppLanguage, StartupPreferences, StartupScene } from '@/lib/startup-scenes/types';
 import { trackScreenView } from '@/lib/analytics';
 import { apiFetch, setApiAccessTokenFromSession } from '@/lib/api';
+import { markAuthReady } from '@/lib/authReadyGate';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
@@ -526,6 +527,7 @@ function RootLayout() {
 
     const timer = setTimeout(() => {
       setAuthReady(true);
+      markAuthReady();
       setAppIsReady(true);
     }, 6000);
 
@@ -592,9 +594,11 @@ function RootLayout() {
         await routeForSession(session);
 
         setAuthReady(true);
+        markAuthReady();
       } catch (e) {
         console.error('Initialization error:', e);
         setAuthReady(true); // Proceed anyway
+        markAuthReady();
       } finally {
         setAppIsReady(true);
       }
