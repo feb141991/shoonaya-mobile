@@ -11,7 +11,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { MotionView } from '@/components/ui/Motion';
 import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { SkeletonRow } from '@/components/ui/SkeletonLoader';
+import { SacredLoader } from '@/components/ui/SacredLoader';
+import { Screen } from '@/components/ui/Screen';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { getStartupPreferences } from '@/lib/startup-scenes/preferences';
@@ -364,6 +365,19 @@ function LiveDarshanContent() {
     );
   }
 
+  if (status === 'loading') {
+    return (
+      <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
+        <SacredLoader
+          icon="live-darshan"
+          title="Connecting to Sacred Darshan"
+          subtitle="Tuning in to live streams from sacred sanctums..."
+          showBack
+        />
+      </Screen>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: 56, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}>
@@ -384,13 +398,7 @@ function LiveDarshanContent() {
           </ScrollView>
         ) : null}
 
-        {status === 'loading' ? (
-          <View style={{ gap: 10 }}>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-          </View>
-        ) : status === 'error' ? (
+        {status === 'error' ? (
           <EmptyState
             icon="wifi-off"
             title="Couldn't load Live Darshan"

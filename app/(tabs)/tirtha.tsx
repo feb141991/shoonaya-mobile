@@ -22,6 +22,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { IconTile } from '@/components/ui/IconTile';
 import { Screen } from '@/components/ui/Screen';
+import { SacredLoader } from '@/components/ui/SacredLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { YatraCircuitsSection } from '@/components/tirtha/YatraCircuitsSection';
@@ -150,6 +151,7 @@ export default function TirthaScreen() {
 
   const mapRef = useRef<MapView | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
@@ -378,6 +380,7 @@ export default function TirthaScreen() {
         setNotice('Could not load Tirtha right now. Check your connection and try again.');
       } finally {
         setLoading(false);
+        setInitialLoading(false);
         setRefreshing(false);
       }
     },
@@ -644,6 +647,18 @@ export default function TirthaScreen() {
     () => (traditionFilter === 'all' ? temples : temples.filter((t) => t.tradition === traditionFilter)),
     [temples, traditionFilter]
   );
+
+  if (initialLoading) {
+    return (
+      <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
+        <SacredLoader
+          icon="tirtha"
+          title="Locating Sacred Tirthas"
+          subtitle="Discovering temples, gurudwaras & pilgrimage sites..."
+        />
+      </Screen>
+    );
+  }
 
   return (
     <Screen style={{ backgroundColor: bg, paddingHorizontal: 0, paddingVertical: 0 }}>
