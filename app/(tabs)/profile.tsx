@@ -31,7 +31,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
-import { API_BASE, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, OFFICIAL_EMAIL, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -1267,6 +1267,35 @@ export default function ProfileScreen() {
               {signingOut ? <ActivityIndicator color={COLORS.danger} /> : <Feather name="log-out" size={22} color={COLORS.danger} />}
             </PressableSurface>
           </View>
+          <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ ...TYPE.body, color: theme.dim }}>Official communication</Text>
+              <Text numberOfLines={1} style={{ ...TYPE.cardHeading, color: theme.brand }}>
+                {OFFICIAL_EMAIL}
+              </Text>
+            </View>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Contact official support"
+              onPress={() => { void Linking.openURL(SOCIAL_LINKS.email); }}
+              style={{
+                minHeight: 44,
+                paddingHorizontal: 16,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+                backgroundColor: theme.brandSoft,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 6,
+              }}
+            >
+              <Feather name="mail" size={16} color={theme.brand} />
+              <Text style={{ ...TYPE.label, color: theme.brand }}>Contact</Text>
+            </PressableSurface>
+          </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <PressableSurface
               haptic="selection"
@@ -1317,6 +1346,24 @@ export default function ProfileScreen() {
               }
             }}>
               <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>Privacy</Text>
+            </PressableSurface>
+            <PressableSurface haptic="selection" style={{ minHeight: 0 }} onPress={async () => {
+              try {
+                const canOpen = await Linking.canOpenURL(SOCIAL_LINKS.email);
+                if (canOpen) {
+                  await Linking.openURL(SOCIAL_LINKS.email);
+                  return;
+                }
+              } catch {
+                // fallback to web contact page
+              }
+              try {
+                await Linking.openURL(`${API_BASE}/contact`);
+              } catch {
+                Alert.alert('Contact', `You can reach the Shoonaya team at ${OFFICIAL_EMAIL}`);
+              }
+            }}>
+              <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>Contact</Text>
             </PressableSurface>
           </View>
           <Text style={{ ...TYPE.caption, color: theme.dim }}>Shoonaya · Find your infinity</Text>
