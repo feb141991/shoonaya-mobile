@@ -292,6 +292,30 @@ const MandaliPostCard = memo(function MandaliPostCard({
                   {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
                 </Text>
               </PressableSurface>
+              {post.profiles?.username === 'shoonaya' ? (
+                // Fixed, unique username claimed by the seeded system account
+                // that authors daily Mandali conversation-starter prompts
+                // (scripts/seed-mandali-prompt-author.ts) -- profiles.username
+                // is UNIQUE NOT NULL, so no real seeker can ever collide with
+                // this check. No new API field needed to identify it.
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 3,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: theme.surface,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Feather name="check-circle" size={8} color={theme.brand} />
+                  <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 8 }}>Official</Text>
+                </View>
+              ) : null}
               <Text style={{ color: theme.dim, fontSize: 9, opacity: 0.5, flexShrink: 0 }}>•</Text>
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, flexShrink: 0 }}>
                 {formatRelativeTime(post.created_at)}
