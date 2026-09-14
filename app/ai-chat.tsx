@@ -19,27 +19,9 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
+import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { getTraditionPrompts } from '@/lib/dharma-mitra-content';
-
-const SCRIPTURE_CITATION_REGEX = /\[([A-Za-z0-9\s.,'’—–:-]+)\]/g;
-
-function isScriptureCitation(citation: string): boolean {
-  const c = citation.toLowerCase();
-  return (
-    c.includes('gita') ||
-    c.includes('upanishad') ||
-    c.includes('ramayana') ||
-    c.includes('purana') ||
-    c.includes('dhammapada') ||
-    c.includes('sutra') ||
-    c.includes('katha') ||
-    c.includes('dharm veer') ||
-    c.includes('calendar') ||
-    c.includes('rule') ||
-    /\b\d+[.:]\d+\b/.test(c)
-  );
-}
 
 function renderFormattedMessage(
   text: string,
@@ -47,26 +29,7 @@ function renderFormattedMessage(
 ) {
   if (!text) return null;
 
-  const parts: { text: string; isCitation: boolean }[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  const regex = new RegExp(SCRIPTURE_CITATION_REGEX);
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push({ text: text.substring(lastIndex, match.index), isCitation: false });
-    }
-    const rawMatch = match[0];
-    const inner = match[1];
-    parts.push({
-      text: rawMatch,
-      isCitation: isScriptureCitation(inner),
-    });
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < text.length) {
-    parts.push({ text: text.substring(lastIndex), isCitation: false });
-  }
+  const parts = parseAiMessageCitations(text);
 
   return (
     <Text
