@@ -307,6 +307,172 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(homeSummaryNetworkRequests, 1, 'Rapid concurrent focus calls deduplicate to exactly 1 network request');
     });
 
+    it('calendar fresh within 12h: request omits panchang and keeps the cached calendar/hero', async () => {
+      const requestedPaths: string[] = [];
+      const appliedPayloads: any[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-calendar-fresh-1' };
+      const timezone = 'Europe/London';
+      const calendarSavedAt = Date.now() - 60 * 60 * 1000; // 1h ago, well within the 12h TTL
+
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-calendar-fresh-1' }, sampleHomeSummary, timezone, undefined, calendarSavedAt);
+
+      const { panchang: _omitted, ...responseWithoutPanchang } = sampleHomeSummary;
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async (path: string) => {
+          requestedPaths.push(path);
+          return new Response(JSON.stringify(responseWithoutPanchang), { status: 200 });
+        },
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      // Sadhana/practice fields are stale (>5m) so a request is still issued,
+      // but the calendar itself is still within its own 12h window.
+      coordinator.state.hasValidState = true;
+      coordinator.state.lastLoadedAt = Date.now() - 10 * 60 * 1000;
+      coordinator.state.lastCalendarLoadedAt = calendarSavedAt;
+      coordinator.state.lastIdentityKey = 'authenticated:user-calendar-fresh-1';
+
+      // The reference to compare against is the *sanitized* cached panchang
+      // (round-tripped through writeHomeCache/sanitizeForHomeCache, which
+      // fills in series/storyCards/calendarStatus/sampradaya defaults), not
+      // the raw input fixture literal -- that round-trip already happened
+      // once before this test's own writeHomeCache call above.
+      const cachedBefore = await readHomeCache({ kind: 'authenticated', userId: 'user-calendar-fresh-1' }, timezone);
+
+      await coordinator.onFocus(userA);
+
+      assert.equal(requestedPaths.length, 1);
+      assert.ok(requestedPaths[0].includes('skipCalendar=true'), `expected skipCalendar=true, got ${requestedPaths[0]}`);
+      const applied = appliedPayloads[appliedPayloads.length - 1];
+      assert.deepEqual(applied.panchang, cachedBefore?.payload.panchang, 'cached panchang must be preserved, not wiped by the calendar-omitted response');
+      assert.deepEqual(applied.hero, cachedBefore?.payload.hero, 'cached hero must be preserved too -- festival hero theming depends on calendar data');
+
+      const cachedAfter = await readHomeCache({ kind: 'authenticated', userId: 'user-calendar-fresh-1' }, timezone);
+      assert.equal(cachedAfter?.calendarSavedAt, calendarSavedAt, 'a skipped-calendar write must not bump calendarSavedAt to now');
+    });
+
+    it('calendar older than 12h: request is unqualified and the fresh panchang is applied and cached', async () => {
+      const requestedPaths: string[] = [];
+      const appliedPayloads: any[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-calendar-stale-1' };
+      const timezone = 'Europe/London';
+      const oldCalendarSavedAt = Date.now() - 13 * 60 * 60 * 1000; // 13h ago, past the 12h TTL
+
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-calendar-stale-1' }, sampleHomeSummary, timezone, undefined, oldCalendarSavedAt);
+
+      const freshSummary = {
+        ...sampleHomeSummary,
+        panchang: { ...sampleHomeSummary.panchang, festivalLabel: '🪔 Fresh Festival' },
+      };
+      const beforeRequest = Date.now();
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async (path: string) => {
+          requestedPaths.push(path);
+          return new Response(JSON.stringify(freshSummary), { status: 200 });
+        },
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      coordinator.state.hasValidState = true;
+      coordinator.state.lastLoadedAt = Date.now() - 10 * 60 * 1000;
+      coordinator.state.lastCalendarLoadedAt = oldCalendarSavedAt;
+      coordinator.state.lastIdentityKey = 'authenticated:user-calendar-stale-1';
+
+      await coordinator.onFocus(userA);
+
+      assert.equal(requestedPaths.length, 1);
+      assert.ok(!requestedPaths[0].includes('skipCalendar'), `expected an unqualified request, got ${requestedPaths[0]}`);
+      const applied = appliedPayloads[appliedPayloads.length - 1];
+      assert.equal(applied.panchang.festivalLabel, '🪔 Fresh Festival');
+      assert.ok(coordinator.state.lastCalendarLoadedAt >= beforeRequest, 'lastCalendarLoadedAt must advance to (about) now on a real calendar fetch');
+
+      const cachedAfter = await readHomeCache({ kind: 'authenticated', userId: 'user-calendar-stale-1' }, timezone);
+      assert.equal(cachedAfter?.payload.panchang.festivalLabel, '🪔 Fresh Festival');
+      assert.ok((cachedAfter?.calendarSavedAt ?? 0) >= beforeRequest);
+    });
+
+    it('manual refresh always requests a fresh calendar regardless of the 12h window', async () => {
+      const requestedPaths: string[] = [];
+
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-manual-refresh-1' };
+      const timezone = 'Europe/London';
+      // Calendar was fetched 1 minute ago -- deep inside the 12h window, so a
+      // normal focus would skip it. A manual refresh must not.
+      const recentCalendarSavedAt = Date.now() - 60 * 1000;
+
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-manual-refresh-1' }, sampleHomeSummary, timezone, undefined, recentCalendarSavedAt);
+
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async (path: string) => {
+          requestedPaths.push(path);
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      coordinator.state.hasValidState = true;
+      coordinator.state.lastLoadedAt = Date.now();
+      coordinator.state.lastCalendarLoadedAt = recentCalendarSavedAt;
+      coordinator.state.lastIdentityKey = 'authenticated:user-manual-refresh-1';
+
+      await coordinator.loadHome(userA, /* isManualRefresh */ true);
+
+      assert.equal(requestedPaths.length, 1);
+      assert.ok(!requestedPaths[0].includes('skipCalendar'), `manual refresh must always fetch a fresh calendar, got ${requestedPaths[0]}`);
+    });
+
+    it('cold start rehydrates lastCalendarLoadedAt from the on-disk calendarSavedAt', async () => {
+      const userA: HomeAuthIdentity = { kind: 'authenticated', userId: 'user-cold-start-1' };
+      const timezone = 'Europe/London';
+      const persistedCalendarSavedAt = Date.now() - 3 * 60 * 60 * 1000; // 3h ago
+
+      await writeHomeCache({ kind: 'authenticated', userId: 'user-cold-start-1' }, sampleHomeSummary, timezone, undefined, persistedCalendarSavedAt);
+
+      const { panchang: _omitted, ...responseWithoutPanchang } = sampleHomeSummary;
+      // Fresh coordinator instance, matching a real cold app start -- no
+      // in-memory state carried over from a previous session. The mock must
+      // actually honor skipCalendar like the real backend does -- 3h is
+      // within the 12h TTL once rehydrated from disk, so the background
+      // fetch this triggers is expected to omit panchang; a mock that always
+      // returns a full payload would let that fresh "fetch" silently
+      // overwrite the very rehydration this test is checking.
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async (path: string) => new Response(
+          JSON.stringify(path.includes('skipCalendar=true') ? responseWithoutPanchang : sampleHomeSummary),
+          { status: 200 }
+        ),
+        onApplyPayload: () => {},
+        onSetLoading: () => {},
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+        getTimezone: () => timezone,
+      });
+
+      assert.equal(coordinator.state.lastCalendarLoadedAt, 0, 'a fresh coordinator starts with no known calendar freshness');
+
+      await coordinator.onFocus(userA);
+
+      assert.equal(coordinator.state.lastCalendarLoadedAt, persistedCalendarSavedAt, 'the SWR cache-read branch must rehydrate lastCalendarLoadedAt from disk, not leave it at 0');
+    });
+
     it('User A -> User B: User A data cleared immediately before User B data renders', async () => {
       let homeSummaryNetworkRequests = 0;
       let appliedNames: string[] = [];

@@ -55,6 +55,17 @@ export type HomeFetchApi = (
 
 export const HOME_SUMMARY_TIMEOUT_MS = 30_000;
 
+// How long the fast-changing fields (japa/sadhana progress, sankalpa, etc.)
+// are trusted before a focus forces a full reload.
+export const HOME_FOCUS_STALE_MS = 5 * 60 * 1000;
+// How long the Sacred Days calendar deck specifically is trusted before its
+// own portion of home-summary is re-requested -- independent of, and much
+// longer than, HOME_FOCUS_STALE_MS, since festival/vrat dates don't change
+// intraday. A day-rollover within this window is already handled correctly
+// from cache alone by withDateSensitiveFieldsPending (homeCache.ts), so
+// there's no separate "force refetch on rollover" rule here.
+export const CALENDAR_FRESHNESS_MS = 12 * 60 * 60 * 1000;
+
 export type HomeLoaderDependencies = {
   fetchApi: HomeFetchApi;
   onApplyPayload: (payload: any) => void;
@@ -78,6 +89,7 @@ export type HomeLoaderDependencies = {
 export type HomeLoaderState = {
   hasValidState: boolean;
   lastLoadedAt: number;
+  lastCalendarLoadedAt: number;
   lastIdentityKey: string | null;
   requestGen: number;
   currentHeroUrl: string | null;
@@ -98,6 +110,7 @@ export class HomeSummaryCoordinator {
     this.state = {
       hasValidState: false,
       lastLoadedAt: 0,
+      lastCalendarLoadedAt: 0,
       lastIdentityKey: null,
       requestGen: 0,
       currentHeroUrl: null,
@@ -112,6 +125,7 @@ export class HomeSummaryCoordinator {
   public invalidateMemoryState(newIdentityKey: string | null = null) {
     this.state.hasValidState = false;
     this.state.lastLoadedAt = 0;
+    this.state.lastCalendarLoadedAt = 0;
     this.state.lastIdentityKey = newIdentityKey;
     this.deps.onSetLoading(true);
     this.deps.onSetError(false);
@@ -135,7 +149,7 @@ export class HomeSummaryCoordinator {
     }
 
     const now = Date.now();
-    const isStale = now - this.state.lastLoadedAt > 5 * 60 * 1000;
+    const isStale = now - this.state.lastLoadedAt > HOME_FOCUS_STALE_MS;
 
     // If we have valid state and it's fresh (<5m), no mandatory reload needed unless stale
     if (this.state.hasValidState && !isStale) {
@@ -190,6 +204,10 @@ export class HomeSummaryCoordinator {
       this.inFlightRequests.delete(currentIdentityKey);
       await clearHomeCache(cacheIdentity);
       this.state.lastLoadedAt = 0;
+      // Cache is gone and lastCalendarLoadedAt resets too -- a manual
+      // pull-to-refresh is an explicit "give me the latest" gesture, so it
+      // must never be narrowed by the 12h calendar-freshness window below.
+      this.state.lastCalendarLoadedAt = 0;
     }
 
     // 1. If we don't have valid state rendered yet, read stale-while-revalidate cache
@@ -204,6 +222,11 @@ export class HomeSummaryCoordinator {
         this.deps.onSetSectionsPending?.(cached.dateSensitiveStale);
         this.state.hasValidState = true;
         this.state.lastLoadedAt = cached.savedAt;
+        // Without this, every cold app start would think the calendar has
+        // never been fetched and request it fresh every time -- defeating
+        // most of the benefit on the single most common flow (reopening a
+        // backgrounded/killed app).
+        this.state.lastCalendarLoadedAt = cached.calendarSavedAt;
         this.deps.onSetLoading(false);
         cacheApplied = true;
         if (!wasAlreadyValid) {
@@ -237,9 +260,18 @@ export class HomeSummaryCoordinator {
     // 2. Fetch fresh network payload for authenticated user (deduplicated per identity)
     let inFlight = this.inFlightRequests.get(currentIdentityKey);
     if (!inFlight) {
+      // Already implicitly false right after a manual refresh, since that
+      // branch above resets lastCalendarLoadedAt to 0 -- no separate
+      // isManualRefresh check needed here.
+      const calendarFresh =
+        this.state.lastCalendarLoadedAt > 0 &&
+        Date.now() - this.state.lastCalendarLoadedAt < CALENDAR_FRESHNESS_MS;
+      const homeSummaryPath = calendarFresh
+        ? '/api/native/home-summary?skipCalendar=true'
+        : '/api/native/home-summary';
       inFlight = (async () => {
         try {
-          const response = await this.deps.fetchApi('/api/native/home-summary', {
+          const response = await this.deps.fetchApi(homeSummaryPath, {
             timeoutMs: HOME_SUMMARY_TIMEOUT_MS,
           });
           // Measurement only -- this is the one place that issues Home's
@@ -285,6 +317,26 @@ export class HomeSummaryCoordinator {
 
       const payload = result?.payload;
       if (payload) {
+        // A `?skipCalendar=true` response omits `panchang` entirely (see
+        // HomeSummaryResponse's doc comment on the backend) -- and, since
+        // hero theming picks a festival-themed image server-side using the
+        // same occurrence data, `hero` too. Splice both back in from the
+        // last real fetch's cache rather than letting them apply/persist as
+        // empty: applyPayload and sanitizeForHomeCache both already default
+        // a genuinely-missing panchang gracefully (neutral, not fabricated),
+        // so if the cache read below unexpectedly comes back empty this
+        // still degrades safely instead of crashing -- it just means one
+        // extra real fetch next time, same as any other cache miss.
+        let calendarSavedAt = Date.now();
+        if (!payload.panchang) {
+          const cachedCalendar = await readHomeCache(cacheIdentity, timezone);
+          if (cachedCalendar) {
+            payload.panchang = cachedCalendar.payload.panchang;
+            payload.hero = cachedCalendar.payload.hero;
+            calendarSavedAt = cachedCalendar.calendarSavedAt;
+          }
+        }
+
         if (payload.hero?.imageUrl && this.deps.onPrefetchHeroImage) {
           const nextHeroUrl = payload.hero.imageUrl;
           if (nextHeroUrl && nextHeroUrl !== this.state.currentHeroUrl) {
@@ -296,12 +348,13 @@ export class HomeSummaryCoordinator {
         this.deps.onSetSectionsPending?.(false);
         this.state.hasValidState = true;
         this.state.lastLoadedAt = Date.now();
+        this.state.lastCalendarLoadedAt = calendarSavedAt;
         this.deps.onSetLoading(false);
         this.deps.onSetError(false);
 
         const canonicalTimezone = safeTimezone(payload.date?.timezone || timezone);
         const canonicalSpiritualDate = spiritualDate(canonicalTimezone);
-        void writeHomeCache(cacheIdentity, payload, canonicalTimezone, canonicalSpiritualDate);
+        void writeHomeCache(cacheIdentity, payload, canonicalTimezone, canonicalSpiritualDate, calendarSavedAt);
         void syncStartupPreferencesFromProfile(
           payload.profile,
           canonicalTimezone,

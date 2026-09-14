@@ -129,6 +129,13 @@ export type HomeCacheEnvelope<T = CachedHomeRenderModel> = {
   spiritualDate: string;
   timezone: string;
   savedAt: number;
+  // When this envelope's `panchang` was actually last fetched fresh from
+  // the server -- distinct from `savedAt` (this whole envelope's write
+  // time) because a write can happen without a fresh calendar fetch (the
+  // 12h-TTL "skipCalendar" request -- see HomeSummaryCoordinator). Falls
+  // back to `savedAt` for any envelope written before this field existed,
+  // since that's the closest true value available.
+  calendarSavedAt: number;
   payload: T;
 };
 
@@ -428,6 +435,7 @@ export async function readHomeCache(
 ): Promise<{
   payload: CachedHomeRenderModel;
   savedAt: number;
+  calendarSavedAt: number;
   timezone: string;
   spiritualDate: string;
   dateSensitiveStale: boolean;
@@ -485,6 +493,11 @@ export async function readHomeCache(
     return {
       payload: envelope.payload,
       savedAt: envelope.savedAt ?? 0,
+      // Envelopes written before this field existed fall back to savedAt --
+      // the closest true value available, and errs toward "treat as not
+      // fresh yet" is impossible here since savedAt is always <= now, so
+      // this can only make the calendar TTL look *more* stale, never less.
+      calendarSavedAt: envelope.calendarSavedAt ?? envelope.savedAt ?? 0,
       timezone: canonicalTimezone,
       spiritualDate: envelope.spiritualDate,
       dateSensitiveStale,
@@ -503,7 +516,14 @@ export async function writeHomeCache(
   identity: CacheIdentity,
   payload: unknown,
   timezone?: string,
-  currentSpiritualDate?: string
+  currentSpiritualDate?: string,
+  // Pass the carried-forward prior value here when this write's panchang
+  // wasn't actually freshly fetched (a skipCalendar round) -- the caller
+  // (HomeSummaryCoordinator) already has it in hand from its own
+  // readHomeCache merge earlier in the same request, so this just takes it
+  // rather than re-reading disk. Omitted (defaults to now) for callers that
+  // always represent a fully-fresh write, like the guest payload.
+  calendarSavedAt?: number
 ): Promise<void> {
   if (!validateHomeSummaryPayload(payload)) return;
   const sanitized = sanitizeForHomeCache(payload);
@@ -517,6 +537,7 @@ export async function writeHomeCache(
     spiritualDate: date,
     timezone: canonicalTimezone,
     savedAt: Date.now(),
+    calendarSavedAt: calendarSavedAt ?? Date.now(),
     payload: sanitized,
   };
 
