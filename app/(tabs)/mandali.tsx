@@ -1384,16 +1384,6 @@ export default function MandaliScreen() {
   // alert once it has genuinely succeeded — lib/mandali.ts's report/block
   // functions previously swallowed errors, so these chains would show
   // "Reported"/"Blocked" even on a failed network call or DB rejection.
-  const submitPostReport = useCallback(async (post: PostRow, reason: string) => {
-    if (!profile) return;
-    try {
-      await reportMandaliPost(profile.userId, post, reason);
-      Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
-    } catch {
-      Alert.alert('Could not submit report', 'Check your connection and try again.');
-    }
-  }, [profile]);
-
   const blockPostAuthor = useCallback(async (authorId: string) => {
     if (!profile) return;
     try {
@@ -1404,6 +1394,29 @@ export default function MandaliScreen() {
       Alert.alert('Could not block user', 'Check your connection and try again.');
     }
   }, [loadMandali, profile]);
+
+  const submitPostReport = useCallback(async (post: PostRow, reason: string) => {
+    if (!profile) return;
+    const authorName = post.profiles?.full_name ?? post.profiles?.username ?? 'Author';
+    try {
+      await reportMandaliPost(profile.userId, post, reason);
+      setPosts((prev) => prev.filter((p) => p.id !== post.id));
+      Alert.alert(
+        'Report Submitted',
+        'Thank you — our team will review within 24 hours. This post has been hidden from your feed.',
+        [
+          { text: 'OK' },
+          {
+            text: `Block ${authorName}`,
+            style: 'destructive',
+            onPress: () => void blockPostAuthor(post.author_id),
+          },
+        ]
+      );
+    } catch {
+      Alert.alert('Could not submit report', 'Check your connection and try again.');
+    }
+  }, [blockPostAuthor, profile]);
 
   const showPostOptions = useCallback((post: PostRow) => {
     setPostOptionsPost(post);
@@ -1482,47 +1495,46 @@ export default function MandaliScreen() {
 
   const reportMember = useCallback((memberId: string) => {
     if (!profile) return;
+    const submitMemberReport = async (reason: string) => {
+      try {
+        await reportMandaliMember(profile.userId, memberId, reason);
+        Alert.alert(
+          'Report Submitted',
+          'Thank you. Our moderation team will review this within 24 hours.',
+          [
+            { text: 'OK' },
+            {
+              text: 'Block Seeker',
+              style: 'destructive',
+              onPress: () => void blockPostAuthor(memberId),
+            },
+          ]
+        );
+      } catch {
+        Alert.alert('Could not submit report', 'Check your connection and try again.');
+      }
+    };
+
     Alert.alert(
       'Report Seeker',
       'Please tell us what is wrong. All reports are reviewed by our moderation team within 24 hours.',
       [
         {
           text: 'Spam or commercial content',
-          onPress: async () => {
-            try {
-              await reportMandaliMember(profile.userId, memberId, 'spam');
-              Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team within 24 hours.');
-            } catch {
-              Alert.alert('Could not submit report', 'Check your connection and try again.');
-            }
-          },
+          onPress: () => void submitMemberReport('spam'),
         },
         {
           text: 'Harassment or offensive behavior',
-          onPress: async () => {
-            try {
-              await reportMandaliMember(profile.userId, memberId, 'harassment');
-              Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team within 24 hours.');
-            } catch {
-              Alert.alert('Could not submit report', 'Check your connection and try again.');
-            }
-          },
+          onPress: () => void submitMemberReport('harassment'),
         },
         {
           text: 'Inappropriate profile or impersonation',
-          onPress: async () => {
-            try {
-              await reportMandaliMember(profile.userId, memberId, 'other');
-              Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team within 24 hours.');
-            } catch {
-              Alert.alert('Could not submit report', 'Check your connection and try again.');
-            }
-          },
+          onPress: () => void submitMemberReport('other'),
         },
         { text: 'Cancel', style: 'cancel' },
       ]
     );
-  }, [profile]);
+  }, [blockPostAuthor, profile]);
 
   const showMemberOptions = useCallback((member: MemberRow) => {
     if (member.id === profile?.userId) return;
@@ -1552,42 +1564,31 @@ export default function MandaliScreen() {
 
   const handleReportComment = useCallback((commentId: string) => {
     if (!profile) return;
+    const submitCommentReport = async (reason: string) => {
+      try {
+        await reportMandaliComment(profile.userId, commentId, reason);
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        Alert.alert('Reported', 'Thank you — our team will review within 24 hours. This comment has been hidden from your view.');
+      } catch {
+        Alert.alert('Could not submit report', 'Check your connection and try again.');
+      }
+    };
+
     Alert.alert(
       'Report Comment',
       'Please tell us what is wrong with this comment. Reports are reviewed by our team within 24 hours.',
       [
         {
           text: 'Spam or commercial',
-          onPress: async () => {
-            try {
-              await reportMandaliComment(profile.userId, commentId, 'spam');
-              Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
-            } catch {
-              Alert.alert('Could not submit report', 'Check your connection and try again.');
-            }
-          },
+          onPress: () => void submitCommentReport('spam'),
         },
         {
           text: 'Harassment or abuse',
-          onPress: async () => {
-            try {
-              await reportMandaliComment(profile.userId, commentId, 'harassment');
-              Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
-            } catch {
-              Alert.alert('Could not submit report', 'Check your connection and try again.');
-            }
-          },
+          onPress: () => void submitCommentReport('harassment'),
         },
         {
           text: 'Inappropriate or offensive',
-          onPress: async () => {
-            try {
-              await reportMandaliComment(profile.userId, commentId, 'other');
-              Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
-            } catch {
-              Alert.alert('Could not submit report', 'Check your connection and try again.');
-            }
-          },
+          onPress: () => void submitCommentReport('other'),
         },
         { text: 'Cancel', style: 'cancel' },
       ]

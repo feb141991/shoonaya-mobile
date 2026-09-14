@@ -174,13 +174,49 @@ export default function MemberProfileScreen() {
     } catch {}
   };
 
+  const handleBlockSeeker = () => {
+    if (!currentUserId || !id) return;
+    const targetName = profile?.full_name ?? profile?.username ?? 'this seeker';
+    Alert.alert(
+      `Block ${targetName}?`,
+      'They will not be able to interact with you, and their posts and comments will no longer appear in your feed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockUser(currentUserId, id);
+              setIsBlocked(true);
+              Alert.alert('Seeker Blocked', `${targetName} has been blocked.`);
+            } catch {
+              Alert.alert('Could not block seeker', 'Check your connection and try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const submitSeekerReport = async (reason: string) => {
     if (!currentUserId || !id) return;
+    const targetName = profile?.full_name ?? profile?.username ?? 'this seeker';
     try {
       await reportMandaliMember(currentUserId, id, reason);
       Alert.alert(
         'Report Submitted',
-        'Thank you for keeping our sacred fellowship safe. Our team will review this within 24 hours.'
+        'Thank you for keeping our sacred fellowship safe. Our moderation team will review this within 24 hours.',
+        isBlocked
+          ? [{ text: 'OK' }]
+          : [
+              { text: 'OK' },
+              {
+                text: `Block ${targetName}`,
+                style: 'destructive',
+                onPress: () => handleBlockSeeker(),
+              },
+            ]
       );
     } catch {
       Alert.alert('Could not submit report', 'Check your connection and try again.');
@@ -206,31 +242,6 @@ export default function MemberProfileScreen() {
           onPress: () => void submitSeekerReport('other'),
         },
         { text: 'Cancel', style: 'cancel' },
-      ]
-    );
-  };
-
-  const handleBlockSeeker = () => {
-    if (!currentUserId || !id) return;
-    const targetName = profile?.full_name ?? profile?.username ?? 'this seeker';
-    Alert.alert(
-      `Block ${targetName}?`,
-      'They will not be able to interact with you, and their posts and comments will no longer appear in your feed.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await blockUser(currentUserId, id);
-              setIsBlocked(true);
-              Alert.alert('Seeker Blocked', `${targetName} has been blocked.`);
-            } catch {
-              Alert.alert('Could not block seeker', 'Check your connection and try again.');
-            }
-          },
-        },
       ]
     );
   };
