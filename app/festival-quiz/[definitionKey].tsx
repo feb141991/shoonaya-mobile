@@ -35,6 +35,7 @@ type Season = {
   status: string;
   currentDay: number | null;
   totalDays: number | null;
+  daysUntilStart: number | null;
   year: number;
   days: SeasonDay[];
 };
@@ -192,7 +193,15 @@ export default function FestivalQuizScreen() {
           <View style={{ flex: 1, alignItems: 'center', marginHorizontal: 10 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 18, textAlign: 'center' }}>{season.title}</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
-              Day {season.currentDay ?? '–'} of {season.totalDays ?? season.days.length}
+              {season.currentDay
+                ? `Day ${season.currentDay} of ${season.totalDays ?? season.days.length}`
+                : season.daysUntilStart === 0
+                  ? 'Starts today'
+                  : season.daysUntilStart === 1
+                    ? 'Starts tomorrow'
+                    : season.daysUntilStart !== null
+                      ? `Starts in ${season.daysUntilStart} days`
+                      : `${season.totalDays ?? season.days.length}-day journey`}
             </Text>
           </View>
           <View style={{ width: 40 }} />
