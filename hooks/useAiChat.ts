@@ -11,6 +11,7 @@ export type ChatMessage = {
 };
 
 export type ProfileContext = {
+  userId: string;
   tradition: string | null;
   sampradaya: string | null;
   city: string | null;
@@ -90,6 +91,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       .single();
 
     setProfile({
+      userId: user.id,
       tradition: data?.tradition ?? null,
       sampradaya: data?.sampradaya ?? null,
       city: data?.city ?? null,

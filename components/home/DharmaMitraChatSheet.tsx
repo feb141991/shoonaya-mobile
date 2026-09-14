@@ -1,10 +1,24 @@
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View, useColorScheme } from 'react-native';
+import { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  useColorScheme,
+} from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { ScrollUnrollPanel } from '@/components/home/ScrollUnrollPanel';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
+import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts } from '@/lib/dharma-mitra-content';
 
@@ -36,8 +50,81 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
   const prompts = getTraditionPrompts(tradition);
   const activeLanguage = language ?? profile?.appLanguage ?? 'en';
 
+  const [reportedMessageIds, setReportedMessageIds] = useState<Set<string>>(new Set());
+
+  const handleReportAiMessage = useCallback(
+    (message: ChatMessage) => {
+      if (reportedMessageIds.has(message.id)) {
+        Alert.alert('Already Reported', 'You have already reported this response.');
+        return;
+      }
+
+      const msgIndex = messages.findIndex((m) => m.id === message.id);
+      const userPrompt =
+        msgIndex > 0
+          ? messages
+              .slice(0, msgIndex)
+              .reverse()
+              .find((m) => m.role === 'user')?.text
+          : undefined;
+
+      const submit = async (reason: AiReportReason) => {
+        try {
+          await reportAiChatResponse({
+            userId: profile?.userId,
+            messageId: message.id,
+            aiText: message.text,
+            userPrompt,
+            reason,
+          });
+          setReportedMessageIds((prev) => new Set(prev).add(message.id));
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+          Alert.alert(
+            'Report Submitted',
+            'Thank you for your feedback. Our team reviews reported responses to ensure accuracy and safety.'
+          );
+        } catch (error) {
+          Alert.alert(
+            'Could not submit report',
+            error instanceof Error ? error.message : 'Please check your connection and try again.'
+          );
+        }
+      };
+
+      Alert.alert(
+        'Report AI Response',
+        'Help us improve Dharma Mitra by selecting an issue with this response:',
+        [
+          {
+            text: 'Factually incorrect',
+            onPress: () => void submit('incorrect'),
+          },
+          {
+            text: 'Harmful or dangerous',
+            onPress: () => void submit('harmful'),
+          },
+          {
+            text: 'Religiously inaccurate',
+            onPress: () => void submit('religiously_inaccurate'),
+          },
+          {
+            text: 'Offensive content',
+            onPress: () => void submit('offensive'),
+          },
+          {
+            text: 'Other concern',
+            onPress: () => void submit('other'),
+          },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+    },
+    [messages, profile?.userId, reportedMessageIds]
+  );
+
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isUser = item.role === 'user';
+    const isReported = reportedMessageIds.has(item.id);
 
     return (
       <View style={{ alignItems: isUser ? 'flex-end' : 'flex-start', marginBottom: 12 }}>
@@ -71,6 +158,57 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
             <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 22 }}>
               {item.text || (streaming ? '...' : '')}
             </Text>
+          </View>
+        )}
+
+        {!isUser && Boolean(item.text) && !streaming && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 4,
+              marginLeft: 8,
+              gap: 8,
+            }}
+          >
+            {isReported ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Feather name="check" size={11} color={theme.dim} />
+                <Text
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 11,
+                    color: theme.dim,
+                  }}
+                >
+                  Reported · Under review
+                </Text>
+              </View>
+            ) : (
+              <PressableSurface
+                onPress={() => handleReportAiMessage(item)}
+                accessibilityLabel="Report response"
+                accessibilityRole="button"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  opacity: 0.65,
+                }}
+              >
+                <Feather name="flag" size={11} color={theme.dim} />
+                <Text
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 11,
+                    color: theme.dim,
+                  }}
+                >
+                  Report
+                </Text>
+              </PressableSurface>
+            )}
           </View>
         )}
       </View>
