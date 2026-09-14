@@ -199,6 +199,23 @@ function findObservanceForDate(
 }
 
 /**
+ * Keeps only entries still in the future relative to `targetIsoDate` and
+ * refreshes their daysLeft/label via recomputeEntryForDate. Shared by both
+ * branches of withDateSensitiveFieldsPending below -- an entry with no
+ * `date` (pre-dates that field) is dropped, same as recomputeEntryForDate's
+ * own passthrough guard would make pointless to keep here (its daysLeft
+ * would never be refreshed for the new date).
+ */
+function keepFutureEntries(
+  entries: CachedObservanceEntry[],
+  targetIsoDate: string
+): CachedObservanceEntry[] {
+  return entries
+    .filter((entry) => entry.date && entry.date > targetIsoDate)
+    .map((entry) => recomputeEntryForDate(entry, targetIsoDate));
+}
+
+/**
  * Given a cached payload whose spiritualDate no longer matches today, returns
  * a copy with the date-sensitive sections re-evaluated for `targetIsoDate` --
  * identity, hero and sacred-text content pass through unchanged since those
@@ -217,8 +234,14 @@ function findObservanceForDate(
  * fetch (a council correction, a materialization update), the promoted value
  * is corrected within one network round-trip -- it is never the last word.
  *
- * Falls back to the pre-existing neutral 'pending' skeleton when no matching
- * date is found in the cached window, or when `targetIsoDate` is omitted.
+ * When no entry matches `targetIsoDate` exactly (the common case -- most
+ * days aren't a festival), still-future cached entries are kept (filtered
+ * and recomputed the same way) and rendered as 'ready' with `observance:
+ * null` -- there is no reason to discard 14 days of already-cached, still
+ * valid festivals just because none of them happens to be *today*. Only
+ * falls back to the neutral 'pending' skeleton when the cache genuinely has
+ * nothing left for the future (a fully expired window, or entries that
+ * predate the `date` field), or when `targetIsoDate` is omitted entirely.
  */
 export function withDateSensitiveFieldsPending(
   payload: CachedHomeRenderModel,
@@ -227,9 +250,7 @@ export function withDateSensitiveFieldsPending(
   const promoted = targetIsoDate ? findObservanceForDate(payload, targetIsoDate) : null;
 
   if (promoted && targetIsoDate) {
-    const remainingUpcoming = (payload.panchang.upcomingObservances ?? [])
-      .filter((entry) => entry.date && entry.date > targetIsoDate)
-      .map((entry) => recomputeEntryForDate(entry, targetIsoDate));
+    const remainingUpcoming = keepFutureEntries(payload.panchang.upcomingObservances ?? [], targetIsoDate);
 
     return {
       ...payload,
@@ -261,6 +282,13 @@ export function withDateSensitiveFieldsPending(
     };
   }
 
+  // No exact match for targetIsoDate -- most days aren't a festival. Keep
+  // whatever's still genuinely in the future rather than treating "nothing
+  // for *today*" as "nothing usable at all".
+  const remainingFuture = targetIsoDate
+    ? keepFutureEntries(payload.panchang.upcomingObservances ?? [], targetIsoDate)
+    : [];
+
   return {
     ...payload,
     panchang: {
@@ -269,14 +297,15 @@ export function withDateSensitiveFieldsPending(
       vratLabel: null,
       viewedToday: false,
       observance: null,
-      upcomingObservances: [],
+      upcomingObservances: remainingFuture,
       series: [],
       storyCards: [],
-      // Stale cache with no matching cached date means today's
-      // materialization state is simply unknown until the fresh network
-      // response lands -- render the pill's neutral loading skeleton, not a
-      // confirmed-empty pill.
-      calendarStatus: 'pending',
+      // Only a genuinely empty cache (fully expired window, entries
+      // predating the `date` field, or no targetIsoDate at all) is truly
+      // unknown and needs the pill's neutral loading skeleton -- surviving
+      // future entries are real, already-verified data and render as
+      // 'ready' same as the promoted branch above.
+      calendarStatus: remainingFuture.length > 0 ? 'ready' : 'pending',
     },
     practices: payload.practices.map((p) => ({ ...p, done: false, progress: 0 })),
     nextPractice: {

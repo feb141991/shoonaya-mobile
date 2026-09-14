@@ -102,6 +102,26 @@ test('recomputes daysLeft/label for remaining upcoming observances and drops pas
   assert.equal(result.panchang.upcomingObservances[0].label, 'Next Ekadashi in 13 days');
 });
 
+test('no festival today, but future cached entries survive and get recomputed', () => {
+  const cached = makePayload({
+    observance: makeEntry({ name: 'Kamada Ekadashi', date: '2026-09-07', daysLeft: 0 }),
+    upcomingObservances: [
+      makeEntry({ name: 'Next Ekadashi', date: '2026-09-21', daysLeft: 14 }),
+    ],
+  });
+
+  // Rolling to 2026-09-08: no cached entry is dated exactly today, but
+  // 2026-09-21 is still genuinely in the future and must not be discarded.
+  const result = withDateSensitiveFieldsPending(cached, '2026-09-08');
+
+  assert.equal(result.panchang.calendarStatus, 'ready');
+  assert.equal(result.panchang.observance, null);
+  assert.equal(result.panchang.upcomingObservances.length, 1);
+  assert.equal(result.panchang.upcomingObservances[0].name, 'Next Ekadashi');
+  assert.equal(result.panchang.upcomingObservances[0].daysLeft, 13, 'must be recomputed relative to 2026-09-08, not the stale fetch date');
+  assert.equal(result.panchang.upcomingObservances[0].label, 'Next Ekadashi in 13 days');
+});
+
 test('falls back to the pending skeleton when no cached entry covers the target date', () => {
   const cached = makePayload({
     observance: makeEntry({ name: 'Kamada Ekadashi', date: '2026-09-07', daysLeft: 0 }),
