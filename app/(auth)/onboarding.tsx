@@ -41,6 +41,7 @@ import {
   computeFinalNotificationState,
 } from '@/lib/onboarding-contract';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
+import { saveDeviceStartupPreferences, syncStartupPreferencesFromProfile } from '@/lib/startup-scenes/preferences';
 import {
   LIFE_STAGES,
   GENDERS,
@@ -453,6 +454,10 @@ export default function OnboardingScreen() {
     if (step === 'preferences') {
       if (!tradition || !language) return;
       void persistPreferenceEarly({ tradition, app_language: language, meaning_language: language });
+      void saveDeviceStartupPreferences({
+        tradition: tradition === 'none' ? 'neutral' : tradition,
+        language,
+      });
       setFounderNoteContext({ tradition, language });
       return;
     }
@@ -711,6 +716,11 @@ export default function OnboardingScreen() {
       }
 
       await clearOnboardingDraft(user.id);
+      void syncStartupPreferencesFromProfile(
+        { tradition, appLanguage: language },
+        null,
+        user.id
+      );
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);
       setSaveError(error instanceof Error ? error.message : (isHindi ? 'ऑनबोर्डिंग सहेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Unable to save onboarding. Please try again.'));
@@ -962,6 +972,9 @@ export default function OnboardingScreen() {
                             setCalendarScope('');
                           }
                           void persistPreferenceEarly({ tradition: t.key });
+                          void saveDeviceStartupPreferences({
+                            tradition: t.key === 'none' ? 'neutral' : t.key,
+                          });
                         });
                       }}
                       accessibilityRole="button"

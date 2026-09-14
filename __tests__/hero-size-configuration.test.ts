@@ -218,5 +218,21 @@ describe('Configurable Home Hero Size Invariants & Bounds Suite', () => {
       const day2 = resolveAutoRotatedHeroTheme('jain', new Date('2026-01-02'));
       assert.notEqual(day1?.id, day2?.id);
     });
+
+    it('11. Auto-rotation returns null for neutral or unpopulated traditions, and never leaks Hindu deities to Jain users', () => {
+      const { resolveAutoRotatedHeroTheme } = require('../lib/heroPreference');
+      // Neutral, all, or empty tradition MUST return null so Home uses the universal backdrop
+      assert.equal(resolveAutoRotatedHeroTheme('neutral'), null);
+      assert.equal(resolveAutoRotatedHeroTheme('all'), null);
+      assert.equal(resolveAutoRotatedHeroTheme(''), null);
+
+      // On mid-September (day-of-year where Hindu pool yields Hanuman), Jain user MUST receive a Jain theme
+      const jainSept14 = resolveAutoRotatedHeroTheme('jain', new Date('2026-09-14'));
+      assert.ok(jainSept14 !== null);
+      assert.ok(jainSept14.heroImage.includes('/jain/'));
+      assert.ok(!jainSept14.id.includes('hanuman'));
+      assert.ok(!jainSept14.heroImage.includes('/hindu/'));
+    });
   });
 });
+

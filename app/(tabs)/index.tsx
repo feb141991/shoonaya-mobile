@@ -57,6 +57,7 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
+import { getStartupPreferences } from '@/lib/startup-scenes/preferences';
 import {
   HomeSummaryCoordinator,
   PanchangRetryController,
@@ -348,7 +349,7 @@ const INITIAL_STATE: HomeSummary = {
   profile: {
     name: 'Seeker',
     firstName: 'Seeker',
-    tradition: 'hindu',
+    tradition: 'neutral',
     appLanguage: 'en',
     city: '',
     country: '',
@@ -731,6 +732,27 @@ function HomeContent() {
     createInitialDiscoveryState(resolveIdentityKey(appIdentity))
   );
 
+  useEffect(() => {
+    let active = true;
+    void getStartupPreferences(appIdentity.kind === 'authenticated' ? appIdentity.userId : null).then((prefs) => {
+      if (!active || !prefs || prefs.tradition === 'neutral') return;
+      setState((prev) => {
+        if (prev.profile.tradition !== 'neutral') return prev;
+        return {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            tradition: prefs.tradition,
+            appLanguage: prefs.language,
+          },
+        };
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [appIdentity]);
+
   const isContentRendered = !loading && !loadError && Boolean(state.profile.firstName);
 
   const hasBlockingHomeSurface =
@@ -950,7 +972,7 @@ function HomeContent() {
     profile: {
       name: 'Atithi',
       firstName: 'Atithi',
-      tradition: 'hindu',
+      tradition: 'neutral',
       appLanguage: 'en',
       city: '',
       country: '',

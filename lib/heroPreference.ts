@@ -707,16 +707,19 @@ export async function setHeroSize(size: HeroSize): Promise<void> {
  * and fresh every morning, while staying deterministic throughout the day.
  */
 export function resolveAutoRotatedHeroTheme(
-  tradition: string = 'hindu',
+  tradition: string = 'neutral',
   date: Date = new Date()
 ): { id: string; label: string; heroImage: string; objectPosition?: string } | null {
-  const normTradition = tradition.trim().toLowerCase() || 'hindu';
+  const normTradition = tradition.trim().toLowerCase();
+  if (!normTradition || normTradition === 'neutral' || normTradition === 'all') {
+    return null;
+  }
   const matchingThemes = BUNDLED_HERO_THEMES.filter(
-    (t) => !t.traditions?.length || t.traditions.includes(normTradition)
+    (t) => t.traditions?.includes(normTradition)
   );
 
   if (matchingThemes.length === 0) {
-    return BUNDLED_HERO_THEMES[0] ?? null;
+    return null;
   }
 
   // Calculate day of the year (0 - 365)
@@ -726,4 +729,5 @@ export function resolveAutoRotatedHeroTheme(
 
   return matchingThemes[index];
 }
+
 
