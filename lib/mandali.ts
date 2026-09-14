@@ -52,15 +52,26 @@ export type RsvpStatus = 'going' | 'interested' | 'not_going';
 // Devotional reaction set replacing the single upvote heart — deliberately
 // no negative/"dislike" option (tonally wrong for a feed people share vrat
 // updates, losses, and scripture questions on).
-export type ReactionType = 'pranam' | 'love' | 'insightful';
+export type ReactionType =
+  | 'pranam'
+  | 'bhakti'
+  | 'jnana'
+  | 'chardi_kala'
+  | 'shanti'
+  | 'love'
+  | 'insightful';
 
 export const REACTION_META: Record<ReactionType, { emoji: string; label: string; color: string }> = {
-  pranam: { emoji: "🙏", label: "Pranam", color: "#C5A059" },
-  love: { emoji: "❤️", label: "Love", color: "#E0684C" },
-  insightful: { emoji: "💡", label: "Insightful", color: "#4C8BF5" },
+  pranam: { emoji: '🙏', label: 'Pranam', color: '#C5A059' },
+  bhakti: { emoji: '🪷', label: 'Bhakti', color: '#E0684C' },
+  jnana: { emoji: '🪔', label: 'Jnana', color: '#F59E0B' },
+  chardi_kala: { emoji: '🌸', label: 'Chardi Kala', color: '#EC4899' },
+  shanti: { emoji: '🕊️', label: 'Shanti', color: '#3B82F6' },
+  love: { emoji: '❤️', label: 'Love', color: '#E0684C' },
+  insightful: { emoji: '💡', label: 'Insightful', color: '#4C8BF5' },
 };
 
-export const REACTION_ORDER: ReactionType[] = ["pranam", "love", "insightful"];
+export const REACTION_ORDER: ReactionType[] = ['pranam', 'bhakti', 'jnana', 'chardi_kala', 'shanti'];
 
 export { formatRelativeTime } from './formatRelativeTime';
 
@@ -84,6 +95,21 @@ export type PostAuthor = {
   is_official?: boolean;
 };
 
+export type MandaliPollOption = {
+  id: string;
+  text: string;
+  voteCount: number;
+  percentage: number;
+};
+
+export type MandaliPoll = {
+  id: string;
+  question: string;
+  totalVotes: number;
+  userVotedOptionId: string | null;
+  options: MandaliPollOption[];
+};
+
 export type PostRow = {
   id: string;
   created_at: string;
@@ -98,6 +124,7 @@ export type PostRow = {
   mandali_prompt_id?: string | null;
   mandali_prompt_date?: string | null;
   profiles?: PostAuthor | null;
+  poll?: MandaliPoll | null;
   // Present only from the paginated /api/mandali/feed?cursor/limit path --
   // undefined on the legacy full-fidelity response.
   viewerReaction?: ReactionType | null;
@@ -114,6 +141,10 @@ export type CommentRow = {
   updated_at: string | null;
   deleted_at: string | null;
   upvotes: number;
+  is_highlighted?: boolean;
+  highlight_label?: string | null;
+  highlighted_at?: string | null;
+  highlighted_by?: string | null;
   myReaction?: ReactionType | null;
   profiles?: { full_name: string; username: string; avatar_url: string | null } | null;
 };
@@ -701,4 +732,26 @@ export async function setPostReaction(postId: string, userId: string, reaction: 
 export async function removePostReaction(postId: string, userId: string): Promise<void> {
   const { error } = await supabase.from('post_upvotes').delete().match({ post_id: postId, user_id: userId });
   if (error) throw error;
+}
+
+export async function voteMandaliPoll(pollId: string, optionId: string): Promise<MandaliPoll> {
+  const response = await apiFetch('/api/mandali/polls/vote', {
+    method: 'POST',
+    body: JSON.stringify({ pollId, optionId }),
+  });
+  if (!response.ok) throw new Error('Could not record vote');
+  const result = (await response.json()) as { poll: MandaliPoll };
+  return result.poll;
+}
+
+export async function highlightMandaliComment(
+  commentId: string,
+  label: 'guru_prasad' | 'insightful' | null,
+): Promise<{ success: boolean; isHighlighted: boolean; highlightLabel: string | null }> {
+  const response = await apiFetch('/api/mandali/comments/highlight', {
+    method: 'POST',
+    body: JSON.stringify({ commentId, label }),
+  });
+  if (!response.ok) throw new Error('Could not highlight reflection');
+  return response.json();
 }

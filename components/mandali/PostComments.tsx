@@ -53,6 +53,8 @@ function CommentItem({
   nameSize,
   bodySize,
   bodyLineHeight,
+  isPostAuthor,
+  onToggleHighlight,
 }: {
   comment: CommentRow;
   userId: string;
@@ -76,6 +78,8 @@ function CommentItem({
   nameSize: number;
   bodySize: number;
   bodyLineHeight: number;
+  isPostAuthor?: boolean;
+  onToggleHighlight?: (commentId: string, isHighlighted: boolean) => void;
 }) {
   const cleanBody = normalizeCommentBody(comment.body);
   const [editing, setEditing] = useState(false);
@@ -117,6 +121,35 @@ function CommentItem({
         </View>
       </PressableSurface>
       <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+        {comment.is_highlighted && !isDeleted ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              alignSelf: 'flex-start',
+              paddingHorizontal: 7,
+              paddingVertical: 2,
+              borderRadius: RADII.pill,
+              backgroundColor: 'rgba(197, 160, 89, 0.14)',
+              borderWidth: 1,
+              borderColor: 'rgba(197, 160, 89, 0.35)',
+              marginBottom: 3,
+            }}
+          >
+            <Text style={{ fontSize: 10.5 }}>🪔</Text>
+            <Text
+              style={{
+                fontFamily: FONTS.sansSemiBold,
+                fontSize: 10,
+                color: COLORS.brandGold,
+              }}
+            >
+              {comment.highlight_label === 'insightful' ? 'Insightful Reflection' : 'Guru Prasad'}
+            </Text>
+          </View>
+        ) : null}
+
         <PressableSurface
           haptic="selection"
           accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
@@ -217,6 +250,24 @@ function CommentItem({
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Reply</Text>
               </PressableSurface>
             ) : null}
+            {isPostAuthor ? (
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel={comment.is_highlighted ? 'Remove highlighted reflection' : 'Pin reflection as Guru Prasad'}
+                onPress={() => onToggleHighlight?.(comment.id, !comment.is_highlighted)}
+                style={{ minHeight: 0 }}
+              >
+                <Text
+                  style={{
+                    fontFamily: FONTS.sansSemiBold,
+                    fontSize: 11,
+                    color: comment.is_highlighted ? COLORS.brandGold : dim,
+                  }}
+                >
+                  {comment.is_highlighted ? 'Pinned Prasad' : 'Pin Prasad'}
+                </Text>
+              </PressableSurface>
+            ) : null}
             {isOwn ? (
               <PressableSurface
                 haptic="selection"
@@ -266,6 +317,8 @@ export function PostComments({
   border,
   scrimColor = 'rgba(0,0,0,0.4)',
   brand,
+  postAuthorId,
+  onToggleHighlightComment,
 }: {
   comments: CommentRow[];
   expanded: boolean;
@@ -291,13 +344,24 @@ export function PostComments({
   border: string;
   scrimColor?: string;
   brand: string;
+  postAuthorId?: string;
+  onToggleHighlightComment?: (commentId: string, isHighlighted: boolean) => void;
 }) {
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [activeReactorsCommentId, setActiveReactorsCommentId] = useState<string | null>(null);
 
-  const rootComments = useMemo(() => comments.filter((comment) => !comment.parent_id), [comments]);
+  const isPostAuthor = Boolean(postAuthorId && userId && postAuthorId === userId);
+
+  const rootComments = useMemo(() => {
+    const roots = comments.filter((comment) => !comment.parent_id);
+    return roots.slice().sort((a, b) => {
+      if (a.is_highlighted && !b.is_highlighted) return -1;
+      if (!a.is_highlighted && b.is_highlighted) return 1;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  }, [comments]);
   const repliesByParent = useMemo(() => {
     const grouped = new Map<string, CommentRow[]>();
     for (const comment of comments) {
@@ -376,6 +440,8 @@ export function PostComments({
                   nameSize={12}
                   bodySize={12.5}
                   bodyLineHeight={17}
+                  isPostAuthor={isPostAuthor}
+                  onToggleHighlight={onToggleHighlightComment}
                 />
 
                 {replies.length > 0 ? (
@@ -404,6 +470,8 @@ export function PostComments({
                         nameSize={11.5}
                         bodySize={12}
                         bodyLineHeight={16}
+                        isPostAuthor={isPostAuthor}
+                        onToggleHighlight={onToggleHighlightComment}
                       />
                     ))}
                   </View>

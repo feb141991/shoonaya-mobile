@@ -37,6 +37,7 @@ import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/Me
 import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
+import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
@@ -76,6 +77,8 @@ import {
   updateMandaliComment,
   updateMandaliRsvp,
   updateMandaliPost,
+  voteMandaliPoll,
+  highlightMandaliComment,
   formatRelativeTime,
   type CommentRow,
   type ConnectionRequestRow,
@@ -199,6 +202,8 @@ type MandaliPostCardProps = {
   onRetryCommentReaction: (commentId: string) => void;
   myCommentReactions: Record<string, ReactionType>;
   failedCommentReactionIds: Set<string>;
+  onVotePoll?: (pollId: string, optionId: string) => Promise<boolean | void>;
+  onToggleHighlightComment?: (commentId: string, isHighlighted: boolean) => Promise<void> | void;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -228,7 +233,10 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onRetryCommentReaction,
   myCommentReactions,
   failedCommentReactionIds,
+  onVotePoll,
+  onToggleHighlightComment,
 }: MandaliPostCardProps) {
+  const isDark = useColorScheme() === 'dark';
   const isOwnPost = post.author_id === userId;
   const postTypeMeta = POST_TYPE_META[post.type] ?? POST_TYPE_META.update;
   const eventDateLabel = post.event_date
@@ -406,6 +414,19 @@ const MandaliPostCard = memo(function MandaliPostCard({
         </View>
       ) : null}
 
+      {post.poll ? (
+        <MandaliPollCard
+          poll={post.poll}
+          onVote={onVotePoll ?? (() => Promise.resolve())}
+          dim={theme.dim}
+          text={theme.text}
+          brand={theme.brand}
+          cardBg={theme.card}
+          border={theme.premiumBorder}
+          isDark={isDark}
+        />
+      ) : null}
+
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
         <PostReactionButton
           reaction={myReaction}
@@ -440,6 +461,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
         loadingFull={loadingComments}
         onToggleExpand={() => onToggleComments(post.id)}
         userId={userId ?? ''}
+        postAuthorId={post.author_id}
+        onToggleHighlightComment={onToggleHighlightComment}
         posting={postingComment}
         onSubmit={(body, parentId) => onSubmitComment(post.id, body, parentId)}
         onEditComment={onEditComment}
@@ -1308,6 +1331,51 @@ export default function MandaliScreen() {
     }
   }, [profile, rsvps]);
 
+  const handleVotePoll = useCallback(async (pollId: string, optionId: string) => {
+    try {
+      const updatedPoll = await voteMandaliPoll(pollId, optionId);
+      if (updatedPoll) {
+        setPosts((currentPosts) =>
+          currentPosts.map((p) => (p.poll?.id === pollId ? { ...p, poll: updatedPoll } : p))
+        );
+        setBlendedPosts((currentPosts) =>
+          currentPosts.map((p) => (p.poll?.id === pollId ? { ...p, poll: updatedPoll } : p))
+        );
+      }
+    } catch (err) {
+      console.error('[MandaliScreen] voteMandaliPoll failed', err);
+      throw err;
+    }
+  }, []);
+
+  const handleToggleHighlightComment = useCallback(async (commentId: string, isHighlighted: boolean) => {
+    try {
+      const res = await highlightMandaliComment(commentId, isHighlighted ? 'guru_prasad' : null);
+      setComments((current) =>
+        current.map((c) => {
+          if (c.id === commentId) {
+            return {
+              ...c,
+              is_highlighted: res.isHighlighted,
+              highlight_label: res.highlightLabel,
+            };
+          }
+          if (isHighlighted && c.is_highlighted && c.post_id === (current.find((item) => item.id === commentId)?.post_id)) {
+            return {
+              ...c,
+              is_highlighted: false,
+              highlight_label: null,
+            };
+          }
+          return c;
+        })
+      );
+    } catch (err) {
+      console.error('[MandaliScreen] highlightMandaliComment failed', err);
+      Alert.alert('Could not update reflection', 'Check your connection and try again.');
+    }
+  }, []);
+
   // Each of these now actually awaits the write and only shows a success
   // alert once it has genuinely succeeded — lib/mandali.ts's report/block
   // functions previously swallowed errors, so these chains would show
@@ -1680,9 +1748,11 @@ export default function MandaliScreen() {
         onRetryCommentReaction={handleRetryCommentReaction}
         myCommentReactions={myCommentReactions}
         failedCommentReactionIds={failedCommentReactionIds}
+        onVotePoll={handleVotePoll}
+        onToggleHighlightComment={handleToggleHighlightComment}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleViewProfile, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>

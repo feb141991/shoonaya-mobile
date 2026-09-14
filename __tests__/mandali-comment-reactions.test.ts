@@ -1,15 +1,32 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-export type ReactionType = 'pranam' | 'love' | 'insightful';
+export type ReactionType =
+  | 'pranam'
+  | 'bhakti'
+  | 'jnana'
+  | 'chardi_kala'
+  | 'shanti'
+  | 'love'
+  | 'insightful';
 
 export const REACTION_META: Record<ReactionType, { emoji: string; label: string; color: string }> = {
   pranam: { emoji: '🙏', label: 'Pranam', color: '#C5A059' },
+  bhakti: { emoji: '🪷', label: 'Bhakti', color: '#E0684C' },
+  jnana: { emoji: '🪔', label: 'Jnana', color: '#F2A900' },
+  chardi_kala: { emoji: '🌸', label: 'Chardi Kala', color: '#E97451' },
+  shanti: { emoji: '🕊️', label: 'Shanti', color: '#4C8BF5' },
   love: { emoji: '❤️', label: 'Love', color: '#E0684C' },
-  insightful: { emoji: '💡', label: 'Insightful', color: '#4C8BF5' },
+  insightful: { emoji: '💡', label: 'Insightful', color: '#F2A900' },
 };
 
-export const REACTION_ORDER: ReactionType[] = ['pranam', 'love', 'insightful'];
+export const REACTION_ORDER: ReactionType[] = [
+  'pranam',
+  'bhakti',
+  'jnana',
+  'chardi_kala',
+  'shanti',
+];
 
 export type CommentReactor = {
   userId: string;
@@ -29,9 +46,9 @@ export type SafetyState = {
 };
 
 describe('Mandali Comment Reactions & Who-Reacted Contract Suite', () => {
-  it('supports the exact 3 devotional reaction types: pranam, love, insightful', () => {
-    assert.equal(REACTION_ORDER.length, 3);
-    assert.deepEqual(REACTION_ORDER, ['pranam', 'love', 'insightful']);
+  it('supports the 5 authentic Dharmic devotional reaction types plus legacy keys', () => {
+    assert.equal(REACTION_ORDER.length, 5);
+    assert.deepEqual(REACTION_ORDER, ['pranam', 'bhakti', 'jnana', 'chardi_kala', 'shanti']);
 
     for (const type of REACTION_ORDER) {
       const meta = REACTION_META[type];
@@ -42,6 +59,12 @@ describe('Mandali Comment Reactions & Who-Reacted Contract Suite', () => {
     }
 
     assert.equal(REACTION_META.pranam.emoji, '🙏');
+    assert.equal(REACTION_META.bhakti.emoji, '🪷');
+    assert.equal(REACTION_META.jnana.emoji, '🪔');
+    assert.equal(REACTION_META.chardi_kala.emoji, '🌸');
+    assert.equal(REACTION_META.shanti.emoji, '🕊️');
+
+    // Backward compatibility with legacy reactions
     assert.equal(REACTION_META.love.emoji, '❤️');
     assert.equal(REACTION_META.insightful.emoji, '💡');
   });

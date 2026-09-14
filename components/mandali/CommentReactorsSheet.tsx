@@ -75,10 +75,15 @@ export function CommentReactorsSheet({
   }, [visible, commentId, currentUserId]);
 
   const counts = useMemo(() => {
-    const map: Record<ReactionType, number> = { pranam: 0, love: 0, insightful: 0 };
+    const map = {} as Record<ReactionType, number>;
+    for (const type of REACTION_ORDER) {
+      map[type] = 0;
+    }
     for (const r of reactors) {
       if (map[r.reactionType] != null) {
         map[r.reactionType]++;
+      } else {
+        map[r.reactionType] = 1;
       }
     }
     return map;
