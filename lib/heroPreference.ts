@@ -495,6 +495,27 @@ export const BUNDLED_HERO_THEMES: Array<{
     traditions: ['sikh'],
   },
   {
+    id: 'sikh-guru-amar-das',
+    label: 'Sri Guru Amar Das Ji Gurpurab',
+    heroImage: '/assets/images/heroes/sikh/sikh-guru-amar-das-ji.webp',
+    objectPosition: 'center 20%',
+    traditions: ['sikh'],
+  },
+  {
+    id: 'sikh-guru-ram-das',
+    label: 'Sri Guru Ram Das Ji Gurpurab',
+    heroImage: '/assets/images/heroes/sikh/sikh-guru-ram-das-ji.webp',
+    objectPosition: 'center 20%',
+    traditions: ['sikh'],
+  },
+  {
+    id: 'sikh-guru-har-krishan',
+    label: 'Sri Guru Har Krishan Ji Gurpurab',
+    heroImage: '/assets/images/heroes/sikh/sikh-guru-har-krishan-ji.webp',
+    objectPosition: 'center 20%',
+    traditions: ['sikh'],
+  },
+  {
     id: 'sikh-harmandir-sahib-sarovar',
     label: 'Harmandir Sahib Amritsar',
     heroImage: '/assets/images/heroes/sikh/sikh-harmandir-sahib-sarovar.webp',
