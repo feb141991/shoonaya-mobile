@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -9,7 +9,9 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
+import { createMandaliPost } from '@/lib/mandali';
 
 // Multi-day "Event Arena" quiz journey -- distinct from app/quiz.tsx's
 // single daily question (Model A / dedicated deck, per product decision).
@@ -51,6 +53,14 @@ export default function FestivalQuizScreen() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [shareOpenFor, setShareOpenFor] = useState<number | null>(null);
+  const [shareDraft, setShareDraft] = useState('');
+  const [sharing, setSharing] = useState(false);
+
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
 
   // Same "quiz" identity accent as app/quiz.tsx (the Daily Spark), for
   // visual consistency across the two quiz surfaces.
@@ -118,6 +128,31 @@ export default function FestivalQuizScreen() {
       setSelectedAnswer(null);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Direct-posts through the same POST /api/mandali/posts createMandaliPost
+  // already uses everywhere else, rather than routing through the Mandali
+  // screen's own compose sheet -- that screen sees heavy concurrent edits
+  // this session, and this achieves the same user-facing outcome (a
+  // reflection appears in Mandali) without adding a prefill prop to it.
+  const openShare = (day: SeasonDay) => {
+    setShareOpenFor(day.daySequence);
+    setShareDraft(`${day.title} 🪔 #UtsavGyan\n\n`);
+  };
+
+  const submitShare = async () => {
+    if (!userId || !shareDraft.trim()) return;
+    setSharing(true);
+    try {
+      await createMandaliPost({ userId, content: shareDraft.trim(), postType: 'update' });
+      setShareOpenFor(null);
+      setShareDraft('');
+      Alert.alert('Shared', 'Your reflection has been posted to your Mandali.');
+    } catch {
+      Alert.alert('Could not share', 'Check your connection and try again.');
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -259,6 +294,39 @@ export default function FestivalQuizScreen() {
                 {activeDay.question.source ? (
                   <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>Source: {activeDay.question.source}</Text>
                 ) : null}
+
+                {shareOpenFor === activeDay.daySequence ? (
+                  <View style={{ gap: 8, marginTop: 4 }}>
+                    <TextInput
+                      value={shareDraft}
+                      onChangeText={setShareDraft}
+                      multiline
+                      maxLength={1000}
+                      placeholder="Share a one-line reflection..."
+                      placeholderTextColor={textDim}
+                      style={{ borderRadius: RADII.xs, borderWidth: 1, borderColor: quizBorder, backgroundColor: isDark ? COLORS.cardBgDark : COLORS.cardBgLight, color: text, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18, padding: 10, minHeight: 70 }}
+                    />
+                    <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
+                      <PressableSurface haptic="selection" onPress={() => setShareOpenFor(null)} style={{ minHeight: 36, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Cancel</Text>
+                      </PressableSurface>
+                      <PressableSurface
+                        haptic="selection"
+                        onPress={() => void submitShare()}
+                        disabled={sharing || !shareDraft.trim()}
+                        style={{ minHeight: 36, paddingHorizontal: 16, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, backgroundColor: quizAccent, opacity: sharing || !shareDraft.trim() ? 0.6 : 1 }}
+                      >
+                        {sharing ? <ActivityIndicator size="small" color={COLORS.creamBg} /> : <Feather name="share-2" size={13} color={COLORS.creamBg} />}
+                        <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Post to Mandali</Text>
+                      </PressableSurface>
+                    </View>
+                  </View>
+                ) : (
+                  <PressableSurface haptic="selection" onPress={() => openShare(activeDay)} style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 4 }}>
+                    <Feather name="share-2" size={13} color={quizAccent} />
+                    <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Share a reflection</Text>
+                  </PressableSurface>
+                )}
               </View>
             ) : null}
           </Card>

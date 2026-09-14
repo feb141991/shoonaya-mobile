@@ -38,6 +38,7 @@ import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
+import { FestivalQuizMandaliStat } from '@/components/mandali/FestivalQuizMandaliStat';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
@@ -2057,6 +2058,8 @@ export default function MandaliScreen() {
           </PressableSurface>
         </View>
       ) : null}
+
+      {profile?.mandaliId ? <FestivalQuizMandaliStat /> : null}
 
       {profile?.mandaliId ? (
         <View style={{ flexDirection: 'row', marginHorizontal: 8, marginTop: 6, borderBottomWidth: 1, borderBottomColor: theme.premiumBorder }}>
