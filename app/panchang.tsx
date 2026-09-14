@@ -550,11 +550,20 @@ export default function PanchangScreen() {
     try {
       const response = await apiFetch('/api/native/panchang-viewed', { method: 'POST' });
       if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
+        let detail = `Server error (${response.status})`;
+        try {
+          const body = (await response.json()) as { error?: string };
+          if (body?.error) detail = body.error;
+        } catch {
+          // body not JSON — keep status-based message
+        }
+        console.warn('[Panchang] markObserved failed:', detail);
+        throw new Error(detail);
       }
       setViewedToday(true);
-    } catch {
-      setMarkError('Could not save — check your connection and try again.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Could not save';
+      setMarkError(`Could not save — ${msg}. Check your connection and try again.`);
     } finally {
       setMarkingViewed(false);
     }
@@ -887,9 +896,18 @@ export default function PanchangScreen() {
           {festivals.length === 0 ? (
             <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 13 }}>No upcoming observances loaded.</Text>
           ) : (
-            festivals.slice(0, 8).map((festival) => (
+            // Deduplicate on date+slug before rendering to prevent React key
+            // collisions when the API returns the same observance twice (e.g.
+            // Ganesh Chaturthi appearing in two profiles on the same date).
+            festivals
+              .filter(
+                (f, idx, arr) =>
+                  arr.findIndex((o) => o.date === f.date && o.slug === f.slug) === idx
+              )
+              .slice(0, 8)
+              .map((festival, i) => (
               <PressableSurface
-                key={`${festival.date}-${festival.slug}`}
+                key={`${festival.date}-${festival.slug}-${i}`}
                 onPress={() => setWhyTodayFestival(festival)}
                 accessibilityLabel={`Why ${festival.display_name} is on ${festival.date}`}
                 style={{
