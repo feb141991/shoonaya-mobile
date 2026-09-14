@@ -167,6 +167,7 @@ export default function MemberProfileScreen() {
           title="Visiting Sacred Profile"
           subtitle="Connecting with fellow seeker's journey..."
           showBack={true}
+          fallbackHref="/(tabs)/mandali"
         />
       </Screen>
     );
@@ -175,7 +176,7 @@ export default function MemberProfileScreen() {
   if (notFound || !profile) {
     return (
       <Screen>
-        <BackButton variant="glass" />
+        <BackButton variant="glass" fallbackHref="/(tabs)/mandali" handleHardwareBack />
         <EmptyState
           icon="user-x"
           title="Profile not found"
@@ -198,7 +199,7 @@ export default function MemberProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 48, gap: 16 }} showsVerticalScrollIndicator={false}>
         {/* Top Header Bar */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <BackButton variant="glass" />
+          <BackButton variant="glass" fallbackHref="/(tabs)/mandali" handleHardwareBack />
           <PressableSurface
             haptic="selection"
             onPress={handleShare}

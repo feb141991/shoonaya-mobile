@@ -27,7 +27,6 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { SacredIcon } from '@/components/ui/SacredIcon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { JoinMandaliPrompt } from '@/components/mandali/JoinMandaliPrompt';
@@ -37,7 +36,6 @@ import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/MemberInfoSheet';
 import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
-import { FilterPicker } from '@/components/mandali/FilterPicker';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
@@ -133,6 +131,8 @@ type MandaliFeedItem =
   | { type: 'blendedPost'; post: PostRow }
   | { type: 'members' };
 
+type MandaliSection = 'feed' | 'events' | 'people';
+
 const POST_TYPE_META: Record<MandaliPostType, { label: string; icon: keyof typeof Feather.glyphMap; color: string }> = {
   update: { label: 'Update', icon: 'message-circle', color: '#4C8BF5' },
   question: { label: 'Question', icon: 'help-circle', color: '#8C64C8' },
@@ -185,7 +185,7 @@ type MandaliPostCardProps = {
   onRsvp: (postId: string, status: RsvpStatus) => void;
   onShowOptions: (post: PostRow) => void;
   onShowOwnOptions: (post: PostRow) => void;
-  onSubmitComment: (postId: string, body: string, parentId?: string | null) => void;
+  onSubmitComment: (postId: string, body: string, parentId?: string | null) => Promise<boolean>;
   onToggleComments: (postId: string) => void;
   onSelectReaction: (postId: string, reaction: ReactionType) => void;
   onRemoveReaction: (postId: string) => void;
@@ -245,11 +245,13 @@ const MandaliPostCard = memo(function MandaliPostCard({
     <Card
       tone="auto"
       style={{
-        backgroundColor: theme.card,
+        backgroundColor: post.mandali_prompt_id ? theme.brandSoft : theme.card,
         borderColor: theme.premiumBorder,
-        gap: 9,
-        padding: 13,
-        borderRadius: 18,
+        borderLeftWidth: post.mandali_prompt_id ? 3 : 1,
+        borderLeftColor: post.mandali_prompt_id ? theme.brand : theme.premiumBorder,
+        gap: 8,
+        padding: 11,
+        borderRadius: 16,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
@@ -347,84 +349,89 @@ const MandaliPostCard = memo(function MandaliPostCard({
               </PressableSurface>
             </View>
           </View>
-
-          <Text style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: 13.5, lineHeight: 20 }}>{post.content}</Text>
-
-          {post.type === 'event' && post.event_date ? (
-            <View
-              style={{
-                marginTop: 8,
-                backgroundColor: theme.soft,
-                borderColor: theme.premiumBorder,
-                borderWidth: 1,
-                borderRadius: 10,
-                paddingHorizontal: 10,
-                paddingVertical: 7,
-                gap: 3,
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ flex: 1, gap: 5 }}>
-                  {eventDateLabel ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Feather name="calendar" size={13} color={theme.brand} />
-                      <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>{eventDateLabel}</Text>
-                    </View>
-                  ) : null}
-                  {post.event_location ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Feather name="map-pin" size={13} color={theme.brand} />
-                      <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{post.event_location}</Text>
-                    </View>
-                  ) : null}
-                </View>
-                {new Date(post.event_date).getTime() < Date.now() ? (
-                  <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.surface }}>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
-                  </View>
-                ) : null}
-              </View>
-              <EventRsvpBar
-                postId={post.id}
-                rsvps={rsvps}
-                userId={userId ?? ''}
-                brand={theme.brand}
-                border={theme.border}
-                surface={theme.surface}
-                dim={theme.dim}
-                onRsvp={onRsvp}
-              />
-            </View>
-          ) : null}
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 9 }}>
-            <PostReactionButton
-              reaction={myReaction}
-              count={post.upvotes}
-              onSelect={(reaction) => onSelectReaction(post.id, reaction)}
-              onRemove={() => onRemoveReaction(post.id)}
-              failed={reactionFailed}
-              onRetry={() => onRetryReaction(post.id)}
-              dim={theme.dim}
-              cardBg={theme.card}
-              border={theme.premiumBorder}
-              scrimColor={COLORS.bottomSheetScrim}
-            />
-
-            <PressableSurface
-              haptic="selection"
-              accessibilityLabel={expanded ? 'Hide comments' : 'Show comments'}
-              onPress={() => onToggleComments(post.id)}
-              style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 5 }}
-              hitSlop={10}
-            >
-              <Feather name="message-square" size={12} color={expanded ? theme.brand : theme.dim} />
-              <Text style={{ color: expanded ? theme.brand : theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11.5 }}>
-                {post.comment_count > 0 ? post.comment_count : 'Comment'}
-              </Text>
-            </PressableSurface>
-          </View>
         </View>
+      </View>
+
+      {post.mandali_prompt_id ? (
+        <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 10 }}>Today&apos;s conversation</Text>
+      ) : null}
+
+      <Text style={{ color: theme.text, fontFamily: post.mandali_prompt_id ? FONTS.serif : FONTS.sans, fontSize: post.mandali_prompt_id ? 16 : 13.5, lineHeight: post.mandali_prompt_id ? 22 : 20 }}>
+        {post.content}
+      </Text>
+
+      {post.type === 'event' && post.event_date ? (
+        <View
+          style={{
+            backgroundColor: theme.soft,
+            borderColor: theme.premiumBorder,
+            borderWidth: 1,
+            borderRadius: 10,
+            paddingHorizontal: 10,
+            paddingVertical: 7,
+            gap: 3,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flex: 1, gap: 5 }}>
+              {eventDateLabel ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Feather name="calendar" size={13} color={theme.brand} />
+                  <Text style={{ flex: 1, fontFamily: FONTS.sansMedium, fontSize: 12, color: theme.text }}>{eventDateLabel}</Text>
+                </View>
+              ) : null}
+              {post.event_location ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Feather name="map-pin" size={13} color={theme.brand} />
+                  <Text style={{ flex: 1, fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{post.event_location}</Text>
+                </View>
+              ) : null}
+            </View>
+            {new Date(post.event_date).getTime() < Date.now() ? (
+              <View style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: theme.surface }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9.5, color: theme.dim, textTransform: 'uppercase' }}>Past</Text>
+              </View>
+            ) : null}
+          </View>
+          <EventRsvpBar
+            postId={post.id}
+            rsvps={rsvps}
+            userId={userId ?? ''}
+            brand={theme.brand}
+            border={theme.border}
+            surface={theme.surface}
+            dim={theme.dim}
+            onRsvp={onRsvp}
+          />
+        </View>
+      ) : null}
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
+        <PostReactionButton
+          reaction={myReaction}
+          count={post.upvotes}
+          onSelect={(reaction) => onSelectReaction(post.id, reaction)}
+          onRemove={() => onRemoveReaction(post.id)}
+          failed={reactionFailed}
+          onRetry={() => onRetryReaction(post.id)}
+          dim={theme.dim}
+          cardBg={theme.card}
+          border={theme.premiumBorder}
+          scrimColor={COLORS.bottomSheetScrim}
+        />
+
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel={expanded ? 'Hide comments' : 'Show comments'}
+          onPress={() => onToggleComments(post.id)}
+          style={{ minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 5 }}
+          hitSlop={6}
+        >
+          <Feather name="message-square" size={13} color={expanded ? theme.brand : theme.dim} />
+          <Text style={{ color: expanded ? theme.brand : theme.dim, fontFamily: FONTS.sansMedium, fontSize: 11.5 }}>
+            {expanded ? 'Hide comments' : post.comment_count > 0 ? `${post.comment_count} ${post.comment_count === 1 ? 'reply' : 'replies'}` : 'Comment'}
+          </Text>
+        </PressableSurface>
       </View>
 
       <PostComments
@@ -504,6 +511,7 @@ export default function MandaliScreen() {
   const [composeEventDate, setComposeEventDate] = useState('');
   const [composeEventLoc, setComposeEventLoc] = useState('');
   const [editingPost, setEditingPost] = useState<PostRow | null>(null);
+  const [activeSection, setActiveSection] = useState<MandaliSection>('feed');
   const [activeFilter, setActiveFilter] = useState<MandaliPostType | 'all'>('all');
   // Keyset pagination state for the paginated feed endpoint.
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -1101,6 +1109,15 @@ export default function MandaliScreen() {
   const feedItems = useMemo<MandaliFeedItem[]>(() => {
     if (!profile?.mandaliId) return [];
 
+    if (activeSection === 'people') return [{ type: 'members' }];
+
+    if (activeSection === 'events') {
+      const eventPosts = posts.filter((post) => post.type === 'event');
+      return eventPosts.length > 0
+        ? eventPosts.map((post) => ({ type: 'post' as const, post }))
+        : [{ type: 'empty' }];
+    }
+
     const items: MandaliFeedItem[] =
       filteredPosts.length === 0
         ? [{ type: 'empty' }]
@@ -1111,9 +1128,8 @@ export default function MandaliScreen() {
       for (const post of filteredBlendedPosts) items.push({ type: 'blendedPost', post });
     }
 
-    items.push({ type: 'members' });
     return items;
-  }, [filteredBlendedPosts, filteredPosts, profile?.mandaliId]);
+  }, [activeSection, filteredBlendedPosts, filteredPosts, posts, profile?.mandaliId]);
 
   // Post/comment reactions queue through lib/reactionOutbox.ts rather than
   // writing directly and reverting on failure -- the backend is naturally
@@ -1175,14 +1191,16 @@ export default function MandaliScreen() {
     await refreshFailedReactionTargets(profile.userId);
   }, [profile, performReactionAction, refreshFailedReactionTargets]);
 
-  const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null) => {
-    if (!profile) return;
+  const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null): Promise<boolean> => {
+    if (!profile) return false;
     setCommenting(postId);
     try {
       const newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
       await patchNewComment(postId, newId);
+      return true;
     } catch {
       Alert.alert('Could not post comment', 'Check your connection and try again.');
+      return false;
     } finally {
       setCommenting(null);
     }
@@ -1576,6 +1594,13 @@ export default function MandaliScreen() {
     ]);
   }, [loadMandali, profile]);
 
+  const showMandaliOptions = useCallback(() => {
+    Alert.alert(profile?.mandaliName ?? 'Mandali', 'Manage your place in this sacred circle.', [
+      { text: 'Leave Mandali', style: 'destructive', onPress: handleLeave },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, [handleLeave, profile?.mandaliName]);
+
   const toggleComments = useCallback((postId: string) => {
     setExpandedPostId((current) => {
       const next = current === postId ? null : postId;
@@ -1637,10 +1662,10 @@ export default function MandaliScreen() {
         failedCommentReactionIds={failedCommentReactionIds}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, loadingCommentsForPostId, handleRsvp, handleRemoveReaction, handleSelectReaction, handleRetryReaction, failedReactionTargets, handleViewProfile, handleEditComment, handleDeleteComment, handleSelectCommentReaction, handleRemoveCommentReaction, handleRetryCommentReaction, myCommentReactions, failedCommentReactionIds, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleViewProfile, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
-    <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 12, borderRadius: 22 }}>
+    <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 38, height: 38, borderRadius: 15, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.premiumBorder, alignItems: 'center', justifyContent: 'center' }}>
           <Feather name="users" size={16} color={theme.brand} />
@@ -1662,7 +1687,7 @@ export default function MandaliScreen() {
                 haptic="selection"
                 accessibilityLabel={`View ${member.full_name ?? 'member'}`}
                 onPress={() => openMemberInfo(member)}
-                style={{ minHeight: 0, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: 8 }}
+                style={{ minHeight: 44, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: 8 }}
               >
                 {member.avatar_url ? (
                   <Image source={{ uri: member.avatar_url }} style={{ width: 32, height: 32, borderRadius: 16 }} contentFit="cover" />
@@ -1718,9 +1743,9 @@ export default function MandaliScreen() {
     } else if (item.type === 'empty') {
       content = (
         <EmptyState
-          icon="message-circle"
-          title={posts.length === 0 ? 'No posts yet' : 'No posts in this category'}
-          subtitle={posts.length === 0 ? 'Be the first to share something with your Mandali.' : 'Try a different filter, or clear it to see everything.'}
+          icon={activeSection === 'events' ? 'calendar' : 'message-circle'}
+          title={activeSection === 'events' ? 'No events yet' : posts.length === 0 ? 'No posts yet' : 'No posts in this category'}
+          subtitle={activeSection === 'events' ? 'Create an event when your Mandali plans its next gathering.' : posts.length === 0 ? 'Be the first to share something with your Mandali.' : 'Try a different filter, or clear it to see everything.'}
         />
       );
     } else if (item.type === 'blendHeader') {
@@ -1739,8 +1764,8 @@ export default function MandaliScreen() {
     } else {
       content = renderMembersCard();
     }
-    return <View style={{ marginBottom: 16 }}>{content}</View>;
-  }, [posts.length, renderMembersCard, renderPost, theme.dim, theme.premiumBorder]);
+    return <View style={{ marginHorizontal: 8, marginBottom: 9 }}>{content}</View>;
+  }, [activeSection, posts.length, renderMembersCard, renderPost, theme.dim, theme.premiumBorder]);
 
   const keyExtractor = useCallback((item: MandaliFeedItem) => {
     if (item.type === 'post') return `post:${item.post.id}`;
@@ -1750,95 +1775,138 @@ export default function MandaliScreen() {
 
   const renderFeedHeader = useCallback(() => (
     <>
-      <LinearGradient
-        colors={isDark
-          ? [COLORS.homeHeroDark, COLORS.cardBgDark, theme.bg]
-          : [COLORS.homeRaisedLight, COLORS.brandSoftLight, theme.bg]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <View
         style={{
-          borderRadius: 28,
-          padding: 18,
-          gap: 14,
-          boxShadow: theme.shadow,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          paddingHorizontal: 8,
+          paddingVertical: 8,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.premiumBorder,
+          backgroundColor: theme.card,
         }}
       >
-        <BackButton variant="hero" style={{ alignSelf: 'flex-start' }} />
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <View
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: 22,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              backgroundColor: theme.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <SacredIcon name="mandali" fallbackGlyph="users" size={24} color={theme.brand} />
-          </View>
-          <View style={{ flex: 1, gap: 3 }}>
-            <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 12 }}>Sacred Circle</Text>
-            <Text style={{ color: theme.text, ...TYPE.hero }} numberOfLines={1}>
-              {profile?.mandaliName ?? 'Mandali'}
+        <BackButton variant="glass" />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text numberOfLines={1} style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 21, lineHeight: 25 }}>
+            {profile?.mandaliName ?? 'Mandali'}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Text numberOfLines={1} style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, flexShrink: 1 }}>
+              {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Your sacred circle'}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-              <Text style={{ color: theme.dim, ...TYPE.caption }}>
-                {profile?.city && profile?.country ? `${profile.city}, ${profile.country}` : 'Find your local sangat'}
+            {profile?.mandaliId ? (
+              <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
+                · {members.length} member{members.length === 1 ? '' : 's'}
               </Text>
-              {profile?.mandaliId && members.length > 0 ? (
-                <>
-                  <Text style={{ color: theme.dim, fontSize: 10, opacity: 0.5 }}>•</Text>
-                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-                    {members.length} member{members.length === 1 ? '' : 's'}
-                  </Text>
-                </>
-              ) : null}
-            </View>
+            ) : null}
           </View>
         </View>
-
         {profile?.mandaliId ? (
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <PressableSurface
-              onPress={() => { resetComposeState(); setSheetVisible(true); }}
-              style={{ flex: 1, minHeight: 46, borderRadius: 18, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
-            >
-              <Feather name="edit-3" size={15} color={COLORS.ink} />
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Share with Mandali</Text>
-            </PressableSurface>
+          <>
             <PressableSurface
               haptic="selection"
               onPress={() => setRequestsSheetVisible(true)}
               accessibilityLabel={`Connection requests${pendingRequests.length > 0 ? ` (${pendingRequests.length} pending)` : ''}`}
-              style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}
+              style={{ minHeight: 44, width: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}
             >
               <Feather name="user-plus" size={17} color={theme.dim} />
               {pendingRequests.length > 0 ? (
-                <View style={{ position: 'absolute', top: 6, right: 6, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
+                <View style={{ position: 'absolute', top: 4, right: 4, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
                   <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 9.5 }}>{pendingRequests.length}</Text>
                 </View>
               ) : null}
             </PressableSurface>
-            <PressableSurface haptic="selection" onPress={handleLeave} accessibilityLabel="Leave Mandali" style={{ minHeight: 46, width: 48, borderRadius: 18, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="log-out" size={17} color={theme.dim} />
+            <PressableSurface haptic="selection" onPress={showMandaliOptions} accessibilityLabel="Mandali options" style={{ minHeight: 44, width: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="more-horizontal" size={18} color={theme.dim} />
             </PressableSurface>
-          </View>
+          </>
         ) : null}
-      </LinearGradient>
+      </View>
 
-      {profile?.mandaliId && (posts.length > 0 || blendedPosts.length > 0) ? (
-        <FilterPicker
-          options={FILTER_OPTIONS}
-          value={activeFilter}
-          onChange={setActiveFilter}
-          cardBg={theme.card}
-          border={theme.premiumBorder}
-          scrimColor={COLORS.bottomSheetScrim}
-        />
+      {profile?.mandaliId && activeSection !== 'people' ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 8, marginTop: 8 }}>
+          <LinearGradient
+            colors={[theme.brand, COLORS.brandGoldLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={{ color: COLORS.creamBg, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
+              {getInitials(profile.displayName)}
+            </Text>
+          </LinearGradient>
+          <PressableSurface
+            haptic="selection"
+            onPress={() => {
+              resetComposeState();
+              if (activeSection === 'events') setComposeType('event');
+              setSheetVisible(true);
+            }}
+            style={{ flex: 1, minHeight: 44, borderRadius: 15, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, paddingHorizontal: 13, justifyContent: 'center' }}
+          >
+            <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 13 }}>
+              {activeSection === 'events' ? 'Create an event…' : 'Share with your Mandali…'}
+            </Text>
+          </PressableSurface>
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel={activeSection === 'events' ? 'Create event' : 'Create post'}
+            onPress={() => {
+              resetComposeState();
+              if (activeSection === 'events') setComposeType('event');
+              setSheetVisible(true);
+            }}
+            style={{ width: 44, height: 44, borderRadius: 15, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Feather name="plus" size={19} color={COLORS.ink} />
+          </PressableSurface>
+        </View>
+      ) : null}
+
+      {profile?.mandaliId ? (
+        <View style={{ flexDirection: 'row', marginHorizontal: 8, marginTop: 6, borderBottomWidth: 1, borderBottomColor: theme.premiumBorder }}>
+          {([
+            ['feed', 'Feed'],
+            ['events', `Events${posts.some((post) => post.type === 'event') ? ` · ${posts.filter((post) => post.type === 'event').length}` : ''}`],
+            ['people', 'People'],
+          ] as Array<[MandaliSection, string]>).map(([section, label]) => {
+            const selected = activeSection === section;
+            return (
+              <PressableSurface
+                key={section}
+                haptic="selection"
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                onPress={() => setActiveSection(section)}
+                style={{ flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: selected ? theme.brand : 'transparent' }}
+              >
+                <Text style={{ color: selected ? theme.brand : theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>{label}</Text>
+              </PressableSurface>
+            );
+          })}
+        </View>
+      ) : null}
+
+      {profile?.mandaliId && activeSection === 'feed' && (posts.length > 0 || blendedPosts.length > 0) ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 7, gap: 6 }}>
+          {FILTER_OPTIONS.filter((option) => option.value !== 'event').map((option) => {
+            const selected = activeFilter === option.value;
+            return (
+              <PressableSurface
+                key={option.value}
+                haptic="selection"
+                onPress={() => setActiveFilter(option.value)}
+                hitSlop={4}
+                style={{ minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, borderRadius: 13, borderWidth: 1, borderColor: selected ? theme.brand : theme.premiumBorder, backgroundColor: selected ? theme.brandSoft : theme.card }}
+              >
+                <Feather name={option.icon} size={12} color={selected ? theme.brand : theme.dim} />
+                <Text style={{ color: selected ? theme.brand : theme.dim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>{option.label}</Text>
+              </PressableSurface>
+            );
+          })}
+        </ScrollView>
       ) : null}
 
       {!profile?.mandaliId && profile ? (
@@ -1854,7 +1922,7 @@ export default function MandaliScreen() {
         />
       ) : null}
     </>
-  ), [activeFilter, blendedPosts.length, handleLeave, isDark, loadMandali, members.length, pendingRequests.length, posts.length, profile, resetComposeState, router, theme]);
+  ), [activeFilter, activeSection, blendedPosts.length, loadMandali, members.length, pendingRequests.length, posts, profile, resetComposeState, showMandaliOptions, theme]);
   const feedFooter = useMemo(() => {
     const hasCapturedLocation = profile?.latitude != null && profile.longitude != null;
     const loadMoreIndicator = loadingMore ? (
@@ -1863,11 +1931,11 @@ export default function MandaliScreen() {
       </View>
     ) : null;
 
-    if (!profile?.mandaliId || !hasCapturedLocation) return loadMoreIndicator;
+    if (!profile?.mandaliId || activeSection !== 'people') return loadMoreIndicator;
+    if (!hasCapturedLocation) return null;
 
     return (
-      <>
-        {loadMoreIndicator}
+      <View style={{ marginHorizontal: 8 }}>
         <SeekersNearYou
           seekers={seekers}
           loading={loadingSeekers}
@@ -1878,9 +1946,9 @@ export default function MandaliScreen() {
           border={theme.border}
           onSelectSeeker={openSeekerInfo}
         />
-      </>
+      </View>
     );
-  }, [loadingMore, loadingSeekers, openSeekerInfo, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
+  }, [activeSection, loadingMore, loadingSeekers, openSeekerInfo, profile?.latitude, profile?.longitude, profile?.mandaliId, seekers, theme]);
 
   if (loading) {
     return (
@@ -1914,7 +1982,7 @@ export default function MandaliScreen() {
   }
 
   return (
-    <Screen style={{ backgroundColor: theme.bg }}>
+    <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
       <FlashList
         data={feedItems}
         renderItem={renderFeedItem}
@@ -1924,7 +1992,7 @@ export default function MandaliScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE }}
         onScroll={navScrollHandler}
         scrollEventThrottle={16}
-        onEndReached={loadMorePosts}
+        onEndReached={activeSection === 'people' ? undefined : loadMorePosts}
         onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} colors={[theme.brand]} />

@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feather from '@expo/vector-icons/Feather';
+import type { Href } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
@@ -49,6 +50,14 @@ export type SacredLoaderProps = {
   customGlyph?: string;
   /** Whether to show a safe BackButton at the top left so user is never trapped */
   showBack?: boolean;
+  /**
+   * Screen to land on when there's no real back history to pop (e.g. this
+   * loader was the first thing rendered on a fresh push). Without this,
+   * BackButton's own default falls through to the generic "/(tabs)" tab
+   * root instead of this screen's actual parent -- see every other
+   * `<BackButton fallbackHref=...>` call site in the app for the pattern.
+   */
+  fallbackHref?: Href;
   /** Custom container style */
   style?: ViewStyle;
 };
@@ -64,6 +73,7 @@ export function SacredLoader({
   icon,
   customGlyph,
   showBack = false,
+  fallbackHref,
   style,
 }: SacredLoaderProps) {
   const isDark = useColorScheme() === 'dark';
@@ -158,7 +168,11 @@ export function SacredLoader({
       {/* Optional Top Back Button */}
       {showBack ? (
         <View style={[styles.backButtonWrap, { top: Math.max(insets.top, 16) + 8 }]}>
-          <BackButton variant="glass" />
+          <BackButton
+            variant="glass"
+            fallbackHref={fallbackHref}
+            handleHardwareBack={fallbackHref !== undefined}
+          />
         </View>
       ) : null}
 

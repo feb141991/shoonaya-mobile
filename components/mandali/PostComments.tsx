@@ -256,7 +256,7 @@ export function PostComments({
   onToggleExpand: () => void;
   userId: string;
   posting: boolean;
-  onSubmit: (body: string, parentId?: string | null) => void;
+  onSubmit: (body: string, parentId?: string | null) => boolean | Promise<boolean>;
   onEditComment: (commentId: string, body: string) => void;
   onDeleteComment: (commentId: string) => void;
   onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
@@ -290,19 +290,21 @@ export function PostComments({
     return grouped;
   }, [comments]);
 
-  const submit = () => {
+  const submit = async () => {
     const trimmed = draft.trim();
     if (!trimmed || posting) return;
-    onSubmit(trimmed);
-    setDraft('');
+    const succeeded = await onSubmit(trimmed);
+    if (succeeded) setDraft('');
   };
 
-  const submitReply = (parentId: string) => {
+  const submitReply = async (parentId: string) => {
     const trimmed = replyDraft.trim();
     if (!trimmed || posting) return;
-    onSubmit(trimmed, parentId);
-    setReplyDraft('');
-    setReplyTo(null);
+    const succeeded = await onSubmit(trimmed, parentId);
+    if (succeeded) {
+      setReplyDraft('');
+      setReplyTo(null);
+    }
   };
 
   if (!expanded) return null;
@@ -390,7 +392,7 @@ export function PostComments({
                       multiline
                       returnKeyType="send"
                       blurOnSubmit
-                      onSubmitEditing={() => submitReply(comment.id)}
+                      onSubmitEditing={() => void submitReply(comment.id)}
                       maxLength={1000}
                       style={{
                         flex: 1,
@@ -419,7 +421,7 @@ export function PostComments({
                     <PressableSurface
                       accessibilityLabel="Send reply"
                       disabled={posting || !replyDraft.trim()}
-                      onPress={() => submitReply(comment.id)}
+                      onPress={() => void submitReply(comment.id)}
                       style={{
                         width: 44,
                         height: 44,
@@ -452,7 +454,7 @@ export function PostComments({
               multiline
               returnKeyType="send"
               blurOnSubmit
-              onSubmitEditing={submit}
+              onSubmitEditing={() => void submit()}
               maxLength={1000}
               style={{
                 flex: 1,
@@ -471,7 +473,7 @@ export function PostComments({
             <PressableSurface
               accessibilityLabel="Send comment"
               disabled={posting || !draft.trim()}
-              onPress={submit}
+              onPress={() => void submit()}
               style={{
                 width: 44,
                 height: 44,
