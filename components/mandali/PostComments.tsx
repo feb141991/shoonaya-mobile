@@ -415,6 +415,55 @@ export function PostComments({
         </View>
       ) : null}
 
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 1 }}>
+        <TextInput
+          value={draft}
+          onChangeText={setDraft}
+          placeholder="Write a comment…"
+          placeholderTextColor={dim}
+          multiline
+          returnKeyType="send"
+          blurOnSubmit
+          onSubmitEditing={() => void submit()}
+          maxLength={1000}
+          style={{
+            flex: 1,
+            minHeight: 44,
+            borderRadius: RADII.xs,
+            borderWidth: 1,
+            borderColor: border,
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            fontFamily: FONTS.sans,
+            fontSize: 12.5,
+            lineHeight: 17,
+            color: text,
+            maxHeight: 140,
+          }}
+        />
+        <PressableSurface
+          accessibilityLabel="Send comment"
+          disabled={posting || !draft.trim()}
+          onPress={() => void submit()}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: draft.trim() ? brand : border,
+            opacity: posting ? 0.6 : 1,
+            minHeight: 44,
+          }}
+        >
+          {posting ? (
+            <ActivityIndicator size="small" color={COLORS.ink} />
+          ) : (
+            <Feather name="send" size={13} color={COLORS.ink} />
+          )}
+        </PressableSurface>
+      </View>
+
       {rootComments.length > 0 ? (
         <ScrollView
           nestedScrollEnabled
@@ -558,54 +607,6 @@ export function PostComments({
           })}
         </ScrollView>
       ) : null}
-
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 1 }}>
-            <TextInput
-              value={draft}
-              onChangeText={setDraft}
-              placeholder="Write a comment…"
-              placeholderTextColor={dim}
-              multiline
-              returnKeyType="send"
-              blurOnSubmit
-              onSubmitEditing={() => void submit()}
-              maxLength={1000}
-              style={{
-                flex: 1,
-                borderRadius: RADII.xs,
-                borderWidth: 1,
-                borderColor: border,
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-                fontFamily: FONTS.sans,
-                fontSize: 12.5,
-                lineHeight: 17,
-                color: text,
-                maxHeight: 140,
-              }}
-            />
-            <PressableSurface
-              accessibilityLabel="Send comment"
-              disabled={posting || !draft.trim()}
-              onPress={() => void submit()}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: draft.trim() ? brand : border,
-                opacity: posting ? 0.6 : 1,
-                minHeight: 44,
-              }}
-            >
-              {posting ? (
-                <ActivityIndicator size="small" color={COLORS.ink} />
-              ) : (
-                <Feather name="send" size={13} color={COLORS.ink} />
-              )}
-            </PressableSurface>
-          </View>
 
           {/* Explicit close affordance -- the only way to collapse this
               thread was previously the small comment-count toggle at the
