@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TextInput, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -19,6 +19,14 @@ import { CommentReactorsSheet } from '@/components/mandali/CommentReactorsSheet'
 // them via parent_id, with a "Reply" button per root comment opening an
 // inline reply composer.
 //
+export function normalizeCommentBody(body: string | null | undefined): string {
+  if (!body) return '';
+  return body
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 // Reactions & Sheet: comment-level devotional reactions with the same 3-type
 // variety as posts (pranam, love, insightful), long-press reaction picker,
 // and a "Who reacted" bottom sheet opened by tapping the reaction count.
@@ -69,14 +77,15 @@ function CommentItem({
   bodySize: number;
   bodyLineHeight: number;
 }) {
+  const cleanBody = normalizeCommentBody(comment.body);
   const [editing, setEditing] = useState(false);
-  const [editDraft, setEditDraft] = useState(comment.body);
+  const [editDraft, setEditDraft] = useState(cleanBody);
   const isOwn = comment.author_id === userId;
   const isDeleted = !!comment.deleted_at;
 
   const submitEdit = () => {
     const trimmed = editDraft.trim();
-    if (!trimmed || trimmed === comment.body) {
+    if (!trimmed || trimmed === cleanBody) {
       setEditing(false);
       return;
     }
@@ -85,7 +94,7 @@ function CommentItem({
   };
 
   return (
-    <View style={{ flexDirection: 'row', gap: 7 }}>
+    <View style={{ flexDirection: 'row', gap: 7, alignItems: 'flex-start' }}>
       <PressableSurface
         haptic="selection"
         accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
@@ -107,7 +116,7 @@ function CommentItem({
           </Text>
         </View>
       </PressableSurface>
-      <View style={{ flex: 1, gap: 1 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
         <PressableSurface
           haptic="selection"
           accessibilityLabel={`View ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'profile'}`}
@@ -129,6 +138,7 @@ function CommentItem({
               lineHeight: bodyLineHeight,
               color: dim,
               fontStyle: 'italic',
+              flexShrink: 1,
             }}
           >
             Comment deleted
@@ -162,7 +172,7 @@ function CommentItem({
               accessibilityLabel="Cancel edit"
               onPress={() => {
                 setEditing(false);
-                setEditDraft(comment.body);
+                setEditDraft(cleanBody);
               }}
               style={{ minHeight: 36, minWidth: 36, alignItems: 'center', justifyContent: 'center' }}
             >
@@ -173,8 +183,17 @@ function CommentItem({
             </PressableSurface>
           </View>
         ) : (
-          <Text style={{ fontFamily: FONTS.sans, fontSize: bodySize, lineHeight: bodyLineHeight, color: text }}>
-            {comment.body}
+          <Text
+            style={{
+              fontFamily: FONTS.sans,
+              fontSize: bodySize,
+              lineHeight: bodyLineHeight,
+              color: cleanBody ? text : dim,
+              fontStyle: cleanBody ? 'normal' : 'italic',
+              flexShrink: 1,
+            }}
+          >
+            {cleanBody || '🙏'}
           </Text>
         )}
 
@@ -311,12 +330,21 @@ export function PostComments({
 
   return (
     <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: border, gap: 9 }}>
-          {loadingFull ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <ActivityIndicator size="small" color={dim} />
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim }}>Loading comments…</Text>
-            </View>
-          ) : null}
+      {loadingFull ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <ActivityIndicator size="small" color={dim} />
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim }}>Loading comments…</Text>
+        </View>
+      ) : null}
+
+      {rootComments.length > 0 ? (
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={rootComments.length > 3}
+          style={{ maxHeight: 340, flexGrow: 0 }}
+          contentContainerStyle={{ gap: 8 }}
+          keyboardShouldPersistTaps="handled"
+        >
           {rootComments.map((comment) => {
             const replies = repliesByParent.get(comment.id) ?? [];
             const isReplying = replyTo === comment.id;
@@ -444,8 +472,10 @@ export function PostComments({
               </View>
             );
           })}
+        </ScrollView>
+      ) : null}
 
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 1 }}>
             <TextInput
               value={draft}
               onChangeText={setDraft}

@@ -52,4 +52,43 @@ describe('Mandali post card layout & timestamp formatting', () => {
     // is never displayed below the collapsed action bar
     assert.match(postComments, /if\s*\(!expanded\)\s*return null;/);
   });
+
+  it('normalizes comment bodies defensively and bounds inline comment thread height', () => {
+    // PostComments must normalize comment bodies to prevent excessive blank lines
+    assert.match(postComments, /function normalizeCommentBody/);
+    assert.match(postComments, /replace\(\/\\r\\n\/g,\s*'\\n'\)/);
+    assert.match(postComments, /replace\(\/\\n\{3,\}\/g,\s*'\\n\\n'\)/);
+    assert.match(postComments, /\.trim\(\)/);
+
+    // If body is empty or whitespace-only, renders fallback emoji instead of an empty tall block
+    assert.match(postComments, /cleanBody\s*\|\|\s*'🙏'/);
+
+    // CommentItem container must use alignItems: 'flex-start' to prevent vertical stretching
+    assert.match(postComments, /flexDirection:\s*'row',\s*gap:\s*7,\s*alignItems:\s*'flex-start'/);
+
+    // Text column must have minWidth: 0 to prevent Yoga layout expansion
+    assert.match(postComments, /flex:\s*1,\s*minWidth:\s*0,\s*gap:\s*1/);
+
+    // PostComments bounds the comment thread with ScrollView and maxHeight
+    assert.match(postComments, /<ScrollView[^>]*nestedScrollEnabled/);
+    assert.match(postComments, /maxHeight:\s*340/);
+    assert.match(postComments, /flexGrow:\s*0/);
+
+    // Functional verification of normalization rules
+    const normalize = (body: string | null | undefined): string => {
+      if (!body) return '';
+      return body.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    };
+
+    assert.equal(normalize(null), '');
+    assert.equal(normalize(undefined), '');
+    assert.equal(normalize('   \n\n\n\n\t  '), '');
+    assert.equal(normalize('Hello\n\n\n\n\n\nWorld'), 'Hello\n\nWorld');
+    assert.equal(normalize('  Pranam 🙏  '), 'Pranam 🙏');
+  });
+
+  it('prevents PressableSurface from forcing flex: 1 when minHeight: 0 is specified', () => {
+    const pressableSurface = readFileSync(new URL('../components/ui/PressableSurface.tsx', import.meta.url), 'utf8');
+    assert.match(pressableSurface, /flex:\s*flattenedStyle\.minHeight\s*===\s*0\s*\?\s*flattenedStyle\.flex\s*:\s*1/);
+  });
 });

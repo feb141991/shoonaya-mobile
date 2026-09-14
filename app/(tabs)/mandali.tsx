@@ -1630,6 +1630,26 @@ export default function MandaliScreen() {
     });
   }, [fullyLoadedCommentPostIds]);
 
+  useEffect(() => {
+    if (expandedPostId && !fullyLoadedCommentPostIds.has(expandedPostId)) {
+      setLoadingCommentsForPostId(expandedPostId);
+      fetchPostComments(expandedPostId)
+        .then((fullComments) => {
+          setComments((currentComments) => {
+            const withoutThisPost = currentComments.filter((c) => c.post_id !== expandedPostId);
+            return [...withoutThisPost, ...fullComments];
+          });
+          setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(expandedPostId));
+        })
+        .catch((error) => {
+          console.error('[MandaliScreen] fetchPostComments failed', error);
+        })
+        .finally(() => {
+          setLoadingCommentsForPostId(null);
+        });
+    }
+  }, [expandedPostId, fullyLoadedCommentPostIds]);
+
   const renderPost = useCallback((post: PostRow) => {
     return (
       <MandaliPostCard
