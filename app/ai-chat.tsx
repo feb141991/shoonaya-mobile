@@ -12,11 +12,87 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { getTraditionPrompts } from '@/lib/dharma-mitra-content';
+
+const SCRIPTURE_CITATION_REGEX = /\[([A-Za-z0-9\s.,'’—–:-]+)\]/g;
+
+function isScriptureCitation(citation: string): boolean {
+  const c = citation.toLowerCase();
+  return (
+    c.includes('gita') ||
+    c.includes('upanishad') ||
+    c.includes('ramayana') ||
+    c.includes('purana') ||
+    c.includes('dhammapada') ||
+    c.includes('sutra') ||
+    c.includes('katha') ||
+    c.includes('dharm veer') ||
+    c.includes('calendar') ||
+    c.includes('rule') ||
+    /\b\d+[.:]\d+\b/.test(c)
+  );
+}
+
+function renderFormattedMessage(
+  text: string,
+  theme: ReturnType<typeof themeColor> & { userBubble: string }
+) {
+  if (!text) return null;
+
+  const parts: { text: string; isCitation: boolean }[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  const regex = new RegExp(SCRIPTURE_CITATION_REGEX);
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ text: text.substring(lastIndex, match.index), isCitation: false });
+    }
+    const rawMatch = match[0];
+    const inner = match[1];
+    parts.push({
+      text: rawMatch,
+      isCitation: isScriptureCitation(inner),
+    });
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ text: text.substring(lastIndex), isCitation: false });
+  }
+
+  return (
+    <Text
+      style={{
+        color: theme.text,
+        fontFamily: FONTS.sans,
+        fontSize: 15,
+        lineHeight: 22,
+      }}
+    >
+      {parts.map((p, idx) =>
+        p.isCitation ? (
+          <Text
+            key={idx}
+            style={{
+              fontFamily: FONTS.serifBold,
+              color: theme.brandStrong,
+            }}
+          >
+            {p.text}
+          </Text>
+        ) : (
+          p.text
+        )
+      )}
+    </Text>
+  );
+}
 
 export default function AiChatScreen() {
   const router = useRouter();
@@ -45,17 +121,13 @@ export default function AiChatScreen() {
 
   const suggestedPrompts = getTraditionPrompts(profile?.tradition);
 
-  const theme = useMemo(
-    () => ({
-      bg: isDark ? COLORS.darkBg : COLORS.creamBg,
-      card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-      border: isDark ? COLORS.borderDark : COLORS.borderLight,
-      text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+  const theme = useMemo(() => {
+    const base = themeColor(isDark);
+    return {
+      ...base,
       userBubble: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
-    }),
-    [isDark]
-  );
+    };
+  }, [isDark]);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isUser = item.role === 'user';
@@ -67,7 +139,14 @@ export default function AiChatScreen() {
           marginBottom: 12,
         }}
       >
-        <View
+        <PressableSurface
+          onLongPress={async () => {
+            if (item.text) {
+              await Clipboard.setStringAsync(item.text);
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            }
+          }}
+          disabled={!item.text}
           style={{
             maxWidth: '86%',
             borderRadius: 22,
@@ -78,17 +157,21 @@ export default function AiChatScreen() {
             borderColor: theme.border,
           }}
         >
-          <Text
-            style={{
-              color: isUser ? COLORS.ink : theme.text,
-              fontFamily: FONTS.sans,
-              fontSize: 15,
-              lineHeight: 22,
-            }}
-          >
-            {item.text || (streaming && !isUser ? '...' : '')}
-          </Text>
-        </View>
+          {isUser ? (
+            <Text
+              style={{
+                color: COLORS.ink,
+                fontFamily: FONTS.sans,
+                fontSize: 15,
+                lineHeight: 22,
+              }}
+            >
+              {item.text}
+            </Text>
+          ) : (
+            renderFormattedMessage(item.text || (streaming ? '...' : ''), theme)
+          )}
+        </PressableSurface>
       </View>
     );
   };
