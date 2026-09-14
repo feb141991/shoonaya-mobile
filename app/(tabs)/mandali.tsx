@@ -292,12 +292,9 @@ const MandaliPostCard = memo(function MandaliPostCard({
                   {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
                 </Text>
               </PressableSurface>
-              {post.profiles?.username === 'shoonaya' ? (
-                // Fixed, unique username claimed by the seeded system account
-                // that authors daily Mandali conversation-starter prompts
-                // (scripts/seed-mandali-prompt-author.ts) -- profiles.username
-                // is UNIQUE NOT NULL, so no real seeker can ever collide with
-                // this check. No new API field needed to identify it.
+              {post.profiles?.is_official === true ? (
+                // Official identity is derived server-side from the configured
+                // system author id. Cached pre-contract posts simply omit it.
                 <View
                   style={{
                     flexDirection: 'row',

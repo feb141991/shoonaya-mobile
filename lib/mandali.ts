@@ -79,6 +79,9 @@ export type PostAuthor = {
   avatar_url: string | null;
   sampradaya: string | null;
   spiritual_level: string | null;
+  // Server-derived identity metadata. Optional only for cached responses
+  // written before the field was added to the feed contract.
+  is_official?: boolean;
 };
 
 export type PostRow = {
@@ -92,6 +95,8 @@ export type PostRow = {
   comment_count: number;
   event_date: string | null;
   event_location: string | null;
+  mandali_prompt_id?: string | null;
+  mandali_prompt_date?: string | null;
   profiles?: PostAuthor | null;
   // Present only from the paginated /api/mandali/feed?cursor/limit path --
   // undefined on the legacy full-fidelity response.
