@@ -31,6 +31,7 @@ import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { HomeSkeleton } from '@/components/home/HomeSkeleton';
 import { ShimmerBlock } from '@/components/ui/SkeletonLoader';
 import { QuizSparkCard } from '@/components/home/QuizSparkCard';
+import { FestivalQuizBanner } from '@/components/home/FestivalQuizBanner';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SacredDaysCarousel } from '@/components/home/SacredDaysCarousel';
@@ -2178,6 +2179,8 @@ function HomeContent() {
             quizStreak={0}
             timezone={state.date?.timezone}
           />
+
+          <FestivalQuizBanner />
 
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}
