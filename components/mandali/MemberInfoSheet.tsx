@@ -28,6 +28,7 @@ type MemberInfoSheetProps = {
   onClose: () => void;
   onViewProfile?: (subject: MemberInfoSubject) => void;
   onReport?: (subject: MemberInfoSubject) => void;
+  onBlock?: (subject: MemberInfoSubject) => void;
   connectionStatus?: ConnectionStatus;
   connectionBusy?: boolean;
   onConnect?: (subject: MemberInfoSubject) => void;
@@ -57,6 +58,7 @@ export function MemberInfoSheet({
   onClose,
   onViewProfile,
   onReport,
+  onBlock,
   connectionStatus,
   connectionBusy,
   onConnect,
@@ -270,6 +272,26 @@ export function MemberInfoSheet({
             >
               <Feather name="flag" size={14} color={theme.dim} />
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>Report member</Text>
+            </PressableSurface>
+          ) : null}
+
+          {onBlock ? (
+            <PressableSurface
+              haptic="selection"
+              onPress={() => onBlock(displaySubject)}
+              style={{
+                minHeight: 44,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 8,
+              }}
+            >
+              <Feather name="slash" size={14} color={COLORS.danger} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>Block member</Text>
             </PressableSurface>
           ) : null}
         </View>

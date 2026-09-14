@@ -55,6 +55,7 @@ function CommentItem({
   bodyLineHeight,
   isPostAuthor,
   onToggleHighlight,
+  onReport,
 }: {
   comment: CommentRow;
   userId: string;
@@ -80,6 +81,7 @@ function CommentItem({
   bodyLineHeight: number;
   isPostAuthor?: boolean;
   onToggleHighlight?: (commentId: string, isHighlighted: boolean) => void;
+  onReport?: (commentId: string) => void;
 }) {
   const cleanBody = normalizeCommentBody(comment.body);
   const [editing, setEditing] = useState(false);
@@ -288,6 +290,16 @@ function CommentItem({
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Delete</Text>
               </PressableSurface>
             ) : null}
+            {!isOwn && onReport ? (
+              <PressableSurface
+                haptic="selection"
+                accessibilityLabel="Report comment"
+                onPress={() => onReport(comment.id)}
+                style={{ minHeight: 0 }}
+              >
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Report</Text>
+              </PressableSurface>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -319,6 +331,7 @@ export function PostComments({
   brand,
   postAuthorId,
   onToggleHighlightComment,
+  onReportComment,
 }: {
   comments: CommentRow[];
   expanded: boolean;
@@ -346,6 +359,7 @@ export function PostComments({
   brand: string;
   postAuthorId?: string;
   onToggleHighlightComment?: (commentId: string, isHighlighted: boolean) => void;
+  onReportComment?: (commentId: string) => void;
 }) {
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -442,6 +456,7 @@ export function PostComments({
                   bodyLineHeight={17}
                   isPostAuthor={isPostAuthor}
                   onToggleHighlight={onToggleHighlightComment}
+                  onReport={onReportComment}
                 />
 
                 {replies.length > 0 ? (
@@ -472,6 +487,7 @@ export function PostComments({
                         bodyLineHeight={16}
                         isPostAuthor={isPostAuthor}
                         onToggleHighlight={onToggleHighlightComment}
+                        onReport={onReportComment}
                       />
                     ))}
                   </View>

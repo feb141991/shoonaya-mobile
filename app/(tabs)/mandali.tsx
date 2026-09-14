@@ -67,6 +67,7 @@ import {
   fetchPostComments,
   leaveMandali,
   removeCommentReaction,
+  reportMandaliComment,
   reportMandaliMember,
   reportMandaliPost,
   removePostReaction,
@@ -204,6 +205,7 @@ type MandaliPostCardProps = {
   failedCommentReactionIds: Set<string>;
   onVotePoll?: (pollId: string, optionId: string) => Promise<boolean | void>;
   onToggleHighlightComment?: (commentId: string, isHighlighted: boolean) => Promise<void> | void;
+  onReportComment?: (commentId: string) => void;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -235,6 +237,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   failedCommentReactionIds,
   onVotePoll,
   onToggleHighlightComment,
+  onReportComment,
 }: MandaliPostCardProps) {
   const isDark = useColorScheme() === 'dark';
   const isOwnPost = post.author_id === userId;
@@ -473,6 +476,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
         myCommentReactions={myCommentReactions}
         failedCommentReactionIds={failedCommentReactionIds}
         onViewProfile={onViewProfile}
+        onReportComment={onReportComment}
         text={theme.text}
         dim={theme.dim}
         cardBg={theme.card}
@@ -1476,22 +1480,119 @@ export default function MandaliScreen() {
     setPostOptionsPost(post);
   }, []);
 
-  const reportMember = useCallback(async (memberId: string) => {
+  const reportMember = useCallback((memberId: string) => {
     if (!profile) return;
-    try {
-      await reportMandaliMember(profile.userId, memberId);
-      Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team.');
-    } catch {
-      Alert.alert('Could not submit report', 'Check your connection and try again.');
-    }
+    Alert.alert(
+      'Report Seeker',
+      'Please tell us what is wrong. All reports are reviewed by our moderation team within 24 hours.',
+      [
+        {
+          text: 'Spam or commercial content',
+          onPress: async () => {
+            try {
+              await reportMandaliMember(profile.userId, memberId, 'spam');
+              Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team within 24 hours.');
+            } catch {
+              Alert.alert('Could not submit report', 'Check your connection and try again.');
+            }
+          },
+        },
+        {
+          text: 'Harassment or offensive behavior',
+          onPress: async () => {
+            try {
+              await reportMandaliMember(profile.userId, memberId, 'harassment');
+              Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team within 24 hours.');
+            } catch {
+              Alert.alert('Could not submit report', 'Check your connection and try again.');
+            }
+          },
+        },
+        {
+          text: 'Inappropriate profile or impersonation',
+          onPress: async () => {
+            try {
+              await reportMandaliMember(profile.userId, memberId, 'other');
+              Alert.alert('Report Submitted', 'Thank you. This will be reviewed by our team within 24 hours.');
+            } catch {
+              Alert.alert('Could not submit report', 'Check your connection and try again.');
+            }
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
   }, [profile]);
 
   const showMemberOptions = useCallback((member: MemberRow) => {
+    if (member.id === profile?.userId) return;
     Alert.alert(member.full_name ?? 'Mandali member', 'Choose an action for this member.', [
-      { text: 'Report member', onPress: () => void reportMember(member.id) },
+      { text: 'Report member', onPress: () => reportMember(member.id) },
+      {
+        text: 'Block member',
+        style: 'destructive',
+        onPress: () => {
+          Alert.alert(
+            `Block ${member.full_name ?? 'this member'}?`,
+            'Their posts and comments will no longer appear in your feed.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Block',
+                style: 'destructive',
+                onPress: () => void blockPostAuthor(member.id),
+              },
+            ]
+          );
+        },
+      },
       { text: 'Cancel', style: 'cancel' },
     ]);
-  }, [reportMember]);
+  }, [blockPostAuthor, profile?.userId, reportMember]);
+
+  const handleReportComment = useCallback((commentId: string) => {
+    if (!profile) return;
+    Alert.alert(
+      'Report Comment',
+      'Please tell us what is wrong with this comment. Reports are reviewed by our team within 24 hours.',
+      [
+        {
+          text: 'Spam or commercial',
+          onPress: async () => {
+            try {
+              await reportMandaliComment(profile.userId, commentId, 'spam');
+              Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
+            } catch {
+              Alert.alert('Could not submit report', 'Check your connection and try again.');
+            }
+          },
+        },
+        {
+          text: 'Harassment or abuse',
+          onPress: async () => {
+            try {
+              await reportMandaliComment(profile.userId, commentId, 'harassment');
+              Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
+            } catch {
+              Alert.alert('Could not submit report', 'Check your connection and try again.');
+            }
+          },
+        },
+        {
+          text: 'Inappropriate or offensive',
+          onPress: async () => {
+            try {
+              await reportMandaliComment(profile.userId, commentId, 'other');
+              Alert.alert('Reported', 'Thank you — our team will review within 24 hours.');
+            } catch {
+              Alert.alert('Could not submit report', 'Check your connection and try again.');
+            }
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  }, [profile]);
 
   // Members and nearby seekers were previously dead ends -- tapping either
   // did nothing (seekers had zero interactivity; members only had the
@@ -1750,9 +1851,10 @@ export default function MandaliScreen() {
         failedCommentReactionIds={failedCommentReactionIds}
         onVotePoll={handleVotePoll}
         onToggleHighlightComment={handleToggleHighlightComment}
+        onReportComment={handleReportComment}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>
@@ -2231,10 +2333,18 @@ export default function MandaliScreen() {
         onClose={() => setSelectedMember(null)}
         onViewProfile={(subject) => handleViewProfile(subject.id)}
         onReport={
-          selectedMember && members.some((m) => m.id === selectedMember.id)
+          selectedMember && selectedMember.id !== profile?.userId
             ? (subject) => {
                 setSelectedMember(null);
-                void reportMember(subject.id);
+                reportMember(subject.id);
+              }
+            : undefined
+        }
+        onBlock={
+          selectedMember && selectedMember.id !== profile?.userId
+            ? (subject) => {
+                setSelectedMember(null);
+                void blockPostAuthor(subject.id);
               }
             : undefined
         }

@@ -518,11 +518,32 @@ export async function reportMandaliPost(reportedBy: string, post: PostRow, reaso
   if (result.reportId) triggerPush(`content_reported:${result.reportId}`);
 }
 
-export async function reportMandaliMember(reportedBy: string, memberId: string): Promise<void> {
+export async function reportMandaliMember(reportedBy: string, memberId: string, reason: string = 'other'): Promise<void> {
   void reportedBy;
+  const normalizedReason = reason.toLowerCase().includes('spam')
+    ? 'spam'
+    : reason.toLowerCase().includes('harassment')
+      ? 'harassment'
+      : 'other';
   const response = await apiFetch('/api/mandali/report', {
     method: 'POST',
-    body: JSON.stringify({ targetType: 'user_profile', targetId: memberId, reason: 'other' }),
+    body: JSON.stringify({ targetType: 'user_profile', targetId: memberId, reason: normalizedReason }),
+  });
+  if (!response.ok) throw new Error('Could not submit report');
+  const result = await response.json() as { reportId?: string | null };
+  if (result.reportId) triggerPush(`content_reported:${result.reportId}`);
+}
+
+export async function reportMandaliComment(reportedBy: string, commentId: string, reason: string): Promise<void> {
+  void reportedBy;
+  const normalizedReason = reason.toLowerCase().includes('spam')
+    ? 'spam'
+    : reason.toLowerCase().includes('harassment')
+      ? 'harassment'
+      : 'other';
+  const response = await apiFetch('/api/mandali/report', {
+    method: 'POST',
+    body: JSON.stringify({ targetType: 'comment', targetId: commentId, reason: normalizedReason }),
   });
   if (!response.ok) throw new Error('Could not submit report');
   const result = await response.json() as { reportId?: string | null };
@@ -546,6 +567,25 @@ export async function blockUser(blockerId: string, blockedUserId: string): Promi
   // ignoreDuplicates means an already-existing block returns no row here --
   // nothing new happened, so no fresh notification/push to trigger.
   if (data) triggerPush(`user_blocked:${data.id}`);
+}
+
+export async function unblockUser(blockerId: string, blockedUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('user_blocked_profiles')
+    .delete()
+    .match({ blocker_id: blockerId, blocked_user_id: blockedUserId });
+  if (error) throw error;
+}
+
+export async function isUserBlocked(blockerId: string, targetUserId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('user_blocked_profiles')
+    .select('id')
+    .eq('blocker_id', blockerId)
+    .eq('blocked_user_id', targetUserId)
+    .maybeSingle();
+  if (error) return false;
+  return Boolean(data);
 }
 
 // ── Safety state (matches PWA's src/lib/user-safety.ts getUserSafetyState) ──

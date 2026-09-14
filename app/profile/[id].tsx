@@ -14,6 +14,8 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { API_BASE, COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import { blockUser, isUserBlocked, reportMandaliMember, unblockUser } from '@/lib/mandali';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
@@ -105,6 +107,8 @@ export default function MemberProfileScreen() {
   const [notFound, setNotFound] = useState(false);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [pranamSent, setPranamSent] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +121,17 @@ export default function MemberProfileScreen() {
       }
       setLoading(true);
       try {
+        const { data: authData } = await supabase.auth.getUser();
+        const uid = authData.user?.id ?? null;
+        if (!cancelled) setCurrentUserId(uid);
+
+        if (uid && uid !== id) {
+          try {
+            const blocked = await isUserBlocked(uid, id);
+            if (!cancelled) setIsBlocked(blocked);
+          } catch {}
+        }
+
         const response = await apiFetch(`/api/mandali/member-profile?id=${encodeURIComponent(id)}`);
         if (cancelled) return;
         if (!response.ok) {
@@ -157,6 +172,110 @@ export default function MemberProfileScreen() {
         message: `Connect with ${profile.full_name || 'a fellow seeker'} (@${profile.username || 'seeker'}) on Shoonaya — Sacred Sadhana, Panchang & Devotion.`,
       });
     } catch {}
+  };
+
+  const submitSeekerReport = async (reason: string) => {
+    if (!currentUserId || !id) return;
+    try {
+      await reportMandaliMember(currentUserId, id, reason);
+      Alert.alert(
+        'Report Submitted',
+        'Thank you for keeping our sacred fellowship safe. Our team will review this within 24 hours.'
+      );
+    } catch {
+      Alert.alert('Could not submit report', 'Check your connection and try again.');
+    }
+  };
+
+  const handleReportSeeker = () => {
+    if (!currentUserId || !id) return;
+    Alert.alert(
+      'Report Seeker',
+      'Please tell us what is wrong. All reports are reviewed by our moderation team within 24 hours.',
+      [
+        {
+          text: 'Spam or commercial content',
+          onPress: () => void submitSeekerReport('spam'),
+        },
+        {
+          text: 'Harassment or offensive behavior',
+          onPress: () => void submitSeekerReport('harassment'),
+        },
+        {
+          text: 'Inappropriate profile or impersonation',
+          onPress: () => void submitSeekerReport('other'),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const handleBlockSeeker = () => {
+    if (!currentUserId || !id) return;
+    const targetName = profile?.full_name ?? profile?.username ?? 'this seeker';
+    Alert.alert(
+      `Block ${targetName}?`,
+      'They will not be able to interact with you, and their posts and comments will no longer appear in your feed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockUser(currentUserId, id);
+              setIsBlocked(true);
+              Alert.alert('Seeker Blocked', `${targetName} has been blocked.`);
+            } catch {
+              Alert.alert('Could not block seeker', 'Check your connection and try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUnblockSeeker = async () => {
+    if (!currentUserId || !id) return;
+    const targetName = profile?.full_name ?? profile?.username ?? 'this seeker';
+    try {
+      await unblockUser(currentUserId, id);
+      setIsBlocked(false);
+      Alert.alert('Seeker Unblocked', `You have unblocked ${targetName}.`);
+    } catch {
+      Alert.alert('Could not unblock seeker', 'Check your connection and try again.');
+    }
+  };
+
+  const handleOpenSafetyMenu = () => {
+    if (!currentUserId || !id) return;
+    const targetName = profile?.full_name ?? profile?.username ?? 'Seeker';
+    const options: { text: string; style?: 'default' | 'cancel' | 'destructive'; onPress?: () => void }[] = [
+      {
+        text: 'Report Seeker',
+        onPress: handleReportSeeker,
+      },
+    ];
+
+    if (isBlocked) {
+      options.push({
+        text: 'Unblock Seeker',
+        onPress: () => void handleUnblockSeeker(),
+      });
+    } else {
+      options.push({
+        text: 'Block Seeker',
+        style: 'destructive',
+        onPress: handleBlockSeeker,
+      });
+    }
+
+    options.push({
+      text: 'Cancel',
+      style: 'cancel',
+    });
+
+    Alert.alert('Seeker Safety Options', `Choose an action for ${targetName}.`, options);
   };
 
   if (loading) {
@@ -200,24 +319,89 @@ export default function MemberProfileScreen() {
         {/* Top Header Bar */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackButton variant="glass" fallbackHref="/(tabs)/mandali" handleHardwareBack />
-          <PressableSurface
-            haptic="selection"
-            onPress={handleShare}
-            accessibilityLabel="Share seeker profile"
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <PressableSurface
+              haptic="selection"
+              onPress={handleShare}
+              accessibilityLabel="Share seeker profile"
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: theme.cardSoft,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="share-2" size={18} color={theme.text} />
+            </PressableSurface>
+
+            {currentUserId && currentUserId !== id ? (
+              <PressableSurface
+                haptic="selection"
+                onPress={handleOpenSafetyMenu}
+                accessibilityLabel="Seeker safety options"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: theme.cardSoft,
+                  borderWidth: 1,
+                  borderColor: theme.borderSoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="more-horizontal" size={18} color={theme.text} />
+              </PressableSurface>
+            ) : null}
+          </View>
+        </View>
+
+        {/* Blocked Seeker Notice */}
+        {isBlocked ? (
+          <View
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: theme.cardSoft,
-              borderWidth: 1,
-              borderColor: theme.borderSoft,
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderRadius: RADII.lg,
+              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FEF2F2',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : '#FCA5A5',
             }}
           >
-            <Feather name="share-2" size={18} color={theme.text} />
-          </PressableSurface>
-        </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <Feather name="slash" size={18} color={COLORS.danger} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...TYPE.cardHeading, fontSize: 13, color: COLORS.danger }}>
+                  Seeker Blocked
+                </Text>
+                <Text style={{ ...TYPE.micro, color: theme.dim }}>
+                  Their posts and comments are hidden from your fellowship feed.
+                </Text>
+              </View>
+            </View>
+            <PressableSurface
+              haptic="selection"
+              onPress={() => void handleUnblockSeeker()}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: RADII.pill,
+                backgroundColor: theme.card,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
+              }}
+            >
+              <Text style={{ ...TYPE.chip, color: theme.text }}>Unblock</Text>
+            </PressableSurface>
+          </View>
+        ) : null}
 
         {/* Hero Identity Section */}
         <View style={{ alignItems: 'center', gap: 12, marginTop: 4 }}>
