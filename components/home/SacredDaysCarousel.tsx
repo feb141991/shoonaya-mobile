@@ -20,7 +20,8 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE } from '@/lib/constants';
 import type { ObservanceSeries } from '@/lib/observance-series-contract.generated';
 import {
-  buildSacredDaysSections,
+  buildSacredDaysDeck,
+  HOME_SACRED_DAYS_WINDOW,
   SACRED_DAYS_CARD_HEIGHT,
   type SacredDaysDeckItem,
   type SacredDaysObservance,
@@ -106,9 +107,44 @@ export function SacredDaysCarousel({
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const cardWidth = Math.min(380, Math.max(240, screenWidth - 48));
 
-  const sections = useMemo(
-    () => buildSacredDaysSections({ observances, series, spiritualDate }),
+  const items = useMemo(
+    () =>
+      buildSacredDaysDeck({
+        observances,
+        series,
+        spiritualDate,
+        windowDays: HOME_SACRED_DAYS_WINDOW,
+      }),
     [observances, series, spiritualDate],
+  );
+
+  const reducedMotion = useReducedMotion();
+  const listRef = useRef<FlatList<SacredDaysDeckItem>>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex((current) => (items.length === 0 ? 0 : Math.min(current, items.length - 1)));
+  }, [items.length]);
+
+  const scrollTo = useCallback(
+    (index: number) => {
+      if (items.length === 0) return;
+      const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
+      listRef.current?.scrollToOffset({
+        offset: boundedIndex * (cardWidth + CARD_GAP),
+        animated: !reducedMotion,
+      });
+      setActiveIndex(boundedIndex);
+    },
+    [cardWidth, items.length, reducedMotion],
+  );
+
+  const handleMomentumEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const index = Math.round(event.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP));
+      setActiveIndex(Math.max(0, Math.min(index, items.length - 1)));
+    },
+    [cardWidth, items.length],
   );
 
   const exportCalendar = useCallback(async () => {
@@ -137,11 +173,7 @@ export function SacredDaysCarousel({
     }
   }, [copy, exporting]);
 
-  const itemCount = sections.today.length + sections.upcoming.length;
-  const hasItems = itemCount > 0;
-
-
-
+  const hasItems = items.length > 0;
   const SHOW_CALENDAR_SUBSCRIPTION = false; // Put on hold as requested
 
   return (
@@ -160,9 +192,9 @@ export function SacredDaysCarousel({
           <Text style={{ ...TYPE.section, color: accent }} numberOfLines={1}>
             {copy.title}
           </Text>
-          {calendarStatus === 'ready' && itemCount > 0 ? (
+          {calendarStatus === 'ready' && items.length > 0 ? (
             <View style={{ minWidth: 24, paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADII.pill, backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight }}>
-              <Text style={{ ...TYPE.chip, color: accent, textAlign: 'center' }}>{itemCount}</Text>
+              <Text style={{ ...TYPE.chip, color: accent, textAlign: 'center' }}>{items.length}</Text>
             </View>
           ) : null}
         </View>
@@ -235,51 +267,6 @@ export function SacredDaysCarousel({
         </View>
       ) : (
         <>
-          {sections.today.length > 0 ? <SacredDaysRow title={copy.today} items={sections.today} theme={theme} isDark={isDark} lang={lang} spiritualDate={spiritualDate} /> : null}
-          {sections.upcoming.length > 0 ? <SacredDaysRow title={copy.upcoming} items={sections.upcoming} theme={theme} isDark={isDark} lang={lang} spiritualDate={spiritualDate} /> : null}
-
-        </>
-      )}
-    </View>
-  );
-}
-
-function SacredDaysRow({ title, items, theme, isDark, lang, spiritualDate }: {
-  title: string;
-  items: SacredDaysDeckItem[];
-  theme: Theme;
-  isDark: boolean;
-  lang: 'en' | 'hi' | 'pa';
-  spiritualDate: string;
-}) {
-  const { width: screenWidth } = useWindowDimensions();
-  const reducedMotion = useReducedMotion();
-  const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-  const cardWidth = Math.min(380, Math.max(240, screenWidth - 48));
-  const listRef = useRef<FlatList<SacredDaysDeckItem>>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  useEffect(() => {
-    setActiveIndex((current) => items.length === 0 ? 0 : Math.min(current, items.length - 1));
-  }, [items.length]);
-
-  const scrollTo = useCallback((index: number) => {
-    if (items.length === 0) return;
-    const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
-    listRef.current?.scrollToOffset({
-      offset: boundedIndex * (cardWidth + CARD_GAP),
-      animated: !reducedMotion,
-    });
-    setActiveIndex(boundedIndex);
-  }, [cardWidth, items.length, reducedMotion]);
-
-  const handleMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(event.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP));
-    setActiveIndex(Math.max(0, Math.min(index, items.length - 1)));
-  }, [cardWidth, items.length]);
-
-  return (
-    <View style={{ marginTop: 12, gap: 8 }}>
-      <Text accessibilityRole="header" style={{ ...TYPE.chip, color: theme.text, paddingHorizontal: 4 }}>{title}</Text>
           <FlatList
             ref={listRef}
             horizontal
@@ -317,15 +304,29 @@ function SacredDaysRow({ title, items, theme, isDark, lang, spiritualDate }: {
           />
 
           {items.length > 1 ? (
-            <View style={{ minHeight: MIN_TOUCH_TARGET, marginTop: 4, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+            <View
+              style={{
+                minHeight: MIN_TOUCH_TARGET,
+                marginTop: 4,
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {items.map((item, index) => (
                 <Pressable
                   key={item.key}
                   accessibilityRole="button"
-                  accessibilityLabel={`${title}, ${index + 1} of ${items.length}`}
+                  accessibilityLabel={`${copy.title}, ${index + 1} of ${items.length}`}
                   accessibilityState={{ selected: index === activeIndex }}
                   onPress={() => scrollTo(index)}
-                  style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
+                  style={{
+                    width: MIN_TOUCH_TARGET,
+                    height: MIN_TOUCH_TARGET,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
                   <View
                     style={{
@@ -339,6 +340,8 @@ function SacredDaysRow({ title, items, theme, isDark, lang, spiritualDate }: {
               ))}
             </View>
           ) : null}
+        </>
+      )}
     </View>
   );
 }
