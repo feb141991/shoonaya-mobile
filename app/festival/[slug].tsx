@@ -7,7 +7,12 @@ import { Card } from '@/components/ui/Card';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
-import { resolveFestivalText, resolveFestivalList, isFestivalPublishable } from '@/lib/festival-content-helpers';
+import {
+  resolveFestivalText,
+  resolveFestivalList,
+  isFestivalPublishable,
+  resolveFestivalShareHeadline,
+} from '@/lib/festival-content-helpers';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
@@ -125,19 +130,9 @@ export default function FestivalDetailScreen() {
       languages={hasLocalFestival ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिंदी' }] : undefined}
       currentLanguage={lang}
       setLanguage={setLang}
-      onShare={handleShare}
+      onShare={publishable ? handleShare : undefined}
     >
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        {!publishable ? (
-          <Card style={{ padding: 12, marginBottom: 16, backgroundColor: isDark ? COLORS.warningBgDark : COLORS.warningBgLight }}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-              <Feather name="alert-triangle" size={14} color={isDark ? COLORS.warningDark : COLORS.warningLight} style={{ marginTop: 2 }} />
-              <Text style={{ ...TYPE.body, fontSize: 12, color: isDark ? COLORS.warningDark : COLORS.warningLight, flex: 1 }}>
-                This festival's content is still pending editorial/source review and is not yet shown to regular readers.
-              </Text>
-            </View>
-          </Card>
-        ) : null}
 
         <Card style={{ padding: 20, marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -261,7 +256,12 @@ export default function FestivalDetailScreen() {
             data={{
               tradition: 'universal',
               layout: 'sacredText',
-              headlineValue: (festival.mantra ? festival.mantra.sanskrit : '') || tagline,
+              headlineValue: resolveFestivalShareHeadline({
+                publishable,
+                mantraText: festival.mantra?.sanskrit,
+                mantraTranslation,
+                tagline,
+              }),
               title: name,
               subtitle: tagline,
               caption: significance,

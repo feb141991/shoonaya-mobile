@@ -32,3 +32,14 @@ export function isFestivalPublishable(festival: {
 }): boolean {
   return isEditorialFieldDisplayable(festival.significance) && isEditorialFieldDisplayable(festival.rituals);
 }
+
+/** Raw mantra drafts must never bypass the editorial gate through share-card rendering. */
+export function resolveFestivalShareHeadline(input: {
+  publishable: boolean;
+  mantraText?: string;
+  mantraTranslation: string;
+  tagline: string;
+}): string {
+  if (!input.publishable) return '';
+  return input.mantraText && input.mantraTranslation ? input.mantraText : input.tagline;
+}
