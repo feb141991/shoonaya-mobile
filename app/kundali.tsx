@@ -19,6 +19,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
+import { forwardGeocode, reverseGeocode } from '@/lib/mandali';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
 
@@ -85,21 +86,113 @@ export default function KundaliScreen() {
     fetchProfiles();
   }, [fetchProfiles]);
 
+  const resolveCityCoordinates = async (query: string): Promise<GeocodeResult | null> => {
+    const trimmed = query.trim();
+    if (!trimmed) return null;
+
+    // Strategy 1: Primary Jyotish geocode with 20s timeout and reverse-geocode refinement
+    try {
+      const response = await apiFetch(`/api/jyotish/geocode?q=${encodeURIComponent(trimmed)}`, {
+        timeoutMs: 20_000,
+      });
+      if (response.ok) {
+        const payload = (await response.json()) as GeocodeResult;
+        if (typeof payload?.lat === 'number' && typeof payload?.lng === 'number') {
+          let city = payload.city;
+          let country = payload.country;
+
+          // If city seems generic or is a state (e.g. "Punjab" when user entered "Jalandhar"),
+          // refine via reverse-geocode
+          try {
+            const rev = await reverseGeocode(payload.lat, payload.lng);
+            if (rev?.city) {
+              city = rev.city;
+              if (rev.country) country = rev.country;
+            }
+          } catch {
+            // Ignore refinement error and use primary
+          }
+
+          return {
+            lat: payload.lat,
+            lng: payload.lng,
+            timezone: payload.timezone || 'Asia/Kolkata',
+            city: city || trimmed.split(',')[0].trim(),
+            country: country || 'India',
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[Kundali] /api/jyotish/geocode error, attempting fallback:', err);
+    }
+
+    // Strategy 2: Fast fallback via forwardGeocode (Geoapify) + reverseGeocode
+    try {
+      const coords = await forwardGeocode(trimmed);
+      if (coords && typeof coords.lat === 'number' && typeof coords.lon === 'number') {
+        let city = trimmed.split(',')[0].trim();
+        let country = 'India';
+        try {
+          const rev = await reverseGeocode(coords.lat, coords.lon);
+          if (rev?.city) city = rev.city;
+          if (rev?.country) country = rev.country;
+        } catch {
+          // ignore refinement error
+        }
+
+        const isIndia = /india/i.test(country) || /india/i.test(trimmed);
+        const timezone = isIndia ? 'Asia/Kolkata' : Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+        return {
+          lat: coords.lat,
+          lng: coords.lon,
+          city,
+          country,
+          timezone,
+        };
+      }
+    } catch (err) {
+      console.warn('[Kundali] forwardGeocode fallback error:', err);
+    }
+
+    return null;
+  };
+
   const searchCity = async () => {
-    if (formData.cityQuery.length < 2) return;
+    if (formData.cityQuery.trim().length < 2) return;
     setSearchingCity(true);
     setGeocodeResult(null);
     try {
-      // Geocode is public, no apiFetch needed if it's full absolute URL, but apiFetch handles it well.
-      const response = await apiFetch(`/api/jyotish/geocode?q=${encodeURIComponent(formData.cityQuery)}`);
-      if (response.ok) {
-        const payload = await response.json();
-        setGeocodeResult(payload as GeocodeResult);
+      const result = await resolveCityCoordinates(formData.cityQuery);
+      if (result) {
+        setGeocodeResult(result);
       } else {
-        Alert.alert('City Not Found', 'Could not locate that city. Try another name.');
+        const queryCity = formData.cityQuery.split(',')[0].trim();
+        Alert.alert(
+          'Confirm Location',
+          `Could not pinpoint exact coordinates for "${queryCity}". Continuing will use a default central-India location (New Delhi) instead, not ${queryCity}'s actual position -- this can shift your ascendant and house placements. Search again for a precise result, or continue with the approximation.`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Use Approximate Location',
+              onPress: () => {
+                // Coordinates are New Delhi's, NOT queryCity's -- the "(approx.)"
+                // suffix keeps the confirmation line (below) from implying a
+                // precision this chart's ascendant/houses don't actually have.
+                setGeocodeResult({
+                  city: `${queryCity} (approx.)`,
+                  country: 'India',
+                  lat: 28.6139,
+                  lng: 77.209,
+                  timezone: 'Asia/Kolkata',
+                });
+              },
+            },
+          ]
+        );
       }
     } catch (err) {
-      Alert.alert('Error', 'Failed to search for city.');
+      Alert.alert('Error', 'Failed to search for city. Please check your connection and try again.');
     } finally {
       setSearchingCity(false);
     }

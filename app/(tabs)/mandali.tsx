@@ -66,6 +66,7 @@ import {
   fetchNearbySeekers,
   fetchPendingConnectionRequests,
   fetchPostComments,
+  fetchSafetyState,
   leaveMandali,
   removeCommentReaction,
   reportMandaliComment,
@@ -699,13 +700,174 @@ export default function MandaliScreen() {
     // viewer reaction + comment preview in one response) -- opt-in via
     // ?limit, see /api/mandali/feed's route handler. First page only here;
     // loadMorePosts below fetches subsequent pages with ?cursor.
-    const feedResponse = await apiFetch('/api/mandali/feed?limit=20');
-    const feedServerTiming = parseServerTimingHeader(feedResponse.headers.get('Server-Timing'));
-    if (feedServerTiming) {
-      recordServerTiming({ kind: 'authenticated', userId: user.id }, 'mandali', feedServerTiming);
+    let feed: FeedPayload | null = null;
+    try {
+      const feedResponse = await apiFetch('/api/mandali/feed?limit=20');
+      const feedServerTiming = parseServerTimingHeader(feedResponse.headers.get('Server-Timing'));
+      if (feedServerTiming) {
+        recordServerTiming({ kind: 'authenticated', userId: user.id }, 'mandali', feedServerTiming);
+      }
+      if (feedResponse.ok) {
+        feed = (await feedResponse.json()) as FeedPayload;
+      } else {
+        console.warn(`[MandaliScreen] /api/mandali/feed returned ${feedResponse.status}, attempting direct Supabase fallback`);
+      }
+    } catch (feedErr) {
+      console.warn('[MandaliScreen] /api/mandali/feed fetch failed, attempting direct Supabase fallback:', feedErr);
     }
-    if (!feedResponse.ok) throw new Error('Could not load Mandali.');
-    const feed = await feedResponse.json() as FeedPayload;
+
+    if (!feed) {
+      // Mirrors the real /api/mandali/feed route's use of getUserSafetyState +
+      // filterAuthoredItems/filterProfileRows (backend's src/lib/user-safety.ts)
+      // -- without this, a blocked/muted member's posts and comments (and their
+      // own row in the member list) would leak straight through this fallback,
+      // since it reads posts/profiles directly with no server-side filtering.
+      const [{ data: myProfile }, safetyState] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, username, mandali_id, city, country, latitude, longitude, mandalis(name)')
+          .eq('id', user.id)
+          .maybeSingle(),
+        fetchSafetyState(user.id).catch((safetyErr) => {
+          console.warn('[MandaliScreen] fetchSafetyState failed, fallback feed will be unfiltered:', safetyErr);
+          return { excludedAuthorIds: new Set<string>(), hiddenContentKeys: new Set<string>() };
+        }),
+      ]);
+
+      const mandaliId = myProfile?.mandali_id ?? null;
+      let fetchedPosts: PostRow[] = [];
+      let fetchedMembers: Array<{ id: string; username: string; avatar_url: string | null; seva_score: number }> = [];
+
+      if (mandaliId) {
+        const { data: rawPosts, error: rawPostsErr } = await supabase
+          .from('posts')
+          .select('id, author_id, mandali_id, content, type, event_date, event_location, upvotes, comment_count, created_at')
+          .eq('mandali_id', mandaliId)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (rawPostsErr) {
+          console.warn('[MandaliScreen] Direct posts query error:', rawPostsErr);
+        }
+
+        const visiblePosts = (rawPosts ?? []).filter((p) =>
+          !safetyState.excludedAuthorIds.has(p.author_id) &&
+          !safetyState.hiddenContentKeys.has(`mandali_post:${p.id}`)
+        );
+
+        if (visiblePosts.length > 0) {
+          const rawPosts = visiblePosts;
+          const authorIds = Array.from(new Set(rawPosts.map((p) => p.author_id)));
+          const { data: authors } = await supabase
+            .from('public_profiles')
+            .select('id, username, avatar_url, seva_score')
+            .in('id', authorIds);
+
+          const authorMap = new Map((authors ?? []).map((a) => [a.id, a]));
+
+          const postIds = rawPosts.map((p) => p.id);
+          const { data: myUpvotes } = await supabase
+            .from('post_upvotes')
+            .select('post_id, reaction_type')
+            .eq('user_id', user.id)
+            .in('post_id', postIds);
+
+          const upvoteMap = new Map((myUpvotes ?? []).map((u) => [u.post_id, (u.reaction_type ?? 'love') as ReactionType]));
+
+          const { data: rawComments } = await supabase
+            .from('post_comments')
+            .select('id, post_id, author_id, body, created_at, upvotes')
+            .in('post_id', postIds)
+            .order('created_at', { ascending: false })
+            .limit(40);
+
+          const visibleComments = (rawComments ?? []).filter((c) =>
+            !safetyState.excludedAuthorIds.has(c.author_id) &&
+            !safetyState.hiddenContentKeys.has(`mandali_comment:${c.id}`)
+          );
+
+          const commentAuthorIds = Array.from(new Set(visibleComments.map((c) => c.author_id)));
+          const { data: commentAuthors } = commentAuthorIds.length > 0
+            ? await supabase.from('public_profiles').select('id, username, avatar_url').in('id', commentAuthorIds)
+            : { data: [] };
+          const commentAuthorMap = new Map((commentAuthors ?? []).map((a) => [a.id, a]));
+
+          const commentsByPost = new Map<string, CommentRow[]>();
+          for (const c of visibleComments) {
+            const auth = commentAuthorMap.get(c.author_id);
+            const row: CommentRow = {
+              id: c.id,
+              post_id: c.post_id,
+              author_id: c.author_id,
+              body: c.body,
+              parent_id: null,
+              created_at: c.created_at,
+              updated_at: null,
+              deleted_at: null,
+              upvotes: c.upvotes ?? 0,
+              profiles: auth ? { full_name: auth.username, username: auth.username, avatar_url: auth.avatar_url } : null,
+            };
+            const list = commentsByPost.get(c.post_id) ?? [];
+            if (list.length < 2) list.push(row);
+            commentsByPost.set(c.post_id, list);
+          }
+
+          fetchedPosts = rawPosts.map((p) => {
+            const auth = authorMap.get(p.author_id);
+            return {
+              id: p.id,
+              created_at: p.created_at,
+              author_id: p.author_id,
+              mandali_id: p.mandali_id,
+              content: p.content,
+              type: p.type,
+              upvotes: p.upvotes ?? 0,
+              comment_count: p.comment_count ?? 0,
+              event_date: p.event_date,
+              event_location: p.event_location,
+              profiles: auth ? {
+                full_name: auth.username,
+                username: auth.username,
+                avatar_url: auth.avatar_url,
+                sampradaya: null,
+                spiritual_level: null,
+              } : null,
+              viewerReaction: upvoteMap.get(p.id) ?? null,
+              commentPreview: commentsByPost.get(p.id) ?? [],
+            };
+          });
+        }
+
+        const { data: memberRows } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('mandali_id', mandaliId);
+        if (memberRows && memberRows.length > 0) {
+          const { data: pubMembers } = await supabase
+            .from('public_profiles')
+            .select('id, username, avatar_url, seva_score')
+            .in('id', memberRows.map((m) => m.id));
+          fetchedMembers = (pubMembers ?? [])
+            .filter((m) => !safetyState.excludedAuthorIds.has(m.id))
+            .map((m) => ({
+              id: m.id,
+              username: m.username,
+              avatar_url: m.avatar_url,
+              seva_score: m.seva_score ?? 0,
+            }));
+        }
+      }
+
+      feed = {
+        schemaVersion: 1,
+        profile: myProfile as any,
+        posts: fetchedPosts,
+        rsvps: [],
+        members: fetchedMembers,
+        blendedPosts: [],
+        nextCursor: null,
+      };
+    }
     const profileRow = feed.profile;
     const mandaliRelation = Array.isArray(profileRow?.mandalis) ? profileRow.mandalis[0] : profileRow?.mandalis;
     const context: ProfileContext = {
@@ -1746,7 +1908,14 @@ export default function MandaliScreen() {
           eventDate,
           eventLocation,
         });
-        await loadMandali();
+        resetComposeState();
+        setSheetVisible(false);
+        try {
+          await loadMandali();
+        } catch (reloadErr) {
+          console.warn('[MandaliScreen] Post persisted, but background feed refresh encountered error:', reloadErr);
+        }
+        return;
       }
       resetComposeState();
       setSheetVisible(false);
