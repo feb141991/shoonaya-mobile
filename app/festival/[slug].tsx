@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { apiFetch } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
 import {
@@ -72,20 +73,55 @@ export default function FestivalDetailScreen() {
     let cancelled = false;
     setStoryLoading(true);
 
-    apiFetch(`/api/observance-content?slug=${encodeURIComponent(slug)}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+    const fetchStory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('observance_story_versions')
+          .select('id, version, status, published_at, observance_definitions!inner(id, slug, display_name, tradition), observance_story_translations(*)')
+          .eq('observance_definitions.slug', slug)
+          .eq('status', 'published')
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
         if (cancelled) return;
-        if (data?.published && data?.story) {
-          setLiveStory(data.story);
+        if (data && !error) {
+          const row = data as any;
+          const def = Array.isArray(row.observance_definitions) ? row.observance_definitions[0] : row.observance_definitions;
+          const translations = Array.isArray(row.observance_story_translations) ? row.observance_story_translations : [];
+          const translationsMap: Record<string, any> = {};
+
+          for (const t of translations) {
+            translationsMap[t.language] = {
+              title: def?.display_name,
+              teaser: t.teaser,
+              origin: t.origin,
+              significance: t.significance,
+              rituals: t.rituals || [],
+              verse: t.verse,
+              personalPractice: t.personal_practice,
+            };
+          }
+
+          setLiveStory({
+            id: row.id,
+            definitionId: def?.id ?? '',
+            slug: def?.slug ?? slug,
+            displayName: def?.display_name ?? slug,
+            tradition: def?.tradition ?? '',
+            version: row.version ?? 1,
+            publishedAt: row.published_at,
+            translations: translationsMap,
+          });
         }
-      })
-      .catch((err) => {
-        console.warn('[FestivalDetail] Failed to load live observance story:', err);
-      })
-      .finally(() => {
+      } catch (err) {
+        console.warn('[FestivalDetail] Supabase story fetch failed:', err);
+      } finally {
         if (!cancelled) setStoryLoading(false);
-      });
+      }
+    };
+
+    void fetchStory();
 
     return () => {
       cancelled = true;
