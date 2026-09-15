@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { DHARM_VEERS, selectDharmVeerOfTheDayFromRoster } from '../lib/dharm-veer';
 
 describe('Dharm Veer Canonical 500+ Words & Verification Suite', () => {
-  it('contains all 12 cornerstone heroes offline in DHARM_VEERS', () => {
-    assert.equal(DHARM_VEERS.length, 12);
+  it('contains all cornerstone heroes offline in DHARM_VEERS', () => {
+    assert.equal(DHARM_VEERS.length, 13);
   });
 
   it('guarantees each hero has >= 500 words in core narrative', () => {
