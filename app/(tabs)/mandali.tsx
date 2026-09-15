@@ -1384,16 +1384,48 @@ export default function MandaliScreen() {
   const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null): Promise<boolean> => {
     if (!profile) return false;
     setCommenting(postId);
+    let newId: string | null = null;
     try {
-      const newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
-      await patchNewComment(postId, newId);
-      return true;
+      newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
     } catch {
       Alert.alert('Could not post comment', 'Check your connection and try again.');
       return false;
     } finally {
       setCommenting(null);
     }
+
+    // Optimistically update post comment count
+    setPosts((current) => current.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
+    setBlendedPosts((current) => current.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
+
+    if (newId) {
+      const optimisticComment: CommentRow = {
+        id: newId,
+        post_id: postId,
+        author_id: profile.userId,
+        body,
+        parent_id: parentId ?? null,
+        created_at: new Date().toISOString(),
+        updated_at: null,
+        deleted_at: null,
+        upvotes: 0,
+        is_highlighted: false,
+        profiles: {
+          full_name: profile.displayName || 'You',
+          username: profile.displayName || 'You',
+          avatar_url: null,
+        },
+      };
+      setComments((current) => (current.some((c) => c.id === newId) ? current : [...current, optimisticComment]));
+
+      // Refresh full thread in the background to replace with server-hydrated row.
+      // A background refresh failure must never trigger a false "Could not post comment" alert.
+      void patchNewComment(postId, newId).catch((err) => {
+        console.warn('[MandaliScreen] Background patchNewComment failed', err);
+      });
+    }
+
+    return true;
   }, [patchNewComment, profile]);
 
   const handleSelectCommentReaction = useCallback(async (commentId: string, reaction: ReactionType) => {
