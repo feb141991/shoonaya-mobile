@@ -28,6 +28,25 @@ const FONT_PRESETS = [
   { label: 'A++', value: 3 },
 ];
 
+type LiveObservanceStory = {
+  id: string;
+  definitionId: string;
+  slug: string;
+  displayName: string;
+  tradition: string;
+  version: number;
+  publishedAt?: string;
+  translations: Record<string, {
+    title?: string;
+    teaser?: string;
+    origin?: string;
+    significance?: string;
+    rituals?: string[];
+    verse?: { original?: string; transliteration?: string; translation?: string };
+    personalPractice?: string;
+  }>;
+};
+
 export default function FestivalDetailScreen() {
   const params = useLocalSearchParams<{ slug: string }>();
   const slug = params.slug ?? '';
@@ -38,6 +57,8 @@ export default function FestivalDetailScreen() {
 
   const [occurrence, setOccurrence] = useState<ClientObservanceResult | null>(null);
   const [occurrenceLoading, setOccurrenceLoading] = useState(true);
+  const [liveStory, setLiveStory] = useState<LiveObservanceStory | null>(null);
+  const [storyLoading, setStoryLoading] = useState(true);
   const [lang, setLang] = useState<'en' | 'local'>('en');
   const [fontStep, setFontStep] = useState(1);
   const [sharing, setSharing] = useState(false);
@@ -46,6 +67,30 @@ export default function FestivalDetailScreen() {
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   const festival = useMemo(() => lookupFestivalContent(slug), [slug]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStoryLoading(true);
+
+    apiFetch(`/api/observance-content?slug=${encodeURIComponent(slug)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.published && data?.story) {
+          setLiveStory(data.story);
+        }
+      })
+      .catch((err) => {
+        console.warn('[FestivalDetail] Failed to load live observance story:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setStoryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +122,7 @@ export default function FestivalDetailScreen() {
     };
   }, [slug]);
 
-  if (!festival) {
+  if (!festival && !liveStory && !storyLoading) {
     return (
       <ReaderShell title="Festival" fallbackBackUrl="/(tabs)" themeColor={theme.brand} ambientGlowColor={theme.brand}>
         <View style={{ padding: 24, alignItems: 'center' }}>
@@ -87,19 +132,31 @@ export default function FestivalDetailScreen() {
     );
   }
 
-  const name = resolveFestivalText(festival.name, resolvedLang) || festival.definitionKey;
-  const tagline = resolveFestivalText(festival.tagline, resolvedLang);
-  const significance = resolveFestivalText(festival.significance, resolvedLang);
-  const rituals = resolveFestivalList(festival.rituals, resolvedLang);
-  const dos = resolveFestivalList(festival.dos, resolvedLang);
-  const donts = resolveFestivalList(festival.donts, resolvedLang);
-  const pujaItems = resolveFestivalList(festival.pujaItems, resolvedLang);
-  const mantraTranslation = festival.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : '';
-  const publishable = isFestivalPublishable(festival);
-  // Only offer the toggle when real Hindi content actually exists --
-  // never a switch to a language that silently falls back to English.
+  const liveTranslation = liveStory?.translations?.[resolvedLang] ?? liveStory?.translations?.['en'];
+
+  const name =
+    liveTranslation?.title ||
+    liveStory?.displayName ||
+    (festival ? resolveFestivalText(festival.name, resolvedLang) : '') ||
+    festival?.definitionKey ||
+    slug;
+
+  const tagline = liveTranslation?.teaser || (festival ? resolveFestivalText(festival.tagline, resolvedLang) : '');
+  const significance = liveTranslation?.significance || (festival ? resolveFestivalText(festival.significance, resolvedLang) : '');
+  const rituals = (liveTranslation?.rituals && liveTranslation.rituals.length > 0)
+    ? liveTranslation.rituals
+    : (festival ? resolveFestivalList(festival.rituals, resolvedLang) : []);
+  const dos = festival ? resolveFestivalList(festival.dos, resolvedLang) : [];
+  const donts = festival ? resolveFestivalList(festival.donts, resolvedLang) : [];
+  const pujaItems = festival ? resolveFestivalList(festival.pujaItems, resolvedLang) : [];
+  const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || '';
+  const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : '');
+  const publishable = Boolean(liveStory) || (festival ? isFestivalPublishable(festival) : false);
+
+  // Only offer the toggle when real Hindi content actually exists
   const hasLocalFestival = Boolean(
-    resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi')
+    liveStory?.translations?.hi?.significance ||
+    (festival && resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi'))
   );
 
   const handleShare = async () => {
@@ -136,7 +193,7 @@ export default function FestivalDetailScreen() {
 
         <Card style={{ padding: 20, marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Text style={{ fontSize: 36 }}>{festival.emoji}</Text>
+            <Text style={{ fontSize: 36 }}>{festival?.emoji ?? '🪔'}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ ...TYPE.title, color: theme.text }}>{name}</Text>
               {tagline ? <Text style={{ ...TYPE.body, color: theme.dim, marginTop: 2 }}>{tagline}</Text> : null}
@@ -233,15 +290,19 @@ export default function FestivalDetailScreen() {
           </Card>
         ) : null}
 
-        {festival.mantra && mantraTranslation ? (
+        {mantraTranslation ? (
           <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
             <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>Sacred Mantra</Text>
-            <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
-              {festival.mantra.sanskrit}
-            </Text>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 12 * fsScale, lineHeight: 16 * fsScale, color: theme.dim, textAlign: 'center' }}>
-              {festival.mantra.transliteration}
-            </Text>
+            {mantraText ? (
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
+                {mantraText}
+              </Text>
+            ) : null}
+            {festival?.mantra?.transliteration ? (
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12 * fsScale, lineHeight: 16 * fsScale, color: theme.dim, textAlign: 'center' }}>
+                {festival.mantra.transliteration}
+              </Text>
+            ) : null}
             <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: TYPE.body.lineHeight * fsScale, textAlign: 'center', marginTop: 6 }}>{mantraTranslation}</Text>
           </Card>
         ) : null}
@@ -258,7 +319,7 @@ export default function FestivalDetailScreen() {
               layout: 'sacredText',
               headlineValue: resolveFestivalShareHeadline({
                 publishable,
-                mantraText: festival.mantra?.sanskrit,
+                mantraText: mantraText || festival?.mantra?.sanskrit,
                 mantraTranslation,
                 tagline,
               }),
