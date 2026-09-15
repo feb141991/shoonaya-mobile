@@ -2,7 +2,12 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { lookupFestivalContent, FESTIVAL_CONTENT_SNAPSHOT } from '../lib/festival-content.generated';
-import { resolveFestivalText, resolveFestivalList, isFestivalPublishable } from '../lib/festival-content-helpers';
+import {
+  resolveFestivalText,
+  resolveFestivalList,
+  isFestivalPublishable,
+  resolveFestivalShareHeadline,
+} from '../lib/festival-content-helpers';
 import { LOCAL_HERO_ASSETS, BUNDLED_HERO_THEMES } from '../lib/heroPreference';
 
 const ALL_HINDU_SLUGS = [
@@ -166,7 +171,7 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
       assert.equal(festival.definitionKey, slug);
       assert.equal(festival.tradition, 'sikh');
       assert.ok(festival.emoji.length > 0);
-      assert.ok(resolveFestivalText(festival.name, 'pa').length > 0, `Missing Gurmukhi name for ${slug}`);
+      assert.ok(festival.name.value.pa && festival.name.value.pa.length > 0, `Missing Gurmukhi draft name for ${slug}`);
     }
     for (const slug of ALL_BUDDHIST_SLUGS) {
       const festival = lookupFestivalContent(slug);
@@ -191,37 +196,43 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
     }
   });
 
-  it('verifies bilingual content integrity (EN & HI) for every festival', () => {
+  it('retains bilingual drafts but withholds every field until provenance review is durable', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
-      const nameEn = resolveFestivalText(festival.name, 'en');
-      const nameHi = resolveFestivalText(festival.name, 'hi');
-      assert.ok(nameEn.length > 0, `Missing EN name for ${slug}`);
-      assert.ok(nameHi.length > 0, `Missing HI name for ${slug}`);
+      assert.ok(festival.name.value.en.length > 0, `Missing EN draft name for ${slug}`);
+      assert.ok(festival.name.value.hi && festival.name.value.hi.length > 0, `Missing HI draft name for ${slug}`);
+      assert.ok(festival.significance.value.en.length > 20, `Significance EN draft too short for ${slug}`);
+      assert.ok(festival.rituals.value.en.length >= 3, `Expected at least 3 EN draft rituals for ${slug}`);
 
-      const sigEn = resolveFestivalText(festival.significance, 'en');
-      const sigHi = resolveFestivalText(festival.significance, 'hi');
-      assert.ok(sigEn.length > 20, `Significance EN too short for ${slug}`);
-      assert.ok(sigHi.length > 20, `Significance HI too short for ${slug}`);
+      for (const [fieldName, field] of Object.entries({
+        name: festival.name,
+        tagline: festival.tagline,
+        significance: festival.significance,
+        rituals: festival.rituals,
+        dos: festival.dos,
+        donts: festival.donts,
+        pujaItems: festival.pujaItems,
+      })) {
+        assert.ok(field, `Missing ${fieldName} draft for ${slug}`);
+        assert.equal(field.status, 'pending_source', `${slug}.${fieldName} must remain withheld`);
+        assert.deepEqual(field.sourceRefs, [], `${slug}.${fieldName} carries unverified source metadata`);
+        assert.equal(field.reviewRef, undefined, `${slug}.${fieldName} carries an unsupported review claim`);
+      }
 
-      const ritualsEn = resolveFestivalList(festival.rituals, 'en');
-      const ritualsHi = resolveFestivalList(festival.rituals, 'hi');
-      assert.ok(ritualsEn.length >= 3, `Expected at least 3 EN rituals for ${slug}`);
-      assert.ok(ritualsHi.length >= 3, `Expected at least 3 HI rituals for ${slug}`);
-
-      const dos = resolveFestivalList(festival.dos, 'en');
-      const donts = resolveFestivalList(festival.donts, 'en');
-      assert.ok(dos.length >= 1, `Expected dos for ${slug}`);
-      assert.ok(donts.length >= 1, `Expected donts for ${slug}`);
-
-      const items = resolveFestivalList(festival.pujaItems, 'en');
-      assert.ok(items.length >= 3, `Expected puja items for ${slug}`);
-
-      assert.ok(isFestivalPublishable(festival), `Festival ${slug} must be publishable`);
+      assert.equal(resolveFestivalText(festival.name, 'en'), '', `${slug} leaked an unreviewed name`);
+      assert.equal(resolveFestivalText(festival.significance, 'hi'), '', `${slug} leaked unreviewed significance`);
+      assert.deepEqual(resolveFestivalList(festival.rituals, 'en'), [], `${slug} leaked unreviewed rituals`);
+      assert.equal(isFestivalPublishable(festival), false, `Festival ${slug} must fail closed`);
+      assert.equal(resolveFestivalShareHeadline({
+        publishable: isFestivalPublishable(festival),
+        mantraText: festival.mantra?.sanskrit,
+        mantraTranslation: festival.mantra ? resolveFestivalText(festival.mantra.translation, 'en') : '',
+        tagline: resolveFestivalText(festival.tagline, 'en'),
+      }), '', `${slug} leaked pending content into a share card`);
     }
   });
 
-  it('verifies authentic Sanskrit/Gurbani/Pali/Prakrit mantra and translations for all 114 festivals', () => {
+  it('retains structurally complete mantra drafts while withholding all 114 from display', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       assert.ok(festival.mantra, `Expected mantra for ${slug}`);
@@ -230,8 +241,11 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
 
       const transEn = resolveFestivalText(festival.mantra.translation, 'en');
       const transHi = resolveFestivalText(festival.mantra.translation, 'hi');
-      assert.ok(transEn.length > 10, `Mantra EN translation too short for ${slug}`);
-      assert.ok(transHi.length > 10, `Mantra HI translation too short for ${slug}`);
+      assert.equal(festival.mantra.translation.status, 'pending_source', `${slug} mantra must remain withheld`);
+      assert.deepEqual(festival.mantra.translation.sourceRefs, [], `${slug} mantra carries unverified source metadata`);
+      assert.equal(festival.mantra.translation.reviewRef, undefined, `${slug} mantra carries an unsupported review claim`);
+      assert.equal(transEn, '', `Unreviewed EN mantra leaked for ${slug}`);
+      assert.equal(transHi, '', `Unreviewed HI mantra leaked for ${slug}`);
     }
   });
 

@@ -38,7 +38,7 @@ export interface FestivalContentSnapshot {
 }
 
 export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "festivals": [
     {
       "definitionKey": "raksha-bandhan",
@@ -49,15 +49,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Raksha Bandhan",
           "hi": "रक्षा बंधन"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Samskara / Bhavishya Purana",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -67,15 +60,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "A sacred thread of protection between siblings",
           "hi": "भाई-बहन के पवित्र स्नेह और रक्षा का पावन बंधन"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Samskara",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -85,15 +71,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Raksha Bandhan celebrates the bond between brothers and sisters. A sister ties a protective thread (rakhi) on her brother's wrist as a symbol of her love and prayers for his wellbeing, and he in turn pledges to protect and support her. The festival is observed on the full moon (Purnima) of the lunar month of Shravana.",
           "hi": "श्रावण मास की पूर्णिमा को रक्षा बंधन का पावन पर्व मनाया जाता है। बहन अपने भाई की कलाई पर रक्षा-सूत्र बांधकर उसकी दीर्घायु और मंगल की कामना करती है, और भाई अपनी बहन के सम्मान व सुरक्षा का संकल्प लेता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana (Uttara Parva)",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -113,15 +92,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "परस्पर मिष्ठान खिलाकर मंगल कामना करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Samskara",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -137,15 +109,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूजन और तिलक के समय पूर्व या उत्तर दिशा की ओर मुख रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -161,15 +126,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूजा में खंडित अक्षत (चावल) अथवा खंडित रक्षा-सूत्र का प्रयोग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Muhurat Shastra guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -191,15 +149,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मिठाई"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -212,15 +163,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "With the same thread that bound the mighty king of demons [Bali], I bind you, O protective thread — may you not falter, may you not falter.",
             "hi": "जिस रक्षा-सूत्र से दानवों के महाबली राजा बलि को बांधा गया था, उसी से मैं तुम्हें बांधती हूँ। हे रक्षा-सूत्र! तुम सदा अडिग रहना और रक्षा करना।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana traditional raksha mantra",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -236,15 +180,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganesh Chaturthi",
           "hi": "गणेश चतुर्थी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana / Mudgala Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -254,15 +191,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the birth of Lord Ganesha, the remover of obstacles",
           "hi": "विघ्नहर्ता भगवान श्री गणेश के प्राकट्य का पावन उत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -272,15 +202,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganesh Chaturthi (Vinayaka Chaturthi) marks the descent of Lord Ganesha, the embodiment of wisdom, auspicious beginnings, and remover of all obstacles (Vighnaharta). Celebrated on Shukla Chaturthi of the lunar month of Bhadrapada, it invites divine discernment and spiritual clarity into the home and temple.",
           "hi": "भाद्रपद मास के शुक्ल पक्ष की चतुर्थी को विघ्नहर्ता, बुद्धि और रिद्धि-सिद्धि के दाता भगवान श्री गणेश का जन्मोत्सव मनाया जाता है। इस पावन अवसर पर घर और मंदिर में विघ्नविनाशक की स्थापना कर बुद्धि, विवेक और कल्याण की प्रार्थना की जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana / Mudgala Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -300,15 +223,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अनंत चतुर्दशी पर कृतज्ञता, विसर्जन और अगले वर्ष शीघ्र आगमन की प्रार्थना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Atharvashirsha / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -326,15 +242,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूजन के समय सात्विक भाव और एकाग्रता रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -350,15 +259,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विसर्जन में पर्यावरण को क्षति पहुँचाने वाले रसायनों का प्रयोग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana / Muhurat Shastra",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -384,15 +286,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "नारियल व पान के पत्ते"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -405,15 +300,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Lord with the curved trunk and immense form, radiant as a million suns, please make all my endeavors free of obstacles, always.",
             "hi": "हे वक्र सूंड वाले, विशालकाय, करोड़ों सूर्यों के समान तेजस्वी देव, मेरे सभी कार्यों को सदा बाधा-मुक्त करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganesha Purana / Traditional Invocations",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -429,15 +317,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Krishna Janmashtami",
           "hi": "श्री कृष्ण जन्माष्टमी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam / Harivamsa",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -447,15 +328,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The divine advent of Lord Sri Krishna, protector of Dharma",
           "hi": "धर्म संस्थापक भगवान श्री कृष्ण का दिव्य प्राकट्योत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -465,15 +339,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Krishna Janmashtami (Gokulashtami) marks the midnight birth of Bhagavan Sri Krishna, the eighth avatar of Lord Vishnu, on Krishna Ashtami in the month of Bhadrapada under Rohini Nakshatra. He descended to restore cosmic righteousness (Dharma), teach the supreme wisdom of the Bhagavad Gita, and shower divine love upon all seekers.",
           "hi": "भाद्रपद मास के कृष्ण पक्ष की अष्टमी तिथि और रोहिणी नक्षत्र में मध्यरात्रि को भगवान श्री कृष्ण का प्राकट्य हुआ। यह पावन पर्व धर्म की स्थापना, श्रीमद्भगवद्गीता के अमर संदेश और निष्काम भक्ति का उत्सव है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam (Canto 10)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -493,15 +360,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रीमद्भगवद्गीता एवं श्रीमद्भागवत महापुराण के श्लोकों का पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhagavata Purana tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -519,15 +379,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मध्यरात्रि में रोहिणी नक्षत्र के शुभ संयोग में आरती करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -543,15 +396,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बिना तुलसी पत्र के भगवान कृष्ण को भोग न लगाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -577,15 +423,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप व घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -598,15 +437,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to Lord Krishna, the son of Vasudeva, the destroyer of Kamsa and Chanura, the supreme joy of Devaki, and the spiritual preceptor of the universe.",
             "hi": "वसुदेव के पुत्र, कंस और चाणूर का मर्दन करने वाले, माता देवकी को परमानंद देने वाले, जगद्गुरु भगवान श्री कृष्ण को मैं प्रणाम करता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Krishna Ashtakam (Adi Shankaracharya)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -622,15 +454,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chhath Puja",
           "hi": "छठ पूजा"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Rigveda / Surya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -640,15 +465,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ancient Vedic thanksgiving to the Sun God and Chhathi Maiya",
           "hi": "भगवान सूर्य और छठी मइया की उपासना का महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Surya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -658,15 +476,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chhath Puja is an ancient four-day Vedic festival dedicated to Surya (the Sun deity) and Chhathi Maiya (Usha/Pratyusha). Celebrated on Kartika Shukla Shashthi, it expresses deep gratitude for the life-giving energy of the cosmos through rigorous penance, mental purity, and serene arghya offerings at natural water bodies.",
           "hi": "कार्तिक शुक्ल षष्ठी को मनाया जाने वाला चार दिवसीय महापर्व छठ भगवान सूर्य और षष्ठी देवी (छठी मइया) को समर्पित है। यह पर्व प्रकृति, जल, और जीवनदायिनी सौर ऊर्जा के प्रति अटूट आस्था, तपस्या और कृतज्ञता का प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Rigveda / Brahma Vaivarta Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -686,15 +497,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चतुर्थ दिन: उषा अर्घ्य — उदीयमान सूर्य को अर्घ्य दान एवं पारण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vedic Chhath tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -712,15 +516,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जलाशय में खड़े होकर सूर्य देव का ध्यान और प्रार्थना करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -736,15 +533,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घाटों पर प्लास्टिक या पर्यावरण को नुकसान पहुँचाने वाली सामग्री का प्रयोग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -768,15 +558,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कच्चा दूध व गंगाजल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -789,15 +572,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate on the cosmic radiant Sun, the creator and sustainer. May that divine solar consciousness inspire and illuminate our intellect.",
             "hi": "हम सूर्य नारायण का ध्यान करते हैं, जो समस्त जगत के प्राण हैं। वे सूर्य देव हमारी बुद्धि को सत्य के मार्ग पर प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Surya Gayatri Mantra (Rigveda tradition)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -813,15 +589,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Maha Shivaratri",
           "hi": "महाशिवरात्रि"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana / Linga Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -831,15 +600,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The great night of Shiva — transcending darkness through stillness",
           "hi": "शिव-पार्वती विवाह एवं आत्म-जागरण की महान पावन रात्रि"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -849,15 +611,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Maha Shivaratri, celebrated on Magha/Phalguna Krishna Chaturdashi, is the most sacred night dedicated to Bhagavan Shiva. It commemorates the cosmic dance of creation and dissolution (Tandava), the marriage of Shiva and Parvati (Prakriti and Purusha), and the emergence of the Jyotirlinga. Fasting and staying vigilant through the four praharas (night watches) brings profound inner stillness and liberation.",
           "hi": "फाल्गुन मास के कृष्ण पक्ष की चतुर्दशी को देवाधिदेव महादेव और माता पार्वती के पावन मिलन का महापर्व मनाया जाता है। यह रात्रि तमोगुण पर विजय, आत्म-साक्षात्कार और भगवान शिव के ज्योतिर्लिंग स्वरूप के प्राकट्य का पावन पर्व है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana (Kotirudra Samhita)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -877,15 +632,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पंचाक्षर मंत्र \"ॐ नमः शिवाय\" और महामृत्युंजय मंत्र का निरंतर जप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -903,15 +651,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शारीरिक क्षमता अनुसार फलाहार या निर्जला व्रत का संकल्प लें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Agama ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -927,15 +668,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शिवलिंग की परिक्रमा करते समय जलधारी (सोम सूत्र) को न लांघें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana / Agama Shastra",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -959,15 +693,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कपूर व घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -980,15 +707,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "We worship the Three-Eyed Lord Shiva, who is fragrant and nourishes all beings. As a ripe cucumber is liberated from its stem, may He release us from the bondage of death and ignorance into immortality.",
             "hi": "हम त्रिनेत्रधारी भगवान शिव की आराधना करते हैं, जो सुगंधित हैं और सबका पोषण करते हैं। जैसे पका हुआ फल बेल से मुक्त हो जाता है, वैसे ही हम मृत्यु और बंधनों से मुक्त होकर अमरता को प्राप्त हों।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Rigveda (7.59.12) / Shukla Yajurveda (3.60)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -1004,15 +724,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Dhanteras",
           "hi": "धनतेरस (धनत्रयोदशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Ayurveda tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1022,15 +735,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Invoking Lord Dhanvantari for health and Goddess Lakshmi for prosperity",
           "hi": "आरोग्य के देव धन्वंतरि और महालक्ष्मी की कृपा का पावन पर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1040,15 +746,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Dhanteras (Dhanatrayodashi), observed on Ashvina/Kartika Krishna Trayodashi, marks the appearance of Lord Dhanvantari, the physician of the devas, bearing the pot of Amrita (nectar of immortality) from the cosmic Samudra Manthan. It also honors Goddess Lakshmi and Lord Kubera, blessing homes with health, longevity, and spiritual and material well-being.",
           "hi": "कार्तिक मास के कृष्ण पक्ष की त्रयोदशी को समुद्र मंथन से अमृत कलश लेकर भगवान धन्वंतरि प्रकट हुए थे। यह पर्व उत्तम स्वास्थ्य (आरोग्य), दीर्घायु तथा माता लक्ष्मी और कुबेर देव की कृपा प्राप्त करने का शुभ दिन है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Bhagavata Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1068,15 +767,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घर व मंदिर की दीपों और रंगोली से सजावट"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1094,15 +786,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घर के मुख्य द्वार को स्वच्छ और दीपों से आलोकित रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1118,15 +803,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संध्या समय घर के किसी कोने को अंधकारमय न छोड़ें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1150,15 +828,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रोली, अक्षत व पुष्प"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1171,15 +842,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to the Supreme Lord Dhanvantari, manifestation of Mahavishnu, holding the vessel of celestial nectar, the destroyer of all fears and healer of all afflictions across the three worlds.",
             "hi": "भगवान धन्वंतरि को नमस्कार है, जो हाथ में अमृत कलश धारण किए हुए हैं, समस्त रोगों और भयों का नाश करने वाले हैं और सम्पूर्ण जगत के आरोग्य दाता हैं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Traditional Dhanvantari Mahamantra",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -1195,15 +859,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Naraka Chaturdashi",
           "hi": "नरक चतुर्दशी (छोटी दिवाली)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Srimad Bhagavatam",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1213,15 +870,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Victory of light over darkness and liberation from ignorance",
           "hi": "अज्ञान और तम पर विजय, रूप चौदस एवं दीपदान"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1231,15 +881,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Naraka Chaturdashi (also known as Choti Diwali, Roop Chaudas, or Kali Chaudas) falls on Kartika Krishna Chaturdashi. It celebrates Lord Krishna and Satyabhama vanquishing the tyrannical demon Narakasura, releasing sixteen thousand captives and restoring Dharma. Devotees take the auspicious pre-dawn Abhyanga Snan (herbal oil bath) to cleanse physical and spiritual impurities.",
           "hi": "कार्तिक कृष्ण चतुर्दशी को भगवान श्री कृष्ण और देवी सत्यभामा ने अत्याचारी नरकासुर का वध कर धर्म की रक्षा की थी। इसे रूप चतुर्दशी और छोटी दिवाली भी कहते हैं। इस दिन ब्रह्ममुहूर्त में उबटन और सुगंधित तेल से अभ्यंग स्नान करने से पापों और विकारों का नाश होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1259,15 +902,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दीपावली के स्वागत हेतु मिष्ठान व पकवान तैयार करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dharma Shastra / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1283,15 +919,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मुख्य द्वार और तुलसी के समीप दीपक जलाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1307,15 +936,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घर में कूड़ा-कचरा या अव्यवस्था न रहने दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1337,15 +959,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गंगाजल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1358,15 +973,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I offer this four-wicked lamp on Chaturdashi to appease Lord Yama and illuminate the darkness, praying that all past sins and suffering be dispelled.",
             "hi": "नरक चतुर्दशी के दिन मैं चार बत्तियों वाला यह दीपक यमराज की प्रसन्नता और अपने समस्त पापों के निवारण हेतु अर्पित करता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Padma Purana traditional Deepa-dana shloka",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -1382,15 +990,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Diwali",
           "hi": "दीपावली (लक्ष्मी पूजन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1400,15 +1001,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The festival of lights — awakening the inner light and welcoming Mahalakshmi",
           "hi": "प्रकाश पर्व — अंतःकरण के अंधकार का नाश और महालक्ष्मी का आगमन"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1418,15 +1012,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Diwali (Deepavali), celebrated on the dark moon night (Amavasya) of Kartika, is the premier festival of lights. It celebrates Lord Rama's triumphant return to Ayodhya after fourteen years of exile, the emergence of Goddess Mahalakshmi from the churning of the cosmic ocean, and the eternal victory of inner divine illumination over the darkness of ignorance. Homes glow with thousands of earthen lamps to welcome peace, prosperity, and spiritual wisdom.",
           "hi": "कार्तिक मास की अमावस्या को मनाया जाने वाला दीपावली महापर्व संपूर्ण भारतवर्ष का प्रमुख प्रकाश पर्व है। यह भगवान श्री राम के 14 वर्ष के वनवास के पश्चात अयोध्या आगमन और समुद्र मंथन से मां महालक्ष्मी के प्राकट्य का आनंदोत्सव है। मिट्टी के दीपों की ज्योति हमारे भीतर के अज्ञान को मिटाकर ज्ञान और समृद्धि का संचार करती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ramayana / Skanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1446,15 +1033,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "परिजनों, मित्रों और जरूरतमंदों में मिठाई, वस्त्र व उपहार बांटना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vedic Lakshmi Puja Vidhi / Dharma Shastra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1472,15 +1052,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "नवीन बही-खाते, लेखनी और सद्ग्रंथों का पूजन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Muhurat Shastra guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1498,15 +1071,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जीव-जंतुओं और पर्यावरण को कष्ट पहुँचाने वाले प्रदूषणकारी पटाखों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral & ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1530,15 +1096,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चांदी का सिक्का व पूजा की थाली"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1551,15 +1110,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, O Supreme Goddess Mahalakshmi, seated upon the pure lotus, be pleased and shower Your boundless grace, auspiciousness, and spiritual abundance upon us.",
             "hi": "हे कमल पर विराजमान मां महालक्ष्मी! आप हम पर प्रसन्न हों और हमारे जीवन में शुचिता, शांति और कल्याण की वर्षा करें। हम आपको नमन करते हैं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Lakshmi Mahamantra / Sri Sukta tradition",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -1575,15 +1127,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Govardhan Puja",
           "hi": "गोवर्धन पूजा (अन्नकूट)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam / Vishnu Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1593,15 +1138,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Honoring Mother Nature and Sri Krishna's protection of Vrindavan",
           "hi": "प्रकृति वंदना, गो-सेवा एवं भगवान श्री कृष्ण द्वारा गिरिराज धारण की स्मृति"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1611,15 +1149,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Govardhan Puja (Annakut), celebrated on Kartika Shukla Pratipada (the day after Diwali), commemorates Lord Krishna lifting Mount Govardhan on His little finger for seven days to shelter the people and cattle of Braj from torrential rains sent by Indra. It teaches ecological reverence, humble surrender, gratitude to cows and nature, and community worship.",
           "hi": "कार्तिक शुक्ल प्रतिपदा को गोवर्धन पूजा और अन्नकूट महोत्सव मनाया जाता है। जब देवराज इंद्र के प्रकोप से ब्रज में मूसलाधार वर्षा हुई, तब भगवान श्री कृष्ण ने कनिष्ठिका उंगली पर गोवर्धन पर्वत धारण कर सभी ग्वालों और गोवंश की रक्षा की थी। यह पर्व प्रकृति, पर्वत और गो-सेवा के प्रति कृतज्ञता व्यक्त करने का संदेश देता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam (Canto 10)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1639,15 +1170,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गो-पूजन: गायों को स्नान कराकर रोली-चंदन लगाना और गुड़-हरा चारा खिलाना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava tradition / Bhagavata Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1665,15 +1189,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रद्धापूर्वक गोवर्धन भगवान की सात या चार परिक्रमा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1689,15 +1206,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्नकूट के प्रसाद में प्याज-लहसुन या तामसिक वस्तुओं का उपयोग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1719,15 +1229,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दही, मक्खन व गन्ने के टुकड़े"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1740,15 +1243,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "May that Supreme Lord Sri Krishna, who lovingly lifted Mount Govardhan to protect the sacred cows and devotees, be gracious and pleased with my prayers.",
             "hi": "जिन्होंने गोवर्धन पर्वत को धारण कर गौओं और भक्तों की रक्षा की, वे गिरिराज प्रिय भगवान श्री कृष्ण मुझ पर सदैव प्रसन्न रहें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Traditional Vaishnava Govardhan Stotram",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -1764,15 +1260,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Bhai Dooj",
           "hi": "भाई दूज (यम द्वितीया)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1782,15 +1271,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the sacred bond and longevity of brothers and sisters",
           "hi": "भाई-बहन के अटूट स्नेह और दीर्घायु का मंगलमय पर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1800,15 +1282,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Bhai Dooj (Yama Dwitiya / Bhai Phota), celebrated on Kartika Shukla Dwitiya, marks the concluding day of the Diwali festival cycle. According to tradition, Lord Yama (the deity of death and righteousness) visited his sister Yamuna on this day, who welcomed him with a loving aarti, tilak, and delicious feast. Deeply moved, Yama granted a boon that any brother who visits his sister and receives her tilak on this day will be blessed with long life and freedom from untimely demise.",
           "hi": "कार्तिक शुक्ल द्वितीया को भाई दूज या यम द्वितीया मनाई जाती है। पौराणिक मान्यता के अनुसार, इस दिन यमराज अपनी बहन यमुना के घर गए थे, जहाँ यमुना ने उनका आदर-सत्कार कर तिलक लगाया और प्रेमपूर्वक भोजन कराया। यमराज ने वरदान दिया कि इस दिन जो भाई अपनी बहन के हाथ से तिलक लगवाएगा और भोजन करेगा, उसे दीर्घायु और यम भय से मुक्ति प्राप्त होगी।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Kartika Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1828,15 +1303,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भाई द्वारा बहन को उपहार भेंट करना और स्नेह व रक्षा का वचन देना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Samskara / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1852,15 +1320,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बहनें अपने भाई की दीर्घायु और उज्ज्वल भविष्य की मंगल कामना करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1876,15 +1337,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तिलक और पूजन संपन्न होने से पूर्व अन्न ग्रहण न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1906,15 +1360,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कलावा (मौली)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1927,15 +1374,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to You, O Dharmaraja (Lord Yama), elder brother of Devi Yamuna! Protect us from all suffering and bestow upon my brother a long and virtuous life.",
             "hi": "हे धर्मराज! हे यमुना के अग्रज! आपको नमस्कार है। आप समस्त दुःखों से हमारी रक्षा करें और मेरे भाई को दीर्घायु प्रदान करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Skanda Purana traditional Yama Dwitiya stotram",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -1951,15 +1391,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Holi",
           "hi": "होली (धुलेंडी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Srimad Bhagavatam",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1969,15 +1402,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The festival of colors — celebrating devotion, springtime, and cosmic joy",
           "hi": "रंगोत्सव — भक्त प्रह्लाद की विजय, वसंत ऋतु और दिव्य आनंद का पर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -1987,15 +1413,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Holi, celebrated on the full moon (Purnima) and the following Pratipada in the month of Phalguna, is the joyous festival of colors and springtime renewal. It commemorates young Prahlada's steadfast devotion surviving the fire while Holika perished, proving the triumph of unshakeable faith over tyranny. In Braj, it commemorates the divine, pure love of Radha and Krishna through playful floral and herbal colors.",
           "hi": "फाल्गुन मास की पूर्णिमा को होलिका दहन और अगले दिन रंगोत्सव (धुलेंडी) मनाया जाता है। यह पर्व भक्त प्रह्लाद की अनन्य प्रभु भक्ति और अहंकार रूपी होलिका के भस्म होने की स्मृति है। ब्रज में यह भगवान श्री कृष्ण और श्री राधा रानी के पावन प्रेम और वसंत ऋतु के आगमन का दिव्य उल्लास है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam (Canto 7) / Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2015,15 +1434,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुझिया, ठंडाई और पारंपरिक पकवानों का आनंद लेना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2041,15 +1453,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रंग खेलने से पहले भगवान के चरणों में गुलाल अर्पित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2065,15 +1470,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बेजुबान पशु-पक्षियों पर या किसी की अनिच्छा पर रंग न डालें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral & environmental guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2095,15 +1493,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गंगाजल व चंदन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2116,15 +1507,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Holika deity, worshipped even by Indra, Brahma, and Shankara, protect us and bestow prosperity, vitality, and peace upon all beings.",
             "hi": "हे देवी! ब्रह्मा, विष्णु और शंकर द्वारा पूजित, आप हम सबकी रक्षा करें और समस्त प्राणियों को सुख, शांति और ऐश्वर्य प्रदान करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana traditional Holika Dahan puja vidhi",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -2140,15 +1524,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Rama Navami",
           "hi": "श्री राम नवमी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana / Ramcharitmanas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2158,15 +1535,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The birth of Maryada Purushottam Bhagavan Sri Rama",
           "hi": "मर्यादा पुरुषोत्तम भगवान श्री राम का पावन जन्मोत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2176,15 +1546,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Rama Navami, celebrated on Chaitra Shukla Navami at the culmination of Chaitra Navratri, marks the divine birth of Bhagavan Sri Rama, the seventh avatar of Lord Vishnu, in Ayodhya. Revered as Maryada Purushottam (the ideal supreme human), Rama exemplifies flawless righteousness, duty, truth, and compassion. Devotees fast, chant the Ramcharitmanas, and celebrate His midday birth with great devotion.",
           "hi": "चैत्र मास के शुक्ल पक्ष की नवमी तिथि को मध्याह्न (दोपहर 12 बजे) अभिजीत मुहूर्त में अयोध्या में भगवान श्री राम का प्राकट्य हुआ था। यह दिन चैत्र नवरात्रि की पूर्णाहुति और मर्यादा पुरुषोत्तम के आदर्श जीवन, सत्य, धर्म और न्याय के प्रति समर्पण का महापर्व है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana (Bala Kanda) / Ramcharitmanas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2204,15 +1567,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पनाकम (शीतल पेय), पंजीरी, पंचामृत और फल का वितरण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ramayana tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2230,15 +1586,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गौ-सेवा करें और जरूरतमंदों को अन्न-जल दान दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2254,15 +1603,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, असत्य भाषण या अधार्मिक आचरण से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2286,15 +1628,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चंदन, रोली व अक्षत"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2307,15 +1642,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "To Rama, the auspicious one, to Ramachandra, the creator of the world, to the Lord of the Raghus, the protector of all, the beloved consort of Sita — salutations to Him.",
             "hi": "कल्याणकारी राम, चंद्रमा के समान शीतल रामचंद्र, सर्वज्ञ, रघुकुल के स्वामी और माता जानकी के प्रिय पति भगवान श्री राम को मेरा सादर प्रणाम है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Rama Raksha Stotra / traditional Vedic invocation",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -2331,15 +1659,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Hanuman Jayanti",
           "hi": "श्री हनुमान जयंती"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana / Shiva Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2349,15 +1670,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the birth of Sri Hanuman, the epitome of selfless devotion and valor",
           "hi": "अतुलित बलधामा, संकटमोचन श्री हनुमान जी का प्राकट्योत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2367,15 +1681,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Hanuman Jayanti marks the birth of Sri Hanuman, the Rudra avatar of Lord Shiva and the supreme devotee of Lord Rama. Celebrated on the full moon (Purnima) of Chaitra (and in different traditions during Vaishakha or Margashirsha), it honors the embodiment of selfless service (Seva), supreme strength, humility, fearlessness, and unwavering devotion (Bhakti). Devotees recite the Hanuman Chalisa and Sundarkand for protection and mental strength.",
           "hi": "चैत्र मास की पूर्णिमा को भगवान शिव के ग्यारहवें रुद्रावतार, पवनपुत्र श्री हनुमान जी का जन्मोत्सव मनाया जाता है। वे अतुलनीय बल, बुद्धि, विनम्रता, निस्वार्थ सेवा और प्रभु श्री राम के प्रति अनन्य निष्ठा के जीवंत प्रतीक हैं। इस दिन हनुमान चालीसा और सुंदरकांड का पाठ करने से सभी भय और संकट दूर होते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana / Shiva Purana (Shatarudra Samhita)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2395,15 +1702,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घर के मुख्य शिखर पर लाल/केसरिया ध्वज लगाना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hanuman Upasana Vidhi / Ramayana tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2421,15 +1721,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूर्ण ब्रह्मचर्य और सात्विकता का पालन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2445,15 +1738,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अहंकार, क्रोध और तामसिक आचरण से सर्वथा दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2477,15 +1763,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सरसों या चमेली के तेल का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2498,15 +1777,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I surrender to Sri Rama's messenger, Sri Hanuman, who is swift as the mind, fast as the wind, master of the senses, foremost among the wise, the son of the Wind God, and the leader of the Vanaras.",
             "hi": "जो मन के समान शीघ्रगामी, वायु के समान वेगवान, इंद्रियों को जीतने वाले, बुद्धिमानों में श्रेष्ठ, पवनपुत्र और वानर सेना के प्रमुख हैं, उन श्री रामदूत हनुमान जी की मैं शरण लेता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Rama Raksha Stotra (verse 33)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -2522,15 +1794,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Makar Sankranti",
           "hi": "मकर संक्रांति"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Surya Siddhanta / Surya Upanishad",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2540,15 +1805,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The auspicious northward journey of the Sun and harvest celebration",
           "hi": "भगवान सूर्य का मकर राशि में प्रवेश एवं उत्तरायण का महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Surya Siddhanta",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2558,15 +1816,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Makar Sankranti marks the astronomical transit (Sankranti) of Surya (the Sun deity) into Makara Rashi (Capricorn), signaling the end of winter and the beginning of longer, warmer days (Uttarayan). Celebrated across India as Pongal, Uttarayan, Maghi, and Khichdi, it is a day of profound gratitude to nature, holy dips in sacred rivers (Snan), and charitable giving (Dana).",
           "hi": "सूर्य देव के धनु राशि से मकर राशि में संक्रमण को मकर संक्रांति कहते हैं। इस दिन से सूर्य उत्तरायण होते हैं और ऋतु परिवर्तन के साथ दिनों की लंबाई बढ़ने लगती है। यह पर्व पवित्र नदियों में स्नान, सूर्य उपासना, तिल-गुड़ के दान और प्रकृति के प्रति आभार व्यक्त करने का पावन दिन है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Surya Upanishad / Vishnu Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2586,15 +1837,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तिल-गुड़ के लड्डू बांटना और मधुर वाणी व स्नेह का संकल्प लेना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2612,15 +1856,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तिल और खिचड़ी का सात्विक प्रसाद ग्रहण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2636,15 +1873,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पुण्य काल के शुभ समय को व्यर्थ न जाने दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2666,15 +1896,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घी का दीपक व कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2687,15 +1910,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to the Sun God. Om, to the thousand-rayed Surya, bestower of light and warmth, fulfill our highest and most righteous aspirations.",
             "hi": "सूर्य देव को नमस्कार है। हे सहस्र किरणों वाले तेजस्वी सूर्य देव! आप हमें प्रकाश, आरोग्य और मनोवांछित सद्गति प्रदान करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Surya Upanishad / Traditional Vedic Surya Mantra",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -2711,15 +1927,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vasant Panchami",
           "hi": "बसंत पंचमी (सरस्वती पूजा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Saraswati Rahasya Upanishad / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2729,15 +1938,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Honoring Goddess Saraswati, embodiment of wisdom, arts, and springtime renewal",
           "hi": "विद्या, ज्ञान, वाणी और कला की अधिष्ठात्री देवी मां सरस्वती की वंदना"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2747,15 +1949,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vasant Panchami (Saraswati Puja), celebrated on Magha Shukla Panchami, marks the advent of spring (Vasant Ritu) and the appearance of Goddess Saraswati, the embodiment of wisdom, music, learning, and eloquence. Adorned in radiant yellow (symbolizing mustard blossoms and intellectual illumination), devotees place sacred scriptures, pens, and musical instruments before the Goddess to seek Her blessings.",
           "hi": "माघ मास के शुक्ल पक्ष की पंचमी को बसंत पंचमी का पावन पर्व मनाया जाता है। इसी दिन ज्ञान, विद्या, वाणी, संगीत और कला की देवी मां सरस्वती का प्राकट्य हुआ था। पीला रंग ज्ञान और बसंत की नई ऊर्जा का प्रतीक है। इस दिन पुस्तकों, वाद्य यंत्रों और लेखनी का पूजन कर विद्यारंभ संस्कार किया जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Matsya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2775,15 +1970,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पीत वस्त्र धारण करना और केसरिया मीठे चावल या बूंदी का भोग लगाना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Saraswati Puja Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2801,15 +1989,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जरूरतमंद विद्यार्थियों को पुस्तक व पठन सामग्री भेंट करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2825,15 +2006,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वाणी की देवी के दिन किसी के प्रति कटु या असत्य वचन न कहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2857,15 +2031,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घी का दीपक व धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2878,15 +2045,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to You, O Goddess Saraswati, giver of boons and embodiment of all desires. As I begin my learning, may there always be accomplishment and wisdom for me.",
             "hi": "हे वरदायिनी और सर्वमनोरथ पूर्ण करने वाली मां सरस्वती! आपको नमस्कार है। मैं विद्या अध्ययन आरंभ करने जा रहा हूँ, मुझे सदा सफलता और सद्बुद्धि प्राप्त हो।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Traditional Saraswati Prarthana / Padma Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -2902,15 +2062,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Gudi Padwa",
           "hi": "गुड़ी पड़वा (नव संवत्सर)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Purana / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2920,15 +2073,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Traditional Maharashtra & Deccan New Year celebrating cosmic creation and victory",
           "hi": "नव संवत्सर का शुभारंभ, विजय पताका गुड़ी की स्थापना और उल्लास"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2938,15 +2084,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Gudi Padwa, celebrated on Chaitra Shukla Pratipada, marks the commencement of the traditional Hindu lunar New Year (Nav Samvatsar). It commemorates the day Lord Brahma created the cosmos, and the victorious return of Lord Rama to Ayodhya after defeating Ravana. The raising of the Gudi (a victory flag adorned with neem leaves, mango leaves, a silver/copper pot, and sugar garland) atop homes signifies prosperity, auspiciousness, and spiritual triumph.",
           "hi": "चैत्र मास के शुक्ल पक्ष की प्रतिपदा को गुड़ी पड़वा और हिंदू नववर्ष का शुभारंभ होता है। मान्यता है कि इसी दिन ब्रह्मा जी ने सृष्टि की रचना की थी और प्रभु श्री राम ने दक्षिण में सुग्रीव के साथ मिलकर बाली के अत्याचार से मुक्ति दिलाई थी। घर-घर में फहराई जाने वाली \"गुड़ी\" विजय, समृद्धि और नकारात्मकता को दूर भगाने का पावन प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Purana / Jyotisha Shastra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2966,15 +2105,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रीखंड-पूरी और पारंपरिक व्यंजनों का परिवार के साथ आनंद लेना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Maharashtrian cultural tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -2992,15 +2124,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बड़ों का आशीर्वाद लेकर नववर्ष की मंगलकामनाएं साझा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3016,15 +2141,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "साल के पहले दिन कलह, आलस्य या नकारात्मक विचारों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3048,15 +2166,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रीखंड व पूरी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3069,15 +2180,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to You, O Brahma-dhwaja (sacred Gudi), granter of all righteous wishes! Throughout this arriving new year, please bestow peace, auspiciousness, and well-being upon our home.",
             "hi": "हे सभी मनोकामनाओं को पूर्ण करने वाली ब्रह्मध्वज (गुड़ी)! आपको नमस्कार है। इस नए वर्ष में हमारे घर में सदा सुख, शांति और मंगल का वास हो।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Brahma Purana Gudi Puja Stotram",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -3093,15 +2197,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ugadi",
           "hi": "उगादी (युगादि)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Surya Siddhanta / Shalivahana Shaka tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3111,15 +2208,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Deccan Lunar New Year — embracing the six flavors of life with wisdom",
           "hi": "दक्षिण भारत का पावन नववर्ष — षड्रुचियों से परिपूर्ण जीवन का उत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shalivahana Shaka tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3129,15 +2219,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ugadi (derived from Yuga + Adi, meaning 'the beginning of an era'), celebrated on Chaitra Shukla Pratipada across Karnataka, Andhra Pradesh, and Telangana, heralds the start of the Vedic lunar year (Shalivahana Shaka). The central ritual of consuming Ugadi Pachadi (combining sweet, sour, salty, bitter, tangy, and spicy tastes) profoundly symbolizes life's diverse experiences, reminding seekers to accept joy and hardship with equanimity.",
           "hi": "युग + आदि से बना \"उगादी\" पर्व कर्नाटक, आंध्र प्रदेश और तेलंगाना में नववर्ष के रूप में मनाया जाता है। यह सृष्टि के प्रारंभ और शालिवाहन शक के नए वर्ष का पावन दिन है। इस दिन षड्रस (छह स्वादों) से बना \"उगादी पच्चड़ी\" प्रसाद ग्रहण किया जाता है, जो यह संदेश देता है कि जीवन में सुख, दुःख, सफलता और चुनौतियों को समभाव से स्वीकार करना चाहिए।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Surya Siddhanta / Vedic Calendar tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3157,15 +2240,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बोब्बट्लू (पूरन पोली) जैसे स्वादिष्ट मिष्ठान बनाना और प्रियजनों को भेंट देना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Deccan Vedic tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3183,15 +2259,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "माता-पिता और गुरुजनों के चरण स्पर्श कर आशीर्वाद लें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3207,15 +2276,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन में किसी के प्रति वैर, द्वेष या निराशा न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3239,15 +2301,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3260,15 +2315,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Supreme Lord, fulfill all my righteous aspirations. As this new year dawns upon us, may You bestow Your divine protection, health, and grace upon our path.",
             "hi": "हे देवाधिदेव! मेरे सभी सात्विक संकल्पों को सिद्ध करें। इस नूतन वर्ष में मुझ पर अपनी कृपा और कल्याणकारी दृष्टि बनाए रखें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Traditional Vedic Samvatsara Prarthana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -3284,15 +2332,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Akshaya Tritiya",
           "hi": "अक्षय तृतीया (आखा तीज)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3302,15 +2343,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The day of eternal, inexhaustible auspiciousness and spiritual virtue",
           "hi": "अक्षय पुण्य, सुख-समृद्धि और अटूट शुभता का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3320,15 +2354,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Akshaya Tritiya (Akha Teej), celebrated on Vaishakha Shukla Tritiya, is one of the most auspicious days in the Vedic calendar where the Sun and Moon are both in supreme exaltation. 'Akshaya' means 'that which never diminishes'. It marks the beginning of Satya Yuga, the birth of Lord Parashurama (the sixth avatar of Vishnu), the descent of Holy Ganga to earth, and the day Sage Vyasa began composing the Mahabharata with Lord Ganesha. Spiritual practices, charitable giving (Dana), and virtuous deeds performed on this day yield inexhaustible merits.",
           "hi": "वैशाख शुक्ल तृतीया को अक्षय तृतीया कहते हैं। \"अक्षय\" का अर्थ है जिसका कभी क्षय (नाश) न हो। इस दिन सूर्य और चंद्रमा दोनों अपनी उच्च राशि में होते हैं। इसी पावन दिन सतयुग का आरंभ, भगवान परशुराम का प्राकट्य, मां गंगा का धराधाम पर अवतरण और महर्षि वेदव्यास द्वारा महाभारत का लेखन आरंभ हुआ था। इस दिन किया गया जप, तप, दान और सत्कर्म अनंत गुना पुण्य फल देता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Vaishakha Mahatmya) / Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3348,15 +2375,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सद्कर्मों, नए व्यापार या मांगलिक कार्यों का शुभारंभ और स्वर्ण/रजत का क्रय"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dharma Shastra / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3374,15 +2394,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तुलसी या छायादार वृक्षों का रोपण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3398,15 +2411,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "असत्य भाषण, विवाद या किसी को कष्ट पहुँचाने से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3430,15 +2436,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गाय के घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3451,15 +2450,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om Namo Narayanaya. On the third lunar day of the bright fortnight of Vaishakha, whatever virtuous, devotional, and charitable actions are performed become eternal and inexhaustible.",
             "hi": "भगवान नारायण को नमन है। वैशाख मास के शुक्ल पक्ष की तृतीया तिथि को जो भी जप, दान और सत्कर्म किए जाते हैं, वे सभी अक्षय और अनंत फल देने वाले होते हैं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Padma Purana / Skanda Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -3475,15 +2467,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Narasimha Jayanti",
           "hi": "नृसिंह जयंती"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Narasimha Purana / Srimad Bhagavatam",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3493,15 +2478,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The ferocious yet compassionate advent of Lord Narasimha to protect Prahlada",
           "hi": "भक्त प्रह्लाद की रक्षा हेतु भगवान श्री नृसिंह का दिव्य प्राकट्य"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3511,15 +2489,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Narasimha Jayanti, celebrated on Vaishakha Shukla Chaturdashi, marks the twilight manifestation of Lord Narasimha — the half-lion, half-human avatar of Lord Vishnu. He burst forth from a pillar at dusk to slay the demon Hiranyakashipu, fulfilling impossible celestial boons while safeguarding His five-year-old devotee Prahlada. Lord Narasimha embodies supreme cosmic protection, destruction of ego, and unwavering defense of true surrender (Sharanagati).",
           "hi": "वैशाख मास के शुक्ल पक्ष की चतुर्दशी तिथि को संध्या काल (प्रदोष वेला) में भगवान श्री नृसिंह का प्राकट्य हुआ था। अपने अनन्य भक्त प्रह्लाद के विश्वास की रक्षा करने और अहंकारी हिरण्यकश्यप का संहार करने हेतु भगवान खंभे को चीरकर प्रकट हुए थे। यह पर्व ईश्वर की सर्वव्यापकता, शरणागति और भक्तों की हर संकट से रक्षा का जीवंत प्रमाण है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam (Canto 7) / Narasimha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3539,15 +2510,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्री नृसिंह कवच एवं नृसिंह महामंत्र का भावपूर्ण पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Agama tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3565,15 +2529,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पनाकम, पंचामृत और मौसमी फलों का नैवेद्य लगाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3589,15 +2546,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अहंकार, क्रोध या किसी निर्बल के प्रति क्रूरता का भाव न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3619,15 +2569,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप, कपूर व घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3640,15 +2583,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the ferocious and valorous Lord Narasimha, the great manifestation of Vishnu, radiant on all sides, terrifying to evil yet supremely benevolent to devotees, the vanquisher of death itself.",
             "hi": "जो अत्यंत तेजस्वी, वीर, महाविष्णु स्वरूप, प्रज्वलित, सर्वव्यापी, दुष्टों के लिए भीषण परंतु भक्तों के लिए परम कल्याणकारी और मृत्यु के भी मृत्यु हैं, उन भगवान नृसिंह को मैं प्रणाम करता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Narasimha Tapaniya Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -3664,15 +2600,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Shani Jayanti",
           "hi": "शनि जयंती"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Surya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3682,15 +2611,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Honoring Lord Shani, the cosmic dispenser of justice and karmic discipline",
           "hi": "कर्मफलदाता, न्याय के देव भगवान सूर्यपुत्र शनि देव का जन्मोत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3700,15 +2622,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Shani Jayanti, celebrated on Jyeshtha Amavasya (the new moon day of Jyeshtha), marks the appearance of Lord Shani (Saturn), the son of Surya (Sun) and Chhaya (Shadow). Revering Shani Deva is not about fear, but about honoring cosmic justice, discipline, perseverance, humility, and the inexorable law of Karma. Sincere prayers and charitable service to the poor and differently-abled on this day appease Saturn's malefic effects and awaken spiritual steadfastness.",
           "hi": "ज्येष्ठ मास की अमावस्या को भगवान सूर्य और माता छाया के पुत्र शनि देव का जन्मोत्सव मनाया जाता है। शनि देव क्रूर नहीं, बल्कि न्याय के निष्पक्ष देवता (कर्मफलदाता) हैं जो मनुष्य को उसके कर्मों के अनुसार फल देते हैं। यह दिन संयम, अनुशासन, दीन-दुखियों की सेवा और आत्म-समीक्षा का पावन अवसर है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Kashi Khanda) / Brahma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3728,15 +2643,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "काले तिल, उड़द की दाल, सरसों का तेल, छाता और जूते-चप्पल जरूरतमंदों को दान करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3754,15 +2662,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रमिकों, असहायों और वृद्धों की सेवा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3780,15 +2681,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रमिकों या असहाय जनों का अनादर या शोषण न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3812,15 +2706,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुड़ व काले चने का प्रसाद"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3833,15 +2720,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to Lord Shani, radiant as dark blue collyrium, the son of the Sun God, the elder brother of Yama, born of Chhaya and Martanda, the slow-moving arbiter of destiny.",
             "hi": "नीले अंजन के समान कांति वाले, सूर्य के पुत्र, यमराज के अग्रज, माता छाया और मार्तण्ड से उत्पन्न, मंद गति से चलने वाले भगवान शनैश्चर को मैं प्रणाम करता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Navagraha Stotram (Sage Vyasa) / Skanda Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -3857,15 +2737,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Jagannath Rath Yatra",
           "hi": "जगन्नाथ रथ यात्रा"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Utkala Khanda) / Brahma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3875,15 +2748,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The grand chariot festival of Lord Jagannath, Balabhadra, and Subhadra in Puri",
           "hi": "भगवान जगन्नाथ, बलभद्र और सुभद्रा की पावन रथ यात्रा"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3893,15 +2759,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Jagannath Rath Yatra, celebrated on Ashadha Shukla Dwitiya in Sri Kshetra Puri (Odisha) and worldwide, is the monumental chariot festival of Mahaprabhu Jagannath (Lord of the Universe, Krishna), His elder brother Balabhadra, and sister Subhadra. The deities step out of the sanctum sanctorum to ride their magnificent wooden chariots (Nandighosha, Taladhwaja, and Darpadalana) to the Gundicha Temple, gracing all beings regardless of caste, creed, or status with divine Darshan.",
           "hi": "आषाढ़ मास के शुक्ल पक्ष की द्वितीया तिथि को ओडिशा के पुरी धाम में जगन्नाथ रथ यात्रा का महापर्व आरंभ होता है। ब्रह्मांड के स्वामी भगवान जगन्नाथ, उनके बड़े भाई बलभद्र और बहन सुभद्रा अपने गर्भगृह से बाहर आकर विशाल रथों (नंदीघोष, तालध्वज, दर्पदलन) पर सवार होकर गुंडिचा मंदिर जाते हैं। यह पर्व जाति-वर्ण के भेद से परे सभी भक्तों को भगवान के साक्षात दर्शन और कृपा का सुअवसर प्रदान करता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Utkala Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3921,15 +2780,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुंडिचा मंदिर में नौ दिनों का प्रवास और बहुड़ा यात्रा (वापसी)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Puri Jagannath Temple tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3947,15 +2799,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "\"जय जगन्नाथ\" और हरिनाम संकीर्तन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -3971,15 +2816,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भीड़ में किसी को धक्का न दें और व्यवस्था का पालन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4001,15 +2839,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शंख, घंटी व कपूर का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4022,15 +2853,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to Lord Jagannath, who resides in the sacred realm of Nilachala, the eternal Supreme Soul, along with His brother Balabhadra and sister Subhadra.",
             "hi": "नीलाचल (पुरी) में निवास करने वाले, नित्य, परमात्मा स्वरूप, भ्राता बलभद्र और भगिनी सुभद्रा सहित विराजमान भगवान जगन्नाथ को मेरा सादर नमन है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Jagannatha Ashtakam (Adi Shankaracharya) / Skanda Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -4046,15 +2870,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Nag Panchami",
           "hi": "नाग पंचमी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Mahabharata",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4064,15 +2881,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Veneration of sacred serpents as guardians of nature and cosmic energy",
           "hi": "सर्प देवों की पूजा, कालसर्प शांति एवं प्रकृति संरक्षण का पर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4082,15 +2892,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Nag Panchami, celebrated on Shravana Shukla Panchami, is an ancient Vedic festival honoring serpents (Nagas) — revering Ananta (who supports the cosmos), Vasuki (around Lord Shiva's neck), and Sheshanaga. It symbolizes reverence for all wildlife, acknowledgment of the serpent power (Kundalini Shakti), freedom from fears and phobias, and protection from venomous creatures during the monsoon season.",
           "hi": "श्रावण मास के शुक्ल पक्ष की पंचमी तिथि को नाग पंचमी मनाई जाती है। इस दिन अनंत, वासुकि, शेष, पद्म, कंबोल, कर्कोटक, अश्वतर, धृतराष्ट्र, शंखपाल, कालिया, तक्षक और पिंगल — इन बारह प्रमुख नाग देवों की पूजा की जाती है। यह पर्व सर्पों के प्रति कृतज्ञता, कालसर्प दोष शमन और प्रकृति के संतुलन का प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Mahabharata (Astika Parva)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4110,15 +2913,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "इस दिन खेत में हल चलाना, मिट्टी खोदना या साग-सब्जी काटना वर्जित माना जाता है"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Vedic ritual guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4136,15 +2932,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जीव-जंतुओं और पर्यावरण की रक्षा का संकल्प लें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4160,15 +2949,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जीवित सांपों को जबरन दूध पिलाने जैसी पीड़ा न दें, मंदिर के विग्रह पर प्रतीकात्मक अर्पण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral & environmental guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4190,15 +2972,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घी का दीपक व धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4211,15 +2986,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "May all sacred serpents be pleased with me — those who dwell upon the earth, those in the sun's rays, and those established in the celestial realms.",
             "hi": "इस पृथ्वी पर, सूर्य की किरणों में और स्वर्ग लोक में स्थित सभी नाग देवता मुझ पर प्रसन्न हों और मेरी रक्षा करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana Nag Stotram",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -4235,15 +3003,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Hartalika Teej",
           "hi": "हरतालिका तीज"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4253,15 +3014,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Goddess Parvati's supreme austerity to unite with Lord Shiva",
           "hi": "माता पार्वती की अखंड तपस्या और सुहाग की अमरता का पावन व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4271,15 +3025,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Hartalika Teej, observed on Bhadrapada Shukla Tritiya (the day before Ganesh Chaturthi), commemorates Goddess Parvati's profound tapasya in the forest to attain Lord Shiva as Her consort. 'Harat' means abduction and 'Aalika' means female friends — referring to Parvati's companions taking Her to a secluded grove to allow Her uninterrupted meditation. Married and unmarried women observe a strict nirjala fast, creating clay Shiva-Parvati idols and praying for marital harmony, longevity, and spiritual strength.",
           "hi": "भाद्रपद मास के शुक्ल पक्ष की तृतीया को हरतालिका तीज का महापर्व मनाया जाता है। \"हरत\" अर्थात हरण और \"आलिका\" अर्थात सखियां — माता पार्वती की सखियां उन्हें घने वन में ले गई थीं जहाँ उन्होंने रेत के शिवलिंग बनाकर कठोर तप किया और देवाधिदेव महादेव को पति रूप में प्राप्त किया। महिलाएं अखंड सौभाग्य, सुयोग्य वर और दांपत्य जीवन में माधुर्य हेतु यह निर्जला व्रत रखती हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4299,15 +3046,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "हरतालिका तीज व्रत कथा का श्रवण एवं रात्रि जागरण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Vrat Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4325,15 +3065,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अगले दिन प्रातः पूजा और विसर्जन के पश्चात ही पारण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4349,15 +3082,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन में किसी प्रकार का द्वेष, क्रोध या अशांति न आने दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4379,15 +3105,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घी का दीपक, कपूर व धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4400,15 +3119,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations to Uma and Maheswara! Salutations to Eternal Samba Shiva! O compassionate Goddess Gauri, fulfiller of all pure desires and beloved of Shankara, protect and bless our family.",
             "hi": "मां उमा और भगवान महेश्वर को नमस्कार है। हे करुणामयी देवी गौरी! हे शंकर की प्रियतमा! आप मेरी रक्षा करें और मेरे सुहाग व परिवार को अखंड सौभाग्य प्रदान करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana / Hartalika Vrat Vidhi",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -4424,15 +3136,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Karva Chauth",
           "hi": "करवा चौथ (करक चतुर्थी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Narada Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4442,15 +3147,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sacred fast of devotion, mutual love, and longevity of spouses",
           "hi": "अखंड सौभाग्य, अटूट दांपत्य प्रेम और चंद्र दर्शन का पावन व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4460,15 +3158,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Karva Chauth (Karak Chaturthi), celebrated on Kartika Krishna Chaturdashi (four days after Sharad Purnima), is a cherished festival observed by married Hindu women across Northern and Western India for the health, prosperity, and longevity of their husbands. Women observe a strict waterless fast from dawn, listening to the sacred story of Queen Veervati, and break the fast only after sighting the Moon through a sieve (Chhalni) and offering Arghya from an earthen pot (Karva).",
           "hi": "कार्तिक मास के कृष्ण पक्ष की चतुर्थी तिथि को करवा चौथ का महापर्व मनाया जाता है। सुहागिन महिलाएं अपने पति की दीर्घायु, उत्तम स्वास्थ्य और दांपत्य जीवन में अमर प्रेम हेतु सूर्योदय से चंद्रोदय तक निर्जला व्रत रखती हैं। संध्या समय करवा चौथ की पावन कथा सुनी जाती है और रात्रि में छलनी की ओट से चंद्र दर्शन कर अर्घ्य देने के पश्चात पति के हाथों जल पीकर व्रत खोला जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Vratraj tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4488,15 +3179,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रात्रि में चंद्रोदय होने पर छलनी से चंद्रमा और पति का दर्शन, अर्घ्य समर्पण और पति के हाथों जल ग्रहण कर व्रत का पारण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Karva Chauth Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4514,15 +3198,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चंद्रमा को अर्घ्य देकर ही श्रद्धापूर्वक व्रत खोलें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional ritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4540,15 +3217,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "व्रत के दौरान सुई, धागा या कैंची जैसी नुकीली वस्तुओं का उपयोग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4572,15 +3242,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सिंदूर, बिंदी व श्रृंगार सामग्री"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4593,15 +3256,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to the Moon God. O Lord of the night, born of the cosmic ocean and Sage Atri, accompanied by Rohini, please accept this sacred oblation and bless our marital bond.",
             "hi": "चंद्र देव को नमस्कार है। हे समुद्र मंथन से उत्पन्न, अत्रि मुनि के नेत्रों से प्रकट और रोहिणी के प्रिय स्वामी चंद्र देव! आप मेरा यह अर्घ्य स्वीकार करें और मेरे वैवाहिक जीवन को सुखमय बनाएं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Skanda Purana Chandra Arghya Shloka",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -4617,15 +3273,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Gita Jayanti",
           "hi": "गीता जयंती (मोक्षदा एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavad Gita / Mahabharata",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4635,15 +3284,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the divine dialogue of the Bhagavad Gita spoken by Lord Krishna",
           "hi": "कुरुक्षेत्र में भगवान श्री कृष्ण द्वारा श्रीमद्भगवद्गीता के दिव्य उपदेश का दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahabharata (Bhishma Parva)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4653,15 +3295,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Gita Jayanti, celebrated on Margashirsha Shukla Ekadashi (Mokshada Ekadashi), marks the historical day when Bhagavan Sri Krishna imparted the timeless spiritual dialogue of the Srimad Bhagavad Gita to Arjuna on the battlefield of Kurukshetra over 5,000 years ago. Comprising 700 verses across 18 chapters, the Gita synthesizes Karma Yoga (selfless action), Bhakti Yoga (unconditional love), and Jnana Yoga (spiritual wisdom), guiding human consciousness through moral crisis to liberation.",
           "hi": "मार्गशीर्ष मास के शुक्ल पक्ष की एकादशी (मोक्षदा एकादशी) को भगवान श्री कृष्ण ने कुरुक्षेत्र की रणभूमि में धनुर्धर अर्जुन को श्रीमद्भगवद्गीता का अमर उपदेश दिया था। 18 अध्यायों और 700 श्लोकों का यह महाग्रंथ कर्म, भक्ति, ज्ञान और निष्काम कर्मयोग का सार्वकालिक मार्गदर्शक है। यह एकमात्र ऐसा धर्मग्रंथ है जिसकी स्वयं जयंती मनाई जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahabharata / Gita Mahatmya (Padma Purana, Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4681,15 +3316,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विद्यार्थियों और जिज्ञासुओं को श्रीमद्भगवद्गीता की प्रतियां उपहार में देना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava tradition / Gita Mahatmya",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4707,15 +3335,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अपने दैनिक जीवन में निष्काम कर्म और समत्व भाव का आचरण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional spiritual guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4731,15 +3352,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "एकादशी तिथि पर अन्न ग्रहण से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4763,15 +3377,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "माखन-मिश्री व फल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional puja essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4784,15 +3391,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "All the Upanishads are the cows, the milker is Sri Krishna the son of Nanda, Arjuna is the calf, wise seekers of purified intellect are the drinkers, and the supreme nectar of the Gita is the milk.",
             "hi": "समस्त उपनिषद गौएं हैं, भगवान श्री कृष्ण उन्हें दुहने वाले ग्वाले हैं, अर्जुन बछड़ा है, शुद्ध बुद्धि वाले मनुष्य उस दूध का पान करने वाले हैं और श्रीमद्भगवद्गीता ही वह अमृतमय महान दुग्ध है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Gita Dhyanam (verse 4) / Mahabharata",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -4809,15 +3409,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "बैसाखी (खालसा साजना दिवस)",
           "pa": "ਵੈਸਾਖੀ (ਖ਼ਾਲਸਾ ਸਾਜਣਾ ਦਿਵਸ)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa Panth Creation (1699) / Sri Guru Granth Sahib Ji",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4828,15 +3421,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "वसंत ऋतु की फसल और 1699 में खालसा पंथ की स्थापना का महापर्व",
           "pa": "ਫ਼ਸਲ ਦੀ ਵਾਢੀ ਅਤੇ 1699 ਵਿੱਚ ਖ਼ਾਲਸਾ ਪੰਥ ਦੇ ਸਾਜਣਾ ਦਿਵਸ ਦਾ ਪਵਿੱਤਰ ਤਿਉਹਾਰ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4846,15 +3432,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vaisakhi (Baisakhi), celebrated on the first day of the solar month of Vaisakh (typically April 13/14), holds dual significance for Sikhs and Punjabis. Historically, it marks the bountiful rabi harvest. Spiritually and historically, on Vaisakhi day in 1699 at Anandpur Sahib, the tenth Guru, Sri Guru Gobind Singh Ji, created the Khalsa Panth — initiating the Panj Pyare (Five Beloved Ones) with Khande di Pahul (Amrit) and bestowing a distinct identity of saint-soldiers dedicated to universal justice, equality, and protection of the oppressed.",
           "hi": "वैशाख मास के प्रथम दिन मनाया जाने वाला बैसाखी पर्व सिखों और संपूर्ण भारत का प्रमुख पावन पर्व है। यह जहां एक ओर रबी की फसल की कटाई और समृद्धि का उत्सव है, वहीं 1699 में इसी दिन आनंदपुर साहिब में दशमेश पिता श्री गुरु गोविंद सिंह जी ने पंज प्यारों को अमृत छकाकर \"खालसा पंथ\" की स्थापना की थी। यह दिन समानता, स्वाभिमान, साहस और मानवता की सेवा का अमर प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Historical record / Sri Guru Granth Sahib Ji",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4876,15 +3455,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुरु का अटूट लंगर तैयार करना और बिना किसी भेद के सभी को छकाना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4902,15 +3474,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "खालसा के उच्च आदर्शों — सत्य, निर्भयता और दीन-दुखियों की रक्षा का स्मरण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4926,15 +3491,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जाति-पाति, ऊंच-नीच या अंधविश्वास जैसी कुरीतियों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4956,15 +3514,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चौर साहिब व धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -4977,15 +3528,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "The Khalsa belongs to the Wondrous Lord (Waheguru). The Victory belongs to the Wondrous Lord.",
             "hi": "खालसा अकाल पुरख (परमेश्वर) का है और विजय भी अकाल पुरख की ही है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Khalsa Fateh (Guru Gobind Singh Ji, 1699)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -5002,15 +3546,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु नानक देव जी का प्रकाश पर्व",
           "pa": "ਗੁਰੂ ਨਾਨਕ ਦੇਵ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਗੁਰਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Janamsakhi tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5021,15 +3558,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "सिख धर्म के संस्थापक एवं जगत गुरु श्री गुरु नानक देव जी का प्रकाश उत्सव",
           "pa": "ਸਿੱਖ ਧਰਮ ਦੇ ਬਾਨੀ ਸ੍ਰੀ ਗੁਰੂ ਨਾਨਕ ਦੇਵ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਦਿਹਾੜਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh historical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5039,15 +3569,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Guru Nanak Gurpurab (Prakash Divas), celebrated on Kartika Purnima, marks the appearance in 1469 of Sri Guru Nanak Dev Ji in Rai Bhoi di Talwandi (Nankana Sahib). The first of the ten Sikh Gurus, Guru Nanak illuminated the world with the message of Ik Onkar (One Universal Creator), universal human fraternity ('Na koi hindu na koi musalman'), the dignity of honest labor (Kirat Karo), sharing with others (Vand Chhako), and constant remembrance of the Divine (Naam Japo).",
           "hi": "कार्तिक मास की पूर्णिमा को सिख धर्म के प्रथम गुरु और प्रवर्तक श्री गुरु नानक देव जी का प्रकाश पर्व मनाया जाता है। 1469 में ननकाना साहिब में अवतरित होकर गुरु नानक देव जी ने \"इक ओंकार\" (ईश्वर एक है), अंधविश्वासों के उन्मूलन, सभी मनुष्यों की समानता और तीन मूल सिद्धांतों — \"नाम जपो, कीरत करो, वंड छको\" का अमर संदेश दिया।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Bhai Gurdas Vaaran",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5067,15 +3590,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विशाल लंगर सेवा जिसमें सभी वर्गों के लोग पंगत में बैठकर एक साथ भोजन करते हैं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5093,15 +3609,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "लंगर और जोड़ा घर में श्रद्धापूर्वक निष्काम सेवा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5117,15 +3626,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दिखावे और पाखंड से दूर रहकर सादगी और प्रेम का मार्ग अपनाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5147,15 +3649,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पालकी साहिब हेतु पुष्प"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5168,15 +3663,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "One Universal Creator God, Truth is the Name, Creative Being Personified, No Fear, No Hatred, Eternal Form, Unborn, Self-Existent, By Guru's Grace.",
             "hi": "ईश्वर एक है, उसका नाम सत्य है, वह सृष्टि का कर्ता है, भय-रहित है, वैर-रहित है, अकाल मूरत (काल से परे) है, जन्म-मरण से मुक्त है, स्वयंभू है और गुरु की कृपा से प्राप्त होता है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Mool Mantar (Sri Guru Granth Sahib Ji, Ang 1, Guru Nanak Dev Ji)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -5193,15 +3681,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु गोबिंद सिंह जी का प्रकाश पर्व",
           "pa": "ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਗੁਰਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Dasam Granth / Sikh historical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5212,15 +3693,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "दशमेश पिता, संत-सिपाही, खालसा सृजक श्री गुरु गोबिंद सिंह जी का प्रकाश पर्व",
           "pa": "ਦਸਮੇਸ਼ ਪਿਤਾ, ਸੰਤ-ਸਿਪਾਹੀ ਸ੍ਰੀ ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਦਿਹਾੜਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5230,15 +3704,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The Prakash Gurpurab of Sri Guru Gobind Singh Ji (born in Patna Sahib in 1666) celebrates the tenth Sikh Guru. A supreme spiritual master, poet, philosopher, and warrior, He sacrificed His father (Guru Tegh Bahadur Ji), His four sons (Chaar Sahibzade), and His mother (Mata Gujri Ji) to protect religious freedom and human dignity. He formalized the Khalsa and passed the eternal Guruship to Sri Guru Granth Sahib Ji.",
           "hi": "1666 में पटना साहिब में अवतरित दशमेश पिता श्री गुरु गोबिंद सिंह जी का प्रकाश पर्व वीरता, त्याग और भक्ति का अनुपम संगम है। उन्होंने धर्म और मानवीय मूल्यों की रक्षा हेतु अपने पिता, चारों साहिबजादों और माता का बलिदान सहर्ष स्वीकार किया। उन्होंने खालसा पंथ का सृजन किया और \"सब सिखनि को हुकम है गुरु मान्यो ग्रंथ\" कहकर श्री गुरु ग्रंथ साहिब जी को शाश्वत गुरु घोषित किया।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Dasam Granth / Bhai Nand Lal Ji",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5258,15 +3725,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अटूट लंगर सेवा और कड़ाह प्रसाद का वितरण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5284,15 +3744,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "समस्त मानव जाति को एक ही ईश्वर की संतान समझें (\"मानस की जात सबै एकै पहिचानबो\")"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dasam Granth teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5308,15 +3761,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "किसी निर्बल को कष्ट न दें और मर्यादा का पालन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5338,15 +3784,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5359,15 +3798,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Grant me this boon, O Lord, that I may never hesitate from performing righteous deeds. May I have no fear when I go into battle against unrighteousness, and with firm determination, ensure victory.",
             "hi": "हे प्रभु! मुझे यह वरदान दें कि मैं शुभ कर्मों को करने से कभी पीछे न हटू। जब मैं धर्म और न्याय के लिए अधर्म से युद्ध करूँ, तो भयभीत न होऊँ और निश्चय ही अपनी विजय सुनिश्चित करूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Chandi Charitar (Sri Dasam Granth, Guru Gobind Singh Ji)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -5384,15 +3816,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "बंदी छोड़ दिवस",
           "pa": "ਬੰਦੀ ਛੋੜ ਦਿਵਸ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhai Gurdas Vaaran / Sikh historical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5403,15 +3828,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "मुक्ति दिवस — छठे गुरु हरगोबिंद साहिब द्वारा ग्वालियर किले से 52 राजाओं की रिहाई",
           "pa": "ਛੇਵੇਂ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਹਰਗੋਬਿੰਦ ਸਾਹਿਬ ਜੀ ਵੱਲੋਂ 52 ਰਾਜਿਆਂ ਨੂੰ ਗਵਾਲੀਅਰ ਦੇ ਕਿਲੇ ਤੋਂ ਰਿਹਾਅ ਕਰਵਾਉਣ ਦਾ ਪਵਿੱਤਰ ਦਿਨ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh historical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5421,15 +3839,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Bandhi Chhor Divas ('Day of Liberation'), celebrated concurrently with Diwali on Kartika Amavasya, commemorates the triumphant release in 1619 of the sixth Sikh Guru, Sri Guru Hargobind Sahib Ji, from wrongful imprisonment at Gwalior Fort by Emperor Jahangir. Refusing to leave alone, Guru Sahib secured the liberation of 52 innocent Hindu hill chieftains and kings by having a special cloak made with 52 tassels so each king could hold one and walk out to freedom. When Guru Ji returned to Sri Amritsar, the entire city and Sri Harmandir Sahib were illuminated with radiant oil lamps in celebration of liberation and righteousness.",
           "hi": "कार्तिक अमावस्या (दीपावली) के दिन मनाया जाने वाला बंदी छोड़ दिवस छठे सिख गुरु, मीरी-पीरी के मालिक श्री गुरु हरगोबिंद साहिब जी की ग्वालियर के किले से रिहाई का विजयोत्सव है। जब जहांगीर ने गुरु जी को रिहा करने का आदेश दिया, तो गुरु साहिब ने अकेले जाने से इंकार कर दिया और अपने 52 कलियों वाले चोले के छोर पकड़वाकर 52 निर्दोष हिंदू राजाओं को भी कैद से मुक्त कराया। जब गुरु जी अमृतसर पहुंचे, तो हरमंदिर साहिब को दीपमालाओं से सजाया गया।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhai Gurdas Vaaran (Vaar 24) / Sikh history",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5449,15 +3860,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "समस्त मानवता की मुक्ति, न्याय और परोपकार की प्रार्थना (अरदास)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada & historic tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5475,15 +3879,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "लंगर में सेवा करें और अरदास में शामिल हों"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5499,15 +3896,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "इस पर्व के स्वतंत्रता और परोपकार के पावन संदेश को न भूलें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5529,15 +3919,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5550,15 +3933,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "The True Guru is the Liberator from all bondage; He liberates the soul even while living in this world.",
             "hi": "सच्चे गुरु समस्त बंधनों को काटने वाले (बंदी छोड़) हैं; वे इस संसार में रहते हुए ही जीवात्मा को मुक्त कर देते हैं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhai Gurdas Ji Vaaran (Vaar 24, Pauri 20)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -5575,15 +3951,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "होला मोहल्ला",
           "pa": "ਹੋਲਾ ਮਹੱਲਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Dasam Granth / Anandpur Sahib tradition (1701)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5594,15 +3963,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "आनंदपुर साहिब में संत-सिपाहियों के शौर्य, गतका और युद्ध कौशल का महापर्व",
           "pa": "ਅਨੰਦਪੁਰ ਸਾਹਿਬ ਵਿਖੇ ਸ਼ਸਤਰ ਵਿੱਦਿਆ, ਗਤਕਾ ਅਤੇ ਵੀਰਤਾ ਦਾ ਮਹਾਨ ਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5612,15 +3974,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Hola Mohalla, established in 1701 by Sri Guru Gobind Singh Ji at Anandpur Sahib (observed on Chet Vadi 1, the day after Holi), transformed the spring festival into a grand assembly of martial agility, poetry, and spiritual fortitude. 'Hola' is the masculine form of Holi, and 'Mohalla' denotes an organized military procession. Instead of throwing colors, the Khalsa gathered for Gatka martial arts, horse-riding, mock battles, weapon training (Shastar Vidya), and Kavi Darbar (poetry symposiums).",
           "hi": "1701 में दशमेश पिता श्री गुरु गोबिंद सिंह जी ने आनंदपुर साहिब में होला मोहल्ला का प्रारंभ किया। उन्होंने पारंपरिक होली के रंगोत्सव को वीरता और शौर्य के पर्व में बदल दिया। \"होला\" होली का पौरुष रूप है और \"मोहल्ला\" का अर्थ है सुसज्जित सैन्य दल। इस दिन आनंदपुर साहिब में निहंग सिंहों द्वारा घुड़सवारी, गतका, शस्त्र विद्या और कवि दरबार के माध्यम से धर्म-रक्षा की तत्परता का प्रदर्शन किया जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Dasam Granth / Sri Guru Granth Sahib Ji",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5640,15 +3995,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अटूट 24 घंटे लंगर सेवा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Anandpur Sahib Khalsa tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5666,15 +4014,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वीर रस की गुरबाणी और इतिहास का श्रवण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa code of conduct",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5690,15 +4031,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शस्त्रों का दुरुपयोग या व्यर्थ प्रदर्शन न करें, उन्हें धर्म रक्षा का साधन मानें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5720,15 +4054,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्राकृतिक अबीर-गुलाल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5741,15 +4068,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "He alone is recognized as a true warrior who fights for the sake of the defenseless and oppressed. Though cut piece by piece, he never abandons the battlefield of righteousness.",
             "hi": "सच्चा शूरवीर वही है जो दीन-दुखियों और धर्म की रक्षा हेतु युद्ध करता है। भले ही उसके टुकड़े-टुकड़े हो जाएं, परंतु वह धर्म के रणक्षेत्र को कभी नहीं छोड़ता।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Guru Granth Sahib Ji (Ang 1105, Bhagat Kabir Ji)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -5766,15 +4086,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "लोहड़ी",
           "pa": "ਲੋਹੜੀ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Punjabi agrarian & cultural tradition",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5785,15 +4098,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "शीत ऋतु की विदाई, नई फसल और दुल्ला भट्टी की लोककथा का पावन उत्सव",
           "pa": "ਸਿਆਲ ਦੀ ਰੁੱਤ, ਨਵੀਂ ਫ਼ਸਲ ਅਤੇ ਆਪਸੀ ਭਾਈਚਾਰੇ ਦਾ ਲੋਕ ਤਿਉਹਾਰ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Punjabi traditional culture",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5803,15 +4109,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Lohri, celebrated on the eve of Makar Sankranti (the last day of the lunar month of Poh / Pausha, typically January 13), is the joyful winter solstice harvest festival of Punjab. Families gather around a community bonfire at twilight to thank the Sun and Agni for the ripening sugarcane and winter crops. It celebrates new births and recent marriages, reinforcing family solidarity, neighborly harmony, and the legend of Dulla Bhatti (who rescued innocent girls from tyranny).",
           "hi": "पौष मास के अंतिम दिन (मकर संक्रांति की पूर्व संध्या) पर लोहड़ी का पावन लोकपर्व मनाया जाता है। कड़ाके की ठंड में संध्या समय अलाव (पवित्र अग्नि) जलाकर नई फसल (गन्ना, मक्का, तिल) के पकने की खुशी मनाई जाती है। यह पर्व नवविवाहित जोड़ों, नवजात शिशुओं और समाज में आपसी सौहार्द, मिठास और दुल्ला भट्टी के त्याग व परोपकार की स्मृति का प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji (Barahmaha, Raag Majh) / Punjabi heritage",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5831,15 +4130,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तिल-गुड़, रेवड़ी, गज्जक, मूंगफली और सरसों के साग-मक्के की रोटी का सामूहिक सहभोज"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional community practice",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5857,15 +4149,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रकृति और अन्नदाता किसानों के प्रति कृतज्ञता व्यक्त करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional moral guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5881,15 +4166,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शोर-शराबे या अशोभनीय व्यवहार से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Environmental & community guidance",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5911,15 +4189,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सरसों का साग व मक्के की रोटी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional festive essentials",
-            "tier": 2,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5932,15 +4203,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "The Immaculate Lord cherishes all His creatures. All beings belong to Him; He bestows boundless sustenance upon everyone.",
             "hi": "निर्मल परमात्मा समस्त जीवों की रक्षा और पालन करते हैं। सभी प्राणी उन्हीं के हैं और वे ही सबको असीम अन्न-जल और पोषण प्रदान करते हैं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Guru Granth Sahib Ji (Ang 652, Guru Ram Das Ji)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -5957,15 +4221,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु अर्जन देव जी का शहीदी दिवस",
           "pa": "ਸ੍ਰੀ ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ ਦਾ ਸ਼ਹੀਦੀ ਦਿਹਾੜਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Sikh historical record (1606)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5976,15 +4233,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "सिख धर्म के प्रथम शहीद, पांचवें गुरु श्री गुरु अर्जन देव जी का अमर बलिदान",
           "pa": "ਸ਼ਹੀਦਾਂ ਦੇ ਸਿਰਤਾਜ ਪੰਚਮ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ ਦੀ ਲਾਸਾਨੀ ਸ਼ਹਾਦਤ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh historical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -5994,15 +4244,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The Shaheedi Gurpurab of Sri Guru Arjan Dev Ji (observed on Jeth Sudi 4, typically in May/June) commemorates the supreme martyrdom of the fifth Sikh Guru in 1606 at Lahore. Guru Arjan Dev Ji compiled the Adi Granth (the precursor to Sri Guru Granth Sahib Ji) and built Sri Harmandir Sahib with four open doors. When Mughal Emperor Jahangir demanded alterations to the sacred hymns and payment of an unjust fine, Guru Sahib refused to compromise divine truth. Despite enduring five days of horrific torture on burning hot iron plates and boiling cauldrons in the blistering summer, He remained in absolute peace, uttering 'Tera kiya meetha laage' (Thy Will is sweet to me).",
           "hi": "ज्येष्ठ मास के शुक्ल पक्ष की चतुर्थी को सिख धर्म के प्रथम शहीद, पांचवें पातशाह श्री गुरु अर्जन देव जी का शहीदी दिवस मनाया जाता है। उन्होंने श्री आदि ग्रंथ का संकलन किया और श्री हरमंदिर साहिब की नींव रखवाई। जब मुगल बादशाह जहांगीर ने उन पर धर्म-परिवर्तन और बाणी में फेरबदल का दबाव बनाया, तो गुरु जी ने सत्य से समझौता नहीं किया। जेठ की तपती धूप में तवे पर बैठकर और उबलती देग में शीश नवाकर उन्होंने \"तेरा कीआ मीठा लागै\" कहते हुए अपने प्राण न्यौछावर कर दिए।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Sikh history",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6022,15 +4265,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विनम्र भाव से सात्विक लंगर सेवा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6048,15 +4284,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दुख-सुख में ईश्वर के हुकम को मीठा मानने का समभाव रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6072,15 +4301,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "इस दिन किसी प्रकार के दिखावे या तड़क-भड़क से दूर रहकर सादगी से नमन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6102,15 +4324,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप व श्वेत पुष्प"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6123,15 +4338,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Your actions seem so sweet to me, O Lord. Nanak begs for the supreme treasure of the Lord's Holy Name.",
             "hi": "हे प्रभु! आपका किया हुआ सब कुछ मुझे अत्यंत मीठा (प्रिय) लगता है। आपका यह दास नानक केवल आपके पावन नाम का अनमोल धन मांगता है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Guru Granth Sahib Ji (Ang 394, Guru Arjan Dev Ji, Rag Asa)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -6148,15 +4356,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु तेग बहादुर जी का शहीदी दिवस (हिंद दी चादर)",
           "pa": "ਸ੍ਰੀ ਗੁਰੂ ਤੇਗ ਬਹਾਦਰ ਜੀ ਦਾ ਸ਼ਹੀਦੀ ਦਿਹਾੜਾ (ਹਿੰਦ ਦੀ ਚਾਦਰ)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Sri Dasam Granth (Bachittar Natak)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6167,15 +4368,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "चांदनी चौक में तिलक-जनेऊ और धार्मिक स्वतंत्रता की रक्षा हेतु दिया गया अमर बलिदान",
           "pa": "ਧਰਮ ਹੇਤ ਸਾਕਾ ਜਿਨਿ ਕੀਆ, ਸੀਸੁ ਦੀਆ ਪਰ ਸਿਰਰੁ ਨ ਦੀਆ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bachittar Natak",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6185,15 +4379,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The Shaheedi Divas of Sri Guru Tegh Bahadur Ji (the ninth Sikh Guru, revered as 'Hind di Chadar' — Shield of India) commemorates His historic martyrdom on November 11, 1675, at Chandni Chowk, Delhi (now Gurdwara Sis Ganj Sahib). When a delegation of Kashmiri Pandits sought His protection against forced conversions by Emperor Aurangzeb, Guru Sahib fearlessly stood up for their right to practice their faith freely. Accompanied by Bhai Mati Das, Bhai Sati Das, and Bhai Dayala Ji (who were martyred before His eyes), Guru Tegh Bahadur Ji surrendered His life rather than His spiritual conviction — setting a unique historical precedent of dying for the religious freedom of people belonging to another tradition.",
           "hi": "1675 में दिल्ली के चांदनी चौक (वर्तमान शीश गंज साहिब) में नौवें पातशाह श्री गुरु तेग बहादुर जी का पावन शहीदी दिवस मनाया जाता है। जब कश्मीरी पंडितों ने औरंगजेब के अत्याचार और जबरन धर्म-परिवर्तन से रक्षा की गुहार लगाई, तो गुरु साहिब ने तिलक और जनेऊ की रक्षा हेतु अपना शीश बलिदान कर दिया। उनके साथ भाई मती दास, भाई सती दास और भाई दयाला जी ने भी क्रूर यातनाएं सहते हुए शहादत दी। गुरु साहिब को \"हिंद दी चादर\" कहा जाता है क्योंकि उन्होंने किसी अन्य धर्म के लोगों के विश्वास की रक्षा हेतु अपने प्राण न्यौछावर किए।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Dasam Granth (Bachittar Natak) / Sri Guru Granth Sahib Ji",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6213,15 +4400,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सात्विक लंगर और जल सेवा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6239,15 +4419,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संसार की नश्वरता और प्रभु नाम की शाश्वतता का मनन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6263,15 +4436,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भय या प्रलोभन के वशीभूत होकर अपने धर्म और सत्य का त्याग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6293,15 +4459,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सलोक महला 9 की पोथी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6314,15 +4473,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "He performed this monumental sacrifice for the sake of Dharma; He gave up His head, but never His spiritual conviction.",
             "hi": "उन्होंने धर्म की रक्षा हेतु यह महान बलिदान दिया; उन्होंने अपना शीश दे दिया, परंतु अपने सिद्धांतों और धर्म का कभी त्याग नहीं किया।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bachittar Natak (Sri Dasam Granth, Guru Gobind Singh Ji)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -6339,15 +4491,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "चार साहिबजादे शहीदी दिवस (वीर बाल दिवस)",
           "pa": "ਚਾਰ ਸਾਹਿਬਜ਼ਾਦੇ ਸ਼ਹੀਦੀ ਦਿਹਾੜਾ (ਸਾਕਾ ਸਰਹਿੰਦ ਤੇ ਚਮਕੌਰ)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh historical record (1704) / Zafarnama",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6358,15 +4503,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "चमकौर और सरहिंद में धर्म-रक्षा हेतु साहिबजादों और माता गुजरी जी का अमर बलिदान",
           "pa": "ਚਮਕੌਰ ਦੀ ਜੰਗ ਅਤੇ ਸਰਹਿੰਦ ਦੀਆਂ ਖੂਨੀ ਦੀਵਾਰਾਂ ਵਿੱਚ ਸਾਹਿਬਜ਼ਾਦਿਆਂ ਦੀ ਲਾਸਾਨੀ ਸ਼ਹਾਦਤ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Khalsa Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6376,15 +4514,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The Shaheedi Saptah (Martyrdom Week, observed in late December / Poh month) commemorates the unmatched sacrifice in 1704 of the four sons (Chaar Sahibzade) of Guru Gobind Singh Ji and their grandmother Mata Gujri Ji. The elder Sahibzade, Baba Ajit Singh Ji (17) and Baba Jujhar Singh Ji (14), fell fighting valiantly against overwhelming Mughal forces at the Battle of Chamkaur. The younger Sahibzade, Baba Zorawar Singh Ji (9) and Baba Fateh Singh Ji (7), refused to renounce their faith despite extreme allurements and threats, and were bricked alive at Sirhind (Fatehgarh Sahib) by Wazir Khan. Their courage is celebrated as a pinnacle of moral conviction, fearlessness, and unyielding faith.",
           "hi": "पौष मास के अंतिम सप्ताह में चमकौर की गढ़ी और सरहिंद की दीवारों में दशमेश पिता के चार साहिबजादों और माता गुजरी जी का बलिदान दिवस मनाया जाता है। बड़े साहिबजादे — बाबा अजीत सिंह (17 वर्ष) और बाबा जुझार सिंह (14 वर्ष) चमकौर के युद्ध में लाखों की सेना से लड़ते हुए शहीद हुए। छोटे साहिबजादे — बाबा जोरावर सिंह (9 वर्ष) और बाबा फतेह सिंह (7 वर्ष) ने किसी भी प्रलोभन या भय के आगे धर्म न छोड़ते हुए सरहिंद में जिंदा दीवार में चुने जाना स्वीकार किया। यह बलिदान विश्व इतिहास में अदम्य साहस और दृढ़ निष्ठा का अनुपम उदाहरण है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Historical record / Zafarnama",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6404,15 +4535,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सात्विक लंगर और चाय-प्रसाद की सेवा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh historical commemoration & Gurdwara maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6430,15 +4554,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बाल कल्याण और शिक्षा हेतु परोपकारी कार्यों में योगदान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6454,15 +4571,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "किसी भी दबाव में अपने नैतिक मूल्यों से समझौता न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6484,15 +4594,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6505,15 +4608,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "For the protection of these sons of the nation, I have sacrificed my four sons. What does it matter that four have died, when thousands of my spiritual children live on?",
             "hi": "इन देश-कौम के पुत्रों के कल्याण हेतु मैंने अपने चार पुत्र न्योछावर कर दिए। यदि चार शहीद भी हो गए तो क्या हुआ, मेरे हजारों-लाखों खालसा पुत्र आज भी जीवित हैं।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Guru Gobind Singh Ji historic proclamation",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -6530,15 +4626,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "भगत रविदास जी की जयंती",
           "pa": "ਭਗਤ ਰਵਿਦਾਸ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਦਿਹਾੜਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji (41 Shabads of Bhagat Ravidas Ji)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6549,15 +4638,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "बेगमपुरा (दुःख-विहीन समतावादी समाज) के प्रणेता महान संत-कवि",
           "pa": "ਬੇਗ਼ਮਪੁਰਾ ਸ਼ਹਿਰ ਦੇ ਰਚਨਹਾਰ, ਮਹਾਨ ਭਗਤ ਸ੍ਰੀ ਰਵਿਦਾਸ ਜੀ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhakti Movement / Sri Guru Granth Sahib Ji",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6567,15 +4649,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Guru Ravidas Jayanti (Prakash Parv), celebrated on Magha Purnima, honors Bhagat Ravidas Ji, the 14th-century revolutionary mystic poet-saint of the Bhakti movement whose 41 sublime hymns are enshrined in Sri Guru Granth Sahib Ji. Born in Varanasi into a cobbler family, He fearlessly demolished caste hierarchies, proclaiming that true nobility lies in pure devotion, compassionate action, and self-realization rather than birth. His visionary concept of 'Begampura' (a city without sorrow, oppression, taxes, or inequality) remains a timeless blueprint for universal human liberation.",
           "hi": "माघ मास की पूर्णिमा को महान संत, समाज-सुधारक और भक्तिकाल के अमर कवि भगत रविदास जी का प्रकाश पर्व मनाया जाता है। उनके 41 पावन शबद श्री गुरु ग्रंथ साहिब जी में सुशोभित हैं। काशी में जन्म लेकर उन्होंने कर्म की पवित्रता (\"मन चंगा तो कठौती में गंगा\"), जाति-पाति के खंडन और \"बेगमपुरा\" (ऐसा समाज जहाँ कोई दुःख, कर या गैर-बराबरी न हो) का अमर संदेश दिया।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Bhakti Movement",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6595,15 +4670,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "श्रम की महत्ता को नमन करते हुए स्वच्छता और सेवा कार्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional community practice",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6621,15 +4689,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भगत रविदास जी के पदों का श्रद्धापूर्वक अध्ययन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhakti teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6645,15 +4706,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कुल, जाति या धन के अहंकार से सर्वथा दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6675,15 +4729,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara traditional essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6696,15 +4743,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Begampura, 'the city without sorrow', is the name of that place. There is no suffering or anxiety there. There are no taxes on goods or property; no fear, no blemishes, no downfall.",
             "hi": "उस पावन स्थान का नाम \"बेगमपुरा\" (दुःख-रहित नगर) है। वहाँ किसी प्रकार का कष्ट या चिंता नहीं है। वहाँ न कोई कर (टैक्स) है, न संपत्ति का भय, न कोई अपराध और न ही कोई पतन।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Guru Granth Sahib Ji (Ang 345, Bhagat Ravidas Ji, Rag Gauri)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -6720,15 +4760,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vesak (Buddha Purnima)",
           "hi": "वैशाख पूर्णिमा (बुद्ध पूर्णिमा / बुद्ध जयंती)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tipitaka / Mahavamsa / Buddhist Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6738,15 +4771,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The triple-blessed day celebrating the Birth, Supreme Enlightenment, and Parinirvana of Gautama Buddha",
           "hi": "तथागत भगवान बुद्ध के जन्म, संबोधि (ज्ञान-प्राप्ति) और महापरिनिर्वाण का पावन त्रिविध महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada & Mahayana liturgical calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6756,15 +4782,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vesak (Buddha Purnima), celebrated on the full moon day of Vaisakha, is the most sacred day in Buddhism. It commemorates three momentous milestones in the life of Siddhartha Gautama: His auspicious birth in the gardens of Lumbini (circa 563 BCE), His supreme Awakening (Sammā-Sambodhi) beneath the Bodhi tree in Bodh Gaya at age 35, and His peaceful passing into Mahaparinirvana between the twin Sal trees in Kushinagar at age 80. The festival embodies peace, boundless compassion (Karunā), loving-kindness (Mettā), and the timeless path of the Middle Way (Majjhima Patipada).",
           "hi": "वैशाख मास की पूर्णिमा को संपूर्ण विश्व में बुद्ध पूर्णिमा (वेसाक) का पावन महापर्व मनाया जाता है। यह दिन बौद्ध परंपरा में त्रिविध पावन है क्योंकि इसी दिन लुम्बिनी में राजकुमार सिद्धार्थ का जन्म हुआ, बोधगया में बोधिवृक्ष के नीचे उन्हें कैवल्य-ज्ञान (संबोधि) प्राप्त हुआ, और कुशीनगर में 80 वर्ष की आयु में महापरिनिर्वाण प्राप्त हुआ। यह पर्व सत्य, अहिंसा, करुणा, मैत्री और अष्टांगिक मार्ग का शाश्वत संदेश देता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tipitaka (Sutta Pitaka & Vinaya Pitaka)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6788,15 +4807,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अभयदान (जीवों को बंधनमुक्त करना) और संघ व निर्धनों को भोजन दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Buddhist monastic & lay observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6814,15 +4826,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दया, क्षमा, करुणा और परोपकार के कार्य करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist lay ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6838,15 +4843,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, कटु वचन, अहंकार व किसी भी जीव को कष्ट पहुंचाने से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist lay ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6868,15 +4866,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वेदी हेतु श्वेत रेशमी वस्त्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Buddhist Puja items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6889,15 +4880,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I go to the Buddha for refuge. I go to the Dhamma (Universal Truth) for refuge. I go to the Sangha (Spiritual Community) for refuge.",
             "hi": "मैं भगवान बुद्ध की शरण लेता हूँ। मैं धर्म (परम सत्य) की शरण लेता हूँ। मैं संघ (साधकों के पवित्र समुदाय) की शरण लेता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Khuddakapāṭha (Tisaraṇa / Three Refuges)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -6913,15 +4897,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Asalha Puja (Dhamma Day)",
           "hi": "आसाढ़ पूर्णिमा (धम्म दिवस / धर्मचक्र प्रवर्तन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Samyutta Nikaya 56.11 (Dhammacakkappavattana Sutta)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6931,15 +4908,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Commemorating the Buddha’s First Sermon in Sarnath and the Turning of the Wheel of Dhamma",
           "hi": "सारनाथ में भगवान बुद्ध के प्रथम उपदेश और धर्मचक्र प्रवर्तन का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6949,15 +4919,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Asalha Puja (Dhamma Day), celebrated on the full moon of the eighth lunar month (Ashadha), commemorates the historic day when Gautama Buddha delivered His very first sermon — the Dhammacakkappavattana Sutta (Setting in Motion the Wheel of the Dhamma) — to His former five ascetic companions at the Deer Park in Isipatana (Sarnath near Varanasi). This discourse revealed the Four Noble Truths (Catur-Arya-Satya) and the Noble Eightfold Path (Arya Ashtangika Marga). Upon hearing this teaching, Kondañña attained the first stage of enlightenment (Sotāpanna), establishing the Triple Gem (Buddha, Dhamma, Sangha) in the world.",
           "hi": "आषाढ़ मास की पूर्णिमा को मनाया जाने वाला आसाढ़ पूजा (धम्म दिवस) वह पावन दिवस है जब भगवान बुद्ध ने वाराणसी के निकट सारनाथ के मृगदाव में अपने प्रथम पांच शिष्यों (पंचवर्गीय भिक्षुओं) को पहला उपदेश दिया था। इस \"धर्मचक्र प्रवर्तन सूत्र\" में चार आर्य सत्य और अष्टांगिक मार्ग का उद्घाटन हुआ। इसी दिन कौंडिन्य ने ज्ञान प्राप्त किया और विश्व में पहली बार \"त्रिरत्न\" (बुद्ध, धम्म, संघ) की पूर्ण स्थापना हुई।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Samyutta Nikaya / Mahavagga",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -6979,15 +4942,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अतिवाद से मुक्त मध्यम मार्ग पर ध्यान साधना करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada liturgical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7005,15 +4961,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुरुओं और संघ का आदर-सत्कार करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dhammapada teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7029,15 +4978,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "साधना और शील के नियमों की उपेक्षा न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7057,15 +4999,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध पेय जल व फल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Vihara essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7078,15 +5013,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "There are two extremes that should not be followed by one who has gone forth: devotion to sensual pleasures and devotion to self-mortification. The Middle Path (Majjhima Patipada) avoids both extremes, giving vision and knowledge, leading to peace, direct knowledge, Awakening, and Nibbana.",
             "hi": "हे भिक्षुओं! प्रव्रजित को दो अतियों से बचना चाहिए: एक भोग-विलास की आसक्ति और दूसरी अत्यधिक काया-क्लेश। इन दोनों अतियों को छोड़कर तथागत द्वारा खोजा गया \"मध्यम मार्ग\" ही चक्षु देने वाला, ज्ञान देने वाला, शांति, संबोधि और निर्वाण की ओर ले जाने वाला है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Samyutta Nikaya 56.11 (Dhammacakkappavattana Sutta)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -7102,15 +5030,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Magha Puja (Sangha Day)",
           "hi": "माघ पूर्णिमा (माघ पूजा / संघ दिवस)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dīgha Nikāya / Dhammapada 183-185",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7120,15 +5041,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the spontaneous gathering of 1,250 Arahants and the Ovāda Pātimokkha discourse",
           "hi": "1,250 अर्हत भिक्षुओं के ऐतिहासिक सम्मेलन और ओवाद पातिमोक्ख (आदर्श आचार संहिता) का उत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7138,15 +5052,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Magha Puja (Fourfold Assembly Day), observed on the full moon of the third lunar month (Magha), commemorates four miraculous occurrences at Veluvana Bamboo Grove in Rajgir: 1,250 enlightened monks assembled spontaneously without prior appointment; all were ordained by the Buddha Himself (\"Ehi Bhikkhu\"); all were fully enlightened Arahants with direct spiritual attainments; and it was the full moon of Magha. On this day, the Buddha delivered the foundational Ovada Patimokkha, distilling the core ethical discipline of all Buddhas: avoiding all unwholesome deeds, cultivating all good, and purifying one's own mind.",
           "hi": "माघ पूर्णिमा के दिन राजगीर के वेणुवन में एक अद्भुत घटना घटी थी: बिना किसी पूर्व सूचना के 1,250 प्रबुद्ध अर्हत भिक्षु स्वयं एकत्रित हुए, वे सभी भगवान बुद्ध द्वारा दीक्षित थे और सभी परम ज्ञानी थे। इस दिन भगवान बुद्ध ने \"ओवाद पातिमोक्ख\" का उपदेश देकर समस्त बुद्धों के उपदेश का सार प्रस्तुत किया: \"सब पापों से बचना, कुशल कर्मों का संचय करना और अपने चित्त को सर्वथा शुद्ध करना।\""
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tipitaka (Mahavagga & Dhammapada Commentary)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7168,15 +5075,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भिक्षु संघ को औषधि, चीवर व आहार का दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Sangha day rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7194,15 +5094,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सत्संगति और कल्याणमित्रों के साथ धर्म चर्चा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dhammapada teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7218,15 +5111,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विलासिता व प्रमाद में समय व्यर्थ न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ovada Patimokkha guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7246,15 +5132,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संघ दान हेतु औषधियां व फल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Magha Puja essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7267,15 +5146,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "To avoid all evil, to cultivate the good, and to purify one’s own mind — this is the teaching of all the Buddhas.",
             "hi": "सभी पापों से बचना, समस्त पुण्य/कुशल कर्मों का संचय करना, और अपने मन को पूर्णतया शुद्ध रखना — यही सभी बुद्धों का शाश्वत उपदेश है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Dhammapada 183 (Ovāda Pātimokkha)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -7291,15 +5163,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vassa begins (Rains Retreat)",
           "hi": "वर्षावास प्रारंभ (वस्सा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya Pitaka (Mahavagga Vassupanayikakkhandhaka)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7309,15 +5174,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Three-month annual monastic retreat of intensive meditation and spiritual study during the monsoon",
           "hi": "चातुर्मास में भिक्षुओं का तीन महीने का गहन ध्यान साधना व स्वाध्याय काल"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada monastic tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7327,15 +5185,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vassa (derived from the Sanskrit Varsha, meaning rain) is the three-lunar-month annual retreat observed by Theravada monastics, starting the day after Asalha Puja (in Ashadha) and concluding with Pavarana (in Ashvina). Instituted by Gautama Buddha to prevent monastics from inadvertently trampling upon agricultural crops and newborn insect life during the rainy season, Vassa is dedicated to intense seclusion, meditation (Bhavana), scripture study, and Dhamma instruction. Lay disciples also embrace stricter vows, daily meditation, and increased Dana during this auspicious season.",
           "hi": "आषाढ़ पूर्णिमा के अगले दिन से प्रारंभ होने वाला तीन महीने का \"वर्षावास\" बौद्ध भिक्षुओं की गहन साधना का पावन समय है। वर्षा ऋतु में छोटे-छोटे जीवों व फसलों की रक्षा के लिए तथागत ने भिक्षुओं को एक स्थान पर रहकर ध्यान, स्वाध्याय और उपदेश करने का नियम बनाया था। इस दौरान गृहस्थ भी विशेष शील, उपवास और दैनिक ध्यान का संकल्प लेते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya Pitaka",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7357,15 +5208,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दैनिक परित्त सूत्रों का पाठ व सांध्य धर्म-चर्चा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Monastic Vinaya traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7383,15 +5227,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विहारों व संन्यासियों की सेवा-सुश्रूषा में सहयोग दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Lay Vassa guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7407,15 +5244,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वर्षा ऋतु में प्रकृति व सूक्ष्म जीवों की अहिंसा का विशेष ध्यान रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7435,15 +5265,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "छत्र व संघ हेतु औषधियां"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Vassa offerings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7456,15 +5279,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I enter the Rains Retreat in this monastery for these three months. I take up this Vassa.",
             "hi": "मैं इस विहार में आगामी तीन मास के लिए वर्षावास में प्रवेश करता हूँ। मैं इस वर्षावास का संकल्प लेता हूँ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vinaya Pitaka (Vassupagamanā Gāthā)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -7480,15 +5296,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Pavarana (End of Vassa)",
           "hi": "पवारणा (वर्षावास समापन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya Pitaka (Mahavagga Pavaranakkhandhaka)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7498,15 +5307,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The sacred ceremony of mutual invitation, reconciliation, and completion of the three-month Rains Retreat",
           "hi": "वर्षावास की पूर्णता पर आपसी क्षमा-याचना, विनम्रता और संघ समन्वय का महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada monastic tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7516,15 +5318,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Pavarana (literally \"to invite\") marks the formal conclusion of the three-month Vassa rains retreat on the full moon of Ashvina. Established by the Buddha, the Pavarana ceremony requires every monastic — regardless of seniority — to approach fellow monks and invite them to point out any breach of discipline or unskillful conduct they may have seen, heard, or suspected. It stands as a sublime monument to radical humility, open communication, spiritual transparency, and pure harmony in the Sangha.",
           "hi": "आश्विन मास की पूर्णिमा को तीन माह के वर्षावास की समाप्ति पर \"पवारणा\" दिवस मनाया जाता है। तथागत द्वारा स्थापित इस परंपरा में प्रत्येक भिक्षु अपने साथी भिक्षुओं से विनम्रतापूर्वक प्रार्थना करता है कि यदि उन्होंने उनके किसी आचरण में कोई त्रुटि देखी, सुनी या शंका की हो, तो वे निसंकोच बताएं ताकि वे प्रायश्चित कर सकें। यह पर्व असीम विनम्रता, आत्म-शुद्धि और संघ की अखंड समरसता का प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya Pitaka",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7546,15 +5341,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "समस्त प्राणियों के कल्याण हेतु करणीय मेत्त सूत्र का पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada monastic liturgy",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7572,15 +5360,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "साधना की पूर्णता पर कृतज्ञता व्यक्त करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7596,15 +5377,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कलह या विवाद से सर्वथा दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7624,15 +5398,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भिक्षुओं हेतु शहद, फल व पेय पदार्थ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pavarana traditional offerings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7645,15 +5412,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Venerable sirs, I invite the Sangha to point out anything seen, heard, or suspected of my conduct. Out of compassion, please speak to me; seeing my fault, I shall make amends.",
             "hi": "हे आयुष्मानों! मैं संघ को आमंत्रित करता हूँ कि मेरे किसी भी कार्य में जो आपने देखा हो, सुना हो या शंका की हो, अनुकम्पा करके मुझे बताएं; अपनी भूल को समझकर मैं उसका अवश्य प्रायश्चित करूंगा।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vinaya Pitaka (Mahavagga Pavaranakkhandhaka)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -7669,15 +5429,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kathina (Robe Offering Ceremony)",
           "hi": "कठिन चीवर दान (कठिनोत्सव)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya Pitaka (Mahavagga Kathinakkhandhaka)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7687,15 +5440,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The annual month of supreme meritorious generosity: offering new robes to the monastic Sangha",
           "hi": "संघ को नवीन चीवर दान कर असीम पुण्य अर्जित करने का महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Theravada tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7705,15 +5451,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kathina is the largest and most joyous alms-giving festival in Theravada Buddhism, held during the lunar month following Pavarana (Ashvina full moon to Kartika full moon). Instituted when thirty devout monks walking through rain to visit the Buddha arrived with drenched, tattered robes, the Buddha authorized lay devotees to offer raw cloth to the monastic community. The cloth is ceremonially cut, stitched, dyed, and presented to a worthy monk on the very same day using a wooden frame called a \"Kathina\" (meaning durable or unshakeable). It represents supreme dana and communal spiritual generosity.",
           "hi": "पवारणा के बाद एक मास तक चलने वाला \"कठिन चीवर दान\" बौद्ध परंपरा का सबसे बड़ा पुण्य-पर्व है। जब तीस भिक्षु कीचड़ और वर्षा में भीगते हुए फटे वस्त्रों के साथ तथागत के दर्शन को पहुंचे, तब बुद्ध ने गृहस्थों को संघ हेतु नवीन वस्त्र दान करने की अनुमति दी थी। इस दिन भक्त कच्चा कपड़ा लाते हैं जिसे उसी दिन काटकर, सिलकर और रंगकर \"कठिन\" (काष्ठ के फ्रेम) पर तैयार कर भिक्षुओं को भेंट किया जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya Pitaka",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7735,15 +5474,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पुण्य-अनुमोदन मंत्रोच्चार द्वारा समस्त लोकों में मंगल भावना प्रसारित करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Kathina observance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7761,15 +5493,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्य दाताओं के पुण्य का भी हर्षपूर्वक अनुमोदन (मुदिता) करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist lay practice",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7785,15 +5510,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कठिन चीवर किसी विशेष व्यक्ति के लिए नहीं अपितु संपूर्ण संघ हेतु समर्पित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vinaya guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7813,15 +5531,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विहार सेवा हेतु द्रव्य व सामग्री"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kathina requisites",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7834,15 +5545,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Venerable sirs, we present this Kathina cloth to the Sangha. May the venerable Sangha accept this Kathina cloth and spread the Kathina for our long-term benefit and happiness.",
             "hi": "हे भदंत! हम यह कठिन वस्त्र संघ को सादर समर्पित करते हैं। पूज्य संघ इस वस्त्र को स्वीकार करे और हमारे दीर्घकालिक हित व सुख के लिए कठिन संस्कार संपन्न करे।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vinaya Pitaka Kathina offering formula",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -7858,15 +5562,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ullambana (Ancestor Day / Ghost Festival)",
           "hi": "उल्लम्बन (पितृ दिवस / मातृ-पितृ कल्याण पर्व)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ullambana Sutra (Taishō Tripiṭaka 685)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7876,15 +5573,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Filial piety and boundless compassion: offering food and merit to liberate departed ancestors and suffering realms",
           "hi": "मातृ-पितृ भक्ति व करुणा: पूर्वजों और दुःखी आत्माओं की मुक्ति हेतु संघ-दान का महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahayana & Theravada traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7894,15 +5584,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ullambana (derived from Sanskrit Avalambana, meaning \"rescuing from upside-down hanging/agony\") is celebrated on the full moon of the seventh lunar month (Shravana/Bhadrapada). According to the Ullambana Sutra, when the Buddha’s chief disciple Maudgalyayana (Moggallana) saw with his divine eye that his deceased mother had been reborn into the realm of hungry ghosts (Pretas) due to past greed, he was unable to save her alone. The Buddha instructed him to make bountiful offerings of food, robes, and medicine to the assembled Sangha upon the completion of their summer retreat (Pavarana). The collective spiritual power of the Sangha instantly liberated his mother and countless suffering beings.",
           "hi": "उल्लम्बन का अर्थ है \"घोर कष्टों और बंधन से मुक्ति दिलाना\"। यह पर्व श्रावण/भाद्रपद पूर्णिमा को मनाया जाता है। उल्लम्बन सूत्र के अनुसार जब महामौद्गल्यायन ने दिव्य दृष्टि से देखा कि उनकी माता पूर्व जन्म के लोभ के कारण प्रेत योनि में कष्ट पा रही हैं, तब तथागत ने उन्हें वर्षावास पूर्ण करने वाले संपूर्ण संघ को शुद्ध भोजन व सामग्री दान करने का मार्ग बताया। उस सामूहिक पुण्य के प्रभाव से उनकी माता प्रेत योनि से तत्काल मुक्त होकर स्वर्गलोक को प्राप्त हुईं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ullambana Sutra / Petavatthu",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7924,15 +5607,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दीन-दुखियों व असहायों को अन्न-वस्त्र दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahayana liturgical texts",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7950,15 +5626,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पशु-पक्षियों और असहायों को भोजन कराएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist filial ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -7974,15 +5643,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अंधविश्वास अथवा बलि जैसी कुरीतियों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist ethical guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8002,15 +5664,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संघ हेतु औषधियां व वस्त्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ullambana altar essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8023,15 +5678,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Homage to Amitabha Buddha, the Buddha of Infinite Light. May this merit go to our relatives; may all departed relatives be happy and at peace.",
             "hi": "अमित प्रकाश के स्वामी भगवान अमिताभ बुद्ध को नमन। यह पुण्य हमारे समस्त पितरों व संबंधियों को प्राप्त हो; वे सभी सुखी व शांत रहें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Tirokudda Sutta (Khuddakapāṭha 7) & Pure Land liturgy",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -8047,15 +5695,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Bodhi Day (Day of Awakening / Rohatsu)",
           "hi": "बोधि दिवस (संबोधि दिवस / ज्ञानोदय पर्व)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Majjhima Nikaya 26 (Ariyapariyesana Sutta) / Mahavastu",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8065,15 +5706,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Commemorating Gautama Buddha’s Supreme Enlightenment under the Bodhi Tree in Bodh Gaya",
           "hi": "बोधगया में बोधिवृक्ष के नीचे भगवान बुद्ध के परम कैवल्य (ज्ञानोदय) का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahayana & Zen tradition (8th day of 12th lunar month / Dec 8)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8083,15 +5717,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Bodhi Day commemorates the dawn when Siddhartha Gautama, having seated Himself in unwavering meditation beneath the Bodhi tree (Ficus religiosa) in Bodh Gaya, overcame the illusions and temptations of Mara, penetrated the Twelve Links of Dependent Origination (Pratītyasamutpāda), and attained complete, unexcelled Enlightenment (Anuttara Samyak Sambodhi). He emerged as the Buddha — the Awakened One. Bodhi Day celebrates the eradication of ignorance (Avidya) and the triumph of pure wisdom (Prajñā) and boundless compassion.",
           "hi": "बोधि दिवस उस ऐतिहासिक भोर का स्मरण कराता है जब बोधगया में पवित्र बोधिवृक्ष के नीचे दृढ़ संकल्प के साथ ध्यानमग्न सिद्धार्थ गौतम ने मार (माया/अज्ञान) की सेना को परास्त कर \"प्रतीत्यसमुत्पाद\" के गूढ़ रहस्य को जाना और परम बुद्धत्व प्राप्त किया। इस दिन अंधकार पर ज्ञान की विजय हुई और संसार को दुःखों से मुक्ति का शाश्वत मार्ग मिला।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ariyapariyesana Sutta / Lalitavistara",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8113,15 +5740,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अज्ञान के अंधकार को मिटाने हेतु ज्ञान-दीप प्रज्वलित करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Zen & Mahayana Rohatsu traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8139,15 +5759,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "समस्त प्राणियों के प्रति करुणा और दया का भाव रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist wisdom teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8163,15 +5776,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अपनी आंतरिक क्षमता और मुक्ति के प्रति संशय न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Prajnaparamita teachings",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8191,15 +5797,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप, श्वेत कमल व सिंगिंग बाउल (घंटी)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bodhi Day altar essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8212,15 +5811,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Gone, gone, gone beyond, gone completely beyond to Awakening, Hail! (Heart Sutra). \"Through countless births in samsara I wandered, seeking the builder of this house and not finding him. House-builder, you are seen! You shall build no more house!\" (Dhammapada 153-154).",
             "hi": "चले गए, पार चले गए, पूर्णतः पार होकर संबोधि को प्राप्त हुए, जय हो! \"अनेक जन्मों के इस संसार में मैं गृह-निर्माता (तृष्णा) को खोजता हुआ भटकता रहा। हे गृह-निर्माता! अब मैंने तुझे देख लिया है, तू अब पुनः कोई नया घर (बंधन) नहीं बना सकेगा!\""
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Prajñāpāramitā Hṛdaya & Dhammapada 153-154",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -8236,15 +5828,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Parinirvana Day (Nirvana Day)",
           "hi": "महापरिनिर्वाण दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dīgha Nikāya 16 (Mahāparinibbāna Sutta)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8254,15 +5839,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Contemplating the Buddha’s final passing into Nirvana, impermanence (Anicca), and His last words of wisdom",
           "hi": "भगवान बुद्ध के महापरिनिर्वाण, अनित्यता (अनित्य बोध) और अंतिम अमर संदेश का चिंतन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahayana & Theravada traditions (Feb 15 / Vaisakha)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8272,15 +5850,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Parinirvana Day commemorates the physical passing of Gautama Buddha at the age of eighty in the Sal grove of Upavattana in Kushinagar. Lying on His right side between twin flowering Sal trees, the Buddha answered the final questions of the wanderer Subhadda and uttered His immortal last words to His disciples: \"Handa dāni bhikkhave āmantayāmi vo, vayadhammā saṅkhārā appamādena sampādetha\" (All conditioned things are subject to decay; strive diligently for your own liberation). Parinirvana is not a day of grief, but a profound contemplation of impermanence (Anicca) and the unconditioned peace of Nirvana.",
           "hi": "महापरिनिर्वाण दिवस भगवान बुद्ध के 80 वर्ष की आयु में कुशीनगर के सालवन में देहत्याग और निर्वाण में लीन होने का पावन दिवस है। दो साल वृक्षों के बीच दाईं करवट लेटे हुए तथागत ने अपने अंतिम शिष्य सुभद्र को ज्ञान दिया और संपूर्ण संघ को अपना अंतिम अमर संदेश दिया: \"सभी संस्कार (निर्मित वस्तुएं) विनाशधर्मी हैं; प्रमाद-रहित होकर निरंतर अपनी मुक्ति का प्रयास करो।\" यह शोक का नहीं, अपितु अनित्यता और निर्वाण के परम सत्य का चिंतन दिवस है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dīgha Nikāya 16 (Mahāparinibbāna Sutta)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8302,15 +5873,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धर्म-ग्रंथों का दान व असहायों की सेवा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Buddhist monastic liturgy",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8328,15 +5892,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जीवन और मृत्यु के प्रति शांत व समता भाव विकसित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist core philosophy",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8352,15 +5909,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सद्गुणों के अभ्यास और चित्त शुद्धि को कल पर न टालें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahaparinibbana Sutta guidance",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8380,15 +5930,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "महापरिनिर्वाण सूत्र की पावन प्रति"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Parinirvana Day essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8401,15 +5944,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Behold, O monastics, I advise you: all conditioned things are subject to decay. Strive on with diligence! Impermanent indeed are all compounded things; their nature is to arise and cease. Having arisen, they pass away; their complete cessation is supreme bliss.",
             "hi": "हे भिक्षुओं! सुनो, मैं तुमसे कहता हूँ: सभी संस्कार (रचित वस्तुएं) क्षय होने वाली हैं। अप्रमाद (पूर्ण जागरूकता) के साथ अपना उद्धार करो! निश्चय ही सभी संस्कार अनित्य हैं; उनका स्वभाव उत्पन्न होना और नष्ट होना है। उत्पन्न होकर वे विलीन हो जाते हैं; उनका शांत हो जाना ही परम सुख (निर्वाण) है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Dīgha Nikāya 16 (Buddha’s Last Words) & Mahā-Sudassana Sutta",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -8425,15 +5961,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Losar (Tibetan New Year)",
           "hi": "लोसार (तिब्बती नववर्ष)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tibetan Buddhist Lunar Calendar (Phugpa tradition)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8443,15 +5972,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The auspicious Tibetan Buddhist festival of spiritual renewal, clearing negative obstacles, and hanging fresh prayer flags",
           "hi": "तिब्बती बौद्ध परंपरा में आध्यात्मिक नवजीवन, बाधा-निवारण और शांति-प्रार्थना का महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vajrayana tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8461,15 +5983,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Losar (from \"Lo\" meaning year and \"Sar\" meaning new) is the foremost festival in Tibetan Buddhism, celebrated for fifteen days with the main events over the first three days. Dating back to pre-Buddhist times and infused with sacred Vajrayana Buddhist practices by Guru Padmasambhava, Losar begins with clearing out past year’s negativity (Guthuk night), making elaborate shrine offerings (Derga, Chemar, Droma Dresi), hoisting new wind-horse prayer flags (Lungta), and seeking blessings from the Triple Gem, Dharmapalas, and spiritual teachers for universal harmony.",
           "hi": "लोसार (तिब्बती भाषा में \"लो\" अर्थात वर्ष और \"सार\" अर्थात नया) तिब्बती बौद्ध धर्म का सबसे बड़ा नववर्ष उत्सव है। गुरु पद्मसंभव की पावन परंपरा के अनुसार, इस पर्व पर पुराने वर्ष की नकारात्मक ऊर्जाओं और बाधाओं का निवारण (गुथुक रात्रि) किया जाता है। नववर्ष की प्रातः चेमार और शुभ प्रसाद अर्पित कर नए लंगता (शांति प्रार्थना ध्वज) फहराए जाते हैं तथा समस्त लोकों के कल्याण व सुख-समृद्धि की मंगल कामना की जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vajrayana liturgical tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8491,15 +6006,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "स्तूपों की प्रदक्षिणा और गुरुओं व प्रतिमाओं को श्वेत खातक (रेशमी दुपट्टा) भेंट करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tibetan Buddhist cultural observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8517,15 +6025,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अतिथियों का मीठे चावल व बटर टी से आदर-सत्कार करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vajrayana ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8541,15 +6042,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रातःकाल घर से सौभाग्य बाहर जाने के प्रतीक रूप में झाड़ू न लगाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tibetan customs",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8571,15 +6065,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "केसरिया मीठे चावल व सूखे मेवे"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Losar altar essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8592,15 +6079,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, the jewel in the lotus, Hum! May all auspiciousness, prosperity, and spiritual perfection be with you (Tashi Delek Phunsum Tsok).",
             "hi": "ॐ मणिपद्मे हुँ (पद्म में स्थित दिव्य मणि को नमन)। आपके जीवन में समस्त शुभ, समृद्धि, शांति और आध्यात्मिक पूर्णता का वास हो।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Avalokiteshvara Karuna Mantra & Traditional Tibetan Losar Blessing",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -8616,15 +6096,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sangha Day (Loy Krathong / Lantern Festival)",
           "hi": "संघ दिवस (लोई क्राथोंग / दीप-प्रवाह पर्व)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Anguttara Nikaya / Theravada Festival Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8634,15 +6107,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Floating illuminated baskets of light on waters and honoring the noble virtues of the Sangha",
           "hi": "जल में दीप-पात्र प्रवाहित कर चित्त-मलिनताओं का विसर्जन और संघ की वंदना"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Southeast Asian Buddhist tradition (Kartika full moon)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8652,15 +6118,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sangha Day, celebrated in tandem with the magical lantern festival of Loy Krathong on the full moon of the twelfth lunar month (Kartika), is dedicated to honoring the Sangha — the noble community of spiritually enlightened practitioners who preserve and embody the Buddha’s Dhamma. Devotees craft delicate lotus-shaped baskets (Krathong) from banana leaves, adorned with incense, flowers, and glowing candles, floating them onto rivers to symbolize letting go of defilements (Kilesas), anger, and past regrets, while dedicating the luminous reflections to the sacred footprint of the Buddha and the Sangha.",
           "hi": "कार्तिक पूर्णिमा की मनमोहक रात्रि को मनाया जाने वाला \"लोई क्राथोंग\" और संघ दिवस, तथागत के धर्म का प्रचार-प्रसार करने वाले पवित्र भिक्षु संघ के प्रति कृतज्ञता का पर्व है। इस रात्रि भक्त केले के पत्तों से सुंदर कमल-रूपी नाव (क्राथोंग) बनाते हैं, जिसमें ताजे पुष्प, धूप और दीप सजाकर नदियों व सरोवरों में प्रवाहित करते हैं। यह जल में दीप प्रवाहित करना मन के विकारों, क्रोध और संताप को विसर्जित कर अंतःकरण में ज्ञान का प्रकाश जगाने का पावन प्रतीक है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist Southeast Asian liturgical history",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8682,15 +6141,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विहारों में दीप-दान व संघ की सेवा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Loy Krathong & Sangha day traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8708,15 +6160,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जल और पर्यावरण की शुचिता का ध्यान रखते हुए प्राकृतिक सामग्री का उपयोग करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Buddhist lay ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8732,15 +6177,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "नदियों व पवित्र स्थलों पर अभद्रता या मद्यपान से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Environmental & monastic guidelines",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8760,15 +6198,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संघ दान हेतु सात्विक सामग्री"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sangha day essentials",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8781,15 +6212,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "The Sangha of the Blessed One’s disciples has practiced well; has practiced directly; has practiced correctly. Worthy of gifts, worthy of hospitality, worthy of offerings, worthy of reverential salutation with joined hands, the supreme field of merit for the world.",
             "hi": "भगवान तथागत के श्रावकों का संघ सुमार्ग पर चलने वाला है, ऋजु (सीधे) मार्ग पर चलने वाला है, न्याय मार्ग पर चलने वाला है... यह संघ सत्कार के योग्य है, आतिथ्य के योग्य है, दक्षिणा के योग्य है, दोनों हाथ जोड़कर प्रणाम करने योग्य है, और संसार के लिए पुण्य का सर्वश्रेष्ठ क्षेत्र है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Anguttara Nikaya (Saṅghānussati / Recollection of the Sangha)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -8805,15 +6229,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Mahavir Jayanti",
           "hi": "महावीर जयन्ती (जन्म कल्याणक)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Tradition / Uttarādhyayana Sūtra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8823,15 +6240,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Auspicious celebration of the Janma Kalyānaka of Tirthankara Mahavira, the 24th and final Jina",
           "hi": "चौबीसवें तीर्थंकर भगवान महावीर के जन्म कल्याणक का परम पावन महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8841,15 +6251,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Mahavir Jayanti commemorates the birth of Vardhamana Mahavira (circa 599 BCE) in Kundagrama. He renounced worldly kingdom at age thirty, undertook twelve years of rigorous tapasya and mindfulness, and attained Kevala Jnana (supreme omniscience) on the banks of the Rjukula river. His teachings on Ahimsa (universal non-violence), Anekantavada (multi-faceted truth), and Aparigraha (non-possession) form the timeless ethical foundation of Jain dharma.",
           "hi": "महावीर जयंती २४वें तीर्थंकर भगवान महावीर के पावन जन्म कल्याणक का उत्सव है। तीस वर्ष की आयु में राजवैभव त्यागकर उन्होंने १२ वर्षों की कठोर तपस्या के उपरांत कैवल्य-ज्ञान प्राप्त किया। भगवान महावीर द्वारा प्रतिपादित अहिंसा, सत्य, अस्तेय, ब्रह्मचर्य और अपरिग्रह के पंच महाव्रत मानव चेतना को मुक्ति और आत्मकल्याण का मार्ग दिखाते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ācārāṅga Sūtra & Kalpa Sūtra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8869,15 +6272,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जीवदया, पक्षियों को दाना, गौशालाओं में सेवा और निर्धनों को भोजन दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Jain Temple Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8895,15 +6291,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जिनालय जाकर दर्शन, चैत्यवंदन और सामायिक स्वाध्याय करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8921,15 +6310,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कटु वचन, अहंकार और व्यर्थ के आडंबरों से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8949,15 +6331,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "नैवेद्य हेतु सूखे मेवे और ताजे फल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ashtaprakari Puja Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -8970,15 +6345,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -8994,15 +6362,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Akshaya Tritiya (Jain)",
           "hi": "अक्षय तृतीया (आदिनाथ पारणा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Tradition / Ādipurāṇa",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9012,15 +6373,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Commemorating the first Tirthankara Rishabhadeva breaking his year-long fast with sugarcane juice",
           "hi": "प्रथम तीर्थंकर भगवान ऋषभदेव द्वारा १३ मास के तप के उपरांत इक्षुरस से पारणा का पावन पर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9030,15 +6384,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "On Vaishakha Shukla Tritiya, Bhagwan Rishabhadeva (Adinatha) broke his thirteen-month continuous fast when King Shreyamsa offered fresh sugarcane juice (Ikshu-rasa) into His cupped hands. This established the sacred institution of Ahara-dana (offering pure food to ascetics) in the current cosmic descending cycle (Avasarpini), earning this day the name Akshaya (inexhaustible merit). Practitioners completing the year-long alternate-day fast (Varshitapa) break their fast on this day.",
           "hi": "वैशाख शुक्ल तृतीया को प्रथम तीर्थंकर भगवान आदिनाथ ने १३ महीने के कठोर तप के बाद हस्तिनापुर में राजा श्रेयांस के हाथों इक्षुरस (गन्ने का रस) ग्रहण कर पारणा की थी। इस दिन संसार में आहार-दान की पावन परंपरा आरंभ हुई। आज के दिन वर्षीतप (एक वर्ष तक एक दिन उपवास, एक दिन पारणा) करने वाले तपस्वी अपना तप पूर्ण करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ādipurāṇa (Jinasena)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9058,15 +6405,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "राजा श्रेयांस और भगवान आदिनाथ की भक्ति में स्तवन गायन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Jain Temple Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9084,15 +6424,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भगवान आदिनाथ के त्याग और समता भाव का ध्यान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9108,15 +6441,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कटु वचन व तामसिक भोजन से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9134,15 +6460,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दीपक व मंदिर वेदी हेतु शुद्ध नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Jain Temple Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9155,15 +6474,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -9179,15 +6491,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Parva begins",
           "hi": "पर्युषण पर्व प्रारंभ (पर्वाधिराज)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9197,15 +6502,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The commencement of the holiest eight-day period of spiritual introspection, fasting, and repentance",
           "hi": "आत्म-शुद्धि, त्याग, तप और संयम के आठ दिवसीय महापर्व का शुभारंभ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9215,15 +6513,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Parva is the supreme festival (Parvadhiraja) in Jainism, observed during Bhadrapada. For eight days (Svetambara) or ten days (Digambara: Dasa Lakshana), householders and ascetics withdraw from external preoccupations to focus exclusively on atma-shuddhi (soul purification), Pratikramana (confessional repentance), tapas (fasting), and scriptural contemplation from the Kalpa Sutra.",
           "hi": "पर्युषण पर्व जैन धर्म का सर्वोच्च और पवित्रतम पर्व है, जिसे पर्वाधिराज कहा जाता है। भाद्रपद मास में मनाए जाने वाले इस पर्व के दौरान साधक लौकिक प्रपंचों से हटकर आत्म-निरीक्षण, तप, स्वाध्याय और प्रतिक्रमण करते हैं। यह काल आत्मा पर जमे कर्मों के मैल को धोने और मोक्षमार्ग पर अग्रसर होने का पावन अवसर है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra & Āvaśyaka Cūrṇi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9243,15 +6534,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रतिदिन सामायिक (४८ मिनट की समता साधना) करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Liturgical Observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9269,15 +6553,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "उबला हुआ शुद्ध जल पिएं और पूर्ण सात्विक भोजन ग्रहण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9295,15 +6572,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "किसी भी सूक्ष्म जीव की हिंसा से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9321,15 +6591,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चंदन, अक्षत और शुद्ध घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Liturgical Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9342,15 +6605,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -9366,15 +6622,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Samvatsari (Universal Forgiveness Day)",
           "hi": "संवत्सरी महापर्व (क्षमावाणी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9384,15 +6633,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The crown day of Paryushana when every Jain offers and seeks heartfelt forgiveness with \"Micchami Dukkadam\"",
           "hi": "समस्त चराचर जीवों से \"मिच्छामि दुक्कडम्\" कहकर अंतर्मन से क्षमा याचना का सर्वोच्च दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9402,15 +6644,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Samvatsari is the culminating and most sublime day of the Paryushana festival, falling on Bhadrapada Shukla Panchami. Jains perform the annual Samvatsari Pratikramana, reviewing the entirety of the past year to atone for transgressions. The day centers on universal forgiveness through the sacred phrase \"Micchami Dukkadam\" (May all the evil that has been done by me be fruitless). Jains ask forgiveness from family, friends, foes, and every living entity in creation without reservations.",
           "hi": "संवत्सरी पर्युषण पर्व का अंतिम और शिखर दिवस है। इस दिन संवत्सरी प्रतिक्रमण करके वर्षभर की समस्त भूलों का प्रायश्चित किया जाता है। \"मिच्छामि दुक्कडम्\" का उच्चारण करते हुए प्रत्येक साधक ज्ञात-अज्ञात गलतियों के लिए प्राणीमात्र से करबद्ध क्षमा मांगता है और सबको अंतःकरण से क्षमा करता है। यह वैर-विरोध को मिटाकर आत्मा को निष्कलंक बनाने का पावन दिवस है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Āvaśyaka Sūtra / Samvatsari Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9430,15 +6665,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्षमावाणी सूत्र और १०८ लोगस्स का पावन पाठ करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Samvatsari Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9456,15 +6684,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संसार के सभी जीवों के प्रति निश्छल प्रेम और मैत्री की भावना रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9480,15 +6701,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मिच्छामि दुक्कडम् कहने के बाद भी मन में कोई गांठ या द्वेष न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9506,15 +6720,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "नवकारवाली (जपमाला)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Samvatsari Liturgical Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9527,15 +6734,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I ask forgiveness from all living beings; may all living beings forgive me. I cherish friendship with all beings; I harbor enmity towards none.",
             "hi": "मैं सभी जीवों से क्षमा मांगता हूँ, सब जीव मुझे क्षमा करें। मेरी समस्त जीवों से मित्रता है, किसी से भी वैर-भाव नहीं है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Āvaśyaka Sūtra (Kṣamāpanā Sūtra)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -9551,15 +6751,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Das Lakshana Dharma begins",
           "hi": "दश लक्षण धर्म महापर्व प्रारंभ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Digambara Jain Tradition / Tattvārtha Sūtra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9569,15 +6762,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The ten-day Digambara festival celebrating the ten supreme virtues of the soul",
           "hi": "दिगंबर परंपरा में आत्मा के दस परम धर्मों की आराधना का दस दिवसीय महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Digambara Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9587,15 +6773,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Observed primarily by Digambara Jains starting on Bhadrapada Shukla Panchami, Das Lakshana Parva dedicates each of its ten consecutive days to one of the ten supreme attributes of the soul enumerated by Acharya Umasvati in Tattvartha Sutra: Uttama Kshama (Supreme Forgiveness), Mardava (Humility), Arjava (Straightforwardness), Saucha (Purity), Satya (Truth), Samyama (Self-restraint), Tapa (Austerity), Tyaga (Renunciation), Akinchanya (Non-possessiveness), and Brahmacharya (Celibacy).",
           "hi": "दिगंबर जैन समाज द्वारा भाद्रपद शुक्ल पंचमी से अनंत चतुर्दशी तक दस लक्षण महापर्व मनाया जाता है। आचार्य उमास्वामी के तत्त्वार्थ सूत्र के अनुसार, यह पर्व आत्मा के दस स्वाभाविक गुणों की साधना को समर्पित है: उत्तम क्षमा, उत्तम मार्दव, उत्तम आर्जव, उत्तम शौच, उत्तम सत्य, उत्तम संयम, उत्तम तप, उत्तम त्याग, उत्तम आकिंचन्य, और उत्तम ब्रह्मचर्य।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tattvārtha Sūtra (Chapter 9)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9615,15 +6794,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दस दिनों तक एकासन, उपवास और नियमबद्ध जीवनचर्या का पालन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Digambara Temple Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9639,15 +6811,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रतिदिन के धर्म (जैसे क्षमा, नम्रता, सरलता) को जीवन में उतारें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9663,15 +6828,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विलासिता और इंद्रिय सुखों की आसक्ति का त्याग करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9689,15 +6847,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धूप (शुद्ध सुगंधित दशांग) और फल (ताजे ऋतु फल)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Digambara Ashta Dravya Puja",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9710,15 +6861,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -9734,15 +6878,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Jain New Year (Kartik Pratipada)",
           "hi": "जैन नव वर्ष (कार्तिक प्रतिपदा / वीर निर्वाण संवत्)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Tradition / Kalpa Sūtra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9752,15 +6889,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The auspicious dawn of the Jain New Year celebrating the Kevala Jnana of Gautama Swami",
           "hi": "वीर निर्वाण संवत् का आरंभ और गणधर गौतम स्वामी के कैवल्य-ज्ञान प्राप्ति का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9770,15 +6900,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kartik Shukla Pratipada marks the start of the Jain New Year (Vira Nirvana Samvat). Falling on the morning after Diwali, it celebrates the historic moment when Indrabhuti Gautama (Gautama Swami), the chief disciple (Ganadhara) of Mahavira, overcame his profound personal attachment to his teacher and attained Kevala Jnana (supreme enlightenment). Jains greet each other with \"Saal Mubarak\", begin new financial account books (Khatavahi pujan), and reaffirm their commitment to the path of knowledge.",
           "hi": "कार्तिक शुक्ल प्रतिपदा को जैन नव वर्ष (वीर निर्वाण संवत्) का शुभारंभ होता है। दीवाली की अगली सुबह भगवान महावीर के प्रमुख गणधर गौतम स्वामी को कैवल्य-ज्ञान की प्राप्ति हुई थी। इस दिन जैन धर्मावलंबी जिनालयों में दर्शन कर नव वर्ष का स्वागत करते हैं, बही-खाता पूजन करते हैं और एक-दूसरे को \"साल मुबारक\" कहकर मंगलकामनाएं प्रेषित करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra & Gautama Pṛcchā",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9798,15 +6921,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "साधु-साध्वियों के दर्शन कर नव वर्ष के मांगलिक आशीर्वाद ग्रहण करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Jain New Year Customs",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9822,15 +6938,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दीन-दुखियों की सहायता और सेवा कार्यों में योगदान दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9846,15 +6955,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पटाखे फोड़कर मूक जीवों और पर्यावरण को क्षति न पहुँचाएँ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9872,15 +6974,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "नया बही-खाता और लेखनी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Sharda & Lekhani Puja",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9893,15 +6988,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -9917,15 +7005,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Jain Diwali (Mahavira Nirvana)",
           "hi": "जैन दीवाली (भगवान महावीर निर्वाण कल्याणक)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9935,15 +7016,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Commemorating Bhagwan Mahavira’s final liberation (Moksha) at Pavapuri and the lighting of the inner lamp",
           "hi": "पावापुरी में भगवान महावीर के मोक्ष गमन पर अंतरात्मा के प्रकाश का पावन दीपपर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9953,15 +7027,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "For Jains, Diwali (Ashvina Amavasya / Kartik Amavasya) marks the sacred Nirvana Kalyānaka of the 24th Tirthankara, Bhagwan Mahavira, at Pavapuri in 527 BCE. As His physical body departed and His liberated soul entered the timeless realm of Siddhashila, the kings of Kashi and Kosala illuminated their cities with clay lamps, proclaiming: \"Since the light of supreme wisdom is gone, let us kindle the lamps of material light.\" Jains observe Nirvana Ladu offering at dawn, reflecting on eternal liberation from samsara.",
           "hi": "जैन परंपरा में दीपावली भगवान महावीर के निर्वाण कल्याणक के रूप में मनाई जाती है। कार्तिक अमावस्या की पावन भोर में पावापुरी की पावन भूमि से भगवान महावीर ने मोक्ष प्राप्त किया। उनके कैवल्य-ज्ञान के आलोक की स्मृति में सोलह गणराज्यों के राजाओं ने दीप जलाए थे। इस दिन जिनालयों में निर्वाण लाडू चढ़ाकर अंतरात्मा को प्रकाशित करने का संकल्प लिया जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra & Harivaṃśa Purāṇa (Jinasena)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -9981,15 +7048,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मोक्ष कल्याणक के उपलक्ष्य में जप, तप, सामायिक और उपवास रखना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Nirvana Kalyānaka Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10005,15 +7065,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संसार के जन्म-मरण चक्र से मुक्ति और मोक्ष प्राप्ति का लक्ष्य संजोएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10029,15 +7082,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जुआ, मद्यपान अथवा सांसारिक व्यसनों से सर्वथा दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10055,15 +7101,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चंदन, केसर और अखंडित अक्षत"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Nirvana Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10076,15 +7115,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -10100,15 +7132,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kartik Purnima (Jain)",
           "hi": "कार्तिक पूर्णिमा (शत्रुंजय तीर्थ यात्रा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Tradition / Śatruñjaya Māhātmya",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10118,15 +7143,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Conclusion of the four-month monsoon retreat and opening of pilgrimage to sacred Shatrunjaya",
           "hi": "चातुर्मास की पूर्णता और पवित्र शत्रुंजय महातीर्थ की यात्रा का मंगल शुभारंभ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10136,15 +7154,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kartik Purnima marks the formal completion of the four-month monastic monsoon retreat (Chaturmasa). On this day, the pilgrimage paths to sacred Mount Shatrunjaya (Palitana, Gujarat) re-open to pilgrims after four months of closure to protect monsoon vegetation and insect life. Thousands of devout Jains undertake the arduous barefoot ascent of Shatrunjaya hill, where countless Tirthankaras and ascetics attained liberation.",
           "hi": "कार्तिक पूर्णिमा को चार महीने का चातुर्मास समाप्त होता है। इस दिन वर्षाकाल में बंद रहे शत्रुंजय तीर्थ (पालीताना) के द्वार भाविकों के लिए पुनः खुल जाते हैं। लाखों श्रद्धालु नंगे पांव शत्रुंजय पर्वत की पवित्र चढ़ाई करते हैं। इसे छःरी पालिता संघ और तीर्थ वंदना का सबसे शुभ दिन माना जाता है, जहाँ अनंतानंत आत्माओं ने मोक्ष पद प्राप्त किया है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Śatruñjaya Māhātmya & Tīrtha Vandana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10164,15 +7175,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विश्व शांति और सर्वजीव कल्याण हेतु विशेष प्रार्थना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shatrunjaya Yatra Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10188,15 +7192,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "यात्रियों और साधकों की सेवा व सुविधा में सहयोग दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10212,15 +7209,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पर्वत पर कोलाहल, व्यर्थ वार्तालाप अथवा अमर्यादित आचरण न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10238,15 +7228,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शिखर जिनालय वेदी हेतु मंगल द्रव्य व सिक्का"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tīrtha Yatra Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10259,15 +7242,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -10283,15 +7259,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Day 2",
           "hi": "पर्युषण दिवस २ (अमरी प्रवर्तन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10301,15 +7270,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Second day of Paryushana focusing on universal non-violence and protection of all life (Amari Pravartana)",
           "hi": "समस्त प्राणियों के अभयदान और अमरी प्रवर्तन (अहिंसा) को समर्पित द्वितीय दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10319,15 +7281,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The second day of Paryushana underscores Amari Pravartana — the proclamation of absolute non-injury to all living creatures. Jains appeal to civic communities and slaughterhouses to cease all killing, while individuals deepen their dietary mindfulness, refraining from harm even to the subtlest forms of life.",
           "hi": "पर्युषण के दूसरे दिन अमरी प्रवर्तन का विशेष महत्व है, जिसका अर्थ है संपूर्ण जगत में किसी भी जीव की हिंसा न होने देना। इस दिन साधक अपनी दैनिक चर्या में सूक्ष्म जीवों की रक्षा के प्रति अतिरिक्त सतर्कता बरतते हैं और अहिंसा व्रत का दृढ़ता से पालन करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10347,15 +7302,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकालीन प्रतिक्रमण और आत्म-निरीक्षण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Liturgical Observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10371,15 +7319,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मूक पशु-पक्षियों के संरक्षण में सहयोग करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10395,15 +7336,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध और झुंझलाहट से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10421,15 +7355,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चरवला और १०८ मनकों की नवकार जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Puja Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10442,15 +7369,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -10466,15 +7386,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Day 3",
           "hi": "पर्युषण दिवस ३ (तप आराधना)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10484,15 +7397,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Third day of Paryushana with an emphasis on tapas (austerity) to incinerate accumulated karma",
           "hi": "कर्मों के क्षय हेतु बाह्य और आभ्यंतर तप की गहन आराधना का तृतीय दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10502,15 +7408,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The third day focuses on Tapasya (spiritual austerities). In Jain doctrine, tapas is not mortification of the flesh, but a spiritual fire that burns away the sticky residue of past karma (Nirjara). Practitioners embrace external tapas like fasting and internal tapas like humility, service (Vaiyavritya), and meditation.",
           "hi": "तीसरा दिन तप आराधना का दिन है। जैन दर्शन में तप शरीर को कष्ट देना नहीं, बल्कि अंतरात्मा को तपाकर कर्मों की कालिमा धोने की प्रक्रिया (निर्जरा) है। इस दिन साधक उपवास, रस-त्याग, स्वाध्याय और विनय जैसे बाह्य व आभ्यंतर तपों में संलग्न होते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tattvārtha Sūtra (Chapter 9)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10530,15 +7429,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दोपहर में मौन रहकर ध्यान और णमोकार महामंत्र का जाप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Liturgical Observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10554,15 +7446,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन को सांसारिक प्रलोभनों से हटाकर धर्म में लगाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10578,15 +7463,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "थकान या कमजोरी की व्यर्थ शिकायत न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10604,15 +7482,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चरवला और १०८ मनकों की नवकार जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Puja Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10625,15 +7496,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -10649,15 +7513,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Day 4",
           "hi": "पर्युषण दिवस ४ (कल्पसूत्र वाचन प्रारंभ)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10667,15 +7524,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Commencement of the solemn reading of the Kalpa Sutra and veneration of the fourteen auspicious dreams",
           "hi": "पवित्र कल्पसूत्र के पावन वाचन का शुभारंभ और चौदह मंगल स्वप्नों का दर्शन"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10685,15 +7535,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day four marks the historic ceremonial commencement of the Kalpa Sutra recitation by venerated Jain Acharyas in community Upashrayas. Devotees honor the sacred text with silver and gold offerings and contemplate the fourteen (or sixteen in Digambara) auspicious dreams witnessed by Queen Trishala before the birth of Tirthankara Mahavira.",
           "hi": "चौथे दिन उपाश्रयों में आचार्यों द्वारा कल्पसूत्र जी का औपचारिक वाचन आरंभ होता है। यह ग्रंथ तीर्थंकरों के जीवन, गणधरों की परंपरा और साधु मर्यादाओं का वर्णन करता है। इस दिन माता त्रिशला द्वारा देखे गए १४ मंगलकारी महास्वप्नों (गज, वृषभ, सिंह, लक्ष्मी आदि) का दर्शन और पूजन अत्यंत भक्तिभाव से किया जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra (Bhadrabāhu)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10713,15 +7556,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकालीन सामायिक व प्रतिक्रमण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra Veneration Customs",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10737,15 +7573,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "स्वप्नों के पावन संदेशों को अपने जीवन में धारण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10761,15 +7590,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रवचन सभा में बातचीत या मोबाइल का उपयोग न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10787,15 +7609,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चरवला और १०८ मनकों की नवकार जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra Veneration Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10808,15 +7623,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -10832,15 +7640,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Day 5",
           "hi": "पर्युषण दिवस ५ (महावीर जन्म वाचन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10850,15 +7651,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The joyous pinnacle day of Kalpa Sutra recitation celebrating the Janma Vachan of Bhagwan Mahavira",
           "hi": "कल्पसूत्र के वाचन में भगवान महावीर के जन्म वाचन का परम आनंदमयी दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10868,15 +7662,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day five is celebrated with joyous devotion as the Kalpa Sutra recitation reaches the birth narrative (Janma Vachan) of Bhagwan Mahavira. As the auspicious moment of the Tirthankara’s birth is proclaimed, the congregation erupts in devotional joy, rocking the cradle (Palanu) of the infant Jina, showering saffron and flowers, and singing joyful stavans.",
           "hi": "पर्युषण का पांचवां दिन सबसे उल्लासपूर्ण दिन माना जाता है क्योंकि इस दिन कल्पसूत्र में भगवान महावीर के जन्म का वाचन (जन्म वाचन) होता है। जैसे ही भगवान के अवतरण का क्षण आता है, पूरा उपाश्रय \"त्रिशला नंदन वीर की, जय बोलो महावीर की\" के जयकारों से गूंज उठता है। पालना झुलाया जाता है और केसर-गुलाल से खुशियां मनाई जाती हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra (Janma Kalyāṇaka Chapter)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10896,15 +7683,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल भव्य महाआरती, मंगल दीवो और प्रतिक्रमण साधना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Janma Vachan Celebration Customs",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10920,15 +7700,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धर्मार्थ कार्यों, ज्ञानदान और निर्धनों की सेवा में खुले मन से दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10944,15 +7717,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दान अथवा बोलियों में अहंकार का प्रदर्शन न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10970,15 +7736,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चरवला और १०८ मनकों की नवकार जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Janma Vachan Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -10991,15 +7750,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -11015,15 +7767,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Day 6",
           "hi": "पर्युषण दिवस ६ (बारसा सूत्र / अंतर-शुद्धि)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11033,15 +7778,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sixth day of Paryushana with an emphasis on Barsa Sutra, spiritual dispassion, and karma shedding",
           "hi": "बारसा सूत्र वाचन, वैराग्य भावना और आत्मा की गहन विशुद्धि का षष्ठम दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11051,15 +7789,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Following the joy of Janma Vachan, day six pivots inward toward Vairagya (renunciation and spiritual dispassion). The Barsa Sutra (monastic conduct rules) and the life of subsequent Tirthankaras are expounded, guiding the lay seeker to examine attachments to worldly wealth, status, and bodily comforts.",
           "hi": "जन्म वाचन के उल्लास के उपरांत छठा दिन साधक को पुनः अंतर्मुखी बनाता है। इस दिन बारसा सूत्र और अन्य तीर्थंकरों के वैराग्य प्रसंगों का श्रवण कराया जाता है। यह दिन सांसारिक आसक्तियों, मोह और परिग्रह को घटाकर आत्मा को निर्मल बनाने पर केंद्रित है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kalpa Sūtra (Sādhuvihāra Section)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11079,15 +7810,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकालीन सामायिक व प्रतिक्रमण में वाणी और इंद्रिय संयम की समीक्षा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Liturgical Observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11103,15 +7827,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुरुदेव के प्रति विनय और कृतज्ञता का भाव रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11127,15 +7844,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "व्यर्थ के सोशल मीडिया और गपशप से पूरी तरह दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11153,15 +7863,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चरवला और १०८ मनकों की नवकार जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Puja Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11174,15 +7877,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I bow to the Arihantas (Enlightened Conquerors), the Siddhas (Liberated Souls), the Acharyas (Spiritual Leaders), the Upadhyayas (Spiritual Teachers), and all Sadhus (Ascetics) in the universe.",
             "hi": "अरिहंतों को नमस्कार, सिद्धों को नमस्कार, आचार्यों को नमस्कार, उपाध्यायों को नमस्कार, और संपूर्ण लोक के समस्त साधुओं को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Namaskāra Mahāmantra (Āgama canon)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -11198,15 +7894,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Paryushana Day 7",
           "hi": "पर्युषण दिवस ७ (क्षमा की पूर्व-तैयारी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Agamic Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11216,15 +7905,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The penultimate day of Paryushana preparing the heart and soul for universal forgiveness on Samvatsari",
           "hi": "संवत्सरी महापर्व की पूर्व संध्या पर अंतःकरण को पूर्ण क्षमाभाव हेतु तैयार करने का सप्तम दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11234,15 +7916,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day seven is the solemn eve of Samvatsari. The discourses focus on resolving long-standing grudges, dissolving the knot of ego (Mana), and preparing the heart to ask for and grant forgiveness without holding back any resentment. Seekers make lists of individuals to contact and resolve pending inner enmities before tomorrow’s universal reconciliation.",
           "hi": "सातवां दिन संवत्सरी महापर्व की पूर्व संध्या है। इस दिन का मुख्य उद्देश्य हृदय की समस्त ग्रंथियों, पुराने द्वेष और अहंकार को पिघलाना है ताकि अगले दिन की क्षमावाणी केवल वाणी का विलास न होकर अंतर्मन का सत्य बन सके। साधक उन सभी व्यक्तियों का स्मरण करते हैं जिनसे जाने-अनजाने कभी मनमुटाव हुआ हो, और क्षमा याचना का संकल्प लेते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Āvaśyaka Sūtra (Pratikramaṇa Preparation)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11262,15 +7937,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकालीन चैत्यवंदन और सर्वजीव शांति की प्रार्थना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Liturgical Observances",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11286,15 +7954,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जिन्होंने आपका अहित किया हो, उन्हें भी अभी से क्षमा करने का मन बनाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11310,15 +7971,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्षमा मांगने या देने में किसी प्रकार का संकोच न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Jain Lay Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11336,15 +7990,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चरवला और १०८ मनकों की नवकार जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Paryushana Puja Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11357,15 +8004,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "I ask forgiveness from all living beings; may all living beings forgive me. I cherish friendship with all beings; I harbor enmity towards none.",
             "hi": "मैं सभी जीवों से क्षमा मांगता हूँ, सब जीव मुझे क्षमा करें। मेरी समस्त जीवों से मित्रता है, किसी से भी वैर-भाव नहीं है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Āvaśyaka Sūtra (Kṣamāpanā Sūtra)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -11382,15 +8022,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु अमरदास जी गुरपुरब (प्रकाश पर्व)",
           "pa": "ਗੁਰੂ ਅਮਰਦਾਸ ਜੀ ਪ੍ਰਕਾਸ਼ ਗੁਰਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Sikh Itihas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11401,15 +8034,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "सेवा, समरसता और लंगर परंपरा को सुदृढ़ करने वाले तीसरे सिख गुरु श्री गुरु अमरदास जी का प्रकाश पर्व",
           "pa": "ਨਿਮਰਤਾ ਤੇ ਨਿਸ਼ਕਾਮ ਸੇਵਾ ਦੇ ਪੁੰਜ ਤੀਜੇ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਅਮਰਦਾਸ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਦਿਹਾੜਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11420,15 +8046,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "श्री गुरु अमरदास जी सिखों के तीसरे गुरु थे। उन्होंने गोइंदवाल साहिब में निस्वार्थ सेवा की मिसाल कायम की और \"पहले पंगत पाछे संगत\" की परंपरा को अनिवार्य बनाया, जिसके तहत बादशाह अकबर को भी साधारण संगत के साथ बैठकर लंगर छकना पड़ा था। गुरु जी ने सती प्रथा व पर्दा प्रथा का घोर विरोध किया, आनंद साहिब की पवित्र रचना की और श्री गुरु ग्रंथ साहिब में १७ रागों में ९०७ शबदों का योगदान दिया।",
           "pa": "ਸ੍ਰੀ ਗੁਰੂ ਅਮਰਦਾਸ ਜੀ ਸਿੱਖਾਂ ਦੇ ਤੀਜੇ ਗੁਰੂ ਸਨ। ਆਪ ਜੀ ਨੇ ਗੋਇੰਦਵਾਲ ਸਾਹਿਬ ਵਿਖੇ ਨਿਸ਼ਕਾਮ ਸੇਵਾ ਦਾ ਅਦੁੱਤੀ ਆਦਰਸ਼ ਕਾਇਮ ਕੀਤਾ ਅਤੇ \"ਪਹਿਲੇ ਪੰਗਤ ਪਾਛੇ ਸੰਗਤ\" ਦੀ ਮਰਯਾਦਾ ਨੂੰ ਦ੍ਰਿੜ੍ਹ ਕਰਵਾਇਆ। ਗੁਰੂ ਸਾਹਿਬ ਨੇ ਸਤੀ ਪ੍ਰਥਾ ਤੇ ਪਰਦਾ ਪ੍ਰਥਾ ਦਾ ਖੰਡਨ ਕੀਤਾ, ਅਨੰਦ ਸਾਹਿਬ ਦੀ ਬਾਣੀ ਰਚੀ ਅਤੇ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਵਿੱਚ ੯੦੭ ਸ਼ਬਦ ਦਰਜ ਕਰਵਾਏ।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji & Mahan Kosh",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11454,15 +8073,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "ਸ਼ਾਮ ਨੂੰ ਵਿਸ਼ੇਸ਼ ਕੀਰਤਨ ਦਰਬਾਰ ਤੇ ਗੁਰ-ਇਤਿਹਾਸ ਵੀਚਾਰ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11480,15 +8092,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "समाज में समता और नारी सम्मान के आदर्शों का पालन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11504,15 +8109,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सेवा करते समय अहंकार या दिखावे से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11530,15 +8128,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दीवान हाल हेतु सुगंधित पुष्प व चंवर साहिब"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara Seva Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11552,15 +8143,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "hi": "हे मेरी माँ! मैं परम आनंद में हूँ क्योंकि मुझे सच्चे गुरु मिल गए हैं। सहज स्वभाव से मुझे सतगुरु प्राप्त हुए हैं और मेरे मन में आनंद के वाद्य बज रहे हैं।",
             "pa": "ਹੇ ਮੇਰੀ ਮਾਂ! ਮੈਨੂੰ ਸਤਿਗੁਰੂ ਮਿਲ ਪਏ ਹਨ, ਮੇਰੇ ਅੰਦਰ ਪੂਰਨ ਅਨੰਦ ਪੈਦਾ ਹੋ ਗਿਆ ਹੈ। ਸਹਿਜ ਸੁਭਾਵਕ ਹੀ ਸਤਿਗੁਰੂ ਜੀ ਦੀ ਪ੍ਰਾਪਤੀ ਹੋਈ ਹੈ ਅਤੇ ਮਨ ਵਿੱਚ ਵਧਾਈਆਂ ਦੇ ਵਾਜੇ ਵੱਜ ਰਹੇ ਹਨ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Guru Granth Sahib Ji (Raag Ramkali, Ang 917 — Anand Sahib)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -11577,15 +8161,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु हरकिशन जी गुरपुरब (प्रकाश पर्व)",
           "pa": "ਗੁਰੂ ਹਰਿਕ੍ਰਿਸ਼ਨ ਜੀ ਪ੍ਰਕਾਸ਼ ਗੁਰਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Sikh Itihas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11596,15 +8173,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "जिनके पावन स्मरण मात्र से समस्त दुखों का नाश होता है — बाल पीर श्री गुरु हरकिशन जी का प्रकाश पर्व",
           "pa": "ਜਿਸੁ ਡਿਠੇ ਸਭਿ ਦੁਖ ਜਾਇ — ਬਾਲਾ ਪ੍ਰੀਤਮ ਸ੍ਰੀ ਗੁਰੂ ਹਰਿਕ੍ਰਿਸ਼ਨ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11615,15 +8185,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "श्री गुरु हरकिशन साहिब जी सिखों के आठवें गुरु थे, जिन्हें ५ वर्ष की बाल आयु में गुरुगद्दी मिली। जब दिल्ली में चेचक और हैजे की भयंकर महामारी फैली, तो गुरु जी राजा जयसिंह के महल (वर्तमान बंगला साहिब) में ठहरे। उन्होंने स्वयं महामारी से पीड़ित दीन-दुखियों की सेवा की और अपने पावन करकमलों से बावली का जल देकर हजारों रोगियों को निरोगी बनाया। अंततः सात वर्ष की आयु में गुरु जी ने ज्योति-जोत समाते हुए \"बाबा बकाले\" कहकर नवें गुरु का मार्ग प्रशस्त किया।",
           "pa": "ਸ੍ਰੀ ਗੁਰੂ ਹਰਿਕ੍ਰਿਸ਼ਨ ਜੀ ਸਿੱਖਾਂ ਦੇ ਅੱਠਵੇਂ ਗੁਰੂ ਸਨ। ਆਪ ਜੀ ਨੇ ਬਾਲ ਅਵਸਥਾ ਵਿੱਚ ਹੀ ਅਕਾਲ ਪੁਰਖ ਦੀ ਅਪਾਰ ਨੂਰੀ ਬਖ਼ਸ਼ਿਸ਼ ਦਾ ਪ੍ਰਗਟਾਵਾ ਕੀਤਾ। ਦਿੱਲੀ ਵਿੱਚ ਚੇਚਕ ਦੀ ਬਿਮਾਰੀ ਦੌਰਾਨ ਆਪ ਜੀ ਨੇ ਮਰੀਜ਼ਾਂ ਦੀ ਆਪ ਸੇਵਾ ਕੀਤੀ ਅਤੇ ਬੰਗਲਾ ਸਾਹਿਬ ਦੇ ਪਵਿੱਤਰ ਸਰੋਵਰ ਦੇ ਜਲ ਨਾਲ ਅਨੇਕਾਂ ਦੁਖੀਆਂ ਨੂੰ ਅਰੋਗਤਾ ਬਖ਼ਸ਼ੀ। ਆਪ ਜੀ ਦਾ ਧਿਆਨ ਧਰਿਆਂ ਸਾਰੇ ਦੁੱਖ-ਦਰਦ ਦੂਰ ਹੋ ਜਾਂਦੇ ਹਨ।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Gur Pratap Suraj Granth & Ardas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11649,15 +8212,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "ਅਖੰਡ ਪਾਠ ਸਾਹਿਬ ਦੇ ਭੋਗ ਤੇ ਸ਼ਬਦ ਕੀਰਤਨ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11673,15 +8229,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "\"सरबत दा भला\" की भावना से समस्त मानवता के आरोग्य की कामना करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11697,15 +8246,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अंधविश्वास से बचें और गुरु की कृपा व सेवा पर विश्वास रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11723,15 +8265,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सुंदर रुमाला साहिब व पुष्प मालाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara Seva Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11745,15 +8280,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "hi": "श्री गुरु हरकिशन जी का ध्यान करें, जिनके पावन दर्शन मात्र से समस्त दुख-संताप दूर हो जाते हैं।",
             "pa": "ਸ੍ਰੀ ਗੁਰੂ ਹਰਿਕ੍ਰਿਸ਼ਨ ਜੀ ਦਾ ਧਿਆਨ ਧਰੋ, ਜਿਨ੍ਹਾਂ ਦੇ ਦਰਸ਼ਨ ਕਰਨ ਨਾਲ ਸਾਰੇ ਦੁੱਖ-ਦਰਦ ਨਾਸ ਹੋ ਜਾਂਦੇ ਹਨ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vaar Sri Bhagauti Ji Ki (Sikh Ardas / Guru Gobind Singh Ji)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -11770,15 +8298,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "गुरु रामदास जी गुरपुरब (प्रकाश पर्व)",
           "pa": "ਗੁਰੂ ਰਾਮਦਾਸ ਜੀ ਪ੍ਰਕਾਸ਼ ਗੁਰਪੁਰਬ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji / Sikh Itihas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11789,15 +8310,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "अमृतसर के संस्थापक व सोढ़ी सुल्तान श्री गुरु रामदास जी का पावन प्रकाश पर्व",
           "pa": "ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ ਜੀ ਦੇ ਬਾਨੀ ਚੌਥੇ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਰਾਮਦਾਸ ਜੀ ਦਾ ਪ੍ਰਕਾਸ਼ ਦਿਹਾੜਾ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11808,15 +8322,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "hi": "श्री गुरु रामदास जी सिखों के चौथे गुरु थे। उन्होंने पवित्र तीर्थ नगरी श्री अमृतसर साहिब की स्थापना की और अमृत सरोवर की खुदाई कराई। गुरु जी ने राग सूही में चार \"लावां\" की पवित्र रचना की, जो आज सिख विवाह संस्कार (आनंद कारज) का आध्यात्मिक आधार हैं। श्री गुरु ग्रंथ साहिब में गुरु जी के ६७९ पावन शबद ३० रागों में संकलित हैं, जो परमात्मा के प्रति अनन्य प्रेम, विरह और समर्पण से परिपूर्ण हैं।",
           "pa": "ਸ੍ਰੀ ਗੁਰੂ ਰਾਮਦਾਸ ਜੀ ਸਿੱਖਾਂ ਦੇ ਚੌਥੇ ਗੁਰੂ ਸਨ। ਆਪ ਜੀ ਨੇ ਰਾਮਦਾਸਪੁਰ (ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ ਸਾਹਿਬ) ਨਗਰ ਵਸਾਇਆ ਅਤੇ ਪਵਿੱਤਰ ਅੰਮ੍ਰਿਤ ਸਰੋਵਰ ਦੀ ਖੁਦਾਈ ਕਰਵਾਈ। ਆਪ ਜੀ ਨੇ ਆਨੰਦ ਕਾਰਜ ਦੀਆਂ ਚਾਰ ਲਾਵਾਂ ਦੀ ਰਚਨਾ ਕੀਤੀ ਅਤੇ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਵਿੱਚ ੬੭੯ ਸ਼ਬਦਾਂ ਦੀ ਰਚਨਾ ਕੀਤੀ। ਗੁਰੂ ਸਾਹਿਬ ਜੀ ਦੀ ਸਿਫ਼ਤ ਸਾਰੇ ਜਗਤ ਵਿੱਚ ਗੂੰਜਦੀ ਹੈ।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Guru Granth Sahib Ji & Bhatt Vani",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11842,15 +8349,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "ਵਿਸ਼ਾਲ ਨਗਰ ਕੀਰਤਨ ਤੇ ਗੁਰੂ ਕੇ ਲੰਗਰਾਂ ਦੀ ਸੇਵਾ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sikh Rehat Maryada",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11868,15 +8368,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मीठी वाणी बोलें और निस्वार्थ भाव से दीन-दुखियों की सेवा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11892,15 +8385,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "धार्मिक पर्वों को व्यावसायिक दिखावे का माध्यम न बनाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurmat Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11918,15 +8404,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सुंदर रेशमी रुमाला साहिब व श्वेत पुष्प"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gurdwara Seva Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11940,15 +8419,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "hi": "धन्य-धन्य हैं गुरु रामदास जी! जिस सृजनहार ने आपको रचा, उसी ने आपको संवारा है। आपकी करामात पूर्ण है, स्वयं करतार ने आपको गुरु रूप में स्थापित किया है।",
             "pa": "ਧੰਨ ਧੰਨ ਹਨ ਗੁਰੂ ਰਾਮਦਾਸ ਜੀ! ਜਿਸ ਕਰਤਾਰ ਨੇ ਆਪ ਨੂੰ ਸਾਜਿਆ, ਉਸੇ ਨੇ ਆਪ ਨੂੰ ਸਵਾਰਿਆ ਹੈ। ਆਪ ਜੀ ਦੀ ਵਡਿਆਈ ਪੂਰਨ ਹੈ, ਸਿਰਜਣਹਾਰ ਨੇ ਆਪ ਨੂੰ ਆਪ ਪਰਗਟ ਕੀਤਾ ਹੈ।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Sri Guru Granth Sahib Ji (Raag Ramkali, Satta & Balwand, Ang 968)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -11964,15 +8436,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chhath Day 1 — Nahay Khay",
           "hi": "छठ प्रथम दिवस — नहाय खाय"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Chhath Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -11982,15 +8447,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The opening purification day of the Mahaparva Chhath with ritual river bathing and sattvic feast",
           "hi": "महापर्व छठ का प्रथम पावन दिवस — पवित्र स्नान, गृह-शुद्धि और सात्विक कद्दू-भात का नियम"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12000,15 +8458,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Nahay Khay initiates the four-day solar austerity of Chhath Puja on Kartika Shukla Chaturthi. The Vratin (fasting devotee) bathes in a holy river or clean water to purge bodily and subtle impurities. The entire dwelling is scrupulously cleaned. The vratin then cooks and partakes of a strictly satvik meal of Lauki-Bhat (bottle gourd with pure rice) cooked in brass or earthenware with sendha namak (rock salt) and pure ghee. Only after the vratin eats may family members partake.",
           "hi": "कार्तिक शुक्ल चतुर्थी को छठ महापर्व का आरंभ \"नहाय खाय\" के साथ होता है। व्रती पवित्र नदी अथवा जलाशय में स्नान कर शुद्धता का संकल्प लेते हैं। पूरे घर की गहन सफाई की जाती है। इसके उपरांत मिट्टी के नए चूल्हे पर पीतल अथवा कांसे के पात्र में सेंधा नमक, शुद्ध घी और चने की दाल के साथ कद्दू-भात (लौकी की सब्जी व अरवा चावल) बनाया जाता है। व्रती द्वारा भोजन ग्रहण करने के बाद ही परिवारजन प्रसाद पाते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana & Regional Chhath Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12028,15 +8479,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सूर्य देव को भोग लगाने के उपरांत व्रती का भोजन ग्रहण करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Parva Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12054,15 +8498,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "व्रती की सेवा और आज्ञा का पूर्ण आदर करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Vrata Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12078,15 +8515,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रसोई में जूते-चप्पल अथवा अशुद्ध वस्त्र पहनकर न जाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Vrata Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12104,15 +8534,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पीतल/कांसे के शुद्ध बर्तन अथवा मिट्टी के पात्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Ritual Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12125,15 +8548,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate upon the divine Son of Aditi, the effulgent life-giver. May the Sun God inspire and illuminate our intellect.",
             "hi": "हम अदिति-पुत्र भगवान सूर्य का ध्यान करते हैं जो संपूर्ण जगत के प्राण हैं। वे सूर्य देव हमारी बुद्धि को सत्कर्मों में प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Surya Upanishad / Rigveda Khila",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -12149,15 +8565,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chhath Day 2 — Kharna",
           "hi": "छठ द्वितीय दिवस — खरना (लोहंडा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Chhath Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12167,15 +8576,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The solemn evening fast-breaking with sacred Rasiya kheer marking the start of 36 hours of waterless fast",
           "hi": "गुड़ की खीर (रसियाव) और रोटी का नैवेद्य — इसके उपरांत आरंभ होता है ३६ घंटे का निर्जला व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12185,15 +8587,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kharna (also called Lohanda) falls on Kartika Shukla Panchami. The Vratin observes a waterless fast throughout the daylight hours. At dusk, a special prasad of Rasiya (rice kheer made with pure jaggery and milk) and whole wheat rotis smeared with ghee is cooked on an earthen hearth using dried mango wood. The prasad is offered to Chhathi Maiya and Surya Dev in quiet solitude. After the vratin partakes, the rigorous 36-hour nirjala (waterless) fast commences until the final morning arghya on Saptami.",
           "hi": "कार्तिक शुक्ल पंचमी को खरना का अत्यंत पावन अनुष्ठान होता है। व्रती पूरे दिन निर्जल उपवास रखते हैं। सूर्यास्त के समय मिट्टी के नए चूल्हे पर आम की लकड़ी से गुड़, दूध और अरवा चावल की विशेष खीर (रसियाव) और घी चुपड़ी रोटी बनाई जाती है। एकांत में छठी मइया और सूर्य देव को नैवेद्य अर्पित कर व्रती इसे ग्रहण करते हैं। इसके तुरंत बाद ३६ घंटे का अखंड निर्जला व्रत आरंभ हो जाता है जो सप्तमी की सुबह तक चलता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana & Regional Chhath Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12213,15 +8608,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "व्रती द्वारा शांत मन से प्रसाद ग्रहण, तत्पश्चात समस्त परिजनों व पड़ोसियों में वितरण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Parva Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12239,15 +8627,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अगले दिन के अर्घ्य हेतु सूप, दौरा और ठेकुआ की तैयारी आरंभ करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Vrata Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12263,15 +8644,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भोग लगाने से पूर्व प्रसाद को जूठा अथवा अशुद्ध न होने दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Vrata Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12289,15 +8663,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मिट्टी का दीपक, कपूर और धूपबत्ती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Ritual Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12310,15 +8677,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate upon the divine Son of Aditi, the effulgent life-giver. May the Sun God inspire and illuminate our intellect.",
             "hi": "हम अदिति-पुत्र भगवान सूर्य का ध्यान करते हैं जो संपूर्ण जगत के प्राण हैं। वे सूर्य देव हमारी बुद्धि को सत्कर्मों में प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Surya Upanishad / Rigveda Khila",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -12334,15 +8694,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chhath Day 4 — Usha Arghya",
           "hi": "छठ चतुर्थ दिवस — उषा अर्घ्य (पारण)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Chhath Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12352,15 +8705,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The grand concluding morning offering to the rising Sun God followed by joyous breaking of the 36-hour fast",
           "hi": "उगते सूर्य को प्रातःकालीन अर्घ्य और ३६ घंटे के निर्जला व्रत का पारण — महापर्व की पूर्णाहुति"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12370,15 +8716,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The grand finale of Chhath Puja occurs at dawn on Kartika Shukla Saptami with Usha Arghya (offering to the rising sun and Usha, consort of Surya). Gathered on the riverbanks before first light, devotees stand chest-deep in water holding the decorated bamboo soop filled with fresh harvest fruits, sugarcane, and the sacred Thekua prasad. As the first crimson rays pierce the horizon, arghya of milk and holy water is poured to the rising sun amidst conch shells and jubilant folk songs. Devotees then break the fast (Parana), sharing prasad across communities.",
           "hi": "कार्तिक शुक्ल सप्तमी की अरुणोदय वेला में उषा अर्घ्य के साथ छठ महापर्व का समापन होता है। व्रती और परिजन ब्रह्म मुहूर्त में नदी-घाटों पर पहुंचते हैं। शीतल जल में खड़े होकर बाँस के सूप में ठेकुआ, मौसमी फल, ईख और दीप लेकर उगते हुए सूर्य देव की प्रतीक्षा की जाती है। जैसे ही भगवान भास्कर की पहली किरण दिखाई देती है, दूध और गंगाजल से अर्घ्य अर्पित किया जाता है। इसके उपरांत व्रती कच्चा दूध और प्रसाद लेकर पारण करते हैं और ३६ घंटे का महाव्रत पूर्ण होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana & Regional Chhath Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12398,15 +8737,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पारण: अदरक, गुड़, कच्चा दूध और ठेकुआ खाकर ३६ घंटे के व्रत को पूर्ण करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Parva Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12424,15 +8756,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूजा के बाद नदी-घाटों की पूर्ण सफाई सुनिश्चित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Vrata Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12448,15 +8773,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अर्घ्य पूर्ण होने से पहले जल से बाहर न आएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Vrata Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12476,15 +8794,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अर्घ्य हेतु पीतल का लोटा, कच्चा गाय का दूध और गंगाजल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chhath Ritual Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12497,15 +8808,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate upon the divine Son of Aditi, the effulgent life-giver. May the Sun God inspire and illuminate our intellect.",
             "hi": "हम अदिति-पुत्र भगवान सूर्य का ध्यान करते हैं जो संपूर्ण जगत के प्राण हैं। वे सूर्य देव हमारी बुद्धि को सत्कर्मों में प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Surya Upanishad / Rigveda Khila",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -12521,15 +8825,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kartik Purnima (Dev Diwali / Tripurari Purnima)",
           "hi": "कार्तिक पूर्णिमा (देव दीपावली / त्रिपुरारी पूर्णिमा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Shiva Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12539,15 +8836,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The night when the gods celebrate Dev Diwali on the ghats of Kashi celebrating Shiva’s victory over Tripurasura",
           "hi": "काशी के घाटों पर देवताओं की दीपावली और भगवान शिव द्वारा त्रिपुरासुर संहार का पावन महापर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12557,15 +8847,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kartik Purnima (also known as Tripurari Purnima or Dev Diwali) is observed on the full moon of Kartika. According to the Shiva Purana, on this day Lord Shiva destroyed the three invincible flying iron, silver, and gold cities of the demon trio Tripurasura with a single arrow (Pashupatastra) shot from the bow Pinaka, earning the name Tripurari. The celestial Devas descended to the banks of the Ganga in Varanasi to celebrate with countless oil lamps, an immortal tradition celebrated today as Dev Diwali. It also marks the appearance of Lord Vishnu’s Matsya (fish) Avatar.",
           "hi": "कार्तिक पूर्णिमा को त्रिपुरारी पूर्णिमा और देव दीपावली के रूप में मनाया जाता है। शिव पुराण के अनुसार, इसी दिन भगवान शिव ने तीनों लोकों में हाहाकार मचाने वाले त्रिपुरासुर के तीनों लौह, रजत व स्वर्ण पुरों को एक ही बाण से भस्म किया था। इस विजय के उल्लास में समस्त देवताओं ने काशी के गंगा घाटों पर आकर दीप जलाए थे। इसी दिन भगवान विष्णु का प्रथम अवतार \"मत्स्यावतार\" भी प्रकट हुआ था।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana & Skanda Purana (Kashi Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12585,15 +8868,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वर्षभर के प्रकाश के प्रतीक ३६५ बत्तियों वाले दीपक का दान करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Kashi Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12611,15 +8887,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "निर्धनों को अन्न, वस्त्र और गर्म कंबलों का दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Puranic Vrata Dharma",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12635,15 +8904,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तामसिक भोजन, मदिरा और कलह से पूर्णतः दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Puranic Vrata Dharma",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12661,15 +8923,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गंगाजल, कच्चा गाय का दूध, शहद, दही और गन्ने का रस"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dev Diwali Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12682,15 +8937,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations unto Lord Shiva. Grant auspiciousness, peace, and auspiciousness everywhere. Salutations unto Shiva, Om.",
             "hi": "भगवान शिव को नमस्कार है। हे कल्याणकारी शिव, सर्वत्र शुभ और मंगल करें। आपको बारंबार नमन है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Shiva Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -12706,15 +8954,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Guru Purnima (Vyasa Purnima)",
           "hi": "गुरु पूर्णिमा (व्यास पूर्णिमा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahabharata / Guru Gita",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12724,15 +8965,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Honoring the spiritual preceptor and the sage Krishna Dvaipayana Vyasa who codified the sacred Vedas",
           "hi": "वेदों के संकलनकर्ता महर्षि वेदव्यास का जन्मोत्सव और गुरु-तत्व के प्रति कृतज्ञता अर्पण का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu & Buddhist Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12742,15 +8976,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrated on Ashadha Purnima, Guru Purnima commemorates the birth of Maharshi Veda Vyasa (Krishna Dvaipayana), who classified the singular Veda into four (Rig, Yajur, Sama, Atharva) and composed the eighteen Puranas and Mahabharata. In Sanatan tradition, the Guru is revered as the living dispeller of spiritual darkness (Gu = darkness, Ru = remover). In Buddhism, it also commemorates the Dhammacakkappavattana Sutta at Sarnath, and in Jainism, Mahavira taking his first disciple Indrabhuti Gautama.",
           "hi": "आषाढ़ मास की पूर्णिमा को गुरु पूर्णिमा अथवा व्यास पूर्णिमा कहा जाता है। इसी दिन आदिगुरु महर्षि वेदव्यास जी का प्राकट्य हुआ था, जिन्होंने वेदों का चार भागों में विभाजन किया और १८ पुराणों व महाभारत की रचना की। \"गु\" का अर्थ अंधकार और \"रु\" का अर्थ प्रकाश है — जो अज्ञान के अंधकार से निकालकर ज्ञान के प्रकाश की ओर ले जाए, वही सद्गुरु है। इस दिन शिष्य अपने गुरुदेव के श्रीचरणों में कृतज्ञता अर्पित करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Guru Gita (Skanda Purana) & Mahabharata",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12770,15 +8997,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "संन्यासियों और साधुओं द्वारा चातुर्मास व्रत का औपचारिक शुभारंभ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Guru Parampara Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12796,15 +9016,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "माता-पिता, शिक्षकों और सभी मार्गदर्शकों के प्रति आदरभाव रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Guru Vrata Dharma",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12820,15 +9033,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अपनी विद्या, ज्ञान अथवा साधना का अहंकार न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Guru Vrata Dharma",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12846,15 +9052,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुरु दक्षिणा: ताजे फल, मिष्ठान, वस्त्र अथवा सेवा सहयोग"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Guru Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12867,15 +9066,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "The Guru is Brahma (the Creator), the Guru is Vishnu (the Preserver), the Guru is Maheswara (the Dissolver). The Guru is verily the Supreme Absolute Reality manifest. Salutations to that revered Guru.",
             "hi": "गुरु ही ब्रह्मा हैं, गुरु ही विष्णु हैं और गुरु ही महेश्वर शिव हैं। गुरु ही साक्षात् परब्रह्म हैं; ऐसे श्री गुरुदेव को मेरा बारम्बार नमस्कार है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Guru Gita (Skanda Purana)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -12891,15 +9083,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vivah Panchami",
           "hi": "विवाह पंचमी (श्री सीताराम विवाहोत्सव)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana / Ramcharitmanas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12909,15 +9094,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the divine celestial wedding of Bhagwan Sri Rama and Mata Janaki in Janakpur",
           "hi": "जनकपुर धाम में भगवान श्रीराम और माता जानकी के मंगल परिणयोत्सव का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12927,15 +9105,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Observed on Margashirsha Shukla Panchami, Vivah Panchami commemorates the sacred wedding ceremony of Bhagwan Sri Rama and Mata Sita. In the ancient kingdom of Mithila (Janakpur), Prince Rama effortlessly lifted and strung the celestial Pinaka bow of Lord Shiva at King Janaka’s swayamvara, winning the hand of Princess Sita. The festival celebrates the ideal union of Dharma (Rama) and Shakti (Sita), celebrated with re-enactments of the divine wedding (Vivahotsav) in Ayodhya and Janakpur.",
           "hi": "मार्गशीर्ष शुक्ल पंचमी को भगवान श्रीराम और जनक-नंदिनी माता सीता का विवाह उत्सव मनाया जाता है। मिथिला नरेश राजा जनक द्वारा आयोजित स्वयंवर में प्रभु श्रीराम ने भगवान शिव के पिनाक धनुष को उठाकर प्रत्यंचा चढ़ाई और सीता जी ने उनके गले में वरमाला डाली थी। यह दिन मर्यादा, पातिव्रत और आदर्श गृहस्थ धर्म के मिलन का प्रतीक है। जनकपुर और अयोध्या में इस दिन भव्य राम बारात निकाली जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Valmiki Ramayana (Bala Kanda) & Ramcharitmanas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12955,15 +9126,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रभु श्रीराम व माता जानकी को पीले वस्त्र, वरमाला और मिष्ठान अर्पण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Traditional Vivahotsav Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -12979,15 +9143,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रामचरितमानस के पावन विवाह प्रसंग का पाठ करें अथवा श्रवण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dharmic Grihastha Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13003,15 +9160,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मिथिला व अवध की लोक परंपरा अनुसार इस तिथि पर सांसारिक विवाह संस्कार करने से बचें तथा इसे केवल श्रीसीताराम विवाह उत्सव में लगाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Dharmic Grihastha Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13029,15 +9179,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मंगल कलश, आम्र पल्लव और शुद्ध घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vivahotsav Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13050,15 +9193,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Rama, the beloved of Janaki (Sita). Om, salutations unto Sri Rama.",
             "hi": "जानकी के प्राणप्रिय भगवान श्रीराम को नमस्कार। हे मर्यादा पुरुषोत्तम राम, आपको कोटिशः नमन।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Rama Rahasya Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -13074,15 +9210,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Onam (Thiruvonam)",
           "hi": "ओणम (तिरुवोणम)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam / Kerala Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13092,15 +9221,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The harvest festival of Kerala celebrating the annual homecoming of the benevolent King Mahabali and Vamana Avatar",
           "hi": "केरल का पावन फसल उत्सव — महादानी राजा बलि का स्वागत और भगवान वामन का प्राकट्य"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kerala Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13110,15 +9232,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Onam falls in the Malayalam month of Chingam when the moon aligns with the asterism Thiruvonam (Shravana). The ten-day harvest festival commemorates the golden, utopian reign of the righteous Asura King Mahabali (Maveli), who promised Lord Vishnu’s Vamana Avatar all the land he could measure in three strides. When Vamana covered the earth and heavens in two strides, Mahabali offered his own head for the third stride. In return, Lord Vishnu blessed him with the boon to revisit his beloved people once every year. Homes are adorned with elaborate flower mandalas (Pookkalam) and celebrated with the grand feast Onasadya.",
           "hi": "ओणम केरल का सबसे भव्य पर्व है जो मलयालम मास चिंगम के तिरुवोणम नक्षत्र में मनाया जाता है। यह पर्व न्यायप्रिय और दानी राजा महाबलि के वार्षिक आगमन और भगवान विष्णु के वामन अवतार की लीला का उत्सव है। राजा बलि के शासनकाल में कोई भी दुखी, भूखा या दीन नहीं था। इस दिन घरों के आंगन में रंग-बिरंगे फूलों की मनमोहक रंगोली (पूकलम) बनाई जाती है और केले के पत्ते पर २६ से अधिक व्यंजनों वाला पारंपरिक \"ओणम सद्या\" परोसा जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Srimad Bhagavatam (Skandha 8) & Kerala Folk Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13138,15 +9253,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वल्लम कली (नौका दौड़), पुलिकली (बाघ नृत्य) और पारंपरिक लोक उत्सव"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kerala Onam Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13164,15 +9272,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सत्य, निष्कपटता और सामाजिक समरसता का वातावरण बनाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Onam Cultural Dharma",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13188,15 +9289,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कपट, लोभ अथवा किसी से ईर्ष्या का भाव न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Onam Cultural Dharma",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13216,15 +9310,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "केले के पत्ते, मट्टा चावल, पायसम की सामग्री (गुड़, नारियल का दूध, इलायची)"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Kerala Onam Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13237,15 +9324,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vamana, the Trivikrama who measured the universe in three strides, the inner Soul of all beings.",
             "hi": "भगवान वामन, जिन्होंने तीन पगों में त्रिलोकी को नाप लिया, समस्त भूतों के अंतर्यामी प्रभु को मेरा नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Srimad Bhagavatam (Canto 8)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -13261,15 +9341,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chaitra Navratri begins (Ghatasthapana)",
           "hi": "चैत्र नवरात्रि प्रारंभ (घटस्थापना / कलश स्थापना)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Bhagavata Purana / Markandeya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13279,15 +9352,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The spring nine nights of the Goddess commencing with Ghatasthapana and the Nav Varsh of Vikram Samvat",
           "hi": "विक्रम संवत् के नए वर्ष और वसंत ऋतु की पावन नवदुर्गा आराधना का प्रथम दिवस — घटस्थापना"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13297,15 +9363,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chaitra Navratri commences on Chaitra Shukla Pratipada, marking both the Hindu New Year (Vikram Samvat) and the nine-day adoration of the Divine Mother Durga in Her nine forms (Navadurga), beginning with Maa Shailaputri. The opening day centers on Ghatasthapana (Kalash Sthapana), the ceremonial invocation of the cosmic Shakti into a sanctified earthen pitcher surrounded by barley seeds (Jowar). It inaugurates nine days of fasting, culminating in Ram Navami on the ninth day.",
           "hi": "चैत्र शुक्ल प्रतिपदा से चैत्र नवरात्रि का पावन महापर्व आरंभ होता है। यह दिन हिंदू नववर्ष (विक्रम संवत) का प्रथम दिवस भी है। इस दिन घटस्थापना (कलश स्थापना) कर नवदुर्गा के प्रथम स्वरूप माँ शैलपुत्री की पूजा की जाती है। मिट्टी की वेदी पर जौ बोए जाते हैं और कलश में गंगाजल, पंचरत्न व आम के पत्ते रखकर मां का आह्वान किया जाता है। यह नौ दिवसीय साधना चैत्र नवमी (राम नवमी) पर पूर्ण होती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Bhagavata Purana (Skandha 3) & Durgasaptashati",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13325,15 +9384,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "माँ शैलपुत्री का पूजन, लाल पुष्प, अक्षत व मिष्ठान अर्पण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Navratri Vidhi / Nirnay Sindhu",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13351,15 +9403,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रतिदिन श्रद्धापूर्वक जौ की खेतरी में जल सींचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13375,15 +9420,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "लहसुन, प्याज, मांसाहार, मद्यपान और क्रोध-विवाद से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13401,15 +9439,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "आम के पत्ते, कलावा (मौली), सुपारी, लौंग, कपूर और शुद्ध घी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ghatasthapana Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13422,15 +9453,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate on the mountain-born Goddess Girija, the beloved of Shiva. May the invincible Durga inspire and illuminate our intellect.",
             "hi": "हम गिरिराज-नंदिनी, भगवान शिव की प्रिय आदिशक्ति का ध्यान करते हैं। वे माँ दुर्गा हमारी बुद्धि को श्रेष्ठ मार्ग पर प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Devi Upanishad / Atharvaveda",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -13446,15 +9470,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sharad Navratri begins (Ghatasthapana)",
           "hi": "शारदीय नवरात्रि प्रारंभ (घटस्थापना / शैलपुत्री पूजन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Mahatmya / Markandeya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13464,15 +9481,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The grand autumn nine nights celebrating Mahishasuramardini Durga and the victory of light over darkness",
           "hi": "अश्विन मास की पावन शारदीय नवरात्रि — महिषासुरमर्दिनी माँ दुर्गा की अखंड साधना का शुभारंभ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13482,15 +9492,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sharad Navratri commences on Ashvina Shukla Pratipada. Known as the Mahaparva of Divine Shakti, it celebrates the historic victory of Goddess Durga over the demon Mahishasura after a fierce nine-day battle, as immortalized in the Devi Mahatmya. Devotees install the sacred Kalash (Ghatasthapana) in the auspicious morning hour, sow the barley seeds (Jowar), light the Akhand Jyot, and invoke the nine manifestations of Durga through intense tapas, Garba and Dandiya folk celebrations, culminating in Vijayadashami (Dussehra).",
           "hi": "अश्विन शुक्ल प्रतिपदा से शारदीय नवरात्रि का शुभारंभ होता है। देवी महात्म्य के अनुसार, इसी काल में माँ दुर्गा ने महिषासुर के अत्याचारों का अंत करने हेतु नौ दिनों तक संग्राम कर उसका संहार किया था। प्रथम दिन कलश स्थापना कर माँ शैलपुत्री का पूजन किया जाता है। यह पर्व शक्ति, तपस्या, धर्म-रक्षा और अधर्म पर धर्म की शाश्वत विजय का प्रतीक है। इसके बाद नौ दिनों तक उपवास, डांडिया-गरबा और दुर्गा सप्तशती का पाठ होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Bhagavata Purana & Markandeya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13510,15 +9513,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दुर्गा सप्तशती व नवार्ण मंत्र का भक्तिभाव से संपुट पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sharad Navratri Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13536,15 +9532,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "माँ को नित्य ताजे मौसमी फल, मेवे और सात्विक भोग अर्पित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13560,15 +9549,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दिन में सोने, परनिंदा, असत्य भाषण और कटु वचनों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13586,15 +9568,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "लाल गुड़हल अथवा गुलाब के पुष्प, सिंदूर, चंदन, धूप और शुद्ध गाय का घी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ghatasthapana Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13607,15 +9582,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate on the mountain-born Goddess Girija, the beloved of Shiva. May the invincible Durga inspire and illuminate our intellect.",
             "hi": "हम गिरिराज-नंदिनी, भगवान शिव की प्रिय आदिशक्ति का ध्यान करते हैं। वे माँ दुर्गा हमारी बुद्धि को श्रेष्ठ मार्ग पर प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Devi Upanishad / Atharvaveda",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -13631,15 +9599,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ashadha Gupt Navratri begins",
           "hi": "आषाढ़ गुप्त नवरात्रि प्रारंभ (दसमहाविद्या साधना)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Bhagavata Purana / Shakta Tantra",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13649,15 +9610,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The esoteric nine nights of secret Shakti sadhana dedicated to the Ten Mahavidyas during monsoon onset",
           "hi": "आषाढ़ मास की गुप्त साधना — दस महाविद्याओं की गहन उपासना और आत्म-शक्ति जागरण का पर्व"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13667,15 +9621,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ashadha Gupt Navratri begins on Ashadha Shukla Pratipada. Unlike the two public (Prakat) Navratris of Chaitra and Sharad, the two Gupt (secret) Navratris in Ashadha and Magha are reserved for esoteric, internal sadhana, particularly invoking the Dasa Mahavidyas (Kali, Tara, Tripurasundari, Bhuvaneshwari, Chhinnamasta, Bhairavi, Dhumavati, Bagalamukhi, Matangi, and Kamalatmika). Tantric and yogic seekers practice intense mantra japa in solitude to transcend inner obstacles and awaken Kundalini Shakti.",
           "hi": "आषाढ़ शुक्ल प्रतिपदा से आषाढ़ गुप्त नवरात्रि का आरंभ होता है। चैत्र और शारदीय नवरात्रि जहाँ सार्वजनिक उत्सव होते हैं, वहीं आषाढ़ और माघ की गुप्त नवरात्रि साधकों द्वारा गुप्त रूप से की जाने वाली गूढ़ साधना को समर्पित है। इसमें दस महाविद्याओं (काली, तारा, षोडशी, भुवनेश्वरी, छिन्नमस्ता, त्रिपुरभैरवी, धूमावती, बगलामुखी, मातंगी, कमला) की आराधना की जाती है। यह साधना आंतरिक विघ्नों को हरने और आध्यात्मिक सिद्धियों की प्राप्ति हेतु की जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tantra Sara & Devi Bhagavata Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13695,15 +9642,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गोपनीयतापूर्वक फलाहार और मौन साधना का पालन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gupt Navratri Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13719,15 +9659,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "काम, क्रोध, मद, मोह और लोभ पर विजय पाने हेतु आंतरिक एकाग्रता रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Sadhana Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13743,15 +9676,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तामसिक भोजन, कटु वचन और बाहरी प्रपंचों से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Sadhana Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13769,15 +9695,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रुद्राक्ष अथवा कमलगट्टे की जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tantric Sadhana Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13790,15 +9709,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Goddess Chamunda, the embodiment of Mahasaraswati (Aim), Mahalakshmi (Hrim), and Mahakali (Klim). Release the soul from bondage.",
             "hi": "हे महासरस्वती (ऐं), महालक्ष्मी (ह्रीं) और महाकाली (क्लीं) स्वरूपिणी माँ चामुंडे, मेरे समस्त बंधनों को काटकर मुझे मुक्ति और ज्ञान प्रदान करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Devi Atharvashirsha / Navarna Mantra",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -13814,15 +9726,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Magha Gupt Navratri begins",
           "hi": "माघ गुप्त नवरात्रि प्रारंभ (शिशिर ऋतु साधना)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Bhagavata Purana / Shakta Tradition",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13832,15 +9737,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The winter nine nights of secret Shakti adoration preparing the spirit for Vasant Panchami",
           "hi": "माघ मास की गुप्त साधना — शीतकाल में दस महाविद्याओं की आराधना और विद्या-शक्ति संचय"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13850,15 +9748,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Magha Gupt Navratri begins on Magha Shukla Pratipada during late winter. Just preceding Vasant Panchami, this sacred period is revered by sadhaks and householders for silent contemplative worship of the Divine Mother Durga and the Ten Mahavidyas. The winter stillness provides the ideal environment for deep dhyana, mantra anushthanas, and reading the Devi Mahatmya, purifying karmic debris before the arrival of spring.",
           "hi": "माघ शुक्ल प्रतिपदा से माघ गुप्त नवरात्रि प्रारंभ होती है। वसंत पंचमी से पूर्व पड़ने वाली यह गुप्त नवरात्रि शीतकाल की शांत वेला में मां भगवती की साधना का उत्तम अवसर है। साधक इस काल में एकांत में रहकर दस महाविद्याओं और माँ जगदंबा की आराधना करते हैं। यह काल चित्त की एकाग्रता, आत्म-संयम और मानसिक शांति प्राप्त करने के लिए अत्यंत प्रभावशाली माना जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Bhagavata Purana (Skandha 3) & Mantra Mahodadhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13878,15 +9769,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल सिद्ध कुंजिका स्तोत्र और ऋग्वैदिक देवी सूक्त का पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Magha Navratri Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13902,15 +9786,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शीत ऋतु में निर्धनों को गर्म वस्त्र, अन्न और तिल का दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Sadhana Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13926,15 +9803,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, लोभ, असत्य और तामसिक खानपान से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Sadhana Rules",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13952,15 +9822,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रुद्राक्ष अथवा लाल चंदन की जपमाला"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gupt Navratri Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -13973,15 +9836,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Auspicious One, the most auspicious of all that is auspicious, the consort of Shiva, who accomplishes every goal. O Refuge of all, three-eyed Gauri, O Narayani, salutations unto You!",
             "hi": "हे समस्त मंगलों को मंगल करने वाली, हे कल्याणमयी शिवे, सब मनोरथों को सिद्ध करने वाली, शरणागतवत्सला, तीन नेत्रों वाली हे गौरी नारायणी! आपको कोटि-कोटि नमस्कार है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Devi Mahatmya (Durga Saptashati, Chapter 11)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -13997,15 +9853,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Mahalaya Amavasya (Sarva Pitru Amavasya)",
           "hi": "महालय अमावस्या (सर्वपितृ मोक्ष अमावस्या)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Garuda Purana / Markandeya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14015,15 +9864,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The culminating day of Pitru Paksha offering sacred Shraddha and Tarpan to all departed ancestors",
           "hi": "पितृ पक्ष की पूर्णाहुति — समस्त ज्ञात-अज्ञात पूर्वजों की तृप्ति और सद्गति हेतु सर्वपितृ तर्पण"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14033,15 +9875,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Mahalaya Amavasya (also known as Sarva Pitru Moksha Amavasya) falls on the new moon day ending the sixteen-day fortnight of Pitru Paksha in Bhadrapada/Ashvina. It is the most sacred day of the ancestral cycle: any ancestor whose exact death tithi is unknown or whose shraddha was missed during the year receives full liberation and satisfaction through tarpan performed today. It also marks the holy dawn when Goddess Durga is invoked (Mahalaya) to descend to earth for the ensuing Navratri.",
           "hi": "भाद्रपद/अश्विन मास की कृष्ण पक्ष की अमावस्या को महालय अथवा सर्वपितृ अमावस्या कहा जाता है। यह पितृपक्ष का अंतिम और सबसे महत्वपूर्ण दिन है। जिन पूर्वजों की मृत्यु तिथि ज्ञात न हो अथवा वर्षभर में जिनका श्राद्ध न हो पाया हो, उनका श्राद्ध व तर्पण आज के दिन करने से वे तृप्त होकर मोक्ष प्राप्त करते हैं और वंशजों को सुख-समृद्धि का आशीर्वाद देते हैं। इसी दिन प्रातःकाल से माँ दुर्गा के आह्वान का पावन महालय काल भी आरंभ होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Garuda Purana (Preta Khanda) & Vishnu Smriti",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14061,15 +9896,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "ब्राह्मण भोजन कराना और जरूरतमंदों को वस्त्र, अन्न व दक्षिणा का दान करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shraddha Kalpa Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14085,15 +9913,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गाय, पक्षियों और मूक पशुओं को प्रेमपूर्वक भोजन कराएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pitru Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14109,15 +9930,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तामसिक भोजन, मदिरा, कलह और अनैतिक आचरण से सर्वथा दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pitru Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14135,15 +9949,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तांबे का तर्पण पात्र, पत्तल और दान हेतु श्वेत वस्त्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shraddha Ritual Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14156,15 +9963,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations and svadha offerings unto our departed parents. Svadha and salutations unto our grandparents and all ancestors.",
             "hi": "हमारे समस्त पितरों को स्वधा रूपी नैवेद्य सहित नमस्कार। हमारे पितामहों और पूर्वजों को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Yajurveda (Vajasaneyi Samhita, Chapter 19)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -14180,15 +9980,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vat Savitri Vrat (Amavasya)",
           "hi": "वट सावित्री व्रत (अमावस्या)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahabharata (Vana Parva) / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14198,15 +9991,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the devotion of Sati Savitri who reclaimed her husband Satyavan from Yama under the Banyan tree",
           "hi": "वटवृक्ष की पूजा और सती सावित्री के पातिव्रत की पावन स्मृति — पति के दीर्घायु और अखंड सौभाग्य का व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14216,15 +10002,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Observed on Jyeshtha Amavasya (particularly in northern, western, and eastern regions), Vat Savitri Vrat honors the legendary devotion of Princess Savitri. When Lord Yama (God of Death) claimed the life of her husband Prince Satyavan beneath a sacred Banyan tree (Vata Vriksha), Savitri followed Yama on foot across realms, impressing him with Her profound wisdom and righteous speech until Yama restored Satyavan to life. Married women worship the immortal Banyan tree (representing the Trimurti: Brahma in the roots, Vishnu in the bark, Shiva in the branches) wrapping it with raw thread for marital harmony and long life for their spouses.",
           "hi": "ज्येष्ठ अमावस्या को वट सावित्री का व्रत अखंड सौभाग्य और पति की दीर्घायु की कामना से किया जाता है। महाभारत के वन पर्व की कथा के अनुसार, पतिव्रता सावित्री ने अपने सत्य, धर्म और वाक्-चातुर्य से यमराज को प्रसन्न कर वटवृक्ष के नीचे अपने मृत पति सत्यवान के प्राण वापस प्राप्त किए थे। वटवृक्ष में त्रिदेव (जड़ में ब्रह्मा, तने में विष्णु और शाखाओं में शिव) का वास माना जाता है। सुहागिनें वटवृक्ष पर कच्चा सूत लपेटकर परिक्रमा करती हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahabharata (Pativrata Mahatmya) & Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14244,15 +10023,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सावित्री-सत्यवान की पावन कथा सुनना और सास व बुजुर्गों के चरण स्पर्श कर आशीर्वाद लेना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vat Savitri Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14268,15 +10040,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भीगे चने, गुड़ और फल अन्य सुहागिन स्त्रियों को प्रसाद रूप में बांटें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pativrata Dharma Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14292,15 +10057,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूजा के समय काले अथवा सफेद वस्त्र पहनने से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pativrata Dharma Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14318,15 +10076,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सिंदूर, कुमकुम, हल्दी, शुद्ध घी का दीपक और धूपबत्ती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vat Savitri Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14339,15 +10090,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Lord Banyan Tree! Bestow upon me unbroken marital auspiciousness and freedom from widowhood. Just as you flourish on earth with countless branches, bless my lineage to flourish perpetually with progeny and prosperity.",
             "hi": "हे वट वृक्ष! आप मुझे अखंड सौभाग्य और सुहाग प्रदान करें। जैसे आप अपनी शाखाओं से पृथ्वी पर विस्तृत होते हैं, वैसे ही मेरे वंश में पुत्र-पौत्रों और धर्म-समृद्धि की सदा वृद्धि करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Skanda Purana (Vat Savitri Vrata Vidhi)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -14363,15 +10107,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vat Savitri Purnima",
           "hi": "वट सावित्री पूर्णिमा (वट पूर्णिमा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mahabharata / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14381,15 +10118,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The Purnimanta observance of Vat Savitri popular in Maharashtra, Gujarat, and southern traditions",
           "hi": "महाराष्ट्र, गुजरात और दक्षिण भारत में ज्येष्ठ पूर्णिमा को वटवृक्ष पूजन व अखंड सौभाग्य का पावन व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14399,15 +10129,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Observed on Jyeshtha Purnima (the full moon day of Jyeshtha) primarily across Maharashtra, Gujarat, Karnataka, and southern regions according to the Amanta lunar reckoning, Vat Purnima carries the same sublime significance as the Amavasya observance: the celebration of Savitri’s unflinching devotion that moved Yama to revive Satyavan. Women observe waterless or fruit-only fasts, visit the Banyan tree, wrap cotton threads around its trunk, and fanning it with bamboo fans, praying for their spouse’s vitality and lifelong companionship.",
           "hi": "ज्येष्ठ मास की पूर्णिमा को वट पूर्णिमा के रूप में महाराष्ट्र, गुजरात और दक्षिण भारत में बड़े हर्षोल्लास से मनाया जाता है। अमान्त पंचांग पद्धति के अनुसार पूर्णिमा को यह व्रत किया जाता है। सती सावित्री द्वारा यमराज से पति के प्राण वापस लाने की पावन स्मृति में महिलाएं वटवृक्ष की पूजा करती हैं, बाँस के पंखे से हवा करती हैं और पति की लंबी उम्र की कामना करती हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana & Regional Vrata Kaumudi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14427,15 +10150,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बाँस का पंखा झलना और ब्राह्मण अथवा सुहागिनों को आम व वस्त्र भेंट करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vat Purnima Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14451,15 +10167,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बाँस का पंखा, मौसमी फल और अन्न का दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pativrata Dharma Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14475,15 +10184,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "व्रत के दिन विवाद, क्रोध और कटु वचनों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pativrata Dharma Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14501,15 +10203,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सुहाग पिटारी: लाल वस्त्र, चूड़ियां, बिंदी दान हेतु"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vat Purnima Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14522,15 +10217,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Salutations unto Dharmaraja Yama, the son of Vivasvan. May Satyavan and Sati Savitri be perpetually pleased with me and protect my family.",
             "hi": "सूर्यपुत्र धर्मराज यमराज को बारम्बार नमस्कार है। सत्यवान और पतिव्रता सावित्री मुझ पर सदा प्रसन्न रहें और मेरे सुहाग की रक्षा करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana (Vat Purnima Section)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -14546,15 +10234,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chintpurni Mata Chaitra Navratri Mela",
           "hi": "माँ चिंतपूर्णी चैत्र नवरात्रि मेला"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakti Peetha Tradition / Devi Bhagavata Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14564,15 +10245,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The sacred spring pilgrimage festival to the Chhinnamastika Shakti Peetha in Himachal Pradesh",
           "hi": "हिमाचल स्थित छिन्नमस्तिका शक्तिपीठ पर भक्तों की समस्त चिंताओं का हरण करने वाली माँ चिंतपूर्णी का पावन मेला"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Himachal Shakti Peetha Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14582,15 +10256,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrated during Chaitra Navratri at the revered Chintpurni temple in Una district, Himachal Pradesh, this sacred gathering honors Goddess Chhinnamastika (she who severed her own head to feed her attendants, representing supreme ego-transcendence). Known affectionately as Chintpurni (\"She who fulfills all wishes and dispels all worries\"), the sacred pindi marks the spot where Sati’s feet (Charan Paduka) fell during Shiva’s Tandava. Devotees travel from across North India carrying red flags (Dhwaja) and offerings to seek freedom from worldly anxieties.",
           "hi": "हिमाचल प्रदेश के ऊना जिले में स्थित माँ चिंतपूर्णी धाम में चैत्र नवरात्रि का विशाल मेला लगता है। यह स्थान ५१ शक्तिपीठों में से एक है जहाँ माता सती के चरण गिरे थे। यहाँ माँ छिन्नमस्तिका स्वरूप में विराजमान हैं जो भक्तों की समस्त चिंताओं, कष्टों और भयों का हरण कर उनकी मनोकामनाएं पूर्ण करती हैं। श्रद्धालु लाल ध्वज (झंडा), हलवा-चना और नारियल लेकर माँ के दरबार में हाजिरी लगाते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana (Rudra Samhita) & Chintpurni Sthala Mahatmya",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14610,15 +10277,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "माँ चिंतपूर्णी चालीसा और छिन्नमस्ता स्तोत्र का पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chintpurni Tirtha Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14634,15 +10294,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "छोटी कन्याओं को देवी स्वरूप मानकर आदरपूर्वक भोजन व उपहार दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Pilgrimage Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14658,15 +10311,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तीर्थ परिसर और पहाड़ी रास्तों पर कचरा या प्लास्टिक न फेंकें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Pilgrimage Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14684,15 +10330,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सुहाग सामग्री: सिंदूर, चूड़ियां, बिंदी और कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chintpurni Prasad Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14705,15 +10344,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations unto Goddess Chintpurni, who embodies knowledge, protection, desire-fulfillment, and divine prosperity, dispelling every anxiety.",
             "hi": "हे समस्त चिंताओं को हरने वाली और मनोकामनाएं पूर्ण करने वाली माँ चिंतपूर्णी! आपको बारंबार नमस्कार है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Chhinnamastika Tantra",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -14729,15 +10361,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Chintpurni Mata Sharad Navratri Mela",
           "hi": "माँ चिंतपूर्णी शारदीय नवरात्रि मेला"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakti Peetha Tradition / Devi Bhagavata Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14747,15 +10372,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The autumn pilgrimage festival to the Chhinnamastika Shakti Peetha in Himachal Pradesh",
           "hi": "शारदीय नवरात्रि में माँ चिंतपूर्णी दरबार में आस्था का महासंगम और महाअष्टमी-महानवमी उत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Himachal Shakti Peetha Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14765,15 +10383,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Held during the autumn Sharad Navratri at the sacred shrine of Chintpurni in Himachal Pradesh, this grand festival attracts hundreds of thousands of pilgrims. The temple reverberates with the chants of \"Jai Mata Di\" as devotees celebrate the supreme Shakti’s triumph over internal afflictions and ignorance. The eighth and ninth days (Maha Ashtami and Maha Navami) feature continuous Havan, recitation of the Chandi Path, and massive community Langars.",
           "hi": "शारदीय नवरात्रि के पावन अवसर पर हिमाचल के चिंतपूर्णी धाम में लाखों श्रद्धालु शीश नवाने आते हैं। पूरा मंदिर परिसर \"जय माता दी\" के जयकारों से गुंजायमान रहता है। महाअष्टमी और महानवमी के दिन विशेष हवन, चंडी पाठ और विशाल भंडारों का आयोजन होता है। भक्तजन माँ के चरणों में नतमस्तक होकर जीवन में सुख, शांति और आरोग्यता की याचना करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devi Mahatmya & Chintpurni Sthala Mahatmya",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14793,15 +10404,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रात्रि जागरण में माँ की पावन भेंटों का गायन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chintpurni Tirtha Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14817,15 +10421,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन को निरंतर माँ के नाम स्मरण में लीन रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Pilgrimage Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14841,15 +10438,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तीर्थयात्रियों से अनुचित लाभ लेने या ठगी से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Pilgrimage Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14867,15 +10457,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "लाल गुलाबों की माला और पीतल का आरती दीप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chintpurni Prasad Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14888,15 +10471,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations unto Goddess Chamunda, sovereign of all worlds, who dispels all darkness and fear.",
             "hi": "हे माँ चामुंडे, समस्त दुखों और भयों को हरने वाली परमेश्वरी, आपको बारम्बार नमन।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Devi Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -14912,15 +10488,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Nirjala Ekadashi (Pandava Nirjala / Bhimseni)",
           "hi": "निर्जला एकादशी (भीमसेनी एकादशी / पाण्डव एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Vaivarta Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14930,15 +10499,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The crown of all 24 Ekadashis observed without even a drop of water, bestowing the fruit of all year’s fasts",
           "hi": "बिना जल की बूंद ग्रहण किए किया जाने वाला वर्ष का सबसे कठिन और फलदायी महाव्रत — समस्त एकादशियों का पुण्य"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14948,15 +10510,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Nirjala Ekadashi falls on Jyeshtha Shukla Ekadashi during peak summer heat. Known as Bhimseni Ekadashi, it derives from the Mahabharata: the mighty Pandava prince Bhima possessed an insatiable digestive fire (Vrika-udara) and could not endure fasting twice every month. Sage Vyasa instructed Bhima that by observing this single Ekadashi in Jyeshtha with absolute waterless discipline (Nirjala: no food and not even a drop of water from sunrise to next morning’s sunrise), he would attain the complete spiritual merit of all twenty-four annual Ekadashis combined.",
           "hi": "ज्येष्ठ शुक्ल एकादशी को निर्जला एकादशी कहा जाता है, जो समस्त २४ एकादशियों में सबसे श्रेष्ठ और कठिन मानी जाती है। महाभारत के अनुसार, महाबली भीमसेन अपनी तीव्र जठराग्नि के कारण हर महीने दो एकादशियों का उपवास नहीं रख पाते थे। महर्षि वेदव्यास ने उन्हें परामर्श दिया कि यदि वे केवल ज्येष्ठ मास की इस एकादशी को बिना अन्न और बिना जल (निर्जल) का उपवास रख लें, तो उन्हें वर्षभर की समस्त एकादशियों का सम्मिलित पुण्य फल प्राप्त हो जाएगा।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Vaivarta Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -14976,15 +10531,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जल से भरे मिट्टी के घड़े, खरबूजा, पंखा, छाता और सत्तू का ब्राह्मणों व निर्धनों को दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15002,15 +10550,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "द्वादशी को ब्राह्मण भोजन व दान के उपरांत ही पारण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15026,15 +10567,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, व्यर्थ विवाद, आलस्य और प्यास की शिकायत से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15052,15 +10586,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तुलसी दल, पीला चंदन, पीले पुष्प और शुद्ध घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Nirjala Ekadashi Dana Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15073,15 +10600,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate upon Lord Narayana, the all-pervading Supreme Being Vasudeva. May Lord Vishnu inspire and illuminate our intellect.",
             "hi": "हम सर्वव्यापी भगवान नारायण वासुदेव का ध्यान करते हैं। वे भगवान श्रीविष्णु हमारी बुद्धि को सत्कर्मों में प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Mahanarayana Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -15097,15 +10617,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vaikunta Ekadashi (Mukkoti / Swarga Vathil)",
           "hi": "वैकुंठ एकादशी (मुक्कोटी एकादशी / मोक्षदा एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Sri Vaishnava Agamas",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15115,15 +10628,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The opening of the celestial northern gates of Vaikuntha granting liberation from the cycle of rebirth",
           "hi": "वैकुंठ के परम पावन मोक्ष-द्वार (उत्तरा द्वार) के खुलने का दिव्य दिवस — श्रीरंगम और तिरुपति में महामहोत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15133,15 +10639,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Observed on Margashirsha Shukla Ekadashi (corresponding to Dhanur Masa in solar calendars), Vaikunta Ekadashi is celebrated with sublime grandeur across South Indian temples, notably Sri Ranganathaswamy Temple in Srirangam and Tirumala Venkateswara Temple. According to the Padma Purana, on this day the Vaikuntha Dvaram (the Gateway to Lord Vishnu’s celestial abode) remains open. Walking through the sanctified northern gate (Swarga Vathil / Paramapada Vasal) in temple enclosures is believed to dissolve lifetimes of karma and bestow Moksha.",
           "hi": "मार्गशीर्ष शुक्ल एकादशी (धनुर्मास) को दक्षिण भारत में वैकुंठ एकादशी के रूप में परम पावन माना जाता है। पद्म पुराण के अनुसार, इस दिन भगवान श्रीविष्णु के परम धाम \"वैकुंठ\" का द्वार (उत्तरा द्वारम / स्वर्ग द्वार) खुला रहता है। श्रीरंगम, तिरुपति और तिरुवनंतपुरम के महामंदिरों में भक्त इस विशेष द्वार से होकर भगवान के दर्शन करते हैं, जिससे जन्म-जन्मांतर के पापों का क्षय होकर मोक्ष पद प्राप्त होता है। इसी दिन उत्तर भारत में \"मोक्षदा एकादशी\" और गीता जयंती भी मनाई जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana (Uttara Khanda) & Pancharatra Agama",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15161,15 +10660,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "प्रभु का हीरक-जड़ित स्वर्ण आभूषणों से अलौकिक श्रृंगार व दिव्य आरती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Vaishnava Temple Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15187,15 +10679,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अलवार संतों के दिव्य प्रबंधम और भजनों का प्रेमपूर्वक गायन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15211,15 +10696,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दिन में सोने, विषय-वासना और व्यर्थ प्रपंचों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15237,15 +10715,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चांदी का दीप, शुद्ध गाय का घी और कर्पूर आरती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sri Vaishnava Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15258,15 +10729,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations to Lord Narayana, Sovereign of Vaikuntha.",
             "hi": "भगवान वासुदेव को नमस्कार। वैकुंठ के अधिपति श्रीहरि नारायण को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Pancharatra Samhita",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -15282,15 +10746,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Devshayani Ekadashi (Hari Shayani / Ashadhi)",
           "hi": "देवशयनी एकादशी (हरिशयनी / आषाढ़ी एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15300,15 +10757,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Lord Vishnu enters the four-month yogic slumber on the cosmic serpent Shesha, commencing Chaturmasa",
           "hi": "भगवान श्रीविष्णु का क्षीरसागर में चार मास हेतु योगनिद्रा में शयन — चातुर्मास महाव्रत का पावन प्रारंभ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15318,15 +10768,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Falling on Ashadha Shukla Ekadashi, Devshayani Ekadashi marks the moment when Lord Vishnu enters His four-month cosmic yogic slumber (Yoga Nidra) upon the coils of the serpent Ananta Shesha in the Kshirasagara (Ocean of Milk). This initiates the sacred period of Chaturmasa (four rainy months) during which auspicious rites like weddings and house-warmings are paused, and sadhaks turn inward for intense tapas, fasting, and scriptural study. In Maharashtra, it marks the grand culmination of the Pandharpur Wari pilgrimage where millions of Warkaris reach Lord Vitthal.",
           "hi": "आषाढ़ शुक्ल एकादशी को देवशयनी अथवा हरिशयनी एकादशी कहा जाता है। इस दिन से भगवान विष्णु क्षीरसागर में शेषनाग की शैय्या पर चार मास के लिए योगनिद्रा में शयन करते हैं। इसके साथ ही चातुर्मास का आरंभ होता है, जिसमें विवाह आदि मांगलिक कार्य रोक दिए जाते हैं और तप, ध्यान, साधना व स्वाध्याय को प्रमुखता दी जाती है। महाराष्ट्र में लाखों वारकरी भक्त पंढरपुर पहुंचकर भगवान विट्ठल के दर्शन करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15346,15 +10789,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "एकादशी का उपवास और श्रीहरि के चरणों में अखंड दीप जलाना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Chaturmasya Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15370,15 +10806,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "\"राम कृष्ण हरि\" और \"विट्ठल विट्ठल\" महामंत्र का भक्तिपूर्वक जाप करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15394,15 +10823,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विलासितापूर्ण शयन, गरिष्ठ भोजन और व्यर्थ वार्तालाप से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15420,15 +10842,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक, कपूर और पंचमेवा का भोग"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Devshayan Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15441,15 +10856,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Lord of the Universe (Jagannatha)! When You sleep, the entire universe sleeps. When You awaken, the entire universe awakens. O Infallible Lord (Achyuta), be pleased with me.",
             "hi": "हे जगन्नाथ! आपके शयन करने पर यह संपूर्ण जगत सो जाता है और आपके जागने पर पूरा संसार जागृत होता है। हे अच्युत! आप मुझ पर सदा प्रसन्न रहें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana (Devshayani Chapter)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -15465,15 +10873,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Devutthana Ekadashi (Prabodhini / Dev Uthani)",
           "hi": "देवउठनी एकादशी (प्रबोधिनी / देवोत्थान एकादशी / तुलसी विवाह)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15483,15 +10884,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Lord Vishnu awakens from His four-month yogic slumber, reopening auspicious wedding rites across the land",
           "hi": "चार मास के योगनिद्रा से श्रीहरि का जागरण — तुलसी-शालिग्राम विवाह और समस्त मांगलिक कार्यों का शुभारंभ"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15501,15 +10895,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kartika Shukla Ekadashi is celebrated as Devutthana (Prabodhini) Ekadashi, marking the joyful awakening of Lord Vishnu from His four-month Chaturmasa sleep. The divine awakening is celebrated by ringing bells, conches, and singing awakening hymns (Prabodhini stotras). This day marks the joyous ceremonial wedding of sacred Tulsi (Vrinda) with Lord Shaligrama (Vishnu), which formally concludes Chaturmasa and reopens the season for Hindu weddings (lagna muhurats) and auspicious samskaras across the subcontinent.",
           "hi": "कार्तिक शुक्ल एकादशी को देवउठनी अथवा प्रबोधिनी एकादशी कहा जाता है। इस दिन भगवान विष्णु चार महीने की योगनिद्रा से जागृत होते हैं। शंख, घंटी और ढोल बजाकर \"उठो देवा, बैठो देवा\" के मंगल गीतों से प्रभु को जगाया जाता है। इसी दिन शालिग्राम जी के साथ तुलसी माता का विवाह रचाया जाता है। इसके साथ ही चातुर्मास समाप्त होता है और विवाह आदि समस्त मांगलिक कार्यों के शुभ मुहूर्त खुल जाते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana (Kartika Mahatmya) & Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15529,15 +10916,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तुलसी चौरे और घर के आंगन में दीपमाला प्रज्वलित करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tulsi Vivah & Prabodhini Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15553,15 +10933,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चातुर्मास के नियमों का पारण कर भगवान विष्णु के प्रति कृतज्ञता व्यक्त करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15577,15 +10950,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तुलसी मंच के पास जूते-चप्पल अथवा अशुद्ध वस्तुएं न रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15603,15 +10969,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सिंघाड़ा, शकरकंद, आंवला, बेर, कच्ची हल्दी और पीले पुष्प"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Tulsi Vivah Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15624,15 +10983,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Awaken! Awaken, O Govinda! Relinquish Your sleep, O Lord of the Universe! When You sleep, the entire cosmos is asleep; awaken and bring light to the three worlds!",
             "hi": "हे गोविंद! उठिए, जागिए! हे जगत्पति! निद्रा का त्याग कीजिए। हे जगन्नाथ, आपके सोने पर यह संसार सो जाता है, अब जागकर संपूर्ण सृष्टि को प्रकाशित कीजिए।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Padma Purana (Prabodhini Chapter)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -15648,15 +11000,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kamada Ekadashi",
           "hi": "कामदा एकादशी (सर्व कामना पूरक)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Varaha Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15666,15 +11011,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The wish-fulfilling Ekadashi of spring that liberates the seeker from curses and deep-seated desires",
           "hi": "समस्त कामनाओं की पूर्ति और शाप-पापों से मुक्ति दिलाने वाली चैत्र शुक्ल कामदा एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15684,15 +11022,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kamada Ekadashi falls on Chaitra Shukla Ekadashi, the first Ekadashi of the Hindu New Year (Vikram Samvat). According to the Varaha Purana, King Dilipa was narrated the legend of the Gandharva singer Lalit, who was cursed by King Pundarika into a demonic cannibal form (Rakshasa) due to inattention in singing. Lalit’s devoted wife Lalita prayed to Sage Shringi, who advised her to observe Kamada Ekadashi with pure intent and transfer its merit to her husband. Upon doing so, Lalit was instantly freed from the curse, reassuming his radiant celestial form.",
           "hi": "चैत्र शुक्ल एकादशी को कामदा एकादशी कहा जाता है, जो नव संवत्सर की प्रथम एकादशी है। वराह पुराण के अनुसार, गंधर्व ललित को राजा के शाप से राक्षस योनि प्राप्त हो गई थी। उसकी पतिव्रता पत्नी ललिता ने महर्षि श्रृंगी के निर्देशानुसार कामदा एकादशी का उपवास किया और उसका पुण्य अपने पति को समर्पित किया। इसके प्रभाव से ललित को तत्काल राक्षस योनि से मुक्ति मिली और वह पुनः दिव्य गंधर्व बन गया। यह व्रत सभी मनोकामनाओं को पूर्ण करने वाला है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Varaha Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15712,15 +11043,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल श्रीहरि के समक्ष दीपक जलाना और हरि संकीर्तन करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15736,15 +11060,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "द्वादशी के दिन ब्राह्मणों और असहायों को अन्न-वस्त्र का दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15760,15 +11077,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, असत्य, छल-कपट और कलह से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15786,15 +11096,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "केले, पपीता और पंचमेवा का नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15807,15 +11110,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto the all-pervading Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -15831,15 +11127,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Amalaki Ekadashi (Amla Ekadashi)",
           "hi": "आमलकी एकादशी (आंवला एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15849,15 +11138,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Worship of the sacred Amla (Indian gooseberry) tree where Lord Vishnu and Lakshmi eternally abide",
           "hi": "पवित्र आंवले के वृक्ष की पूजा और श्रीहरि-लक्ष्मी की कृपा से समस्त पापों के शमन का पावन व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15867,15 +11149,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Amalaki Ekadashi falls on Phalguna Shukla Ekadashi, nestled during the joyous spring Holi festival. The Brahmanda Purana states that the sacred Amalaki (Indian gooseberry / Emblica officinalis) tree sprang from the divine drops of tears shed by Lord Brahma in ecstatic meditation on Lord Vishnu. Lord Vishnu proclaimed that He resides perpetually within the Amla tree alongside Mata Lakshmi. Worshiping the Amalaki tree on this day destroys heaps of sins and grants vitality, longevity, and liberation.",
           "hi": "फाल्गुन शुक्ल एकादशी को आमलकी अथवा रंगभरी एकादशी कहा जाता है। ब्रह्मांड पुराण के अनुसार, भगवान विष्णु के ध्यान में मग्न ब्रह्मा जी के नेत्रों से गिरी अश्रु-बिंदुओं से पावन आंवले के वृक्ष की उत्पत्ति हुई थी। भगवान विष्णु ने वरदान दिया कि जो प्राणी इस दिन आंवले के वृक्ष की पूजा करेगा, उसके समस्त पाप नष्ट हो जाएंगे और वह विष्णुलोक को प्राप्त होगा। काशी में इस दिन भगवान शिव माता पार्वती का गौना कराकर काशी लाते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmanda Purana & Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15895,15 +11170,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भगवान को आंवले का फल अर्पित करना और ब्राह्मणों को आंवले व भोजन का दान करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Amalaki Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15919,15 +11187,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भगवान विष्णु और माता लक्ष्मी के नामों का प्रेमपूर्वक संकीर्तन करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15943,15 +11204,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल और तामसिक भोजन का त्याग रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15969,15 +11223,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक, अगरबत्ती, पंचमेवा और पंचामृत"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Amalaki Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -15990,15 +11237,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to the divine life-nourishing Amalaki (Dhatri). Om, salutations unto Bhagwan Vasudeva.",
             "hi": "संसार का पोषण करने वाली पावन आमलकी (धात्री) को नमस्कार। भगवान वासुदेव को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Brahmanda Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -16014,15 +11254,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Papmochani Ekadashi",
           "hi": "पापमोचिनी एकादशी (पाप विनाशिनी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16032,15 +11265,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The purifier that frees the repentant soul from the heaviest bonds of past sins and guilt",
           "hi": "पूर्वकृत समस्त पापों, भूलों और अपराधों के भार से आत्मा को मुक्त करने वाली चैत्र कृष्ण एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16050,15 +11276,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Papmochani Ekadashi falls on Chaitra Krishna Ekadashi, the final Ekadashi of the lunar year before the New Year Pratipada. As its name signifies (Papa = sin, Mochani = liberator), this sacred fast cleanses past transgressions. In the Bhavishya Purana, Sage Medhavi, son of Cyavana, was seduced by the celestial nymph Manjughosha. When the sage realized he had lost years of austerity to sensory delusion, his father instructed both Medhavi and Manjughosha to observe Papmochani Ekadashi. Through this single observance, both were freed from sin and restored to spiritual radiance.",
           "hi": "चैत्र मास के कृष्ण पक्ष की एकादशी को पापमोचिनी एकादशी कहा जाता है। यह संवत्सर की अंतिम एकादशी है। भविष्य पुराण के अनुसार, ऋषि मेधावी और अप्सरा मंजुघोषा के प्रमाद व पापों का निवारण इसी एकादशी के व्रत से हुआ था। जो साधक अपने जाने-अनजाने किए गए पापों का सच्चे हृदय से प्रायश्चित कर इस दिन उपवास रखते हैं, भगवान श्रीहरि उनके समस्त पापों को क्षमा कर उन्हें आत्म-शांति और मोक्ष प्रदान करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana (Papmochani Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16078,15 +11297,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल दीपदान और निर्धनों को भोजन व वस्त्र का दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16102,15 +11314,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दूसरों की गलतियों को क्षमा करें और उदारतापूर्वक दान-पुण्य करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16126,15 +11331,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल, मदिरा और तामसिक वस्तुओं से पूर्ण परहेज़ रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16152,15 +11350,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "ऋतु फल और सफेद मिष्ठान का भोग"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16173,15 +11364,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto the all-pervading Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -16197,15 +11381,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Apara Ekadashi (Achala Ekadashi)",
           "hi": "अपरा एकादशी (अचला एकादशी / भद्रकाली एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16215,15 +11392,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The bestower of boundless (apara) merit, wiping away heavy karmas and granting prosperity",
           "hi": "अपार पुण्य फल प्रदान करने वाली और गंभीर पापों का नाश करने वाली ज्येष्ठ कृष्ण अपरा एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16233,15 +11403,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Apara Ekadashi falls on Jyeshtha Krishna Ekadashi. In the Brahma Purana, Lord Krishna explains to King Yudhishthira that the word \"Apara\" signifies \"limitless\" (A-para: having no shore or boundary). Observing this Ekadashi bestows limitless spiritual merit, equivalent to bathing in the sacred Triveni Sangam at Prayagraj during the Kumbha Mela, or giving charity of thousands of cows at Kurukshetra during a solar eclipse. In northern and eastern regions, it is also celebrated in honor of Goddess Bhadrakali.",
           "hi": "ज्येष्ठ कृष्ण एकादशी को अपरा अथवा अचला एकादशी कहा जाता है। ब्रह्म पुराण में भगवान श्रीकृष्ण युधिष्ठिर से कहते हैं कि \"अपरा\" का अर्थ है जिसकी कोई सीमा न हो (अपार)। इस एकादशी का व्रत रखने से अपार पुण्य की प्राप्ति होती है, जो कुंभ में प्रयाग स्नान अथवा सूर्य ग्रहण पर कुरुक्षेत्र में स्वर्ण दान के समान फलदायी है। यह व्रत मनुष्य को ब्रह्महत्या, परनिंदा और झूठी गवाही जैसे गंभीर पापों के प्रभाव से भी मुक्ति दिलाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16261,15 +11424,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल तुलसी जी के पास दीपक जलाना और द्वादशी को दान के बाद पारण करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16285,15 +11441,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गर्मी के मौसम में राहगीरों और निर्धनों को जल, छाता अथवा चप्पल दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16309,15 +11458,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल, मदिरा और दिन में सोने से पूरी तरह परहेज रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16335,15 +11477,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पके आम, केले और पंचमेवा का नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16356,15 +11491,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto the all-pervading Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -16380,15 +11508,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kamika Ekadashi",
           "hi": "कामिका एकादशी (श्रावण कृष्ण एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmavaivarta Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16398,15 +11519,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The auspicious monsoon Ekadashi of Shravana erasing pitru dosha and granting liberation",
           "hi": "श्रावण मास के कृष्ण पक्ष की परम पावन एकादशी — तुलसी दल अर्पण से कोटि यज्ञों का पुण्य फल"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16416,15 +11530,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Kamika Ekadashi falls on Shravana Krishna Ekadashi, the first Ekadashi during the holy monsoon month of Shravana. In the Brahmavaivarta Purana, Lord Brahma explains to Sage Narada that worshiping Lord Vishnu on Kamika Ekadashi with fresh Tulsi leaves yields merit far surpassing that of bathing in the Ganges at Kashi or visiting the Kedarnath shrine. Worshipping the Lord with a single Tulsi sprig on this day frees the seeker from the deepest karmic stains and purifies seven generations of ancestors.",
           "hi": "श्रावण कृष्ण एकादशी को कामिका एकादशी कहा जाता है। ब्रह्मवैवर्त पुराण के अनुसार, ब्रह्मा जी देवर्षि नारद को बताते हैं कि श्रावण मास में कामिका एकादशी के दिन भगवान श्रीधर (विष्णु) की तुलसी पत्रों से पूजा करने का फल काशी में गंगा स्नान अथवा अश्वमेध यज्ञ से भी अधिक है। इस दिन तुलसी की एक मंजरी प्रभु के चरणों में चढ़ाने से मनुष्य समस्त पापों से मुक्त होकर बैकुंठ लोक को प्राप्त होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmavaivarta Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16444,15 +11551,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल तुलसी चौरे और मंदिर में घी का दीपक जलाना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16468,15 +11568,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वर्षा ऋतु में राहगीरों और जरूरतमंदों को छाता, अन्न और वस्त्र दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16492,15 +11585,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल, लहसुन-प्याज और क्रोध से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16518,15 +11604,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गाय का कच्चा दूध और पंचामृत"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16539,15 +11618,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -16563,15 +11635,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Putrada Ekadashi (Shravana)",
           "hi": "पुत्रदा एकादशी (श्रावण शुक्ल एकादशी / पवित्रा एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16581,15 +11646,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Bestower of worthy progeny, family lineage continuity, and purification of domestic karma",
           "hi": "संतान सुख, वंश वृद्धि और संतान के उज्ज्वल भविष्य का आशीर्वाद देने वाली श्रावण पुत्रदा एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16599,15 +11657,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Shravana Putrada Ekadashi (also celebrated as Pavitra Ekadashi) falls on Shravana Shukla Ekadashi. In the Bhavishya Purana, King Mahijit of Mahishmati was childless despite being righteous. Sage Lomasha revealed that the king had denied a thirsty cow drinking water in a past life, which blocked his progeny. The sage instructed the king and queen to observe this Shravana Shukla Ekadashi and donate its merit for the birth of a child. By observing this fast, the queen conceived and bore a heroic son who continued the lineage.",
           "hi": "श्रावण शुक्ल एकादशी को पुत्रदा एकादशी अथवा पवित्रा एकादशी कहा जाता है। भविष्य पुराण के अनुसार, महिष्मती के धर्मात्मा राजा महीजित को संतान नहीं थी। महर्षि लोमश ने बताया कि पूर्वजन्म में प्यासी गाय को पानी पीने से रोकने के कारण उन्हें यह कष्ट हुआ है। ऋषि के परामर्श पर राजा-रानी ने श्रावण पुत्रदा एकादशी का श्रद्धापूर्वक व्रत रखा, जिसके प्रभाव से उन्हें तेजस्वी पुत्र रत्न की प्राप्ति हुई। यह व्रत संतान के स्वास्थ्य और वंश वृद्धि हेतु फलदायी है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana (Putrada Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16627,15 +11678,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "द्वादशी के दिन छोटे बालकों को भोजन और वस्त्र-मिष्ठान का दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Putrada Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16651,15 +11695,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "छोटे बच्चों को प्रेमपूर्वक फल और मिष्ठान दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16675,15 +11712,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल और तामसिक भोजन का पूर्ण त्याग रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16701,15 +11731,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पंचामृत, शुद्ध घी का दीपक और चंदन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Putrada Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16722,15 +11745,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, O Devakisuta Govinda, Lord of the Universe Vasudeva! Bestow upon me a worthy child, O Krishna; I have taken refuge in You.",
             "hi": "हे देवकी-नंदन गोविंद! हे वासुदेव जगत्पते! हे श्रीकृष्ण, मैं आपकी शरण में हूँ, मुझे सुयोग्य संतान का वरदान प्रदान कीजिए।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Santana Gopala Stotra",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -16746,15 +11762,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Aja Ekadashi (Ananda Ekadashi)",
           "hi": "अजा एकादशी (आनंदा एकादशी / हरिश्चंद्र मुक्ति)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmavaivarta Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16764,15 +11773,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The redeemer of lost kingdoms and restore of righteous glory, immortalized by King Harishchandra",
           "hi": "सत्यवादी राजा हरिश्चंद्र को खोया राज्य और परिवार लौटाने वाली भाद्रपद कृष्ण अजा एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16782,15 +11784,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Aja Ekadashi falls on Bhadrapada Krishna Ekadashi. In the Brahmavaivarta Purana, the truthful King Harishchandra lost his entire kingdom, wealth, and family due to past karma and was forced to work as a crematorium attendant in Kashi. Sage Gautama advised him to observe the rigorous fast of Aja Ekadashi with pure devotion to Lord Hrishikesha. Upon completing the fast, Harishchandra’s past sins were dissolved, his dead son Rohitashwa was revived, his virtuous wife Taramati returned, and his entire kingdom was miraculously restored.",
           "hi": "भाद्रपद मास के कृष्ण पक्ष की एकादशी को अजा अथवा आनंदा एकादशी कहा जाता है। ब्रह्मवैवर्त पुराण के अनुसार, सत्यवादी राजा हरिश्चंद्र अपने पूर्वजन्मों के कर्मों के कारण अपना संपूर्ण राज्य, पत्नी व पुत्र खोकर काशी के मणिकर्णिका घाट पर चांडाल का काम करने को विवश हो गए थे। महर्षि गौतम के उपदेश से उन्होंने अजा एकादशी का पावन व्रत किया। व्रत के प्रभाव से उनके समस्त पाप धुल गए, मृत पुत्र जीवित हो गया, पत्नी वापस मिली और उनका खोया हुआ राज्य पुनः प्राप्त हुआ।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmavaivarta Purana (Aja Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16810,15 +11805,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रात्रि में भजन-कीर्तन कर जागरण और श्रीहरि का ध्यान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16834,15 +11822,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कष्टों और अभाव में भी धैर्य और धर्म का साथ न छोड़ें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16858,15 +11839,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल और तले हुए गरिष्ठ भोजन का त्याग रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16884,15 +11858,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पंचामृत, पंचमेवा और ऋतु फल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16905,15 +11872,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -16929,15 +11889,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Parivartini Ekadashi (Parsva / Vamana Ekadashi)",
           "hi": "परिवर्तिनी एकादशी (पार्श्व एकादशी / वामन जयंती)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Vaivarta Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16947,15 +11900,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The cosmic midpoint of Chaturmasa when Lord Vishnu turns His sleeping posture from left to right side",
           "hi": "चातुर्मास की मध्य वेला — योगनिद्रा में शयन करते श्रीहरि का करवट बदलना और वामन अवतार का प्राकट्य"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16965,15 +11911,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Parivartini (also called Parsva) Ekadashi falls on Bhadrapada Shukla Ekadashi. Midpoint through His four-month cosmic slumber, Lord Vishnu turns His posture from the left side to the right side (Parivartana: turning over) while reclining upon Sheshanaga in the milk ocean. It is also celebrated as Vamana Jayanti, the appearance day of Lord Vishnu’s dwarfish Brahmin incarnation Vamana who restored cosmic balance by measuring the three worlds in three strides from King Mahabali. Worshiping the Lord on this day bestows freedom from sorrow and grants heavenly residence.",
           "hi": "भाद्रपद शुक्ल एकादशी को परिवर्तिनी अथवा पार्श्व एकादशी कहा जाता है। चार महीने की योगनिद्रा के ठीक मध्य में भगवान विष्णु क्षीरसागर में अपनी बाईं करवट से दाईं करवट बदलते हैं (करवट बदलना = परिवर्तन)। इसी दिन भगवान विष्णु के पांचवें अवतार \"वामन अवतार\" का प्राकट्य भी हुआ था जिन्होंने राजा बलि के यज्ञ में तीन पग भूमि मांगकर ब्रह्मांड का उद्धार किया था। इस दिन भगवान वामन और करवट बदलते श्रीहरि की विशेष पूजा की जाती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Vaivarta Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -16993,15 +11932,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल तुलसी जी और देवालय में घी के दीप प्रज्वलित करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Parivartini Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17017,15 +11949,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "छात्रों, ब्रह्मचारियों और संन्यासियों को छाता, जूते-चप्पल और भोजन दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17041,15 +11966,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अहंकार, आत्म-प्रशंसा और असत्य से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17067,15 +11985,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दही, माखन और ऋतु फल का नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vamana Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17088,15 +11999,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vamana. Om, salutations unto Lord Narayana.",
             "hi": "भगवान वामन को नमस्कार। भगवान नारायण को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Srimad Bhagavatam",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -17112,15 +12016,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Rama Ekadashi",
           "hi": "रमा एकादशी (कार्तिक कृष्ण एकादशी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Vaivarta Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17130,15 +12027,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The pre-Diwali Ekadashi dedicated to Mata Lakshmi (Rama) and Lord Keshav, bestowing supreme affluence",
           "hi": "दीपावली से पूर्व माता लक्ष्मी (रमा) और श्रीहरि की कृपा से दारिद्र्य नाश व सुख-समृद्धि प्रदायिनी एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17148,15 +12038,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Rama Ekadashi falls on Kartika Krishna Ekadashi, four days before Diwali. Named after Mata Lakshmi’s divine appellation \"Rama\", it is celebrated with joint adoration of Lord Keshava and Mahalakshmi. In the Brahma Vaivarta Purana, Princess Chandrabhaga and her husband Prince Shobhana observed this sacred fast. Through its spiritual merit, Shobhana gained an immortal celestial kingdom on Mount Mandara and enjoyed eternal companionship with his faithful wife. Observing this fast dispels poverty, karmic debts, and sorrow.",
           "hi": "कार्तिक मास के कृष्ण पक्ष की एकादशी को रमा एकादशी कहा जाता है। यह दीपावली महापर्व से ठीक पूर्व आती है। \"रमा\" माता लक्ष्मी का एक नाम है, इसलिए इस दिन भगवान केशव और महालक्ष्मी का संयुक्त पूजन होता है। ब्रह्मवैवर्त पुराण के अनुसार, राजकुमारी चंद्रभागा और शोभन ने इस पावन व्रत के प्रभाव से देव-तुल्य ऐश्वर्य और बैकुंठ सुख प्राप्त किया था। यह व्रत दरिद्रता और आर्थिक संकटों को दूर कर जीवन में सुख, शांति और समृद्धि लाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahma Vaivarta Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17176,15 +12059,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तुलसी जी की आरती और गाय के दूध की खीर का नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17200,15 +12076,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दीपावली से पूर्व घर को स्वच्छ, पावन और दीपकों से सुसज्जित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17224,15 +12093,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल और तामसिक वस्तुओं का पूर्ण त्याग रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17250,15 +12112,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मखाने की खीर, पंचमेवा और ताजे ऋतु फल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Rama Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17271,15 +12126,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Sri Lakshmi-Narayana, the supreme embodiments of grace, prosperity, and divine consciousness.",
             "hi": "माँ लक्ष्मी और भगवान नारायण के युगल स्वरूप को मेरा कोटिशः नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Lakshmi Narayana Samhita",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -17295,15 +12143,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Utpanna Ekadashi",
           "hi": "उत्पन्ना एकादशी (एकादशी देवी प्राकट्य)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17313,15 +12154,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Celebrating the birth of Ekadashi Devi who emerged from Lord Vishnu to slay the demon Mura",
           "hi": "भगवान श्रीहरि के तेज से एकादशी देवी के प्राकट्य और राक्षस मुर के संहार का पावन स्मरण दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17331,15 +12165,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Utpanna Ekadashi falls on Margashirsha Krishna Ekadashi. In the Bhavishya Purana, the demon Mura had driven the Devas from heaven. Lord Vishnu fought Mura for centuries and eventually reclined in a cave named Himavati at Badrikashrama to rest. As Mura attempted to strike the sleeping Lord, a radiant, armed female goddess emerged directly from Vishnu’s divine effulgence and incinerated Mura to ashes. Pleased, Lord Vishnu declared Her \"Ekadashi Devi\" and granted that whoever fasts on Her appearance day will be freed from all sins and receive direct entrance into Vaikuntha.",
           "hi": "मार्गशीर्ष कृष्ण एकादशी को उत्पन्ना एकादशी कहा जाता है क्योंकि इसी दिन \"एकादशी देवी\" का प्राकट्य हुआ था। भविष्य पुराण के अनुसार, जब भगवान विष्णु बदरिकाश्रम की गुफा में विश्राम कर रहे थे, तब दुष्ट राक्षस मुर उन पर प्रहार करने आया। उसी क्षण भगवान के शरीर के तेज से एक अलौकिक दिव्य शक्ति (एकादशी देवी) प्रकट हुईं और उन्होंने मुर का संहार कर दिया। भगवान ने प्रसन्न होकर उन्हें वरदान दिया कि जो प्राणी इस दिन उपवास रखेगा, वह परम पद को प्राप्त करेगा। इसी दिन से एकादशी व्रत का विधान आरंभ हुआ माना जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana (Utpanna Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17359,15 +12186,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रात्रि जागरण कर भजन-संकीर्तन और द्वादशी को अन्न-दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17383,15 +12203,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भगवान विष्णु के प्रति अनन्य शरणागति और भक्ति भाव रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17407,15 +12220,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल, मदिरा और कलह से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17433,15 +12239,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "ऋतु फल, सूखे मेवे और मिश्री का भोग"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17454,15 +12253,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -17478,15 +12270,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Saphala Ekadashi",
           "hi": "सफला एकादशी (सफलता प्रदायिनी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17496,15 +12281,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The winter Ekadashi that makes all auspicious endeavors, sadhana, and righteous goals successful (saphala)",
           "hi": "साधना, कर्म और जीवन के समस्त सत्प्रयासों को सफलता प्रदान करने वाली पौष कृष्ण सफला एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17514,15 +12292,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Saphala Ekadashi falls on Pausha Krishna Ekadashi during the winter chill. As its name indicates (Saphala = fruitful / successful), this fast turns all virtuous endeavors into crowning success. In the Brahmanda Purana, Lord Krishna recounts the story of Prince Lumpaka, the wicked and exiled son of King Mahishmat, who lived in a dense forest. Shivering under a banyan tree on Pausha Krishna Ekadashi, Lumpaka unintentionally fasted and stayed awake all night under cold skies. Lord Vishnu accepted this penance, transforming Lumpaka into a righteous ruler and restoring his royal inheritance.",
           "hi": "पौष मास के कृष्ण पक्ष की एकादशी को सफला एकादशी कहा जाता है। \"सफला\" का अर्थ है — सफल करने वाली। इस व्रत के प्रभाव से मनुष्य के समस्त शुभ संकल्प और कार्य सिद्ध होते हैं। ब्रह्मांड पुराण के अनुसार, राजा महिष्मान के पापी पुत्र लुम्पक को उसके कुकर्मों के कारण जंगल में निकाल दिया गया था। पौष कृष्ण एकादशी को भीषण ठंड में अनजाने में ही उससे उपवास और रात्रि जागरण हो गया। इस अनजाने व्रत से भी प्रसन्न होकर भगवान नारायण ने उसके सारे पाप क्षमा किए और उसे पुनः राजसिंहासन प्राप्त कराया।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmanda Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17542,15 +12313,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल दीपदान और रात्रि में जागरण कर भगवान का संकीर्तन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17566,15 +12330,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शीत काल में निर्धनों को गर्म कंबल, ऊनी वस्त्र और भोजन का दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17590,15 +12347,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल और तामसिक वस्तुओं का पूर्ण त्याग रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17616,15 +12366,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दान हेतु गर्म वस्त्र अथवा कंबल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17637,15 +12380,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -17661,15 +12397,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vijaya Ekadashi",
           "hi": "विजया एकादशी (विजय प्रदायिनी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17679,15 +12408,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The victory-granting fast observed by Bhagwan Sri Rama before crossing the ocean to conquer Lanka",
           "hi": "लंका विजय हेतु समुद्र पार करने से पूर्व प्रभु श्रीराम द्वारा अनुष्ठित विजयदायिनी फाल्गुन कृष्ण एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17697,15 +12419,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vijaya Ekadashi falls on Phalguna Krishna Ekadashi. In the Skanda Purana, Lord Brahma recounts that when Bhagwan Sri Rama stood on the shores of the southern ocean with the Vanara army, contemplating how to cross over to Lanka, Sage Bakadalbhya advised Him to observe Vijaya Ekadashi along with His commanders. Sri Rama observed this sacred fast with full ritual protocol, following which the ocean granted passage and the bridge (Ram Setu) was successfully constructed, leading to total victory over Ravana. Observing this fast grants triumph in legitimate struggles and defeats inner and outer foes.",
           "hi": "फाल्गुन मास के कृष्ण पक्ष की एकादशी को विजया एकादशी कहा जाता है। स्कंद पुराण के अनुसार, जब मर्यादा पुरुषोत्तम श्रीराम अपनी वानर सेना के साथ समुद्र तट पर पहुंचे और लंका पार करने का मार्ग तलाश रहे थे, तब महर्षि बकदालभ्य ने उन्हें ससैन्य विजया एकादशी का व्रत रखने का परामर्श दिया। प्रभु श्रीराम ने इस पावन व्रत का अनुष्ठान किया जिसके प्रभाव से समुद्र ने मार्ग दिया, सेतु बंधा और लंकापति रावण पर धर्म की विजय हुई। यह व्रत जीवन के हर क्षेत्र में विजय और संकटों से मुक्ति दिलाने वाला है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana & Padma Purana (Uttara Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17725,15 +12440,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "द्वादशी के दिन कलश, अन्न और दक्षिणा का सुपात्र ब्राह्मण को दान कर पारण करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vijaya Ekadashi Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17749,15 +12457,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सुंदरकाण्ड अथवा रामरक्षा स्तोत्र का पाठ करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17773,15 +12474,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल, मदिरा और आलस्य से पूर्णतः दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17799,15 +12493,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तुलसी दल, पीले पुष्प, चंदन और शुद्ध घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vijaya Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17820,15 +12507,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Sri Rama. Om, salutations unto Lord Vasudeva.",
             "hi": "भगवान श्रीराम को नमस्कार। भगवान वासुदेव को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Rama Rahasya Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -17844,15 +12524,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Yogini Ekadashi",
           "hi": "योगिनी एकादशी (कुबेर सेवक मुक्ति / पाप नाशिनी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmavaivarta Purana / Padma Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17862,15 +12535,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The purifier that cures ailments, bodily afflictions, and frees the soul from severe curses",
           "hi": "शारीरिक व्याधियों, कुष्ठ रोग और असाध्य कष्टों का निवारण करने वाली आषाढ़ कृष्ण योगिनी एकादशी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17880,15 +12546,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Yogini Ekadashi falls on Ashadha Krishna Ekadashi, just before Devshayani Ekadashi. In the Brahmavaivarta Purana, Hemamali, a Yaksha gardener in the service of Kubera (Lord of Wealth), neglected to bring flowers for Shiva puja due to infatuation with his wife. Enraged, Kubera cursed Hemamali with severe leprosy (Kustha) and separation from his beloved. Wandering in agony in the Himalayas, Hemamali met Sage Markandeya, who instructed him to observe Yogini Ekadashi with pure repentance. Through this observance, Hemamali was completely cured of disease and reunited with his wife.",
           "hi": "आषाढ़ मास के कृष्ण पक्ष की एकादशी को योगिनी एकादशी कहा जाता है। ब्रह्मवैवर्त पुराण के अनुसार, अलकापुरी के राजा कुबेर का माली हेममाली अपनी पत्नी की आसक्ति के कारण शिव पूजा हेतु पुष्प लाना भूल गया। कुबेर के शाप से वह कोढ़ी होकर पृथ्वी पर भटकने लगा। महर्षि मार्कंडेय के परामर्श पर उसने योगिनी एकादशी का पावन व्रत किया। इस व्रत के पुण्य से उसका कुष्ठ रोग समूल नष्ट हो गया और वह पुनः दिव्य देह धारण कर अपनी पत्नी से मिला। यह व्रत असाध्य रोगों और कष्टों से मुक्ति दिलाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Brahmavaivarta Purana (Yogini Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17908,15 +12567,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अस्पतालों में रोगियों को फल, दवाइयां और वस्त्रों का सेवा-दान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17932,15 +12584,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन में सकारात्मक और सात्विक विचार रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17956,15 +12601,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अन्न, दाल, मदिरा और तामसिक भोजन का त्याग रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -17982,15 +12620,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दान हेतु दवाइयां अथवा वस्त्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18003,15 +12634,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -18027,15 +12651,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ekadashi (Fortnightly Vrata)",
           "hi": "एकादशी (पाक्षिक हरि वासर व्रत)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana / Garuda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18045,15 +12662,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The supreme fortnightly fast observed on the eleventh tithi of every lunar cycle dedicated to Lord Vishnu",
           "hi": "प्रत्येक मास के दोनों पक्षों की एकादशी तिथि को अनुष्ठित होने वाला सर्वश्रेष्ठ हरि-वासर महाव्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18063,15 +12673,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ekadashi occurs twice every lunar month, on the eleventh tithi of the waxing (Shukla) and waning (Krishna) fortnights. In the Padma Purana, Lord Krishna extols Ekadashi as the supreme among all fasts (Hari-vasara: the day of Lord Hari), declaring that neither sacrifice, charity, nor pilgrimage equates to the merit of abstaining from grains on Ekadashi. Beyond immense spiritual purification, scientific and ayurvedic wisdom affirms that fasting on the 11th tithi rebalances bodily bio-rhythms (Vata, Pitta, Kapha) aligning with the moon’s gravitational phases.",
           "hi": "प्रत्येक हिंदू मास के शुक्ल और कृष्ण दोनों पक्षों की ग्यारहवीं तिथि को एकादशी कहा जाता है। पद्म पुराण में भगवान श्रीकृष्ण ने एकादशी को \"हरि वासर\" (भगवान विष्णु का दिन) कहकर सभी व्रतों में सर्वोच्च स्थान दिया है। इस दिन अन्न का त्याग कर भगवान विष्णु का ध्यान करने से चित्त की शुद्धि, इंद्रिय संयम और आत्मिक शांति प्राप्त होती है। आयुर्वेद के अनुसार भी पाक्षिक उपवास शरीर को डिटॉक्सिफाई कर स्वास्थ्य और दीर्घायु प्रदान करता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Padma Purana (Ekadashi Mahatmya) & Haribhaktivilasa",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18091,15 +12694,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "द्वादशी तिथि के शुभ मुहूर्त में ब्राह्मण या गौ-सेवा के उपरांत पारण करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18115,15 +12711,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मौन, ध्यान और परोपकार की भावना बनाए रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18139,15 +12728,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, असत्य, परनिंदा और दिन में सोने से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18165,15 +12747,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अर्घ्य हेतु तांबे का लोटा और गंगाजल"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ekadashi Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18186,15 +12761,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Bhagwan Vasudeva. Om, salutations unto Lord Vishnu.",
             "hi": "भगवान वासुदेव को नमस्कार। सर्वव्यापक श्रीविष्णु भगवान को बारम्बार प्रणाम।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Vishnu Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -18210,15 +12778,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Pradosh Vrat (Trayodashi Vrata)",
           "hi": "प्रदोष व्रत (त्रयोदशी शिव प्रदोष)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Shiva Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18228,15 +12789,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The auspicious fortnightly twilight fast dedicated to Lord Shiva and Mata Parvati on Trayodashi",
           "hi": "प्रत्येक मास के दोनों पक्षों की त्रयोदशी के सायंकाल (प्रदोष काल) भगवान शिव की परम कल्याणकारी आराधना"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18246,15 +12800,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Pradosh Vrat is observed twice every lunar month on the thirteenth tithi (Trayodashi) during the sacred twilight window (Pradosha Kala: roughly 45 minutes before to 45 minutes after sunset). The Skanda Purana declares that during this twilight window, all deities and celestial sages gather on Mount Kailash to witness Lord Shiva performing His sublime cosmic dance of joy (Ananda Tandava) while Mata Parvati presides on the golden throne. Worshipping Shiva during Pradosh dissolves heavy karmic debts, removes disease, and grants spiritual fulfillment.",
           "hi": "स्कंद पुराण के अनुसार, प्रत्येक पक्ष की त्रयोदशी तिथि के सायंकाल (सूर्यास्त से लगभग ४५ मिनट पूर्व व पश्चात) को प्रदोष काल कहा जाता है। इस पावन वेला में भगवान शिव माता पार्वती के साथ कैलास पर्वत पर आनंद तांडव करते हैं और समस्त देवी-देवता उनकी स्तुति करते हैं। प्रदोष काल में भगवान आशुतोष का जलाभिषेक और पूजन करने से जन्म-जन्मांतर के पाप, ऋण और व्याधियां दूर होती हैं तथा मनोवांछित फल की प्राप्ति होती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana & Shiva Purana (Vidyeshvara Samhita)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18274,15 +12821,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "महामृत्युंजय मंत्र, शिव चालीसा और वार-अनुसार प्रदोष व्रत कथा का पाठ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pradosha Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18298,15 +12838,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन को शांत, परोपकारी और \"ॐ नमः शिवाय\" के ध्यान में लीन रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18322,15 +12855,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तामसिक भोजन, मदिरा, क्रोध और कलह से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18348,15 +12874,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सफेद मिष्ठान और मौसमी फल का नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pradosha Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18369,15 +12888,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Shiva. Let us meditate on the Supreme Being Mahadeva. May Lord Rudra inspire and guide our consciousness.",
             "hi": "भगवान शिव को नमस्कार। हम परम पुरुष महादेव का ध्यान करते हैं। वे रुद्र देव हमारी चेतना को सन्मार्ग पर प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Mahanarayana Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -18393,15 +12905,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Purnima Vrat (Satyanarayan Vrata)",
           "hi": "पूर्णिमा व्रत (श्री सत्यनारायण व्रत कथा)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Reva Khanda)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18411,15 +12916,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The monthly full moon fast dedicated to Lord Satyanarayana and Chandra Deva bringing peace and truth",
           "hi": "प्रत्येक मास की पूर्णिमा को भगवान श्री सत्यनारायण और चंद्र देव की पावन आराधना — गृह-शांति व सत्य निष्ठा"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18429,15 +12927,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Purnima (the full moon day) occurs once every lunar month and is celebrated with the sacred Sri Satyanarayan Vrata. Described in the Reva Khanda of the Skanda Purana, Lord Vishnu taught Sage Narada that in the age of Kaliyuga, there is no simpler or more potent means to dispel suffering and attain worldly harmony and spiritual liberation than observing the Satyanarayan fast on Purnima. Families gather in the evening to hear the five sacred chapters of the Katha, offer Panjiri and Panchamrita, and make offerings to the radiant full moon.",
           "hi": "प्रत्येक मास की पूर्णिमा तिथि को सत्यनारायण भगवान का व्रत और कथा का विशेष विधान है। स्कंद पुराण के रेवा खंड में भगवान विष्णु ने महर्षि नारद से कहा कि कलयुग में समस्त कष्टों, दरिद्रता और गृह-क्लेश से मुक्ति पाने का सबसे सरल और श्रेष्ठ साधन सत्यनारायण व्रत है। इस दिन परिवार के सभी सदस्य मिलकर सायंकाल पांच अध्यायों की पावन कथा सुनते हैं, पंजीरी का प्रसाद बांटते हैं और पूर्ण चंद्र देव को अर्घ्य देकर आशीर्वाद प्राप्त करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Satyanarayana Vrata Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18457,15 +12948,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भुने आटे की पंजीरी (केले व तुलसी युक्त) और पंचामृत का भोग, फिर चंद्र देव को अर्घ्य देना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Satyanarayana Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18481,15 +12965,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कथा के उपरांत पंजीरी और चरणामृत का प्रसाद सभी को आदरपूर्वक बांटें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Satyanarayana Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18505,15 +12982,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "झूठ बोलने और किसी को धोखा देने से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Satyanarayana Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18531,15 +13001,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पंचामृत, तुलसी दल, पान, सुपारी, लौंग और कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Satyanarayana Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18552,15 +13015,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations unto Bhagwan Satyanarayana. Speak the Truth, practice righteousness (Dharma).",
             "hi": "भगवान श्री सत्यनारायण को नमस्कार। सत्य बोलो, धर्म का आचरण करो।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Skanda Purana & Taittiriya Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -18576,15 +13032,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Amavasya Vrat (New Moon Vrata)",
           "hi": "अमावस्या व्रत (पितृ तर्पण / शनि अमावस्या)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Garuda Purana / Vishnu Smriti",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18594,15 +13043,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The monthly dark moon day dedicated to ancestral offerings (Tarpan), charity, and spiritual introspection",
           "hi": "प्रत्येक मास की कृष्ण पक्ष की अंतिम तिथि — पितरों की तृप्ति, दान-पुण्य और शनि देव की कृपा का पावन दिवस"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18612,15 +13054,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Amavasya (the new moon day) concludes the dark fortnight (Krishna Paksha) of every Hindu lunar month. In the Puranas, the sun and moon reside in the same celestial sign on Amavasya, rendering the subtle solar gates open for ancestral connection. It is the designated day for offering Tarpan and Shraddha to departed forebears, feeding the hungry, and lighting mustard oil lamps beneath the Peepal tree. When Amavasya falls on a Monday (Somvati Amavasya) or Saturday (Shani Amavasya), its spiritual efficacy is magnified thousandfold.",
           "hi": "प्रत्येक मास की कृष्ण पक्ष की अमावस्या तिथि पितृ तर्पण और दान-पुण्य के लिए विशेष फलदायी मानी गई है। ज्योतिष और पुराणों के अनुसार, अमावस्या को सूर्य और चंद्रमा एक ही राशि में स्थित होते हैं। इस दिन पितरों के निमित्त जल, तिल और अन्न का दान करने से पितृ दोष का निवारण होता है और घर में सुख-शांति आती है। जब यह सोमवार को पड़ती है तो \"सोमवती अमावस्या\" और शनिवार को पड़ने पर \"शनि अमावस्या\" के रूप में महापुण्य फल देने वाली होती है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Garuda Purana & Vishnu Smriti",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18640,15 +13075,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल पीपल के नीचे सरसों के तेल का दीपक जलाना और जरूरतमंदों को भोजन कराना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Amavasya Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18664,15 +13092,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गरीबों को आटा, दाल, तेल और वस्त्रों का दान करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pitru Dharma Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18688,15 +13109,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तामसिक भोजन, मदिरा, गृह-कलह और नकारात्मक विचारों से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Pitru Dharma Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18714,15 +13128,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गेहूं का आटा, गुड़ और पंचबलि हेतु भोजन"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Amavasya Ritual Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18735,15 +13142,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to our family deities. Salutations to our departed ancestors. Salutations unto Lord Shanaishchara (Saturn).",
             "hi": "कुलदेवता को नमन। पितृदेवों को सादर प्रणाम। भगवान शनिदेव को नमस्कार।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Garuda Purana",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -18759,15 +13159,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vinayaka Chaturthi (Shukla Chaturthi)",
           "hi": "विनायक चतुर्थी (शुक्ल चतुर्थी गणेश व्रत)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana / Mudgala Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18777,15 +13170,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The monthly fast on the waxing fourth tithi dedicated to Lord Ganesha for wisdom and obstacle removal",
           "hi": "प्रत्येक मास के शुक्ल पक्ष की चतुर्थी को विघ्नहर्ता भगवान गणेश का पावन मध्याह्न व्रत व पूजन"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18795,15 +13181,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Vinayaka Chaturthi occurs once every lunar month on the fourth tithi of the waxing fortnight (Shukla Paksha Chaturthi). Unlike the evening-timed Sankashti Chaturthi, Vinayaka Chaturthi worship is performed at midday (Madhyahna Kala), the auspicious hour when Lord Ganesha took birth. Worshipping Lord Vighnaharta with twenty-one blades of sacred Durva grass, fresh modaks, and vermilion dispels delays, promotes academic and intellectual brilliance, and brings harmony to family endeavors.",
           "hi": "प्रत्येक मास के शुक्ल पक्ष की चतुर्थी को विनायक चतुर्थी कहा जाता है। विघ्नहर्ता भगवान गणेश का प्राकट्य मध्याह्न काल में हुआ था, इसलिए विनायक चतुर्थी की मुख्य पूजा दोपहर के समय की जाती है। इस दिन भगवान गणेश को २१ दूर्वा दल, मोदक और लाल सिंदूर अर्पित करने से साधक के समस्त कार्यों की विघ्न-बाधाएं दूर होती हैं, बुद्धि और विवेक का विकास होता है तथा जीवन में मंगल का संचार होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana (Upasana Khanda) & Mudgala Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18823,15 +13202,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गणपति अथर्वशीर्ष का सस्वर पाठ और विनायक चतुर्थी व्रत कथा का श्रवण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Puja Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18847,15 +13219,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "\"ॐ गं गणपतये नमः\" महामंत्र का दिनभर स्मरण करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18871,15 +13236,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, जल्दबाजी और तामसिक खानपान से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18897,15 +13255,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक, कपूर और पान-सुपारी"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18918,15 +13269,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O curved-trunk, immense-bodied Lord of radiance equal to millions of suns, remove all obstacles from all my endeavors forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -18942,15 +13286,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sankashti Chaturthi (Sankat Chauth)",
           "hi": "संकष्टी चतुर्थी (संकट चौथ / वक्रतुण्ड संकष्टी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana / Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18960,15 +13297,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The monthly evening fast on the waning fourth tithi breaking only after sighting the moon to overcome crises",
           "hi": "प्रत्येक मास के कृष्ण पक्ष की चतुर्थी को चंद्रोदय दर्शन के उपरांत पारण — समस्त संकटों से मुक्ति का महाव्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -18978,15 +13308,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sankashti Chaturthi (also known as Sankat Hara Chaturthi) occurs on the fourth tithi of the waning fortnight (Krishna Paksha Chaturthi) of every Hindu month. \"Sankashti\" means \"deliverance from distress\". The fast is observed with strict discipline throughout the day until the moon rises in the night sky. Devotees offer arghya of milk and water to the rising moon god (Chandra Deva) and then break the fast by worshipping Lord Ganesha with sesame sweets (Tilkut) and modaks, seeking freedom from financial, physical, and familial crises.",
           "hi": "प्रत्येक मास के कृष्ण पक्ष की चतुर्थी तिथि को संकष्टी चतुर्थी (संकट चौथ) कहा जाता है। \"संकष्टी\" का शाब्दिक अर्थ है — संकटों को हरने वाली। साधक दिनभर निर्जल अथवा फलाहार का व्रत रखते हैं। रात्रि में जब चंद्रमा का उदय होता है, तब चंद्र देव को दूध और जल से अर्घ्य दिया जाता है और भगवान गणेश की पूजा करके तिलकूट (तिल-गुड़) के प्रसाद से व्रत खोला जाता है। जब यह मंगलवार को पड़ती है तो इसे \"अंगारकी चतुर्थी\" कहा जाता है जिसका पुण्य अत्यंत दुर्लभ है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana (Upasana Khanda) & Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19006,15 +13329,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चंद्र देव के प्रकट होते ही लोटे में कच्चा दूध व जल भरकर अर्घ्य देना और तिलकूट खाकर व्रत खोलना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sankashti Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19030,15 +13346,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "अपनी समस्त चिंताओं और संकटों को विघ्नहर्ता के चरणों में समर्पित करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19054,15 +13363,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "क्रोध, विवाद और अशांति से दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19080,15 +13382,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "चंद्र अर्घ्य हेतु लोटा, कच्चा दूध, जल और शुद्ध घी का दीपक"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Sankashti Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19101,15 +13396,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O curved-trunk, immense-bodied Lord of radiance equal to millions of suns, remove all obstacles from all my endeavors forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -19125,15 +13413,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Shravan Somvar (Monday Shiva Vrata)",
           "hi": "सावन सोमवार व्रत (श्रावण सोमवार शिव आराधना)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana (Kotirudra Samhita) / Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19143,15 +13424,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The holy Mondays of the monsoon month of Shravana dedicated to Jalabhishek and adoration of Lord Mahadeva",
           "hi": "श्रावण मास के प्रत्येक सोमवार को भगवान भोलेनाथ का जलाभिषेक, बिल्वपत्र अर्पण और अखंड शिव साधना"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19161,15 +13435,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Shravan Somvar refers to the Mondays falling in the auspicious monsoon month of Shravana. According to the Shiva Purana, when the cosmic ocean was churned (Samudra Manthana), the lethal poison Halahala emerged, threatening all creation. Lord Shiva drank the deadly poison, holding it in His throat which turned blue, earning Him the name Nilakantha. To cool the burning poison, the gods poured streams of cool water and milk over Him. Observing Shravan Somvar fasts and pouring holy water on the Shiva Linga cools cosmic heat and fulfills all righteous aspirations.",
           "hi": "श्रावण मास के सोमवार भगवान शिव को अत्यंत प्रिय हैं। शिव पुराण के अनुसार, समुद्र मंथन के समय जब कालकूट हलाहल विष निकला, तो संसार की रक्षा हेतु भगवान शिव ने उसे अपने कंठ में धारण कर लिया जिससे वे \"नीलकंठ\" कहलाए। विष के तीव्र ताप को शांत करने के लिए देवताओं ने उन पर गंगाजल और दूध की शीतल धाराएं अर्पित की थीं। इसी कारण सावन सोमवार को भगवान शिव का जलाभिषेक और रुद्राभिषेक करने से समस्त मनोकामनाएं पूर्ण होती हैं और अकाल मृत्यु का भय समाप्त होता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shiva Purana & Skanda Purana (Shravana Mahatmya)",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19189,15 +13456,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "\"ॐ नमः शिवाय\" का १०८ बार जाप और सावन सोमवार व्रत कथा का श्रवण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shravana Somvara Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19213,15 +13473,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मन में शांति, नम्रता और भगवान शिव के प्रति अनन्य श्रद्धा रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19237,15 +13490,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सावन में मांसाहार, मदिरा, लहसुन-प्याज से सर्वथा दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shaiva Vrata Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19263,15 +13509,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक, कपूर और सफेद मिष्ठान"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Somvara Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19284,15 +13523,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Shiva. Let us meditate on the Supreme Being Mahadeva. May Lord Rudra inspire and guide our consciousness.",
             "hi": "भगवान शिव को नमस्कार। हम परम पुरुष महादेव का ध्यान करते हैं। वे रुद्र देव हमारी चेतना को सन्मार्ग पर प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Mahanarayana Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -19308,15 +13540,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Mangala Gauri Vrat",
           "hi": "मंगला गौरी व्रत (श्रावण मंगलवार गौरी व्रत)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19326,15 +13551,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The auspicious Tuesday fast of Shravana observed by women for marital harmony and unbroken auspiciousness",
           "hi": "श्रावण मास के प्रत्येक मंगलवार को माता पार्वती (गौरी) का व्रत — अखंड सौभाग्य और दांपत्य सुख का वरदान"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19344,15 +13562,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Mangala Gauri Vrat is observed on every Tuesday (Mangalavara) in the sacred monsoon month of Shravana by newly married women and maiden seekers. Dedicated to Goddess Mangala Gauri (an auspicious form of Mata Parvati), the fast is believed to dissolve marital obstacles, nullify the malefic effects of Mangal Dosha (Mars afflictions), and bestow enduring marital bliss, progeny, and mutual understanding between spouses.",
           "hi": "श्रावण मास के प्रत्येक मंगलवार को मंगला गौरी व्रत रखने का विधान है। यह व्रत माता पार्वती के मंगलमयी स्वरूप \"मंगला गौरी\" को समर्पित है। नवविवाहिता महिलाएं और कन्याएं अखंड सौभाग्य, सुखी दांपत्य जीवन और मंगल दोष के शमन हेतु यह व्रत करती हैं। पौराणिक मान्यता है कि इस व्रत के प्रभाव से पति की आयु लंबी होती है, घर में सुख-समृद्धि आती है और जीवन के समस्त अमंगल नष्ट हो जाते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana (Shravana Mahatmya) & Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19372,15 +13583,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सोलह बत्तियों वाले दीपक से माता की पावन महाआरती संपन्न करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mangala Gauri Vrata Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19396,15 +13600,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सुहाग सामग्री अपनी सास अथवा वृद्ध सुहागिन महिलाओं को देकर उनके चरण स्पर्श करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Grihastha Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19420,15 +13617,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कलह, क्रोध और काले अथवा सफेद वस्त्र पहनने से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Shakta Grihastha Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19446,15 +13636,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "१६ मीठी पूड़ियां अथवा आटे के लड्डू नैवेद्य हेतु"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mangala Gauri Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19467,15 +13650,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "O Auspicious One, the most auspicious of all that is auspicious, the accomplish-er of every goal. O Refuge, three-eyed Gauri, Narayani, salutations unto You!",
             "hi": "हे समस्त मंगलों को मंगल करने वाली, हे कल्याणकारी शिवे, सब मनोरथ सिद्ध करने वाली माँ मंगला गौरी! आपको बारम्बार नमस्कार है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Devi Mahatmya",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -19491,15 +13667,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 2",
           "hi": "गणेशोत्सव दिवस २ (मोदक भोग व दूर्वा अर्पण)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19509,15 +13678,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Second day of the ten-day Ganeshotsav celebrating Lord Ganesha with morning Abhishek and sacred Durva offerings",
           "hi": "गणेशोत्सव का द्वितीय दिवस — भगवान गणपति का प्रातः अभिषेक, २१ दूर्वा दल अर्पण और मोदक भोग"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19527,15 +13689,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The second day of Ganeshotsav deepens the domestic and community worship of Lord Ganesha following His Pran-Pratishtha. Families and pandals commence daily recitations of the Ganapati Atharvashirsha. Worshipping the Lord with fresh blades of green Durva grass cools the Lord’s internal effulgence, while offering steamed Ukadiche Modaks symbolizes the sweetness of supreme spiritual wisdom (Jnana).",
           "hi": "गणेशोत्सव के दूसरे दिन प्राण-प्रतिष्ठा के उपरांत भगवान गणेश की दैनिक आराधना का क्रम आगे बढ़ता है। घरों और सार्वजनिक पंडालों में गणपति अथर्वशीर्ष का सस्वर पाठ होता है। भगवान को २१ दूर्वा दल अर्पित करने से मन के संताप शांत होते हैं और उकडीचे मोदक का भोग आत्मिक ज्ञान की मिठास का अनुभव कराता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana & Regional Ganeshotsav Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19555,15 +13710,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल शंख, झांझ और ढोल-ताशों के साथ भव्य महाआरती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Daily Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19579,15 +13727,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भगवान गणेश के १०८ नामों का प्रेमपूर्वक जाप करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19603,15 +13744,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "तामसिक भोजन और मदिरा से पूरी तरह दूर रहें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19629,15 +13763,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक और कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19650,15 +13777,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -19674,15 +13794,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 3",
           "hi": "गणेशोत्सव दिवस ३ (गौरी आगमन पूर्व-तैयारी)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19692,15 +13805,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Third day of Ganeshotsav with devotional kirtans and preparing for the arrival of Mata Jyeshtha-Kanishtha Gauri",
           "hi": "गणेशोत्सव का तृतीय दिवस — भक्ति संगीत, भजन संध्या और माता गौरी के आगमन की मंगल तैयारी"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19710,15 +13816,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day three focuses on community cultural programs, devotional singing, and scriptural discourses on the Ganesha Purana. In western India, households clean and adorn their courtyards with colorful rangolis in eager anticipation of Mata Gauri (Goddess Parvati), who arrives on day four to visit Her divine son Ganesha.",
           "hi": "तीसरे दिन पंडालों और घरों में भक्ति संगीत, भजन संध्या और बाल संस्कार कार्यक्रमों का आयोजन होता है। महाराष्ट्र और गोवा में घरों के प्रवेश द्वार पर सुंदर रंगोली सजाई जाती है और माता गौरी (पार्वती) के अगले दिन होने वाले आगमन की मंगल तैयारियां की जाती हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana & Regional Ganeshotsav Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19738,15 +13837,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "वेदी के चारों ओर २१ छोटे दीपक प्रज्वलित करना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Daily Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19762,15 +13854,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गणेश जी के स्वरूप से धैर्यपूर्वक श्रवण का गुण सीखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19786,15 +13871,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बच्चों या बुजुर्गों से कटु शब्द न बोलें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19812,15 +13890,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रंगोली के रंग और आरती हेतु कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19833,15 +13904,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -19857,15 +13921,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 4 (Gauri Avahan)",
           "hi": "गणेशोत्सव दिवस ४ (महालक्ष्मी / गौरी आवाहन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Skanda Purana / Bhavishya Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19875,15 +13932,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Fourth day of Ganeshotsav featuring the joyous ceremonial welcome (Avahan) of Mata Gauri into homes",
           "hi": "गणेशोत्सव का चतुर्थ दिवस — माता गौरी (महालक्ष्मी) का गृह-आगमन, पावन आवाहन और सुहाग उत्सव"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19893,15 +13943,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day four is especially celebrated in Maharashtra, Goa, and parts of Karnataka with Gauri Avahan (the welcoming of Goddess Gauri). Goddess Parvati descends to earth to meet Her son Ganesha. She is welcomed as Jyeshtha and Kanishtha Gauri (two sisters representing wealth and agricultural abundance). Women bring pairs of decorated idols or brass masks of the Mother into the home with footprints drawn from the doorstep to the shrine, showering Her with wild flowers and festive sweets.",
           "hi": "गणेशोत्सव के चौथे दिन माता गौरी (महालक्ष्मी) का पावन आवाहन होता है। ऐसी मान्यता है कि माता पार्वती अपने लाडले पुत्र गणेश को देखने धरती पर आती हैं। ज्येष्ठा और कनिष्ठ गौरी के स्वरूप में माँ का घर के मुख्य द्वार से मंदिर तक पदचिह्न बनाकर गाजे-बाजे के साथ गृह-प्रवेश कराया जाता है। यह दिन स्त्रियों के अखंड सौभाग्य और गृह-समृद्धि का महापर्व है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gauri Vrata Vidhi & Skanda Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19921,15 +13964,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "१६ प्रकार की सब्जियों का सात्विक नैवेद्य और भव्य आरती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gauri Puja Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19945,15 +13981,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मंदिर को हरी पत्तियों और ताजे फूलों से सजाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19969,15 +13998,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बासी या अशुद्ध भोजन का भोग न लगाएं"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -19995,15 +14017,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पूरनपोली, लड्डू और पारंपरिक १६ सब्जियों का नैवेद्य"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Gauri Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20016,15 +14031,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, let us meditate on Mahalakshmi, the divine consort of Vishnu. May Goddess Lakshmi illuminate our intellect and paths.",
             "hi": "हम भगवान विष्णु की प्रिया महालक्ष्मी का ध्यान करते हैं। वे देवी लक्ष्मी हमारी बुद्धि को सन्मार्ग पर प्रेरित करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Mahanarayana Upanishad",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -20040,15 +14048,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 5 (Gauri Pujan & 5-Day Visarjan)",
           "hi": "गणेशोत्सव दिवस ५ (गौरी पूजन व पंचम दिवस विसर्जन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20058,15 +14059,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Fifth day of Ganeshotsav with grand Gauri Mahapuja and the first major immersion day for 5-day idols",
           "hi": "गणेशोत्सव का पंचम दिवस — महालक्ष्मी गौरी का महापूजन और पांच दिवसीय गणेश प्रतिमाओं का भावपूर्ण विसर्जन"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20076,15 +14070,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day five represents both the culmination of the three-day Gauri festival and the designated immersion day for five-day household Ganesha idols. Families prepare an elaborate feast of Mahaprasad featuring Puran Poli, Gavhache Kheer, and sixteen varieties of vegetables offered to Gauri-Ganesha. In the afternoon or evening, households observing five-day Ganpati perform the Uttarpuja and carry the clay idol to water bodies amidst chants of \"Ganpati Bappa Morya\".",
           "hi": "पांचवां दिन गौरी महापूजन और पांच दिवसीय गणेश जी के विसर्जन का पावन दिन है। इस दिन घर में पूरनपोली और खीर का महाप्रसाद बनाया जाता है और माता गौरी व भगवान गणेश को छप्पन भोग अर्पित किए जाते हैं। जो परिवार पांच दिन के लिए गणपति बैठाते हैं, वे सायं काल उत्तरपूजा कर ढोल-ताशों के साथ नदी अथवा विसर्जन कुंड में बाप्पा को विदा करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Visarjan Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20104,15 +14091,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "इको-फ्रेंडली विसर्जन: जल कुंड में प्रतिमा का विसर्जन और पावन मिट्टी को पौधों में डालना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Visarjan Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20128,15 +14108,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कृतज्ञता के साथ विदा करते हुए अगले वर्ष जल्दी आने की प्रार्थना करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20152,15 +14125,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जल में प्लास्टिक अथवा गैर-बायोडिग्रेडेबल सामग्री न डालें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20178,15 +14144,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "आरती की थाली व विसर्जन पात्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20199,15 +14158,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -20223,15 +14175,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 6",
           "hi": "गणेशोत्सव दिवस ६ (सामूहिक महाआरती व भजन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20241,15 +14186,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Sixth day of Ganeshotsav with cultural performances, charity drives, and mid-festival community prayers",
           "hi": "गणेशोत्सव का षष्ठम दिवस — सेवा कार्य, रक्तदान शिविर, सांस्कृतिक संध्या और भव्य महाआरती"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20259,15 +14197,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day six marks the vibrant middle chapter of the ten-day festival. In the tradition instituted by Lokmanya Tilak during the freedom struggle, public Ganesh mandals utilize this day for civic dialogue, youth educational awards, free health clinics, and inter-faith social harmony initiatives, uniting society in the divine shelter of Lord Ganesha.",
           "hi": "छठे दिन गणेशोत्सव का सामाजिक और सांस्कृतिक स्वरूप पूर्ण रूप से निखरता है। लोकमान्य बाल गंगाधर तिलक द्वारा आरंभ की गई सार्वजनिक गणेशोत्सव की परंपरा के अनुसार, इस दिन मंडलों में सामाजिक संवाद, रक्तदान शिविर, निर्धन छात्र सहायता और सांस्कृतिक कार्यक्रमों का आयोजन होता है जो समाज को एकता के सूत्र में पिरोता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Public Ganeshotsav Heritage & Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20287,15 +14218,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "पंडालों में दीपमाला सजाना और बूंदी के लड्डुओं का प्रसाद वितरण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Community Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20311,15 +14235,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गणेश जी के आदर्शों पर चलकर जिम्मेदार नागरिक बनें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20335,15 +14252,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "देर रात तक तेज लाउडस्पीकर बजाकर दूसरों को असुविधा न पहुँचाएँ"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20361,15 +14271,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक और अगरबत्ती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20382,15 +14285,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -20406,15 +14302,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 7 (7-Day Visarjan)",
           "hi": "गणेशोत्सव दिवस ७ (सप्तम दिवस विसर्जन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20424,15 +14313,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Seventh day of Ganeshotsav marking the farewell and immersion for one-week household idols",
           "hi": "गणेशोत्सव का सप्तम दिवस — सात दिनों के लिए विराजमान बाप्पा का भावभीना विसर्जन व महाआरती"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20442,15 +14324,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day seven is celebrated as the immersion day for seven-day Ganpati installations. Having blessed the home for an entire week with divine joy, the deity is prepared for departure. Family members apply sandalwood paste to Ganesha’s forehead, offer final prayers of gratitude, and carry the idol to coastal beaches, rivers, or home garden tanks amidst drumbeats and songs, seeking protection and wisdom for the coming year.",
           "hi": "सातवां दिन सात दिवसीय गणेश प्रतिमाओं के विसर्जन का दिन है। एक सप्ताह तक घर में भक्ति और आनंद की वर्षा करने के उपरांत बाप्पा को विदाई दी जाती है। परिवार के सदस्य भगवान को चंदन और अक्षत लगाकर उत्तरपूजा करते हैं, मोदक का अंतिम भोग लगाते हैं और आंसुओं व उल्लास के संगम के बीच बाप्पा को जल में विसर्जित करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Visarjan Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20470,15 +14345,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "\"गणपति बाप्पा मोरया, पुढच्या वर्षी लवकर या\" के जयघोष के साथ विसर्जन यात्रा"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Visarjan Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20494,15 +14362,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विदाई के दिन गौ-माता को भोजन कराएं और पड़ोसियों को प्रसाद दें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20518,15 +14379,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शोभायात्रा में अमर्यादित आचरण या नशे से पूरी तरह बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20544,15 +14398,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "आरती थाली और लाल वस्त्र"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20565,15 +14412,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -20589,15 +14429,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 8 (Ashtami Archana)",
           "hi": "गणेशोत्सव दिवस ८ (अष्टमी सहस्रनाम अर्चन)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20607,15 +14440,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Eighth day of Ganeshotsav with Sahasranama Archana and special prayers for mental fortitude and harmony",
           "hi": "गणेशोत्सव का अष्टम दिवस — भगवान गणपति का सहस्रनाम अर्चन, मोदक महायज्ञ और सामूहिक शांति प्रार्थना"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20625,15 +14451,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day eight represents the sacred Ashtami of the festival. Temples and public pandals perform Ganesha Sahasranama Archana (offering a Durva grass blade or red flower with each of the 1,000 holy names of Ganesha). It is celebrated with grand Annakut and Bhandaras (free community feasts) feeding tens of thousands in major cities like Mumbai, Pune, and Hyderabad.",
           "hi": "गणेशोत्सव के आठवें दिन अष्टम तिथि पर विशेष सहस्रनाम अर्चन किया जाता है। भगवान गणेश के १००० पावन नामों का उच्चारण करते हुए प्रत्येक नाम पर एक दूर्वा दल अथवा पुष्प अर्पित किया जाता है। इस दिन विशाल अन्नकूट और महाभंडारे आयोजित किए जाते हैं जहाँ हजारों श्रद्धालु पंगत में बैठकर प्रसाद ग्रहण करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana & Regional Ganeshotsav Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20653,15 +14472,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "सायंकाल १०८ दीपकों से भव्य दीपोत्सव और महाआरती"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Community Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20677,15 +14489,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "मानसिक शांति हेतु गणेश अष्टकम का पाठ करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20701,15 +14506,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "दर्शन की कतारों में धैर्य और मर्यादा बनाए रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20727,15 +14525,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "आरती दीप और धूप"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20748,15 +14539,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -20772,15 +14556,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 9 (Navami Sandhya)",
           "hi": "गणेशोत्सव दिवस ९ (नवमी संध्या व जागरण)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20790,15 +14567,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ninth day of Ganeshotsav with all-night bhajan vigils and final grand Aarti before Anant Chaturdashi",
           "hi": "गणेशोत्सव का नवम दिवस — अनंत चतुर्दशी से पूर्व भव्य रात्रि जागरण, भक्ति रस और महाआरती"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20808,15 +14578,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day nine is the emotional eve of Anant Chaturdashi. Knowing that the grand farewell takes place the following day, devotees flock to pandals in massive numbers for late-night darshan. Cultural performances reach their fever pitch with traditional Lavani, powada, and dhol-tasha rehearsals filling the air. Devotees stay awake in prayer, thanking the Lord for nine days of unalloyed joy.",
           "hi": "नौवां दिन अनंत चतुर्दशी की पूर्व संध्या है। अगले दिन होने वाले विसर्जन की भावुकता इस दिन चारों ओर दिखाई देती है। श्रद्धालु रातभर जागकर अंतिम दर्शन हेतु उमड़ते हैं। पंडालों में भजन, कीर्तन और पारंपरिक ढोल-ताशों के वादन से पूरा वातावरण भक्तिमय हो उठता है। साधक नौ दिनों तक घर-आंगन को पावन रखने हेतु बाप्पा के प्रति कृतज्ञता व्यक्त करते हैं।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana & Regional Ganeshotsav Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20836,15 +14599,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "२१ नारियल, मोदक और फलों का धन्यवाद नैवेद्य अर्पण"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Community Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20860,15 +14616,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "कल के विसर्जन हेतु वाहन, पुष्प और पावन प्रसाद की तैयारी रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20884,15 +14633,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शारीरिक स्वास्थ्य और सुरक्षा का ध्यान रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20910,15 +14652,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "रात के जागरण हेतु दीपक और कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20931,15 +14666,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -20955,15 +14683,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Ganeshotsav Day 10 (Visarjan Purva)",
           "hi": "गणेशोत्सव दिवस १० (विसर्जन पूर्व संध्या)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Mudgala Purana / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20973,15 +14694,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Tenth day of Ganeshotsav marking the eve of the final grand immersion on Anant Chaturdashi",
           "hi": "गणेशोत्सव का दशम दिवस — अनन्त चतुर्दशी विसर्जन की अंतिम पूर्व-तैयारी और महामहोत्सव की पूर्णता"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -20991,15 +14705,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Day ten concludes the ten-day period of Ganeshotsav before the mammoth immersion ceremonies of Anant Chaturdashi. Thousands of decorated chariots, floats, and palanquins are assembled across cities like Mumbai, Pune, and Nagpur. The sacred ten-day vows are reviewed, prayers are offered for forgiveness of any unintentional procedural lapses (Kshama Prarthana), and communities prepare for the monumental farewell march.",
           "hi": "दसवां दिन गणेशोत्सव के दस दिवसीय अनुष्ठान की पूर्णता का प्रतीक है। अगले दिन अनंत चतुर्दशी पर होने वाले विशाल विसर्जन हेतु रथों, पालकियों और झांकियों को अंतिम रूप दिया जाता है। साधक पूजा में हुई किसी भी भूल-चूक के लिए भगवान से क्षमा-प्रार्थना करते हैं और पूरे नगर में उत्सव और विदाई का अभूतपूर्व उल्लास छा जाता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganesha Purana & Regional Ganeshotsav Traditions",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21019,15 +14726,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विसर्जन हेतु श्रीफल और पावन नारियल का पूजन व संकल्प"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Community Rituals",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21043,15 +14743,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "भक्ति, प्रेम और सेवा की भावना को सर्वोपरि रखें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21067,15 +14760,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "हुड़दंग अथवा अमर्यादित आचरण से बचें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21093,15 +14779,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "शुद्ध घी का दीपक और कपूर"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ganeshotsav Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21114,15 +14793,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to Lord Ganapati. O Lord of immense form and curved trunk, radiant as ten million suns, remove all obstacles from my paths forever.",
             "hi": "भगवान गणपति को नमस्कार। हे वक्रतुंड, महाकाय, करोड़ों सूर्यों के समान तेजस्वी प्रभु, मेरे समस्त कार्यों को सदा निर्विघ्न पूर्ण करें।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Ganapati Atharvashirsha",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
@@ -21138,15 +14810,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Anant Chaturdashi (Ganesh Visarjan / Ananta Vrata)",
           "hi": "अनंत चतुर्दशी (गणेश विसर्जन / अनंत व्रत)"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana / Mahabharata / Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21156,15 +14821,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "The grand finale immersion of Lord Ganesha and the sacred fourteen-knot thread worship of Lord Ananta Vishnu",
           "hi": "गणेशोत्सव का भव्य महाविसर्जन और भगवान श्री अनन्त (विष्णु) के चौदह गांठों वाले पावन रक्षा-सूत्र का व्रत"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Hindu Liturgical Calendar",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21174,15 +14832,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "en": "Anant Chaturdashi falls on Bhadrapada Shukla Chaturdashi, combining two profound observances. First, it is the magnificent culmination of Ganeshotsav: millions escort their beloved Ganesha idols to the Arabian Sea, holy rivers, and water bodies amidst thunderous cheers of \"Ganpati Bappa Morya, Pudhchya Varshi Lavkar Ya!\" as the Lord dissolves into water, symbolizing the return of form (Sakar) into formless cosmic reality (Nirakar). Simultaneously, devotees observe the Ananta Vrata described by Sri Krishna to Yudhishthira in the Mahabharata, tying a sacred fourteen-knot silk thread (Ananta Sutra) consecrated to Lord Vishnu, seeking protection and limitless spiritual merit.",
           "hi": "भाद्रपद शुक्ल चतुर्दशी को अनंत चतुर्दशी कहा जाता है। इस दिन दो महान पर्वों का संगम होता है। प्रथम — गणेशोत्सव का महाविसर्जन, जिसमें करोड़ों श्रद्धालु नम आंखों और अपार उल्लास के साथ \"गणपति बाप्पा मोरया, पुढच्या वर्षी लवकर या\" के जयघोष के साथ समुद्र और नदियों में बाप्पा का विसर्जन करते हैं (साकार का निराकार में विलीन होना)। द्वितीय — महाभारत में श्रीकृष्ण द्वारा युधिष्ठिर को बताया गया \"अनंत व्रत\", जिसमें भगवान अनंत (श्रीविष्णु) की पूजा कर चौदह गांठों वाला रेशमी रक्षा-सूत्र (अनंत सूत्र) धारण किया जाता है जो समस्त संकटों से रक्षा करता है।"
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Bhavishya Purana (Ananta Vrata Katha) & Ganesha Purana",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21202,15 +14853,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "जल में भावपूर्ण विसर्जन और जीवन में सुख, शांति व अगले वर्ष पुनः आगमन की प्रार्थना"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ananta Vrata & Visarjan Vidhi",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21228,15 +14872,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "बाप्पा को कृतज्ञता और अश्रुपूरित नेत्रों से विदा करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava & Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21252,15 +14889,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "विसर्जन जुलूस में धक्का-मुक्की, नशा अथवा अमर्यादित व्यवहार कदापि न करें"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Vaishnava & Ganapatya Ethics",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21278,15 +14908,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "गुलाल, कपूर, गेंदे के फूलों की बड़ी माला और आरती थाली"
           ]
         },
-        "status": "council_reviewed_editorial",
-        "reviewRef": "council-verified-2026-09",
-        "sourceRefs": [
-          {
-            "sourceName": "Ananta & Visarjan Puja Items",
-            "tier": 1,
-            "usagePermitted": "public_domain"
-          }
-        ],
+        "status": "pending_source",
+        "sourceRefs": [],
         "applicability": {
           "universal": true
         }
@@ -21299,15 +14922,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
             "en": "Om, salutations to the Infinite Lord Ananta! O Vasudeva, uplift me who is drowning in this boundless ocean of worldly existence. Unite me with Your infinite divine nature; salutations unto You who are of limitless forms!",
             "hi": "भगवान अनंत को नमस्कार! हे वासुदेव, इस अपार भवसागर में डूबे हुए मेरा उद्धार कीजिए। मुझे अपने अनंत स्वरूप में लीन कीजिए; हे अनंत रूप वाले प्रभु, आपको बारंबार नमस्कार है।"
           },
-          "status": "council_reviewed_editorial",
-          "reviewRef": "council-verified-2026-09",
-          "sourceRefs": [
-            {
-              "sourceName": "Bhavishya Purana (Ananta Vrata Section)",
-              "tier": 1,
-              "usagePermitted": "public_domain"
-            }
-          ],
+          "status": "pending_source",
+          "sourceRefs": [],
           "applicability": {
             "universal": true
           }
