@@ -329,7 +329,7 @@ export default function VratDetailScreen() {
                       marginLeft: 'auto',
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>Under Review</Text>
+                    <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>Upcoming</Text>
                   </View>
                 )}
               </View>

@@ -220,7 +220,7 @@ export default function DharmVeerScreen() {
     return (
       <Screen style={{ backgroundColor: surface }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
-          <BackButton variant="glass" />
+          <BackButton variant="glass" fallbackHref="/(tabs)/bhakti" handleHardwareBack />
           <Card style={{ backgroundColor: cardBg, borderColor: border, gap: 14 }}>
             <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 30 }}>Dharm Veer</Text>
             <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 15, lineHeight: 24 }}>
@@ -263,7 +263,7 @@ export default function DharmVeerScreen() {
         backgroundColor: cardBg,
         gap: 12
       }}>
-        <BackButton variant="glass" style={{ marginHorizontal: 0, marginBottom: 0 }} />
+        <BackButton variant="glass" style={{ marginHorizontal: 0, marginBottom: 0 }} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
         <View style={{ flex: 1 }}>
           <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>
             Sacred Archive

@@ -92,22 +92,12 @@ export function CommentReactionButton({
           </PressableSurface>
         </View>
 
-        {/* Count Button (Tapping opens "Who reacted" sheet); replaced with a
-            Retry label when the last reaction change failed to sync. */}
-        {failed ? (
+        {/* Count Button (Tapping opens "Who reacted" sheet or retries if failed) */}
+        {count > 0 ? (
           <PressableSurface
             haptic="selection"
-            accessibilityLabel="Retry syncing this reaction"
-            onPress={onRetry}
-            style={{ minHeight: 0, paddingHorizontal: 2, paddingVertical: 2 }}
-          >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10.5, color: COLORS.danger }}>Retry</Text>
-          </PressableSurface>
-        ) : count > 0 ? (
-          <PressableSurface
-            haptic="selection"
-            accessibilityLabel={`View all ${count} reactions`}
-            onPress={onViewReactors}
+            accessibilityLabel={failed ? 'Retry syncing this reaction' : `View all ${count} reactions`}
+            onPress={failed ? onRetry : onViewReactors}
             style={{ minHeight: 0, paddingHorizontal: 2, paddingVertical: 2 }}
           >
             <Text

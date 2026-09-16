@@ -153,7 +153,7 @@ export default function KathaListScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
+        <BackButton style={{ marginBottom: 4 }} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 24 }}>
           <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>Could not load these stories.</Text>
           <Button label="Retry" onPress={() => void load()} />
@@ -165,20 +165,28 @@ export default function KathaListScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       <FlatList
+        style={{ flex: 1, width: '100%' }}
         data={chunkPairs(filtered)}
         keyExtractor={(row, rowIndex) => row[0]?.id ?? String(rowIndex)}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={{ width: '100%', maxWidth: '100%', paddingBottom: 60 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <>
-            <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <BackButton />
+          <View style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+            <View style={{ width: '100%', paddingHorizontal: 20, paddingTop: 16 }}>
+              <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <BackButton fallbackHref="/(tabs)/bhakti" handleHardwareBack variant="glass" showLabel={false} />
                 <PressableSurface
                   haptic="selection"
                   onPress={() => setShowSearch((s) => !s)}
                   accessibilityLabel="Search kathas"
-                  style={{ borderRadius: 999 }}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    minHeight: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
                   <View style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.card }}>
                     <Feather name="search" size={16} color={showSearch ? meta.accent : theme.dim} />
@@ -190,7 +198,9 @@ export default function KathaListScreen() {
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.6, textTransform: 'uppercase', color: meta.accent }}>
                   {meta.sub}
                 </Text>
-                <Text style={{ ...TYPE.title, color: theme.text, marginTop: 2 }}>{meta.heading}</Text>
+                <Text style={{ ...TYPE.cardHeading, fontSize: 24, color: theme.text, marginTop: 4 }}>
+                  {meta.heading}
+                </Text>
               </View>
 
               {showSearch && (
@@ -262,9 +272,9 @@ export default function KathaListScreen() {
               )}
 
               {!searchQuery && weekKathas.length > 0 && (
-                <View style={{ gap: 10 }}>
+                <View style={{ gap: 10, overflow: 'hidden' }}>
                   <SectionHeader label="Weekly Sadhana" />
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 10 }}>
                     {weekKathas.map((k) => (
                       <PressableSurface
                         key={k.id}
@@ -296,7 +306,7 @@ export default function KathaListScreen() {
                 {!searchQuery && <Text style={{ ...TYPE.caption, color: theme.dim }}>{filtered.length} stories</Text>}
               </View>
             </View>
-          </>
+          </View>
         }
         ListEmptyComponent={
           <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 48, alignItems: 'center', gap: 10 }}>

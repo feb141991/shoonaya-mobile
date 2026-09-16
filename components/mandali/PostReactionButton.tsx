@@ -79,9 +79,9 @@ export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, c
           ) : (
             <Feather name="smile" size={13} color={dim} />
           )}
-          {failed || count > 0 ? (
-            <Text style={{ color: failed ? COLORS.danger : active ? active.color : dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>
-              {failed ? 'Retry' : count}
+          {count > 0 ? (
+            <Text style={{ color: active ? active.color : dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>
+              {count}
             </Text>
           ) : null}
         </PressableSurface>

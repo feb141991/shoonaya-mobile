@@ -186,16 +186,6 @@ export default function FestivalDetailScreen() {
     setTimeout(() => setCopiedMantra(false), 2000);
   };
 
-  if (!festival && !liveStory && !storyLoading) {
-    return (
-      <ReaderShell title="Festival" fallbackBackUrl="/(tabs)" themeColor={theme.brand} ambientGlowColor={theme.brand}>
-        <View style={{ padding: 24, alignItems: 'center' }}>
-          <Text style={{ ...TYPE.body, color: theme.dim }}>This festival's content isn't available yet.</Text>
-        </View>
-      </ReaderShell>
-    );
-  }
-
   const liveTranslation = liveStory?.translations?.[resolvedLang] ?? liveStory?.translations?.['en'];
 
   const name =
@@ -207,15 +197,29 @@ export default function FestivalDetailScreen() {
 
   const tagline = liveTranslation?.teaser || (festival ? resolveFestivalText(festival.tagline, resolvedLang) : '');
   const significance = liveTranslation?.significance || (festival ? resolveFestivalText(festival.significance, resolvedLang) : '');
+  const publishable = Boolean(liveStory) || (festival ? isFestivalPublishable(festival) : false);
+
+  const resolveListContent = (field: any): string[] => {
+    if (!field) return [];
+    const canonical = resolveFestivalList(field, resolvedLang);
+    if (canonical.length > 0) return canonical;
+    if (publishable && field.value) {
+      if (resolvedLang === 'hi' && Array.isArray(field.value.hi) && field.value.hi.length > 0) return field.value.hi;
+      if (Array.isArray(field.value.en) && field.value.en.length > 0) return field.value.en;
+    }
+    return [];
+  };
+
   const rituals = (liveTranslation?.rituals && liveTranslation.rituals.length > 0)
     ? liveTranslation.rituals
-    : (festival ? resolveFestivalList(festival.rituals, resolvedLang) : []);
-  const dos = festival ? resolveFestivalList(festival.dos, resolvedLang) : [];
-  const donts = festival ? resolveFestivalList(festival.donts, resolvedLang) : [];
-  const pujaItems = festival ? resolveFestivalList(festival.pujaItems, resolvedLang) : [];
+    : (festival ? resolveListContent(festival.rituals) : []);
+
+  const canonicalDos = festival ? resolveListContent(festival.dos) : [];
+  const dos = canonicalDos.length > 0 ? canonicalDos : (liveTranslation?.personalPractice ? [liveTranslation.personalPractice] : []);
+  const donts = festival ? resolveListContent(festival.donts) : [];
+  const pujaItems = festival ? resolveListContent(festival.pujaItems) : [];
   const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || '';
   const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : '');
-  const publishable = Boolean(liveStory) || (festival ? isFestivalPublishable(festival) : false);
 
   const traditionKey = festival?.tradition || liveStory?.tradition || '';
   const traditionLabel =
@@ -243,6 +247,16 @@ export default function FestivalDetailScreen() {
     if (mantraText || mantraTranslation) list.push({ key: 'mantra', label: resolvedLang === 'hi' ? 'मंत्र' : 'Mantra', icon: '🕉️' });
     return list;
   }, [significance, rituals.length, dos.length, donts.length, pujaItems.length, mantraText, mantraTranslation, resolvedLang]);
+
+  if (!festival && !liveStory && !storyLoading) {
+    return (
+      <ReaderShell title="Festival" fallbackBackUrl="/(tabs)" themeColor={theme.brand} ambientGlowColor={theme.brand}>
+        <View style={{ padding: 24, alignItems: 'center' }}>
+          <Text style={{ ...TYPE.body, color: theme.dim }}>This festival's content isn't available yet.</Text>
+        </View>
+      </ReaderShell>
+    );
+  }
 
   const handleShare = async () => {
     if (sharing) return;
@@ -366,7 +380,7 @@ export default function FestivalDetailScreen() {
                     letterSpacing: 0.4,
                   }}
                 >
-                  {occurrence.status === 'resolved' ? 'Canonical' : 'Under Review'}
+                  {occurrence.status === 'resolved' ? 'Canonical' : 'Upcoming'}
                 </Text>
               </View>
             </View>

@@ -383,7 +383,7 @@ export default function VratScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-          <BackButton />
+          <BackButton fallbackHref="/(tabs)/bhakti" handleHardwareBack />
           <Text style={{ ...TYPE.title, color: theme.text, marginLeft: 12 }}>Vrat & Fasting</Text>
         </View>
 

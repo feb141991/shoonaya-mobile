@@ -178,7 +178,7 @@ export default function BrowseScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
+        <BackButton style={{ marginBottom: 4 }} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 24 }}>
           <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>Could not load the sacred library.</Text>
           <Button label="Retry" onPress={() => void load()} />
@@ -197,7 +197,7 @@ export default function BrowseScreen() {
         ListHeaderComponent={
           <>
             <View style={{ paddingHorizontal: 20, paddingTop: 16, gap: 4 }}>
-              <BackButton style={{ marginBottom: 8 }} />
+              <BackButton style={{ marginBottom: 8 }} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
               <Text style={{ ...TYPE.title, color: theme.text }}>Sacred Library</Text>
               <Text style={{ ...TYPE.caption, color: theme.dim }}>
                 {tradition === 'sikh' ? 'Banis, kirtans & simran'

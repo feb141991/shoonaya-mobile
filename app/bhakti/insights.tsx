@@ -176,7 +176,7 @@ export default function BhaktiInsightsScreen() {
   if (loading) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
+        <BackButton style={{ marginBottom: 4 }} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={ROSE} />
         </View>
@@ -187,7 +187,7 @@ export default function BhaktiInsightsScreen() {
   if (loadError) {
     return (
       <Screen style={{ backgroundColor: theme.bg }}>
-        <BackButton style={{ marginBottom: 4 }} />
+        <BackButton style={{ marginBottom: 4 }} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 24 }}>
           <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>Could not load your insights.</Text>
           <Button label="Retry" onPress={() => void load()} />
@@ -200,7 +200,7 @@ export default function BhaktiInsightsScreen() {
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 60, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <BackButton showLabel={false} />
+          <BackButton showLabel={false} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
           <View style={{ alignItems: 'center' }}>
             <Text style={{ ...TYPE.micro, letterSpacing: 1.6, textTransform: 'uppercase', color: `${ROSE}99` }}>Bhakti</Text>
             <Text style={{ ...TYPE.cardHeading, fontSize: 17, color: theme.text }}>Devotion Insights</Text>

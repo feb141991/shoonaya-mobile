@@ -303,7 +303,7 @@ export default function SattvicModeScreen() {
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 60, gap: 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <BackButton showLabel={false} />
+          <BackButton showLabel={false} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
           <Text style={{ ...TYPE.micro, letterSpacing: 2, textTransform: 'uppercase', color: gold }}>{modeLabel}</Text>
           <View style={{ width: 38 }} />
         </View>

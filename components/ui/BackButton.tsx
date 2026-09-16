@@ -19,9 +19,17 @@ type BackButtonProps = {
 };
 
 function inferParentFallback(pathname: string): Href {
+  if (pathname === '/dharm-veer') return '/(tabs)/bhakti';
+  if (pathname.startsWith('/dharm-veer/')) return '/dharm-veer';
+  if (pathname === '/vrat') return '/(tabs)/bhakti';
+  if (pathname.startsWith('/vrat/')) return '/vrat';
+  if (pathname.startsWith('/bhakti/katha/')) return '/bhakti/katha';
+  if (pathname.startsWith('/bhakti/stotram/')) return '/bhakti/browse';
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/mantras')) return '/(tabs)/bhakti';
+  if (pathname.startsWith('/pathshala/')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
+  if (pathname.startsWith('/lineage/')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/lineage')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/yatra')) return '/(tabs)/tirtha';
   if (pathname.startsWith('/live-darshan')) return '/(tabs)/tirtha';
@@ -29,8 +37,6 @@ function inferParentFallback(pathname: string): Href {
   if (pathname.startsWith('/japa')) return '/(tabs)/japa';
   if (pathname.startsWith('/settings')) return '/settings';
   if (pathname.startsWith('/kundali')) return '/kundali';
-  if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
-  if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/my-progress/')) return '/my-progress';
   if (pathname.startsWith('/name-story')) return '/(tabs)/profile';
   return '/(tabs)';
