@@ -57,4 +57,9 @@ describe('reader navigation and audio lifecycle', () => {
     assert.match(mantrasSrc, /<BackButton fallbackHref="\/\(tabs\)\/bhakti" handleHardwareBack/);
     assert.match(pathDetailSrc, /<BackButton showLabel=\{false\} iconSize=\{22\} iconColor=\{text\} fallbackHref="\/\(tabs\)\/pathshala" handleHardwareBack \/>/);
   });
+
+  it('guarantees back navigation to tab hubs navigates directly to prevent slot remount reset to Home', () => {
+    assert.match(backButton, /targetPath\.startsWith\('\/\(tabs\)\/'\)/);
+    assert.match(backButton, /router\.replace\(target\)/);
+  });
 });

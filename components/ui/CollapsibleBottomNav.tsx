@@ -151,11 +151,12 @@ export function CollapsibleBottomNav() {
       },
       {
         key: 'bhakti',
-        href: '/bhakti',
+        href: '/(tabs)/bhakti',
         label: 'Bhakti',
         match: (p) =>
           matchesAny(p, [
             '/bhakti',
+            '/(tabs)/bhakti',
             '/shloka',
             '/quiz',
             '/vrat',

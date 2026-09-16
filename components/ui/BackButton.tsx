@@ -58,12 +58,22 @@ export function useFallbackBackHandler(
   const navigateBack = useCallback(() => {
     if (onPress) {
       onPress();
+      return;
+    }
+    const target = fallbackHref ?? inferParentFallback(pathname);
+    const targetPath = typeof target === 'string' ? target : (target as any)?.pathname ?? '';
+
+    // If the target destination is a tab inside (tabs) (e.g. /(tabs)/bhakti,
+    // /(tabs)/pathshala, /(tabs)/tirtha, /(tabs)/japa, etc.), router.back()
+    // pops to the root slot, which remounts (tabs) at its initial tab (Home).
+    // To return to the intended tab hub deterministically, we must explicitly
+    // navigate to the target tab rather than relying on an ambiguous stack pop.
+    if (targetPath.startsWith('/(tabs)/')) {
+      router.replace(target);
     } else if (router.canGoBack()) {
       router.back();
     } else {
-      // Preserve the BackButton's historical direct-entry behavior for the
-      // many readers that do not declare a more specific parent route.
-      router.replace(fallbackHref ?? inferParentFallback(pathname));
+      router.replace(target);
     }
   }, [fallbackHref, onPress, pathname, router]);
 
