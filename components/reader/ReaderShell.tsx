@@ -65,6 +65,9 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   shellHeaderBackgroundColor?: string;
   children: ReactNode;
   contentContainerStyle?: ViewStyle;
+  scrollViewRef?: React.RefObject<ScrollView | null>;
+  onScroll?: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
+  scrollEventThrottle?: number;
 }
 
 const TTS_RATES = [0.75, 1, 1.25] as const;
@@ -104,6 +107,9 @@ export function ReaderShell<LanguageCode extends string = string>({
   shellHeaderBackgroundColor,
   children,
   contentContainerStyle,
+  scrollViewRef,
+  onScroll,
+  scrollEventThrottle,
 }: ReaderShellProps<LanguageCode>) {
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
@@ -447,8 +453,15 @@ export function ReaderShell<LanguageCode extends string = string>({
       </View>
 
       <ScrollView
+        ref={(node) => {
+          if (scrollViewRef) {
+            (scrollViewRef as any).current = node;
+          }
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
+        scrollEventThrottle={scrollEventThrottle ?? (onScroll ? 16 : undefined)}
         contentContainerStyle={[
           {
             paddingHorizontal: 16,

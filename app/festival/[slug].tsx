@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -10,6 +10,7 @@ import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
+import { OBSERVANCE_SERIES_CONTENT_SNAPSHOT } from '@/lib/observance-series-content.generated';
 import {
   resolveFestivalText,
   resolveFestivalList,
@@ -175,6 +176,38 @@ export default function FestivalDetailScreen() {
     }
   };
 
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    const entries = Object.entries(sectionPositions).sort((a, b) => a[1] - b[1]);
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const [key, y] = entries[i];
+      if (scrollY >= y - 80) {
+        setActiveJumpSection(key);
+        break;
+      }
+    }
+  }, [sectionPositions]);
+
+  const seriesContext = useMemo(() => {
+    for (const s of OBSERVANCE_SERIES_CONTENT_SNAPSHOT.series) {
+      const childIndex = s.children.findIndex((c: any) => c.slug === slug);
+      if (childIndex !== -1) {
+        return {
+          seriesKey: s.definitionKey,
+          seriesName: (resolvedLang === 'hi' && (s.name as any)?.value?.hi) ? (s.name as any).value.hi : ((s.name as any)?.value?.en || s.definitionKey),
+          children: s.children.map((c: any) => ({
+            seq: c.sequence,
+            slug: c.slug,
+          })),
+          currentIndex: childIndex,
+          prevChild: childIndex > 0 ? s.children[childIndex - 1] : null,
+          nextChild: childIndex < s.children.length - 1 ? s.children[childIndex + 1] : null,
+        };
+      }
+    }
+    return null;
+  }, [slug, resolvedLang]);
+
   const handleCopyMantra = async () => {
     const textToCopy = mantraText ? `${mantraText}\n\n${mantraTranslation}` : mantraTranslation;
     if (!textToCopy) return;
@@ -295,12 +328,65 @@ export default function FestivalDetailScreen() {
       currentLanguage={lang}
       setLanguage={setLang}
       onShare={publishable ? handleShare : undefined}
+      scrollViewRef={scrollViewRef}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
     >
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ paddingBottom: 40 }}>
+        {/* Series Day Traversing Bar (For multi-day festival series like Ganeshotsav, Navratri) */}
+        {seriesContext ? (
+          <View style={{ marginBottom: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingHorizontal: 2 }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                {seriesContext.seriesName} · {resolvedLang === 'hi' ? 'दैनिक क्रम' : 'Daily Journey'}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim }}>
+                {resolvedLang === 'hi' ? `दिन ${seriesContext.currentIndex + 1} / ${seriesContext.children.length}` : `Day ${seriesContext.currentIndex + 1} of ${seriesContext.children.length}`}
+              </Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}>
+              {seriesContext.children.map((child) => {
+                const isSelected = child.slug === slug;
+                const dayLabel = child.seq === 1
+                  ? (resolvedLang === 'hi' ? 'दिन १ · चतुर्थी' : 'Day 1 · Chaturthi')
+                  : child.seq === seriesContext.children.length
+                  ? (resolvedLang === 'hi' ? `दिन ${child.seq} · विसर्जन` : `Day ${child.seq} · Visarjan`)
+                  : (resolvedLang === 'hi' ? `दिन ${child.seq}` : `Day ${child.seq}`);
+
+                return (
+                  <TouchableOpacity
+                    key={child.slug}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      if (!isSelected) {
+                        router.replace(`/festival/${child.slug}`);
+                      }
+                    }}
+                    style={{
+                      paddingVertical: 7,
+                      paddingHorizontal: 13,
+                      borderRadius: RADII.pill,
+                      backgroundColor: isSelected ? theme.brand : theme.card,
+                      borderWidth: 1,
+                      borderColor: isSelected ? theme.brand : theme.border,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: isSelected ? FONTS.sansSemiBold : FONTS.sansMedium,
+                        fontSize: 12,
+                        color: isSelected ? (isDark ? '#000' : '#FFF') : theme.text,
+                      }}
+                    >
+                      {dayLabel}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
+
         {/* 1. Hero Altar Card */}
         <Card style={{ padding: 18, marginBottom: 14, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -813,7 +899,77 @@ export default function FestivalDetailScreen() {
             </Card>
           </View>
         ) : null}
-      </ScrollView>
+
+        {/* Next / Previous Day Traversing Controls */}
+        {seriesContext && (seriesContext.prevChild || seriesContext.nextChild) ? (
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 8, marginBottom: 16 }}>
+            {seriesContext.prevChild ? (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (seriesContext.prevChild?.slug) {
+                    router.replace(`/festival/${seriesContext.prevChild.slug}`);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: RADII.md,
+                  backgroundColor: theme.card,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Feather name="arrow-left" size={14} color={theme.brand} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, textTransform: 'uppercase' }}>
+                    {resolvedLang === 'hi' ? 'पिछला दिन' : 'Previous Day'}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }} numberOfLines={1}>
+                    {resolvedLang === 'hi' ? `दिन ${seriesContext.prevChild.sequence}` : `Day ${seriesContext.prevChild.sequence}`}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ) : <View style={{ flex: 1 }} />}
+
+            {seriesContext.nextChild ? (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (seriesContext.nextChild?.slug) {
+                    router.replace(`/festival/${seriesContext.nextChild.slug}`);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: RADII.md,
+                  backgroundColor: theme.card,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 8,
+                }}
+              >
+                <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, textTransform: 'uppercase' }}>
+                    {resolvedLang === 'hi' ? 'अगला दिन' : 'Next Day'}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }} numberOfLines={1}>
+                    {resolvedLang === 'hi' ? `दिन ${seriesContext.nextChild.sequence}` : `Day ${seriesContext.nextChild.sequence}`}
+                  </Text>
+                </View>
+                <Feather name="arrow-right" size={14} color={theme.brand} />
+              </TouchableOpacity>
+            ) : <View style={{ flex: 1 }} />}
+          </View>
+        ) : null}
+      </View>
 
       {/* Off-screen, rasterized by shareCapturedShoonayaCard via
           react-native-view-shot -- same pattern as app/shloka.tsx. */}
