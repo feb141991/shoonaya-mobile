@@ -105,3 +105,42 @@ export function resolveLocalizedList(
   if (translationStatus?.en === 'pending') return [];
   return obj.en || [];
 }
+
+/**
+ * Derives a clean, tradition-accurate, compact day label (e.g. 'Day 1 · Dhanteras' or 'दिन १ · शैलपुत्री')
+ * for any multi-day series child observance across Sharad Navratri, Diwali, Chhath Puja, Ganeshotsav, etc.
+ */
+export function formatSeriesDayLabel(
+  child: { sequence: number; canonicalTitle?: { value?: { en?: string; hi?: string; pa?: string } } },
+  lang: SupportedLanguage = 'en',
+): string {
+  const isHi = lang === 'hi';
+  const isPa = lang === 'pa';
+  const rawTitle = (isHi ? child.canonicalTitle?.value?.hi : isPa ? child.canonicalTitle?.value?.pa : child.canonicalTitle?.value?.en)
+    || child.canonicalTitle?.value?.en
+    || '';
+
+  let specific = '';
+  if (rawTitle.includes('—')) {
+    specific = rawTitle.split('—')[1].trim();
+  } else if (rawTitle.includes('–')) {
+    specific = rawTitle.split('–')[1].trim();
+  } else {
+    specific = rawTitle;
+  }
+  specific = specific.split('(')[0].split('/')[0].trim();
+
+  if (rawTitle.toLowerCase().includes('visarjan') || rawTitle.includes('विसर्जन') || rawTitle.includes('ਵਿਸਰਜਨ')) {
+    specific = isHi ? 'विसर्जन' : isPa ? 'ਵਿਸਰਜਨ' : 'Visarjan';
+  } else if (specific.toLowerCase().includes('chaturthi') || specific.includes('चतुर्थी') || specific.includes('ਚੌਥ')) {
+    specific = isHi ? 'गणेश चतुर्थी' : isPa ? 'ਗਣੇਸ਼ ਚੌਥ' : 'Chaturthi';
+  } else if (specific.toLowerCase().includes('dussehra') || specific.toLowerCase().includes('vijayadashami') || specific.includes('दशहरा') || specific.includes('विजयादशमी')) {
+    specific = isHi ? 'विजयादशमी' : isPa ? 'ਦੁਸਹਿਰਾ' : 'Dussehra';
+  }
+  if (specific.toLowerCase().includes('day ') || specific.includes('दिन ') || specific.includes('ਦਿਨ ')) {
+    specific = '';
+  }
+
+  const dayPrefix = isHi ? `दिन ${child.sequence}` : isPa ? `ਦਿਨ ${child.sequence}` : `Day ${child.sequence}`;
+  return specific ? `${dayPrefix} · ${specific}` : dayPrefix;
+}

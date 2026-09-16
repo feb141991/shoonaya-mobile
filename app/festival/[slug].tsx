@@ -12,6 +12,12 @@ import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
 import { OBSERVANCE_SERIES_CONTENT_SNAPSHOT } from '@/lib/observance-series-content.generated';
 import {
+  getSeriesChildContent,
+  getSeriesGroupContent,
+  formatSeriesDayLabel,
+  type SupportedLanguage,
+} from '@/lib/observance-series-content';
+import {
   resolveFestivalText,
   resolveFestivalList,
   isFestivalPublishable,
@@ -74,6 +80,14 @@ export default function FestivalDetailScreen() {
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   const festival = useMemo(() => lookupFestivalContent(slug), [slug]);
+  const seriesChild = useMemo(() => getSeriesChildContent(slug), [slug]);
+  const seriesGroup = useMemo(() => getSeriesGroupContent(slug), [slug]);
+
+  useEffect(() => {
+    if (seriesGroup && seriesGroup.children.length > 0 && slug === seriesGroup.definitionKey) {
+      router.replace(`/festival/${seriesGroup.children[0].slug}`);
+    }
+  }, [seriesGroup, slug, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,18 +204,30 @@ export default function FestivalDetailScreen() {
 
   const seriesContext = useMemo(() => {
     for (const s of OBSERVANCE_SERIES_CONTENT_SNAPSHOT.series) {
-      const childIndex = s.children.findIndex((c: any) => c.slug === slug);
+      let childIndex = s.children.findIndex((c: any) => c.slug === slug);
+      if (childIndex === -1 && s.definitionKey === slug) {
+        childIndex = 0;
+      }
       if (childIndex !== -1) {
+        const currentLang = (resolvedLang as SupportedLanguage) || 'en';
         return {
           seriesKey: s.definitionKey,
+          tradition: s.tradition,
           seriesName: (resolvedLang === 'hi' && (s.name as any)?.value?.hi) ? (s.name as any).value.hi : ((s.name as any)?.value?.en || s.definitionKey),
           children: s.children.map((c: any) => ({
             seq: c.sequence,
             slug: c.slug,
+            label: formatSeriesDayLabel(c, currentLang),
           })),
           currentIndex: childIndex,
-          prevChild: childIndex > 0 ? s.children[childIndex - 1] : null,
-          nextChild: childIndex < s.children.length - 1 ? s.children[childIndex + 1] : null,
+          prevChild: childIndex > 0 ? {
+            ...s.children[childIndex - 1],
+            label: formatSeriesDayLabel(s.children[childIndex - 1], currentLang),
+          } : null,
+          nextChild: childIndex < s.children.length - 1 ? {
+            ...s.children[childIndex + 1],
+            label: formatSeriesDayLabel(s.children[childIndex + 1], currentLang),
+          } : null,
         };
       }
     }
@@ -221,16 +247,30 @@ export default function FestivalDetailScreen() {
 
   const liveTranslation = liveStory?.translations?.[resolvedLang] ?? liveStory?.translations?.['en'];
 
+  const getSeriesChildValue = (field: any) => {
+    if (!field || field.status === 'pending_source' || field.status === 'withheld') return '';
+    return (resolvedLang === 'hi' ? field.value?.hi : field.value?.en) || field.value?.en || '';
+  };
+
   const name =
     liveTranslation?.title ||
     liveStory?.displayName ||
     (festival ? resolveFestivalText(festival.name, resolvedLang) : '') ||
+    getSeriesChildValue(seriesChild?.canonicalTitle) ||
     festival?.definitionKey ||
     slug;
 
-  const tagline = liveTranslation?.teaser || (festival ? resolveFestivalText(festival.tagline, resolvedLang) : '');
-  const significance = liveTranslation?.significance || (festival ? resolveFestivalText(festival.significance, resolvedLang) : '');
-  const publishable = Boolean(liveStory) || (festival ? isFestivalPublishable(festival) : false);
+  const tagline =
+    liveTranslation?.teaser ||
+    (festival ? resolveFestivalText(festival.tagline, resolvedLang) : '') ||
+    getSeriesChildValue(seriesChild?.deityOrTheme);
+
+  const significance =
+    liveTranslation?.significance ||
+    (festival ? resolveFestivalText(festival.significance, resolvedLang) : '') ||
+    getSeriesChildValue(seriesChild?.significance);
+
+  const publishable = Boolean(liveStory) || Boolean(seriesChild) || (festival ? isFestivalPublishable(festival) : false);
 
   const resolveListContent = (field: any): string[] => {
     if (!field) return [];
@@ -243,9 +283,16 @@ export default function FestivalDetailScreen() {
     return [];
   };
 
+  const seriesChildRituals = (() => {
+    const field = seriesChild?.rituals;
+    if (!field || field.status === 'pending_source' || field.status === 'withheld') return [];
+    const list = (resolvedLang === 'hi' ? field.value?.hi : field.value?.en) || field.value?.en || [];
+    return Array.isArray(list) ? list : [];
+  })();
+
   const rituals = (liveTranslation?.rituals && liveTranslation.rituals.length > 0)
     ? liveTranslation.rituals
-    : (festival ? resolveListContent(festival.rituals) : []);
+    : (festival ? resolveListContent(festival.rituals) : seriesChildRituals);
 
   const canonicalDos = festival ? resolveListContent(festival.dos) : [];
   const dos = canonicalDos.length > 0 ? canonicalDos : (liveTranslation?.personalPractice ? [liveTranslation.personalPractice] : []);
@@ -254,7 +301,7 @@ export default function FestivalDetailScreen() {
   const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || '';
   const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : '');
 
-  const traditionKey = festival?.tradition || liveStory?.tradition || '';
+  const traditionKey = festival?.tradition || liveStory?.tradition || seriesContext?.tradition || '';
   const traditionLabel =
     traditionKey === 'hindu'
       ? (resolvedLang === 'hi' ? 'सनातन परंपरा' : 'Sanatana Tradition')
@@ -268,7 +315,8 @@ export default function FestivalDetailScreen() {
 
   const hasLocalFestival = Boolean(
     liveStory?.translations?.hi?.significance ||
-    (festival && resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi'))
+    (festival && resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi')) ||
+    Boolean(seriesChild?.significance?.value?.hi)
   );
 
   const availableSections = useMemo(() => {
@@ -281,7 +329,7 @@ export default function FestivalDetailScreen() {
     return list;
   }, [significance, rituals.length, dos.length, donts.length, pujaItems.length, mantraText, mantraTranslation, resolvedLang]);
 
-  if (!festival && !liveStory && !storyLoading) {
+  if (!festival && !liveStory && !seriesChild && !seriesGroup && !storyLoading) {
     return (
       <ReaderShell title="Festival" fallbackBackUrl="/(tabs)" themeColor={theme.brand} ambientGlowColor={theme.brand}>
         <View style={{ padding: 24, alignItems: 'center' }}>
@@ -346,12 +394,8 @@ export default function FestivalDetailScreen() {
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}>
               {seriesContext.children.map((child) => {
-                const isSelected = child.slug === slug;
-                const dayLabel = child.seq === 1
-                  ? (resolvedLang === 'hi' ? 'दिन १ · चतुर्थी' : 'Day 1 · Chaturthi')
-                  : child.seq === seriesContext.children.length
-                  ? (resolvedLang === 'hi' ? `दिन ${child.seq} · विसर्जन` : `Day ${child.seq} · Visarjan`)
-                  : (resolvedLang === 'hi' ? `दिन ${child.seq}` : `Day ${child.seq}`);
+                const isSelected = child.slug === slug || (child.seq === 1 && seriesContext.seriesKey === slug);
+                const dayLabel = child.label;
 
                 return (
                   <TouchableOpacity
@@ -929,7 +973,7 @@ export default function FestivalDetailScreen() {
                     {resolvedLang === 'hi' ? 'पिछला दिन' : 'Previous Day'}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }} numberOfLines={1}>
-                    {resolvedLang === 'hi' ? `दिन ${seriesContext.prevChild.sequence}` : `Day ${seriesContext.prevChild.sequence}`}
+                    {seriesContext.prevChild.label}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -961,7 +1005,7 @@ export default function FestivalDetailScreen() {
                     {resolvedLang === 'hi' ? 'अगला दिन' : 'Next Day'}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }} numberOfLines={1}>
-                    {resolvedLang === 'hi' ? `दिन ${seriesContext.nextChild.sequence}` : `Day ${seriesContext.nextChild.sequence}`}
+                    {seriesContext.nextChild.label}
                   </Text>
                 </View>
                 <Feather name="arrow-right" size={14} color={theme.brand} />

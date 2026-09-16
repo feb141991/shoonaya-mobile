@@ -6,6 +6,7 @@ import {
   resolveLocalizedText,
   resolveLocalizedList,
   isEditorialFieldDisplayable,
+  formatSeriesDayLabel,
 } from '../lib/observance-series-content';
 import {
   OBSERVANCE_SERIES_CONTENT_SNAPSHOT,
@@ -118,6 +119,55 @@ test('Native Observance Series Content — Sourced Provenance & Snapshot Integri
         assert.equal((child as any).mantra, undefined);
       }
     }
+  });
+
+  await t.test('8. formatSeriesDayLabel derives tradition-accurate, compact day labels across all 6 multi-day series', () => {
+    // 1. Sharad Navratri (10 days)
+    const navratri = getSeriesGroupContent('sharad-navratri')!;
+    assert.equal(formatSeriesDayLabel(navratri.children[0], 'en'), 'Day 1 · Shailaputri');
+    assert.equal(formatSeriesDayLabel(navratri.children[0], 'hi'), 'दिन 1 · शैलपुत्री');
+    assert.equal(formatSeriesDayLabel(navratri.children[1], 'en'), 'Day 2 · Brahmacharini');
+    assert.equal(formatSeriesDayLabel(navratri.children[9], 'en'), 'Day 10 · Dussehra');
+    assert.equal(formatSeriesDayLabel(navratri.children[9], 'hi'), 'दिन 10 · विजयादशमी');
+
+    // 2. Diwali Five Days (5 days)
+    const diwali = getSeriesGroupContent('diwali-five-days')!;
+    assert.equal(formatSeriesDayLabel(diwali.children[0], 'en'), 'Day 1 · Dhanteras');
+    assert.equal(formatSeriesDayLabel(diwali.children[0], 'hi'), 'दिन 1 · धनतेरस');
+    assert.equal(formatSeriesDayLabel(diwali.children[1], 'en'), 'Day 2 · Naraka Chaturdashi');
+    assert.equal(formatSeriesDayLabel(diwali.children[2], 'en'), 'Day 3 · Diwali');
+    assert.equal(formatSeriesDayLabel(diwali.children[2], 'hi'), 'दिन 3 · दीपावली');
+    assert.equal(formatSeriesDayLabel(diwali.children[3], 'en'), 'Day 4 · Govardhan Puja');
+    assert.equal(formatSeriesDayLabel(diwali.children[4], 'en'), 'Day 5 · Bhai Dooj');
+
+    // 3. Chhath Puja (4 days)
+    const chhath = getSeriesGroupContent('chhath-puja-four-days')!;
+    assert.equal(formatSeriesDayLabel(chhath.children[0], 'en'), 'Day 1 · Nahay Khay');
+    assert.equal(formatSeriesDayLabel(chhath.children[0], 'hi'), 'दिन 1 · नहाय खाय');
+    assert.equal(formatSeriesDayLabel(chhath.children[1], 'en'), 'Day 2 · Kharna');
+    assert.equal(formatSeriesDayLabel(chhath.children[2], 'en'), 'Day 3 · Sandhya Arghya');
+    assert.equal(formatSeriesDayLabel(chhath.children[3], 'en'), 'Day 4 · Usha Arghya');
+
+    // 4. Paryushana Parva (8 days)
+    const paryushana = getSeriesGroupContent('paryushana-parva')!;
+    assert.equal(formatSeriesDayLabel(paryushana.children[0], 'en'), 'Day 1');
+    assert.equal(formatSeriesDayLabel(paryushana.children[6], 'en'), 'Day 7');
+    assert.equal(formatSeriesDayLabel(paryushana.children[7], 'en'), 'Day 8 · Samvatsari');
+    assert.equal(formatSeriesDayLabel(paryushana.children[7], 'hi'), 'दिन 8 · संवत्सरी');
+
+    // 5. Ganeshotsav (11 days)
+    const ganesh = getSeriesGroupContent('ganeshotsav')!;
+    assert.equal(formatSeriesDayLabel(ganesh.children[0], 'en'), 'Day 1 · Chaturthi');
+    assert.equal(formatSeriesDayLabel(ganesh.children[0], 'hi'), 'दिन 1 · गणेश चतुर्थी');
+    assert.equal(formatSeriesDayLabel(ganesh.children[1], 'en'), 'Day 2');
+    assert.equal(formatSeriesDayLabel(ganesh.children[10], 'en'), 'Day 11 · Visarjan');
+    assert.equal(formatSeriesDayLabel(ganesh.children[10], 'hi'), 'दिन 11 · विसर्जन');
+
+    // 6. Chaitra Navratri (9 days)
+    const chaitra = getSeriesGroupContent('chaitra-navratri')!;
+    assert.equal(formatSeriesDayLabel(chaitra.children[0], 'en'), 'Day 1 · Shailaputri');
+    assert.equal(formatSeriesDayLabel(chaitra.children[8], 'en'), 'Day 9 · Siddhidatri');
+    assert.equal(formatSeriesDayLabel(chaitra.children[8], 'hi'), 'दिन 9 · सिद्धिदात्री');
   });
 
 });
