@@ -404,11 +404,81 @@ export async function createMandaliComment(payload: { postId: string; userId: st
 // a post's comment section is expanded, rather than upfront for every post
 // in the feed. The feed response itself only carries a 2-comment preview
 // per post (see MandaliFeedPost.commentPreview).
-export async function fetchPostComments(postId: string): Promise<CommentRow[]> {
-  const response = await apiFetch(`/api/mandali/comments?postId=${encodeURIComponent(postId)}`);
-  if (!response.ok) throw new Error('Could not load comments');
-  const result = await response.json() as { comments: CommentRow[] };
-  return result.comments ?? [];
+export async function fetchPostComments(postId: string, currentUserId?: string): Promise<CommentRow[]> {
+  try {
+    const response = await apiFetch(`/api/mandali/comments?postId=${encodeURIComponent(postId)}`);
+    if (response.ok) {
+      const result = (await response.json()) as { comments: CommentRow[] };
+      return result.comments ?? [];
+    }
+  } catch (apiErr) {
+    console.warn('[fetchPostComments] /api/mandali/comments failed, falling back to direct Supabase:', apiErr);
+  }
+
+  // Direct Supabase fallback when backend API is unreachable or returned an error
+  try {
+    const safetyState = currentUserId
+      ? await fetchSafetyState(currentUserId).catch(() => ({
+          excludedAuthorIds: new Set<string>(),
+          hiddenContentKeys: new Set<string>(),
+        }))
+      : { excludedAuthorIds: new Set<string>(), hiddenContentKeys: new Set<string>() };
+
+    const { data: rawComments, error } = await supabase
+      .from('post_comments')
+      .select('id, post_id, author_id, body, created_at, upvotes, is_highlighted, client_operation_id')
+      .eq('post_id', postId)
+      .is('deleted_at', null)
+      .order('is_highlighted', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.warn('[fetchPostComments] Direct Supabase comments query error:', error);
+      return [];
+    }
+
+    const comments = (rawComments ?? []).filter(
+      (c) =>
+        !safetyState.excludedAuthorIds.has(c.author_id) &&
+        !safetyState.hiddenContentKeys.has(`mandali_comment:${c.id}`)
+    );
+
+    if (comments.length === 0) return [];
+
+    const authorIds = Array.from(new Set(comments.map((c) => c.author_id)));
+    const { data: authors } = await supabase
+      .from('public_profiles')
+      .select('id, full_name, username, avatar_url')
+      .in('id', authorIds);
+
+    const authorMap = new Map((authors ?? []).map((a) => [a.id, a]));
+
+    return comments.map((c) => {
+      const auth = authorMap.get(c.author_id);
+      return {
+        id: c.id,
+        post_id: c.post_id,
+        author_id: c.author_id,
+        body: c.body,
+        parent_id: null,
+        created_at: c.created_at,
+        updated_at: null,
+        deleted_at: null,
+        upvotes: c.upvotes ?? 0,
+        is_highlighted: c.is_highlighted ?? false,
+        profiles: auth
+          ? {
+              full_name: auth.full_name || auth.username || 'Seeker',
+              username: auth.username || 'Seeker',
+              avatar_url: auth.avatar_url,
+            }
+          : null,
+      };
+    });
+  } catch (err) {
+    console.warn('[fetchPostComments] Direct Supabase fallback failed:', err);
+    return [];
+  }
 }
 
 export async function updateMandaliComment(payload: { commentId: string; body: string }): Promise<void> {

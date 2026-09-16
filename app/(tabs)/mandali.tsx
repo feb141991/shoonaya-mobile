@@ -1063,11 +1063,11 @@ export default function MandaliScreen() {
   // this reuses that instead of adding a second cross-user profile fetch
   // path.
   const patchNewComment = useCallback(async (postId: string, commentId: string) => {
-    const fullComments = await fetchPostComments(postId);
+    const fullComments = await fetchPostComments(postId, profile?.userId);
     const normalized = fullComments.find((c) => c.id === commentId);
     if (!normalized) return;
     setComments((current) => (current.some((c) => c.id === normalized.id) ? current : [...current, normalized]));
-  }, []);
+  }, [profile?.userId]);
 
   // Upvotes, comments, and RSVPs used to all funnel into one debounced
   // full loadMandali() -- meaning a single upvote from a stranger on a
@@ -1983,7 +1983,7 @@ export default function MandaliScreen() {
       // isn't blocked on the network.
       if (next && !fullyLoadedCommentPostIds.has(next)) {
         setLoadingCommentsForPostId(next);
-        fetchPostComments(next)
+        fetchPostComments(next, profile?.userId)
           .then((fullComments) => {
             setComments((currentComments) => {
               const withoutThisPost = currentComments.filter((c) => c.post_id !== next);
@@ -1992,7 +1992,7 @@ export default function MandaliScreen() {
             setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(next));
           })
           .catch((error) => {
-            console.error('[MandaliScreen] fetchPostComments failed', error);
+            console.warn('[MandaliScreen] fetchPostComments failed', error);
           })
           .finally(() => {
             setLoadingCommentsForPostId((current) => (current === next ? null : current));
@@ -2000,12 +2000,12 @@ export default function MandaliScreen() {
       }
       return next;
     });
-  }, [fullyLoadedCommentPostIds]);
+  }, [fullyLoadedCommentPostIds, profile?.userId]);
 
   useEffect(() => {
     if (expandedPostId && !fullyLoadedCommentPostIds.has(expandedPostId)) {
       setLoadingCommentsForPostId(expandedPostId);
-      fetchPostComments(expandedPostId)
+      fetchPostComments(expandedPostId, profile?.userId)
         .then((fullComments) => {
           setComments((currentComments) => {
             const withoutThisPost = currentComments.filter((c) => c.post_id !== expandedPostId);
@@ -2014,13 +2014,13 @@ export default function MandaliScreen() {
           setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(expandedPostId));
         })
         .catch((error) => {
-          console.error('[MandaliScreen] fetchPostComments failed', error);
+          console.warn('[MandaliScreen] fetchPostComments failed', error);
         })
         .finally(() => {
           setLoadingCommentsForPostId(null);
         });
     }
-  }, [expandedPostId, fullyLoadedCommentPostIds]);
+  }, [expandedPostId, fullyLoadedCommentPostIds, profile?.userId]);
 
   const renderPost = useCallback((post: PostRow) => {
     return (
