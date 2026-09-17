@@ -1045,6 +1045,1271 @@ export const DHARM_VEERS: DharmVeer[] = [
       "text": "ਜਉ ਤਉ ਪ੍ਰੇਮ ਖੇਲਣ ਕਾ ਚਾਉ ॥ ਸਿਰੁ ਧਰਿ ਤਲੀ ਗਲੀ ਮੇਰੀ ਆਉ ॥",
       "attribution": "ਸ੍ਰੀ ਗੁਰੂ ਨਾਨਕ ਦੇਵ ਜੀ (ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ, ਅੰਗ ੧੪੧੨)"
     }
+  },
+  {
+    "id": "hanuman",
+    "name": "Sri Hanuman",
+    "nameLocal": "श्री हनुमान",
+    "era": "Treta Yuga",
+    "eraLocal": "त्रेता युग",
+    "tradition": "hindu",
+    "region": "Kishkindha & Ayodhya",
+    "regionLocal": "किष्किंधा व अयोध्या",
+    "emoji": "🚩",
+    "tagline": "The supreme exemplar of selfless devotion, wisdom, and strength whose unconditional service to Lord Rama conquered all adversity.",
+    "taglineLocal": "निःस्वार्थ भक्ति, असीम बल और विवेक के शिरोमणि जिन्होंने प्रभु श्री राम के काज संवारने हेतु समस्त संकटों को हर लिया।",
+    "journey": "Born to Anjana and Kesari through the divine grace of Vayu Deva, Hanuman displayed cosmic spiritual vitality from infancy. Mistaking the rising sun for a golden fruit, the child leapt into the heavens, demonstrating fearless wonder before receiving boons of invulnerability, wisdom, and mastery over the elements from the celestial guardians. Educated directly by Surya Deva, the sun god, Hanuman mastered the four Vedas, the six Vedangas, grammar, and statesmanship, becoming the wisest among scholars while remaining completely devoid of ego. Later, as chief minister to the Vanara king Sugriva in the forests of Kishkindha, Hanuman acted as the discerning bridge of trust, recognizing the divine avatarhood of Sri Rama and Lakshmana during their wandering exile.\n\nWhen the search for the abducted Mother Sita led the Vanara search party to the southern shores of the ocean, the warriors sat in despair, overwhelmed by the hundred-yojana expanse of roaring waters. Reminded of his latent strength by the elder Jambavan, Hanuman expanded his physical form, climbed Mount Mahendra, and launched himself into the sky with a roar that shook the earth. Braving the oceanic demons Surasa and Simhika through intellect and agility, Hanuman reached Lanka, transformed into the size of a cat to slip past guards, and located the grief-stricken Janaki in the Ashoka Vatika, delivering Rama's signet ring and restoring her hope.",
+    "journeyLocal": "माता अंजना और वानरराज केसरी के यहाँ पवनदेव की कृपा से अवतरित श्री हनुमान ने बाल्यकाल से ही अद्भुत तेज का परिचय दिया। सूर्य को फल समझकर आकाश में छलांग लगाने वाले बालक को समस्त देवों ने अमरता, अतुलित बल और विद्या का वरदान दिया। स्वयं सूर्यदेव से समस्त वेदों, उपनिषदों और व्याकरण का ज्ञान प्राप्त कर वे परम ज्ञानी बने, किंतु उनका हृदय सदैव निरहंकार और सेवा-भाव में लीन रहा। किष्किंधा में सुग्रीव के मंत्री के रूप में उन्होंने वन-वन भटकते प्रभु श्री राम और लक्ष्मण को पहचानकर उनकी मैत्री कराई।\n\nसीता जी की खोज में जब वानर सेना दक्षिण समुद्र तट पर आकर निराश हो गई, तब जाम्बवंत जी ने हनुमान जी को उनकी सोई हुई दिव्य शक्ति का स्मरण कराया। 'कवन सो काज कठिन जग माहीं, जो नहिं होत तात तुम्ह पाहीं' सुनते ही हनुमान जी ने महेंद्र पर्वत से गर्जना करते हुए सौ योजन के विशाल समुद्र को एक छलांग में लांघ लिया। सुरसा और सिंहिका की बाधाओं को बुद्धि-बल से पार कर वे लंका पहुँचे, सूक्ष्म रूप धरकर पहरेदारों से बचते हुए अशोक वाटिका में माता जानकी के दर्शन किए और प्रभु राम की मुद्रिका देकर उनके प्राणों में नवजीवन का संचार किया।",
+    "trial": "Hanuman's trial was not merely facing demonic legions, but navigating extreme danger with unshakeable restraint and strategic brilliance. Captured intentionally after destroying the Ashoka grove to confront the demon king Ravana in open court, Hanuman fearlessly warned the tyrant to return Sita and take refuge in Rama's compassion. When the enraged Rakshasa king ordered Hanuman's tail wrapped in cloth, soaked in oil, and set ablaze, Hanuman transformed the intended execution into an instrument of liberation, expanding his body, leaping across the golden ramparts, and reducing the arrogant fortress of Lanka to ashes while keeping Mother Sita’s sanctuary untouched.\n\nDuring the apocalyptic war in Lanka, when Lakshmana fell unconscious, struck by Indrajit’s deadly Shakti weapon, the royal physician Sushena declared that life could only be preserved if the Sanjeevani herb from the distant Dronagiri mountain in the Himalayas was fetched before dawn. Traversing thousands of leagues across the night sky, Hanuman found the mountain enveloped in dazzling mystical illusions concealing the herb. Refusing to let time or uncertainty triumph, Hanuman uprooted the entire cosmic mountain upon his palm and flew back across the subcontinent, reviving Lakshmana and turning the tide of the war.",
+    "trialLocal": "हनुमान जी की परीक्षा केवल दैत्यों से युद्ध करने की नहीं, बल्कि विषम परिस्थितियों में धैर्य और धर्म की मर्यादा बनाए रखने की थी। रावण की राजसभा में बंदी बनकर उन्होंने निर्भय होकर धर्म का उपदेश दिया। जब क्रूर रावण ने उनकी पूंछ में आग लगाने का आदेश दिया, तो उन्होंने उसी अग्नि से रावण के सोने की लंका के अहंकार को भस्म कर दिया, किंतु माता सीता के निवास को आंच तक नहीं आने दी।\n\nलंका युद्ध में जब मेघनाद के शक्ति-बाण से लक्ष्मण मूर्छित हो गए और सूर्योदय से पूर्व हिमालय के द्रोणागिरि पर्वत से संजीवनी बूटी लाना अनिवार्य हो गया, तब हनुमान जी ने रात्रि के अंधकार में हजारों योजन की दूरी तय की। पर्वत पर जड़ी-बूटियों की पहचान में भ्रम होने पर, उन्होंने समय व्यर्थ किए बिना समूचे पर्वत को ही अपनी हथेली पर उठा लिया और सूर्योदय से पहले लंका लौटकर लक्ष्मण जी के प्राणों की रक्षा की।",
+    "teaching": "Hanuman revealed that the highest strength (Bala) finds its true purpose only when consecrated in selfless service (Seva) and total surrender to the Divine. Ego is the ultimate bondage, whereas pure devotion transforms even the impossible into effortless reality. Power without righteousness leads to ruin like Ravana; power aligned with Dharma becomes the savior of worlds like Hanuman.",
+    "teachingLocal": "श्री हनुमान ने सिखाया कि बल और बुद्धि की सार्थकता केवल प्रभु-सेवा और दीन-दुखियों की रक्षा में है। अहंकार सबसे बड़ा बंधन है, जबकि अनन्य भक्ति असंभव कार्य को भी सहज बना देती है। शक्ति जब अधर्म के साथ होती है तो रावण की तरह विनाश लाती है, किंतु जब धर्म के साथ होती है तो हनुमान की भांति जगत का उद्धार करती है।",
+    "moral": "True heroism does not boast of its achievements; it bows in humble gratitude to the Divine will. When actions are dedicated unconditionally to truth and love, grace dissolves every obstacle in heaven and earth.",
+    "moralLocal": "सच्चा वीर अपने पराक्रम का अभिमान नहीं करता, बल्कि अपनी विजय को ईश्वर की कृपा मानता है। जब हृदय में सत्य और सेवा का वास होता है, तो संसार की कोई भी बाधा मार्ग नहीं रोक सकती।",
+    "legacy": "Sri Hanuman remains the immortal Chiranjivi, revered in millions of households, ashrams, and temples across the world as the Sankat Mochan—the dispeller of fear, disease, and sorrow. His name invokes courage in the hearts of athletes, scholars, and spiritual seekers alike, while the Hanuman Chalisa composed by Tulsidas stands as the universal anthem of divine protection and inner fortitude.",
+    "legacyLocal": "हनुमान जी अष्ट चिरंजीवियों में से एक हैं और युगों-युगों से संकटमोचन के रूप में जन-जन के हृदय में बसे हैं। तुलसीदास कृत 'हनुमान चालीसा' आज भी कोटि-कोटि भक्तों को आत्मिक शांति, अभय और सकारात्मक ऊर्जा प्रदान करती है।",
+    "source": "Valmiki Ramayana (Sundara Kanda & Yuddha Kanda), Goswami Tulsidas — Ramcharitmanas",
+    "sourceLocal": "वाल्मीकि रामायण (सुंदरकांड व युद्धकांड), गोस्वामी तुलसीदास — श्रीरामचरितमानस",
+    "sourceCitations": [
+      {
+        "sourceName": "Valmiki Ramayana",
+        "sourceRef": "Sundara Kanda, Sargas 1–55 (The Leap Across the Ocean and Exploration of Lanka)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Goswami Tulsidas — Ramcharitmanas",
+        "sourceRef": "Sundar Kand, Chaupais 1–35 & Lanka Kand (Sanjeevani Episode)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Enter the city keeping the King of Ayodhya in your heart, and accomplish all your tasks with success.",
+      "attribution": "Goswami Tulsidas — Ramcharitmanas, Sundar Kand 5"
+    },
+    "quoteLocal": {
+      "text": "प्रबिसि नगर कीजै सब काजा। हृदयँ राखि कौसलपुर राजा॥",
+      "attribution": "श्रीरामचरितमानस (सुंदरकांड, दोहा ५)"
+    }
+  },
+  {
+    "id": "bhishma",
+    "name": "Bhishma Pitamah",
+    "nameLocal": "भीष्म पितामह",
+    "era": "Dwapara Yuga",
+    "eraLocal": "द्वापर युग",
+    "tradition": "hindu",
+    "region": "Hastinapur, Kuru Realm",
+    "regionLocal": "हस्तिनापुर, कुरु राज्य",
+    "emoji": "🏹",
+    "tagline": "The grand patriarch of the Mahabharata whose dreadful vow of lifelong celibacy and unbending dedication to duty shaped the destiny of the Kuru dynasty.",
+    "taglineLocal": "कुरुवंश के भीष्म पितामह जिनकी आजीवन ब्रह्मचर्य की भीषण प्रतिज्ञा और कर्तव्य-निष्ठा ने महाभारत के युग को दिशा दी।",
+    "journey": "Born as Devavrata, the eighth son of the sacred river Ganga and King Shantanu of Hastinapur, the young prince was trained in spiritual knowledge and statesmanship by Sage Brihaspati, Shukracharya, and Vasishtha, and in supreme martial mastery by Lord Parashurama himself. Renowned for radiant intellect and unmatched prowess with the celestial bow, Devavrata was formally invested as the crown prince of Hastinapur, beloved by citizens and royalty alike.\n\nHis life pivoted into tragedy when his aging father Shantanu fell deeply in love with Satyavati, the daughter of the chieftain of fishermen. The chieftain refused to permit the marriage unless Satyavati's future sons were guaranteed the imperial throne over Devavrata. Learning of his father’s silent despondency, Devavrata approached the fisherman chief and renounced his rightful claim to the kingdom. When the chief voiced anxiety that Devavrata’s future children might challenge the throne, Devavrata took the terrible oath that stunned the cosmos: renouncing marriage and taking a solemn vow of unbroken celibacy (Akhanda Brahmacharya). Celestial flowers showered from heaven with the cry 'Bhishma! Bhishma!' (The Terrible One), and Shantanu granted his son the rare boon of Ichha Mrityu—the power to choose the moment of his own death.",
+    "journeyLocal": "हस्तिनापुर नरेश शांतनु और देवनदी गंगा के आठवें पुत्र के रूप में जन्मे देवव्रत ने महर्षि वशिष्ठ, बृहस्पति और शुक्राचार्य से वेद-वेदांग और नीति-शास्त्र का ज्ञान प्राप्त किया, तथा भगवान परशुराम से अस्त्र-शस्त्र की अद्वितीय शिक्षा ली। उनके अतुलित पराक्रम और शील को देखकर शांतनु ने उन्हें हस्तिनापुर का युवराज घोषित किया।\n\nकिंतु जब महाराज शांतनु निषादराज की कन्या सत्यवती पर मोहित हुए और निषादराज ने शर्त रखी कि सत्यवती का पुत्र ही राजा बनेगा, तब पिता के मौन दुख को दूर करने के लिए देवव्रत ने न केवल सिंहासन का अधिकार त्याग दिया, बल्कि आजीवन अखण्ड ब्रह्मचर्य का पालन करने की 'भीषण प्रतिज्ञा' ली। इस अलौकिक त्याग से प्रसन्न होकर देवताओं ने उन्हें 'भीष्म' नाम दिया और शांतनु ने उन्हें 'इच्छा-मृत्यु' का वरदान प्रदान किया।",
+    "trial": "Bhishma's tragic crucible lay in living bound by his oath of allegiance to the throne of Hastinapur, even as righteousness was subverted by the arrogance of Duryodhana and the blindness of Dhritarashtra. Powerless to prevent the gambling match that brought dishonor to Draupadi, Bhishma endured agonizing spiritual torment, caught between institutional duty to the crown and moral truth.\n\nWhen the Kurukshetra war became inevitable, Bhishma served as supreme commander of the Kaurava armies for ten furious days, repelling the combined might of the Pandavas and forcing even Sri Krishna to breach his vow of not taking up weapons. On the tenth day, knowing that the Pandavas could never win as long as he stood undefeated, Bhishma revealed the secret of his own vulnerability to Yudhishthira. Permitting Arjuna to shoot him while standing behind Shikhandi, Bhishma was pierced by thousands of arrows until he fell from his chariot, resting upon a bed of arrows without his body touching the earth. Awaiting the auspicious Uttarayana solstice to leave his mortal frame, the dying patriarch lay upon his bed of arrows for fifty-eight nights, patiently transmitting the monumental discourses of the Shanti Parva and Anushasana Parva on Rajadharma, Moksha, and the Vishnu Sahasranama to Yudhishthira.",
+    "trialLocal": "भीष्म का सबसे बड़ा आंतरिक संघर्ष हस्तिनापुर के सिंहासन से बंधी निष्ठा और धर्म के बीच का था। भरी सभा में द्रौपदी के चीरहरण के समय वे कुल-मर्यादा और राजसिंहासन के नियमों के बंधन में बंधे रहे, जो उनके जीवन की सबसे बड़ी पीड़ा बनी।\n\nकुरुक्षेत्र के महायुद्ध में कौरव सेना के प्रधान सेनापति के रूप में दस दिनों तक उन्होंने ऐसा भीषण पराक्रम दिखाया कि भगवान श्री कृष्ण को भी अपनी प्रतिज्ञा तोड़कर चक्र उठाना पड़ा। दसवें दिन, जब उन्होंने देखा कि उनके रहते धर्म की विजय संभव नहीं है, तो उन्होंने स्वयं युधिष्ठिर को अपने पतन का उपाय बताया। शिखंडी को आगे कर अर्जुन के बाणों से छलनी होकर वे शर-शैया पर गिरे। बाणों की शैया पर पड़े हुए उत्तरायण की प्रतीक्षा करते हुए उन्होंने युधिष्ठिर को 'शांति पर्व' और 'अनुशासन पर्व' के अंतर्गत राजधर्म, मोक्षधर्म और 'श्री विष्णु सहस्रनाम' का अमर उपदेश दिया।",
+    "teaching": "Bhishma revealed that vows and institutional obligations, when rigid and detached from compassionate justice, can become a golden cage that enables adharma. True righteousness requires the courage to dismantle corrupt systems rather than merely serving them with unquestioning loyalty. Yet his profound discourses upon his bed of arrows remain humanity's highest treatises on ethical governance and detachment.",
+    "teachingLocal": "भीष्म का जीवन सिखाता है कि कर्तव्य और प्रतिज्ञाएँ यदि न्याय और संवेदना से रहित हो जाएँ, तो वे अनजाने में अधर्म को संरक्षण देने लगती हैं। सच्चा धर्म किसी पद या सिंहासन का अंधानुकरण नहीं, बल्कि समय पर असत्य के विरुद्ध खड़े होने का साहस है। शर-शैया पर दिया गया उनका उपदेश आज भी राजधर्म का सर्वोच्च ग्रंथ है।",
+    "moral": "Uncompromising integrity and personal sacrifice make a soul immortal, but one must always ensure that one's strength and loyalty are never mortgaged to unjust authority.",
+    "moralLocal": "व्यक्तिगत त्याग और सत्यनिष्ठा मनुष्य को अमर बनाती है, किंतु यह ध्यान रखना आवश्यक है कि हमारी शक्ति और निष्ठा कभी अधर्म के पक्ष में ढाल न बन जाए।",
+    "legacy": "Bhishma stands as the tragic colossus of the Mahabharata, the archetype of supreme self-denial, martial brilliance, and philosophical depth. His gift of the Vishnu Sahasranama to King Yudhishthira remains one of the most sacred stotras recited by spiritual seekers across the centuries.",
+    "legacyLocal": "भीष्म पितामह त्याग, संयम और ज्ञान के अद्वितीय शिखर हैं। महाभारत के शांति पर्व में उनके द्वारा दिया गया राजधर्म का ज्ञान और श्री विष्णु सहस्रनाम का प्राकट्य सनातन संस्कृति की अमूल्य धरोहर है।",
+    "source": "Mahabharata (Adi Parva, Bhishma Parva, Shanti Parva, Anushasana Parva)",
+    "sourceLocal": "महाभारत (आदि पर्व, भीष्म पर्व, शांति पर्व, अनुशासन पर्व)",
+    "sourceCitations": [
+      {
+        "sourceName": "Vyasa — Mahabharata",
+        "sourceRef": "Adi Parva, Chapters 100–105 (Devavrata's Terrible Vow)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Vyasa — Mahabharata",
+        "sourceRef": "Shanti Parva & Anushasana Parva (Teachings on Rajadharma and Vishnu Sahasranama)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "I covet neither the sovereignty of the earth nor the pleasures of the gods; truth alone is dear to me, and from righteousness I will never swerve.",
+      "attribution": "Bhishma Pitamah — Mahabharata, Adi Parva 100"
+    },
+    "quoteLocal": {
+      "text": "न चाहं पृथिवीं राज्यं कामये नरसत्तम। सत्यं च मे प्रियं राजन् धर्माच्च न चलेयम्॥",
+      "attribution": "भीष्म पितामह (महाभारत, आदि पर्व १००)"
+    }
+  },
+  {
+    "id": "dhruv",
+    "name": "Bhakta Dhruv",
+    "nameLocal": "भक्त ध्रुव",
+    "era": "Satya Yuga",
+    "eraLocal": "सत्य युग",
+    "tradition": "hindu",
+    "region": "Madhuvana, Yamuna Banks",
+    "regionLocal": "मधुवन, यमुना तट",
+    "emoji": "⭐",
+    "tagline": "The child-devotee whose unwavering single-pointed penance won the grace of Lord Vishnu and transformed him into the eternal Pole Star.",
+    "taglineLocal": "बाल-भक्त जिनकी अनन्य तपस्या और अटूट निष्ठा ने श्रीहरि का साक्षात्कार कराया और वे आकाश में अचल 'ध्रुव तारा' बने।",
+    "journey": "Born as the son of King Uttanapada and Queen Suniti, prince Dhruva was a gentle five-year-old child who yearned for his father's affection. One day, seeing his elder half-brother Uttama sitting happily in their father's lap, Dhruva approached to climb up as well. His proud stepmother, Queen Suruchi, pushed the child away with cutting words, declaring that he had no right to sit on the king's lap or inherit the royal throne because he had not been born from her womb, telling him to wander into the wilderness and pray to Lord Vishnu if he desired royalty.\n\nWeeping inconsolably from the public humiliation, Dhruva ran to his mother Suniti. Instead of sowing seeds of bitterness or resentment, the noble Suniti embraced her son and counseled him with profound spiritual wisdom: worldly kings and thrones are transient, but Lord Narayana alone is the imperishable father and refuge of all living beings. Inspired by his mother's words, the five-year-old prince renounced palace comfort, took leave of his mother, and walked alone into the dense forests of Madhuvana along the sacred banks of the Yamuna to seek the supreme Lord.",
+    "journeyLocal": "राजा उत्तानपाद और महारानी सुनीति के पुत्र के रूप में जन्मे पांच वर्षीय बालक ध्रुव जब एक दिन अपने पिता की गोद में बैठने गए, तो उनकी सौतेली माता सुरुचि ने अहंकारवश उन्हें झिड़क दिया। सुरुचि ने कटु वचन कहते हुए कहा कि राजा की गोद और सिंहासन केवल उसके पुत्र उत्तम का अधिकार है; यदि ध्रुव सिंहासन चाहता है तो वन में जाकर भगवान नारायण की तपस्या करे।\n\nरोते हुए जब ध्रुव अपनी माता सुनीति के पास पहुँचे, तो माता ने उन्हें ढांढस बंधाते हुए सिखाया कि संसार के राजाओं की गोद क्षणभंगुर है, किंतु जगतपिता श्रीहरि की शरण सर्वोपरि है। माता के वचनों को हृदय में धारण कर नन्हे ध्रुव ने उसी क्षण राजमहलों के सुखों का त्याग कर दिया और यमुना तट पर स्थित मधुवन के घने जंगलों की ओर चल पड़े।",
+    "trial": "On the forest path, the divine sage Narada intercepted Dhruva, testing his resolve. Narada urged the young prince to return home, warning that forest austerities are perilous even for seasoned ascetics, and that worldly honor and insult are merely illusions of childhood. Seeing that Dhruva’s resolve remained immovable as granite, Narada initiated him into the sacred twelve-syllable mantra: 'Om Namo Bhagavate Vasudevaya', instructing him in breath control and unbroken meditation.\n\nIn Madhuvana, Dhruva undertook an ascetic tapasya unprecedented in cosmic history. In the first month, he ate only wild fruits every three days; in the second month, dried leaves every six days; in the third month, only water every nine days; in the fourth month, only air every twelve days. By the fifth month, standing poised on one foot like a pillar with his senses withdrawn from the material world, Dhruva restrained his breath entirely, fixing his soul on the supreme effulgence in his heart. The spiritual intensity of his penance created cosmic heat, causing the demigods to appeal to Lord Vishnu for relief. Moved by the child's unyielding faith, Lord Vishnu descended upon Garuda, touched Dhruva’s cheek with his divine conch Panchajanya, awakening supreme spiritual poetry and granting him the Dhruva Loka—the eternal, unmoving Pole Star around which the entire celestial sphere revolves.",
+    "trialLocal": "मार्ग में देवर्षि नारद ने बालक की परीक्षा लेते हुए समझाया कि इतनी छोटी आयु में वन की कठोर तपस्या असंभव है और मान-अपमान को भूलकर महल लौट जाना चाहिए। किंतु जब नारद जी ने देखा कि ध्रुव का संकल्प अडिग है, तो उन्होंने उन्हें 'ॐ नमो भगवते वासुदेवाय' का द्वादशाक्षर मंत्र और ध्यान की विधि प्रदान की।\n\nमधुवन में पांच वर्ष के बालक ने कठोर तप प्रारंभ किया। पहले महीने में तीन दिन में एक बार फल, दूसरे महीने में छह दिन में सूखे पत्ते, तीसरे महीने में नौ दिन में जल, और चौथे महीने में बारह दिन में केवल वायु का सेवन किया। पांचवें महीने में एक पैर पर खड़े होकर उन्होंने अपनी श्वास को रोककर हृदय में श्रीहरि का ध्यान धर लिया। उनके तपोबल से तीनों लोक कंपित हो उठे। अंततः भगवान विष्णु शंख, चक्र, गदा और पद्म धारण कर प्रकट हुए। प्रभु ने अपने पाञ्चजन्य शंख का स्पर्श ध्रुव के गाल से कराया, जिससे उन्हें समस्त ज्ञान प्राप्त हुआ और उन्हें ब्रह्मांड के केंद्र में 'ध्रुव लोक' का अमर स्थान प्राप्त हुआ।",
+    "teaching": "Dhruva taught that age, lineage, and physical stature are no barriers to spiritual realization. When determination (Sankalpa) is pure and directed toward the Divine rather than worldly ego, grace descends immediately. Insults and adversities in life are not curses; they are catalysts meant to awaken the sleeping soul to its eternal heritage.",
+    "teachingLocal": "भक्त ध्रुव ने सिखाया कि ईश्वर-प्राप्ति में आयु, बल या सांसारिक साधन कभी बाधा नहीं बनते। यदि मनुष्य का संकल्प निष्काम और अडिग हो, तो भगवान स्वयं चलकर अपने भक्त के पास आते हैं। संसार का अपमान भी यदि भगवान की ओर मोड़ दे, तो वह वरदान बन जाता है।",
+    "moral": "Rejection by the world is an invitation to seek the eternal embrace of Truth. Single-pointed devotion and patience can steady the mind and elevate the humblest soul to the highest station in the universe.",
+    "moralLocal": "संसार की उपेक्षा से निराश होने के बजाय उसे आत्म-जागृति का साधन बना लेना चाहिए। एकाग्र तप और निष्ठा से मनुष्य आकाश में ध्रुव तारे की भांति अचल और अमर हो सकता है।",
+    "legacy": "Bhakta Dhruv remains the universal symbol of steadfast resolve (Dhruva Sankalpa) in Sanatan Dharma. The Pole Star (Dhruva Tara) continues to guide navigators, seekers, and newlyweds as an eternal reminder of fidelity, constancy, and the ultimate triumph of pure childlike surrender.",
+    "legacyLocal": "सनातन संस्कृति में 'ध्रुव संकल्प' अडिग निष्ठा का प्रतीक बन गया। आकाश में चमकता ध्रुव तारा आज भी हर युग में भक्तों, संतों और पथिकों को यह संदेश देता है कि सत्य के पथ पर चलने वाला कभी अपने लक्ष्य से नहीं डिगता।",
+    "source": "Srimad Bhagavata Purana (Skandha 4, Ch. 8–12), Vishnu Purana (Book I, Ch. 11–12)",
+    "sourceLocal": "श्रीमद्भागवत महापुराण (चतुर्थ स्कंध, अध्याय ८-१२), विष्णु पुराण (प्रथम अंश, अध्याय ११-१२)",
+    "sourceCitations": [
+      {
+        "sourceName": "Srimad Bhagavata Purana",
+        "sourceRef": "Skandha 4, Chapters 8–12 (Dhruva Charitra & Penance in Madhuvana)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Vishnu Purana",
+        "sourceRef": "Book I, Chapters 11–12 (The Legend of Dhruva, trans. H. H. Wilson)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "He who with unbroken contemplation fixed his heart upon the imperishable Lord, dissolved all worldly desire and attained the unmoving celestial station.",
+      "attribution": "Srimad Bhagavata Purana 4.12"
+    },
+    "quoteLocal": {
+      "text": "स वै निवृत्तस्तरसा गतो वनं चकार तीव्रं तप ईश्वरेच्छया।",
+      "attribution": "श्रीमद्भागवत महापुराण (४.८)"
+    }
+  },
+  {
+    "id": "savitri",
+    "name": "Sati Savitri",
+    "nameLocal": "सती सावित्री",
+    "era": "Treta Yuga",
+    "eraLocal": "त्रेता युग",
+    "tradition": "hindu",
+    "region": "Madra & Shalva Kingdoms",
+    "regionLocal": "मद्र व शाल्व देश",
+    "emoji": "🌳",
+    "tagline": "The luminous princess whose intellect, moral power, and devotion defeated Yama, the god of death, and restored her husband's life and dynasty.",
+    "taglineLocal": "अपूर्व ज्ञान, सतीत्व और तपोबल की मूर्ति जिन्होंने अपनी बुद्धि और धर्म-चर्चा से यमराज को परास्त कर पति के प्राण और साम्राज्य वापस पाए।",
+    "journey": "Born as the long-sought daughter of the pious King Ashvapati of Madra through intense worship of the solar deity Savitr, Savitri grew into a woman of such radiant beauty, purity, and intellectual majesty that suitors stood in awe and dared not ask for her hand in marriage. Her father gently instructed her to travel across the kingdoms and select her own husband according to the dictates of her conscience.\n\nTraveling through the serene hermitages of the forest with royal courtiers, Savitri encountered Satyavan, the virtuous prince of the Shalva kingdom whose father, King Dyumatsena, had gone blind and been usurped of his throne, living in humble forest exile. Impressed by Satyavan’s nobility, filial service to his blind parents, and tranquil demeanor in poverty, Savitri chose him in her heart. Returning to her father's palace, she announced her choice in the presence of the divine sage Narada. Narada raised a grave warning: Satyavan possessed every virtue, but was destined to die exactly one year from that day. Unshaken by the prophecy, Savitri declared that a maiden chooses her partner only once, and that moral resolve and destiny are shaped by righteous fidelity.",
+    "journeyLocal": "मद्र देश के धर्मात्मा राजा अश्वपति को सूर्यदेव सावित्री की उपासना से एक अत्यंत तेजस्वी कन्या प्राप्त हुई, जिनका नाम सावित्री रखा गया। जब सावित्री विवाह योग्य हुईं, तो उनके अलौकिक शील और तेज के सम्मुख किसी में विवाह का प्रस्ताव रखने का साहस न हुआ। पिता की आज्ञा से सावित्री ने स्वयं जीवनसाथी की खोज में तीर्थों और वनों का भ्रमण किया।\n\nवन में तपोवन के भ्रमण के दौरान उनकी भेंट सत्यवान से हुई, जो शाल्व नरेश द्युमत्सेन के पुत्र थे। राजा द्युमत्सेन के दृष्टिहीन हो जाने पर शत्रुओं ने उनका राज्य छीन लिया था, जिससे सत्यवान वन में रहकर अपने माता-पिता की सेवा करते थे। सावित्री ने मन ही मन सत्यवान का वरण कर लिया। जब वे महल लौटीं, तो देवर्षि नारद ने चेतावनी दी कि सत्यवान सर्वगुण संपन्न हैं किंतु उनकी आयु मात्र एक वर्ष शेष है। इस पर सावित्री ने निर्भीक होकर कहा कि जीवन में संकल्प केवल एक बार लिया जाता है, और वे सत्यवान के अतिरिक्त किसी अन्य का वरण नहीं करेंगी।",
+    "trial": "Entering the forest as the bride of Satyavan, Savitri laid aside her royal silks, donning coarse bark garments and serving her aging in-laws and husband with joyful reverence while secretly tracking the days to the prophesied hour of doom. Three days before the fateful date, she undertook the grueling Triratra vow—fasting and standing in continuous meditation for seventy-two hours without sleep.\n\nOn the morning of the designated day, she accompanied Satyavan into the forest to gather firewood. As noon approached, Satyavan felt sudden piercing agony in his head and fell into Savitri’s lap beneath a banyan tree. Suddenly, Yama, the terrifying lord of death, appeared with blood-red robes and noose in hand, drawing out Satyavan’s thumb-sized soul (Angushtha-matra Purusha) and walking south towards the netherworld. Refusing to weep or abandon her duty, Savitri walked resolutely behind Yama. Astonished by a mortal walking in the realm of death, Yama repeatedly commanded her to return, offering boons excluding Satyavan's life. With consummate wisdom, Savitri engaged Yama in philosophical discourses on eternal Dharma, compassion, and the sanctity of truth. First, she secured the restoration of her father-in-law's sight; second, the return of his kingdom; third, a hundred noble sons for her own father; and fourth, a hundred righteous sons born of herself and Satyavan. Realizing he had granted a boon that could only be fulfilled if Satyavan lived, and utterly charmed by her righteous eloquence, Yama smiled, released Satyavan’s soul from the noose, and blessed Savitri with long life, honor, and prosperity.",
+    "trialLocal": "विवाह के पश्चात सावित्री ने राजमहलों के वस्त्र त्यागकर वल्कल वस्त्र धारण किए और वन में वृद्ध सास-ससुर की सेवा की। नारद जी द्वारा बताई गई तिथि से तीन दिन पूर्व उन्होंने 'त्रिरात्र व्रत' प्रारंभ किया, जिसमें तीन दिनों तक अन्न-जल त्यागकर वे ध्यान में खड़ी रहीं।\n\nनिश्चित दिन पर जब सत्यवान लकड़ियां काटने वन में गए, तो सावित्री भी उनके साथ गईं। दोपहर में एक वटवृक्ष के नीचे सत्यवान के सिर में असह्य पीड़ा हुई और वे सावित्री की गोद में सिर रखकर लेट गए। उसी समय साक्षात यमराज काल-पाश लेकर प्रकट हुए और सत्यवान के प्राण लेकर दक्षिण दिशा की ओर चल दिए। सावित्री भी यमराज के पीछे-पीछे चल पड़ीं। यमराज ने उन्हें लौट जाने को कहा, किंतु सावित्री ने धर्म, सत्य और संगति की ऐसी अद्भुत व्याख्या की कि यमराज प्रसन्न हो गए। यमराज ने सत्यवान के प्राणों को छोड़कर अन्य वर मांगने को कहा। सावित्री ने पहले वर में ससुर की आंखों की ज्योति, दूसरे में उनका खोया हुआ राज्य, और तीसरे में अपने पिता के लिए सौ पुत्रों का वरदान प्राप्त किया। चौथे वर में जब सावित्री ने अपने लिए सत्यवान से सौ धर्मनिष्ठ पुत्रों का वरदान मांगा, तो यमराज ने 'तथास्तु' कह दिया। सत्यवान के जीवित हुए बिना यह वर पूर्ण नहीं हो सकता था; यमराज सावित्री की बुद्धि और धर्म-निष्ठा से परास्त हो गए और उन्होंने सत्यवान के प्राण मुक्त कर दिए।",
+    "teaching": "Savitri proved that intellect, moral clarity, and unwavering determination can triumph over the most immutable laws of mortality. Destiny is not an arbitrary curse to be suffered passively; it is a spiritual terrain where virtue, courageous speech, and selfless love can reshape reality.",
+    "teachingLocal": "सावित्री ने सिद्ध किया कि विवेक, चारित्रिक पवित्रता और धर्मनिष्ठ वाणी से मृत्यु पर भी विजय प्राप्त की जा सकती है। भाग्य कोई अटल अभिशाप नहीं है जिसे चुपचाप स्वीकार कर लिया जाए; सत्य और प्रेम के बल पर प्रारब्ध की रेखाओं को भी बदला जा सकता है।",
+    "moral": "True love is not an emotional weakness but a divine spiritual power. When righteousness and intellectual discernment walk hand-in-hand, even cosmic forces must bow to human resolve.",
+    "moralLocal": "सच्चा प्रेम और समर्पण दुर्बलता नहीं, बल्कि ब्रह्मांड की सबसे बड़ी शक्ति है। जब ज्ञान और निष्ठा का संगम होता है, तो असंभव भी संभव हो जाता है।",
+    "legacy": "Savitri’s triumph is celebrated across India in the sacred festival of Vat Savitri Vrata, where women revere the immortal banyan tree as a symbol of resilience, longevity, and marital harmony. Her dialogue with Yama in the Mahabharata remains a classic philosophical masterpiece on Dharma, cited across ages from ancient commentators to modern Indian literature.",
+    "legacyLocal": "सती सावित्री सनातन संस्कृति में नारी-शक्ति, बुद्धिमत्ता और निष्ठा की शाश्वत प्रतीक हैं। 'वट सावित्री व्रत' के रूप में आज भी भारत की करोड़ों नारियां वटवृक्ष का पूजन कर उनके पावन आदर्शों को स्मरण करती हैं।",
+    "source": "Mahabharata (Vana Parva, Pativrata Mahatmya Parva, Ch. 293–299), Matsya Purana (Ch. 208–214)",
+    "sourceLocal": "महाभारत (वन पर्व, पतिव्रता-माहात्म्य पर्व, अध्याय २९३-२९९), मत्स्य पुराण (अध्याय २०८-२१४)",
+    "sourceCitations": [
+      {
+        "sourceName": "Vyasa — Mahabharata",
+        "sourceRef": "Vana Parva, Chapters 293–299 (Pativratamahatmya Parva / Legend of Savitri)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Matsya Purana",
+        "sourceRef": "Chapters 208–214 (Dialogue of Savitri and Yama on Dharma)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "The righteous sustain the universe through truth and virtue; where the noble speak, truth alone prevails.",
+      "attribution": "Sati Savitri — Mahabharata, Vana Parva 297"
+    },
+    "quoteLocal": {
+      "text": "धर्मेण सत्येन च पालयन्ति सन्तो हि सत्या वचनेन युक्ताः।",
+      "attribution": "सती सावित्री (महाभारत, वन पर्व २९७)"
+    }
+  },
+  {
+    "id": "shabari",
+    "name": "Mata Shabari",
+    "nameLocal": "माता शबरी",
+    "era": "Treta Yuga",
+    "eraLocal": "त्रेता युग",
+    "tradition": "hindu",
+    "region": "Matanga Ashram, Pampa Sarovar",
+    "regionLocal": "मतंग आश्रम, पंपा सरोवर",
+    "emoji": "🫐",
+    "tagline": "The forest saint whose decades of patient waiting and pure, unpretentious love was rewarded with the personal arrival of Lord Rama.",
+    "taglineLocal": "वनवासी संत जिन्होंने दशकों तक निःस्वार्थ प्रतीक्षा और पवित्र प्रेम से मार्ग संवारा और प्रभु श्री राम के चरणों में अमर गति पाई।",
+    "journey": "Born as Shramana into a humble tribal chieftain's family of the Nishada or Shabara clan, she was a girl of tender compassion from her earliest days. On the eve of her arranged marriage, she discovered that hundreds of innocent forest animals, sheep, and birds had been captured and pensively penned to be slaughtered for the wedding feast. Horrified by the cruelty done in her name, she renounced the wedding in the dead of night, slipping away into the deep forests of Mount Rishyamukha near the pristine waters of Pampa Lake.\n\nWandering through the wilderness, she arrived at the hermitage of the revered Sage Matanga. Because worldly customs judged her tribal origin, she feared to approach the holy rishis directly. Instead, every morning in the dark hours before dawn, while the hermitage slept, Shabari silently swept the thorny forest paths leading from the ashram to the river, gathering firewood and placing smooth river stones so the elderly sages would not prick their bare feet. Observing this secret, selfless act of service day after day, Sage Matanga discovered her and welcomed her into the hermitage as his beloved disciple, instructing her in spiritual contemplation and the ultimate unity of all beings.",
+    "journeyLocal": "शबर भील कुल में जन्मी श्रमणा बाल्यकाल से ही अत्यंत दयालु स्वभाव की थीं। जब उनके विवाह के उपलक्ष्य में सैकड़ों मूक पशु-पक्षियों को भोज के लिए बांधा गया, तो उस हिंसा से उनका हृदय कांप उठा। उस रक्तपात को रोकने के लिए उन्होंने रात्रि के अंधकार में चुपचाप गृह-त्याग कर दिया और ऋष्यमूक पर्वत के घने वनों की शरण ली।\n\nवन में वे महर्षि मतंग के आश्रम पहुँचीं। अपनी वनवासी जाति के संकोच के कारण वे दिन में आश्रम नहीं जाती थीं; बल्कि ब्रह्ममुहूर्त में छिपकर आश्रम से सरोवर तक जाने वाले पथ के कांटे चुनती थीं, पत्थरों को हटाती थीं और लकड़ियां काटकर रख आती थीं ताकि संतों के चरणों में कांटे न चुभें। जब महर्षि मतंग को इस गुप्त सेवा का पता चला, तो उन्होंने शबरी को अपनी शिष्या बनाया और उन्हें अध्यात्म और समदृष्टि का ज्ञान दिया।",
+    "trial": "When Sage Matanga's physical life came to its twilight, the disciples prepared to depart the mortal plane. Shabari wept, asking how she would survive alone in the wilderness without her guru. The dying sage blessed her with an immortal prophecy: 'Stay here in the ashram, my daughter. Lord Rama, the Supreme Incarnation, will walk into this very forest in search of Sita. He will surely visit your cottage.'\n\nFor decades, Shabari remained in solitary sadhana, enduring the isolation of the forest as her youth faded, her hair turned white as kasha grass, and her back bent with age. Yet every morning of those long decades, she arose with ecstatic anticipation, sweeping the forest paths, decorating the threshold with fragrant wild lotus blossoms, and wandering into the thickets to collect sweet jujube berries (ber), tasting each fruit gently with her tongue to ensure no bitter or sour fruit would ever touch her Lord's lips. The villagers mocked her faith, calling her a mad hermit awaiting a prince who would never come. Yet her devotion remained unbroken. Finally, on an auspicious afternoon, the forest rustled, and Sri Rama, along with Lakshmana, walked directly to her humble mud hut. Weeping tears of bliss, Shabari washed Rama's feet with her tears and offered her half-tasted wild berries. Eating the offered fruits with boundless joy, Lord Rama declared that her devotion was the pinnacle of spiritual attainment, expounding to her the immortal Ninefold Path of Devotion (Navadha Bhakti).",
+    "trialLocal": "जब महर्षि मतंग का महाप्रयाण का समय आया, तो शबरी ने रोते हुए पूछा कि वे उनके बिना कैसे रहेंगी। महर्षि ने वरदान दिया: 'पुत्री, इसी कुटिया में प्रतीक्षा करो। स्वयं मर्यादा पुरुषोत्तम श्री राम वन में सीता की खोज करते हुए यहाँ आएंगे और तुम्हें दर्शन देंगे।'\n\nदशकों बीत गए; शबरी के बाल श्वेत हो गए, देह दुर्बल हो गई, किंतु उनकी प्रतीक्षा कभी नहीं थकी। वे प्रतिदिन आश्रम के मार्ग को फूलों से सजाती थीं, और वनों से मीठे बेर चुन-चुनकर लाती थीं। प्रभु को कोई खट्टा या कड़वा फल न मिले, इसलिए वे हर बेर को स्वयं चखकर मीठे बेर एकत्र करती थीं। लोग उनका उपहास करते थे, किंतु उनका विश्वास अडिग था। अंततः एक दिन प्रभु श्री राम अपने अनुज लक्ष्मण के साथ उनकी कुटिया में पधारे। शबरी ने अपने आंसुओं से उनके चरण धोए और प्रेम से चखे हुए बेर अर्पित किए। प्रभु ने बड़े चाव से उन बेरों को खाया और उन्हें 'नवधा भक्ति' का सर्वोच्च उपदेश देकर उनका उद्धार किया।",
+    "teaching": "Mata Shabari revealed that God looks neither at social status, gender, birth, learning, nor outer wealth, but solely at the purity of devotion (Bhakti). In the presence of genuine spiritual longing, rigid ritualism dissolves, and simple, unpretentious love becomes the highest offering in the universe.",
+    "teachingLocal": "माता शबरी ने सिद्ध किया कि ईश्वर न कुल देखते हैं, न जाति, न विद्या और न बाह्य वैभव; वे केवल प्रेम के भूखे हैं। जहाँ सच्चा समर्पण और निष्कपट भाव होता है, वहाँ समस्त रूढ़ियाँ समाप्त हो जाती हैं और साधारण बेर भी अमृत बन जाते हैं।",
+    "moral": "Patience is the highest form of faith. No prayer whispered in unselfish devotion is ever forgotten by the Divine; what is awaited with pure love will inevitably manifest at the perfect cosmic moment.",
+    "moralLocal": "धैर्य और प्रतीक्षा ही भक्ति की वास्तविक कसौटी है। निःस्वार्थ भाव से की गई साधना कभी व्यर्थ नहीं जाती; यदि विश्वास अटल हो, तो भगवान को स्वयं भक्त की कुटिया तक आना पड़ता है।",
+    "legacy": "Mata Shabari remains the immortal queen of Navadha Bhakti, celebrated in the Ramayana across millennia as the embodiment of egalitarian, pure-hearted devotion. Her encounter with Sri Rama destroyed ancient social prejudices and established an eternal paradigm of divine love transcending social barriers.",
+    "legacyLocal": "माता शबरी का जीवन नवधा भक्ति का शाश्वत आदर्श है। प्रभु श्री राम और शबरी का मिलन सामाजिक समरसता और असीम करुणा का ऐसा अमर अध्याय है जो युगों-युगों तक मानवता का पथ-प्रदर्शन करता रहेगा।",
+    "source": "Valmiki Ramayana (Aranya Kanda, Canto 74), Goswami Tulsidas — Ramcharitmanas (Aranya Kand)",
+    "sourceLocal": "वाल्मीकि रामायण (अरण्यकांड, सर्ग ७४), गोस्वामी तुलसीदास — श्रीरामचरितमानस (अरण्यकांड)",
+    "sourceCitations": [
+      {
+        "sourceName": "Valmiki Ramayana",
+        "sourceRef": "Aranya Kanda, Sarga 74 (Sri Rama's Visit to Shabari's Hermitage)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Goswami Tulsidas — Ramcharitmanas",
+        "sourceRef": "Aranya Kand, Chaupais 34–36 (Navadha Bhakti Discourse)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "I recognize only one relationship—the bond of devotion; without it, all high birth, rank, and wealth are like clouds without rain.",
+      "attribution": "Sri Rama to Mata Shabari — Ramcharitmanas, Aranya Kand 35"
+    },
+    "quoteLocal": {
+      "text": "मानउँ एक भगति कर नाता। जाति पाँति कुल धरम बड़ाई। धन बल परिजन गुन चतुराई। भगति हीन नर सोहइ कैसा। बिनु जल बारिद देखिअ जैसा॥",
+      "attribution": "श्रीरामचरितमानस (अरण्यकांड, दोहा ३५)"
+    }
+  },
+  {
+    "id": "valmiki",
+    "name": "Maharishi Valmiki",
+    "nameLocal": "महर्षि वाल्मीकि",
+    "era": "Treta Yuga",
+    "eraLocal": "त्रेता युग",
+    "tradition": "hindu",
+    "region": "Tamasa River Banks",
+    "regionLocal": "तमसा तट",
+    "emoji": "📜",
+    "tagline": "The Adi Kavi (First Poet) whose transformative repentance and cosmic compassion gave birth to Sanskrit poetic meter and the immortal epic Ramayana.",
+    "taglineLocal": "संस्कृत काव्य के आदिकवि जिनकी करुणा से छंद का प्राकट्य हुआ और जिन्होंने मर्यादा पुरुषोत्तम श्री राम के जीवन को अमर महाकाव्य रामायण में गढ़ा।",
+    "journey": "Known in his early wandering life as Ratnakara, he lived in the deep forests, maintaining his family through roadside robbery and banditry, unaware of the spiritual gravity of his sinful deeds. One day, the divine sage Narada walked through the forest, radiating serene peace. When Ratnakara accosted him with weapons demanding his belongings, Narada showed neither fear nor anger, but calmly asked a probing question: 'You commit these violent deeds to feed your family; will your parents, wife, and children also share the karmic burden of your sins in the afterlife?'\n\nStunned by the question, Ratnakara returned to his home and asked his family members one by one. To his shock, every single relative replied that while it was his duty to provide for them, they would never share in the sin or punishment of his unlawful actions. Shaken to the core of his being, the illusion of worldly attachment shattered. Ratnakara fell at Narada's feet in agonizing repentance, pleading for liberation. Narada instructed him to chant the divine name of Rama. Unable even to articulate the sacred name due to the weight of his past actions, Narada skillfully asked him to chant 'Mara Mara' (meaning death), which in continuous repetition naturally resolved into the sacred name 'Rama Rama'. Entering deep samadhi in the forest for decades, an anthill (valmika) grew over his motionless body. When the penance bore fruit, the divine voice called him forth from the anthill, christening him Valmiki—the sage born of the anthill.",
+    "journeyLocal": "आदिकवि वाल्मीकि का पूर्व जीवन रत्नाकर के रूप में वनों में बीता, जहाँ वे अपने परिवार के भरण-पोषण के लिए राहगीरों को लूटते थे। एक दिन देवर्षि नारद उस वन से निकले। जब रत्नाकर ने उन्हें लूटने का प्रयास किया, तो नारद जी ने शांत भाव से पूछा: 'जिन पाप-कर्मों से तुम परिवार का पालन कर रहे हो, क्या वे तुम्हारे पापों के फल के भी भागीदार बनेंगे?'\n\nरत्नाकर ने घर जाकर अपने माता-पिता और पत्नी से यही प्रश्न किया। सबने एक स्वर में कहा कि हमारा भरण-पोषण तुम्हारा कर्तव्य है, किंतु तुम्हारे पापों के फल को हम नहीं भोगेंगे। इस सत्य ने रत्नाकर की आँखें खोल दीं। वे नारद जी के चरणों में गिरकर पश्चाताप करने लगे। नारद जी ने उन्हें राम-नाम का जप करने को कहा, किंतु पापों के प्रभाव से उनके मुख से 'राम' नहीं निकला। तब नारद जी ने 'मरा-मरा' जपने की युक्ति दी, जो उलटकर 'राम-राम' बन गया। वनों में हजारों वर्ष की समाधि में उनके शरीर पर दीमकों ने बांबी (वाल्मीक) बना ली, जिससे उनका नाम 'वाल्मीकि' पड़ा।",
+    "trial": "Valmiki’s defining trial transformed from personal repentance to cosmic poetic awakening. Walking near the tranquil banks of the sacred Tamasa river, he watched a pair of sweet Krauncha birds mating blissfully upon a branch. Suddenly, a cruel hunter shot an arrow, killing the male bird while the female wailed in heart-wrenching agony. Overwhelmed by unbearable empathy, a spontaneous verse burst from Valmiki’s lips in grief: 'Ma Nishada pratishtham tvam agamah shashvatih samah...' (O hunter, may you find no peace for endless years, for you have slain this innocent bird in its moment of joy!).\n\nReturning to his hermitage, Valmiki reflected on the spontaneous utterance, discovering that his sorrow (shoka) had transformed into poetic meter (shloka), balanced perfectly in thirty-two syllables. Lord Brahma then appeared, instructing Valmiki to use this divinely revealed meter to compose the life, character, and mission of Sri Rama—the perfect human being described by Narada. Valmiki composed the twenty-four thousand verses of the Ramayana in seven Kandas, capturing cosmic truth in literary perfection. His ultimate moral test arrived when Mother Sita, cast out due to public gossip, sought refuge in the forest; Valmiki welcomed her as his own daughter, sheltered her in his hermitage, and lovingly trained her twin sons Lava and Kusha in the Vedas, music, archery, and the singing of the Ramayana.",
+    "trialLocal": "महर्षि वाल्मीकि के जीवन की सबसे बड़ी परीक्षा उनकी करुणा के छंद में रूपांतरित होने की थी। तमसा नदी के तट पर जब एक बहेलिए ने प्रणयरत क्रौंच पक्षी के जोड़े में से नर पक्षी का वध कर दिया और मादा पक्षी विलाप करने लगी, तो महर्षि के हृदय से करुणा की ज्वाला फूट पड़ी। उनके मुख से स्वतः ही पहला श्लोक निकला: 'मा निषाद प्रतिष्ठां त्वमगमः शाश्वतीः समाः...'\n\nशोक के श्लोक में बदलने की इस घटना के पश्चात साक्षात ब्रह्मा जी ने प्रकट होकर उन्हें इसी छंद में मर्यादा पुरुषोत्तम श्री राम के पावन चरित्र को रचने की आज्ञा दी। वाल्मीकि ने २४,००० श्लोकों में अमर महाकाव्य रामायण की रचना की। उनका सबसे बड़ा सेवा-धर्म तब प्रकट हुआ जब उन्होंने वन में निर्वासित माता सीता को अपनी पुत्री के समान आश्रम में आश्रय दिया और उनके जुड़वां पुत्रों लव और कुश को वेद, धनुर्विद्या और रामायण-गायन की शिक्षा देकर समर्थ बनाया।",
+    "teaching": "Maharishi Valmiki taught that past actions, no matter how burdened with error, do not define a soul’s eternal destiny. Sincere repentance, coupled with the grace of the divine name, can transform a sinner into the highest sage. Furthermore, he revealed that true art, poetry, and literature are born not from cold intellectual ambition, but from profound empathy for the suffering of living creatures.",
+    "teachingLocal": "महर्षि वाल्मीकि ने सिखाया कि मनुष्य का अतीत कितना भी कलंकित क्यों न हो, सच्चा पश्चाताप और ईश्वर का पावन नाम उसे ब्रह्मर्षि बना सकता है। इसके अतिरिक्त, उन्होंने सिद्ध किया कि साहित्य और कला का जन्म अहंकार से नहीं, बल्कि पीड़ित जीवों के प्रति उठने वाली असीम करुणा और संवेदना से होता है।",
+    "moral": "Every saint has a past, and every seeker has a future. When compassion awakens in the heart, suffering turns into wisdom, and life becomes an instrument of universal blessing.",
+    "moralLocal": "सच्ची करुणा मनुष्य को ईश्वर के निकट ले जाती है। कोई भी मनुष्य अपने जन्म या अतीत से नहीं, बल्कि अपने वर्तमान संकल्प और साधना से महान बनता है।",
+    "legacy": "As the Adi Kavi (First Poet), Maharishi Valmiki is the founding father of classical Sanskrit literature, giving humanity the Anushtubh meter and the eternal epic Ramayana. His ashram was the sacred crucible where the ideals of Ramarajya were preserved and taught to the future rulers of the solar dynasty.",
+    "legacyLocal": "महर्षि वाल्मीकि संस्कृत साहित्य के 'आदिकवि' हैं। उनके द्वारा रचित रामायण संपूर्ण विश्व साहित्य का मुकुटमणि है, जिसने युगों-युगों तक भारतीय संस्कृति, धर्म, दर्शन और मर्यादाओं को गढ़ा है।",
+    "source": "Valmiki Ramayana (Bala Kanda, Sargas 1–4), Adhyatma Ramayana (Ayodhya Kanda, Ch. 6)",
+    "sourceLocal": "वाल्मीकि रामायण (बालकांड, सर्ग १-४), अध्यात्म रामायण (अयोध्याकांड, अध्याय ६)",
+    "sourceCitations": [
+      {
+        "sourceName": "Valmiki Ramayana",
+        "sourceRef": "Bala Kanda, Sargas 1–4 (Inquiry with Narada, Krauncha Episode, First Sloka)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Adhyatma Ramayana",
+        "sourceRef": "Ayodhya Kanda, Chapter 6 (Transformation of Ratnakara into Valmiki)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "O hunter, you shall find no enduring rest in the world, for you have slain one of this pair of Krauncha birds while intoxicated with love.",
+      "attribution": "Maharishi Valmiki — Valmiki Ramayana, Bala Kanda 2.15"
+    },
+    "quoteLocal": {
+      "text": "मा निषाद प्रतिष्ठां त्वमगमः शाश्वतीः समाः। यत्क्रौञ्चमिथुनादेकमवधीः काममोहितम्॥",
+      "attribution": "महर्षि वाल्मीकि (वाल्मीकि रामायण, बालकांड २.१५)"
+    }
+  },
+  {
+    "id": "harishchandra",
+    "name": "King Harishchandra",
+    "nameLocal": "राजा हरिश्चंद्र",
+    "era": "Treta Yuga",
+    "eraLocal": "त्रेता युग",
+    "tradition": "hindu",
+    "region": "Ayodhya & Kashi",
+    "regionLocal": "अयोध्या व काशी",
+    "emoji": "⚖️",
+    "tagline": "The legendary monarch of Ayodhya who surrendered his empire, wealth, and family, serving in a cremation ground to uphold the inviolable sanctity of Truth.",
+    "taglineLocal": "अयोध्या के सत्यवादी सम्राट जिन्होंने सत्य और धर्म की रक्षा हेतु संपूर्ण राजपाट, परिवार और स्वयं को श्मशान घाट पर बेच दिया।",
+    "journey": "King Harishchandra of the illustrious Ikshvaku dynasty of Ayodhya was renowned across the three worlds for his absolute adherence to Satya (Truth), unwavering justice, and limitless charity. Under his reign, famine was unknown, crime was non-existent, and the righteous prospered in peace. His reputation for moral integrity became so exalted that celestial assemblies debated whether human nature could remain faithful to truth under absolute deprivation.\n\nTo test this supreme virtue, the fiery sage Vishvamitra appeared in a dream, requesting the donation of the entire earth. Upon waking, Harishchandra affirmed his word without hesitation. When Vishvamitra arrived in the physical court of Ayodhya, the king formally surrendered his golden throne, his imperial treasury, his armies, and his kingdom, retaining only the humble garments he wore. When Vishvamitra then demanded the traditional gold coin dakshina to seal the religious gift, Harishchandra, now completely penniless, requested a period of one month to earn the money, walking into exile with his devoted queen Shaivya and young son Rohitashva toward the holy city of Kashi.",
+    "journeyLocal": "अयोध्या के सूर्यवंशी राजा हरिश्चंद्र अपने सत्य, न्याय और दानशीलता के लिए तीनों लोकों में विख्यात थे। उनके राज्य में प्रजा सुखी, संपन्न और धर्मपरायण थी। उनके सत्य की परीक्षा लेने के लिए महर्षि विश्वामित्र ने स्वप्न में उनका संपूर्ण राज्य दान में मांग लिया। प्रातःकाल जब विश्वामित्र साक्षात राजदरबार में पधारे, तो राजा हरिश्चंद्र ने बिना तनिक भी संकोच किए अपनी संपूर्ण संपदा और साम्राज्य महर्षि को दान कर दिया।\n\nजब विश्वामित्र ने दान का संकल्प पूरा करने हेतु राजसूय यज्ञ की दक्षिणा मांगी, तो राजा के पास फूटी कौड़ी भी न थी। राजा ने दक्षिणा चुकाने के लिए एक माह का समय मांगा और अपनी महारानी शैव्या तथा नन्हे पुत्र रोहिताश्व के साथ वल्कल वस्त्र पहनकर काशी की ओर पैदल चल पड़े।",
+    "trial": "In Kashi, the deadline for paying the sage arrived. To honor his word of truth, Harishchandra took the agonizing step of selling his beloved queen Shaivya and child Rohitashva to an elderly brahmin as domestic servants. Since the sale still fell short of the full dakshina, the emperor sold himself to a chandala named Kallu, the keeper of the Manikarnika cremation ground. For months, the former emperor of Ayodhya lived amidst smoldering funeral pyres, clad in rags and covered in ashes, collecting burial taxes and shroud cloths from grieving relatives day and night.\n\nThe ultimate trial of agony arrived on a stormy night. Young Rohitashva was bitten by a venomous serpent while picking flowers in the forest and died instantly. Queen Shaivya, destitute and dressed in tatters, carried the cold body of her child to the cremation ground in the pouring rain. Recognizing his wife and dead son in the lightning flashes, Harishchandra was overwhelmed with unimaginable grief. Yet, when Shaivya prepared to cremate the boy, Harishchandra stood firm in his duty to his master, stating that as the cremation guard, he could not allow a body to be cremated without collecting the master's burial fee. Having no coins, Shaivya offered half of the worn cloth covering the child. As the king took the torn shroud with trembling hands to fulfill his duty, the heavens blazed with divine light. Lord Shiva, Indra, Vishnu, and Sage Vishvamitra manifested, stopping his hands and showering flowers. Vishvamitra declared that Harishchandra’s adherence to Satya was unmatched in cosmic history. Rohitashva was revived to life, the empire was restored, and the gods proclaimed that Harishchandra’s name would forever shine as the living embodiment of Truth.",
+    "trialLocal": "काशी में दक्षिणा चुकाने का अंतिम दिन आने पर राजा ने भारी मन से अपनी महारानी शैव्या और पुत्र रोहिताश्व को एक ब्राह्मण के यहाँ दासी के रूप में बेच दिया। फिर भी दक्षिणा पूरी न होने पर उन्होंने स्वयं को मणिकर्णिका श्मशान के चांडाल कालू के हाथों बेच दिया। चक्रवर्ती सम्राट श्मशान में मुर्दों के कफ़न एकत्र करने और कर वसूलने का कार्य करने लगे।\n\nअग्नि-परीक्षा की चरम सीमा तब आई जब सर्पदंश से बालक रोहिताश्व की मृत्यु हो गई। महारानी शैव्या रोती हुई आधी रात को बालक के शव को लेकर श्मशान पहुँचीं। बिजली की कौंध में राजा ने अपनी पत्नी और मृत पुत्र को पहचान लिया। दोनों का क्रंदन आकाश को चीरने लगा। किंतु जब शैव्या ने पुत्र का दाह-संस्कार करना चाहा, तो हरिश्चंद्र ने चांडाल के सेवक का धर्म निभाते हुए बिना कर लिए अंतिम संस्कार करने से मना कर दिया। जब निर्धन शैव्या अपनी फटी साड़ी का आधा कफ़न देने को उद्यत हुई, उसी क्षण भगवान शिव, विष्णु, इंद्र और महर्षि विश्वामित्र प्रकट हो गए। उन्होंने राजा के हाथ थाम लिए और पुष्प-वर्षा करते हुए रोहिताश्व को जीवित कर दिया। विश्वामित्र ने घोषणा की कि हरिश्चंद्र ने सत्य की वह परीक्षा उत्तीर्ण की है जो सृष्टि में कोई अन्य नहीं कर सका।",
+    "teaching": "King Harishchandra proved that Satya (Truth) is not a fair-weather intellectual luxury, but the unyielding pillar of cosmic order (Rita). When one adheres to truth through humiliation, poverty, heartbreak, and despair, Truth itself descends to crown the seeker with immortality.",
+    "teachingLocal": "राजा हरिश्चंद्र ने सिद्ध किया कि सत्य कोई सुविधा का विषय नहीं, बल्कि जीवन की अंतिम सांस तक निभाने वाला तप है। सुख हो या दारुण दुख, मान हो या घोर अपमान—जो मनुष्य सत्य का दामन नहीं छोड़ता, संपूर्ण ब्रह्मांड उसकी रक्षा में नतमस्तक हो जाता है।",
+    "moral": "Integrity is proven not in prosperity, but in the furnace of affliction. A promise made must be honored at all costs, for when truth is preserved, all is preserved.",
+    "moralLocal": "सत्य ही ईश्वर है और सत्य ही परम धर्म है। संसार के समस्त वैभव छूट जाएं, किंतु सत्य का त्याग कभी नहीं करना चाहिए, क्योंकि सत्य की रक्षा करने वाले की रक्षा स्वयं धर्म करता है।",
+    "legacy": "King Harishchandra’s legendary devotion to Satya became an eternal touchstone in Indian culture. Centuries later, a theatrical performance of Harishchandra’s life in Rajkot inspired young Mohandas Karamchand Gandhi to dedicate his entire existence to the weapon of Satyagraha (Soul-force grounded in Truth).",
+    "legacyLocal": "राजा हरिश्चंद्र का नाम भारतीय संस्कृति में 'सत्य' का पर्याय बन गया। उनके इस पावन चरित्र ने आगे चलकर राष्ट्रपिता महात्मा गांधी के जीवन को गहराई से प्रभावित किया और उन्हें 'सत्याग्रह' का मार्ग चुनने की प्रेरणा दी।",
+    "source": "Markandeya Purana (Ch. 7–8), Devi Bhagavata Purana (Skandha 6, Ch. 11–13)",
+    "sourceLocal": "मार्कंडेय पुराण (अध्याय ७-८), देवी भागवत पुराण (षष्ठ स्कंध, अध्याय ११-१३)",
+    "sourceCitations": [
+      {
+        "sourceName": "Markandeya Purana",
+        "sourceRef": "Chapters 7–8 (The Testing of Harishchandra and the Glory of Truth)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Devi Bhagavata Purana",
+        "sourceRef": "Skandha 6, Chapters 11–13 (Harishchandra Charitam)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Truth alone is the supreme Dharma; there is no status or attainment higher than Truth in all the worlds.",
+      "attribution": "Markandeya Purana 8.35"
+    },
+    "quoteLocal": {
+      "text": "सत्यमेव परो धर्मः सत्यान्नास्ति परं पदम्।",
+      "attribution": "मार्कंडेय पुराण (८.३५)"
+    }
+  },
+  {
+    "id": "tulsidas",
+    "name": "Goswami Tulsidas",
+    "nameLocal": "गोस्वामी तुलसीदास",
+    "era": "1532 – 1623 CE",
+    "eraLocal": "१५३२ – १६२३ ई.",
+    "tradition": "hindu",
+    "region": "Varanasi & Ayodhya",
+    "regionLocal": "वाराणसी व अयोध्या",
+    "emoji": "🪔",
+    "tagline": "The supreme Bhakti poet-saint who brought the sacred story of Lord Rama into the language of the common people in the immortal Ramcharitmanas.",
+    "taglineLocal": "भक्तिकाल के शिरोमणि संत-कवि जिन्होंने श्रीरामचरितमानस के माध्यम से प्रभु राम की पावन कथा को जन-जन की भाषा अवधी में अमर कर दिया।",
+    "journey": "Born as Rambola in Rajapur along the banks of the sacred Yamuna, the child was abandoned in infancy due to inauspicious astrological conjunctions (Abhukta Mula). Raised in abject poverty by an ascetic maidservant and later initiated by Naraharidas—the fourth spiritual descendant of Ramananda—the boy was educated in Sanskrit, the Upanishads, and the Puranas at Varanasi under the great scholar Shesha Sanatana. Returning to Rajapur, he married Ratnavali, the daughter of a learned scholar, falling into intense, blind attachment to her physical presence.\n\nOne stormy monsoon night, unable to endure even a few days of separation while Ratnavali was visiting her parents' home, Tulsidas braved a roaring flooded river, clutching a floating corpse mistaking it for a log, and scaled the second-story balcony of her house using a hanging venomous snake mistaking it for a rope. Astonished and dismayed by his desperate infatuation, Ratnavali rebuked him with a single razor-sharp verse: 'If you possessed even half the devotion for Sri Rama that you shower upon this frail body of flesh and bone, you would have crossed the ocean of mortal sorrow!' Struck to the heart as if by lightning, the veil of delusion fell. Without uttering a word, Tulsidas turned around in the pouring rain, renounced worldly domestic life, and walked away into lifelong mendicant sadhana.",
+    "journeyLocal": "राजापुर में यमुना तट पर जन्मे रामबोला का बाल्यकाल घोर अभाव और कष्टों में बीता। संत नरहरिदास ने उनका हाथ थामा और उन्हें काशी में शेष सनातन जी के सानिध्य में वेद-वेदांग और शास्त्रों की गहन शिक्षा दिलाई। उनका विवाह रत्नावली से हुआ, जिनके रूप पर वे अत्यधिक आसक्त हो गए।\n\nएक बार वर्षा ऋतु में पत्नी के मायके चले जाने पर तुलसीदास विरह में इतने व्याकुल हुए कि उफनती नदी को एक शव के सहारे पार कर गए और आधी रात को ससुराल की खिड़की पर लटकते सर्प को रस्सी समझकर ऊपर चढ़ गए। पत्नी रत्नावली ने जब यह देखा, तो उन्हें धिक्कारते हुए कहा: 'अस्थि चर्म मय देह यह, तासों ऐसी प्रीति। नेकु जो होती राम महं, तो नहिं भव-भीति॥' इस कटु सत्य ने तुलसीदास की चेतना को झकझोर दिया। वे उसी क्षण विरक्त होकर प्रभु श्री राम की अनन्य साधना में लीन हो गए।",
+    "trial": "Wandering through Prayagraj, Ayodhya, and Varanasi, Tulsidas immersed himself in Rama Nama. According to tradition, through the guidance of a departed spirit he met Sri Hanuman disguised as a leper in an audience hall, who blessed him with direct visions of Lord Rama and Lakshmana on the banks of Chitrakoot: 'Chitrakoot ke ghat par bhai santan ki bheer, Tulsidas chandan ghise tilak det Raghubeer'.\n\nOn the auspicious day of Ram Navami in 1574 in Ayodhya, Tulsidas began composing the monumental epic *Sri Ramcharitmanas* in Awadhi, the spoken vernacular dialect of the common people. This act provoked furious hostility from orthodox Sanskrit scholars in Varanasi, who condemned translating the sacred scripture into a folk tongue. Hostile pandits sent thieves to steal his manuscripts, but the thieves fled in terror after witnessing two youthful celestial archers guarding the saint’s hut through the night. Pandits placed the Ramcharitmanas at the very bottom of a stack of sacred texts in the Kashi Vishwanath temple beneath the four Vedas, the Shastras, and the Puranas, locking the temple doors overnight to test its divine sanction. In the morning, when the doors were opened, the Ramcharitmanas lay miraculously on top of the entire stack, inscribed with the words 'Satyam Shivam Sundaram' by the grace of Lord Shiva himself. Imprisoned later by Emperor Jahangir for refusing to perform miracles, Tulsidas composed the fervent *Hanuman Bahuk*, while thousands of monkeys descended upon the imperial court, compelling the emperor to release the saint with deep reverence.",
+    "trialLocal": "प्रयाग, चित्रकूट और काशी में साधना करते हुए हनुमान जी की कृपा से उन्हें चित्रकूट के घाट पर प्रभु श्री राम के साक्षात दर्शन हुए: 'चित्रकूट के घाट पर भई संतन की भीर। तुलसिदास चंदन घिसैं तिलक देत रघुबीर॥'\n\n१५७४ में अयोध्या में उन्होंने अवधी भाषा में 'श्रीरामचरितमानस' की रचना प्रारंभ की। संस्कृत के रूढ़िवादी पंडितों ने इसका कड़ा विरोध किया कि देववाणी के ज्ञान को लोकभाषा में क्यों लिखा गया। उनकी पांडुलिपि चुराने के षड्यंत्र रचे गए, किंतु प्रभु की कृपा से ग्रंथ सुरक्षित रहा। काशी विश्वनाथ मंदिर में परीक्षा हेतु इस ग्रंथ को चारों वेदों और शास्त्रों के सबसे नीचे रखा गया, किंतु प्रातः द्वार खुलने पर श्रीरामचरितमानस सबसे ऊपर मिला और उस पर 'सत्यं शिवं सुंदरम्' लिखा हुआ पाया गया। मुग़ल सम्राट द्वारा चमत्कार दिखाने के दबाव पर बंदी बनाए जाने पर भी वे अडिग रहे और उनकी निष्ठा सदैव श्री राम के चरणों में समर्पित रही।",
+    "teaching": "Goswami Tulsidas taught that in the age of Kali Yuga, when elaborate Vedic sacrifices, severe yogic austerities, and ritual knowledge are difficult for the common man, the chanting of the divine Name (Nama Japa) and loving surrender to Rama is the supreme, effortless path to liberation. He dismantled elitist barriers to spirituality, proving that the highest philosophical truths belong to everyone regardless of caste or education.",
+    "teachingLocal": "तुलसीदास जी ने सिखाया कि कलियुग में योग, यज्ञ और कठिन तप की अपेक्षा केवल 'राम नाम' का स्मरण और अनन्य शरणागति ही भवसागर से पार उतरने का सबसे सुगम मार्ग है: 'कलिजुग केवल नाम अधारा। सुमिरी सुमिरी नर उतरहिं पारा॥' उन्होंने धर्म को रूढ़ियों से निकालकर जन-जन की भाषा और हृदय में स्थापित किया।",
+    "moral": "When worldly passions are redirected toward the Supreme Reality, the greatest weakness transforms into divine genius. No opposition from orthodox authorities can stifle a message blessed by divine grace.",
+    "moralLocal": "सांसारिक आसक्ति को यदि ईश्वर-प्रेम में बदल दिया जाए, तो सामान्य मनुष्य भी संत बन जाता है। सत्य और लोक-कल्याण के लिए किया गया कार्य समस्त बाधाओं को पार कर अमर हो जाता है।",
+    "legacy": "Goswami Tulsidas transformed the religious and cultural landscape of northern India. The *Ramcharitmanas* is recited in millions of homes and temples worldwide, serving as the moral and spiritual compass of Hindu society. His *Hanuman Chalisa*, *Vinaya Patrika*, and *Kavitavali* remain immortal masterpieces of world devotional literature.",
+    "legacyLocal": "गोस्वामी तुलसीदास जी का श्रीरामचरितमानस भारतीय जनमानस का प्राण है। उनके द्वारा रचित 'हनुमान चालीसा' और 'विनय पत्रिका' आज भी करोड़ों भक्तों के कंठहार हैं। उन्होंने भारतीय समाज को मर्यादा, शील और भक्ति के उच्च आदर्शों से जोड़कर सांस्कृतिक एकता के सूत्र में बांधा।",
+    "source": "Sri Bhaktamal (Nabhadas, c. 1600 CE), Mula Gosain Charitra (Veni Madhav Das), Vinaya Patrika",
+    "sourceLocal": "श्री भक्तमाल (नाभादास, १६०० ई.), मूल गोसाईं चरित (वेणी माधव दास), विनय पत्रिका",
+    "sourceCitations": [
+      {
+        "sourceName": "Nabhadas — Sri Bhaktamal",
+        "sourceRef": "Chhappai on Goswami Tulsidas (c. 1600 CE)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Goswami Tulsidas — Vinaya Patrika & Kavitavali",
+        "sourceRef": "Autobiographical Verses on His Life and Spiritual Trials",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Knowing the entire universe to be filled with Sita and Rama, I bow to all with folded hands.",
+      "attribution": "Goswami Tulsidas — Ramcharitmanas, Bal Kand 8"
+    },
+    "quoteLocal": {
+      "text": "सीय राममय सब जग जानी। करहूँ प्रनाम जोरि जुग पानी॥",
+      "attribution": "श्रीरामचरितमानस (बालकांड, दोहा ८)"
+    }
+  },
+  {
+    "id": "mirabai",
+    "name": "Sant Mirabai",
+    "nameLocal": "संत मीराबाई",
+    "era": "c. 1498 – 1546 CE",
+    "eraLocal": "लगभग १४९८ – १५४६ ई.",
+    "tradition": "hindu",
+    "region": "Mewar & Vrindavan",
+    "regionLocal": "मेवाड़ व वृंदावन",
+    "emoji": "🪕",
+    "tagline": "The royal mystic-poetess whose unconditional, fearless love for Giridhar Gopal dissolved royal tyranny and social convention into ecstatic melody.",
+    "taglineLocal": "मेवाड़ की कृष्ण-दीवानी राजरानी जिनकी गिरधर गोपाल के प्रति अनन्य प्रेम-भक्ति ने विष के प्याले को भी अमृत बना दिया।",
+    "journey": "Born as a Rajput princess in Kudki to Ratan Singh Rathore of the Merta dynasty, Mirabai was drawn to the divine from her earliest childhood. At age five, seeing a colorful wedding procession pass her balcony, she asked her mother who her bridegroom would be; her mother lovingly pointed to a small, dark stone murti of Lord Krishna (Giridhar Gopal), saying: 'My child, your bridegroom is Sri Krishna.' Mira embraced those playful words as eternal cosmic truth, placing the icon in her heart as her sole eternal beloved.\n\nIn 1516, under royal political diplomacy, she was married into the powerful royal house of Mewar to Prince Bhoj Raj, the eldest son of Rana Sanga. Despite living amidst the glittering luxury of Chittorgarh palace, Mira remained utterly detached from worldly opulence. She refused to bow before the royal family's ancestral clan deity or observe the strict purdah seclusion expected of royal Rajput women. Instead, she spent days and nights singing, dancing, and weeping before Giridhar Gopal in her temple, welcoming wandering sadhus, bhaktas, and outcast saints into the palace grounds to participate in divine Harikirtan.",
+    "journeyLocal": "मेड़ता के राठौड़ कुल में जन्मी राजकुमारी मीरा का बाल्यकाल से ही भगवान श्री कृष्ण से गहरा नाता जुड़ गया था। पांच वर्ष की आयु में जब एक बारात को देखकर उन्होंने अपनी माता से पूछा कि उनका दूल्हा कौन है, तो माता ने सहज भाव से भगवान गिरधर गोपाल की प्रतिमा की ओर संकेत करते हुए कहा: 'मीरा, तुम्हारे दूल्हा यह श्री कृष्ण हैं।' मीरा ने माता के इस कथन को अपने जीवन का परम सत्य मान लिया और गिरधर को ही अपना सर्वस्व स्वीकार कर लिया।\n\n१५१६ में उनका विवाह मेवाड़ के महाराणा सांगा के ज्येष्ठ पुत्र युवराज भोजराज के साथ हुआ। चित्तौड़ के राजमहल के अपार वैभव के बीच रहकर भी मीरा राजसी सुखों से सर्वथा विरक्त रहीं। उन्होंने कुल-देवी के सम्मुख पशु-बलि देने और पर्दे में रहने की राजपूती परंपराओं को अस्वीकार कर दिया। वे राजमहलों के बंधनों को तोड़कर साधु-संतों की संगति में भगवान कृष्ण के भजनों में लीन होकर नाचने और गाने लगीं।",
+    "trial": "Following the premature death of her supportive husband Bhoj Raj, and later Rana Sanga, the throne passed to Vikramaditya, who viewed Mira’s public devotional ecstasy and association with saints as an unforgivable stain upon royal prestige. Vikramaditya subjected Mira to cruel, calculated attempts on her life. First, he dispatched a sealed golden casket containing a deadly black cobra, presenting it as a gift of a fragrant flower garland; when Mira opened the box with Krishna’s name upon her lips, the serpent transformed into a garland of fresh celestial blooms.\n\nUndeterred, the Rana sent a cup of lethal green poison, commanding her to drink it as the king’s royal decree. Mira smiled, offered the draught to Giridhar Gopal, and drank the venom in one breath; by divine grace, the poison turned into sweet nectar (Amrit), leaving her radiant and unharmed. Finally, the Rana ordered a bed of sharp iron nails prepared for her to sleep upon; upon touching the metal, the spikes miraculously blossomed into a bed of fragrant rose petals. Realizing that the royal court had become an insurmountable prison for her spiritual freedom, Mira heeded the letter of counsel from Goswami Tulsidas: 'Jake priya na Ram-Vaidehi, tajiye tahi koti bairi sam, yadyapi param sanehi' (Abandon those who love not the Divine as millions of enemies, no matter how dearly related). She walked away from the palace of Chittor barefoot, wandering through Merta, Pushkar, and the holy groves of Vrindavan, singing her immortal padas until taking her final samadhi in Dwarka, where tradition holds she physically merged into the sanctum sanctorum icon of Sri Ranchhodraiji.",
+    "trialLocal": "पति और महाराणा सांगा के निधन के पश्चात नए शासक विक्रमादित्य ने मीरा की भक्ति को राजकुल की मर्यादा के विरुद्ध मानकर उन पर अमानवीय अत्याचार प्रारंभ किए। उन्होंने मीरा की हत्या के अनेक षड्यंत्र रचे। पहले फूलों की टोकरी में एक विषैला काला नाग भेजा गया, किंतु जब मीरा ने कृष्ण-स्मरण करते हुए पिटारी खोली, तो वह सर्प शालिग्राम और पुष्पहार में बदल गया।\n\nइसके पश्चात राणा ने 'चरणामृत' के नाम पर हलाहल विष का प्याला भेजा। मीरा ने हँसते हुए उस विष को गिरधर का प्रसाद मानकर पी लिया: 'विष का प्याला राणा जी भेज्या, पीवत मीराँ हाँसी रे।' ईश्वर की कृपा से वह विष अमृत बन गया। जब उनके शयन हेतु लोहे की नुकीली कीलों की शैया बिछाई गई, तो वह फूलों की सेज में परिवर्तित हो गई। अत्याचारों से तंग आकर मीरा ने गोस्वामी तुलसीदास जी को पत्र लिखा, जिनके उत्तर के पश्चात उन्होंने राजमहल का त्याग कर दिया। वे नंगे पांव मेड़ता, वृंदावन और द्वारका की गलियों में 'पग घुँघरू बाँध मीराँ नाची रे' गाते हुए विचरण करने लगीं और अंततः द्वारकाधीश के विग्रह में समाहित हो गईं।",
+    "teaching": "Sant Mirabai revealed the supreme path of Madhurya Bhakti (sweet, intimate bridal devotion). True surrender to the Divine knows no compromise with worldly tyranny, fear of social ostracism, or fear of death. The soul’s eternal covenant is with the Divine alone; when one's love is absolute and fearless, earthly venom is rendered powerless.",
+    "teachingLocal": "मीराबाई ने माधुर्य भक्ति और अनन्य शरणागति का मार्ग प्रशस्त किया। उन्होंने सिखाया कि आत्मा का शाश्वत संबंध केवल परमात्मा से है। जब प्रेम में कपट नहीं होता, तो संसार का विष भी भक्त का बाल बांका नहीं कर सकता। लोक-लाज और कुल की मर्यादा से परे ईश्वर का प्रेम ही मनुष्य का सर्वोच्च धर्म है।",
+    "moral": "Devotion demands courage to break through the illusions of social prestige. When one surrenders life, ego, and destiny unconditionally to the Divine, grace dissolves every poison and welcomes the soul into eternal union.",
+    "moralLocal": "सच्ची भक्ति समाज के झूठे दिखावों और बंधनों से मुक्त होती है। जो जीव प्रभु के चरणों में पूर्ण समर्पित हो जाता है, उसके समस्त संकटों को भगवान स्वयं हर लेते हैं।",
+    "legacy": "Sant Mirabai’s bhajans and padas are etched into the spiritual and musical heart of India, sung across centuries in every village, classical concert, and temple. She stands as an eternal beacon of spiritual liberty, women's agency, and mystical courage against feudal oppression.",
+    "legacyLocal": "मीराबाई भारतीय भक्ति साहित्य और संगीत की अमर वीणा हैं। उनके पद आज भी जन-जन के कंठ में बसे हैं। वे केवल एक संत नहीं, बल्कि रूढ़िवादी सामंती व्यवस्था के विरुद्ध नारी-स्वाधीनता और आत्मिक निष्ठा की क्रांतिदूत थीं।",
+    "source": "Sri Bhaktamal (Nabhadas, c. 1600 CE), Priyadas's Bhaktirasbodhini Tika, Padavali of Mirabai",
+    "sourceLocal": "श्री भक्तमाल (नाभादास, १६०० ई.), प्रियादास कृत भक्तिरसबोधिनी टीका, मीराँबाई की पदावली",
+    "sourceCitations": [
+      {
+        "sourceName": "Nabhadas — Sri Bhaktamal",
+        "sourceRef": "Chhappai on Mirabai and Her Trial by Poison",
+        "tier": 1
+      },
+      {
+        "sourceName": "Priyadas — Bhaktirasbodhini Tika (1712 CE)",
+        "sourceRef": "Commentary on the Life, Trials, and Miracles of Mirabai",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "My Lord is Giridhar Gopal, the lifter of mountains, and none other; having seen the world, my tears have watered the creeper of divine love.",
+      "attribution": "Sant Mirabai — Padavali"
+    },
+    "quoteLocal": {
+      "text": "मेरो तो गिरधर गोपाल दूसरो न कोई। जाके सिर मोर मुकुट मेरो पति सोई॥",
+      "attribution": "संत मीराबाई (पदावली)"
+    }
+  },
+  {
+    "id": "tukaram",
+    "name": "Sant Tukaram",
+    "nameLocal": "संत तुकाराम",
+    "era": "1598 – 1650 CE",
+    "eraLocal": "१५९८ – १६५० ई.",
+    "tradition": "hindu",
+    "region": "Dehu, Maharashtra",
+    "regionLocal": "देहू, महाराष्ट्र",
+    "emoji": "🪘",
+    "tagline": "The great Varkari saint-poet whose divine abhangas submerged in the Indrayani river resurfaced unscathed, democratizing Bhakti for all humanity.",
+    "taglineLocal": "वारकरी संप्रदाय के महान संत-कवि जिनके इंद्रायणी नदी में डुबोए गए अभंग निष्कलंक तैर आए और जिन्होंने विट्ठल-भक्ति को जन-जन तक पहुँचाया।",
+    "journey": "Born into a humble More peasant (Kunbi) family in the village of Dehu along the Indrayani river, Tukaram inherited a modest grocery business and farmland. His early life was shattered by the devastating Deccan famine of 1630–1632, in which his first wife Rakhumabai and eldest son died of starvation, his cattle perished, and his business collapsed into bankruptcy. Confronted with the harsh transience of worldly security, Tukaram forgave all debts owed to his family, threw the promissory debt bonds into the Indrayani river, and retreated to the solitude of the Bhandara and Bhamchandra hills to immerse himself in spiritual contemplation.\n\nAfter fifteen days of intense fasting and continuous meditation on Lord Vitthala (Vithoba of Pandharpur), Tukaram received spiritual initiation in a dream from a divine guru named Babaji Chaitanya, who gave him the sacred mantra 'Rama Krishna Hari'. Inspired by the legacy of Sant Dnyaneshwar and Namdev, Tukaram began pouring forth thousands of Marathi *Abhangas*—rhythmic devotional verses brimming with raw emotional honesty, profound Vedantic non-dualism, and searing social commentary against caste hypocrisy and ritualist commercialism.",
+    "journeyLocal": "महाराष्ट्र के देहू गाँव में इंद्रायणी नदी के तट पर एक साधारण कृषक परिवार में जन्मे तुकाराम का पूर्वार्ध घोर दुखों से भरा था। १६३० के भीषण अकाल में उनकी पहली पत्नी और ज्येष्ठ पुत्र भूख से तड़प-तड़प कर चल बसे और उनका व्यापार नष्ट हो गया। सांसारिक सुखों की असारता को देखकर तुकाराम ने ग्रामीणों के कर्ज के सभी बही-खाते इंद्रायणी नदी में बहा दिए और स्वयं भामचंद्र और भंडारा की पहाड़ियों में एकांत साधना करने चले गए।\n\nकठोर तपस्या के पश्चात उन्हें स्वप्न में बाबाजी चैतन्य से 'राम कृष्ण हरि' के तारक मंत्र की दीक्षा मिली। भगवान विट्ठल के अनन्य प्रेम में डूबकर उन्होंने मराठी भाषा में हजारों 'अभंगों' की रचना प्रारंभ की, जिनमें वेदांत का सार, आत्म-समर्पण और जाति-पांति के पाखंड पर कड़ा प्रहार समाहित था।",
+    "trial": "Tukaram's meteoric popularity among the peasant masses infuriated the rigid orthodox brahmins of the region, headed by a scholar named Mambaji and the orthodox pandit Rameshwar Bhatt. They argued that as a Shudra, Tukaram possessed no scriptural authority to compose devotional verses on the Vedas. Rameshwar Bhatt summoned Tukaram, subjected him to verbal abuse, and issued a cruel decree: all of Tukaram's handwritten manuscripts containing thousands of his abhangas must be cast into the waters of the Indrayani river, warning that if his poetry was not of divine origin, it would perish forever.\n\nHeartbroken not for himself but for the sacred words of devotion, Tukaram wrapped his precious manuscripts in cloth, weighted them with stones, and lowered them into the deep swirling river. He then sat on a stone slab by the riverbank, undertaking an uncompromising fast-unto-death without food or water, praying: 'O Lord, if these words are merely my human pride, let them drown; but if they belong to You, vindicate Your servant.' For thirteen continuous days and nights, Tukaram sat in unmoving prayer while the villagers watched in awe and the orthodox mocked him. On the thirteenth day, a miraculous sight stunned the entire village: the bundles of manuscripts floated up to the surface of the river, completely dry and undamaged, as if preserved by celestial hands. Witnessing this undeniable sign of divine favor, Rameshwar Bhatt fell at Tukaram’s feet in deep repentance, becoming his lifelong disciple.",
+    "trialLocal": "तुकाराम जी की बढ़ती लोकप्रियता से रूढ़िवादी पंडित क्रुद्ध हो उठे। रामेश्वर भट्ट नामक विद्वान ने उन पर आरोप लगाया कि शूद्र कुल में जन्म लेकर वेदों के ज्ञान पर अभंग लिखने का उन्हें कोई अधिकार नहीं है। उन्होंने तुकाराम जी को कठोर आज्ञा दी कि वे अपने सभी हस्तलिखित अभंगों की बहियों को इंद्रायणी नदी में डुबो दें।\n\nतुकाराम जी ने भारी हृदय से अपने जीवन भर के संचित अभंगों को पत्थर से बांधकर नदी की अथाह जलराशि में डुबो दिया। इसके पश्चात वे नदी तट पर एक शिला पर 'प्रायोपवेशन' (अन्न-जल त्यागकर अनशन) पर बैठ गए। उन्होंने प्रभु विट्ठल से प्रार्थना की कि यदि ये शब्द उनके अपने अहंकार के हैं तो नष्ट हो जाएं, किंतु यदि ये भगवान के हैं तो उनकी रक्षा हो। लगातार तेरह दिनों तक वे भूखे-प्यासे प्रभु-स्मरण में बैठे रहे। तेरहवें दिन इंद्रायणी की लहरों से वे सभी पांडुलिपियाँ सूखी अवस्था में जल के ऊपर तैरती हुई बाहर निकल आईं। इस चमत्कार को देखकर रामेश्वर भट्ट का अहंकार टूट गया और वे रोते हुए तुकाराम जी के चरणों में गिर पड़े।",
+    "teaching": "Sant Tukaram taught that God dwells not in stone temples, ritual ostentation, or high birth, but in the compassionate heart that feels the agony of the downtrodden as its own: 'Je ka ranjale ganjale, tyansi mhane jo apule, tochi sadhu olakhava, deva tethichi janava' (Know him to be a true saint who embraces the tormented and destitute as his own; God resides right there). Pure devotion (Bhakti) requires internal purity, unceasing remembrance of the Holy Name, and active empathy for all living creatures.",
+    "teachingLocal": "संत तुकाराम ने उद्घोष किया कि ईश्वर पाषाण की मूर्तियों या बाह्य आडंबरों में नहीं, बल्कि दीन-दुखियों की सेवा में वास करता है: 'जे का रंजले गांजले, त्यांसी म्हणे जो आपुले। तोचि साधु ओळखावा, देव तेथेंचि जाणावा॥' उन्होंने सिखाया कि सच्चा धर्म हृदय की पवित्रता, ईश्वर के नाम-स्मरण और प्राणी-मात्र के प्रति दया में निहित है।",
+    "moral": "When faith is pure and surrendered without ego, truth will rise to the surface no matter how deeply the world attempts to drown it. The highest spiritual authority is earned not through social lineage, but through humility, love, and righteous conduct.",
+    "moralLocal": "सत्य को संसार कितना भी डुबोने का प्रयास करे, वह इंद्रायणी के अभंगों की भांति तैरकर बाहर आ जाता है। मनुष्य कुल से नहीं, बल्कि अपने आचरण और ईश्वर-प्रेम से पूज्य बनता है।",
+    "legacy": "Sant Tukaram is the crown jewel of the Varkari tradition. His *Tukaram Gatha* containing over 4,500 abhangas continues to be sung by millions of pilgrims (Varkaris) as they march on foot to Pandharpur every year in the historic Ashadhi Ekadashi wari. His spiritual teachings profoundly influenced Chhatrapati Shivaji Maharaj, who personally sought Tukaram's blessings and was counseled by him on detachment and servant-kingship.",
+    "legacyLocal": "संत तुकाराम वारकरी संप्रदाय के शिरोमणि हैं। उनकी 'तुकाराम गाथा' के अभंग आज भी प्रतिवर्ष पंढरपुर की वारी में लाखों श्रद्धालुओं के मुख से गूंजते हैं। छत्रपति शिवाजी महाराज स्वयं उनके दर्शन हेतु देहू आए थे और उनके उपदेशों से अत्यंत प्रभावित हुए थे।",
+    "source": "Sri Bhaktalilamrita & Bhaktavijaya (Mahipati, 18th Century CE), Tukaram Gatha",
+    "sourceLocal": "श्री भक्तिलीलामृत व भक्तविजय (महीपति, १८वीं शताब्दी), तुकाराम गाथा",
+    "sourceCitations": [
+      {
+        "sourceName": "Mahipati — Bhaktalilamrita",
+        "sourceRef": "Chapters 25–40 (Life, Trials, and the Miracle of Submerged Abhangas)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Tukaram Gatha",
+        "sourceRef": "Abhangas on the Indrayani river ordeal and vitthal devotion",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Recognize him alone as a true saint who considers the afflicted and distressed as his very own; God truly dwells within him.",
+      "attribution": "Sant Tukaram — Abhanga 203"
+    },
+    "quoteLocal": {
+      "text": "जे का रंजले गांजले। त्यांसी म्हणे जो आपुले। तोचि साधु ओळखावा। देव तेथेंचि जाणावा॥",
+      "attribution": "संत तुकाराम (अभंग २०३)"
+    }
+  },
+  {
+    "id": "kabir",
+    "name": "Sant Kabir Das",
+    "nameLocal": "संत कबीर दास",
+    "era": "15th Century CE",
+    "eraLocal": "१५वीं शताब्दी",
+    "tradition": "hindu",
+    "region": "Varanasi & Maghar",
+    "regionLocal": "वाराणसी व मगहर",
+    "emoji": "🧵",
+    "tagline": "The fearless weaver-mystic whose piercing dohas shattered sectarian hypocrisy, ritualism, and dogma to reveal the formless Divine within.",
+    "taglineLocal": "निर्भीक जुलाहा-संत जिनके तीखे दोहों ने धार्मिक पाखंड, बाह्याचार और भेदभाव को तोड़कर घट-घट में समाए निर्गुण राम का साक्षात्कार कराया।",
+    "journey": "Discovered as an abandoned infant on a lotus petal in the Lahartara lake of Varanasi by a humble Muslim weaver couple, Niru and Nima, Kabir was raised in the weaver (Julaha) community. Working daily at the handloom, weaving coarse cloth while chanting the divine name, Kabir experienced the rhythm of the loom as the cosmic tapestry of creation itself. Yearning for spiritual initiation into Rama-Nama, he knew that the orthodox Vedic scholar Swami Ramananda might hesitate to accept a low-born weaver as a direct disciple.\n\nUndeterred by social convention, Kabir observed that Swami Ramananda walked down to the Panchganga Ghat in Varanasi every morning in the dark hours before dawn to bathe in the sacred Ganga. One morning, Kabir lay down across the steep stone steps of the ghat. As Ramananda descended in the darkness, his wooden sandal struck Kabir’s chest. Startled, the saint exclaimed: 'Rama! Rama!' Taking those holy words spoken from the guru’s lips as his supreme spiritual mantra and formal initiation, Kabir rose as a disciple of Ramananda, dedicating his life to the realization of the formless, omnipresent Divine (Nirguna Parabrahma).",
+    "journeyLocal": "काशी के लहरतारा तालाब में नीरू और नीमा नामक जुलाहा दंपति को मिले बालक कबीर का लालन-पालन बुनकर परिवार में हुआ। करघे पर कपड़ा बुनते हुए कबीर ने श्रम को ही साधना बना लिया। जब उन्होंने स्वामी रामानंद जी से दीक्षा लेने का विचार किया, तो उन्हें संकोच था कि रूढ़िवादी समाज उन्हें अनुमति नहीं देगा।\n\nकबीर ने एक युक्ति निकाली। वे ब्रह्ममुहूर्त में पंचगंगा घाट की सीढ़ियों पर लेट गए। स्नान के लिए जा रहे स्वामी रामानंद का पैर अंधेरे में कबीर की छाती पर पड़ा, तो उनके मुख से अनायास निकला: 'राम! राम!' कबीर ने इसी को गुरु-मंत्र और दीक्षा मान लिया और 'निर्गुण राम' की उपासना में लीन हो गए।",
+    "trial": "Kabir’s revolutionary verses attacked religious bigotry, caste supremacy, empty rituals, idol worship without inner devotion, and the clerical exploitation practiced by both Hindu pandits and Muslim qazis. Standing in the bustling market squares of Varanasi, he proclaimed: 'Pahan puje Hari mile, to main pujun pahar' (If worshiping a stone brings God, I will worship a mountain) and challenged clerics on formalistic prayers without inward purity. Enraged by his audacity, orthodox leaders from both communities allied together to petition the Delhi Sultan, Sikandar Lodi, accusing Kabir of blasphemy and inciting civic rebellion.\n\nSummoned before the imperial court, Kabir refused to bow before the emperor, stating that he bowed only to the Emperor of the Universe. Sultan Lodi ordered him executed through escalating cruelties. First, Kabir was bound in heavy iron chains and thrown into the churning waters of the Ganga; miraculously, the chains shattered and Kabir floated peacefully upon the river upon a bed of grass. Next, they cast him into a blazing furnace, but he walked out unharmed, enveloped in cool celestial fragrance. Finally, an enraged, intoxicated royal war elephant was driven to crush him; the elephant stopped dead before Kabir, bowed its massive head, and fled in terror despite being struck with sharp iron hooks. Realizing the presence of a supreme divine mystic, the Sultan pardoned Kabir and sought his blessings. In his final act of defiance against superstition, Kabir journeyed in his old age to Maghar—a town believed by orthodox dogma to cause rebirth as an ass for anyone dying there—proving that liberation depends on internal purity, not geographical superstition.",
+    "trialLocal": "कबीर दास जी ने हिंदू और मुस्लिम दोनों धर्मों के पाखंडों, जाति-प्रथा और बाह्याचारों पर तीखे प्रहार किए। उन्होंने दोनों संप्रदायों को आईना दिखाते हुए कहा: 'पाहन पूजे हरि मिलैं, तो मैं पूजौं पहार।' इससे क्षुब्ध होकर पंडितों और मौलवियों ने सुल्तान सिकंदर लोदी से उनकी शिकायत की।\n\nदरबार में पेश किए जाने पर कबीर ने सुल्तान के सामने झुकने से इनकार कर दिया। सुल्तान ने उन्हें मृत्युदंड देने के अनेक प्रयास किए। पहले उन्हें लोहे की जंजीरों में बांधकर गंगा में डुबोया गया, किंतु जंजीरें टूट गईं और वे तैरते रहे। फिर उन्हें धधकती आग में डाला गया, पर वे निष्कलंक बाहर आ गए। अंत में एक मतवाले हाथी के सामने उन्हें कुचलने के लिए फेंका गया, किंतु हाथी ने कबीर के सामने सिर झुका दिया और आगे नहीं बढ़ा। यह देखकर सुल्तान ने क्षमा मांगी। जीवन के अंतिम समय में काशी में मरने पर मोक्ष और मगहर में मरने पर नरक की अंधमान्यता को तोड़ने के लिए वे स्वयं मगहर चले गए और वहीं अपनी देह त्यागी।",
+    "teaching": "Sant Kabir taught that God is neither in the temple, nor the mosque, nor Kaaba, nor Kailash, but resides as the breath of all breaths (Ghat-ghat vasi) within every heart. Outer rituals, holy garments, pilgrimages, and social hierarchies are meaningless illusions without true love, compassion, and the inner awakening of the self.",
+    "teachingLocal": "कबीर ने सिखाया कि ईश्वर न मंदिर में है, न मस्जिद में, न काबा में और न कैलाश में; वह तो हर प्राणी के घट-घट में समाया हुआ है: 'मोको कहाँ ढूँढे रे बन्दे, मैं तो तेरे पास में।' प्रेम, सत्य और निष्कपट हृदय ही परमात्मा को पाने का एकमात्र मार्ग है।",
+    "moral": "Truth requires the fearlessness to dismantle hypocrisy wherever it hides. Spiritual liberation is attained not through dogmatic inheritance, but through living integrity and universal compassion.",
+    "moralLocal": "सच्चा साधु वही है जो पाखंड और रूढ़ियों को तोड़कर सत्य के मार्ग पर निर्भय चले। धर्म का वास्तविक अर्थ बाह्य दिखावा नहीं, बल्कि आंतरिक शुद्धि और सभी जीवों से प्रेम है।",
+    "legacy": "Sant Kabir stands as one of the towering colossi of Indian spiritual history. His *Bijak*, *Sakhi*, and *Sabada* form the foundation of Hindi literature, and 541 of his sacred hymns are permanently enshrined in the *Sri Guru Granth Sahib*. The Kabir Panth continues to preserve his egalitarian, non-sectarian path across the world.",
+    "legacyLocal": "संत कबीर भारतीय संत-परंपरा के अमर स्तंभ हैं। उनकी वाणी 'बीजक' के रूप में प्रसिद्ध है, और उनके सैकड़ों पावन पद 'श्री गुरु ग्रंथ साहिब' में श्रद्धापूर्वक सम्मिलित किए गए हैं। कबीर पंथ आज भी उनके समतावादी दर्शन को जीवित रखे हुए है।",
+    "source": "Kabir Bijak, Sri Guru Granth Sahib (Bhagat Kabir Bani), Sri Bhaktamal (Nabhadas)",
+    "sourceLocal": "कबीर बीजक, श्री गुरु ग्रंथ साहिब (भगत कबीर बाणी), श्री भक्तमाल (नाभादास)",
+    "sourceCitations": [
+      {
+        "sourceName": "Kabir Bijak",
+        "sourceRef": "Sakhi and Sabad collections (Compilation of Kabir's Core Teachings)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Sri Guru Granth Sahib",
+        "sourceRef": "Angs 1364–1377 (Salok Bhagat Kabir Jiu Ke)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Do not ask the caste of a saint; ask only for wisdom. Appraise the value of the sword, leaving the scabbard aside.",
+      "attribution": "Sant Kabir Das — Sakhi"
+    },
+    "quoteLocal": {
+      "text": "जाति न पूछो साधु की, पूछ लीजिये ज्ञान। मोल करो तरवार का, पड़ा रहन दो म्यान॥",
+      "attribution": "संत कबीर दास (साखी)"
+    }
+  },
+  {
+    "id": "ramanujacharya",
+    "name": "Sri Ramanujacharya",
+    "nameLocal": "श्री रामानुजाचार्य",
+    "era": "1017 – 1137 CE",
+    "eraLocal": "१०१७ – ११३७ ई.",
+    "tradition": "hindu",
+    "region": "Sriperumbudur & Srirangam",
+    "regionLocal": "श्रीपेरुंबुदूर व श्रीरंगम",
+    "emoji": "🛕",
+    "tagline": "The revolutionary Acharya of Vishishtadvaita who proclaimed the secret liberating mantra from the temple tower to liberate all humanity, regardless of caste.",
+    "taglineLocal": "विशिष्टाद्वैत वेदांत के महान प्रवर्तक जिन्होंने मंदिर के गोपुरम पर चढ़कर गुप्त मुक्ति-मंत्र का उद्घोष किया ताकि समूची मानवता का कल्याण हो सके।",
+    "journey": "Born in Sriperumbudur in Tamil Nadu to Asuri Keshava Somayaji and Kantimathi, young Ramanuja displayed extraordinary intellectual sharpness and encyclopedic memory. Initially studying under the Advaitic scholar Yadava Prakasha in Kanchi, Ramanuja's deeply devotional heart questioned his preceptor's interpretations that seemed to negate the personal reality and compassionate grace of the Supreme Lord Narayana. Following the divine call of Yamunacharya, the revered pontiff of Srirangam, Ramanuja journeyed south, dedicating his life to synthesizing the transcendental philosophy of the Upanishads with the ecstatic, egalitarian Tamil hymns of the Alvars (the Divya Prabandham).\n\nInvested as the spiritual leader of Srirangam, Ramanuja formulated the profound philosophical system of Vishishtadvaita (qualified non-dualism). He demonstrated through rigorous Sanskrit exegesis that the universe and individual souls (Jivas) are not an illusion (Maya), but real, eternal attributes and bodily expressions of the Supreme Being (Brahman). He reformed the temple administration of Srirangam and Tirumala-Tirupati, opening temple entry and devotional duties to underprivileged communities whom he affectionately named Thirukulattar (the blessed family of the Divine Goddess Lakshmi).",
+    "journeyLocal": "तमिलनाडु के श्रीपेरुंबुदूर में जन्मे रामानुज बाल्यकाल से ही विलक्षण मेधा के धनी थे। कांचीपुरम में यादव प्रकाश से शिक्षा ग्रहण करते हुए उन्होंने परमात्मा के सगुण-साकार और कृपालु स्वरूप की रक्षा हेतु तार्किक व्याख्याएँ प्रस्तुत कीं। श्रीरंगम के महान आचार्य यामुनाचार्य के संकल्पों को पूरा करने हेतु उन्होंने संन्यास धारण किया और प्रस्थानत्रयी पर विशिष्टाद्वैत वेदांत की प्रतिष्ठा की।\n\nउन्होंने उपनिषदों के गंभीर दर्शन को तमिल आलवार संतों के भक्ति-गीतों (दिव्य प्रबंधम्) से जोड़कर जन-आंदोलन का रूप दिया। उन्होंने तिरुपति और श्रीरंगम सहित अनेक प्रमुख मंदिरों की व्यवस्था में क्रांतिकारी सुधार किए और समाज के वंचित वर्गों को 'तिरुक्कुलत्तार' (महालक्ष्मी का पावन कुल) नाम देकर उन्हें मंदिर-प्रवेश और पूजा-अर्चना का अधिकार दिलाया।",
+    "trial": "Ramanuja’s supreme trial and immortal act of spiritual compassion occurred when seeking initiation into the sacred eight-syllable saving mantra: 'Om Namo Narayanaya'. His guru, Goshtipurna (Thirukkoshtiyur Nambi), made Ramanuja walk barefoot from Srirangam to Thirukkoshtiyur eighteen times before finally agreeing to impart the secret mantra. Imparting the initiation under the strictest oath of secrecy, the guru gave a dire warning: 'This mantra guarantees liberation (Moksha) to anyone who hears it, but whoever reveals it to the uninitiated shall suffer eternal damnation in the darkest hells.'\n\nTaking the sacred mantra into his heart, Ramanuja walked out of his guru's cottage and looked upon the suffering, weary crowd of townspeople gathered below. Rather than concealing the secret for his own solitary salvation, Ramanuja climbed the high outer gopuram (temple tower) of the Soumyanarayana Perumal temple. Calling out with a booming voice to all men, women, and children regardless of caste or standing, he proclaimed the eight-syllable mantra at the top of his lungs, commanding everyone to chant it and attain liberation. Infuriated, Goshtipurna stormed before him, raising his staff and thundering: 'Do you not realize that you have consigned yourself to the fires of hell for disobeying your guru?' Ramanuja bowed his head with serene humility and replied: 'O Gurudeva, if my single soul burning in hell can grant salvation to thousands of innocent beings, I welcome hell a million times over.' Overwhelmed by such divine, Christ-like selflessness, the guru cast down his staff, embraced Ramanuja in tears, and proclaimed: 'You are no longer my disciple; you are Emberumanar—our venerable Lord.' Later in life, when a fanatic Chola monarch demanded that all scholars sign a decree stating Shiva was supreme over Vishnu, Ramanuja withstood persecution and exile into Karnataka, where he converted King Bittideva (Vishnuvardhana) and established the historic Cheluvanarayana Swamy temple at Melkote.",
+    "trialLocal": "रामानुजाचार्य के जीवन का सबसे प्रसिद्ध प्रसंग उनकी गुरु-दीक्षा से जुड़ा है। तिरुक्कोष्टियूर नम्बी से 'ॐ नमो नारायणाय' के अष्टाक्षर मंत्र को पाने के लिए वे १८ बार पैदल चलकर गए। गुरु ने इस शर्त पर मंत्र दिया कि यह अत्यंत गुप्त है; इसे सुनने वाला मोक्ष प्राप्त करेगा, किंतु इसे किसी को बताने वाला नरक में जाएगा।\n\nमंत्र पाते ही रामानुजाचार्य ने सोचा कि यदि इस मंत्र से सभी जीवों का उद्धार हो सकता है, तो वे अकेले मोक्ष पाकर क्या करेंगे? वे तुरंत तिरुक्कोष्टियूर के मंदिर के विशाल गोपुरम पर चढ़ गए और पूरे नगर को पुकारकर उच्च स्वर में उस पावन मंत्र का उद्घोष कर दिया। क्रुद्ध होकर जब गुरु ने पूछा कि क्या तुम जानते हो कि तुम्हें घोर नरक मिलेगा, तो रामानुज ने शांत भाव से कहा: 'हे गुरुदेव! यदि मेरे अकेले के नरक जाने से हजारों दीन-दुखियों को मोक्ष मिलता है, तो मुझे नरक जाना सहर्ष स्वीकार है।' उनकी यह असीम करुणा देखकर गुरु ने रोते हुए उन्हें गले लगा लिया और 'एम्बरुमानार' (हमारे प्रभु) की उपाधि दी।",
+    "teaching": "Sri Ramanujacharya taught the sublime doctrine of Sharanagati (Prapatti)—unconditional, loving surrender to Lord Narayana. God is not an impersonal void or cold abstraction, but an ocean of boundless love, accessible to every living being irrespective of social standing, birth, or learning. All souls are interconnected in the cosmic body of the Divine.",
+    "teachingLocal": "रामानुजाचार्य ने शरणागति और प्रपत्ति का सिद्धांत दिया कि भगवान नारायण प्रेम और करुणा के सागर हैं। ईश्वर की दृष्टि में कोई ऊँच-नीच नहीं है; सच्चा समर्पण ही मोक्ष का साधन है। जीव और जगत दोनों ही परमात्मा के शरीर के समान हैं, अतः सभी प्राणियों के प्रति सेवा और आदर का भाव ही सच्चा धर्म है।",
+    "moral": "True spiritual greatness is measured not by the secrets one hoards for personal enlightenment, but by the willingness to sacrifice one's own salvation for the liberation and upliftment of humanity.",
+    "moralLocal": "आध्यात्मिक ज्ञान का उद्देश्य व्यक्तिगत मोक्ष तक सीमित नहीं है, बल्कि समस्त मानवता के कल्याण में है। जो दूसरों के दुख को दूर करने के लिए स्वयं कष्ट सहने को तैयार रहता है, वही सच्चा संत है।",
+    "legacy": "Sri Ramanujacharya is the venerable architect of the Sri Vaishnava sampradaya. His philosophical masterworks, including the *Sri Bhashya* on the Brahma Sutras and the *Gita Bhashya*, established Bhakti on an unassailable intellectual foundation. His egalitarian temple reforms laid the bedrock for universal social inclusion, commemorated in the historic 216-foot Statue of Equality in Hyderabad.",
+    "legacyLocal": "श्री रामानुजाचार्य ने वेदांत दर्शन को भक्ति से जोड़कर भारतीय संस्कृति को नई चेतना प्रदान की। उनके द्वारा रचित 'श्रीभाष्य' और 'गीताभाष्य' दर्शन के अमूल्य ग्रंथ हैं। उनकी समतावादी दृष्टि के सम्मान में हैदराबाद में 'स्टैच्यू ऑफ इक्वैलिटी' (समानता की प्रतिमा) की स्थापना की गई है।",
+    "source": "Prapannamritam (Anantacharya), Sri Ramanuja Divya Charitam, Vedartha Sangraha",
+    "sourceLocal": "प्रपन्नामृतम् (अनंताचार्य), श्री रामानुज दिव्य चरितम्, वेदार्थ संग्रह",
+    "sourceCitations": [
+      {
+        "sourceName": "Anantacharya — Prapannamritam",
+        "sourceRef": "Chapters 15–28 (Life of Sri Ramanuja and Gopuram Mantropadesha)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Sri Ramanuja — Sri Bhashya",
+        "sourceRef": "Commentary on the Brahma Sutras (Chatus-sutri / Foundations of Vishishtadvaita)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "If my single soul falling into hell can bring eternal salvation to thousands of suffering beings, I welcome that hell with joy.",
+      "attribution": "Sri Ramanujacharya to Guru Goshtipurna at Thirukkoshtiyur"
+    },
+    "quoteLocal": {
+      "text": "यदि मेरे अकेले के नरक जाने से हजारों प्राणियों को मुक्ति मिलती है, तो मुझे वह नरक सहर्ष स्वीकार है।",
+      "attribution": "श्री रामानुजाचार्य (तिरुक्कोष्टियूर गोपुरम उद्घोष)"
+    }
+  },
+  {
+    "id": "ramakrishna",
+    "name": "Ramakrishna Paramahamsa",
+    "nameLocal": "रामकृष्ण परमहंस",
+    "era": "1836 – 1886 CE",
+    "eraLocal": "१८३६ – १८८६ ई.",
+    "tradition": "hindu",
+    "region": "Dakshineswar, Bengal",
+    "regionLocal": "दक्षिणेश्वर, बंगाल",
+    "emoji": "🌸",
+    "tagline": "The mystic of Dakshineswar whose direct realization of the Divine Mother and lived experience of all spiritual paths revealed universal harmony.",
+    "taglineLocal": "दक्षिणेश्वर के दिव्य संत जिन्होंने मां काली के साक्षात दर्शन किए और सभी धर्मों की साधना कर 'यतो मत, ततो पथ' का सार्वभौमिक संदेश दिया।",
+    "journey": "Born as Gadadhar Chattopadhyaya in the rural village of Kamarpukur in Bengal to Khudiram and Chandramani Devi, the boy was naturally immersed in mystical contemplation. At age seven, seeing a flock of pure white cranes flying across dark, rolling monsoon clouds, Gadadhar was overwhelmed by transcendent beauty and entered ecstatic samadhi, losing all outward consciousness. Following the passing of his elder brother Ramkumar, he was appointed as the priest of the newly established Bhavatarini Kali temple at Dakshineswar along the Ganga, built by Rani Rashmoni.\n\nAt Dakshineswar, Gadadhar’s longing for the direct vision of the Divine Mother consumed every waking moment. Unable to treat the granite murti as mere stone, he fed the Mother with his own hands, fanned her during summer heat, and wept like a child bereft of its mother, crying: 'Mother, another day has passed and You have not shown Yourself to me!' Seeing his intense spiritual intoxication, relatives believed he had lost his sanity and arranged his marriage to Sarada Devi of Jayrambati; yet when Sarada joined him at Dakshineswar, Ramakrishna worshiped her upon a floral altar as the living embodiment of the Divine Mother Shodashi (Tripura Sundari), sublimating all worldly desire into pure spiritual adoration.",
+    "journeyLocal": "बंगाल के कामारपुकुर गाँव में जन्मे गदाधर चट्टोपाध्याय बाल्यकाल से ही भाव-समाधि में लीन रहते थे। रानी रासमणि द्वारा गंगा तट पर निर्मित दक्षिणेश्वर काली मंदिर में जब वे पुजारी बने, तो माँ भवतारिणी की प्रत्यक्ष अनुभूति के लिए उनकी व्याकुलता चरम पर पहुँच गई। वे मूर्ति को केवल पाषाण नहीं, अपितु साक्षात चिन्मयी माँ मानकर बातें करते थे और उन्हें अपने हाथों से भोग लगाते थे।\n\nजब परिजनों ने उन्हें विक्षिप्त समझकर शारदा देवी से उनका विवाह करा दिया, तब दक्षिणेश्वर आने पर श्रीरामकृष्ण ने शारदा देवी को पाषाण या देह के रूप में नहीं, बल्कि षोडशी महाविद्या के रूप में पूजा और उनके चरणों में अपने जप की माला समर्पित कर दी। उनका संपूर्ण जीवन पवित्रता और काम-कांचन के त्याग का अनुपम उदाहरण बन गया।",
+    "trial": "Ramakrishna’s supreme spiritual trial and historic experiment was to experience the absolute Reality through every major spiritual path known to humanity. Having attained Nirvikalpa Samadhi—the unbroken non-dual union with Brahman—under the guidance of the wandering naked Naga monk Totapuri in just three days (a state that takes ordinary yogis lifetimes to touch), Ramakrishna did not remain frozen in solitary silence.\n\nUnder Bhairavi Brahmani, he systematically mastered all sixty-four Tantric sadhanas without touching liquor or violating moral purity, proving that the Divine Mother can be realized through immaculate self-restraint. He immersed himself in the Vaishnava Rasas, adopting the ecstatic longing of Radha (Madhura Bhava) until tears of divine separation flowed unceasingly. Next, he practiced Islam under the guidance of Govinda Roy, dressing in Muslim garments, reciting the Quran, and offering Namaz five times daily until he experienced the direct vision of the Prophet and merged into the formless Divine. Years later, contemplating an icon of the Madonna and Child, he experienced a dazzling vision of Jesus Christ entering his body, realizing Christ-consciousness. In his physical body, he suffered agonizing throat cancer in his final year at Cossipore garden house, yet while his throat burned, his face radiated ecstatic bliss as he transmitted his spiritual power to his young disciples headed by Narendranath (Swami Vivekananda), commanding them to serve humanity as the living presence of God: 'Shiva Jnane Jiva Seva'.",
+    "trialLocal": "श्रीरामकृष्ण परमहंस का जीवन विभिन्न साधना-मार्गो की सत्यता को प्रमाणित करने की ऐतिहासिक प्रयोगशाला था। तोतापुरी जी के मार्गदर्शन में मात्र तीन दिनों में उन्होंने 'निर्विकल्प समाधि' की सर्वोच्च अवस्था प्राप्त की। इसके पश्चात भैरवी ब्राह्मणी से चौंसठ तंत्रों की कठिन साधनाएं कीं, और वैष्णव भाव में राधा रानी के विरह का अनुभव किया।\n\nयही नहीं, उन्होंने इस्लाम की साधना करते हुए नमाज़ पढ़ी और कुरान का पाठ किया, तथा ईसा मसीह का ध्यान करते हुए क्राइस्ट-चेतना का साक्षात्कार किया। जीवन के अंतिम समय में गले के कैंसर के असह्य दर्द के बीच भी वे शिष्यों को आत्म-ज्ञान बांटते रहे। उन्होंने नरेंद्र (स्वामी विवेकानंद) को अपनी समस्त आध्यात्मिक शक्ति समर्पित करते हुए जन-कल्याण हेतु 'शिव ज्ञाने जीव सेवा' (मानव सेवा ही ईश्वर सेवा है) का अमर मंत्र सौंपा।",
+    "teaching": "Sri Ramakrishna revealed the timeless truth: 'Joto mat, toto poth'—as many faiths, so many paths to the one Supreme Reality. God is both personal with form (Sakara) and formless non-dual existence (Nirakara), just as water freezes into ice forms and melts back into formless ocean. The ultimate obstacle to spiritual awakening is attachment to lust and greed ('Kamini-Kanchana'); when greed and ego are surrendered, God-realization is instantaneous.",
+    "teachingLocal": "श्रीरामकृष्ण ने 'यतो मत, ततो पथ' का अमर संदेश दिया कि विभिन्न धर्म एक ही परमात्मा तक पहुँचने के अलग-अलग मार्ग हैं, जैसे विभिन्न घाटों से एक ही नदी का जल भरा जाता है। ईश्वर साकार भी है और निराकार भी। उन्होंने काम और कांचन (भोग और लोभ) के त्याग को आत्म-साक्षात्कार की अनिवार्य शर्त बताया।",
+    "moral": "Sectarian dogmatism is born of ignorance. When one tastes the sweetness of direct divine experience, all religious animosities vanish, leaving only boundless love, universal respect, and selfless service to humanity.",
+    "moralLocal": "धर्म के नाम पर होने वाले विवाद अज्ञानता का परिणाम हैं। जब हृदय में ईश्वर का सच्चा प्रेम जागृत होता है, तो समस्त संकीर्णताएं मिट जाती हैं और मनुष्य हर प्राणी में परमात्मा का ही रूप देखता है।",
+    "legacy": "Sri Ramakrishna’s teachings, recorded verbatim in the immortal *Sri Sri Ramakrishna Kathamrita* (The Gospel of Sri Ramakrishna) by Mahendranath Gupta (M.), revitalized Hinduism during the colonial era and inspired the global Ramakrishna Math and Ramakrishna Mission founded by Swami Vivekananda, bringing Vedanta to the modern world.",
+    "legacyLocal": "श्रीरामकृष्ण परमहंस आधुनिक भारत के आध्यात्मिक पुनर्जागरण के जनक हैं। 'श्री रामकृष्ण कथामृत' विश्व साहित्य का अद्वितीय ग्रंथ है। उनके विचारों से प्रेरित होकर स्वामी विवेकानंद ने 'रामकृष्ण मिशन' की स्थापना की, जिसने विश्व भर में वेदांत और सेवा के दीप प्रज्वलित किए।",
+    "source": "Sri Sri Ramakrishna Kathamrita (Mahendranath Gupta / M.), The Gospel of Sri Ramakrishna (Swami Nikhilananda)",
+    "sourceLocal": "श्री श्री रामकृष्ण कथामृत (महेंद्रनाथ गुप्त / 'म'), द गॉस्पेल ऑफ श्री रामकृष्ण (स्वामी निखिला Bleaching)",
+    "sourceCitations": [
+      {
+        "sourceName": "Mahendranath Gupta (M.) — Sri Sri Ramakrishna Kathamrita",
+        "sourceRef": "Volumes 1–5 (Verbatim Bengali records of Sri Ramakrishna's discourses)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Swami Saradananda — Sri Ramakrishna the Great Master (Sri Sri Ramakrishna Lilaprasanga)",
+        "sourceRef": "Sadhana Phase and Direct Realization of World Faiths",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "As many faiths, so many paths to God; rain water flows through different channels, but all water returns to the ocean.",
+      "attribution": "Sri Ramakrishna Paramahamsa — Kathamrita"
+    },
+    "quoteLocal": {
+      "text": "यतो मत, ततो पथ—जितने मत, उतने ही ईश्वर तक पहुँचने के मार्ग हैं।",
+      "attribution": "श्रीरामकृष्ण परमहंस (कथामृत)"
+    }
+  },
+  {
+    "id": "ramana-maharshi",
+    "name": "Ramana Maharshi",
+    "nameLocal": "रमण महर्षि",
+    "era": "1879 – 1950 CE",
+    "eraLocal": "१८७९ – १९५० ई.",
+    "tradition": "hindu",
+    "region": "Tiruvannamalai, Tamil Nadu",
+    "regionLocal": "तिरुवन्नामलाई, तमिलनाडु",
+    "emoji": "⛰️",
+    "tagline": "The silent sage of Arunachala whose direct self-enquiry ('Who am I?') illuminated the path to effortless Self-realization for the modern world.",
+    "taglineLocal": "अरुणाचल के मौन ऋषि जिन्होंने 'मैं कौन हूँ?' की आत्म-विचार पद्धति से समूचे विश्व को सहज आत्म-ज्ञान का मार्ग दिखाया।",
+    "journey": "Born as Venkataraman Iyer in the village of Tiruchuzhi in Tamil Nadu to Sundaram Iyer and Azhagammal, he was an ordinary schoolboy with an athletic build and an unusually deep slumber. At age sixteen in July 1896, while sitting alone in an upstairs room of his uncle’s house in Madurai, a sudden, overwhelming fear of death seized him without any physical sickness. Instead of fleeing in panic, the sixteen-year-old youth resolved to face the mystery of death directly. Lying flat upon the floor like a corpse, stiffening his limbs and holding his breath, he entered deep inner inquiry: 'Now death has come. This body is dead, stiff, and will be carried to the cremation ground and burnt to ashes. But with the death of this body, am I dead? Is the body \"I\"?'\n\nIn that blazing moment of intense awareness, he discovered that the physical body, senses, and mental thoughts are merely perishable instruments, while the luminous 'I'-consciousness—the silent Spirit (Atman)—is unborn, immortal, and untouched by physical dissolution. In a single instant, the fear of death dissolved forever, and Venkataraman awakened as a fully liberated Sage (Jivanmukta). Weeks later, feeling the irresistible magnetic pull of Arunachala—the holy mountain revered as the physical form of Lord Shiva—he left three rupees and a note in his room, boarded a train, and arrived at Tiruvannamalai, throwing away his remaining coins, shaving his head, and immersing himself in unbroken absorption in the Self.",
+    "journeyLocal": "तमिलनाडु के तिरुचुली गाँव में जन्मे वेंकटरमण मात्र १६ वर्ष के थे, जब मदुरै में अचानक उन्हें मृत्यु का तीव्र भय हुआ। किसी व्याधि के बिना ही उन्होंने मृत्यु का साक्षात करने का निर्णय लिया। वे फर्श पर शव की भांति लेट गए, सांस रोक ली और आत्म-विचार करने लगे: 'यह शरीर मृत हो गया, इसे जला दिया जाएगा; किंतु क्या इस देह के मरने से मैं भी मर गया? क्या मैं यह शरीर हूँ?'\n\nउसी क्षण उनकी चेतना देह से परे हटकर अमर, शाश्वत आत्म-तत्व में स्थिर हो गई। मृत्यु का भय सदा के लिए समाप्त हो गया और वे आत्म-साक्षात्कारी ऋषि बन गए। इसके पश्चात वे पवित्र अरुणाचल पर्वत की पुकार सुनकर तिरुवन्नामलाई आ गए और जीवन भर मौन ध्यान में लीन रहे।",
+    "trial": "Arriving at the ancient Arunachaleswara temple, young Venkataraman sat in samadhi in the dark underground cellar known as Patala Lingam to escape noisy crowds. He remained in such deep absorption for months that vermin, ants, and scorpions gnawed into his thighs, drawing blood and pus, yet he remained utterly oblivious to bodily pain until devotees discovered him and carried him to safety. For years, he lived in the Virupaksha and Skandashram caves on the slopes of Arunachala, sitting in luminous silence, draped only in a simple loincloth.\n\nSeekers, scholars, and skeptics from across India and Europe—including Paul Brunton, Arthur Osborne, and Somerset Maugham—traveled to sit at his feet. The Maharshi rarely gave elaborate lectures; his primary teaching was transmitted through the silence of his presence, which quieted the restless minds of visitors like a profound tranquilizer. When asked intellectual questions about heaven, rebirth, or metaphysical cosmos, the Maharshi invariably turned the question back upon the inquirer: 'Who is asking this question? Find out who you are first. The seeker who finds the source of the \"I\" discovers that the questioner and the universe are one non-dual Self.' In his final years, afflicted with painful sarcoma cancer in his arm, he refused to allow surgeons to drug his consciousness, undergoing operations with a serene smile and comforting weeping devotees before his passing in April 1950 with the words: 'They say that I am dying, but where can I go? I am here.'",
+    "trialLocal": "अरुणाचल मंदिर के पाताल लिंगम में ध्यानमग्न रहने के दौरान कीड़े और बिच्छू उनके शरीर को नोचते रहे, किंतु उन्हें देह का तनिक भी भान न रहा। वर्षों तक वे विरुपाक्ष गुफा में मौन रहे। देश-विदेश से आने वाले विद्वान और जिज्ञासु केवल उनके सानिध्य में बैठकर ही अपने मन की चंचलता को शांत पाते थे।\n\nजब लोग उनसे ईश्वर, पुनर्जन्म या सृष्टि के विषय में जटिल प्रश्न पूछते, तो वे केवल यही पूछते: 'यह प्रश्न पूछने वाला कौन है? पहले अपने \"मैं\" की खोज करो।' जीवन के अंतिम समय में जब उनकी भुजा में कैंसर का असह्य दर्द था, तब भी वे शांत और मुस्कुराते रहे। भक्तों के रोने पर उन्होंने कहा: 'लोग कहते हैं कि मैं जा रहा हूँ; पर मैं कहाँ जाऊँगा? मैं तो यहीं हूँ।'",
+    "teaching": "Bhagavan Sri Ramana Maharshi taught the direct path of Self-Enquiry (Atma-Vichara)—incessantly tracing the root of the individual ego by asking 'Who am I?' (Nan Yar?). The mind is merely a bundle of thoughts orbiting the primary thought of 'I'; when one investigates where this 'I'-thought arises, it sinks back into the spiritual Heart (Hridaya), revealing the Self as pure, unbroken Consciousness.",
+    "teachingLocal": "रमण महर्षि ने 'आत्म-विचार' (मैं कौन हूँ?) की सरल और प्रत्यक्ष साधना सिखाई। उन्होंने बताया कि मन केवल विचारों का समूह है जो 'मैं' के विचार के इर्द-गिर्द घूमता है। जब मनुष्य अपने अहम् के स्रोत की खोज करता है, तो मन हृदय में विलीन हो जाता है और केवल शुद्ध आत्मा ही शेष रहती है।",
+    "moral": "Peace is not an external commodity to be acquired from without; it is your natural, inherent state when the restless illusion of the ego is dissolved in self-awareness.",
+    "moralLocal": "सच्ची शांति संसार की वस्तुओं में नहीं, बल्कि अपने ही भीतर की आत्मा में है। जब मनुष्य मिथ्या अहंकार को छोड़ देता है, तो वह स्वतः ही परमानंद में स्थित हो जाता है।",
+    "legacy": "Ramana Maharshi is revered globally as one of the purest embodiments of Advaita Vedanta in human history. His ashram at the foot of Mount Arunachala remains a worldwide sanctuary of silent meditation and spiritual awakening, drawing thousands of contemplative seekers across every continent.",
+    "legacyLocal": "महर्षि रमण आधुनिक युग में अद्वैत वेदांत के साक्षात स्वरूप हैं। श्री रमणाश्रम आज भी विश्व भर के आत्म-अन्वेषियों के लिए मौन और शांति का पवित्र केंद्र है, जहाँ उनके विचार साधकों का मार्गदर्शन करते हैं।",
+    "source": "Nan Yar? (Who Am I?), Ulladu Narpadu (Forty Verses on Reality), Talks with Sri Ramana Maharshi",
+    "sourceLocal": "नान् यार्? (मैं कौन हूँ?), उल्लादु नर्पदु (सद्-दर्शनम्), टॉक्स विद श्री रमण महर्षि",
+    "sourceCitations": [
+      {
+        "sourceName": "Sri Ramana Maharshi — Nan Yar? (Who Am I?)",
+        "sourceRef": "Core dialogues on the Self-Enquiry method",
+        "tier": 1
+      },
+      {
+        "sourceName": "Sri Ramana Maharshi — Ulladu Narpadu",
+        "sourceRef": "Forty Verses on Reality (Sanskrit: Sad-Darshanam)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Your duty is to be, and not to be this or that. 'I am that I am' sums up the whole truth; the method is summed up in 'Be still'.",
+      "attribution": "Sri Ramana Maharshi — Talks with Sri Ramana Maharshi"
+    },
+    "quoteLocal": {
+      "text": "तुम्हारा कर्तव्य केवल 'होना' है, यह या वह होना नहीं। 'शांत रहो'—यही समस्त सत्य और साधना का सार है।",
+      "attribution": "श्री रमण महर्षि (टॉक्स विद श्री रमण महर्षि)"
+    }
+  },
+  {
+    "id": "samarth-ramdas",
+    "name": "Samarth Ramdas",
+    "nameLocal": "समर्थ रामदास",
+    "era": "1608 – 1681 CE",
+    "eraLocal": "१६०८ – १६८१ ई.",
+    "tradition": "hindu",
+    "region": "Jamb & Sajjangad, Maharashtra",
+    "regionLocal": "जांब व सज्जनगढ़, महाराष्ट्र",
+    "emoji": "🚩",
+    "tagline": "The dynamic saint-warrior and preceptor to Shivaji who united Bhakti with physical strength (Bala) and political awakening in the immortal Dasbodh.",
+    "taglineLocal": "शिवाजी महाराज के आध्यात्मिक गुरु जिन्होंने 'दास Capitबोध' के माध्यम से भक्ति और शक्ति, साधना और राष्ट्र-जागृति का अद्वितीय समन्वय किया।",
+    "journey": "Born as Narayan Suryaji Thosar in the village of Jamb in Maharashtra on Ram Navami day, he was a child of independent spirit and intense contemplative bent. At age twelve, while standing in his own wedding ceremony, the priests chanted the customary Sanskrit wedding warning 'Savadhan!' (Be on guard / Beware!). Taking the word literally as a divine awakening call to beware of the snares of worldly illusion, young Narayan leapt off the marriage pavilion, ran out of the village, and disappeared into the wilderness.\n\nWandering to Panchavati along the sacred Godavari river near Nashik, he undertook twelve grueling years of penance at Takli. Standing in the waist-deep waters of the river every day from dawn until noon, he chanted the thirteen-letter Rama mantra ('Sri Ram Jaya Ram Jaya Jaya Ram') thirteen crore (130 million) times, undertaking rigorous physical exercise (Surya Namaskars) alongside Gayatri japa. Next, Narayan spent twelve years traveling barefoot across the length and breadth of the Indian subcontinent on a nationwide pilgrimage, closely studying the social degradation, political oppression, and cultural decay under foreign sultanates.",
+    "journeyLocal": "महाराष्ट्र के जांब गाँव में रामनवमी को जन्मे नारायण ठोसर बाल्यकाल से ही गहन चिंतनशील थे। मात्र १२ वर्ष की आयु में जब विवाह मंडप में पुरोहितों ने 'सावधान!' शब्द का उच्चारण किया, तो उन्होंने इसे ईश्वर का बुलावा समझा और मंडप से छलांग लगाकर भाग निकले।\n\nवे नासिक के निकट टाकली पहुँचे और गोदावरी नदी के जल में खड़े होकर लगातार १२ वर्षों तक 'श्री राम जय राम जय जय राम' का १३ करोड़ जप किया। इसके पश्चात उन्होंने १२ वर्षों तक संपूर्ण भारतवर्ष का पैदल भ्रमण किया और विदेशी आक्रांताओं के अधीन पिसती हुई जनता की दुर्दशा का प्रत्यक्ष अनुभव किया।",
+    "trial": "Unlike the passive other-worldly ascetics of his era who preached only patient endurance of suffering, Ramdas recognized that spiritual devotion without physical strength and organizational discipline leads to national subjugation. Returning to Maharashtra, he took the title 'Samarth' (The Capable One) and initiated a revolutionary socio-spiritual revival. He established over 1,200 Akharas (gymnasiums/monasteries) across Maharashtra and southern India, placing a shrine of Sri Hanuman—the symbol of celibacy, physical prowess, and fearless service—in every village. He trained a network of thousands of ascetic youth (Ramdasis) who served as spiritual preceptors by day and intelligence-gathering scouts for the righteous resistance by night.\n\nHis greatest trial lay in awakening the dormant spirit of the people and providing spiritual mentorship to Chhatrapati Shivaji Maharaj. In his monumental Marathi treatise, the *Dasbodh*, composed in the caves of Shivathar Ghal near Raigad, Samarth Ramdas laid down a comprehensive blueprint for practical spirituality, administrative statecraft, physical vigor, and righteous warfare (Kshatradharma). Legend records that when Shivaji Maharaj offered his entire Maratha empire to Ramdas by placing his royal deed inside the saint’s begging bowl at Sajjangad, Ramdas returned the kingdom to Shivaji with the saffron flag (Bhagwa Jhanda), commanding him to rule not as an arrogant monarch, but as a trustee of the Divine: 'This kingdom belongs to God; govern it with righteousness and justice.'",
+    "trialLocal": "समर्थ रामदास जी ने देखा कि केवल निष्क्रिय भक्ति से राष्ट्र की रक्षा नहीं हो सकती; भक्ति के साथ शक्ति (बल) का होना अनिवार्य है। उन्होंने महाराष्ट्र भर में १,२०० से अधिक अखाड़े और मठ स्थापित किए और हर गाँव में शक्ति और सेवा के प्रतीक श्री हनुमान जी की मूर्तियाँ स्थापित कीं। उन्होंने हजारों संन्यासियों को संगठित किया जो धर्म-प्रचार के साथ-साथ समाज को जागृत करते थे।\n\nरायगढ़ के निकट शिवथर घल की गुफा में बैठकर उन्होंने 'दासबोध' जैसे युगांतकारी ग्रंथ की रचना की, जिसमें अध्यात्म, राजनीति, व्यवहार-ज्ञान और संगठन-कौशल का अद्भुत समन्वय था। छत्रपति शिवाजी महाराज ने उन्हें अपना गुरु बनाया। जब शिवाजी ने अपना संपूर्ण राज्य समर्थ रामदास के चरणों में समर्पित कर दिया, तो समर्थ ने उन्हें भगवा ध्वज देकर 'धर्म के न्यासी' के रूप में शासन करने की आज्ञा दी।",
+    "teaching": "Samarth Ramdas taught the synthesis of 'Harikatha' (devotional reflection) and 'Rajyakarana' (practical action and governance). Bhakti must not degenerate into laziness, fatalism, or weakness; true spirituality demands a vigorous, healthy body, a sharp and practical intellect, organizational discipline, and the willingness to defend Dharma with righteous courage.",
+    "teachingLocal": "समर्थ रामदास जी ने सिखाया कि भक्ति का अर्थ कायरता या निष्क्रियता नहीं है। धर्म की रक्षा के लिए बल, बुद्धि और संगठन की आवश्यकता होती है: 'सामर्थ्य आहे चळवळीचे, जो जे करील तयाचे।' उन्होंने 'मराठा तितुका मेळवावा, आपुला महाराष्ट्र धर्म वाढवावा' का नारा देकर समाज को संगठित किया।",
+    "moral": "Prayer without practical action is impotent; action without spiritual contemplation is blind. When inner devotion is joined to physical vigor and collective organization, righteousness triumphs over tyranny.",
+    "moralLocal": "ईश्वर की भक्ति और राष्ट्र-सेवा एक-दूसरे के पूरक हैं। सच्चा साधु वही है जो केवल अपनी मुक्ति की चिंता न करे, बल्कि समूचे समाज को सशक्त, संगठित और संस्कारित बनाए।",
+    "legacy": "Samarth Ramdas’s magnum opus, the *Dasbodh*, and his stirring hymns to Hanuman (Maruti Stotra) and Sri Rama (Manache Shlok) remain daily recitation across millions of Marathi homes. His spiritual guidance provided the moral spine to Chhatrapati Shivaji Maharaj’s Hindavi Swarajya, uniting the people in an indomitable national resurgence.",
+    "legacyLocal": "समर्थ रामदास जी का 'दासबोध' और 'मनाचे श्लोक' आज भी घर-घर में प्रेरणा देते हैं। उनका दिया गया मारुति स्तोत्र जन-जन को बल प्रदान करता है। शिवाजी महाराज के साथ उनका संबंध भारतीय इतिहास में गुरु-शिष्य परंपरा और राष्ट्र-निर्माण का स्वर्णिम अध्याय है।",
+    "source": "Dasbodh (Samarth Ramdas, 1654 CE), Manache Shlok, Sri Samarth Charitra (Hanumant Swami)",
+    "sourceLocal": "दासबोध (समर्थ रामदास, १६५४ ई.), मनाचे श्लोक, श्री समर्थ चरित्र (हनुमंत स्वामी)",
+    "sourceCitations": [
+      {
+        "sourceName": "Samarth Ramdas — Dasbodh",
+        "sourceRef": "Dashaka 1–20 (Discourses on Practical Vedanta, Rajadharma, and Devotion)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Hanumant Swami — Sri Samarth Charitra",
+        "sourceRef": "Historical biography and account of relationship with Shivaji Maharaj",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "There is boundless strength in disciplined collective movement; whoever undertakes it with dedication achieves victory.",
+      "attribution": "Samarth Ramdas — Dasbodh"
+    },
+    "quoteLocal": {
+      "text": "सामर्थ्य आहे चळवळीचे। जो जे करील तयाचे। परंतु येथे भगवंताचे। अधिष्ठान पाहिजे॥",
+      "attribution": "समर्थ रामदास (दासबोध)"
+    }
+  },
+  {
+    "id": "guru-arjan-dev",
+    "name": "Guru Arjan Dev Ji",
+    "nameLocal": "गुरु अर्जन देव जी",
+    "namePa": "ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ",
+    "era": "1563 – 1606 CE",
+    "eraLocal": "१५६३ – १६०६ ई.",
+    "eraPa": "੧੫੬੩ – ੧੬੦੬ ਈ.",
+    "tradition": "sikh",
+    "region": "Amritsar & Lahore, Punjab",
+    "regionLocal": "अमृतसर व लाहौर, पंजाब",
+    "regionPa": "ਅੰਮ੍ਰਿਤਸਰ ਤੇ ਲਾਹੌਰ, ਪੰਜਾਬ",
+    "emoji": "☬",
+    "tagline": "The fifth Sikh Guru, supreme compiler of the Adi Granth and builder of Sri Harmandir Sahib, who bore martyrdom upon burning iron plates with serene love.",
+    "taglineLocal": "सिखों के पांचवें गुरु, आदि ग्रंथ के संकलनकर्ता और हरिमंदिर साहिब के निर्माता जिन्होंने तवे पर बैठकर 'तेरा कीआ मीठा लागै' का अमर संदेश दिया।",
+    "taglinePa": "ਪੰਜਵੇਂ ਪਾਤਸ਼ਾਹ, ਆਦਿ ਗ੍ਰੰਥ ਦੇ ਸੰਪਾਦਕ ਅਤੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੇ ਉਸਰਈਏ ਜਿਨ੍ਹਾਂ ਨੇ ਤੱਤੀ ਤਵੀ 'ਤੇ ਬੈਠ ਕੇ 'ਤੇਰਾ ਕੀਆ ਮੀਠਾ ਲਾਗੈ' ਦਾ ਮਹਾਨ ਸੰਦੇਸ਼ ਦਿੱਤਾ।",
+    "journey": "Born in Goindval to Guru Ram Das, the fourth Guru, and Mata Bhani, Arjan Dev was imbued from his youth with profound humility, poetic genius, and spiritual wisdom. Ascending to the Guruship in 1581 as the fifth Sikh Guru, he consolidated the spiritual and social infrastructure of the Sikh faith. He completed the construction of the sacred Sarovar (pool of nectar) and founded Sri Harmandir Sahib (the Golden Temple) in Amritsar. In a historic gesture of universal brotherhood and religious harmony, Guru Arjan Dev invited the venerated Muslim Sufi saint Hazrat Mian Mir of Lahore to lay the foundation stone of Sri Harmandir Sahib, designing the sanctum with four open doors facing all four directions to welcome seekers of every caste, creed, and gender.\n\nHis greatest cultural and spiritual achievement was the compilation of the sacred *Adi Granth* (the foundational scripture of Sikhism) in 1604. Gathering the sacred hymns of the first four Sikh Gurus, composing over 2,200 of his own sublime verses (including the immortal *Sukhmani Sahib*), and incorporating the hymns of fifteen Hindu and Muslim Bhakti saints—such as Kabir, Ravidas, Namdev, Baba Farid, and Jaidev—Guru Arjan Dev created a universal scripture of divine love and human unity, formally installing it within Sri Harmandir Sahib with Bhai Buddha as the first head granthi.",
+    "journeyLocal": "गोइंदवाल साहिब में चौथे गुरु रामदास जी और माता भानी जी के यहाँ जन्मे अर्जन देव जी बाल्यकाल से ही अत्यंत विनम्र, विद्वान और शांत स्वभाव के थे। १५८१ में पांचवें गुरु के रूप में प्रतिष्ठित होकर उन्होंने सिख धर्म के आध्यात्मिक और सामाजिक स्वरूप को सुदृढ़ किया। उन्होंने अमृतसर के पवित्र अमृत सरोवर का कार्य पूर्ण कराया और 'श्री हरिमंदिर साहिब' का निर्माण कराया। धार्मिक सौहार्द की अनुपम मिसाल पेश करते हुए गुरु जी ने लाहौर के प्रख्यात सूफी संत हज़रत मियाँ मीर से हरिमंदिर साहिब की नींव रखवाई और चारों दिशाओं में चार द्वार रखे ताकि हर जाति, वर्ग और धर्म का व्यक्ति वहाँ बिना किसी भेदभाव के प्रवेश कर सके।\n\nउनका सबसे महान कार्य १६०४ में 'आदि ग्रंथ' (श्री गुरु ग्रंथ साहिब का मूल स्वरूप) का संकलन था। पहले चार गुरुओं की बाणी के साथ-साथ अपनी २,२१८ बाणियों (जिनमें पावन 'सुखमनी साहिब' प्रमुख है) और १५ हिंदू-मुस्लिम भक्त-कवियों—कबीर, रविदास, नामदेव, बाबा फरीद आदि—की बाणी को एकत्र कर उन्होंने मानवता के लिए प्रेम और एकता का पावन ग्रंथ तैयार किया और बाबा बुड्ढा जी को प्रथम ग्रंथी नियुक्त किया।",
+    "journeyPa": "ਸ੍ਰੀ ਗੋਇੰਦਵਾਲ ਸਾਹਿਬ ਵਿਖੇ ਚੌਥੇ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਰਾਮਦਾਸ ਜੀ ਅਤੇ ਮਾਤਾ ਭਾਨੀ ਜੀ ਦੇ ਗ੍ਰਹਿ ਵਿਖੇ ਪ੍ਰਗਟ ਹੋਏ ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ ਨੇ ੧੫੮੧ ਵਿਚ ਗੁਰਗੱਦੀ ਸੰਭਾਲੀ। ਆਪ ਜੀ ਨੇ ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ ਸਾਹਿਬ ਵਿਖੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੀ ਉਸਾਰੀ ਕਰਵਾਈ ਅਤੇ ਇਸ ਦੀ ਨੀਂਹ ਮੁਸਲਮਾਨ ਸੂਫ਼ੀ ਸੰਤ ਸਾਈਂ ਮੀਆਂ ਮੀਰ ਜੀ ਪਾਸੋਂ ਰਖਵਾ ਕੇ ਸਰਬ-ਸਾਂਝੀਵਾਲਤਾ ਦਾ ਅਦੁੱਤੀ ਸਬੂਤ ਦਿੱਤਾ। ਚਹੁੰ ਵਰਨਾਂ ਲਈ ਚਾਰੇ ਦਰਵਾਜ਼ੇ ਖੁੱਲ੍ਹੇ ਰੱਖੇ।\n\n੧੬੦੪ ਵਿਚ ਆਪ ਜੀ ਨੇ ਪਹਿਲੇ ਚਾਰ ਗੁਰੂ ਸਾਹਿਬਾਨ, ਭਗਤਾਂ ਅਤੇ ਭੱਟਾਂ ਦੀ ਬਾਣੀ ਨੂੰ ਇਕੱਤਰ ਕਰਕੇ ਪਵਿੱਤਰ 'ਆਦਿ ਗ੍ਰੰਥ' ਸਾਹਿਬ ਜੀ ਦਾ ਸੰਪਾਦਨ ਕੀਤਾ ਅਤੇ ਬਾਬਾ ਬੁੱਢਾ ਜੀ ਨੂੰ ਪਹਿਲੇ ਹੈੱਡ ਗ੍ਰੰਥੀ ਥਾਪ ਕੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਵਿਖੇ ਪਹਿਲਾ ਪ੍ਰਕਾਸ਼ ਕੀਤਾ।",
+    "trial": "Guru Arjan Dev’s expanding spiritual influence across Punjab aroused bitter jealousy from his elder brother Prithi Chand and venomous hostility from the Mughal courtier Chandu Shah, whose daughter's marriage proposal to the Guru's son Hargobind had been declined. Following the accession of Emperor Jahangir to the Mughal throne in 1605, fundamentalist imperial advisers poisoned the emperor's mind, claiming that the Adi Granth contained verses disrespectful to Islam and accusing the Guru of blessing the rebel prince Khusrau with a saffron mark.\n\nSummoned to the Mughal court in Lahore in May 1606, Jahangir demanded that the Guru alter verses in the Adi Granth and pay an enormous fine of two hundred thousand rupees. Guru Arjan Dev serenely refused, stating: 'The hymns in the Granth are direct revelations from the Creator; not a single syllable can be altered to flatter mortal kings, and money collected from the offerings of the poor cannot be paid as a wrongful fine.' Jahangir ordered the Guru executed under the torturous law of Yasa (death without shedding blood). For five scorching summer days in Lahore, Guru Arjan Dev was subjected to brutal torture: seated on red-hot iron plates while burning sand was poured over his blistered head and body, and boiled alive in cauldrons of water. When his friend Mian Mir arrived in tears and offered to use occult power to destroy the city of Lahore, the Guru comforted him, pointing to the sky and reciting with radiant peace: 'Tera keea meetha laagai, Har naam padharath Nanak maangai' (Sweet is Your will, O Lord; Nanak asks only for the treasure of Your Name). On May 30, 1606, after taking a dip in the cool waters of the Ravi River, the Guru’s luminous soul merged into the eternal Light, becoming the first supreme martyr (Shaheedan-de-Sartaj) of the Sikh faith.",
+    "trialLocal": "गुरु अर्जन देव जी के बढ़ते प्रभाव से मुग़ल सम्राट जहाँगीर सशंकित हो उठा। उसने गुरु जी पर विद्रोही राजकुमार खुसरो की सहायता का आरोप लगाया और आदि ग्रंथ में बदलाव करने तथा भारी जुर्माना भरने का आदेश दिया। गुरु जी ने स्पष्ट कहा कि बाणी साक्षात ईश्वर की वाणी है, उसका एक अक्षर भी नहीं बदला जा सकता और न ही संगतों के धन से अन्यायपूर्ण जुर्माना दिया जाएगा।\n\nजहाँगीर के आदेश पर लाहौर में जेठ की तपती दोपहरी में गुरु जी को अमानवीय यातनाएं दी गईं। उन्हें जलते हुए लाल लोहे के तवे पर बैठाया गया, उनके शीश पर खौलती हुई गर्म रेत डाली गई और उबलते पानी की देग में उबाला गया। जब सूफी संत मियाँ मीर ने रोते हुए लाहौर को श्राप देने की बात कही, तो गुरु जी ने शांत भाव से मुस्कुराते हुए कहा: 'तेरा कीआ मीठा लागै, हरि नामु पदारथु नानकु मांगै।' ३० मई १६०६ को रावी नदी के पावन जल में स्नान करने के पश्चात उनका पावन प्रकाश परमात्मा में लीन हो गया। वे सिख धर्म के 'शहीदों के सरताज' बने।",
+    "trialPa": "ਮੁਗ਼ਲ ਬਾਦਸ਼ਾਹ ਜਹਾਂਗੀਰ ਨੇ ਗੁਰੂ ਸਾਹਿਬ ਨੂੰ ਆਦਿ ਗ੍ਰੰਥ ਵਿਚ ਤਬਦੀਲੀ ਕਰਨ ਅਤੇ ਜੁਰਮਾਨਾ ਭਰਨ ਦਾ ਹੁਕਮ ਦਿੱਤਾ। ਗੁਰੂ ਸਾਹਿब ਨੇ ਸ਼ਬਦ ਵਿਚ ਕਿਸੇ ਕਿਸਮ ਦੀ ਤਬਦੀਲੀ ਕਰਨ ਤੋਂ ਸਾਫ਼ ਇਨਕਾਰ ਕਰ ਦਿੱਤਾ। ਜਹਾਂਗੀਰ ਦੇ ਹੁਕਮ 'ਤੇ ਲਾਹੌਰ ਵਿਖੇ ਜੇਠ ਦੀ ਤਪਦੀ ਧੁੱਪ ਵਿਚ ਗੁਰੂ ਜੀ ਨੂੰ ਤੱਤੀ ਤਵੀ 'ਤੇ ਬਿਠਾਇਆ ਗਿਆ, ਸੀਸ 'ਤੇ ਤੱਤੀ ਰੇਤ ਪਾਈ ਗਈ ਅਤੇ ਉਬਲਦੀਆਂ ਦੇਗਾਂ ਵਿਚ ਉਬਾਲਿਆ ਗਿਆ।\n\nਸਾਈਂ ਮੀਆਂ ਮੀਰ ਜੀ ਜਦੋਂ ਇਹ ਤਸ਼ੱਦਦ ਦੇਖ ਕੇ ਵਿਆਕੁਲ ਹੋਏ, ਤਾਂ ਗੁਰੂ ਸਾਹਿਬ ਨੇ ਉਹਨਾਂ ਨੂੰ ਸ਼ਾਂਤ ਰਹਿਣ ਦਾ ਉਪਦੇਸ਼ ਦਿੰਦਿਆਂ ਫ਼ੁਰਮਾਇਆ: 'ਤੇਰਾ ਕੀਆ ਮੀਠਾ ਲਾਗੈ, ਹਰਿ ਨਾਮੁ ਪਦਾਰਥੁ ਨਾਨਕੁ ਮਾਂਗੈ'। ੩੦ ਮਈ ੧੬੦੬ ਨੂੰ ਰਾਵੀ ਦਰਿਆ ਵਿਚ ਇਸ਼ਨਾਨ ਕਰਕੇ ਆਪ ਜੀ ਜੋਤੀ-ਜੋਤਿ ਸਮਾ ਗਏ ਅਤੇ 'ਸ਼ਹੀਦਾਂ ਦੇ ਸਿਰਤਾਜ' ਅਖਵਾਏ।",
+    "teaching": "Guru Arjan Dev Ji taught the ultimate doctrine of accepting the Divine Will with sweet serenity (Bhana Mannana). Suffering and joy are both gifts from the Creator; when the mind is anchored in the nectar of the Divine Name, the fire of worldly agony cannot burn the immortal spirit. He established the necessity of righteous sacrifice to awaken moral conscience against tyrannical authority.",
+    "teachingLocal": "गुरु अर्जन देव जी ने 'भाणा मंनणा' (ईश्वर की रज़ा को मीठा मानना) का सर्वोच्च दर्शन सिखाया। सुख और दुख दोनों ही परमात्मा के विधान हैं; जो मनुष्य प्रभु के नाम में लीन रहता है, संसार की कोई भी अग्नि उसकी आत्मा को विचलित नहीं कर सकती। उन्होंने सिखाया कि धर्म और सत्य के लिए शांत रहकर सर्वोच्च बलिदान देना ही सबसे बड़ा शौर्य है।",
+    "teachingPa": "ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ ਨੇ ਪ੍ਰਮਾਤਮਾ ਦੇ ਭਾਣੇ ਨੂੰ ਮਿੱਠਾ ਕਰਕੇ ਮੰਨਣ ਦਾ ਮਹਾਨ ਸਿਧਾਂਤ ਦ੍ਰਿੜ੍ਹ ਕਰਵਾਇਆ। ਆਪ ਜੀ ਨੇ ਸਿਖਾਇਆ ਕਿ ਧਰਮ ਅਤੇ ਸੱਚ ਦੀ ਖ਼ਾਤਰ ਸ਼ਾਂਤ ਰਹਿ ਕੇ ਸ਼ਹਾਦਤ ਦੇਣਾ ਜ਼ੁਲਮ ਦੀਆਂ ਜੜ੍ਹਾਂ ਨੂੰ ਹਿਲਾ ਦਿੰਦਾ ਹੈ। ਨਾਮ ਦੀ ਕਮਾਈ ਹੀ ਜੀਵਨ ਦਾ ਅਸਲ ਧਨ ਹੈ।",
+    "moral": "Physical torture cannot conquer a soul grounded in divine love. Peace is not the absence of suffering, but the absolute surrender to truth that transforms martyrdom into an eternal victory.",
+    "moralLocal": "सत्य और ईश्वर-प्रेम में लीन आत्मा को कोई भी शारीरिक प्रताड़ना पराजित नहीं कर सकती। धर्म की रक्षा हेतु दिया गया निःस्वार्थ बलिदान इतिहास का रुख मोड़ देता है।",
+    "moralPa": "ਸਰੀਰਕ ਕਸ਼ਟ ਆਤਮਿਕ ਸ਼ਾਂਤੀ ਨੂੰ ਭੰਗ ਨਹੀਂ ਕਰ ਸਕਦੇ। ਸੱਚ 'ਤੇ ਪਹਿਰਾ ਦਿੰਦਿਆਂ ਜਾਨ ਵਾਰ ਦੇਣਾ ਕਾਇਰਤਾ ਨਹੀਂ, ਸਗੋਂ ਚੜ੍ਹਦੀ ਕਲਾ ਦੀ ਸਿਖ਼ਰ ਹੈ।",
+    "legacy": "Guru Arjan Dev’s martyrdom was the decisive turning point in Sikh history. It led his son and successor, Guru Hargobind, to don the twin swords of Miri and Piri (temporal power and spiritual authority) and build the Akal Takht, transforming the Sikh community into saint-soldiers. The *Guru Granth Sahib*, which he compiled with monumental devotion, remains the eternal living Guru of millions across the earth.",
+    "legacyLocal": "गुरु अर्जन देव जी का बलिदान सिख इतिहास का युगांतकारी मोड़ था। इसी बलिदान ने आगे चलकर 'मीरी और पीरी' की दो तलवारें धारण करने और अकाल तख्त की स्थापना की नींव रखी। उनके द्वारा संकलित 'श्री गुरु ग्रंथ साहिब' आज विश्व भर के सिखों के शाश्वत प्रकाश-स्तंभ हैं।",
+    "legacyPa": "ਗੁਰੂ ਸਾਹਿਬ ਦੀ ਲਾਸਾਨੀ ਸ਼ਹਾਦਤ ਨੇ ਸਿੱਖ ਕੌਮ ਨੂੰ ਨਵਾਂ ਮੋੜ ਦਿੱਤਾ। ਛੇਵੇਂ ਪਾਤਸ਼ਾਹ ਗੁਰੂ ਹਰਿਗੋਬਿੰਦ ਸਾਹਿਬ ਜੀ ਨੇ ਮੀਰੀ ਅਤੇ ਪੀਰੀ ਦੀਆਂ ਦੋ ਤਲਵਾਰਾਂ ਧਾਰਨ ਕਰਕੇ ਸ੍ਰੀ ਅਕਾਲ ਤਖ਼ਤ ਸਾਹਿਬ ਦੀ ਸਿਰਜਣਾ ਕੀਤੀ। ਆਪ ਜੀ ਦੁਆਰਾ ਸੰਪਾਦਿਤ 'ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ' ਸਦਾ ਲਈ ਮਨੁੱਖਤਾ ਦਾ ਚਾਨਣ-ਮੁਨਾਰਾ ਹਨ।",
+    "source": "Sri Guru Granth Sahib (Sukhmani Sahib), Tuzuk-i-Jahangiri (Memoirs of Emperor Jahangir), Sri Gur Pratap Suraj Granth",
+    "sourceLocal": "श्री गुरु ग्रंथ साहिब (सुखमनी साहिब), तुज़ुक-ए-जहाँगीरी (सम्राट जहाँगीर के संस्मरण), श्री गुर प्रताप सूरज ग्रंथ",
+    "sourcePa": "ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ (ਸੁਖਮਨੀ ਸਾਹਿਬ), ਤੁਜ਼ਕ-ਏ-ਜਹਾਂਗੀਰੀ (ਬਾਦਸ਼ਾਹ ਜਹਾਂਗੀਰ ਦੀ ਆਤਮਕਥਾ), ਸ੍ਰੀ ਗੁਰ ਪ੍ਰਤਾਪ ਸੂਰਜ ਗ੍ਰੰਥ",
+    "sourceCitations": [
+      {
+        "sourceName": "Sri Guru Granth Sahib",
+        "sourceRef": "Angs 394 & 262–296 (Gauri Sukhmani Mahalla 5 & Rag Asa)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Emperor Jahangir — Tuzuk-i-Jahangiri (Memoirs)",
+        "sourceRef": "Imperial decrees on Guru Arjan Dev at Lahore (1606 CE)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Sweet is Your will, O Lord; Nanak asks only for the treasure of Your holy Name.",
+      "attribution": "Guru Arjan Dev Ji — Sri Guru Granth Sahib, Ang 394"
+    },
+    "quoteLocal": {
+      "text": "तेरा कीआ मीठा लागै। हरि नामु पदारथु नानकु मांगै॥",
+      "attribution": "गुरु अर्जन देव जी (श्री गुरु ग्रंथ साहिब, अंग ३९४)"
+    },
+    "quotePa": {
+      "text": "ਤੇਰਾ ਕੀਆ ਮੀਠਾ ਲਾਗੈ ॥ ਹਰਿ ਨਾਮੁ ਪਦਾਰਥੁ ਨਾਨਕੁ ਮਾਂਗੈ ॥",
+      "attribution": "ਸ੍ਰੀ ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ (ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ, ਅੰਗ ੩੯੪)"
+    }
+  },
+  {
+    "id": "mai-bhago",
+    "name": "Mai Bhago",
+    "nameLocal": "माई भागो",
+    "namePa": "ਮਾਈ ਭਾਗੋ",
+    "era": "Early 18th Century CE",
+    "eraLocal": "१८वीं शताब्दी का पूर्वार्ध",
+    "eraPa": "੧੮ਵੀਂ ਸਦੀ ਦਾ ਪਹਿਲਾ ਅੱਧ",
+    "tradition": "sikh",
+    "region": "Jhabal, Majha & Muktsar",
+    "regionLocal": "झबाल, माझा व मुक्तसर",
+    "regionPa": "ਝਬਾਲ, ਮਾਝਾ ਤੇ ਮੁਕਤਸਰ",
+    "emoji": "⚔️",
+    "tagline": "The fearless warrior-lioness of Punjab who rallied forty deserters, led them back to Guru Gobind Singh, and fought heroically at the Battle of Muktsar.",
+    "taglineLocal": "पंजाब की वीरांगना शेरनी जिन्होंने चालीस बेदावा लिख चुके सिखों को ललकार कर पुनः गुरु चरणों में खड़ा किया और मुक्तसर के रण में अदम्य पराक्रम दिखाया।",
+    "taglinePa": "ਮਾਝੇ ਦੀ ਉਹ ਦਲੇਰ ਸ਼ੇਰਨੀ ਜਿਨ੍ਹਾਂ ਨੇ ਬੇਦਾਵਾ ਲਿਖ ਕੇ ਆਏ ਚਾਲੀ ਸਿੰਘਾਂ ਨੂੰ ਵੰਗਾਰਿਆ ਅਤੇ ਖ਼ਿਦਰਾਣੇ ਦੀ ਢਾਬ 'ਤੇ ਮੁਗ਼ਲ ਫ਼ੌਜਾਂ ਦੇ ਆਹੂ ਲਾਹੇ।",
+    "journey": "Born as Bhag Kaur in the village of Jhabal Kalan in the Majha region of Punjab to Bhai Malo Shah, she was raised in a devout family of Dhillon Jatts who had served the Sikh Gurus for generations. Imbued with deep spiritual devotion and trained by her father in horse-riding, archery, and swordsmanship, young Bhag Kaur lived in continuous contemplation of the divine mission of Guru Gobind Singh Ji.\n\nHer defining moment arrived in late 1705 during the prolonged, agonizing eight-month Siege of Anandpur Sahib. With food, water, and ammunition exhausted, forty Sikhs from the Majha region lost their resolve, signed a formal disclaimer (Bedawa)—declaring 'Tusi sade guru nahi, te asi tuhade sikh nahi' (You are no longer our Guru, and we are no longer your Sikhs)—and abandoned the fort to return to their villages. When these forty men reached Majha, Mai Bhago stood before them in fury and shame. She cast down her bangles at their feet, thundering: 'If you have deserted the Tenth Master in his hour of greatest trial, put on our glass bangles and sit at home grinding grain, while we women take your swords and ride into battle for our Guru!' Her piercing rebuke ignited the sleeping conscience of the forty men; weeping in repentance, they begged her to lead them back to the Guru.",
+    "journeyLocal": "पंजाब के माझा क्षेत्र के झबाल कलां गाँव में जन्मी भाग कौर बाल्यकाल से ही घुड़सवारी और तलवारबाजी में निपुण थीं। उनका परिवार पीढ़ियों से सिख गुरुओं का अनन्य सेवक था।\n\n१७०५ में जब आनंदपुर साहिब के आठ महीने लंबे घेरे के दौरान भुखमरी से तंग आकर माझा के चालीस सिखों ने गुरु गोबिंद सिंह जी को 'बेदावा' (त्यागपत्र) लिखकर दे दिया कि 'न आप हमारे गुरु, न हम आपके सिख' और वे घर लौट आए, तब माई भागो का स्वाभिमान जाग उठा। उन्होंने उन चालीस सिखों को ललकारते हुए अपनी चूड़ियाँ उनके आगे फेंक दीं और कहा: 'यदि तुम विपत्ति में दशमेश पिता का साथ छोड़कर आ गए हो, तो ये चूड़ियाँ पहन लो और घर में चूल्हा फूंको; हम स्त्रियाँ तुम्हारी तलवारें लेकर गुरु के लिए रणभूमि में जाएंगी!' इस ललकार ने उन वीरों की सोई हुई चेतना को झकझोर दिया और वे पश्चाताप करते हुए माई भागो के नेतृत्व में गुरु जी की खोज में चल पड़े।",
+    "journeyPa": "ਪਿੰਡ ਝਬਾਲ ਕਲਾਂ ਵਿਖੇ ਜਨਮੀ ਭਾਗ ਕੌਰ ਜੀ ਬਚਪਨ ਤੋਂ ਹੀ ਸ਼ਸਤਰ ਵਿੱਦਿਆ ਵਿਚ ਪ੍ਰਬੀਨ ਅਤੇ ਗੁਰੂ ਘਰ ਦੀ ਅਨਿੰਨ ਸੇਵਕ ਸਨ। ੧੭੦੫ ਵਿਚ ਜਦੋਂ ਅਨੰਦਪੁਰ ਸਾਹਿਬ ਦੇ ਘੇਰੇ ਦੌਰਾਨ ਚਾਲੀ ਸਿੰਘ ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ ਨੂੰ 'ਬੇਦਾਵਾ' ਲਿਖ ਕੇ ਘਰ ਆ ਗਏ, ਤਾਂ ਮਾਈ ਭਾਗੋ ਨੇ ਉਹਨਾਂ ਨੂੰ ਲਾਹਣਤਾਂ ਪਾਈਆਂ।\n\nਮਾਈ ਭਾਗੋ ਨੇ ਵੰਗਾਰਦਿਆਂ ਕਿਹਾ ਕਿ ਜੇਕਰ ਤੁਸੀਂ ਦਸਮੇਸ਼ ਪਿਤਾ ਨੂੰ ਛੱਡ ਆਏ ਹੋ ਤਾਂ ਚੂੜੀਆਂ ਪਹਿਨ ਕੇ ਘਰ ਬੈਠੋ, ਅਸੀਂ ਲੜਨ ਜਾਵਾਂਗੀ। ਇਸ ਵੰਗਾਰ ਨੇ ਸਿੰਘਾਂ ਦੇ ਹਿਰਦੇ ਵਲੂੰਧਰ ਦਿੱਤੇ ਅਤੇ ਉਹ ਮਾਈ ਭਾਗੋ ਦੀ ਅਗਵਾਈ ਹੇਠ ਮੁੜ ਗੁਰੂ ਜੀ ਕੋਲ ਜਾਣ ਲਈ ਤਿਆਰ ਹੋ ਗਏ।",
+    "trial": "Donning warrior armor, tying a dastar (turban), wielding a heavy lance, and mounting a warhorse, Mai Bhago led the forty repentant warriors across Punjab in search of Guru Gobind Singh. In December 1705, they located the Mughal imperial army under Wazir Khan advancing rapidly toward Khidrana di Dhab to capture the Guru. Realizing that the Guru was nearby and vulnerable on the sand dunes, Mai Bhago ordered her warriors to spread white cloths over desert bushes to deceive the Mughal scouts into believing a massive army lay in wait.\n\nAt Khidrana (now Sri Muktsar Sahib), the forty Sikhs and Mai Bhago engaged the ten-thousand-strong Mughal army in desperate, savage hand-to-hand combat under scorching desert sun. Mai Bhago charged into the enemy lines like an avatar of Durga, wielding her lance and saber, cutting down dozens of Mughal soldiers while being wounded multiple times. The forty Sikhs fought with such demonic fury that the thirsty, exhausted imperial army believed they had clashed with an entire vanguard and retreated in disorder. Following the battle, Guru Gobind Singh walked across the blood-soaked battlefield, wiping the faces of the fallen martyrs with his robe and naming them the 'Chali Mukte' (the Forty Liberated Ones). Finding their leader Mahan Singh breathing his last, the Guru granted his dying request: tearing up the Bedawa document and restoring their spiritual union with the Guru forever. The Guru then tended to the severely wounded Mai Bhago, dressing her wounds with his own hands and blessing her courage.",
+    "trialLocal": "माई भागो ने पगड़ी बांधी, तलवार उठाई और घोड़े पर सवार होकर उन चालीस योद्धाओं का नेतृत्व किया। खिदराना के मैदान में जब वज़ीर ख़ान की विशाल मुग़ल सेना गुरु जी को पकड़ने आ रही थी, तब माई भागो और उन चालीस सिखों ने मुग़लों पर अचानक भीषण आक्रमण कर दिया।\n\nमाई भागो ने रणचंडी का रूप धरकर शत्रुओं के छक्के छुड़ा दिए। गंभीर रूप से घायल होने के बावजूद वे अंतिम सांस तक लड़ती रहीं। उन चालीस वीरों ने ऐसा पराक्रम दिखाया कि मुग़ल सेना मैदान छोड़कर भाग गई। युद्ध के पश्चात जब गुरु गोबिंद सिंह जी रणभूमि में आए, तो उन्होंने भाई महाँ सिंह की अंतिम इच्छा पर अपनी जेब से वह 'बेदावा' निकालकर फाड़ दिया और उन चालीस वीरों को 'चालीस मुक्तों' (मुक्ति प्राप्त करने वाले) की उपाधि दी। गुरु जी ने घायल माई भागो का स्वयं उपचार किया और उनके साहस की सराहना की।",
+    "trialPa": "ਮਾਈ ਭਾਗੋ ਨੇ ਖ਼ੁਦ ਸ਼ਸਤਰ ਸਜਾਏ, ਘੋੜੇ 'ਤੇ ਸਵਾਰ ਹੋ ਕੇ ਚਾਲੀ ਸਿੰਘਾਂ ਦੀ ਅਗਵਾਈ ਕੀਤੀ ਅਤੇ ਖ਼ਿਦਰਾਣੇ ਦੀ ਢਾਬ 'ਤੇ ਮੁਗ਼ਲ ਫ਼ੌਜਾਂ ਦਾ ਰਾਹ ਰੋਕ ਲਿਆ। ਉਹਨਾਂ ਨੇ ਮੈਦਾਨ-ਏ-ਜੰਗ ਵਿਚ ਅਜਿਹਾ ਜੌਹਰ ਦਿਖਾਇਆ ਕਿ ਮੁਗ਼ਲ ਫ਼ੌਜਾਂ ਪੈਰ ਛੱਡ ਗਈਆਂ।\n\nਸਾਰੇ ਚਾਲੀ ਸਿੰਘ ਸ਼ਹੀਦ ਹੋ ਗਏ ਪਰ ਗੁਰੂ ਸਾਹਿਬ 'ਤੇ ਆਂਚ ਨਾ ਆਉਣ ਦਿੱਤੀ। ਦਸਮੇਸ਼ ਪਿਤਾ ਨੇ ਭਾਈ ਮਹਾਂ ਸਿੰਘ ਦੀ ਅੰਤਿਮ ਬੇਨਤੀ 'ਤੇ ਬੇਦਾਵਾ ਪਾੜ ਕੇ ਉਹਨਾਂ ਨੂੰ 'ਚਾਲੀ ਮੁਕਤਿਆਂ' ਦਾ ਦਰਜਾ ਦਿੱਤਾ। ਗੁਰੂ ਸਾਹਿਬ ਨੇ ਜ਼ਖ਼ਮੀ ਮਾਈ ਭਾਗੋ ਦਾ ਖ਼ੁਦ ਮਲ੍ਹਮ-ਪੱਟੀ ਕਰਕੇ ਇਲਾਜ ਕੀਤਾ।",
+    "teaching": "Mai Bhago shattered the traditional shackles of patriarchal confinement, revealing that courage, honor, and martial leadership belong equally to women. When men falter in their spiritual duty, righteous women must step forward to lead, inspire, and defend the truth with unflinching bravery.",
+    "teachingLocal": "माई भागो ने सिद्ध किया कि शौर्य और धर्म-रक्षा केवल पुरुषों का दायित्व नहीं है; आवश्यकता पड़ने पर नारी चंडी बनकर समाज और धर्म की रक्षा कर सकती है। जब पुरुष अपने कर्तव्य से विमुख हो जाएं, तो नारी को उनका मार्गदर्शक बनकर नेतृत्व करना चाहिए।",
+    "teachingPa": "ਮਾਈ ਭਾਗੋ ਨੇ ਸਾਬਤ ਕੀਤਾ ਕਿ ਸਿੱਖ ਧਰਮ ਵਿਚ ਇਸਤਰੀ ਕੇਵਲ ਘਰ ਦੀ ਚਾਰਦੀਵਾਰੀ ਤੱਕ ਸੀਮਤ ਨਹੀਂ, ਸਗੋਂ ਜੰਗ ਦੇ ਮੈਦਾਨ ਵਿਚ ਜਰਨੈਲੀ ਕਰਨ ਦੇ ਸਮਰੱਥ ਹੈ। ਅਣਖ ਅਤੇ ਗ਼ੈਰਤ ਦੀ ਰਾਖੀ ਕਰਨਾ ਹਰ ਜੀਵ ਦਾ ਫ਼ਰਜ਼ ਹੈ।",
+    "moral": "Guilt and mistakes are redeemed through courageous action and sincere repentance. A single resolute soul can revive the dormant valor of an entire community and turn despair into eternal glory.",
+    "moralLocal": "गलतियाँ सुधारी जा सकती हैं यदि पश्चाताप सच्चा हो। आत्मसम्मान की एक पुकार पूरे समाज की सोई हुई चेतना को जगा सकती है और कायरता को अमर बलिदान में बदल सकती है।",
+    "moralPa": "ਸੱਚੇ ਦਿਲੋਂ ਕੀਤਾ ਪਛਤਾਵਾ ਮਨੁੱਖ ਨੂੰ ਮੁੜ ਸੁਰਖ਼ਰੂ ਕਰ ਦਿੰਦਾ ਹੈ। ਦ੍ਰਿੜ੍ਹ ਇਰਾਦੇ ਵਾਲੀ ਇੱਕ ਔਰਤ ਵੀ ਸਮੁੱਚੀ ਕੌਮ ਦਾ ਰੁਖ਼ ਮੋੜ ਸਕਦੀ ਹੈ।",
+    "legacy": "Mai Bhago stands as the premier martial heroine of Sikh history, revered as a warrior-saint (Kaur). Following the Battle of Muktsar, she remained in the personal bodyguard of Guru Gobind Singh Ji, traveling with him to Nanded (Hazur Sahib), where her residence (Tap Asthan) at Jinwada stands as a sacred site of contemplation. Her valor is celebrated annually at the sacred festival of Maghi Mela in Muktsar.",
+    "legacyLocal": "माई भागो सिख इतिहास की अमर वीरांगना हैं। वे जीवन भर गुरु गोबिंद सिंह जी के अंग-रक्षकों में शामिल रहीं और नांदेड़ (हजूर साहिब) तक उनके साथ गईं। मुक्तसर की पावन भूमि पर माघी मेला प्रतिवर्ष उनके और चालीस मुक्तों के बलिदान की स्मृति में मनाया जाता है।",
+    "legacyPa": "ਮਾਈ ਭਾਗੋ ਸਿੱਖ ਇਤਿਹਾਸ ਦੀ ਅਮਰ ਨਾਇਕਾ ਹਨ। ਉਹ ਹਜ਼ੂਰ ਸਾਹਿਬ ਨਾਂਦੇੜ ਤੱਕ ਗੁਰੂ ਸਾਹਿਬ ਦੇ ਨਾਲ ਰਹੇ। ਸ੍ਰੀ ਮੁਕਤਸਰ ਸਾਹਿਬ ਵਿਖੇ ਮਾਘੀ ਦਾ ਮੇਲਾ ਹਰ ਸਾਲ ਚਾਲੀ ਮੁਕਤਿਆਂ ਅਤੇ ਮਾਈ ਭਾਗੋ ਦੀ ਲਾਸਾਨੀ ਸ਼ਹਾਦਤ ਦੀ ਯਾਦ ਦਿਵਾਉਂਦਾ ਹੈ।",
+    "source": "Prachin Panth Prakash (Rattan Singh Bhangu), Sri Gur Pratap Suraj Granth (Kavi Santokh Singh), Mahan Kosh",
+    "sourceLocal": "प्राचीन पंथ प्रकाश (रतन सिंह भंगू), श्री गुर प्रताप सूरज ग्रंथ (कवि संतोख सिंह), महान कोश (भाई काह्न सिंह नाभा)",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼ (ਰਤਨ ਸਿੰਘ ਭੰਗੂ), ਸ੍ਰੀ ਗੁਰ ਪ੍ਰਤਾਪ ਸੂਰਜ ਗ੍ਰੰਥ (ਕਵੀ ਸੰਤੋਖ ਸਿੰਘ), ਮਹਾਨ ਕੋਸ਼ (ਭਾਈ ਕਾਨ੍ਹ ਸਿੰਘ ਨਾਭਾ)",
+    "sourceCitations": [
+      {
+        "sourceName": "Rattan Singh Bhangu — Prachin Panth Prakash",
+        "sourceRef": "Episode of Mai Bhago and the Battle of Khidrana (Muktsar)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Bhai Kahn Singh Nabha — Mahan Kosh",
+        "sourceRef": "Entry on Mai Bhago and the 40 Mukte",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "If you have turned your backs on the Guru, wear our bangles and sit at home; we shall take your swords and ride to defend the Tenth Master!",
+      "attribution": "Mai Bhago to the Forty Deserters at Jhabal (1705 CE)"
+    },
+    "quoteLocal": {
+      "text": "यदि तुम गुरु जी का साथ छोड़ आए हो तो हमारी चूड़ियाँ पहन लो; हम तुम्हारी तलवारें लेकर दशमेश पिता की रक्षा हेतु जाएँगी!",
+      "attribution": "माई भागो (१७०५ ई.)"
+    },
+    "quotePa": {
+      "text": "ਜੇ ਤੁਸੀਂ ਗੁਰੂ ਸਾਹਿਬ ਨੂੰ ਛੱਡ ਕੇ ਆਏ ਹੋ ਤਾਂ ਚੂੜੀਆਂ ਪਾ ਕੇ ਘਰ ਬੈਠੋ; ਅਸੀਂ ਸ਼ਸਤਰ ਪਹਿਨ ਕੇ ਦਸਮੇਸ਼ ਪਿਤਾ ਦੇ ਚਰਨਾਂ ਵਿਚ ਜਾਵਾਂਗੀਆਂ!",
+      "attribution": "ਮਾਈ ਭਾਗੋ (੧੭੦੫ ਈ.)"
+    }
+  },
+  {
+    "id": "mata-gujri",
+    "name": "Mata Gujri Ji",
+    "nameLocal": "माता गुजरी जी",
+    "namePa": "ਮਾਤਾ ਗੁਜਰੀ ਜੀ",
+    "era": "1624 – 1705 CE",
+    "eraLocal": "१६२४ – १७०५ ई.",
+    "eraPa": "੧੬੨੪ – ੧੭੦੫ ਈ.",
+    "tradition": "sikh",
+    "region": "Kartarpur, Anandpur Sahib & Sirhind",
+    "regionLocal": "करतारपुर, आनंदपुर साहिब व सरहिंद",
+    "regionPa": "ਕਰਤਾਰਪੁਰ, ਅਨੰਦਪੁਰ ਸਾਹਿਬ ਤੇ ਸਰਹਿੰਦ",
+    "emoji": "🏰",
+    "tagline": "The venerable matriarch of the Khalsa—wife of a martyr Guru, mother of a martyr Guru, and grandmother to four martyr Sahibzade—who stood resolute in the Cold Tower of Sirhind.",
+    "taglineLocal": "शहीद गुरु की पत्नी, शहीद गुरु की माता और चार बलिदानी साहिबजादों की दादी जिन्होंने सरहिंद के ठंडे बुर्ज में अदम्य आत्म-बल का परिचय दिया।",
+    "taglinePa": "ਸ਼ਹੀਦ ਗੁਰੂ ਦੇ ਮਹਿਲ, ਸ਼ਹੀਦ ਗੁਰੂ ਦੇ ਮਾਤਾ ਅਤੇ ਚਾਰ ਸਾਹਿਬਜ਼ਾਦਿਆਂ ਦੀ ਦਾਦੀ ਜਿਨ੍ਹਾਂ ਨੇ ਸਰਹਿੰਦ ਦੇ ਠੰਡੇ ਬੁਰਜ ਵਿਚ ਸਿਦਕ ਦੀ ਅਦੁੱਤੀ ਮਿਸਾਲ ਕਾਇਮ ਕੀਤੀ।",
+    "journey": "Born in Kartarpur (Jalandhar district) to Bhai Lal Chand Subhikkhi and Mata Bishan Kaur, Mata Gujri was married in 1632 to the ninth Sikh Guru, Tegh Bahadur. For over three decades, she lived with her husband in serene contemplation during his quiet, solitary sadhana at Baba Bakala. Accompanying him on extensive missionary journeys across eastern India, she gave birth to the tenth Guru, Gobind Rai, in Patna Sahib in 1666.\n\nMata Gujri was the bedrock of fortitude during the formative crises of the Sikh faith. In 1675, when her husband Guru Tegh Bahadur departed for Delhi to offer his life to protect the freedom of religion, she blessed his supreme sacrifice with quiet dignity and steely spiritual composure. Following his martyrdom, she guided her young nine-year-old son Guru Gobind Singh as he assumed leadership of the Panth, supervising the administration and defense of Anandpur Sahib and instilling in the young Sahibzade the immortal values of fearlessness, truth, and dedication to the Guru's mission.",
+    "journeyLocal": "करतारपुर में जन्मी माता गुजरी जी का विवाह १६३२ में नौवें गुरु तेग बहादुर जी के साथ हुआ। उन्होंने बाबा बकाला में गुरु जी के साथ वर्षों तक शांत साधना का जीवन बिताया। पूर्वी भारत की यात्राओं के दौरान १६६६ में पटना साहिब में उन्होंने दशमेश पिता गुरु गोबिंद सिंह जी को जन्म दिया।\n\n१६७५ में जब गुरु तेग बहादुर जी कश्मीरी पंडितों के धर्म की रक्षा हेतु दिल्ली में शहादत देने गए, तो माता गुजरी जी ने धैर्य और आध्यात्मिक गरिमा के साथ उन्हें विदा किया। पति की शहादत के बाद उन्होंने नौ वर्ष के बालक गोबिंद राय का मार्गदर्शन किया और चारों साहिबजादों को धर्म-निष्ठा, शौर्य और त्याग के संस्कारों से सिंचित किया।",
+    "journeyPa": "ਕਰਤਾਰਪੁਰ ਵਿਖੇ ਜਨਮੇ ਮਾਤਾ ਗੁਜਰੀ ਜੀ ਦਾ ਵਿਆਹ ਨੌਵੇਂ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਤੇਗ ਬਹਾਦਰ ਜੀ ਨਾਲ ਹੋਇਆ। ਬਾਬਾ ਬਕਾਲਾ ਵਿਖੇ ਲੰਮਾ ਸਮਾਂ ਗੁਰੂ ਸਾਹਿਬ ਨਾਲ ਭਗਤੀ ਵਿਚ ਬਿਤਾਇਆ ਅਤੇ ੧੬੬੬ ਵਿਚ ਪਟਨਾ ਸਾਹਿਬ ਵਿਖੇ ਦਸਮੇਸ਼ ਪਿਤਾ ਜੀ ਨੂੰ ਜਨਮ ਦਿੱਤਾ।\n\n੧੬੭੫ ਵਿਚ ਪਤੀ ਸ੍ਰੀ ਗੁਰੂ ਤੇਗ ਬਹਾਦਰ ਜੀ ਦੀ ਦਿੱਲੀ ਵਿਖੇ ਲਾਸਾਨੀ ਸ਼ਹਾਦਤ ਵੇਲੇ ਅਡੋਲ ਰਹੇ ਅਤੇ ਬਾਲ ਗੋਬਿੰਦ ਰਾਇ ਜੀ ਦੀ ਪਰਵਰਿਸ਼ ਕਰਦਿਆਂ ਪੰਥ ਦੀ ਅਗਵਾਈ ਵਿਚ ਅਹਿਮ ਭੂਮਿਕਾ ਨਿਭਾਈ।",
+    "trial": "In December 1705, when Anandpur Sahib was evacuated, treacherous attacks by imperial forces while crossing the flooded Sirsa river separated the royal family. Mata Gujri, holding the hands of her two youngest grandsons, Sahibzada Zorawar Singh (9) and Sahibzada Fateh Singh (7), was betrayed by their former domestic servant Gangu in the village of Saheri and handed over to Nawab Wazir Khan of Sirhind.\n\nIn the bitter freezing cold of December, the 81-year-old matriarch and the two innocent children were imprisoned in the open, unheated stone turret of Sirhind known as the Thanda Burj (Cold Tower), exposed to freezing gale-force winds without warm clothing or food. Knowing that the children were summoned daily to the royal court where ministers alternated between tempting them with royal riches and threatening them with gruesome torture if they did not convert to Islam, Mata Gujri did not weep. Instead, every evening in the freezing tower, she embraced the young boys, kissed their foreheads, and narrated the heroic martyrdom of their grandfather Guru Tegh Bahadur and Guru Arjan Dev, commanding them: 'My beloved lions, never bow before tyranny; let your bodies perish, but let your faith in the Creator shine untarnished forever!'\n\nOn December 26, 1705, when the children were bricked alive inside stone walls and executed after steadfastly refusing to renounce their faith, the news was brought to Mata Gujri in the Cold Tower. Closing her eyes in profound serenity, she offered heartfelt gratitude to the Almighty that her grandsons had upheld the supreme honor of the Gurus' house without flinching, and breathed her last in deep meditative samadhi.",
+    "trialLocal": "दिसंबर १७०५ में सरसा नदी पार करते समय परिवार बिछड़ गया। रसोइए गंगू के विश्वासघात के कारण माता गुजरी जी और दोनों छोटे साहिबजादों—जोरावर सिंह (९) और फतेह सिंह (७)—को सरहिंद के नवाब वज़ीर ख़ान ने बंदी बना लिया।\n\nदिसंबर की हाड़ कंपाने वाली ठंड में ८१ वर्ष की वृद्धा माता और नन्हे बालकों को खुले 'ठंडे बुर्ज' में बिना गर्म कपड़ों के कैद रखा गया। प्रतिदिन जब बालकों को कचहरी में पेशी के लिए ले जाया जाता, तो माता गुजरी जी उन्हें अपने दादा गुरु तेग बहादुर जी के बलिदान की गाथाएं सुनाकर कहती थीं: 'मेरे शेरो! जान भले चली जाए, किंतु धर्म की मर्यादा और दादा की पगड़ी पर आंच न आने देना।' जब दोनों साहिबजादों को जीवित दीवारों में चिनवाकर शहीद कर दिया गया और यह समाचार ठंडे बुर्ज पहुँचा, तो माता गुजरी जी ने प्रभु का शुकराना अदा किया कि उनके बच्चों ने धर्म नहीं छोड़ा, और उसी क्षण प्रभु-चरणों में अपने प्राण त्याग दिए।",
+    "trialPa": "ਸਰਸਾ ਨਦੀ ਦੇ ਕੰਢੇ ਪਰਿਵਾਰ ਵਿਛੋੜੇ ਤੋਂ ਬਾਅਦ ਗੰਗੂ ਰਸੋਈਏ ਦੀ ਗ਼ੱਦਾਰੀ ਕਾਰਨ ਮਾਤਾ ਗੁਜਰੀ ਜੀ ਅਤੇ ਦੋਵੇਂ ਛੋਟੇ ਸਾਹਿਬਜ਼ਾਦੇ ਬਾਬਾ ਜ਼ੋਰਾਵਰ ਸਿੰਘ ਤੇ ਬਾਬਾ ਫ਼ਤਿਹ ਸਿੰਘ ਜੀ ਨੂੰ ਗ੍ਰਿਫ਼ਤਾਰ ਕਰਕੇ ਸਰਹਿੰਦ ਦੇ ਠੰਡੇ ਬੁਰਜ ਵਿਚ ਕੈਦ ਕੀਤਾ ਗਿਆ।\n\nਪੋਹ ਦੀ ਕਹਿਰਵਾਨ ਠੰਢ ਵਿਚ ਮਾਤਾ ਜੀ ਨੇ ਸਾਹਿਬਜ਼ਾਦਿਆਂ ਨੂੰ ਆਪਣੇ ਦਾਦਾ ਜੀ ਦੀ ਸ਼ਹਾਦਤ ਯਾਦ ਕਰਵਾ ਕੇ ਧਰਮ 'ਤੇ ਅਡੋਲ ਰਹਿਣ ਦੀ ਪ੍ਰੇਰਨਾ ਦਿੱਤੀ। ਜਦੋਂ ਦੋਵੇਂ ਮਾਸੂਮ ਬੱਚਿਆਂ ਨੂੰ ਜਿਊਂਦੇ ਜੀਅ ਨੀਹਾਂ ਵਿਚ ਚਿਣਵਾ ਦਿੱਤਾ ਗਿਆ, ਤਾਂ ਮਾਤਾ ਜੀ ਨੇ ਅਕਾਲ ਪੁਰਖ ਦਾ ਸ਼ੁਕਰਾਨਾ ਕਰਦਿਆਂ ਠੰਡੇ ਬੁਰਜ ਵਿਚ ਹੀ ਆਪਣੇ ਪ੍ਰਾਣ ਤਿਆਗ ਦਿੱਤੇ।",
+    "teaching": "Mata Gujri demonstrated that spiritual strength, moral resilience, and family character form the true bedrock of civilization. When mothers and grandmothers impart the courage of truth to future generations, even small children can face empires and execution without fear.",
+    "teachingLocal": "माता गुजरी जी ने सिखाया कि परिवार के संस्कार और आत्मिक बल ही राष्ट्र की वास्तविक शक्ति हैं। यदि माताएं बालकों को सत्य और स्वाभिमान का पाठ पढ़ाएं, तो नन्हे बालक भी साम्राज्यवादी अहंकार को झुका सकते हैं।",
+    "teachingPa": "ਮਾਤਾ ਗੁਜਰੀ ਜੀ ਨੇ ਸਿੱਧ ਕੀਤਾ ਕਿ ਮਾਂ ਦੇ ਦਿੱਤੇ ਸੰਸਕਾਰ ਹੀ ਬੱਚਿਆਂ ਨੂੰ ਸ਼ਹਾਦਤ ਦੇ ਮਹਾਨ ਮਾਰਗ 'ਤੇ ਅਡੋਲ ਰੱਖਦੇ ਹਨ। ਜ਼ੁਲਮ ਦੇ ਸਾਹਮਣੇ ਸਿਰ ਝੁਕਾਉਣ ਨਾਲੋਂ ਸੱਚ 'ਤੇ ਮਰ ਮਿਟਣਾ ਹੀ ਅਸਲ ਜੀਵਨ ਹੈ।",
+    "moral": "Dignity does not depend on physical warmth, worldly power, or youth. A steadfast spirit anchored in faith can withstand the freezing winds of persecution and shine as a guide for all ages.",
+    "moralLocal": "सच्चा आत्म-बल बाह्य सुख-सुविधाओं का मोहताज नहीं होता। जो आत्मा सत्य में स्थिर होती है, वह क्रूरतम परिस्थितियों में भी शांत और अपराजेय रहती है।",
+    "moralPa": "ਸਿਦਕ ਅਤੇ ਭਰੋਸਾ ਦੁਨਿਆਵੀ ਤਾਕਤ ਨਾਲੋਂ ਕਿਤੇ ਵੱਡਾ ਹੁੰਦਾ ਹੈ। ਧਰਮ ਦੀ ਖ਼ਾਤਰ ਆਪਣਾ ਪਰਿਵਾਰ ਵਾਰ ਦੇਣ ਵਾਲੀ ਮਾਂ ਦੀ ਸ਼ਾਨ ਸਦਾ ਅਮਰ ਰਹਿੰਦੀ ਹੈ।",
+    "legacy": "Mata Gujri is the sole woman in world spiritual history who was the wife of a martyr (Guru Tegh Bahadur), mother of a martyr (Guru Gobind Singh), and grandmother of four martyr princes (the Sahibzade). Gurdwara Fatehgarh Sahib stands on the hallowed ground in Sirhind where she and the Sahibzade attained immortality, commemorated worldwide during the sacred Shaheedi Jor Mela every December.",
+    "legacyLocal": "माता गुजरी जी विश्व इतिहास की एकमात्र ऐसी नारी हैं जो शहीद पति की पत्नी, शहीद पुत्र की माता और चार बलिदानी पौत्रों की दादी थीं। सरहिंद में गुरुद्वारा फतेहगढ़ साहिब उनकी अमर स्मृति का तीर्थ है, जहाँ प्रतिवर्ष लाखों श्रद्धालु नतमस्तक होते हैं।",
+    "legacyPa": "ਮਾਤਾ ਗੁਜਰੀ ਜੀ ਸੰਸਾਰ ਦੇ ਇਤਿਹਾਸ ਵਿਚ ਇਕਲੌਤੀ ਅਜਿਹੀ ਹਸਤੀ ਹਨ ਜੋ ਸ਼ਹੀਦ ਪਤੀ ਦੇ ਪਤਨੀ, ਸ਼ਹੀਦ ਪੁੱਤਰ ਦੇ ਮਾਤਾ ਅਤੇ ਚਾਰ ਸ਼ਹੀਦ ਪੋਤਰਿਆਂ ਦੇ ਦਾਦੀ ਸਨ। ਫ਼ਤਿਹਗੜ੍ਹ ਸਾਹਿਬ ਦੀ ਧਰਤੀ ਉਹਨਾਂ ਦੇ ਅਦੁੱਤੀ ਸਿਦਕ ਦੀ ਗਵਾਹੀ ਭਰਦੀ ਹੈ।",
+    "source": "Prachin Panth Prakash (Rattan Singh Bhangu), Sri Gur Sobha (Kavi Senapati), Mahan Kosh",
+    "sourceLocal": "प्राचीन पंथ प्रकाश (रतन सिंह भंगू), श्री गुर सोभा (कवि सेनापति), महान कोश (भाई काह्न सिंह नाभा)",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼ (ਰਤਨ ਸਿੰਘ ਭੰਗੂ), ਸ੍ਰੀ ਗੁਰ ਸੋਭਾ (ਕਵੀ ਸੈਨਾਪਤੀ), ਮਹਾਨ ਕੋਸ਼ (ਭਾਈ ਕਾਨ੍ਹ ਸਿੰਘ ਨਾਭਾ)",
+    "sourceCitations": [
+      {
+        "sourceName": "Rattan Singh Bhangu — Prachin Panth Prakash",
+        "sourceRef": "Episode of Mata Gujri and the Chhote Sahibzade at Sirhind",
+        "tier": 1
+      },
+      {
+        "sourceName": "Kavi Senapati — Sri Gur Sobha (1711 CE)",
+        "sourceRef": "Account of the Separation at Sirsa and Martyrdom at Sirhind",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "My beloved children, let your breath depart, but never let the spotless honor of your grandfather Guru Tegh Bahadur be diminished!",
+      "attribution": "Mata Gujri to the Sahibzade in the Cold Tower (1705 CE)"
+    },
+    "quoteLocal": {
+      "text": "मेरे प्यारे बच्चों, प्राण भले चले जाएं, किंतु अपने दादा गुरु तेग बहादुर जी की पगड़ी की लाज पर आंच न आने देना!",
+      "attribution": "माता गुजरी जी (सरहिंद, १७०५ ई.)"
+    },
+    "quotePa": {
+      "text": "ਮੇਰੇ ਲਾਲੋ, ਜਾਨ ਭਾਵੇਂ ਚਲੀ ਜਾਵੇ, ਪਰ ਦਾਦਾ ਗੁਰੂ ਤੇਗ ਬਹਾਦਰ ਜੀ ਦੀ ਸ਼ਾਨ ਨੂੰ ਕਦੇ ਦਾਗ਼ ਨਾ ਲੱਗਣ ਦੇਣਾ!",
+      "attribution": "ਮਾਤਾ ਗੁਜਰੀ ਜੀ (ਠੰਡਾ ਬੁਰਜ, ੧੭੦੫ ਈ.)"
+    }
+  },
+  {
+    "id": "bhai-taru-singh",
+    "name": "Bhai Taru Singh Ji",
+    "nameLocal": "भाई तारू सिंह जी",
+    "namePa": "ਭਾਈ ਤਾਰੂ ਸਿੰਘ ਜੀ",
+    "era": "1720 – 1745 CE",
+    "eraLocal": "१७२० – १७४५ ई.",
+    "eraPa": "੧੭੨੦ – ੧੭੪੫ ਈ.",
+    "tradition": "sikh",
+    "region": "Poolha, Majha & Lahore",
+    "regionLocal": "पूहला, माझा व लाहौर",
+    "regionPa": "ਪੂਹਲਾ, ਮਾਝਾ ਤੇ ਲਾਹੌਰ",
+    "emoji": "🪮",
+    "tagline": "The young farmer-saint who chose to have his scalp scraped off with cobbler's chisels rather than have his sacred Keshas cut to compromise his faith.",
+    "taglineLocal": "अमृतसर के युवा किसान-संत जिन्होंने अपने पावन केशों को कटवाने के बजाय रंभी से खोपड़ी उतरवाना स्वीकार किया।",
+    "taglinePa": "ਸਿੱਖੀ ਸਿਦਕ ਦੇ ਅਮਰ ਸ਼ਹੀਦ ਜਿਨ੍ਹਾਂ ਨੇ ਕੇਸ ਕਟਵਾਉਣ ਦੀ ਥਾਂ ਰੰਬੀ ਨਾਲ ਖੋਪਰੀ ਲੁਹਾਉਣੀ ਪ੍ਰਵਾਨ ਕੀਤੀ ਪਰ ਸਿੱਖੀ ਕੇਸਾਂ-ਸੁਆਸਾਂ ਨਾਲ ਨਿਭਾਈ।",
+    "journey": "Born in the village of Poolha in Amritsar district to a humble Sandhu Jatt peasant family, Bhai Taru Singh grew up as an embodiment of Gurbani’s highest ideals of honest hard work (Kirat Karo), sharing one’s earnings with the needy (Vand Chhako), and constant remembrance of God (Naam Japna). Following the untimely death of his father, the youthful Taru Singh labored in the agricultural fields alongside his mother and sister, living a life of utter simplicity.\n\nDuring the 1740s, Punjab was ruled by the tyrannical Mughal governor of Lahore, Zakariya Khan, who launched a genocidal campaign against the Sikhs, placing price bounties on Sikh heads (ten rupees for information, fifty rupees for a severed head). Driven into the dense jungles of Kahnuwan and the Lakhi wilderness, the Khalsa guerrillas suffered extreme starvation. Working day and night in his fields, Bhai Taru Singh secretly gathered grain, baked dry rotis, and prepared garments, trekking into the trackless wilderness under cover of darkness to feed and clothe the hunted Sikhs, regardless of the mortal danger to his own household.",
+    "journeyLocal": "अमृतसर के पूहला गाँव में जन्मे भाई तारू सिंह एक साधारण, धर्मपरायण किसान थे। पिता के निधन के बाद वे अपनी माता और बहन के साथ खेती करते थे और 'किरत करो, नाम जपो, वंड छको' के सिद्धांत पर चलते थे।\n\n१७४० के दशक में जब लाहौर के क्रूर गवर्नर ज़करिया ख़ान ने सिखों का समूल विनाश करने के लिए उनके सिरों पर इनाम रख दिए थे और सिख जंगलों में भूख-प्यास से व्याकुल भटक रहे थे, तब भाई तारू सिंह दिन-रात अपने खेतों में पसीना बहाकर अन्न उपजाते थे और रात्रि के अंधेरे में चुपचाप जंगलों में जाकर भूखे सिखों को भोजन और वस्त्र पहुँचाते थे।",
+    "journeyPa": "ਅੰਮ੍ਰਿਤਸਰ ਜ਼ਿਲ੍ਹੇ ਦੇ ਪਿੰਡ ਪੂਹਲਾ ਵਿਖੇ ਜਨਮੇ ਭਾਈ ਤਾਰੂ ਸਿੰਘ ਜੀ ਖੇਤੀਬਾੜੀ ਕਰਦਿਆਂ 'ਕਿਰਤ ਕਰੋ, ਨਾਮ ਜਪੋ, ਵੰਡ ਛਕੋ' ਦੇ ਗੁਰਮਤਿ ਸਿਧਾਂਤ 'ਤੇ ਪਹਿਰਾ ਦਿੰਦੇ ਸਨ।\n\nਜਦੋਂ ਜ਼ਕਰੀਆ ਖ਼ਾਨ ਦੇ ਜ਼ੁਲਮ ਕਾਰਨ ਸਿੰਘ ਜੰਗਲਾਂ ਵਿਚ ਭੁੱਖੇ-ਤਿਹਾਈਏ ਦਿਨ ਕੱਟ ਰਹੇ ਸਨ, ਤਾਂ ਭਾਈ ਸਾਹਿਬ ਆਪਣੀ ਮਿਹਨਤ ਦੀ ਕਮਾਈ ਵਿਚੋਂ ਜੰਗਲਾਂ ਵਿਚ ਸਿੰਘਾਂ ਨੂੰ ਗੁਪਤ ਤਰੀਕੇ ਨਾਲ ਰਸਦ ਅਤੇ ਕੱਪੜੇ ਪਹੁੰਚਾਉਂਦੇ ਸਨ।",
+    "trial": "A traitorous government informant named Harbhagat Niranjaniya of Jandiala reported Bhai Taru Singh to Zakariya Khan, accusing him of treason for feeding state rebels. Mughal soldiers raided Poolha, arrested the twenty-five-year-old youth, and marched him in heavy chains to the dungeons of Lahore Fort.\n\nIn the court of Lahore, Zakariya Khan offered Bhai Taru Singh high imperial honors, vast jagir estates, and wealth if he would accept Islam and cut his sacred hair (Kesh). Bhai Taru Singh calmly replied: 'Even if you offer me the empire of Delhi and celestial treasures, I will not barter the sacred gift of the Guru. My breath and my hair belong to God alone.' Enraged by his serene refusal, Zakariya Khan ordered an executioner’s barber to forcibly shave his head. When the barber approached with sharp razors, his hands shook and the blades broke against Taru Singh's hair like glass against iron. Roaring in fury, Zakariya Khan ordered a cobbler to bring his curved chisels (rambi) and scrape the scalp entirely off Taru Singh’s head along with his skull bone.\n\nWhile the barbaric cobbler scraped the skin and bone from his forehead to the nape of his neck, Bhai Taru Singh sat in cross-legged padmasana, eyes closed, chanting *Japji Sahib* without uttering a single groan or shed of tear. Spectators in the court fainted in horror at the ghastly cruelty, but the young martyr's face radiated unearthly peace. Tradition records that Taru Singh declared Zakariya Khan would precede him in death through agonizing suffering; soon after, Zakariya Khan suffered an acute blockage of urine, crying out in unbearable agony until he died on July 1, 1745. Having fulfilled his vow to maintain his faith to his final breath, Bhai Taru Singh surrendered his soul to the Creator on that same day.",
+    "trialLocal": "जंडियाला के मुखबिर हरभगत निरंजनिया ने ज़करिया ख़ान को सूचना दी कि तारू सिंह विद्रोहियों को रसद देता है। सैनिकों ने २५ वर्षीय युवक को बंदी बनाकर लाहौर की काल-कोठरी में डाल दिया।\n\nअदालत में ज़करिया ख़ान ने उन्हें धन, पद और जागीर का प्रलोभन देते हुए इस्लाम स्वीकार करने और केश कटवाने को कहा। भाई तारू सिंह ने शांत स्वर में कहा: 'यदि तुम मुझे दिल्ली का तख्त भी दे दो, तो भी मैं गुरु के दिए केशों का सौदा नहीं करूँगा। मेरी अंतिम सांस तक यह सिख धर्म मेरे साथ रहेगा।' क्रोधित होकर ज़करिया ख़ान ने मोची को बुलाकर रंभी (चमड़ा छीलने वाले औजार) से उनकी खोपड़ी उतारने का आदेश दिया। जब जल्लाद ने रंभी से उनकी खोपड़ी की चमड़ी और हड्डियों को छीला, तब भी भाई तारू सिंह अविचल बैठकर जपजी साहिब का पाठ करते रहे। १ जुलाई १७४५ को अपने केशों और धर्म की रक्षा करते हुए उन्होंने वीरगति प्राप्त की।",
+    "trialPa": "ਜੰਡਿਆਲੇ ਦੇ ਮੁਖ਼ਬਰ ਹਰਭਗਤ ਨਿਰੰਜਨੀਏ ਦੀ ਸ਼ਿਕਾਇਤ 'ਤੇ ਭਾਈ ਸਾਹਿਬ ਨੂੰ ਗ੍ਰਿਫ਼ਤਾਰ ਕਰਕੇ ਲਾਹੌਰ ਲਿਆਂਦਾ ਗਿਆ। ਜ਼ਕਰੀਆ ਖ਼ਾਨ ਨੇ ਇਸਲਾਮ ਕਬੂਲ ਕਰਨ 'ਤੇ ਧਨ-ਦੌਲਤ ਦਾ ਲਾਲਚ ਦਿੱਤਾ, ਪਰ ਭਾਈ ਸਾਹਿਬ ਨੇ ਕਿਹਾ ਕਿ ਸਿੱਖੀ ਮੈਨੂੰ ਪ੍ਰਾਣਾਂ ਤੋਂ ਵੱਧ ਪਿਆਰੀ ਹੈ।\n\nਜ਼ਕਰੀਆ ਖ਼ਾਨ ਦੇ ਹੁਕਮ 'ਤੇ ਮੋਚੀ ਨੇ ਰੰਬੀ ਨਾਲ ਭਾਈ ਸਾਹਿਬ ਦੀ ਖੋਪਰੀ ਉਤਾਰ ਦਿੱਤੀ। ਇਸ ਅਸਹਿ ਤਸ਼ੱਦਦ ਦੌਰਾਨ ਵੀ ਭਾਈ ਸਾਹਿਬ ਅਡੋਲ ਰਹਿ ਕੇ ਜਪੁਜੀ ਸਾਹਿਬ ਦਾ ਪਾਠ ਕਰਦੇ ਰਹੇ। ੧ ਜੁਲਾਈ ੧੭੪੫ ਨੂੰ ਆਪ ਜੀ ਨੇ ਸਿੱਖੀ ਨੂੰ ਕੇਸਾਂ-ਸੁਆਸਾਂ ਨਾਲ ਨਿਭਾ ਕੇ ਸ਼ਹਾਦਤ ਦਾ ਜਾਮ ਪੀਤਾ।",
+    "teaching": "Bhai Taru Singh demonstrated that the sacred emblems of faith (the Kakaars) are not superficial symbols, but the inviolable seal of the Guru upon the disciple’s soul. Physical life can be surrendered with joy, but moral and spiritual fidelity to the Guru must never be compromised for earthly survival or imperial favor.",
+    "teachingLocal": "भाई तारू सिंह जी ने सिखाया कि धर्म के प्रतीक केवल बाह्य दिखावा नहीं, बल्कि आत्मा पर गुरु की अमर मोहर हैं। प्राण भले चले जाएं, किंतु आत्मसम्मान और धर्म की मर्यादा का सौदा कभी नहीं किया जाना चाहिए।",
+    "teachingPa": "ਭਾਈ ਤਾਰੂ ਸਿੰਘ ਜੀ ਨੇ ਸਿੱਧ ਕੀਤਾ ਕਿ ਕੇਸ ਗੁਰੂ ਦੀ ਅਮਾਨਤ ਹਨ ਜਿਨ੍ਹਾਂ ਦੀ ਰਾਖੀ ਲਈ ਸਿਰ ਤਾਂ ਦਿੱਤਾ ਜਾ ਸਕਦਾ ਹੈ ਪਰ ਸਿੱਖੀ ਸਿਦਕ ਨਹੀਂ ਹਾਰਿਆ ਜਾ ਸਕਦਾ।",
+    "moral": "When faith is absolute, physical pain loses its sting. True honor lies in holding fast to one’s principles under the most gruesome persecution, inspiring generations to value spiritual integrity over bodily comfort.",
+    "moralLocal": "अटल निष्ठा के सम्मुख शारीरिक पीड़ा भी तुच्छ हो जाती है। सिद्धांतों के लिए प्राण न्योछावर करने वाला मनुष्य इतिहास के पन्नों में अमर हो जाता है।",
+    "moralPa": "ਸਿਦਕਵਾਨ ਯੋਧਾ ਮੌਤ ਦੇ ਭੈਅ ਤੋਂ ਮੁਕਤ ਹੁੰਦਾ ਹੈ। ਜ਼ੁਲਮ ਦੀ ਤਲਵਾਰ ਨਾਲੋਂ ਧਰਮੀ ਦਾ ਸਿਰ ਉੱਚਾ ਰਹਿੰਦਾ ਹੈ।",
+    "legacy": "Bhai Taru Singh is commemorated daily in the global Sikh Ardas with the sacred words: 'Jinhaan keshyaan suwasaan naal nibhaaya' (Those who preserved their faith and hair intact till their last breath). The historic Gurdwara Shaheed Ganj Bhai Taru Singh stands in Naulakha Bazar in Lahore as a timeless monument to uncompromising spiritual constancy.",
+    "legacyLocal": "भाई तारू सिंह जी का बलिदान सिख अरदास का पावन हिस्सा है: 'जिन्हां ने केशां-सुवासां नाल निबाहेया'। लाहौर का गुरुद्वारा शहीद गंज भाई तारू सिंह उनके अदम्य साहस का साक्षी है।",
+    "legacyPa": "ਸਿੱਖ ਅਰਦਾਸ ਵਿਚ ਰੋਜ਼ਾਨਾ ਭਾਈ ਤਾਰੂ ਸਿੰਘ ਜੀ ਦੀ ਸ਼ਹਾਦਤ ਨੂੰ ਯਾਦ ਕੀਤਾ ਜਾਂਦਾ ਹੈ: 'ਜਿਨ੍ਹਾਂ ਕੇਸਾਂ ਸੁਆਸਾਂ ਨਾਲ ਨਿਬਾਹੀ'। ਲਾਹੌਰ ਵਿਖੇ ਗੁਰਦੁਆਰਾ ਸ਼ਹੀਦ ਗੰਜ ਭਾਈ ਤਾਰੂ ਸਿੰਘ ਜੀ ਉਹਨਾਂ ਦੇ ਅਡੋਲ ਸਿਦਕ ਦੀ ਯਾਦ ਦਿਵਾਉਂਦਾ ਹੈ।",
+    "source": "Prachin Panth Prakash (Rattan Singh Bhangu), Shahid Bilas, Mahan Kosh",
+    "sourceLocal": "प्राचीन पंथ प्रकाश (रतन सिंह भंगू), शहीद बिलास, महान कोश (भाई काह्न सिंह नाभा)",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼ (ਰਤਨ ਸਿੰਘ ਭੰਗੂ), ਸ਼ਹੀਦ ਬਿਲਾਸ, ਮਹਾਨ ਕੋਸ਼ (ਭਾਈ ਕਾਨ੍ਹ ਸਿੰਘ ਨਾਭਾ)",
+    "sourceCitations": [
+      {
+        "sourceName": "Rattan Singh Bhangu — Prachin Panth Prakash",
+        "sourceRef": "Episode of the Martyrdom of Bhai Taru Singh at Lahore",
+        "tier": 1
+      },
+      {
+        "sourceName": "Bhai Kahn Singh Nabha — Mahan Kosh",
+        "sourceRef": "Biographical entry on Bhai Taru Singh",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "My hair is the sacred blessing of my Guru; take my scalp if you will, but you can never sever my bond with the Tenth Master!",
+      "attribution": "Bhai Taru Singh to Zakariya Khan at Lahore (1745 CE)"
+    },
+    "quoteLocal": {
+      "text": "मेरे केश मेरे गुरु की पावन धरोहर हैं; तुम मेरी खोपड़ी उतार सकते हो, किंतु दशमेश पिता से मेरा नाता कभी नहीं तोड़ सकते!",
+      "attribution": "भाई तारू सिंह जी (१७४५ ई.)"
+    },
+    "quotePa": {
+      "text": "ਕੇਸ ਮੇਰੇ ਗੁਰੂ ਦੀ ਅਮਾਨਤ ਹਨ; ਤੁਸੀਂ ਮੇਰੀ ਖੋਪਰੀ ਲਾਹ ਸਕਦੇ ਹੋ ਪਰ ਮੇਰੇ ਅੰਦਰੋਂ ਸਿੱਖੀ ਨਹੀਂ ਖੋਹ ਸਕਦੇ!",
+      "attribution": "ਭਾਈ ਤਾਰੂ ਸਿੰਘ ਜੀ (੧੭੪੫ ਈ.)"
+    }
+  },
+  {
+    "id": "bhai-mani-singh",
+    "name": "Bhai Mani Singh Ji",
+    "nameLocal": "भाई मनी सिंह जी",
+    "namePa": "ਭਾਈ ਮਨੀ ਸਿੰਘ ਜੀ",
+    "era": "1644 – 1737 CE",
+    "eraLocal": "१६४४ – १७३७ ई.",
+    "eraPa": "੧੬੪੪ – ੧੭੩੭ ਈ.",
+    "tradition": "sikh",
+    "region": "Amritsar & Lahore",
+    "regionLocal": "अमृतसर व लाहौर",
+    "regionPa": "ਅੰਮ੍ਰਿਤਸਰ ਤੇ ਲਾਹੌਰ",
+    "emoji": "📜",
+    "tagline": "The supreme Sikh scholar, head granthi of Harmandir Sahib, and scribe of the Damdami Bir who endured being cut joint-by-joint for religious freedom.",
+    "taglineLocal": "श्री हरिमंदिर साहिब के मुख्य ग्रंथी और महान विद्वान जिन्होंने धर्म और मर्यादा की रक्षा हेतु बंद-बंद कटवाना स्वीकार किया।",
+    "taglinePa": "ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੇ ਮੁੱਖ ਗ੍ਰੰਥੀ ਅਤੇ ਮਹਾਨ ਵਿਦਵਾਨ ਜਿਨ੍ਹਾਂ ਨੇ ਧਰਮ ਦੀ ਖ਼ਾਤਰ ਆਪਣਾ ਬੰਦ-ਬੰਦ ਕਟਵਾ ਕੇ ਸ਼ਹਾਦਤ ਦਾ ਜਾਮ ਪੀਤਾ।",
+    "journey": "Born into a devoted Alishenoor Rajput family in the village of Alipur (Multan district) to Mai Das, Mani Ram was brought to Kiratpur Sahib in his youth to serve the seventh Sikh Guru, Har Rai. Devoting his life to scholarship, martial discipline, and Gurbani, he served five successive Sikh Gurus: Guru Har Rai, Guru Harkrishan, Guru Tegh Bahadur, and Guru Gobind Singh.\n\nBhai Mani Singh was one of the most prolific and authoritative scholars of Sikh history. At Anandpur Sahib, he assisted the Tenth Master in transcription and administration, and in 1706 at Damdama Sahib (Talwandi Sabo), he served as the master calligrapher along with Baba Deep Singh, writing down the complete, definitive Damdami Bir of the Sri Guru Granth Sahib as dictated from memory by Guru Gobind Singh Ji. In 1721, when internal sectarian disputes arose between the Tat Khalsa and Bandai Khalsa at Amritsar, Mata Sundri appointed Bhai Mani Singh as the Head Granthi of Sri Harmandir Sahib. Through wisdom, moral authority, and scriptural clarity, he reconciled the factions and restored Amritsar as the supreme spiritual center of the Sikh nation.",
+    "journeyLocal": "मुल्तान के अलीपुर गाँव में जन्मे भाई मनी सिंह बाल्यकाल में ही गुरु-दरबार में आ गए थे। उन्होंने पांच सिख गुरुओं—गुरु हरिराय, गुरु हरिकृष्ण, गुरु तेग बहादुर और गुरु गोबिंद सिंह जी—की निष्ठापूर्वक सेवा की।\n\nवे सिख इतिहास के प्रकांड विद्वान और लेखक थे। १७०६ में दमदमा साहिब में उन्होंने गुरु गोबिंद सिंह जी के मुखारविंद से सुनकर श्री गुरु ग्रंथ साहिब जी के संपूर्ण 'दमदमी बीड़' को लिपिबद्ध किया। १७२१ में माता सुंदरी जी ने उन्हें श्री हरिमंदिर साहिब का मुख्य ग्रंथी नियुक्त किया। उन्होंने सिख पंथ में उपजे मतभेदों को समाप्त कर पंथ में एकता स्थापित की।",
+    "journeyPa": "ਮੁਲਤਾਨ ਦੇ ਅਲੀਪੁਰ ਵਿਖੇ ਜਨਮੇ ਭਾਈ ਮਨੀ ਸਿੰਘ ਜੀ ਨੇ ਪੰਜ ਗੁਰੂ ਸਾਹਿਬਾਨ ਦੀ ਸੰਗਤ ਕੀਤੀ। ੧੭੦੬ ਵਿਚ ਸ੍ਰੀ ਦਮਦਮਾ ਸਾਹਿਬ ਵਿਖੇ ਕਲਗੀਧਰ ਪਾਤਸ਼ਾਹ ਦੇ ਹਜ਼ੂਰੀ ਲਿਖਾਰੀ ਵਜੋਂ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਦੀ ਪਾਵਨ 'ਦਮਦਮੀ ਬੀੜ' ਲਿਖਣ ਦੀ ਮਹਾਨ ਸੇਵਾ ਨਿਭਾਈ।\n\n੧੭੨੧ ਵਿਚ ਮਾਤਾ ਸੁੰਦਰੀ ਜੀ ਦੇ ਹੁਕਮ ਨਾਲ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੇ ਮੁੱਖ ਗ੍ਰੰਥੀ ਥਾਪੇ ਗਏ ਅਤੇ ਤੱਤ ਖ਼ਾਲਸਾ ਤੇ ਬੰਦਈ ਖ਼ਾਲਸਾ ਦੇ ਝਗੜੇ ਨੂੰ ਬੜੀ ਸੂਝ-ਬੂਝ ਨਾਲ ਨਿਬੇੜਿਆ।",
+    "trial": "In 1737, Bhai Mani Singh sought permission from Zakariya Khan, the Mughal governor of Lahore, to hold the traditional Diwali gathering of Sikhs at Sri Harmandir Sahib, which had been banned under pain of death. Zakariya Khan agreed on the condition that Bhai Mani Singh pay a heavy fee of five thousand rupees after the fair. However, Zakariya Khan secretly planned to dispatch a massive imperial army to slaughter the unarmed pilgrims as soon as they assembled.\n\nLearning of the imperial ambush in advance, Bhai Mani Singh immediately dispatched fast messengers across Punjab, warning the Sikhs not to come to Amritsar. Because the congregation did not gather, no offerings were collected, and Bhai Mani Singh could not pay the five thousand rupee tax. Zakariya Khan arrested the ninety-three-year-old scholar and dragged him to Lahore, offering him the choice between Islam or death. Bhai Mani Singh fearlessly chose martyrdom.\n\nThe Qazi sentenced the venerable sage to be cut to pieces joint by joint (Band-band katna). When the executioner approached his wrists with a heavy cleaver to chop off his hands, the ninety-three-year-old scholar stopped him calmly and said: 'Look at the judge's decree, executioner! The order says to cut me joint by joint. You are cutting my wrist, ignoring the joints of my fingers! Start from the tips of my fingers, joint by joint, so you do not fail in your duty, and I do not fail in my patience!' The executioner trembled in terror at such superhuman courage. While the cleaver severed every joint of his fingers, wrists, elbows, and limbs, Bhai Mani Singh serenely recited Gurbani, merging into the eternal Light as an immortal monument to Sikh steadfastness.",
+    "trialLocal": "१७३७ में भाई मनी सिंह जी ने लाहौर के गवर्नर ज़करिया ख़ान से हरिमंदिर साहिब में दीवाली का मेला लगाने की अनुमति ली, जिसके बदले ५,००० रुपये का कर चुकाना तय हुआ। किंतु जब उन्हें पता चला कि मुग़ल सेना मेले में आने वाले निहत्थे सिखों के नरसंहार की योजना बना रही है, तो उन्होंने तुरंत संदेश भेजकर सिखों को आने से रोक दिया। मेला न लगने के कारण वे कर नहीं चुका पाए। ज़करिया ख़ान ने ९३ वर्षीय वृद्ध विद्वान को बंदी बनाकर लाहौर लाया और इस्लाम स्वीकार न करने पर उनका अंग-अंग (बंद-बंद) काटने की सजा सुनाई।\n\nजब जल्लाद ने कलाई पर कुल्हाड़ा रखा, तो भाई मनी सिंह ने शांत भाव से कहा: 'काजी का हुक्म बंद-बंद काटने का है, कलाई से नहीं। उंगलियों के पोरों से काटना शुरू करो ताकि तुम्हारा हुक्म पूरा हो और मेरी परीक्षा अधूरी न रहे!' यह सुनकर जल्लाद भी कांप उठा। उंगलियों से लेकर शरीर के प्रत्येक जोड़ को कटवाते हुए भाई मनी सिंह जपजी साहिब का पाठ करते रहे और शहीद हो गए।",
+    "trialPa": "੧੭੩੭ ਵਿਚ ਦੀਵਾਲੀ ਦਾ ਮੇਲਾ ਕਰਵਾਉਣ ਬਦਲੇ ਜ਼ਕਰੀਆ ਖ਼ਾਨ ਨਾਲ ੫,੦੦੦ ਰੁਪਏ ਦੇਣ ਦਾ ਸਮਝੌਤਾ ਹੋਇਆ, ਪਰ ਜਦੋਂ ਪਤਾ ਲੱਗਾ ਕਿ ਮੁਗ਼ਲ ਫ਼ੌਜ ਸੰਗਤ ਦਾ ਕਤਲੇਆਮ ਕਰਨ ਆ ਰਹੀ ਹੈ, ਤਾਂ ਭਾਈ ਸਾਹਿਬ ਨੇ ਸੰਗਤ ਨੂੰ ਆਉਣ ਤੋਂ ਰੋਕ ਦਿੱਤਾ। ਟੈਕਸ ਨਾ ਭਰ ਸਕਣ ਕਾਰਨ ਆਪ ਜੀ ਨੂੰ ਲਾਹੌਰ ਵਿਖੇ ਗ੍ਰਿਫ਼ਤਾਰ ਕਰ ਲਿਆ ਗਿਆ।\n\nਕਾਜ਼ੀ ਨੇ ਆਪ ਜੀ ਦਾ ਬੰਦ-ਬੰਦ ਕੱਟਣ ਦਾ ਫ਼ਤਵਾ ਦਿੱਤਾ। ਜਦੋਂ ਜੱਲਾਦ ਨੇ ਗੁੱਟ 'ਤੇ ਕੁਹਾੜਾ ਰੱਖਿਆ ਤਾਂ ਭਾਈ ਸਾਹਿਬ ਨੇ ਕਿਹਾ ਕਿ ਹੁਕਮ ਬੰਦ-ਬੰਦ ਕੱਟਣ ਦਾ ਹੈ, ਇਸ ਲਈ ਉਂਗਲਾਂ ਦੇ ਪੋਟਿਆਂ ਤੋਂ ਸ਼ੁਰੂ ਕਰ। ਸਾਰਾ ਸਰੀਰ ਟੁਕੜੇ-ਟੁਕੜੇ ਕਰਵਾ ਕੇ ਵੀ ਆਪ ਜੀ ਨੇ ਬਾਣੀ ਦਾ ਜਾਪ ਕਰਦਿਆਂ ਸ਼ਹਾਦਤ ਦਾ ਜਾਮ ਪੀਤਾ।",
+    "teaching": "Bhai Mani Singh proved that supreme intellectual scholarship must be backed by uncompromising physical valor. Knowledge that surrenders to tyranny is vanity; true wisdom shines only when a sage is prepared to defend the spiritual integrity of his faith with his own flesh and blood.",
+    "teachingLocal": "भाई मनी सिंह जी ने सिद्ध किया कि सच्चा विद्वान वही है जो केवल ग्रंथों की रचना नहीं करता, बल्कि सिद्धांतों की रक्षा हेतु अपना शीश और शरीर समर्पित करने का साहस रखता है।",
+    "teachingPa": "ਭਾਈ ਮਨੀ ਸਿੰਘ ਜੀ ਨੇ ਸਾਬਤ ਕੀਤਾ ਕਿ ਕਹਿਣੀ ਅਤੇ ਕਰਨੀ ਦਾ ਸੂਰਾ ਹੀ ਅਸਲ ਵਿਦਵਾਨ ਹੈ। ਧਰਮ ਦੀ ਆਨ-ਸ਼ਾਨ ਲਈ ਤਨ ਦਾ ਬੰਦ-ਬੰਦ ਕਟਵਾ ਦੇਣਾ ਹੀ ਸੱਚੇ ਸਿੱਖ ਦਾ ਆਦਰਸ਼ ਹੈ।",
+    "moral": "When a soul stands anchored in truth, cruelty exhausts its weapons while patience remains victorious. The courage of the righteous turns the executioner’s block into an altar of eternal glory.",
+    "moralLocal": "अत्याचार के साधन सीमित हैं, किंतु सत्य में स्थिर आत्मा का धैर्य असीम है। अधर्म का नाश अवश्यंभावी है और सत्य का बलिदान युगों-युगों को आलोकित करता है।",
+    "moralPa": "ਜ਼ਾਲਮ ਦਾ ਜ਼ੁਲਮ ਮੁੱਕ ਜਾਂਦਾ ਹੈ ਪਰ ਸ਼ਹੀਦ ਦਾ ਸਿਦਕ ਸਦਾ ਜਿਊਂਦਾ ਰਹਿੰਦਾ ਹੈ। ਸੱਚ ਲਈ ਦਿੱਤੀ ਕੁਰਬਾਨੀ ਕਦੇ ਮਿਟਦੀ ਨਹੀਂ।",
+    "legacy": "Bhai Mani Singh is commemorated daily in the global Sikh Ardas: 'Jinhaan band-band kataaye' (Those who were cut joint by joint). Gurdwara Shaheed Ganj Bhai Mani Singh in Lahore stands on the sacred site of his supreme martyrdom, and his literary masterworks, including the *Gyan Ratnavali* and *Bhagat Ratnavali*, remain treasures of Sikh theology.",
+    "legacyLocal": "सिख अरदास में प्रतिदिन उनका पावन स्मरण किया जाता है: 'जिन्हां ने बंद-बंद कटाए'। उनकी रचित 'ज्ञान रत्नावली' और 'भगत रत्नावली' सिख साहित्य की अमूल्य धरोहर हैं।",
+    "legacyPa": "ਰੋਜ਼ਾਨਾ ਅਰਦਾਸ ਵਿਚ 'ਜਿਨ੍ਹਾਂ ਬੰਦ-ਬੰਦ ਕਟਾਏ' ਕਹਿ ਕੇ ਭਾਈ ਮਨੀ ਸਿੰਘ ਜੀ ਦੀ ਸ਼ਹਾਦਤ ਨੂੰ ਪ੍ਰਣਾਮ ਕੀਤਾ ਜਾਂਦਾ ਹੈ। ਆਪ ਜੀ ਦੀਆਂ ਲਿਖਤਾਂ ਗੁਰਮਤਿ ਗਿਆਨ ਦਾ ਅਥਾਹ ਖ਼ਜ਼ਾਨਾ ਹਨ।",
+    "source": "Prachin Panth Prakash (Rattan Singh Bhangu), Sikhan Di Bhagat Mala, Shahid Bilas Bhai Mani Singh",
+    "sourceLocal": "प्राचीन पंथ प्रकाश (रतन सिंह भंगू), सिखों की भगत माला, शहीद बिलास भाई मनी सिंह",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼ (ਰਤਨ ਸਿੰਘ ਭੰਗੂ), ਸਿੱਖਾਂ ਦੀ ਭਗਤ ਮਾਲਾ, ਸ਼ਹੀਦ ਬਿਲਾਸ ਭਾਈ ਮਨੀ ਸਿੰਘ",
+    "sourceCitations": [
+      {
+        "sourceName": "Rattan Singh Bhangu — Prachin Panth Prakash",
+        "sourceRef": "Episode of the Martyrdom of Bhai Mani Singh (Band-band Katna)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Giani Garja Singh — Shahid Bilas Bhai Mani Singh (Kavi Sewa Singh)",
+        "sourceRef": "Historical biography of Bhai Mani Singh's life and sacrifice",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Executioner, follow the decree with care: cut me joint by joint from my fingertips so you do not fail in your duty and I do not fail in my faith!",
+      "attribution": "Bhai Mani Singh to the Executioner at Lahore (1737 CE)"
+    },
+    "quoteLocal": {
+      "text": "जल्लाद, हुक्म के अनुसार मेरी उंगलियों के पोरों से काटना शुरू करो ताकि तुम्हारा कर्तव्य पूरा हो और मेरा धैर्य अधूरा न रहे!",
+      "attribution": "भाई मनी सिंह जी (१७३७ ई.)"
+    },
+    "quotePa": {
+      "text": "ਜੱਲਾਦ, ਹੁਕਮ ਮੁਤਾਬਕ ਉਂਗਲਾਂ ਦੇ ਪੋਟਿਆਂ ਤੋਂ ਬੰਦ-ਬੰਦ ਕੱਟਣਾ ਸ਼ੁਰੂ ਕਰ ਤਾਂ ਜੋ ਤੂੰ ਆਪਣੇ ਹੁਕਮ ਵਿਚ ਅਤੇ ਮੈਂ ਆਪਣੇ ਸਿਦਕ ਵਿਚ ਪੂਰਾ ਉਤਰਾਂ!",
+      "attribution": "ਭਾਈ ਮਨੀ ਸਿੰਘ ਜੀ (੧੭੩੭ ਈ.)"
+    }
+  },
+  {
+    "id": "bhai-gurdas",
+    "name": "Bhai Gurdas Ji",
+    "nameLocal": "भाई गुरदास जी",
+    "namePa": "ਭਾਈ ਗੁਰਦਾਸ ਜੀ",
+    "era": "1551 – 1636 CE",
+    "eraLocal": "१५५१ – १६३६ ई.",
+    "eraPa": "੧੫੫੧ – ੧੬੩੬ ਈ.",
+    "tradition": "sikh",
+    "region": "Goindval & Amritsar, Punjab",
+    "regionLocal": "गोइंदवाल व अमृतसर, पंजाब",
+    "regionPa": "ਗੋਇੰਦਵਾਲ ਤੇ ਅੰਮ੍ਰਿਤਸਰ, ਪੰਜਾਬ",
+    "emoji": "📜",
+    "tagline": "The supreme Sikh philosopher and scribe who penned the original Adi Granth and whose Vaaran serve as the canonical key to Gurbani.",
+    "taglineLocal": "सिख धर्म के प्रथम दार्शनिक और आदि ग्रंथ के मुख्य लेखक जिनकी 'वारें' गुरुबाणी की कुंजी के रूप में प्रतिष्ठित हैं।",
+    "taglinePa": "ਸਿੱਖ ਧਰਮ ਦੇ ਮਹਾਨ ਦਾਰਸ਼ਨਿਕ ਅਤੇ ਆਦਿ ਗ੍ਰੰਥ ਦੇ ਲਿਖਾਰੀ ਜਿਨ੍ਹਾਂ ਦੀਆਂ ਵਾਰਾਂ ਨੂੰ 'ਗੁਰਬਾਣੀ ਦੀ ਕੁੰਜੀ' ਦਾ ਸਤਿਕਾਰ ਪ੍ਰਾਪਤ ਹੈ।",
+    "journey": "Born in Goindval to Bhai Ishar Das (nephew of Guru Amar Das, the third Sikh Guru) and Mata Jivani, Bhai Gurdas was raised in the serene spiritual atmosphere of the Guru’s court. Orphaned at an early age, he was nurtured under the protective guardianship of Guru Amar Das and later Guru Ram Das. Sent to Varanasi and Agra to study Sanskrit, Braj, Persian, and Indian philosophical systems (Nyaya, Sankhya, Vedanta), young Gurdas became a scholar of towering intellect, uniting deep scriptural knowledge with sublime poetic sensitivity.\n\nReturning to Punjab, Bhai Gurdas served as the chief missionary ambassador of the Sikh faith. He traveled extensively to Kabul, Kashmir, Rajasthan, Agra, and Varanasi, establishing Sangats and clarifying the theological distinctiveness of Sikhi. When the fifth Guru, Arjan Dev Ji, undertook the historic compilation of the *Adi Granth* in 1604 at Ramsar in Amritsar, he selected Bhai Gurdas as his sole master scribe. For over a year, sitting in tranquil meditation by the lake, Bhai Gurdas meticulously wrote down every sacred verse as dictated by Guru Arjan Dev, producing the monumental original Kartarpuri Bir with immaculate calligraphic precision.",
+    "journeyLocal": "गोइंदवाल साहिब में तीसरे गुरु अमरदास जी के भतीजे भाई ईश्वर दास जी के घर जन्मे भाई गुरदास बाल्यकाल से ही अत्यंत मेधावी थे। माता-पिता के साये से वंचित होने पर गुरु अमरदास जी और गुरु रामदास जी ने उनका पालन-पोषण किया। उन्होंने काशी और आगरा में रहकर संस्कृत, ब्रज, फ़ारसी और भारतीय दर्शन शास्त्रों का गहन अध्ययन किया।\n\nसिख धर्म के मुख्य प्रचारक के रूप में उन्होंने काबुल, कश्मीर, राजस्थान और बनारस तक यात्राएं कीं और संगतें स्थापित कीं। १६०४ में जब पांचवें गुरु अर्जन देव जी ने अमृतसर में 'आद ग्रंथ' के संकलन का संकल्प लिया, तो उन्होंने भाई गुरदास जी को मुख्य लेखक चुना। रामसर सरोवर के तट पर एक वर्ष से अधिक समय तक बैठकर भाई गुरदास जी ने गुरु जी के मुखारविंद से उच्चारित प्रत्येक शब्द को अत्यंत सुंदर और शुद्ध हस्तलिपि में लिपिबद्ध किया।",
+    "journeyPa": "ਸ੍ਰੀ ਗੋਇੰਦਵਾਲ ਸਾਹਿਬ ਵਿਖੇ ਤੀਜੇ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਅਮਰਦਾਸ ਜੀ ਦੀ ਛਤਰ-ਛਾਇਆ ਹੇਠ ਪਲੇ ਭਾਈ ਗੁਰਦਾਸ ਜੀ ਨੇ ਕਾਸ਼ੀ ਤੇ ਆਗਰਾ ਤੋਂ ਸੰਸਕ੍ਰਿਤ, ਫ਼ਾਰਸੀ ਅਤੇ ਫ਼ਲਸਫ਼ੇ ਦੀ ਉੱਚ ਵਿੱਦਿਆ ਹਾਸਲ ਕੀਤੀ।\n\n੧੬੦੪ ਵਿਚ ਸ੍ਰੀ ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ ਨੇ ਜਦੋਂ ਰਾਮਸਰ ਸਰੋਵਰ ਦੇ ਕੰਢੇ ਪਵਿੱਤਰ 'ਆਦਿ ਗ੍ਰੰਥ' ਸਾਹਿਬ ਦਾ ਸੰਪਾਦਨ ਕੀਤਾ, ਤਾਂ ਭਾਈ ਗੁਰਦਾਸ ਜੀ ਨੂੰ ਹੱਥੀਂ ਲਿਖਣ ਦੀ ਸੇਵਾ ਬਖ਼ਸ਼ੀ। ਆਪ ਜੀ ਨੇ ਬੜੀ ਨਿਮਰਤਾ ਅਤੇ ਸ਼ੁੱਧਤਾ ਨਾਲ ਸਮੁੱਚੀ ਬਾਣੀ ਲਿਖੀ।",
+    "trial": "Bhai Gurdas’s trial was one of supreme intellectual humility and incorruptible fidelity to truth. When the Adi Granth was completed, Guru Arjan Dev Ji offered to include Bhai Gurdas’s own poetic compositions within the sacred scripture, recognizing their supreme spiritual depth. Displaying breathtaking humility, Bhai Gurdas bowed with folded hands and declined the honor, stating that his mortal verses could never sit on the same celestial throne as the revealed words of the Gurus and Bhagats. Deeply moved by his complete lack of vanity, Guru Arjan Dev bestowed an immortal blessing: 'Bhai Gurdas's compositions shall be revered as the Gurbani Di Kunji—the master key without which the divine treasures of the Guru Granth Sahib cannot be unlocked.'\n\nLater, during Emperor Akbar's visit to Batala in 1598, orthodox opponents accused the Adi Granth of containing slurs against Islam and Hinduism. Bhai Gurdas stood before the imperial Mughal court, fearlessly reciting and explaining the verses. Akbar listened with deep awe, bowed his head, offered fifty-one gold mohurs to the scripture, and remitted the annual land tax for the peasants of Punjab. Following Guru Arjan Dev’s martyrdom, Bhai Gurdas stood firmly with the sixth Guru, Hargobind, defending the new doctrine of Miri-Piri (spiritual and temporal sovereignty) through his powerful 40 *Vaaran* and 675 *Kabit-Swayye*, providing the intellectual spine to the rising Sikh martial renaissance.",
+    "trialLocal": "भाई गुरदास जी के जीवन की सबसे बड़ी विशेषता उनकी अगाध विनम्रता थी। आदि ग्रंथ के पूर्ण होने पर जब गुरु अर्जन देव जी ने उनकी रचनाओं को भी ग्रंथ में शामिल करने का प्रस्ताव रखा, तो भाई गुरदास जी ने हाथ जोड़कर मना कर दिया कि उनकी रचनाएं गुरुबाणी के समकक्ष नहीं हो सकतीं। उनकी इस निरहंकारिता से प्रसन्न होकर गुरु जी ने वरदान दिया कि उनकी 'वारें' गुरुबाणी की 'कुंजी' कहलाएंगी।\n\nजब मुग़ल सम्राट अकबर के दरबार में विरोधियों ने आदि ग्रंथ के विरुद्ध शिकायत की, तो भाई गुरदास जी ने निर्भीक होकर दरबार में बाणी का गायन और व्याख्या की, जिससे प्रभावित होकर अकबर ने ग्रंथ को नमन किया और किसानों का लगान माफ कर दिया। गुरु अर्जन देव जी की शहादत के बाद उन्होंने छठे गुरु हरिगोबिंद साहिब की 'मीरी-पीरी' की नीति का दार्शनिक समर्थन अपनी वारों के माध्यम से किया।",
+    "trialPa": "ਗੁਰੂ ਅਰਜਨ ਦੇਵ ਜੀ ਨੇ ਜਦੋਂ ਭਾਈ ਗੁਰਦਾਸ ਜੀ ਦੀ ਰਚਨਾ ਨੂੰ ਆਦਿ ਗ੍ਰੰਥ ਵਿਚ ਦਰਜ ਕਰਨ ਦੀ ਪੇਸ਼ਕਸ਼ ਕੀਤੀ, ਤਾਂ ਅਥਾਹ ਨਿਮਰਤਾ ਦਿਖਾਉਂਦਿਆਂ ਉਹਨਾਂ ਨੇ ਇਨਕਾਰ ਕਰ ਦਿੱਤਾ। ਗੁਰੂ ਸਾਹਿਬ ਨੇ ਖ਼ੁਸ਼ ਹੋ ਕੇ ਉਹਨਾਂ ਦੀਆਂ ਵਾਰਾਂ ਨੂੰ 'ਗੁਰਬਾਣੀ ਦੀ ਕੁੰਜੀ' ਦਾ ਵਰਦਾਨ ਦਿੱਤਾ।\n\nਅਕਬਰ ਦੇ ਦਰਬਾਰ ਵਿਚ ਵਿਰੋਧੀਆਂ ਦੀਆਂ ਸਾਜ਼ਿਸ਼ਾਂ ਦਾ ਮੂੰਹ-ਤੋੜ ਜਵਾਬ ਦਿੰਦਿਆਂ ਬਾਣੀ ਦਾ ਪ੍ਰਚਾਰ ਕੀਤਾ। ਛੇਵੇਂ ਪਾਤਸ਼ਾਹ ਗੁਰੂ ਹਰਿਗੋਬਿੰਦ ਸਾਹਿਬ ਜੀ ਦੀ ਮੀਰੀ-ਪੀਰੀ ਦੀ ਨੀਤੀ ਨੂੰ ਆਪਣੀਆਂ ੪੦ ਵਾਰਾਂ ਰਾਹੀਂ ਸਿੱਖ ਸੰਗਤਾਂ ਵਿਚ ਦ੍ਰਿੜ੍ਹ ਕਰਵਾਇਆ।",
+    "teaching": "Bhai Gurdas taught that true knowledge is inseparable from humility. Intellectual brilliance and scholarly mastery must lead not to arrogance or self-aggrandizement, but to quiet, dedicated service to the Divine and humanity. His Vaaran reveal that living as a householder with honest labor and selfless remembrance of God is superior to all ascetic escapism.",
+    "teachingLocal": "भाई गुरदास जी ने सिखाया कि विद्या की पराकाष्ठा अहंकार में नहीं, बल्कि विनम्रता और सेवा में है। गृहस्थ जीवन में रहकर सत्य की कमाई करना और ईश्वर का सिमरन करना ही संन्यास से श्रेष्ठ है। उन्होंने गुरु और शिष्य के संबंध को पूर्ण समर्पण का मार्ग बताया।",
+    "teachingPa": "ਭਾਈ ਗੁਰਦਾਸ ਜੀ ਨੇ ਸਿਖਾਇਆ ਕਿ ਅਸਲ ਵਿਦਵਾਨ ਉਹੀ ਹੈ ਜੋ ਹਉਮੈ ਤੋਂ ਮੁਕਤ ਹੋ ਕੇ ਨਿਮਰਤਾ ਧਾਰਨ ਕਰੇ। ਗ੍ਰਹਿਸਤ ਵਿਚ ਰਹਿ ਕੇ ਨਾਮ ਜਪਣਾ ਅਤੇ ਧਰਮ ਦੀ ਕਿਰਤ ਕਰਨਾ ਹੀ ਪਰਮ ਪਦ ਹੈ।",
+    "moral": "The greatest minds are those that seek no personal glory. When intellect is placed at the feet of truth, its legacy outlives empires and guides wandering souls across millennia.",
+    "moralLocal": "सच्चा ज्ञानी कभी अपनी प्रतिष्ठा का भूखा नहीं होता। जो ज्ञान ईश्वर के चरणों में समर्पित कर दिया जाता है, वह युगों-युगों तक मानवता का कल्याण करता है।",
+    "moralPa": "ਵਿਦਿਆ ਵਿਚਾਰੀ ਤਾਂ ਪਰਉਪਕਾਰੀ। ਜਦੋਂ ਬੁੱਧੀ ਸੱਚ ਦੀ ਸੇਵਾ ਵਿਚ ਲੱਗਦੀ ਹੈ, ਤਾਂ ਉਹ ਸਦਾ ਲਈ ਅਮਰ ਹੋ ਜਾਂਦੀ ਹੈ।",
+    "legacy": "Bhai Gurdas is universally venerated as the Saint Paul and Ved Vyasa of Sikhism. His 40 *Vaaran* and *Kabit-Swayye* are the only non-canonical compositions permitted to be sung during sacred worship inside Sri Harmandir Sahib and Sikh gurdwaras worldwide, recognized as the definitive exposition of Sikh theology and history.",
+    "legacyLocal": "भाई गुरदास जी सिख धर्म के वेदव्यास कहे जाते हैं। उनकी ४० वारें और कबित्त-सवैये आज भी श्री हरिमंदिर साहिब में कीर्तन के रूप में गाए जाने वाले एकमात्र गैर-शास्त्र सम्मत पद हैं, जिन्हें गुरुबाणी की कुंजी माना जाता है।",
+    "legacyPa": "ਭਾਈ ਗੁਰਦਾਸ ਜੀ ਦੀਆਂ ੪੦ ਵਾਰਾਂ ਸਿੱਖ ਇਤਿਹਾਸ ਅਤੇ ਫ਼ਲਸਫ਼ੇ ਦੀ ਪ੍ਰਮਾਣਿਕ ਬੁਨਿਆਦ ਹਨ। ਉਹਨਾਂ ਦੀਆਂ ਰਚਨਾਵਾਂ ਨੂੰ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਸਮੇਤ ਹਰ ਗੁਰਦੁਆਰਾ ਸਾਹਿਬ ਵਿਚ ਗਾਉਣ ਦੀ ਪ੍ਰਵਾਨਗੀ ਹੈ।",
+    "source": "Vaaran Bhai Gurdas, Kabit-Swayye Bhai Gurdas, Mahan Kosh",
+    "sourceLocal": "वारें भाई गुरदास, कबित्त-सवैये भाई गुरदास, महान कोश (भाई काह्न सिंह नाभा)",
+    "sourcePa": "ਵਾਰਾਂ ਭਾਈ ਗੁਰਦਾਸ, ਕਬਿੱਤ ਸਵੱਯੇ ਭਾਈ ਗੁਰਦਾਸ, ਮਹਾਨ ਕੋਸ਼ (ਭਾਈ ਕਾਨ੍ਹ ਸਿੰਘ ਨਾਭਾ)",
+    "sourceCitations": [
+      {
+        "sourceName": "Bhai Gurdas — Vaaran",
+        "sourceRef": "Vaar 1 (Historical chronicle of Guru Nanak and the advent of Truth)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Bhai Kahn Singh Nabha — Mahan Kosh",
+        "sourceRef": "Entry on Bhai Gurdas and the title Gurbani Di Kunji",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "With the rising of the Sun of Guru Nanak, the mist of darkness was dispelled, and the light of truth illuminated the whole world.",
+      "attribution": "Bhai Gurdas Ji — Vaaran, Vaar 1, Pauri 27"
+    },
+    "quoteLocal": {
+      "text": "सतिगुरु नानक प्रगटिआ मिटी धुंधु जगि चानणु होआ।",
+      "attribution": "भाई गुरदास जी (वार १, पौड़ी २७)"
+    },
+    "quotePa": {
+      "text": "ਸਤਿਗੁਰ ਨਾਨਕ ਪ੍ਰਗਟਿਆ ਮਿਟੀ ਧੁੰਧੁ ਜਗਿ ਚਾਨਣੁ ਹੋਆ ॥",
+      "attribution": "ਭਾਈ ਗੁਰਦਾਸ ਜੀ (ਵਾਰ ੧, ਪਉੜੀ ੨੭)"
+    }
+  },
+  {
+    "id": "hari-singh-nalwa",
+    "name": "Hari Singh Nalwa",
+    "nameLocal": "हरी सिंह नलवा",
+    "namePa": "ਹਰੀ ਸਿੰਘ ਨਲਵਾ",
+    "era": "1791 – 1837 CE",
+    "eraLocal": "१७९१ – १८३७ ई.",
+    "eraPa": "੧੭੯੧ – ੧੮੩੭ ਈ.",
+    "tradition": "sikh",
+    "region": "Gujranwala, Kashmir, Peshawar & Jamrud",
+    "regionLocal": "गुजरांवाला, कश्मीर, पेशावर व जमरूद",
+    "regionPa": "ਗੁਜਰਾਂਵਾਲਾ, ਕਸ਼ਮੀਰ, ਪੇਸ਼ਾਵਰ ਤੇ ਜਮਰੌਦ",
+    "emoji": "⚔️",
+    "tagline": "The legendary Commander-in-Chief of the Sikh Empire who reversed eight centuries of foreign invasions through the Khyber Pass and defended Jamrud to his last breath.",
+    "taglineLocal": "सिख साम्राज्य के महान सेनापति जिन्होंने खैबर दर्रे से होने वाले आठ सौ वर्षों के विदेशी आक्रमणों को रोककर जमरूद में अंतिम सांस तक पहरा दिया।",
+    "taglinePa": "ਸਿੱਖ ਸਲਤਨਤ ਦੇ ਮਹਾਨ ਜਰਨੈਲ ਜਿਨ੍ਹਾਂ ਨੇ ਖ਼ੈਬਰ ਦੱਰੇ ਤੋਂ ਸਦੀਆਂ ਤੋਂ ਹੁੰਦੇ ਹਮਲਿਆਂ ਦਾ ਰੁਖ਼ ਮੋੜ ਕੇ ਜਮਰੌਦ ਦੀ ਧਰਤੀ 'ਤੇ ਸ਼ਹਾਦਤ ਪਾਈ।",
+    "journey": "Born in Gujranwala to Sardar Gurdial Singh Uppal and Mata Dharam Kaur, young Hari Singh entered the service of Maharaja Ranjit Singh at the age of fourteen in 1805. During a royal hunting expedition in the dense forests, an enormous tiger sprang upon Hari Singh, tearing his horse from beneath him. Calmly drawing his talwar, the teenage warrior shattered the beast's head in mid-air with a single blow, earning the epithet 'Nalwa' (the one who slays with the fury of King Nala).\n\nRecognizing his tactical genius and martial fearlessness, Maharaja Ranjit Singh appointed him general, leading the vanguard of the Khalsa Fauj across the most hazardous frontiers of the subcontinent. Hari Singh led victorious campaigns capturing Kasur (1807), Multan (1818), Kashmir (1819), and Mankera (1821). Appointed Governor of Kashmir, he eradicated religious persecution, stabilized the currency by minting the 'Hari Singhee rupee', abolished corrupt taxation, and rebuilt damaged temples and mosques. In 1834, Nalwa achieved what no Indian ruler had accomplished in eight hundred years: conquering Peshawar and pushing the borders of the Sikh Empire directly to the mouth of the Khyber Pass in Afghanistan.",
+    "journeyLocal": "गुजरांवाला में जन्मे हरी सिंह १४ वर्ष की आयु में महाराजा रणजीत सिंह की सेना में शामिल हुए। शिकार के दौरान जब एक विशाल बाघ ने उन पर झपट्टा मारा, तो उन्होंने तलवार के एक ही वार से उस बाघ को चीर दिया, जिसके बाद उन्हें 'नलवा' की उपाधि मिली।\n\nमहाराजा रणजीत सिंह ने उन्हें खालसा सेना का प्रधान सेनापति बनाया। उन्होंने मुल्तान, कश्मीर और मानकेरा की ऐतिहासिक विजयों का नेतृत्व किया। कश्मीर के गवर्नर के रूप में उन्होंने कर-प्रणाली में सुधार किया और सभी धर्मों को समानता दी। १८३४ में उन्होंने आठ सौ वर्षों के इतिहास को पलटते हुए पेशावर पर विजय प्राप्त की और सिख साम्राज्य की सीमाओं को अफ़गानिस्तान के खैबर दर्रे तक पहुँचा दिया।",
+    "journeyPa": "ਗੁਜਰਾਂਵਾਲਾ ਵਿਖੇ ਜਨਮੇ ਹਰੀ ਸਿੰਘ ਨਲਵਾ ੧੪ ਸਾਲ ਦੀ ਉਮਰ ਵਿਚ ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ ਦੀ ਫ਼ੌਜ ਵਿਚ ਸ਼ਾਮਲ ਹੋਏ। ਇੱਕ ਸ਼ਿਕਾਰ ਦੌਰਾਨ ਸ਼ੇਰ ਦੇ ਹਮਲੇ ਨੂੰ ਤਲਵਾਰ ਦੇ ਇੱਕੋ ਵਾਰ ਨਾਲ ਠੱਲ੍ਹ ਕੇ 'ਨਲਵਾ' ਦਾ ਖ਼ਿਤਾਬ ਹਾਸਲ ਕੀਤਾ।\n\nਕਸੂਰ, ਮੁਲਤਾਨ, ਕਸ਼ਮੀਰ ਅਤੇ ਪੇਸ਼ਾਵਰ ਨੂੰ ਜਿੱਤ ਕੇ ਸਿੱਖ ਰਾਜ ਦੀਆਂ ਹੱਦਾਂ ਖ਼ੈਬਰ ਦੱਰੇ ਤੱਕ ਵਧਾਈਆਂ ਅਤੇ ਸਦੀਆਂ ਤੋਂ ਹੁੰਦੇ ਆ ਰਹੇ ਅਫ਼ਗਾਨੀ ਹਮਲਿਆਂ ਨੂੰ ਸਦਾ ਲਈ ਠੱਲ੍ਹ ਪਾਈ।",
+    "trial": "To permanently seal the historic invasion gateway into India, Hari Singh Nalwa constructed the massive stone fortress of Jamrud at the eastern end of the Khyber Pass in 1836. Recognizing this fortress as a dagger pointing at Kabul, the Afghan Amir Dost Mohammad Khan dispatched a colossal army of over thirty thousand troops under his son Muhammad Akbar Khan in April 1837 to crush the Sikhs.\n\nAt Jamrud, Sardar Hari Singh lay confined to his bed inside the fort with high fever and dysentery, while only a small garrison of eight hundred Sikhs defended the walls. When the Afghan siege artillery breached the outer ramparts, Nalwa rose from his sickbed, don his warrior armor, mounted his horse, and led a thunderous counter-attack through the fortress gates. Driving the Afghans in terror, Nalwa was struck by two fatal bullets in the chest and side while commanding the pursuit. Knowing his death would demoralize his outnumbered troops and invite an Afghan massacre, Nalwa ordered his aides to carry him back inside the fort secretly and conceal his death: 'Do not raise a lament! Stand my body upon the ramparts with my turban and weapons, and fire the cannons regularly so the enemy believes I still watch them!' For over forty-eight hours, the terrified Afghan army dared not advance, held at bay by the mere phantom presence of the dead general upon the ramparts, until Khalsa reinforcements from Lahore arrived under Sardar Tej Singh, liberating Jamrud and cementing India's western frontier forever.",
+    "trialLocal": "अफ़गानों के आक्रमणों को हमेशा के लिए रोकने हेतु नलवा ने खैबर दर्रे पर 'जमरूद' के अजेय दुर्ग का निर्माण कराया। अप्रैल १८३७ में अफ़गान अमीर दोस्त मोहम्मद ख़ान के पुत्र अकबर ख़ान ने ३०,००० सैनिकों के साथ जमरूद पर घेरा डाल दिया।\n\nउस समय सरदार हरी सिंह नलवा तेज बुखार से पीड़ित थे और दुर्ग में मात्र ८०० सिख सैनिक थे। दीवारें टूटने की खबर मिलते ही नलवा अपनी शय्या से उठे और घोड़े पर सवार होकर मुट्ठी भर सैनिकों के साथ अफ़गानों पर टूट पड़े। अफ़गान सेना भाग खड़ी हुई, किंतु दो घातक गोलियाँ नलवा के सीने में जा लगीं। वीरगति प्राप्त करने से पूर्व उन्होंने अपने सैनिकों को अंतिम आदेश दिया कि उनके निधन की खबर गुप्त रखी जाए और उनके पार्थिव शरीर को पगड़ी और अस्त्र-शस्त्र पहनाकर दुर्ग की प्राचीर पर खड़ा रखा जाए ताकि शत्रु हमला न करे। दो दिनों तक अफ़गान सेना उनके भय से आगे नहीं बढ़ी, जब तक कि लाहौर से अतिरिक्त सेना नहीं पहुँच गई।",
+    "trialPa": "ਜਮਰੌਦ ਦੇ ਕਿਲ੍ਹੇ ਨੂੰ ਘੇਰਾ ਪਾਉਣ ਆਈ ੩੦,੦੦੦ ਅਫ਼ਗਾਨੀ ਫ਼ੌਜ ਦਾ ਮੁਕਾਬਲਾ ਕਰਨ ਲਈ ਬਿਮਾਰ ਹੁੰਦਿਆਂ ਵੀ ਹਰੀ ਸਿੰਘ ਨਲਵਾ ਮੈਦਾਨ ਵਿਚ ਨਿੱਤਰੇ। ਅਫ਼ਗਾਨਾਂ ਨੂੰ ਭਾਂਜ ਦਿੱਤੀ ਪਰ ਦੋ ਗੋਲੀਆਂ ਲੱਗਣ ਕਾਰਨ ਗੰਭੀਰ ਜ਼ਖ਼ਮੀ ਹੋ ਗਏ।\n\nਸ਼ਹਾਦਤ ਤੋਂ ਪਹਿਲਾਂ ਆਦੇਸ਼ ਦਿੱਤਾ ਕਿ ਮੇਰੀ ਮੌਤ ਦੀ ਖ਼ਬਰ ਗੁਪਤ ਰੱਖੀ ਜਾਵੇ ਅਤੇ ਮੇਰੀ ਦੇਹ ਨੂੰ ਕਿਲ੍ਹੇ ਦੀ ਕੰਧ 'ਤੇ ਖੜ੍ਹਾ ਰੱਖਿਆ ਜਾਵੇ ਤਾਂ ਜੋ ਦੁਸ਼ਮਣ ਅੱਗੇ ਵਧਣ ਦਾ ਹੌਂਸਲਾ ਨਾ ਕਰੇ। ਦੋ ਦਿਨਾਂ ਤੱਕ ਅਫ਼ਗਾਨ ਕੇਵਲ ਉਹਨਾਂ ਦੇ ਪਰਛਾਵੇਂ ਤੋਂ ਹੀ ਥਰ-ਥਰ ਕੰਬਦੇ ਰਹੇ।",
+    "teaching": "General Hari Singh Nalwa proved that righteous military power and strategic defense must be used to protect the sovereign borders of one's homeland. True leadership is defined not by seeking comfortable safety, but by leading from the front and sacrificing one's physical breath so that future generations may live in dignity and peace.",
+    "teachingLocal": "हरी सिंह नलवा ने सिद्ध किया कि राष्ट्रीय सीमाओं की सुरक्षा हेतु अदम्य शौर्य और दूरदर्शी रणनीति का होना अनिवार्य है। सच्चा सेनापति वह है जो विपत्ति में अपनी देह की चिंता किए बिना राष्ट्र के स्वाभिमान को सर्वोपरि रखे।",
+    "teachingPa": "ਹਰੀ ਸਿੰਘ ਨਲਵਾ ਨੇ ਸਾਬਤ ਕੀਤਾ ਕਿ ਦੇਸ਼ ਦੀਆਂ ਸਰਹੱਦਾਂ ਦੀ ਰਾਖੀ ਲਈ ਲਾਸਾਨੀ ਜਰਨੈਲੀ ਅਤੇ ਨਿਰਭੈਤਾ ਜ਼ਰੂਰੀ ਹੈ। ਮਰਦੇ ਦਮ ਤੱਕ ਕੌਮ ਦੀ ਆਨ-ਸ਼ਾਨ 'ਤੇ ਆਂਚ ਨਾ ਆਉਣ ਦੇਣਾ ਹੀ ਸੱਚੇ ਸੂਰਮੇ ਦੀ ਪਛਾਣ ਹੈ।",
+    "moral": "The dread of a righteous champion can paralyze tyrants even in death. Courage and tactical mastery reverse centuries of subjugation and establish lasting peace for a nation.",
+    "moralLocal": "सत्य और शौर्य के प्रतीक की छाया से भी अधर्मी थर-थर कांपते हैं। जब एक वीर देश के लिए सर्वस्व न्योछावर करता है, तो सदियों की दासता का कलंक मिट जाता है।",
+    "moralPa": "ਸੂਰਬੀਰਤਾ ਅਤੇ ਦਲੇਰੀ ਸਦੀਆਂ ਦੀ ਗ਼ੁਲਾਮੀ ਦੀਆਂ ਜ਼ੰਜੀਰਾਂ ਕੱਟ ਦਿੰਦੀ ਹੈ। ਧਰਮੀ ਯੋਧੇ ਦੀ ਸ਼ਾਨ ਮੌਤ ਤੋਂ ਬਾਅਦ ਵੀ ਦੁਸ਼ਮਣਾਂ ਦੇ ਦਿਲਾਂ ਵਿਚ ਦਹਿਸ਼ਤ ਪਾ ਕੇ ਰੱਖਦੀ ਹੈ।",
+    "legacy": "Hari Singh Nalwa is internationally celebrated as one of the greatest military generals in human history, ranked alongside Alexander and Napoleon in international military studies for conquering the unconquerable North-West Frontier. Fort Jamrud and the historic town of Haripur in Hazara bear his immortal name.",
+    "legacyLocal": "हरी सिंह नलवा को विश्व के महानतम सेनापतियों में गिना जाता है। खैबर दर्रे पर उनके द्वारा स्थापित चौकी आज भी उनकी अमर गाथा का स्मरण कराती है और पाकिस्तान में 'हरिपुर' शहर उनके नाम पर बसा है।",
+    "legacyPa": "ਹਰੀ ਸਿੰਘ ਨਲਵਾ ਨੂੰ ਦੁਨੀਆ ਦੇ ਚੋਟੀ ਦੇ ਜਰਨੈਲਾਂ ਵਿਚ ਸ਼ੁਮਾਰ ਕੀਤਾ ਜਾਂਦਾ ਹੈ। ਜਮਰੌਦ ਦਾ ਕਿਲ੍ਹਾ ਅਤੇ ਹਰੀਪੁਰ ਸ਼ਹਿਰ ਉਹਨਾਂ ਦੇ ਅਦੁੱਤੀ ਕਾਰਨਾਮਿਆਂ ਦੀ ਯਾਦ ਦਿਵਾਉਂਦੇ ਹਨ।",
+    "source": "Tawarikh Guru Khalsa (Giani Gian Singh), Hari Singh Nalwa: Champion of the Khalsaji (Autar Singh Sandhu), The Sikh Empire (Amarpal Singh)",
+    "sourceLocal": "तवारीख गुरु खालसा (ज्ञानी ज्ञान सिंह), हरी सिंह नलवा (अवतार सिंह संधू), द सिख एम्पायर",
+    "sourcePa": "ਤਵਾਰੀਖ਼ ਗੁਰੂ ਖ਼ਾਲਸਾ (ਗਿਆਨੀ ਗਿਆਨ ਸਿੰਘ), ਹਰੀ ਸਿੰਘ ਨਲਵਾ (ਔਤਾਰ ਸਿੰਘ ਸੰਧੂ), ਦ ਸਿੱਖ ਇੰਪਾਇਰ",
+    "sourceCitations": [
+      {
+        "sourceName": "Giani Gian Singh — Tawarikh Guru Khalsa",
+        "sourceRef": "Raj Khalsa, Chapter on General Hari Singh Nalwa and the Battle of Jamrud",
+        "tier": 1
+      },
+      {
+        "sourceName": "Autar Singh Sandhu — General Hari Singh Nalwa (1935)",
+        "sourceRef": "Historical biography based on royal court records of the Sikh Darbar",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Do not weep or sound the retreat; stand my body upon the battlements of Jamrud so the Afghans know that Hari Singh still guards the gates of India!",
+      "attribution": "General Hari Singh Nalwa's final words at Jamrud (1837 CE)"
+    },
+    "quoteLocal": {
+      "text": "विलाप मत करो; मेरे पार्थिव शरीर को जमरूद की प्राचीर पर खड़ा रखो ताकि अफ़गान जान लें कि हरी सिंह अब भी भारत के द्वार की रक्षा कर रहा है!",
+      "attribution": "सरदार हरी सिंह नलवा (जमरूद, १८३७ ई.)"
+    },
+    "quotePa": {
+      "text": "ਮੇਰੀ ਸ਼ਹਾਦਤ ਦਾ ਰੋਣਾ ਨਾ ਰੋਇਓ; ਮੇਰੀ ਦੇਹ ਨੂੰ ਜਮਰੌਦ ਦੀ ਕੰਧ 'ਤੇ ਖੜ੍ਹੀ ਰੱਖਿਓ ਤਾਂ ਜੋ ਅਫ਼ਗਾਨ ਜਾਣ ਸਕਣ ਕਿ ਹਰੀ ਸਿੰਘ ਅਜੇ ਵੀ ਭਾਰਤ ਦੇ ਬੂਹੇ 'ਤੇ ਪਹਿਰਾ ਦੇ ਰਿਹਾ ਹੈ!",
+      "attribution": "ਸਰਦਾਰ ਹਰੀ ਸਿੰਘ ਨਲਵਾ (੧੮੩੭ ਈ.)"
+    }
+  },
+  {
+    "id": "akali-phula-singh",
+    "name": "Akali Phula Singh",
+    "nameLocal": "अकाली फूला सिंह",
+    "namePa": "ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ",
+    "era": "1761 – 1823 CE",
+    "eraLocal": "१७६१ – १८२३ ई.",
+    "eraPa": "੧੭੬੧ – ੧੮੨੩ ਈ.",
+    "tradition": "sikh",
+    "region": "Amritsar & Nowshera",
+    "regionLocal": "अमृतसर व नौशेरा",
+    "regionPa": "ਅੰਮ੍ਰਿਤਸਰ ਤੇ ਨੌਸ਼ਹਿਰਾ",
+    "emoji": "⚔️",
+    "tagline": "The fearless Nihang Jathedar of the Akal Takht who held the Sikh Empire to strict spiritual account and fell as a supreme martyr at the Battle of Nowshera.",
+    "taglineLocal": "अकाल तख्त के निर्भीक निहंग जत्थेदार जिन्होंने महाराजा रणजीत सिंह को भी मर्यादा भंग करने पर तलब किया और नौशेरा के युद्ध में अमर बलिदान दिया।",
+    "taglinePa": "ਸ੍ਰੀ ਅਕਾਲ ਤਖ਼ਤ ਸਾਹਿਬ ਦੇ ਨਿਡਰ ਜਥੇਦਾਰ ਜਿਨ੍ਹਾਂ ਨੇ ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ ਨੂੰ ਵੀ ਤਲਬ ਕੀਤਾ ਅਤੇ ਨੌਸ਼ਹਿਰਾ ਦੀ ਜੰਗ ਵਿਚ ਸ਼ਹੀਦੀ ਪਾਈ।",
+    "journey": "Born in the village of Shihn in Bangar (now Sangrur district) to Sardar Ishar Singh of the Nishanwalia Misl, Phula Singh was initiated into the Nihang Khalsa order (the immortals of the Guru) under Baba Narain Singh. Immersing himself in Gurbani, equestrian warfare, and the blue-robed lifestyle of the warrior-ascetics, Akali Phula Singh rose to become the supreme Jathedar of the Budha Dal and the custodian of Sri Akal Takht Sahib in Amritsar in 1800.\n\nAkali Phula Singh was the incorruptible conscience of the Sikh nation. When Maharaja Ranjit Singh was forging the sovereign Sikh Empire, Akali Phula Singh served as his most formidable military vanguard, leading the battle-hardened Nihang regiments in victorious assaults on Multan, Kasur, and Kashmir. Yet he accepted neither jagir land grants, royal pensions, nor imperial titles, remaining completely detached from worldly power and answering solely to the spiritual authority of the Akal Takht and the Guru Granth Sahib.",
+    "journeyLocal": "संगरूर के शीह गाँव में जन्मे फूला सिंह ने बाल्यकाल में ही निहंग खालसा दल में प्रवेश किया। वे अस्त्र-शस्त्र, घुड़सवारी और गुरुबाणी के निष्ठावान साधक बने और १८०० में श्री अकाल तख्त साहिब के जत्थेदार बने।\n\nवे सिख पंथ की निर्भीक चेतना थे। महाराजा रणजीत सिंह के विस्तारवादी अभियानों में उनके निहंग सैनिकों ने मुल्तान, कसूर और कश्मीर में अजेय मोर्चे संभाले। किंतु फूला सिंह ने कभी कोई जागीर, पद या धन स्वीकार नहीं किया और जीवन भर निष्काम संत-सैनिक बने रहे।",
+    "journeyPa": "ਸੰਗਰੂਰ ਦੇ ਪਿੰਡ ਸ਼ੀਹ ਵਿਖੇ ਜਨਮੇ ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ ਜੀ ਬੁੱਢਾ ਦਲ ਦੇ ਮੁਖੀ ਅਤੇ ਸ੍ਰੀ ਅਕਾਲ ਤਖ਼ਤ ਸਾਹਿਬ ਦੇ ਮਹਾਨ ਜਥੇਦਾਰ ਬਣੇ।\n\nਉਹਨਾਂ ਨੇ ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ ਦੀਆਂ ਮੁਲਤਾਨ, ਕਸੂਰ ਅਤੇ ਕਸ਼ਮੀਰ ਦੀਆਂ ਜਿੱਤਾਂ ਵਿਚ ਮੋਹਰੀ ਰੋਲ ਅਦਾ ਕੀਤਾ, ਪਰ ਕਦੇ ਕੋਈ ਜਾਗੀਰ ਜਾਂ ਸਰਕਾਰੀ ਅਹੁਦਾ ਕਬੂਲ ਨਹੀਂ ਕੀਤਾ।",
+    "trial": "Akali Phula Singh’s legendary moral courage was demonstrated when Maharaja Ranjit Singh breached traditional Sikh moral discipline by associating with a nautch dancer named Moran. As supreme guardian of the Akal Takht, Akali Phula Singh summoned the sovereign Emperor of Punjab to appear before the seat of temporal authority as a humble petitioner. Stripped of imperial regalia, Maharaja Ranjit Singh stood before the Takht with folded hands. The Akali Jathedar sentenced the monarch to public flogging (Kordas) for his moral transgression. When the Maharaja submissively lowered his garments and placed himself against the Tamarind tree to receive the lashes, Akali Phula Singh, moved by the king’s genuine humility and total submission to the authority of the Panth, remitted the physical punishment and blessed him.\n\nHis final supreme trial arrived on March 14, 1823, at the decisive Battle of Nowshera (Tibba Teri) near the Kabul river, where over forty thousand fanatical Afghan Pashtun tribesmen held fortified mountain heights. At dawn, the Sikh army made an Ardas (prayer to God) before the Guru Granth Sahib pledging to launch the assault. However, scouts arrived warning that the Khalsa artillery had not arrived from Attock and that assaulting immediately would be suicidal. Maharaja Ranjit Singh urged waiting for the heavy cannons, but Akali Phula Singh drew his sword and thundered: 'The Khalsa has performed Ardas in the presence of the Guru! An Ardas made to the Almighty can never be revoked for human calculations!' Mounting his horse and rallying twelve hundred Nihangs, Akali Phula Singh charged directly up the flaming heights into a tempest of gunfire. Shot multiple times and with his horse killed beneath him, he mounted a war elephant and drove into the Afghan summit until a final bullet pierced his forehead, breaking the Afghan line and securing victory for the Sikh Empire.",
+    "trialLocal": "अकाली फूला सिंह की निर्भीकता का सबसे बड़ा प्रमाण तब मिला जब उन्होंने सिख मर्यादा के उल्लंघन पर स्वयं महाराजा रणजीत सिंह को अकाल तख्त पर तलब किया और कोड़े मारने की सजा सुनाई। जब महाराजा ने नम्रतापूर्वक दंड स्वीकार करने हेतु कपड़े उतार दिए, तो उनकी सच्ची पश्चाताप भावना देखकर फूला सिंह ने दंड माफ कर दिया।\n\n१४ मार्च १८२३ को नौशेरा के ऐतिहासिक युद्ध में जब ४०,००० अफ़गान कबाइलियों ने पहाड़ियों को घेर रखा था, तब खालसा ने युद्ध हेतु अरदास की। बाद में तोपें न पहुँचने पर महाराजा ने रुकने का सुझाव दिया, किंतु फूला सिंह ने गर्जना की: 'गुरु के सम्मुख की गई अरदास कभी वापस नहीं ली जा सकती!' वे अपने १,२०० निहंगों के साथ सीधे पहाड़ियों पर चढ़ गए। गोली लगने पर जब घोड़ा मारा गया, तो वे हाथी पर सवार होकर लड़े और माथे पर गोली लगने से वीरगति पाई, किंतु खालसा को विजय दिलाई।",
+    "trialPa": "ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ ਨੇ ਮਰਯਾਦਾ ਭੰਗ ਕਰਨ 'ਤੇ ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ ਨੂੰ ਸ੍ਰੀ ਅਕਾਲ ਤਖ਼ਤ ਸਾਹਿਬ 'ਤੇ ਤਲਬ ਕਰਕੇ ਕੋੜਿਆਂ ਦੀ ਸਜ਼ਾ ਸੁਣਾਈ ਸੀ, ਜਿਸ ਨੂੰ ਮਹਾਰਾਜਾ ਨੇ ਸਿਰ ਮੱਥੇ ਪ੍ਰਵਾਨ ਕੀਤਾ।\n\n੧੪ ਮਾਰਚ ੧੮੨੩ ਨੂੰ ਨੌਸ਼ਹਿਰੇ ਦੀ ਜੰਗ ਵਿਚ ਜਦੋਂ ਗੁਰੂ ਅੱਗੇ ਅਰਦਾਸਾ ਸੋਧ ਲਿਆ ਗਿਆ, ਤਾਂ ਤੋਪਾਂ ਨਾ ਪਹੁੰਚਣ 'ਤੇ ਵੀ ਆਪ ਨੇ ਕਿਹਾ ਕਿ ਖ਼ਾਲਸੇ ਦੀ ਅਰਦਾਸ ਅਟੱਲ ਹੈ। ਆਪ ਨੇ ੧,੨੦੦ ਨਿਹੰਗਾਂ ਨਾਲ ਚੜ੍ਹਾਈ ਕੀਤੀ ਅਤੇ ਸ਼ਹਾਦਤ ਦਾ ਜਾਮ ਪੀ ਕੇ ਸਿੱਖ ਰਾਜ ਨੂੰ ਫ਼ਤਿਹ ਬਖ਼ਸ਼ੀ।",
+    "teaching": "Akali Phula Singh proved that spiritual authority is higher than all earthly crowns, empires, and armies. A commitment made to the Divine (Ardas) is sacred and non-negotiable; when duty calls, personal calculations of survival must be dissolved in unwavering faith.",
+    "teachingLocal": "अकाली फूला सिंह ने सिखाया कि ईश्वर और धर्म की सत्ता संसार के समस्त सिंहासनों से ऊपर है। प्रभु के सम्मुख लिया गया संकल्प कभी तोड़ा नहीं जा सकता; जब धर्म पुकारे, तो जीवन-मरण की चिंता किए बिना कूद पड़ना ही सच्चा क्षात्रधर्म है।",
+    "teachingPa": "ਅਕਾਲੀ ਜੀ ਨੇ ਦ੍ਰਿੜ੍ਹ ਕਰਵਾਇਆ ਕਿ ਗੁਰੂ ਦੀ ਮਰਯਾਦਾ ਅੱਗੇ ਦੁਨੀਆ ਦੇ ਬਾਦਸ਼ਾਹ ਵੀ ਨਿਗੂਣੇ ਹਨ। ਗੁਰੂ ਹਜ਼ੂਰ ਕੀਤੀ ਅਰਦਾਸ ਤੋਂ ਪਿੱਛੇ ਹਟਣਾ ਖ਼ਾਲਸੇ ਦੀ ਸ਼ਾਨ ਦੇ ਖ਼ਿਲਾਫ਼ ਹੈ।",
+    "moral": "Integrity means speaking truth to power without fear of consequence. When spiritual conviction guides the sword, sacrifice becomes an eternal triumph.",
+    "moralLocal": "सत्ता के सामने भी सत्य को निर्भीक होकर कहना ही सच्ची साधुता है। सिद्धांतों के लिए प्राण देने वाला योद्धा कभी पराजित नहीं होता।",
+    "moralPa": "ਹੱਕ ਅਤੇ ਸੱਚ 'ਤੇ ਖਲੋਣਾ ਹੀ ਅਸਲ ਦਲੇਰੀ ਹੈ। ਸਿਦਕਵਾਨ ਸ਼ਹੀਦ ਕਦੇ ਮਰਦੇ ਨਹੀਂ, ਸਗੋਂ ਕੌਮਾਂ ਦੇ ਦਿਲਾਂ ਵਿਚ ਸਦਾ ਧੜਕਦੇ ਹਨ।",
+    "legacy": "Akali Phula Singh is celebrated as the iconic personification of the Nihang Singh warrior tradition. The memorial Gurdwara Shaheed Akali Phula Singh stands at Nowshera on the banks of the Kabul River, and his samadhi is revered as a monument to uncompromising moral and martial fearlessness.",
+    "legacyLocal": "अकाली फूला सिंह निहंग परंपरा के सर्वोच्च आदर्श हैं। नौशेरा में काबुल नदी के तट पर उनका समाधि-स्थल आज भी उनकी अदम्य वीरता की गाथा गाता है।",
+    "legacyPa": "ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ ਜੀ ਨਿਹੰਗ ਸਿੰਘਾਂ ਦੇ ਅਮਰ ਨਾਇਕ ਹਨ। ਨੌਸ਼ਹਿਰਾ ਵਿਖੇ ਗੁਰਦੁਆਰਾ ਸ਼ਹੀਦ ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ ਜੀ ਉਹਨਾਂ ਦੇ ਅਦੁੱਤੀ ਬਲਿਦਾਨ ਦਾ ਗਵਾਹ ਹੈ।",
+    "source": "Prachin Panth Prakash, Tawarikh Guru Khalsa (Giani Gian Singh), Life of Akali Phula Singh (Prem Singh Hoti)",
+    "sourceLocal": "प्राचीन पंथ प्रकाश, तवारीख गुरु खालसा (ज्ञानी ज्ञान सिंह), अकाली फूला सिंह (प्रेम सिंह होती)",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼, ਤਵਾਰੀਖ਼ ਗੁਰੂ ਖ਼ਾਲਸਾ (ਗਿਆਨੀ ਗਿਆਨ ਸਿੰਘ), ਜੀਵਨ ਬਿਰਤਾਂਤ ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ (ਬਾਬਾ ਪ੍ਰੇਮ ਸਿੰਘ ਹੋਤੀ)",
+    "sourceCitations": [
+      {
+        "sourceName": "Baba Prem Singh Hoti — Akali Phula Singh (1914)",
+        "sourceRef": "Historical biography and account of the Battle of Nowshera",
+        "tier": 1
+      },
+      {
+        "sourceName": "Giani Gian Singh — Tawarikh Guru Khalsa",
+        "sourceRef": "Raj Khalsa, Chapter on the Fall of Nowshera and Akali Phula Singh's Martyrdom",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "The Khalsa has made its Ardas before the Guru! An Ardas offered to the Almighty can never be recalled for mortal hesitation!",
+      "attribution": "Akali Phula Singh at the Battle of Nowshera (1823 CE)"
+    },
+    "quoteLocal": {
+      "text": "खालसा ने गुरु के सम्मुख अरदास कर ली है! परमात्मा के चरणों में की गई अरदास कभी वापस नहीं ली जा सकती!",
+      "attribution": "अकाली फूला सिंह (नौशेरा, १८२३ ई.)"
+    },
+    "quotePa": {
+      "text": "ਖ਼ਾਲਸੇ ਨੇ ਗੁਰੂ ਅੱਗੇ ਅਰਦਾਸਾ ਸੋਧ ਲਿਆ ਹੈ! ਅਕਾਲ ਪੁਰਖ ਅੱਗੇ ਕੀਤੀ ਅਰਦਾਸ ਤੋਂ ਦੁਨਿਆਵੀ ਡਰ ਕਾਰਨ ਪਿੱਛੇ ਨਹੀਂ ਹਟਿਆ ਜਾ ਸਕਦਾ!",
+      "attribution": "ਅਕਾਲੀ ਫੂਲਾ ਸਿੰਘ (੧੮੨੩ ਈ.)"
+    }
+  },
+  {
+    "id": "maharaja-ranjit-singh",
+    "name": "Maharaja Ranjit Singh",
+    "nameLocal": "महाराजा रणजीत सिंह",
+    "namePa": "ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ",
+    "era": "1780 – 1839 CE",
+    "eraLocal": "१७८० – १८३९ ई.",
+    "eraPa": "੧੭੮੦ – ੧੮੩੯ ਈ.",
+    "tradition": "sikh",
+    "region": "Gujranwala & Lahore, Punjab",
+    "regionLocal": "गुजरांवाला व लाहौर, पंजाब",
+    "regionPa": "ਗੁਜਰਾਂਵਾਲਾ ਤੇ ਲਾਹੌਰ, ਪੰਜਾਬ",
+    "emoji": "👑",
+    "tagline": "Sher-e-Punjab (Lion of Punjab) who united the fractured Misls into a sovereign, secular empire and covered Sri Harmandir Sahib in radiant gold.",
+    "taglineLocal": "शेर-ए-पंजाब जिन्होंने बिखरी हुई मिसलों को एकजुट कर एक धर्मनिरपेक्ष सिख साम्राज्य की स्थापना की और हरिमंदिर साहिब को सोने से सुशोभित किया।",
+    "taglinePa": "ਸ਼ੇਰ-ਏ-ਪੰਜਾਬ ਜਿਨ੍ਹਾਂ ਨੇ ਬਾਰਾਂ ਮਿਸਲਾਂ ਨੂੰ ਇਕੱਠਾ ਕਰਕੇ ਵਿਸ਼ਾਲ ਸਿੱਖ ਸਲਤਨਤ ਕਾਇਮ ਕੀਤੀ ਅਤੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ 'ਤੇ ਸੁਨਹਿਰੀ ਸੇਵਾ ਕਰਵਾਈ।",
+    "journey": "Born in Gujranwala to Sardar Mahan Singh Sukerchakia and Mata Raj Kaur, young Ranjit Singh survived smallpox in infancy which left him blind in his left eye and pockmarked on his face. Succeeding to the chieftainship of the Sukerchakia Misl at the age of twelve in 1792, he displayed prodigious political intelligence, martial valor, and diplomatic vision. In 1799, at the young age of nineteen, he captured the historic capital of Lahore from the Afghan Bhangi rulers, ending decades of foreign invasions into Punjab.\n\nOn Baisakhi in 1801, Ranjit Singh was formally anointed Maharaja of Punjab, but steadfastly refused to sit on an imperial throne, opting to sit on a humble carpet or chair and minting currency named not after himself, but as the 'Nanakshahi rupee' bearing the names of Guru Nanak and Guru Gobind Singh. Uniting the twelve scattered Sikh Misls, he built the legendary Khalsa Fauj—modernizing it with European tactics alongside veteran Sikh cavalry. He expanded the Sikh Empire across Multan, Kashmir, Ladakh, and Peshawar, creating one of the most powerful and prosperous sovereign nations in nineteenth-century Asia.",
+    "journeyLocal": "गुजरांवाला में जन्मे रणजीत सिंह बचपन में चेचक के कारण एक आंख की दृष्टि खो बैठे थे, किंतु उनकी बुद्धि और युद्ध-कौशल अद्वितीय था। १२ वर्ष की अल्पायु में मिसल की कमान संभालते हुए उन्होंने १७९९ में मात्र १९ वर्ष की आयु में लाहौर पर अधिकार कर लिया।\n\n१८०१ में उनका राज्याभिषेक हुआ, किंतु उन्होंने स्वयं को 'महाराजा' के बजाय 'खालसा का सेवक' माना। उन्होंने अपने नाम का सिक्का नहीं चलाया, बल्कि गुरु नानक देव जी के नाम पर 'नानकशाही सिक्का' जारी किया। उन्होंने सभी १२ मिसलों को एकजुट कर एक विशाल साम्राज्य की नींव रखी जो तिब्बत से खैबर दर्रे तक फैला हुआ था।",
+    "journeyPa": "ਗੁਜਰਾਂਵਾਲਾ ਵਿਖੇ ਜਨਮੇ ਰਣਜੀਤ ਸਿੰਘ ਨੇ ੧੭੯੯ ਵਿਚ ਲਾਹੌਰ 'ਤੇ ਕਬਜ਼ਾ ਕੀਤਾ ਅਤੇ ੧੮੦੧ ਵਿਚ ਸਿੱਖ ਰਾਜ ਦੀ ਨੀਂਹ ਰੱਖੀ। ਉਹਨਾਂ ਨੇ ਆਪਣੇ ਨਾਂ ਦਾ ਸਿੱਕਾ ਚਲਾਉਣ ਦੀ ਥਾਂ 'ਨਾਨਕਸ਼ਾਹੀ ਸਿੱਕਾ' ਚਲਾਇਆ।\n\nਬਾਰਾਂ ਮਿਸਲਾਂ ਨੂੰ ਇਕੱਠਾ ਕਰਕੇ ਆਧੁਨਿਕ ਖ਼ਾਲਸਾ ਫ਼ੌਜ ਤਿਆਰ ਕੀਤੀ ਅਤੇ ਮੁਲਤਾਨ, ਕਸ਼ਮੀਰ, ਲੱਦਾਖ਼ ਤੇ ਪੇਸ਼ਾਵਰ ਨੂੰ ਜਿੱਤ ਕੇ ਸਿੱਖ ਰਾਜ ਦਾ ਝੰਡਾ ਬੁਲੰਦ ਕੀਤਾ।",
+    "trial": "Maharaja Ranjit Singh’s crowning glory lay not merely in his military conquests, but in his extraordinary commitment to secular justice, religious tolerance, and complete absence of capital punishment. Throughout his forty-year reign, despite ruling a land filled with warring ethnic factions and assassinations, Ranjit Singh never once executed a single criminal or political enemy, demonstrating an unprecedented ethos of royal clemency in world history.\n\nHis government was a masterclass in inclusive meritocracy: his Prime Minister was a Dogra Rajput (Dhyan Singh), his Foreign Minister was a Muslim (Fakir Azizuddin), his Finance Minister was a Hindu Brahmin (Dina Nath), and his supreme generals included Sikhs, Hindus, Muslims, and European officers (Allard, Ventura, Court). When an impoverished Muslim calligrapher spent his entire life hand-writing a magnificent copy of the Holy Quran, he sought buyers across northern India without success; learning of this, Ranjit Singh purchased the Quran for an immense sum, placed it upon his forehead in reverence, and declared: 'God intended me to look upon all religions with one eye, which is why He took away the sight of my other.' In his devotion to the Gurus, he commissioned the gilding of Sri Harmandir Sahib in pure gold leaf (earning it the name Golden Temple) and donated enormous wealth, including jeweled chandeliers and the golden canopy, as well as donating golden plates to the Kashi Vishwanath temple in Varanasi and the Jwalamukhi temple in Himachal Pradesh.",
+    "trialLocal": "महाराजा रणजीत सिंह के शासन की सबसे बड़ी विशेषता उनका न्याय और धार्मिक सहिष्णुता थी। अपने ४० वर्ष के शासनकाल में उन्होंने किसी भी अपराधी को 'मृत्युदंड' नहीं दिया, जो विश्व इतिहास में एक दुर्लभ मिसाल है। उनके दरबार में हिंदू, सिख, मुस्लिम और ईसाई सभी को योग्यता के आधार पर उच्च पद प्राप्त थे।\n\nजब एक मुस्लिम सुलेखक द्वारा लिखी गई पवित्र कुरान की कोई कद्र नहीं कर रहा था, तो महाराजा ने उसे भारी धनराशि देकर खरीदा और सिर पर लगाया। उन्होंने कहा: 'ईश्वर ने मेरी एक आंख इसलिए ली ताकि मैं सभी धर्मों को एक आंख से समान दृष्टि से देख सकूँ।' उन्होंने श्री हरिमंदिर साहिब पर सोना चढ़वाकर उसे 'स्वर्ण मंदिर' का स्वरूप दिया, तथा काशी विश्वनाथ मंदिर और ज्वालाजी मंदिर को भी स्वर्ण-दान दिया।",
+    "trialPa": "ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ ਨੇ ਆਪਣੇ ੪੦ ਸਾਲਾ ਰਾਜ ਵਿਚ ਕਿਸੇ ਇੱਕ ਵੀ ਵਿਅਕਤੀ ਨੂੰ ਫਾਂਸੀ ਦੀ ਸਜ਼ਾ ਨਹੀਂ ਦਿੱਤੀ। ਉਹਨਾਂ ਦੇ ਦਰਬਾਰ ਵਿਚ ਧਰਮ ਦੇ ਆਧਾਰ 'ਤੇ ਕੋਈ ਵਿਤਕਰਾ ਨਹੀਂ ਸੀ; ਫ਼ਕੀਰ ਅਜ਼ੀਜ਼ੁਦੀਨ ਅਤੇ ਦੀਵਾਨ ਦੀਨਾ ਨਾਥ ਵਰਗੇ ਉੱਚ ਅਹੁਦਿਆਂ 'ਤੇ ਸਨ।\n\nਉਹਨਾਂ ਨੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ 'ਤੇ ਸੋਨੇ ਦੀ ਸੇਵਾ ਕਰਵਾਈ ਜਿਸ ਨਾਲ ਇਹ 'ਗੋਲਡਨ ਟੈਂਪਲ' ਵਜੋਂ ਪ੍ਰਸਿੱਧ ਹੋਇਆ। ਉਹਨਾਂ ਨੇ ਕਾਸ਼ੀ ਵਿਸ਼ਵਨਾਥ ਮੰਦਰ ਨੂੰ ਵੀ ਸੋਨਾ ਭੇਟ ਕੀਤਾ। ਉਹਨਾਂ ਦਾ ਫ਼ੁਰਮਾਨ ਸੀ ਕਿ ਰੱਬ ਨੇ ਮੈਨੂੰ ਇੱਕ ਅੱਖ ਇਸ ਲਈ ਦਿੱਤੀ ਹੈ ਤਾਂ ਜੋ ਮੈਂ ਸਾਰੇ ਧਰਮਾਂ ਨੂੰ ਇੱਕੋ ਨਜ਼ਰ ਨਾਲ ਦੇਖ ਸਕਾਂ।",
+    "teaching": "Maharaja Ranjit Singh taught that a true ruler is not an autocratic master, but a servant-trustee of the people and the Divine. Power finds its justification in universal justice, the abolition of vengeance, protection of the weak, and creating prosperity where all faiths flourish without fear.",
+    "teachingLocal": "महाराजा रणजीत सिंह ने सिखाया कि शासक जनता का स्वामी नहीं, बल्कि ईश्वर का सेवक और न्यासी होता है। सत्ता की सार्थकता न्याय, दया और सभी धर्मों के आदर में है।",
+    "teachingPa": "ਸ਼ੇਰ-ਏ-ਪੰਜਾਬ ਨੇ ਸਿਖਾਇਆ ਕਿ ਰਾਜਭਾਗ ਲੋਕਾਂ ਦੀ ਸੇਵਾ ਅਤੇ ਇਨਸਾਫ਼ ਲਈ ਹੁੰਦਾ ਹੈ। ਸਰਬ-ਸਾਂਝੀਵਾਲਤਾ ਅਤੇ ਦਇਆ ਹੀ ਸੱਚੇ ਸ਼ਾਸਕ ਦਾ ਗਹਿਣਾ ਹੈ।",
+    "moral": "Sovereignty rooted in tolerance, merit, and compassion builds an invincible nation. True strength lies not in the cruelty of punishment, but in the magnanimity of forgiveness and the upliftment of all.",
+    "moralLocal": "सहिष्णुता और न्याय पर आधारित राज्य ही दीर्घकाल तक जनता के हृदय में जीवित रहता है। क्षमा और सर्वधर्म-समभाव ही महान शासक की वास्तविक शक्ति हैं।",
+    "moralPa": "ਨਿਆਂ ਅਤੇ ਦਇਆ ਨਾਲ ਚਲਾਇਆ ਰਾਜ ਹੀ ਲੋਕਾਂ ਦੇ ਦਿਲਾਂ 'ਤੇ ਰਾਜ ਕਰਦਾ ਹੈ। ਨਿਰਪੱਖਤਾ ਅਤੇ ਮਿਹਨਤ ਨਾਲ ਅਸੰਭਵ ਨੂੰ ਵੀ ਸੰਭਵ ਬਣਾਇਆ ਜਾ ਸਕਦਾ ਹੈ।",
+    "legacy": "Maharaja Ranjit Singh is universally celebrated as the greatest sovereign of Punjab, whose reign is remembered as the Golden Age of Punjab. His samadhi at Lahore and the radiant golden domes of Sri Harmandir Sahib stand as eternal monuments to his enlightened servant-kingship.",
+    "legacyLocal": "महाराजा रणजीत सिंह का काल पंजाब का स्वर्णिम युग कहलाता है। लाहौर में उनकी समाधि और अमृतसर में स्वर्ण मंदिर का भव्य स्वरूप आज भी उनके युगप्रवर्तक शासन की गाथा कहते हैं।",
+    "legacyPa": "ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ ਦਾ ਰਾਜ ਸਿੱਖ ਇਤਿਹਾਸ ਦਾ ਸੁਨਹਿਰੀ ਦੌਰ ਹੈ। ਲਾਹੌਰ ਵਿਖੇ ਉਹਨਾਂ ਦੀ ਸਮਾਧ ਅਤੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ 'ਤੇ ਸੋਨੇ ਦੀ ਚਮਕ ਉਹਨਾਂ ਦੇ ਨਾਂ ਨੂੰ ਸਦਾ ਰੌਸ਼ਨ ਰੱਖਦੀ ਹੈ।",
+    "source": "Umdat-ut-Tawarikh (Sohan Lal Suri), The Real Ranjit Singh (Fakir Syed Waheeduddin), History of the Sikhs (J.D. Cunningham)",
+    "sourceLocal": "उमदत-उत-तवारीख (सोहन लाल सूरी), द रियल रणजीत सिंह (फ़कीर सैयद वहीदुद्दीन), हिस्ट्री ऑफ द सिख्स",
+    "sourcePa": "ਉਮਦਾਤ-ਉਤ-ਤਵਾਰੀਖ਼ (ਸੋਹਨ ਲਾਲ ਸੂਰੀ), ਦ ਰੀਅਲ ਰਣਜੀਤ ਸਿੰਘ (ਫ਼ਕੀਰ ਸੱਯਦ ਵਹੀਦੁਦੀਨ), ਹਿਸਟਰੀ ਆਫ਼ ਦ ਸਿੱਖਸ",
+    "sourceCitations": [
+      {
+        "sourceName": "Sohan Lal Suri — Umdat-ut-Tawarikh",
+        "sourceRef": "Official court chronicle of the Lahore Darbar (Daftars II–IV)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Fakir Syed Waheeduddin — The Real Ranjit Singh",
+        "sourceRef": "Family memoirs of the Maharaja's Foreign Minister Fakir Azizuddin",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "God intended me to look upon all religions with one eye; that is why He took away the light from my other eye.",
+      "attribution": "Maharaja Ranjit Singh to Fakir Azizuddin (Lahore Darbar)"
+    },
+    "quoteLocal": {
+      "text": "ईश्वर की इच्छा थी कि मैं सभी धर्मों को एक समान दृष्टि से देखूं, इसीलिए उसने मेरी दूसरी आंख की रोशनी ले ली।",
+      "attribution": "महाराजा रणजीत सिंह (लाहौर दरबार)"
+    },
+    "quotePa": {
+      "text": "ਰੱਬ ਦੀ ਰਜ਼ਾ ਸੀ ਕਿ ਮੈਂ ਸਾਰੇ ਧਰਮਾਂ ਨੂੰ ਇੱਕੋ ਅੱਖ ਨਾਲ ਵੇਖਾਂ, ਇਸੇ ਕਰਕੇ ਉਸ ਨੇ ਮੇਰੀ ਦੂਜੀ ਅੱਖ ਦਾ ਨੂਰ ਲੈ ਲਿਆ।",
+      "attribution": "ਮਹਾਰਾਜਾ ਰਣਜੀਤ ਸਿੰਘ (ਲਾਹੌਰ ਦਰਬਾਰ)"
+    }
+  },
+  {
+    "id": "nawab-jassa-singh",
+    "name": "Nawab Jassa Singh Ahluwalia",
+    "nameLocal": "नवाब जस्सा सिंह आहलूवालिया",
+    "namePa": "ਨਵਾਬ ਜੱਸਾ ਸਿੰਘ ਆਹਲੂਵਾਲੀਆ",
+    "era": "1718 – 1783 CE",
+    "eraLocal": "१७१८ – १७८३ ई.",
+    "eraPa": "੧੭੧੮ – ੧੭੮੩ ਈ.",
+    "tradition": "sikh",
+    "region": "Amritsar, Lahore & Delhi",
+    "regionLocal": "अमृतसर, लाहौर व दिल्ली",
+    "regionPa": "ਅੰਮ੍ਰਿਤਸਰ, ਲਾਹੌਰ ਤੇ ਦਿੱਲੀ",
+    "emoji": "⚔️",
+    "tagline": "Sultan-ul-Qaum (King of the Nation) who commanded the Dal Khalsa, liberated thousands of Hindu captives from Abdali, and hoisted the Sikh Nishan Sahib over the Red Fort.",
+    "taglineLocal": "सुल्तान-उल-कौम जिन्होंने दल खालसा का नेतृत्व किया, अब्दाली के चंगुल से हजारों निर्दोष हिंदू कन्याओं को मुक्त कराया और दिल्ली के लाल किले पर निशान साहिब फहराया।",
+    "taglinePa": "ਸੁਲਤਾਨ-ਉਲ-ਕੌਮ ਜਿਨ੍ਹਾਂ ਨੇ ਦਲ ਖ਼ਾਲਸਾ ਦੀ ਅਗਵਾਈ ਕਰਦਿਆਂ ਅਬਦਾਲੀ ਤੋਂ ਹਜ਼ਾਰਾਂ ਬੰਦੀ ਬੱਚੀਆਂ ਛੁਡਵਾਈਆਂ ਅਤੇ ਦਿੱਲੀ ਦੇ ਲਾਲ ਕਿਲ੍ਹੇ 'ਤੇ ਨਿਸ਼ਾਨ ਸਾਹਿਬ ਝੁਲਾਇਆ।",
+    "journey": "Born in the village of Ahlu near Lahore to Sardar Badar Singh, young Jassa Singh lost his father at age four. His mother took the child to Delhi, seeking refuge in the holy household of Mata Sundri Ji (widow of Guru Gobind Singh Ji). For seven formative years, young Jassa Singh was lovingly raised under Mata Sundri’s direct guidance, learning Gurbani recitation, Persian, and singing classical kirtan with melodious devotion.\n\nIn 1729, Mata Sundri entrusted Jassa Singh to Nawab Kapur Singh, the supreme leader of the nascent Sikh confederacy. Impressed by his integrity, physical strength, and spiritual humility, Kapur Singh trained him in horse-riding and warfare, eventually adopting him as his spiritual son. In 1748, at the historic Sarbat Khalsa meeting at Amritsar on Baisakhi, Nawab Kapur Singh consolidated the scattered Sikh guerrilla bands into the unified *Dal Khalsa*, appointing the thirty-year-old Jassa Singh Ahluwalia as the supreme Supreme Commander of the entire Sikh armed forces.",
+    "journeyLocal": "लाहौर के निकट आहलु गाँव में जन्मे जस्सा सिंह के सिर से बाल्यकाल में ही पिता का साया उठ गया था। उनकी माता उन्हें दिल्ली में माता सुंदरी जी (गुरु गोबिंद सिंह जी की धर्मपत्नी) के पास ले गईं, जहाँ सात वर्षों तक उन्होंने गुरबाणी और शास्त्रीय संगीत की शिक्षा ली।\n\n१७२९ में माता सुंदरी जी ने उन्हें नवाब कपूर सिंह को सौंप दिया, जिन्होंने उन्हें युद्ध-कला और घुड़सवारी में पारंगत किया। १७४८ की बैसाखी को अमृतसर में सर्वत खालसा ने जस्सा सिंह आहलूवालिया को समूचे 'दल खालसा' का प्रधान सेनापति नियुक्त किया।",
+    "journeyPa": "ਪਿੰਡ ਆਹਲੂ ਵਿਖੇ ਜਨਮੇ ਜੱਸਾ ਸਿੰਘ ਜੀ ਨੇ ਬਚਪਨ ਦਿੱਲੀ ਵਿਖੇ ਮਾਤਾ ਸੁੰਦਰੀ ਜੀ ਦੀ ਛਤਰ-ਛਾਇਆ ਹੇਠ ਬਿਤਾਇਆ। ਬਾਅਦ ਵਿਚ ਨਵਾਬ ਕਪੂਰ ਸਿੰਘ ਜੀ ਨੇ ਉਹਨਾਂ ਨੂੰ ਸ਼ਸਤਰ ਵਿੱਦਿਆ ਦਿੱਤੀ ਅਤੇ ਆਪਣਾ ਧਰਮ-ਪੁੱਤਰ ਬਣਾਇਆ।\n\n੧੭੪੮ ਵਿਚ ਸਰਬੱਤ ਖ਼ਾਲਸਾ ਨੇ ਆਪ ਜੀ ਨੂੰ 'ਦਲ ਖ਼ਾਲਸਾ' ਦਾ ਸਰਬ-ਉੱਚ ਜਰਨੈਲ ਥਾਪਿਆ।",
+    "trial": "Nawab Jassa Singh Ahluwalia led the Dal Khalsa through the most horrific holocaust in Sikh history—the Vadda Ghallughara (The Great Massacre) of February 5, 1762, near Kup-Rahira. The Afghan conqueror Ahmad Shah Abdali, marching with a massive cavalry force of over thirty thousand troops, surrounded an entire migrating caravan of fifty thousand Sikh non-combatants, women, and children. In a running battle of forty miles across open plains, Jassa Singh Ahluwalia and Sardar Charat Singh Sukerchakia formed a moving square of cavalry around the caravan, repelling wave after wave of Afghan charges. Though over twenty thousand Sikhs fell that day and Jassa Singh suffered over twenty-two wounds on his body, his defensive masterpiece saved thirty thousand lives.\n\nHis greatest act of humanitarian heroism occurred following Abdali’s raid in 1761, when the Afghan army was escorting over two thousand young Hindu women and girls captive to Kabul to be sold into slavery. Learning of this atrocity, Nawab Jassa Singh led a lightning night raid upon the Afghan rear guard at the Sutlej river crossing. Scattering the Afghan guards, the Khalsa liberated all two thousand women, provided them with food, clothes, and financial aid, and escorted every single daughter safely back to her family across northern India, earning him the immortal title 'Bandi Chhor' (Liberator of the Captives).\n\nIn 1761, Jassa Singh captured Lahore, minting the first independent Sikh coins and being proclaimed 'Sultan-ul-Qaum' (King of the Nation) by the Panth. In March 1783, uniting with Sardar Baghel Singh and Baba Jassa Singh Ramgarhia, Nawab Jassa Singh marched thirty thousand Sikh warriors into Delhi, defeating the Mughal imperial garrison, capturing the Red Fort, and hoisting the Sikh Nishan Sahib over the Diwan-i-Am, breaking the final vestige of Mughal supremacy over India.",
+    "trialLocal": "५ फरवरी १७६२ को 'वडा घल्लूघारा' (विशाल नरसंहार) के दौरान जब अहमद शाह अब्दाली ने ५०,००० सिखों के काफिले को घेर लिया, तब जस्सा सिंह आहलूवालिया ने अपने शरीर पर २२ घाव खाकर भी ३०,००० मासूमों की जान बचाई।\n\n१७६१ में जब अब्दाली २,००० हिंदू कन्याओं को बंदी बनाकर अफ़गानिस्तान ले जा रहा था, तब जस्सा सिंह ने सतलुज नदी पर रात में हमला कर सभी कन्याओं को मुक्त कराया और सुरक्षित उनके घरों तक पहुँचाया, जिससे उन्हें 'बंदी छोड़' कहा गया। मार्च १७८३ में उन्होंने लाल किले पर तिरंगा-नुमा 'निशान साहिब' फहराकर मुग़ल सत्ता का घमंड हमेशा के लिए तोड़ दिया।",
+    "trialPa": "੧੭੬੨ ਦੇ 'ਵੱਡੇ ਘੱਲੂਘਾਰੇ' ਵਿਚ ੨੨ ਫ਼ੱਟ ਖਾ ਕੇ ਵੀ ਕੌਮ ਦੀ ਅਗਵਾਈ ਕੀਤੀ। ੧੭੬੧ ਵਿਚ ਅਹਿਮਦ ਸ਼ਾਹ ਅਬਦਾਲੀ ਵੱਲੋਂ ਗ਼ੁਲਾਮ ਬਣਾ ਕੇ ਲਿਜਾਈਆਂ ਜਾ ਰਹੀਆਂ ੨,੨੦੦ ਹਿੰਦੂ ਬਹੂ-ਬੇਟੀਆਂ ਨੂੰ ਸਤਲੁਜ ਕੰਢੇ ਛਾਪਾ ਮਾਰ ਕੇ ਛੁਡਵਾਇਆ ਅਤੇ ਸੁਰੱਖਿਅਤ ਘਰੋ-ਘਰੀ ਪਹੁੰਚਾਇਆ, ਜਿਸ ਕਰਕੇ 'ਬੰਦੀ ਛੋੜ' ਕਹਾਏ।\n\n੧੭੮੩ ਵਿਚ ਦਿੱਲੀ ਫ਼ਤਿਹ ਕਰਕੇ ਲਾਲ ਕਿਲ੍ਹੇ ਦੇ ਦੀਵਾਨ-ਏ-ਆਮ 'ਤੇ ਖ਼ਾਲਸਾਈ ਨਿਸ਼ਾਨ ਸਾਹਿਬ ਝੁਲਾਇਆ ਅਤੇ 'ਸੁਲਤਾਨ-ਉਲ-ਕੌਮ' ਦਾ ਖ਼ਿਤਾਬ ਪਾਇਆ।",
+    "teaching": "Nawab Jassa Singh Ahluwalia demonstrated that martial prowess finds its highest divine justification in liberating the oppressed, protecting women's honor, and maintaining personal humility amidst absolute victory. He refused to sit on imperial thrones, considering himself merely a humble servant of the Khalsa Panth.",
+    "teachingLocal": "नवाब जस्सा सिंह आहलूवालिया ने सिद्ध किया कि तलवार की सार्थकता पीड़ित की रक्षा और नारी के सम्मान की हिफाजत में है। विजय के शिखर पर भी अहंकार न करना ही सच्चे संत-सिपाही की पहचान है।",
+    "teachingPa": "ਸੁਲਤਾਨ-ਉਲ-ਕੌਮ ਨੇ ਸਿਖਾਇਆ ਕਿ ਸ਼ਸਤਰਾਂ ਦੀ ਵਰਤੋਂ ਮਜ਼ਲੂਮਾਂ ਦੀ ਰਾਖੀ ਅਤੇ ਔਰਤਾਂ ਦੀ ਇੱਜ਼ਤ ਬਚਾਉਣ ਲਈ ਹੀ ਸੋਭਦੀ ਹੈ। ਵੱਡੀਆਂ ਜਿੱਤਾਂ ਪ੍ਰਾਪਤ ਕਰਕੇ ਵੀ ਖ਼ਾਲਸੇ ਦਾ ਨਿਮਾਣਾ ਸੇਵਕ ਬਣੇ ਰਹਿਣਾ ਹੀ ਸਿੱਖੀ ਦਾ ਆਦਰਸ਼ ਹੈ।",
+    "moral": "True nobility is measured by how many captives you liberate, not how many captives you enslave. Moral courage and selfless service elevate a leader to an immortal beacon of freedom.",
+    "moralLocal": "सच्चा विजेता वही है जो दूसरों को स्वतंत्रता दिलाए। जो व्यक्ति निःस्वार्थ भाव से समाज की रक्षा करता है, इतिहास उसे सदैव नमन करता है।",
+    "moralPa": "ਦੂਜਿਆਂ ਦੀ ਆਜ਼ਾਦੀ ਲਈ ਆਪਣੀ ਜਾਨ ਤਲੀ 'ਤੇ ਧਰਨ ਵਾਲਾ ਹੀ ਅਸਲ ਜਰਨੈਲ ਹੁੰਦਾ ਹੈ। ਸੱਚੇ ਸੇਵਕ ਨੂੰ ਰਾਜਭਾਗ ਦਾ ਕੋਈ ਹੰਕਾਰ ਨਹੀਂ ਹੁੰਦਾ।",
+    "legacy": "Nawab Jassa Singh Ahluwalia was the founding father of the Ahluwalia Misl and the Kapurthala state. His leadership preserved the Sikh faith through its darkest eighteenth-century persecutions, laying the bedrock for the sovereign empire of Maharaja Ranjit Singh. He rebuilt Sri Harmandir Sahib after its destruction by Abdali, spending his personal wealth on its sacred reconstruction.",
+    "legacyLocal": "नवाब जस्सा सिंह आहलूवालिया ने १८वीं शताब्दी के घोर संकट में सिख धर्म की रक्षा की। उन्होंने अब्दाली द्वारा तोड़े गए श्री हरिमंदिर साहिब का पुनर्निर्माण कराया और उनकी समाधि अमृतसर में अकाल तख्त के समीप स्थित है।",
+    "legacyPa": "ਸੁਲਤਾਨ-ਉਲ-ਕੌਮ ਨੇ ਅਬਦਾਲੀ ਵੱਲੋਂ ਢਾਹੇ ਗਏ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੀ ਦਰਸ਼ਨੀ ਡਿਓੜੀ ਅਤੇ ਸਰੋਵਰ ਦੀ ਪੁਨਰ-ਉਸਾਰੀ ਕਰਵਾਈ। ਉਹਨਾਂ ਦੀ ਸਮਾਧ ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ ਸਾਹਿਬ ਵਿਖੇ ਸਥਿਤ ਹੈ।",
+    "source": "Prachin Panth Prakash (Rattan Singh Bhangu), Jassa Singh Ahluwalia (Dr. Ganda Singh), Tawarikh Guru Khalsa",
+    "sourceLocal": "प्राचीन पंथ प्रकाश (रतन सिंह भंगू), जस्सा सिंह आहलूवालिया (डॉ. गंडा सिंह), तवारीख गुरु खालसा",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼ (ਰਤਨ ਸਿੰਘ ਭੰਗੂ), ਸਰਦਾਰ ਜੱਸਾ ਸਿੰਘ ਆਹਲੂਵਾਲੀਆ (ਡਾ. ਗੰਡਾ ਸਿੰਘ), ਤਵਾਰੀਖ਼ ਗੁਰੂ ਖ਼ਾਲਸਾ",
+    "sourceCitations": [
+      {
+        "sourceName": "Rattan Singh Bhangu — Prachin Panth Prakash",
+        "sourceRef": "Chapters on the Rise of Nawab Jassa Singh and the Vadda Ghallughara",
+        "tier": 1
+      },
+      {
+        "sourceName": "Dr. Ganda Singh — Sardar Jassa Singh Ahluwalia (1969)",
+        "sourceRef": "Historical monograph based on contemporary Persian and Sikh records",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "The Khalsa takes up the sword not to enslave humanity or conquer kingdoms, but to shatter the chains of the captive and protect the honor of our sisters!",
+      "attribution": "Nawab Jassa Singh Ahluwalia at the Sutlej River (1761 CE)"
+    },
+    "quoteLocal": {
+      "text": "खालसा तलवार किसी को बंदी बनाने के लिए नहीं, बल्कि बंदियों की बेड़ियाँ काटने और बहनों के सम्मान की रक्षा हेतु उठाता है!",
+      "attribution": "नवाब जस्सा सिंह आहलूवालिया (१७६१ ई.)"
+    },
+    "quotePa": {
+      "text": "ਖ਼ਾਲਸਾ ਤਲਵਾਰ ਕਿਸੇ ਨੂੰ ਗ਼ੁਲਾਮ ਬਣਾਉਣ ਲਈ ਨਹੀਂ, ਸਗੋਂ ਗ਼ੁਲਾਮਾਂ ਦੀਆਂ ਬੇੜੀਆਂ ਕੱਟਣ ਅਤੇ ਧੀਆਂ-ਭੈਣਾਂ ਦੀ ਪੱਤ ਰੱਖਣ ਲਈ ਚੁੱਕਦਾ ਹੈ!",
+      "attribution": "ਨਵਾਬ ਜੱਸਾ ਸਿੰਘ ਆਹਲੂਵਾਲੀਆ (੧੭੬੧ ਈ.)"
+    }
   }
 ];
 
