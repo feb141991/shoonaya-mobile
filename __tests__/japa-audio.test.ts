@@ -69,17 +69,25 @@ describe('Japa Ambient Audio & Tanpura Engine', () => {
     assert.ok(mahavira?.stotraOrChant?.audioUrl, 'Mahavira must have authentic Navkar Mantra audio');
     assert.match(mahavira.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Mahavira audio must be MP3');
 
+    // Rishabhanatha's card names Bhaktamara Stotra (Adinatha Stuti) specifically --
+    // no correctly-matching, reasonably-licensed recording of that text was found
+    // (searched Wikimedia Commons and Archive.org), so it intentionally has no
+    // audioUrl and falls back to /api/tts reciting the description text instead of
+    // an unrelated Navkar Mantra track.
     const rishabha = jain.nodes.find((n) => n.id === 'rishabhanatha');
-    assert.ok(rishabha?.stotraOrChant?.audioUrl, 'Rishabhanatha must have authentic audio');
-    assert.match(rishabha.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Rishabhanatha audio must be MP3');
+    assert.ok(!rishabha?.stotraOrChant?.audioUrl, 'Rishabhanatha must not link an unrelated audio track');
   });
 
   it('verifies Virtual Sanctum cornerstone temples specify valid MP3 stotras', async () => {
     const { SACRED_YATRA_CIRCUITS } = await import('../lib/yatra-data');
     const jyotirlingas = SACRED_YATRA_CIRCUITS['12-jyotirlingas'];
+    // Somnath's card names the Dvadasha Jyotirlinga Stotram specifically -- no
+    // correctly-matching, reasonably-licensed recording of that text was found
+    // (searched Wikimedia Commons and Archive.org), so it intentionally has no
+    // audioUrl and falls back to /api/tts reciting the description text instead
+    // of an unrelated stotra.
     const somnath = jyotirlingas.temples.find((t) => t.id === 'somnath');
-    assert.ok(somnath?.stotraOrChant?.audioUrl, 'Somnath must have stotra audio URL');
-    assert.match(somnath.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Somnath stotra audio must be MP3');
+    assert.ok(!somnath?.stotraOrChant?.audioUrl, 'Somnath must not link an unrelated stotra audio track');
 
     const charDham = SACRED_YATRA_CIRCUITS['char-dham'];
     const puri = charDham.temples.find((t) => t.id === 'puri-jagannath');

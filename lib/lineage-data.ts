@@ -339,9 +339,13 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
           'Established fundamental principles of ethical living',
         ],
         stotraOrChant: {
-          title: 'Navkar Mantra & Adinatha Stuti',
+          title: 'Bhaktamara Stotra (Adinatha Stuti)',
           description: 'Bhaktamara-Pranata-Mauli-Mani-Prabhanaam-Uddyotakam Dalita-Papa-Tamo-Vitanam',
-          audioUrl: 'https://archive.org/download/navkarmantraoption2/Navkar%20Mantra%20%28Option%202%29.mp3',
+          // No audioUrl: the only Bhaktamara Stotra recordings found (Wikimedia
+          // Commons has none; Archive.org only has commercial-artist recordings
+          // with no rights clearance) don't meet this app's source-rights bar --
+          // falls back to /api/tts reciting the description above instead of the
+          // unrelated Navkar Mantra track this previously linked.
         },
         colorAccent: '#D97706',
       },

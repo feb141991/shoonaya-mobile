@@ -76,7 +76,10 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         stotraOrChant: {
           title: 'Saurashtre Somanatham (Dvadasha Jyotirlinga Stotram)',
           description: 'Saurashtre Somanatham Cha Shrishaile Mallikarjunam — Adi Shankaracharya.',
-          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/029-Siva%20Bhujangam.mp3',
+          // No audioUrl: no correctly-matching, reasonably-licensed recording of this
+          // specific stotra was found on Wikimedia Commons or Archive.org (searched
+          // 2026-09-17) -- falls back to /api/tts reciting the description above,
+          // rather than link an unrelated or rights-unclear track.
         },
         colorAccent: '#D97706',
         latitude: 20.888,
@@ -180,7 +183,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         stotraOrChant: {
           title: 'Kashi Vishwanathashtakam',
           description: 'Ganga-Taranga-Ramaniya-Jata-Kalapam Gauri-Nirantara-Vibhushita-Vama-Bhagam.',
-          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/014-Kalabhairavashtakam.mp3',
+          audioUrl: 'https://archive.org/download/Chamakam_201606/Kashi%20Vishwanath%20Ashtakam.mp3',
         },
         colorAccent: '#D97706',
         latitude: 25.311,
