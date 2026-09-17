@@ -24,7 +24,8 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
-import { API_BASE, COLORS, FONTS, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
+import { COLORS, FONTS, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
 
@@ -147,13 +148,12 @@ export default function NameStoryScreen() {
     } catch {}
 
     try {
-      const response = await fetch(`${API_BASE}/api/name-story/generate`, {
+      const response = await apiFetch('/api/name-story/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: trimmed,
           tradition: selectedTradition,
-          language: 'en',
+          translationLanguage: 'en',
           intent: [
             'sacred_meaning',
             'scripture_connection',

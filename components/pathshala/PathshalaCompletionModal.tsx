@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   Modal,
   StyleSheet,
   Text,
@@ -21,6 +22,9 @@ export type PathshalaCompletionModalProps = {
   tradition?: string;
   karmaEarned?: number;
   dailySadhanaUpdated?: boolean;
+  reflection?: string | null;
+  nextStep?: string | null;
+  reflectionLoading?: boolean;
   hasNextLesson: boolean;
   onContinueNextLesson: () => void;
   onReturnToPath: () => void;
@@ -44,6 +48,9 @@ export function PathshalaCompletionModal({
   tradition = 'hindu',
   karmaEarned = 8,
   dailySadhanaUpdated = true,
+  reflection,
+  nextStep,
+  reflectionLoading = false,
   hasNextLesson,
   onContinueNextLesson,
   onReturnToPath,
@@ -112,15 +119,30 @@ export function PathshalaCompletionModal({
           </View>
 
           {/* Meditative Contemplation Reflection */}
-          <View style={[styles.reflectionCard, { backgroundColor: isDark ? 'rgba(18, 15, 12, 0.6)' : 'rgba(245, 239, 226, 0.6)', borderColor: theme.borderSoft }]}>
-            <Text style={[styles.reflectionPrompt, { color: theme.brand }]}>
+          <View style={[styles.reflectionCard, { backgroundColor: isDark ? 'rgba(18, 15, 12, 0.6)' : 'rgba(245, 239, 226, 0.6)', borderColor: theme.borderSoft }]}> 
+            <Text style={[styles.reflectionPrompt, { color: theme.brand }]}> 
               Pause & Contemplate
             </Text>
-            <Text style={[styles.reflectionQuote, { color: theme.text }]}>
-              {isPathDone
-                ? 'You have completed this entire sacred study path. Sit in quiet gratitude and let these timeless verses take deep root in your daily life.'
-                : 'Carry the stillness and insight of this verse into your next conversation and deed before proceeding.'}
-            </Text>
+            {reflectionLoading ? (
+              <View accessibilityLiveRegion="polite" style={styles.reflectionLoading}> 
+                <ActivityIndicator size="small" color={theme.brand} />
+                <Text style={[styles.reflectionLoadingText, { color: theme.dim }]}>Preparing your reflection…</Text>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.reflectionQuote, { color: theme.text }]}> 
+                  {reflection || (isPathDone
+                    ? 'You have completed this entire sacred study path. Sit in quiet gratitude and let these timeless verses take deep root in your daily life.'
+                    : 'Carry the stillness and insight of this verse into your next conversation and deed before proceeding.')}
+                </Text>
+                {nextStep ? (
+                  <View style={[styles.nextStepRow, { borderTopColor: theme.borderSoft }]}> 
+                    <Feather name="arrow-right" size={14} color={theme.brand} />
+                    <Text style={[styles.nextStepText, { color: theme.dim }]}>{nextStep}</Text>
+                  </View>
+                ) : null}
+              </>
+            )}
           </View>
 
           {/* Action Buttons */}
@@ -268,6 +290,32 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  reflectionLoading: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  reflectionLoadingText: {
+    fontFamily: FONTS.sansMedium,
+    fontSize: 13,
+  },
+  nextStepRow: {
+    width: '100%',
+    borderTopWidth: 1,
+    paddingTop: 9,
+    marginTop: 3,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 7,
+  },
+  nextStepText: {
+    flex: 1,
+    fontFamily: FONTS.sansMedium,
+    fontSize: 12.5,
+    lineHeight: 18,
   },
   actionContainer: {
     width: '100%',

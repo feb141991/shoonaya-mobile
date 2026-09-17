@@ -135,6 +135,44 @@ export default function LessonReaderScreen() {
     dailySadhanaUpdated: boolean;
   }>({ karmaEarned: 8, dailySadhanaUpdated: true });
 
+  // ── Pathshala reflection bridge (/api/pathshala/bridge) ─────────────────
+  // Fire-and-forget on completion: the modal opens immediately with its
+  // built-in static reflection, and this replaces it if/when the
+  // personalized bridge arrives. A failure (network, auth, AI outage)
+  // leaves reflection/nextStep null, so the modal's own fallback text is
+  // the failure path -- never a blocked or broken completion screen.
+  const [bridgeReflection, setBridgeReflection] = useState<string | null>(null);
+  const [bridgeNextStep, setBridgeNextStep] = useState<string | null>(null);
+  const [bridgeLoading, setBridgeLoading] = useState(false);
+
+  const fetchPathshalaBridge = useCallback(async (completedCount: number) => {
+    if (!lesson || !path) return;
+    setBridgeReflection(null);
+    setBridgeNextStep(null);
+    setBridgeLoading(true);
+    try {
+      const response = await apiFetch('/api/pathshala/bridge', {
+        method: 'POST',
+        body: JSON.stringify({
+          lessonTitle: lesson.title,
+          pathTitle: path.title,
+          tradition: path.tradition,
+          completedCount,
+          totalLessons: lessons.length,
+        }),
+      });
+      if (!response.ok) throw new Error('bridge-failed');
+      const data = (await response.json()) as { bridge?: string; next_step?: string };
+      setBridgeReflection(data.bridge ?? null);
+      setBridgeNextStep(data.next_step ?? null);
+    } catch {
+      setBridgeReflection(null);
+      setBridgeNextStep(null);
+    } finally {
+      setBridgeLoading(false);
+    }
+  }, [lesson, path, lessons.length]);
+
   // ── AI verse explanation (real /api/pathshala/explain wiring) ──────────
   const [explainStatus, setExplainStatus] = useState<ExplainStatus>('idle');
   const [explainVisible, setExplainVisible] = useState(false);
@@ -470,6 +508,7 @@ export default function LessonReaderScreen() {
 
     if (completedLessons.includes(lessonIndex)) {
       setCompletionModalVisible(true);
+      void fetchPathshalaBridge(completedLessons.length);
       return;
     }
 
@@ -521,7 +560,8 @@ export default function LessonReaderScreen() {
     setCompletionReward({ karmaEarned: earned, dailySadhanaUpdated: sadhanaUpdated });
     setShowConfetti(true);
     setCompletionModalVisible(true);
-  }, [completedLessons, isGuest, lessonIndex, lessons.length, pathId, saving, userId]);
+    void fetchPathshalaBridge(nextCompleted.length);
+  }, [completedLessons, fetchPathshalaBridge, isGuest, lessonIndex, lessons.length, pathId, saving, userId]);
 
   if (fetchState === 'loading' || loadingState) {
     return (
@@ -1453,6 +1493,9 @@ export default function LessonReaderScreen() {
         tradition={path?.tradition ?? 'hindu'}
         karmaEarned={completionReward.karmaEarned}
         dailySadhanaUpdated={completionReward.dailySadhanaUpdated}
+        reflection={bridgeReflection}
+        nextStep={bridgeNextStep}
+        reflectionLoading={bridgeLoading}
         hasNextLesson={lessonIndex + 1 < lessons.length}
         onContinueNextLesson={handleContinueNextLesson}
         onReturnToPath={() => {
