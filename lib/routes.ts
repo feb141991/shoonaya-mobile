@@ -32,6 +32,17 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // PWA's /japa/insights (which itself redirects to /bhakti/mala/insights)
   if (pathname.startsWith('/japa/insights') || pathname.startsWith('/bhakti/mala/insights')) return '/japa-insights' as Href;
   if (pathname.startsWith('/bhakti/mala') || pathname.startsWith('/japa')) return '/japa';
+  // Bhakti sub-screens with their own native route at the same path (stotram/
+  // katha readers, katha hub, browse, zen, insights) — must be checked before
+  // the blanket '/bhakti' fallback below, or a link to any of them lands on
+  // the hub tab instead of the actual reader/tool.
+  if (
+    pathname.startsWith('/bhakti/stotram/') ||
+    pathname.startsWith('/bhakti/katha') ||
+    pathname.startsWith('/bhakti/browse') ||
+    pathname.startsWith('/bhakti/zen') ||
+    pathname.startsWith('/bhakti/insights')
+  ) return path as Href;
   if (pathname.startsWith('/bhakti')) return '/(tabs)/bhakti';
   if (pathname.startsWith('/pathshala/')) return path as Href;
   if (pathname.startsWith('/pathshala')) return '/(tabs)/pathshala';
@@ -55,6 +66,9 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/dharm-veer/')) return path as Href;
   if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
   if (pathname.startsWith('/nitya-karma')) return '/nitya-karma';
+  if (pathname.startsWith('/nitya-ashrama')) return '/nitya-ashrama' as Href;
+  if (pathname.startsWith('/nitya-dincharya')) return '/nitya-dincharya' as Href;
+  if (pathname.startsWith('/nitya-plans')) return '/nitya-plans' as Href;
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';
   if (pathname.startsWith('/mandali')) return '/mandali';
   if (pathname.startsWith('/mood')) return '/mood' as Href;
@@ -68,10 +82,25 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // the PWA's /seva page.
   if (pathname.startsWith('/live-darshan')) return '/live-darshan' as Href;
   if (pathname.startsWith('/seva')) return '/seva' as Href;
+  // These native screens exist (app/shloka.tsx, app/my-progress/*, app/mantras.tsx,
+  // app/name-story.tsx, app/festival-quiz/[definitionKey].tsx) but had no dispatch
+  // line at all, so daily shloka cron reminders, my-progress links, and festival
+  // quiz notifications silently fell through to the caller's fallback.
+  if (pathname.startsWith('/shloka')) return '/shloka' as Href;
+  if (pathname.startsWith('/my-progress/')) return path as Href;
+  if (pathname.startsWith('/mantras')) return '/mantras' as Href;
+  if (pathname.startsWith('/name-story')) return '/name-story' as Href;
+  if (pathname.startsWith('/festival-quiz/')) return path as Href;
   // Vichaar Sabha (native) is deprecated/removed for now — deliberately no
   // longer dispatched here, so any deep link or push targeting it falls
   // through to the caller-supplied fallback instead of a dead route.
+  // A specific seeker's profile (another user's, via a Mandali/social deep
+  // link) — routes to the dynamic detail screen at app/profile/[id].tsx.
+  // Bare `/profile` still means the viewer's own profile tab.
+  if (pathname.startsWith('/profile/')) return path as Href;
   if (pathname.startsWith('/profile')) return '/(tabs)/profile';
+  if (pathname.startsWith('/settings/')) return path as Href;
+  if (pathname.startsWith('/settings')) return '/settings' as Href;
   if (pathname.startsWith('/notifications')) return '/notifications';
 
   return fallback;
