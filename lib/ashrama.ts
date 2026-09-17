@@ -1,4 +1,3 @@
-import Feather from '@expo/vector-icons/Feather';
 // ─────────────────────────────────────────────────────────────────────────────
 // Ashrama — Tradition × Life Stage Data Layer
 //
