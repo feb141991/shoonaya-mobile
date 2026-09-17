@@ -2310,6 +2310,1524 @@ export const DHARM_VEERS: DharmVeer[] = [
       "text": "ਖ਼ਾਲਸਾ ਤਲਵਾਰ ਕਿਸੇ ਨੂੰ ਗ਼ੁਲਾਮ ਬਣਾਉਣ ਲਈ ਨਹੀਂ, ਸਗੋਂ ਗ਼ੁਲਾਮਾਂ ਦੀਆਂ ਬੇੜੀਆਂ ਕੱਟਣ ਅਤੇ ਧੀਆਂ-ਭੈਣਾਂ ਦੀ ਪੱਤ ਰੱਖਣ ਲਈ ਚੁੱਕਦਾ ਹੈ!",
       "attribution": "ਨਵਾਬ ਜੱਸਾ ਸਿੰਘ ਆਹਲੂਵਾਲੀਆ (੧੭੬੧ ਈ.)"
     }
+  },
+  {
+    "id": "rishabhanatha",
+    "name": "Lord Rishabhanatha (Adinatha)",
+    "nameLocal": "भगवान ऋषभदेव (आदिनाथ)",
+    "era": "Beginning of Avasarpini Era",
+    "eraLocal": "अवसर्पिणी काल का प्रारंभ",
+    "tradition": "jain",
+    "region": "Ayodhya / Mount Ashtapada",
+    "regionLocal": "अयोध्या / अष्टापद पर्वत",
+    "emoji": "🐂",
+    "tagline": "The first Tirthankara of our cosmic age who laid the foundations of human civilization, polity, and agriculture, before renouncing all sovereignty to attain absolute spiritual liberation.",
+    "taglineLocal": "वर्तमान अवसर्पिणी काल के प्रथम तीर्थंकर, जिन्होंने मानव सभ्यता, कृषि व नीति की नींव रखी और फिर सर्वस्व त्याग कर कैवल्य ज्ञान प्राप्त किया।",
+    "journey": "In the dawn of our cosmic cycle, as the wish-fulfilling trees (Kalpavrikshas) naturally withered and humanity stood bewildered by scarcity and desire, Rishabhanatha was born as the crown prince of Ayodhya to King Nabhi and Queen Marudevi. Recognizing that humanity needed institutional order to survive peacefully without descent into mutual destruction, Rishabhanatha instituted the foundational structures of human society. He introduced the six essential livelihoods: Asi (defense and justice), Masi (writing and record-keeping), Krishi (agrarian cultivation), Vidya (sciences and arts), Vanijya (ethical commerce), and Shilpa (craftsmanship and architecture). He established the first judicial codes, established marriage as a sacred social contract, and personally tutored his daughters Brahmi and Sundari in linguistics, mathematics, and philosophy, laying the ground for India's earliest written scripts. Under his righteous monarchical reign, society flourished in peace, industry, and spiritual equilibrium for thousands of years.\n\nYet the soul of Rishabhanatha was forever attuned to absolute transcendence. During a celestial dance performance in his royal court by the divine maiden Nilanjana, she suddenly collapsed and passed away in an instant. The gods swiftly replaced her with another dancer so the court would not perceive the tragedy, but the discerning eye of Rishabhanatha caught the impermanence of mortal life in its stark reality. The sudden dissolution of beauty illuminated the transient nature of all worldly existence—sovereignty, power, youth, and physical beauty were all transient mirages swept away by the river of time. Without hesitation, Rishabhanatha decided to abandon his vast empire, apportioning the realm fairly among his hundred sons—giving the capital of Ayodhya to his eldest son Bharata and the southern territories to Bahubali. Accompanied by four thousand royal subjects who resolved to follow his monastic footsteps, he walked barefoot out of Ayodhya, tore out his hair in five handfuls (Kesh Lochan), and entered the boundless forest to practice unyielding meditation.\n\nFor one thousand unbroken years, Rishabhanatha walked the earth as an austere digambara ascetic. Because humanity had never before witnessed an ascetic mendicant, people did not understand how to offer him food according to monastic vows (Gocharan). For four hundred continuous days, Rishabhanatha wandered without accepting sustenance, maintaining absolute silence and equanimity amidst starvation and seasonal tempests. Finally, his great-grandson Prince Shreyamsa at Hastinapur intuitively perceived the pure ascetic rite and offered him fresh sugarcane juice (Ikshu-rasa)—a moment eternally commemorated as Akshaya Tritiya. Rishabhanatha continued intense penance until, seated under a great banyan tree at Purimatala, he eradicated all four destructive karmas (Ghatiya Karmas) and attained Kevala Jnana—supreme omniscience. He subsequently established the fourfold community (Chaturvidha Sangha) of monks, nuns, laymen, and laywomen, showing that every living soul possesses identical capacity to awaken from delusion.",
+    "journeyLocal": "अवसर्पिणी काल के आरंभ में जब कल्पवृक्ष लुप्त होने लगे और समाज में अभाव व भ्रम उत्पन्न हुआ, तब अयोध्या में राजा नाभिराज और महारानी मरुदेवी के गृह में भगवान ऋषभदेव का अवतरण हुआ। उन्होंने मानव सभ्यता को व्यवस्था और जीवन-यापन के साधन प्रदान करने के लिए छह महाशिल्पों का सूत्रपात किया—असि (सुरक्षा), मसि (लेखन), कृषि (खेती), विद्या (ज्ञान व कलाएं), वाणिज्य (व्यापार) और शिल्प (दस्तकारी)। उन्होंने अपनी पुत्रियों ब्राह्मी और सुंदरी को लिपि व गणित की शिक्षा दी, जिससे भारतीय लिपियों का विकास हुआ। उनके न्यायप्रिय शासन में प्रजा ने सहस्रों वर्षों तक शांति और धर्म का अनुभव किया।\n\nएक दिन राजसभा में अप्सरा नीलांजना का मनमोहक नृत्य चल रहा था कि अचानक उसका देहांत हो गया। यद्यपि देवों ने तुरंत दूसरी नर्तकी खड़ी कर दी, परंतु ऋषभदेव की अंतर्दृष्टि ने संसार की क्षणभंगुरता को तत्काल पहचान लिया। उन्होंने विचार किया कि जिस शरीर और ऐश्वर्य पर जीव इतराता है, वह बिजली की कौंध के समान नश्वर है। उन्होंने तुरंत अपने साम्राज्य का भार सौ पुत्रों में बांट दिया—अयोध्या का शासन चक्रवर्ती भरत को और पोदनपुर का शासन बाहुबली को सौंपकर, वे स्वयं चार सहस्र राजाओं के साथ दिगंबर दीक्षा लेकर वन की ओर निकल पड़े।\n\nसंन्यास के पश्चात् वे एक सहस्र वर्षों तक घोर तपश्चर्या में लीन रहे। उस समय समाज को श्रमणों को आहार देने की विधि ज्ञात न थी, जिसके कारण ऋषभदेव लगभग चार सौ दिनों तक निराहार विचरते रहे। अंततः हस्तिनापुर के राजकुमार श्रेयांस ने अपने जातिस्मरण ज्ञान से उनकी चर्या पहचानी और उन्हें इक्षुरस (गन्ने का रस) का दान दिया—यह पावन दिवस आज भी 'अक्षय तृतीया' के रूप में मनाया जाता है। घोर ध्यान के पश्चात् पुरिमताल के वटवृक्ष के नीचे उन्हें केवलज्ञान (सर्वज्ञता) प्राप्त हुआ। इसके बाद उन्होंने मुनि, आर्यिका, श्रावक और श्राविका रूप चतुर्विध संघ की स्थापना की और अष्टापद पर्वत पर निर्वाण प्राप्त किया।",
+    "trial": "Rishabhanatha's supreme trial was enduring four hundred days of continuous fasting while wandering through villages that knew nothing of ascetic charity. When people brought him gold, elephants, jewels, and maidens instead of simple pure food, he accepted their incomprehension without frustration or sorrow. He endured extreme hunger, winter frost, and summer heat in absolute silent equanimity, never demanding or asking for anything, proving that true freedom is internal detachment from physical comfort.",
+    "trialLocal": "भगवान आदिनाथ की सबसे बड़ी परीक्षा चार सौ दिनों तक बिना अन्न-जल के एकाकी विचरण करना था। उस समय संसार साधु-चर्या से अनभिज्ञ था; लोग उनके चरणों में रत्न, स्वर्ण और हाथी अर्पित करते, परंतु शुद्ध सात्विक आहार कोई न दे सका। इस दारुण क्षुधा, तृषा और शीत-घाम को उन्होंने बिना एक शब्द कहे परम समता भाव से सहा, जिससे यह सिद्ध हुआ कि आत्मा की तृप्ति भौतिक साधनों पर नहीं, आत्मिक वैराग्य पर निर्भर करती है।",
+    "teaching": "Adinatha taught that spiritual liberation is the natural constitutional state of the pure soul (Jiva), obscured only by encrusted karmic particles accrued through attachment (Raga) and aversion (Dvesha). Life must be grounded in Ahimsa (non-violence to all sentient life), ethical livelihood, and internal renunciation. True sovereignty is not ruling empires across continents, but conquering one's own senses and passions through continuous mindfulness and self-restraint.",
+    "teachingLocal": "आदिनाथ भगवान ने उपदेश दिया कि मुक्ति आत्मा का स्वाभाविक स्वरूप है, जो राग-द्वेष और कर्मों के आवरण से ढका हुआ है। अहिंसा, सत्य और अपरिग्रह ही जीवन के मूल आधार हैं। सच्चा चक्रवर्ती वह नहीं जो देशों को जीतता है, अपितु सच्चा विजेता वह 'जिन' है जो अपनी इंद्रियों और अंतःकरण के विकारों पर पूर्ण विजय प्राप्त कर लेता है।",
+    "moral": "Real civilization begins with compassion and ethical livelihood, but finds its highest fulfillment in inner mastery. No matter how high our societal achievements or responsibilities, we must cultivate the discernment to recognize worldly impermanence and keep our soul detached from possessiveness.",
+    "moralLocal": "सच्ची सभ्यता भौतिक साधनों के विकास से नहीं, अपितु करुणा और अंतर्मुखी वैराग्य से पूर्ण होती है। सांसारिक कर्तव्यों का निर्वहन करते हुए भी अपनी चेतना को नश्वर बंधनों से मुक्त रखना ही सच्चा पुरुषार्थ है।",
+    "legacy": "As the first Tirthankara, Adinatha founded the sacred Shramana tradition that flowered through twenty-four Tirthankaras culminating in Bhagwan Mahavira. His life established the spiritual geometry of Jain monasticism, the ethic of unconditional non-violence, and the sacred pilgrimage shrines of Shatrunjaya and Mount Ashtapada.",
+    "legacyLocal": "प्रथम तीर्थंकर के रूप में उन्होंने श्रमण परंपरा और जैन दर्शन की नींव रखी, जो आगे चलकर चौबीस तीर्थंकरों तक अविच्छिन्न रूप से प्रवाहित हुई। उनकी साधना ने अहिंसा, त्याग और आत्म-शोधन का ऐसा शाश्वत मार्ग प्रशस्त किया जो सहस्रों वर्षों से मानव जाति का मार्गदर्शन कर रहा है।",
+    "source": "Acharanga Sutra & Kalpa Sutra (Acharya Bhadrabahu)",
+    "sourceLocal": "आचारांग सूत्र एवं कल्प सूत्र (आचार्य भद्रबाहु)",
+    "sourceCitations": [
+      {
+        "sourceName": "Acharanga Sutra",
+        "sourceRef": "Book 1, Discourse on the Ascetic Life of the Arhat",
+        "tier": 1
+      },
+      {
+        "sourceName": "Kalpa Sutra",
+        "sourceRef": "Lives of the Jinas: The Life of Rishabhanatha",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Ancient depiction of Lord Rishabhanatha seated in serene deep meditation under a colossal banyan tree, long ascetic locks flowing over his shoulders, surrounded by silent forest deer and lions resting in absolute peace together.",
+    "quote": {
+      "text": "Knowing the world to be full of misery and impermanence, the wise soul casts away all possessions and walks the path of untroubled equanimity.",
+      "attribution": "Acharanga Sutra, 1.3"
+    },
+    "quoteLocal": {
+      "text": "संसार को क्षणभंगुर और दुखों का आगार जानकर ज्ञानी जीव समस्त परिग्रह का त्याग कर परम समता के मार्ग पर आरूढ़ होता है।",
+      "attribution": "आचारांग सूत्र, १.३"
+    }
+  },
+  {
+    "id": "parshvanatha",
+    "name": "Lord Parshvanatha",
+    "nameLocal": "भगवान पार्श्वनाथ",
+    "era": "c. 877–777 BCE",
+    "eraLocal": "लगभग ८७७-७७७ ईसा पूर्व",
+    "tradition": "jain",
+    "region": "Varanasi / Mount Sammed Shikhar",
+    "regionLocal": "वाराणसी / सम्मेद शिखर",
+    "emoji": "🐍",
+    "tagline": "The twenty-third Tirthankara whose transcendental compassion turned deadly malice into serenity, giving humanity the foundational fourfold vows of Ahimsa and truth.",
+    "taglineLocal": "तेईसवें तीर्थंकर जिनकी असीम करुणा ने शत्रु के भयानक क्रोध को भी शांत कर दिया और विश्व को चतुर्याम धर्म की पावन आधारशिला दी।",
+    "journey": "Parshvanatha was born into the royal court of Varanasi as the prince of King Ashvasena and Queen Vama Devi. From earliest childhood, he demonstrated natural detachment, acute intellect, and profound empathy toward all creatures. One day, while walking near the banks of the sacred Ganga, Parshvanatha noticed a renowned ascetic named Kamatha conducting the severe five-fire penance (Panchagni Tapas). The crowd praised the ascetic's endurance, but Parshvanatha's inner vision pierced through external display to perceive two living serpents trapped inside a burning log placed on the blazing altar. Filled with distress, the prince commanded his attendants to split the log open gently. Two charred, suffering snakes fell to the ground on the brink of death. Kneeling beside them, Parshvanatha recited the holy Namokar Mantra, providing them spiritual solace until they peacefully shed their bodies and were reborn in the celestial realm as Dharanendra and Padmavati.\n\nThe ascetic Kamatha was consumed by humiliation and burning rage at being publicly corrected by the young prince, harboring a deep-seated enmity that would stretch across lifetimes. When Parshvanatha turned thirty, observing the fleeting vanities of courtly power, he distributed his royal treasures to the impoverished and accepted the vows of renunciation. He wandered across northern India for eighty-four days of unbroken meditative austerity, practicing absolute silence, sleeping on the bare earth, and remaining unmoved by insults or physical hardships. His mind rested solely on the luminous nature of the pure soul, radiating peace across every forest and meadow he passed.\n\nWhile standing in the profound meditative posture of Kayotsarga under a Dhataki tree near the forest of Kadambari, his former adversary Kamatha, now reborn as the fierce demonic demigod Meghamalin, resolved to destroy him. Meghamalin unleashed an apocalyptic tempest—hurling jagged boulders, summoning ravenous beasts, unleashing blinding bolts of lightning, and pouring torrential sheets of water until the floodwaters rose to Parshvanatha's chest, neck, and lips. Yet Parshvanatha remained utterly motionless in deep contemplation, without a flicker of fear or resentment. Perceiving the supreme danger to their lord, the serpent king Dharanendra and goddess Padmavati manifested from the underworld, Dharanendra spreading his seven majestic serpent hoods over Parshvanatha's head like a protective umbrella, while Padmavati lifted a great lotus blossom beneath his feet to keep him above the deluge. Undisturbed by both the raging demon and the protective deities, Parshvanatha dissolved the final remnants of his deluding karmas, attaining Kevala Jnana (omniscience) and preaching the eternal law of Chatur-yama Dharma across the land until attaining Nirvana on Mount Sammed Shikhar.",
+    "journeyLocal": "वाराणसी के इक्ष्वाकुवंशी राजा अश्वसेन और महारानी वामादेवी के महल में भगवान पार्श्वनाथ का जन्म हुआ। बाल्यकाल से ही उनमें समस्त प्राणियों के प्रति अद्वितीय करुणा थी। एक दिन जब वे गंगा तट पर भ्रमण कर रहे थे, तो उन्होंने देखा कि कमठ नामक तापस पंचाग्नि तप कर रहा था। लोग उसके तप की प्रशंसा कर रहे थे, परंतु पार्श्वनाथ ने अपनी अंतर्दृष्टि से देखा कि जलती हुई लकड़ी में एक नाग-नागिन का जोड़ा तड़प रहा है। राजकुमार ने तुरंत लकड़ी को सावधानी से चिरवाया, जिससे अधजले सर्प बाहर निकले। पार्श्वनाथ ने उन्हें अत्यंत वात्सल्य से णमोकार महामंत्र सुनाया, जिसके प्रभाव से वे शांत भाव से देहत्याग कर पाताल लोक में धरणेंद्र और पद्मावती के रूप में उत्पन्न हुए।\n\nकमठ इस घटना से अपना घोर अपमान मान बैठा और उसके हृदय में प्रतिशोध की ज्वाला धधक उठी। तीस वर्ष की आयु में सांसारिक भोगों की असारता देखकर पार्श्वनाथ ने समस्त राजसी वैभव का परित्याग कर दिया और दिगंबर श्रमण दीक्षा अंगीकार की। उन्होंने चौरासी दिनों तक मौन रहकर कठोर कायोत्सर्ग ध्यान किया। वन-वन विचरण करते हुए वे सर्दी, गर्मी और वन्य जीवों के कष्टों को समभाव से सहते रहे।\n\nएक दिन जब वे कदंबरी वन में एक वृक्ष के नीचे कायोत्सर्ग मुद्रा में लीन थे, तब पूर्वजन्म का वैरी कमठ (जो मेघमाली नामक देव बन चुका था) वहाँ आया और उसने भगवान पर भीषण उपसर्ग प्रारंभ किए। उसने मूसलाधार वर्षा की, विशाल शिलाएं बरसाईं और बिजली के भीषण वज्रपात किए। जब बाढ़ का जल भगवान की नासिका तक पहुँच गया, तब धरणेंद्र देव ने अपने सात फणों का छत्र भगवान के सिर पर तान दिया और पद्मावती ने उनके चरणों में कमल रख दिया। भगवान पार्श्वनाथ न तो मेघमाली पर कुपित हुए और न धरणेंद्र पर मुग्ध; वे पूर्ण समता में स्थित रहे। इसी समता के बल पर उन्हें केवलज्ञान प्राप्त हुआ। उन्होंने अहिंसा, सत्य, अचौर्य और अपरिग्रह रूप चतुर्याम धर्म का उपदेश दिया और अंततः सम्मेद शिखर से मोक्ष पधारे।",
+    "trial": "Parshvanatha's ultimate trial was the violent onslaught of Meghamalin, who sought to drown him in an apocalyptic storm. Standing completely vulnerable in deep meditation, Parshvanatha neither resisted nor prayed for rescue. Most remarkably, his heart held identical equanimity toward his tormentor Meghamalin and his protector Dharanendra, seeing both as souls bound by karmic ignorance.",
+    "trialLocal": "पार्श्वनाथ की सबसे कठिन परीक्षा मेघमाली द्वारा किया गया दारुण उपसर्ग था। जब जलमग्न होते हुए भी उनके प्राण संकट में थे, उन्होंने अपनी देह की रंचमात्र भी चिंता नहीं की। उनकी सबसे बड़ी विजय यह थी कि उनके मन में उपसर्ग करने वाले मेघमाली के प्रति न कोई क्रोध था, और न रक्षा करने वाले धरणेंद्र के प्रति कोई राग; वे दोनों को केवल कर्म-बंधन में बंधे जीव मानकर परम वीतराग रहे।",
+    "teaching": "Lord Parshvanatha systematized the core of Jain ethics through the Chatur-yama Dharma—the four vows of absolute non-violence (Ahimsa), truthfulness (Satya), non-stealing (Asteya), and non-possession (Aparigraha). He taught that equanimity (Samabhava) toward friend and foe alike is the sole fire capable of consuming the accumulated karmas of infinite past lives.",
+    "teachingLocal": "भगवान पार्श्वनाथ ने चतुर्याम धर्म—अहिंसा, सत्य, अचौर्य और अपरिग्रह का उपदेश दिया। उन्होंने सिखाया कि अनुकूलता और प्रतिकूलता में, मित्र और शत्रु में समान दृष्टि रखना ही समता है। जब तक हृदय से वैर-भाव का समूल नाश नहीं होता, तब तक सच्ची आध्यात्मिक शांति संभव नहीं है।",
+    "moral": "Hatred cannot be conquered by hatred; it dissolves only in the cool ocean of unconditional forgiveness and forbearance. When facing malice, remaining grounded in inner stillness neutralizes negativity at its very root.",
+    "moralLocal": "वैर से कभी वैर शांत नहीं होता; वह केवल क्षमा और समता के जल से ही बुझ सकता है। विपत्ति या विरोध की घड़ी में शांत और अडिग रहना ही हमारी आत्मिक शक्ति का सच्चा प्रमाण है।",
+    "legacy": "Parshvanatha's historic mission revitalized the Shramana culture two and a half centuries prior to Bhagwan Mahavira, who integrated his Chatur-yama vows into the Mahavratas. Mount Sammed Shikhar (Parasnath Hill in Jharkhand) stands as the most revered pilgrimage center in Jainism because of his supreme spiritual triumph.",
+    "legacyLocal": "पार्श्वनाथ भगवान ने ऐतिहासिक रूप से श्रमण संस्कृति को सुदृढ़ किया, जिसकी पृष्ठभूमि पर आगे चलकर भगवान महावीर ने पंच महाव्रतों का विधान किया। झारखंड स्थित सम्मेद शिखरजी उनके निर्वाण से पावन होकर आज समस्त जैन समाज का सर्वोच्च तीर्थ बन चुका है।",
+    "source": "Kalpa Sutra (Acharya Bhadrabahu) & Uttaradhyayana Sutra",
+    "sourceLocal": "कल्प सूत्र (आचार्य भद्रबाहु) एवं उत्तराध्ययन सूत्र",
+    "sourceCitations": [
+      {
+        "sourceName": "Kalpa Sutra",
+        "sourceRef": "The Life of the Tirthankara Parshvanatha",
+        "tier": 1
+      },
+      {
+        "sourceName": "Uttaradhyayana Sutra",
+        "sourceRef": "Chapter 23, The Dialogue of Keshi and Gautama",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Magnificent depiction of Lord Parshvanatha standing in serene Kayotsarga posture amidst a roaring thunderstorm, with the seven-hooded serpent King Dharanendra sheltering his crown and lotus blossoming beneath his feet.",
+    "quote": {
+      "text": "Even if an enemy cuts your body to pieces and another embalms it with sandalwood paste, bear equal love and equanimity toward both.",
+      "attribution": "Parshvanatha Charitra"
+    },
+    "quoteLocal": {
+      "text": "यदि कोई तुम्हारे शरीर पर चंदन का लेप करे और दूसरा तलवार से प्रहार करे, तो दोनों के प्रति तुम्हारा अंतःकरण समान और द्वेषरहित होना चाहिए।",
+      "attribution": "पार्श्वनाथ चरित्र"
+    }
+  },
+  {
+    "id": "bahubali",
+    "name": "Lord Bahubali (Gommateshwara)",
+    "nameLocal": "भगवान बाहुबली (गोमटेश्वर)",
+    "era": "Ancient Ikshvaku Period",
+    "eraLocal": "प्राचीन इक्ष्वाकु काल",
+    "tradition": "jain",
+    "region": "Podanpur / Shravanabelagola",
+    "regionLocal": "पोदनपुर / श्रवणबेलगोला",
+    "emoji": "🗿",
+    "tagline": "The prince of boundless strength who defeated an emperor in combat, yet surrendered the empire at the moment of victory to conquer his own ego in standing penance.",
+    "taglineLocal": "अतुल्य बल के धनी राजकुमार, जिन्होंने युद्ध में चक्रवर्ती को पराजित कर भी विजय के क्षण में राज्य त्याग दिया और अहंकार को जीतकर कैवल्य प्राप्त किया।",
+    "journey": "Bahubali was the heroic son of Lord Rishabhanatha and younger brother to Emperor Bharata. Renowned for his towering physical stature, peerless strength, and unshakeable virtue, he ruled the prosperous province of Podanpur with wisdom and fairness. When their father renounced the kingdom to pursue spiritual liberation, Bharata set forth on a world-conquering expedition with his celestial discus (Chakra-ratna), subduing all kingdoms across the continent. However, upon returning to the capital city of Ayodhya, the miraculous discus refused to enter the city gates. The imperial astrologers informed Bharata that his conquest remained incomplete because his own brothers, sovereign rulers of their designated lands, had not yet acknowledged his supreme suzerainty.\n\nWhile ninety-eight of the brothers relinquished their kingdoms to avoid conflict and followed their father into monastic homelessness, Bahubali refused to bend. He maintained that while he revered Bharata deeply as an elder brother, righteous sovereignty could not bow to arbitrary royal pride. Facing the prospect of a catastrophic fratricidal war that would slaughter thousands of innocent soldiers, the venerable ministers of both realms intervened and proposed a duel of champions between the two brothers. The contest consisted of three non-lethal trials: Drishti-yuddha (unblinking staring contest), Jala-yuddha (water-splashing contest in a lake), and Malla-yuddha (physical wrestling).\n\nBahubali defeated Bharata in all three contests through superhuman endurance. Enraged by public humiliation, Bharata violated the sacred rules of combat and hurled his divine Chakra-ratna directly at Bahubali's chest. But the celestial weapon, incapable of harming someone of pure soul and shared blood, circumambulated Bahubali in reverence and came to rest harmlessly at his right side. Bahubali raised his colossal fist to strike down Bharata in retaliation. But at that very threshold of supreme worldly dominion, a lightning flash of spiritual awakening pierced Bahubali's heart. He looked at his raised fist and thought: 'What am I about to do? For a handful of dirt, an impermanent kingdom that countless kings have fought over and turned to ash, would I spill my brother's blood?' With his fist still raised, Bahubali gently lowered his hand, touched Bharata's feet in forgiveness, pulled out his royal hair, and walked into the deep wilderness to conquer the only enemy that truly matters: the ego.\n\nStanding in the motionless Kayotsarga posture for an entire unbroken year, Bahubali neither ate nor sat nor sheltered from torrential monsoons. Vines grew from the earth and coiled around his legs, thighs, and arms; anthills arose around his feet; birds built nests in his tangled beard. Yet, despite his extreme physical austerities, Kevala Jnana eluded him. His father Rishabhanatha revealed to Bahubali's sisters, Brahmi and Sundari, the subtle obstacle: 'Your brother is still standing upon an invisible elephant—the lingering pride that he is standing on his brother Bharata's land.' The sisters traveled to the forest and gently whispered: 'Beloved brother, dismount the elephant of pride!' Hearing these words, Bahubali realized that even the subtle thought of his own renunciation was a lingering veil of pride. As he dissolved this final trace of ego and bowed inwardly to all beings, supreme omniscience (Kevala Jnana) instantly illumined his soul.",
+    "journeyLocal": "भगवान ऋषभदेव के तेजस्वी पुत्र बाहुबली अपार बल, असाधारण तेज और धर्मपरायणता के प्रतीक थे। वे पोदनपुर के न्यायप्रिय शासक थे। जब ऋषभदेव ने दीक्षा ली, तो बड़े भाई भरत ने चक्रवर्ती बनने हेतु दिग्विजय अभियान प्रारंभ किया और समस्त भूमंडल पर विजय प्राप्त की। परंतु जब वे अयोध्या लौटे, तो चक्ररत्न नगर के द्वार पर ही ठहर गया। ज्योतिषियों ने बताया कि जब तक उनके सहोदर भाई उनकी अधीनता स्वीकार नहीं करेंगे, तब तक चक्ररत्न भीतर प्रवेश नहीं करेगा।\n\nअट्ठानवे भाइयों ने व्यर्थ के रक्तपात से बचने के लिए अपने राज्य पिता को समर्पित कर दीक्षा ले ली, परंतु बाहुबली ने स्वाभिमान के साथ कहा कि वे भाई के नाते भरत का सम्मान करते हैं, परंतु अनुचित आधिपत्य के आगे नहीं झुकेंगे। दोनों सेनाएं आमने-सामने आ गईं। निर्दोष सैनिकों को विनाश से बचाने हेतु दोनों पक्षों के मंत्रियों ने सेना युद्ध के स्थान पर तीन धर्म-युद्धों का निर्णय लिया—दृष्टियुद्ध (बिना पलक झपकाए देखना), जलयुद्ध (जल उछालकर विचलित करना) और मल्लयुद्ध (कुश्ती)।\n\nबाहुबली ने तीनों युद्धों में भरत को पराजित कर दिया। अपनी पराजय से कुपित होकर भरत ने नियमों का उल्लंघन करते हुए बाहुबली पर चक्ररत्न चला दिया। परंतु चक्ररत्न बाहुबली जैसे पुण्यात्मा की प्रदक्षिणा कर उनके दाईं ओर शांत खड़ा हो गया। क्रोध में भरकर बाहुबली ने भरत को धराशायी करने के लिए अपनी विशाल मुट्ठी उठाई। परंतु उसी क्षण उनके अंतःकरण में वैराग्य की बिजली कौंध उठी—'जिस राज्य के लिए मैं अपने बड़े भाई पर प्रहार करने जा रहा हूँ, वह राज्य कितना नश्वर है! कितने राजा इसे छोड़कर चले गए!' बाहुबली ने अपनी मुट्ठी को भाई पर मारने के स्थान पर अपने ही केशों पर फेरा और केशलोंच कर सर्वस्व त्याग दिया।\n\nवे वन में एक वर्ष तक बिना हिले-डुले कायोत्सर्ग ध्यान में खड़े रहे। उनके पैरों पर बांबियां बन गईं, अंगों पर लताएं लिपट गईं, और दाढ़ी में पक्षियों ने घोंसले बना लिए। परंतु फिर भी केवलज्ञान उत्पन्न नहीं हुआ। तब भगवान आदिनाथ ने ब्राह्मी और सुंदरी को भेजा। उन्होंने जाकर कहा—'भ्राता, मान रूपी गज से नीचे उतरो!' बाहुबली समझ गए कि उनके मन में यह सूक्ष्म अहंकार शेष था कि मैं भरत की भूमि पर खड़ा हूँ। जैसे ही उन्होंने अहंकार के इस अंतिम कण का त्याग किया, उन्हें तत्काल केवलज्ञान प्राप्त हुआ।",
+    "trial": "Bahubali's hardest trial was not standing motionless for twelve months while jungle vines and serpents entwined his limbs, but recognizing and dissolving the subtle, hidden pride within his mind. The moment he surrendered the pride of his own austere sacrifice, the gates of infinite consciousness swung open.",
+    "trialLocal": "बाहुबली की वास्तविक परीक्षा एक वर्ष तक वर्षा, धूप और देह पर लताएं लिपटे रहने का शारीरिक कष्ट नहीं थी; उनकी सबसे कठिन परीक्षा अपने भीतर छिपे 'त्याग के अहंकार' को पहचानना था। जैसे ही उन्होंने इस सूक्ष्म अभिमान को विसर्जित किया, वे पूर्ण वीतरागी बन गए।",
+    "teaching": "True victory is never achieved by crushing an opponent outside yourself; it is realized only by defeating the inner passions of anger, pride, deceit, and greed (Kashayas). Renunciation without complete freedom from ego is merely an external posture.",
+    "teachingLocal": "सच्चा विजेता वह नहीं जो युद्धभूमि में दूसरों को परास्त करता है, अपितु सच्चा विजेता वह है जो अपने भीतर के क्रोध, मान, माया और लोभ रूपी आंतरिक शत्रुओं को पराजित करता है। अहंकार के विसर्जन के बिना किया गया बाह्य त्याग अधूरा है।",
+    "moral": "Even the greatest spiritual austerity can be blocked by a single grain of pride. To attain absolute peace, we must step off the pedestal of self-importance and see ourselves as humble servants of truth.",
+    "moralLocal": "अहंकार की एक सूक्ष्म बूंद भी साधना के विशाल सागर को विषाक्त कर सकती है। यदि जीवन में वास्तविक शांति पानी है, तो स्वयं को दूसरों से श्रेष्ठ मानने के भाव का पूर्ण त्याग करना होगा।",
+    "legacy": "Bahubali's supreme sacrifice of victory gave humanity an eternal ideal of nobility. The 57-foot monolithic statue of Gommateshwara at Shravanabelagola, carved in 981 CE by Chamundaraya, stands as one of the world's greatest spiritual monuments, celebrated globally through the Mahamastakabhisheka.",
+    "legacyLocal": "बाहुबली का जीवन त्याग और वीतरागता का अमर प्रतीक बन गया। कर्नाटक के श्रवणबेलगोला में चामुंडराय द्वारा ९८१ ईस्वी में स्थापित ५७ फीट ऊंची भगवान बाहुबली की अखंड पाषाण प्रतिमा आज भी सहस्रों वर्षों से संपूर्ण विश्व को त्याग और अहिंसा का मौन संदेश दे रही है।",
+    "source": "Adipurana (Acharya Jinasena) & Trishashti-Shalakapurusha-Charitra",
+    "sourceLocal": "आदिपुराण (आचार्य जिनसेन) एवं त्रिषष्टि-शलाकापुरुष-चरित्र",
+    "sourceCitations": [
+      {
+        "sourceName": "Adipurana",
+        "sourceRef": "Parva 34–36, The Story of Bahubali and Bharata",
+        "tier": 1
+      },
+      {
+        "sourceName": "Trishashti-Shalakapurusha-Charitra",
+        "sourceRef": "Parva 1, The Renunciation of Bahubali",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Colossal monolithic statue of Lord Bahubali standing in majestic tranquility, tender flowering vines climbing up his muscular legs, serene meditative expression overlooking ancient green hills of Shravanabelagola.",
+    "quote": {
+      "text": "Conquer anger by forgiveness, pride by humility, deceit by honesty, and greed by contentment.",
+      "attribution": "Dasavaikalika Sutra, 8.39"
+    },
+    "quoteLocal": {
+      "text": "क्रोध को क्षमा से, मान को नम्रता से, कपट को सरलता से और लोभ को संतोष से जीतो।",
+      "attribution": "दशवैकालिक सूत्र, ८.३९"
+    }
+  },
+  {
+    "id": "bhadrabahu",
+    "name": "Acharya Bhadrabahu",
+    "nameLocal": "आचार्य भद्रबाहु",
+    "era": "c. 4th–3rd Century BCE",
+    "eraLocal": "लगभग चौथी-तीसरी शताब्दी ईसा पूर्व",
+    "tradition": "jain",
+    "region": "Pataliputra / Shravanabelagola",
+    "regionLocal": "पाटलिपुत्र / श्रवणबेलगोला",
+    "emoji": "📜",
+    "tagline": "The last Shruta Kevali of the Maurya era who foresaw the great Magadha famine, led the southern migration of the Sangha, and guided Emperor Chandragupta to spiritual renunciation.",
+    "taglineLocal": "मौर्य काल के अंतिम श्रुतकेवली जिन्होंने मगध के महाअकाल का पूर्वाभास कर संघ का दक्षिण की ओर मार्गदर्शन किया और सम्राट चंद्रगुप्त को वैराग्य का मार्ग दिखाया।",
+    "journey": "Acharya Bhadrabahu was the sixth and final Shruta Kevali—the last sovereign spiritual master who carried the entire fourteen Purvas, twelve Angas, and the unbroken oral canon of the Jain Agamas directly in living memory. Residing in Pataliputra as the supreme head of the united Shramana Sangha, his spiritual authority was revered across kingdoms and imperial courts throughout ancient India. Through profound astrological insight, rigorous contemplative penance, and interpretation of ominous cosmic portents, Bhadrabahu foresaw an impending, catastrophic twelve-year famine that would ravage the fertile heartlands of Magadha, drying up the rivers, turning agrarian fields to dust, and making it impossible for thousands of naked mendicants to sustain their strict vows of non-violence, daily alms-gathering (Gocharan), and compassionate equanimity without imposing a crushing burden on a starving, desperate populace.\n\nDemonstrating extraordinary institutional foresight and moral courage, Bhadrabahu convened the great assembly of elders and made the monumental decision to divide the Sangha to ensure the survival of the sacred teachings. While he appointed Sthulabhadra to oversee the monks who resolved to remain in the northern territories, Bhadrabahu personally guided an epic migration of twelve thousand monks southward across the Vindhya mountain ranges and dense central forests into the tranquil plateaus of Karnataka, establishing an enduring spiritual sanctuary upon the granite ridge of Chandragiri hill at Shravanabelagola.\n\nAmong the most devoted disciples accompanying this southern exodus was the founder of the Mauryan Empire, Emperor Chandragupta Maurya. Having unified the Indian subcontinent, defeated the Seleucid Greek satraps, and consolidated an empire stretching from the Hindu Kush to the Bay of Bengal, Chandragupta was shaken by Bhadrabahu’s prophetic vision and the stark reality of worldly impermanence. The mighty monarch renounced the golden throne of Pataliputra, surrendered all imperial insignia to his son Bindusara, and walked south barefoot as a humble, shaved-headed mendicant (known in monastic records as Muni Prabhachandra), dedicated to serving his spiritual preceptor with profound devotion and cleaning the rocky cave with peacock feathers.\n\nUpon Chandragiri hill, perceiving through inner clarity that his physical body had completed its earthly mission, Acharya Bhadrabahu initiated the sacred rite of Sallekhana—the voluntary, peaceful transition of the soul through progressive fasting and unbroken meditation on the eternal self. Tended solely by his royal disciple Chandragupta in a secluded cave, Bhadrabahu peacefully passed from physical life, leaving behind foundational commentaries and the Kalpa Sutra that preserved the lineage of the twenty-four Tirthankaras for future millennia.",
+    "journeyLocal": "आचार्य भद्रबाहु अंतिम श्रुतकेवली थे—वे अंतिम आचार्य थे जिन्हें चौदह पूर्वों और संपूर्ण जिनवाणी का कंठस्थ ज्ञान था। वे पाटलिपुत्र में विशाल श्रमण संघ के प्रमुख थे। अपने असाधारण निमित्तज्ञान और आत्म-साधना के बल पर उन्होंने पूर्वाभास किया कि मगध में बारह वर्षों का भयानक अकाल पड़ने वाला है, जिससे मुनियों के लिए अहिंसात्मक चर्या का पालन करना असंभव हो जाएगा।\n\nसंघ की सुरक्षा और जिन-शासन की रक्षा हेतु उन्होंने एक युगांतरकारी निर्णय लिया। उन्होंने स्थूलभद्र को उत्तर भारत के संघ का दायित्व सौंपा और स्वयं बारह सहस्र दिगंबर मुनियों को लेकर दक्षिण भारत (कर्नाटक) की ओर प्रस्थान किया। उन्होंने श्रवणबेलगोला की चंद्रगिरि पहाड़ी पर अपनी साधना का केंद्र बनाया। मौर्य साम्राज्य के चक्रवर्ती सम्राट चंद्रगुप्त मौर्य भद्रबाहु के उपदेशों से इतने प्रभावित हुए कि उन्होंने अपना विशाल साम्राज्य पुत्र बिंदुसार को सौंप दिया और मुनि दीक्षा लेकर भद्रबाहु के चरण-कमलों में शिष्य बनकर आ गए।\n\nश्रवणबेलगोला में अपने जीवन के अंतिम समय में आचार्य भद्रबाहु ने सल्लेखना व्रत धारण किया। एक गुफा में बैठकर उन्होंने ध्यान और आत्म-चिंतन में लीन होकर अपने नश्वर शरीर का विसर्जन किया। उनके द्वारा रचित 'कल्पसूत्र' और 'भद्रबाहु संहिता' ने श्रमण परंपरा और तीर्थंकरों के इतिहास को आने वाली पीढ़ियों के लिए सुरक्षित कर दिया।",
+    "trial": "Bhadrabahu’s supreme trial was bearing the staggering burden of leadership during an unprecedented civilizational catastrophe. Making the agonizing choice to lead twelve thousand monks away from their ancestral northern monasteries across thousands of miles of wilderness, through starvation, illness, and displacement, tested every fiber of his spiritual resolve. Even more arduous was the final trial of Sallekhana—voluntarily welcoming the slow cessation of physical sustenance while maintaining crystalline inner joy and unclouded mindfulness inside a desolate granite cave.",
+    "trialLocal": "आचार्य भद्रबाहु की सबसे बड़ी परीक्षा अकाल के संकट में हजारों साधुओं को सुदूर दक्षिण की ओर ले जाने का साहसिक निर्णय था। भूख और विस्थापन के कठिन दौर में पूरे संघ के आचार-विचार को सुरक्षित रखना और अंत समय में पर्वत की गुफा में एकांत सल्लेखना साधना को पूर्ण करना उनकी आत्मिक दृढ़ता का शिखर था।",
+    "teaching": "True spiritual wisdom (Shruta) is not a museum of memorized verses or external dogmas, but the living transformation of consciousness into equanimity and fearlessness. When historical catastrophes threaten society, a true teacher does not panic or cling to institutions, but acts with decisive detachment to safeguard the essence of Dharma. The physical body is merely an impermanent vehicle; the soul alone is eternal, indestructible, and self-sufficient.",
+    "teachingLocal": "सच्चा ज्ञान शास्त्रों को कंठस्थ करने में नहीं, अपितु जीवन में आचरण की पवित्रता में है। संकट के समय में एक आध्यात्मिक पथप्रदर्शक को लौकिक मोह का त्याग कर सिद्धांतों की रक्षा के लिए अडिग रहना चाहिए।",
+    "moral": "Worldly power, military triumph, and material wealth are ephemeral morning mist compared to the eternal majesty of inner self-mastery. When the greatest emperor in Indian history chose to trade his imperial crown for an ascetic’s bowl at Bhadrabahu’s feet, he demonstrated that the ultimate destiny of human existence is self-conquest and spiritual liberation.",
+    "moralLocal": "संसार के बड़े से बड़े साम्राज्य भी एक दिन मिट जाते हैं, परंतु आत्मा का साम्राज्य शाश्वत है। भौतिक उपलब्धियां तभी सार्थक हैं जब वे मनुष्य को अंतर्मुखी वैराग्य और आत्म-कल्याण की ओर ले जाएं।",
+    "legacy": "Acharya Bhadrabahu’s southern migration permanently transformed the cultural and spiritual landscape of South India. It established Karnataka as the indestructible citadel of Jain philosophy, literature, and art for more than two millennia, directly inspiring the rise of monumental sacred centers like Shravanabelagola, fostering classical Kannada literature through poets like Pampa and Ranna, and influencing celebrated royal dynasties including the Gangas, Kadambas, and Rashtrakutas.",
+    "legacyLocal": "आचार्य भद्रबाहु के दक्षिण गमन ने दक्षिण भारत में जैन संस्कृति, दर्शन और साहित्य का स्वर्ण युग प्रारंभ किया। श्रवणबेलगोला का पावन तीर्थ और गंग, राष्ट्रकूट राजाओं द्वारा जैन धर्म का संरक्षण उन्हीं के प्रभाव का ऐतिहासिक परिणाम था।",
+    "source": "Brihat-Katha-Kosha (Harishena) & Bhadrabahu Charitra",
+    "sourceLocal": "बृहत्कथाकोश (हरिषेण) एवं भद्रबाहु चरित्र",
+    "sourceCitations": [
+      {
+        "sourceName": "Brihat-Katha-Kosha",
+        "sourceRef": "Kathanaka of Bhadrabahu and Chandragupta",
+        "tier": 1
+      },
+      {
+        "sourceName": "Epigraphia Carnatica",
+        "sourceRef": "Shravanabelagola Inscription No. 1 (Chandragiri)",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Venerable Acharya Bhadrabahu seated peacefully in a granite cave at Shravanabelagola, surrounded by ancient palm-leaf manuscripts, with the former Emperor Chandragupta Maurya sitting humbly at his feet as an ascetic disciple.",
+    "quote": {
+      "text": "The body is merely an instrument for the pursuit of Dharma; when it can no longer sustain righteousness, let it be shed peacefully like an old garment.",
+      "attribution": "Bhadrabahu Samhita"
+    },
+    "quoteLocal": {
+      "text": "शरीर केवल धर्म-साधना का साधन है; जब यह धर्म के निर्वहन में असमर्थ हो जाए, तो इसे जीर्ण वस्त्र की भांति शांत भाव से विसर्जित कर देना चाहिए।",
+      "attribution": "भद्रबाहु संहिता"
+    }
+  },
+  {
+    "id": "kundakunda",
+    "name": "Acharya Kundakunda",
+    "nameLocal": "आचार्य कुन्दकुन्द",
+    "era": "c. 1st Century BCE – 1st Century CE",
+    "eraLocal": "लगभग प्रथम शताब्दी ईसा पूर्व - प्रथम शताब्दी",
+    "tradition": "jain",
+    "region": "Kondakunda (Andhra Pradesh) / Tamil Nadu",
+    "regionLocal": "कोंडकुंद (आंध्र प्रदेश) / तमिलनाडु",
+    "emoji": "💎",
+    "tagline": "The supreme metaphysician of Jain philosophy who articulated the timeless distinction between the absolute soul and empirical conduct in the sacred Samayasara.",
+    "taglineLocal": "जैन दर्शन के परम अध्यात्मवेत्ता जिन्होंने 'समयसार' के माध्यम से निश्चय नय और व्यवहार नय का शाश्वत भेद प्रकाशित किया।",
+    "journey": "Acharya Kundakunda occupies an exalted, almost divine pedestal in the spiritual consciousness of Jainism, revered alongside Bhagwan Mahavira and Gautama Swami in the universal daily mangalacharan benediction chanted across temples: \"Mangalam Bhagavaan Viro, Mangalam Gautamoo Gani, Mangalam Kundakundaaryo, Jainadharmostu Mangalam.\" Born in the southern village of Kondakunda in present-day Andhra Pradesh, he embraced the unadorned, sky-clad (digambara) monastic path in early youth. Blessed with peerless intellectual clarity and profound mystical absorption, Kundakunda rose to become the guiding luminary of non-dual spiritual metaphysics at a historical crossroads when Shramana traditions were at risk of degenerating into dry ritualism and scholastic pedantry.\n\nWhile preceding scholars focused extensively on elaborate taxonomic classifications of karmic particles, monastic rituals, and cosmological geography, Kundakunda bypassed the outer layers of religious convention to illuminate the radiant, untouched essence of self-realization (Atma-Jnana). Dwelling in secluded forest caverns on hilltops, seated upon bare stone, he composed monumental treatises in the ancient Sauraseni Prakrit language that revolutionized Indian spiritual philosophy: the Samayasara (The Essence of the Soul), Pravachanasara (The Essence of the Doctrine), Panchastikayasara (The Essence of the Five Cosmic Reals), and Niyamasara (The Essence of Restraint).\n\nKundakunda introduced the luminous analytical paradigm of the two viewpoints: Nischaya Naya (the ultimate or absolute perspective) and Vyavahara Naya (the empirical, relative perspective). With unsparing philosophical precision, he showed that all outward ethical observances, temple worship, chanting, severe austerities, and scriptural study belong exclusively to the domain of Vyavahara—necessary conventional stepping-stones that nevertheless generate karmic bondage, even if of a virtuous nature (Punya). The absolute truth (Nischaya), Kundakunda boldly declared, is that the pure soul (Shuddhatman) is an unblemished, self-luminous knower (Jnaka), eternally free from karma, sin, virtue, bodily changes, and worldly delusion. To experience this inner self directly, beyond all conceptual chatter and sectarian dogmatism, is the true meaning of Samyak Darshana (enlightened vision).\n\nThroughout his expansive life as an itinerant wandering monk, Kundakunda walked barefoot without a copper coin or a thread of clothing, carrying only a peacock-feather broom (Pinchi) to gently clear insects from his path and a wooden water pot (Kamandalu). His pristine spiritual realization cut through the mechanical rituals of his age like a brilliant diamond, inspiring spiritual seekers across two millennia from medieval commentators like Amritachandra Suri to twentieth-century spiritual masters like Shrimad Rajchandra and Kanji Swami.",
+    "journeyLocal": "आचार्य कुन्दकुन्द का स्थान जैन परंपरा में इतना उच्च है कि मंगल पाठ में भगवान महावीर और गौतम स्वामी के साथ उनका स्मरण किया जाता है—'मंगलं भगवान वीरो, मंगलं गौतमो गणी। मंगलं कुन्दकुन्दार्यो, जैनधर्मोऽस्तु मंगलम्॥' उनका जन्म दक्षिण भारत के कोंडकुंद ग्राम में हुआ था। अल्पायु में ही दिगंबर दीक्षा अंगीकार कर वे आत्म-साधना के उस शिखर पर पहुँचे जहाँ बाह्य क्रियाकांडों के स्थान पर शुद्ध चेतना का साक्षात्कार मुख्य हो जाता है।\n\nउन्होंने प्राकृत भाषा में अध्यात्म के अमर ग्रंथों की रचना की, जिनमें 'समयसार', 'प्रवचनसार', 'नियमसार' और 'पंचास्तिकाय' प्रमुख हैं। कुन्दकुन्द ने निश्चय नय (परमार्थ सत्य) और व्यवहार नय (व्यावहारिक दृष्टि) का ऐसा वैज्ञानिक और दार्शनिक विश्लेषण प्रस्तुत किया जिसने भारतीय दर्शन को एक नया आयाम दिया। उन्होंने स्पष्ट किया कि बाह्य व्रत, उपवास और तपस्या केवल व्यावहारिक साधन हैं; वास्तविक धर्म तो आत्मा का अपने शुद्ध, ज्ञायक और वीतराग स्वरूप में लीन हो जाना है।\n\nउन्होंने अपने संपूर्ण जीवन में दिगंबर चर्या का कठोरता से पालन करते हुए यह संदेश दिया कि आत्मा स्वयं सिद्ध स्वरूपा है, वह न कभी बंधी है और न अशुद्ध हुई है; केवल अज्ञान के कारण स्वयं को पर-द्रव्य का कर्ता मानती है। उनके इस अध्यात्म ने सदियों तक मुमुक्षुओं का मार्गदर्शन किया और आधुनिक काल में श्रीमद् राजचंद्र तथा कानजी स्वामी जैसे विचारकों को भी गहराई से प्रभावित किया।",
+    "trial": "Kundakunda’s defining trial was confronting the entrenched resistance of traditional scholars and dogmatic ritualists who mistook external religious observances for ultimate liberation. He was accused of undermining monastic discipline when he boldly asserted that attachment to pious religious merit (Punya) is still a golden chain binding the soul to worldly rebirth. Bearing misunderstanding and sectarian debate with unbroken serenity, he preserved the pure non-dual flame of Atma-Jnana against the encroaching tide of mechanical ritualism.",
+    "trialLocal": "आचार्य कुन्दकुन्द की सबसे बड़ी साधना बाह्य कर्मकांडों में उलझे समाज को शुद्ध अध्यात्म की ओर मोड़ना था। उन्होंने निर्भीकता से घोषित किया कि शुभ कर्म भी सोने की बेड़ियां हैं, जो संसार में ही बांधती हैं; वास्तविक मुक्ति तो राग-द्वेष से परे अपने ज्ञायक स्वभाव के अनुभव से ही संभव है।",
+    "teaching": "The soul is pure consciousness—its essential nature is only knowing and seeing (Jnan-Darshan)—completely distinct from the body, thoughts, emotions, and accrued karmas. As long as you believe \"I am the doer of action,\" \"This body is mine,\" or \"These rituals will purchase my salvation,\" you remain trapped in Samsara. Renounce all identification with the non-self; abide as the silent, detached, witness-knower of your own divine consciousness, and liberation is your immediate reality.",
+    "teachingLocal": "आत्मा केवल जानने और देखने वाला शुद्ध चैतन्य तत्व है। वह शरीर, मन और कर्मों से सर्वथा भिन्न है। जब तक मनुष्य यह मानता है कि 'मैं करता हूँ' या 'यह मेरा है', तब तक वह बंधन में है। अपने आपको केवल 'ज्ञाता-दृष्टा' अनुभव करना ही मुक्ति का साक्षात मार्ग है।",
+    "moral": "External religious rituals, fasting, and rules are merely the protective outer bark of the spiritual tree; never mistake them for the sweet fruit of inner self-realization. True religion is the silent, pure experience of your own divine nature, untainted by anger, pride, attachment, or greed.",
+    "moralLocal": "धार्मिक क्रियाएं तभी सार्थक हैं जब वे हमारे अंतःकरण के विकारों को धोकर हमें आत्म-शांति प्रदान करें। बाह्य क्रियाओं के अहंकार में उलझकर आत्मा के वास्तविक स्वरूप को नहीं भूलना चाहिए।",
+    "legacy": "Kundakunda’s Samayasara is celebrated as the pinnacle masterpiece of Jain spiritual literature, often called the \"Upanishad of the Shramanas.\" His revolutionary two-truth framework (Nischaya and Vyavahara) provided the metaphysical foundation for all subsequent Jain philosophical developments and remains the preeminent text studied by spiritual seekers seeking direct experiential awakening across the world today.",
+    "legacyLocal": "आचार्य कुन्दकुन्द का 'समयसार' जैन अध्यात्म का मुकुटमणि ग्रंथ माना जाता है। इसने भारतीय दर्शन में आत्म-साक्षात्कार और अद्वैत चेतना के अध्ययन को नई गहराई दी और आज भी आत्म-कल्याण के इच्छुक साधकों के लिए प्रमुख आधार बना हुआ है।",
+    "source": "Samayasara & Pravachanasara (Acharya Kundakunda)",
+    "sourceLocal": "समयसार एवं प्रवचनसार (आचार्य कुन्दकुन्द)",
+    "sourceCitations": [
+      {
+        "sourceName": "Samayasara",
+        "sourceRef": "Jiva-Ajiva Adhikara, Gatha 1–15",
+        "tier": 1
+      },
+      {
+        "sourceName": "Pravachanasara",
+        "sourceRef": "Jnana Tattva Prajnapana, Chapter 1",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Serene digambara Acharya Kundakunda inscribing Sanskrit-Prakrit verses on palm leaves in a rock-cut mountain cavern, bathed in soft divine golden sunlight with eyes glowing with spiritual wisdom.",
+    "quote": {
+      "text": "I am neither the body nor the mind; I am one eternal, indivisible, pure conscious soul. All else is alien and transient.",
+      "attribution": "Samayasara, Gatha 38"
+    },
+    "quoteLocal": {
+      "text": "मैं न देह हूँ, न मन; मैं तो एक, शाश्वत, शुद्ध चैतन्य आत्म-द्रव्य हूँ। इसके अतिरिक्त जो कुछ भी है, वह पर-भाव और क्षणभंगुर है।",
+      "attribution": "समयसार, गाथा ३८"
+    }
+  },
+  {
+    "id": "hemachandra",
+    "name": "Acharya Hemachandra",
+    "nameLocal": "आचार्य हेमचन्द्र (कलिकाल-सर्वज्ञ)",
+    "era": "1088–1172 CE",
+    "eraLocal": "१०८८-११७२ ईस्वी",
+    "tradition": "jain",
+    "region": "Dhandhuka / Patan (Gujarat)",
+    "regionLocal": "धंधुका / पाटण (गुजरात)",
+    "emoji": "📖",
+    "tagline": "The 'Omniscient of the Iron Age' whose encyclopedic scholarship, literary genius, and ethical diplomacy transformed Gujarat into an empire of non-violence and cultural flowering.",
+    "taglineLocal": "'कलिकाल-सर्वज्ञ' जिनकी असाधारण विद्वता, साहित्यिक प्रतिभा और कूटनीति ने गुजरात को अहिंसा और विद्या का अप्रतिम केंद्र बना दिया।",
+    "journey": "Born in the ancient town of Dhandhuka in Gujarat as Changadeva to a modest mercantile family, Hemachandra’s life was marked by intellectual genius from his earliest days. Recognizing the child’s extraordinary memory and spiritual destiny, the revered master Acharya Devachandra initiated him into the monastic order, bestowing upon him the name Somachandra. By the young age of twenty-one, having mastered the entirety of canonical scriptures, Sanskrit and Prakrit linguistics, Indian logic, poetics, metrics, and statecraft, he was formally elevated to the exalted station of Acharya and given the name Hemachandra. His intellectual brilliance was so comprehensive and encyclopedic that scholars across the Indian subcontinent bestowed upon him the ultimate title: \"Kalikala-Sarvajna\"—the All-Knowing Luminary of the Iron Age.\n\nMoving to Patan (Anhilwad Patan), the glorious capital of the Chaulukya (Solanki) Empire, Hemachandra entered into an extraordinary partnership with King Siddharaja Jayasimha. When the king lamented that Malwa possessed great literary grammars while Gujarat lacked a foundational linguistic text, Hemachandra had manuscripts collected from libraries across Kashmir and central India and composed the immortal Siddha-Hema-Shabdanushasana in astonishingly record time. Recognizing the monumental significance of the work, King Siddharaja placed the palm-leaf manuscript upon the royal imperial elephant beneath a golden umbrella and led a magnificent civic procession through Patan, an honor to literature without parallel in world history.\n\nFollowing Siddharaja’s demise, Hemachandra became the preceptor, counselor, and spiritual father to King Kumarpal. Under Hemachandra’s compassionate guidance, Kumarpal embraced Jainism and transformed the vast Chaulukya Empire into an unprecedented commonwealth of non-violence. Royal decrees known as the A-mari Pravartan (proclamation of non-slaughter) were enacted across Gujarat, Saurashtra, Malwa, and Rajasthan, prohibiting hunting, animal sacrifice, animal combat, fishing, butchery, liquor consumption, and gambling. Crucially, Kumarpal abolished the ancient, predatory confiscation law (Rudanti-Dhana) under which the royal treasury seized the property of childless widows. Meanwhile, Hemachandra penned monumental works including the Yoga Shastra, Trishashti-Shalakapurusha-Charitra, Deshinamamala, and Kavyanushasana, establishing Gujarat as the cultural and intellectual epicenter of medieval India.",
+    "journeyLocal": "गुजरात के धंधुका में जन्मे चंगदेव को बाल्यावस्था में ही आचार्य देवचंद्र ने उनकी असाधारण मेधा देखकर श्रमण दीक्षा दी और उनका नाम हेमचंद्र रखा गया। मात्र इक्कीस वर्ष की आयु में आचार्य पद पर प्रतिष्ठित होने वाले हेमचंद्र ने व्याकरण, न्याय, काव्य, छंद, इतिहास और दर्शन में ऐसा अभूतपूर्व ज्ञान अर्जित किया कि संपूर्ण भारतवर्ष ने उन्हें 'कलिकाल-सर्वज्ञ' (कलियुग के सर्वज्ञ) की उपाधि से विभूषित किया।\n\nवे सोलंकी राजवंश की राजधानी पाटण पहुँचे, जहाँ महाराज सिद्धराज जयसिंह ने उनका सर्वोच्च सम्मान किया। राजा के अनुरोध पर उन्होंने 'सिद्ध-हेम-शब्दानुशासन' नामक एक अद्वितीय व्याकरण ग्रंथ की रचना की, जिसे तत्कालीन राजा ने हाथी पर विराजमान कर पूरे पाटण नगर में गाजे-बाजे के साथ जलूस निकाला—विद्या का ऐसा सम्मान भारतीय इतिहास में दुर्लभ है।\n\nसिद्धराज के पश्चात् जब राजा कुमारपाल सिंहासन पर बैठे, तो हेमचंद्र उनके परम गुरु और पथप्रदर्शक बने। हेमचंद्र के प्रभाव से कुमारपाल ने जैन धर्म अंगीकार किया और अपने संपूर्ण साम्राज्य में अहिंसा का डंका बजाया। उन्होंने राज्य भर में जीव-हिंसा, मदिरापान, जुआ और शिकार पर पूर्ण प्रतिबंध लगा दिया (अमारि घोषणा)। यही नहीं, निःसंतान मृतकों की संपत्ति हड़पने वाले क्रूर कानून (रुदंति-धन) को भी समाप्त कर दिया। हेमचंद्र ने 'योगशास्त्र' और 'त्रिषष्टि-शलाकापुरुष-चरित्र' जैसे विशाल ग्रंथों का सृजन कर गुजरात को ज्ञान और करुणा की पावन भूमि बना दिया।",
+    "trial": "Hemachandra had to navigate the vicious court intrigues, jealousy, and religious bigotry of orthodox Shaivite ministers who sought to destroy his influence over the monarchs. During a historic royal pilgrimage to the sacred shrine of Somnath with King Kumarpal, sectarian opponents engineered a trap, demanding that the Jain monk prostrate before the Shiva Lingam or be condemned for sacrilege. Unshaken and smiling with serene magnanimity, Hemachandra stepped directly before the Lingam and proclaimed: \"I bow to Him who has conquered the passions of attachment and aversion, whether He be known as Brahma, Vishnu, Shiva, or Jina!\" By dissolving dogmatic sectarian boundaries in the universal truth of spiritual self-conquest, he silenced his critics forever.",
+    "trialLocal": "आचार्य हेमचंद्र को दरबार के ईर्ष्यालु सामंतों के षड्यंत्रों का सामना करना पड़ा। एक बार सोमनाथ मंदिर की यात्रा के दौरान विरोधियों ने सोचा कि यदि हेमचंद्र शिव को नमन नहीं करेंगे तो राजा रुष्ट हो जाएगा। परंतु हेमचंद्र ने शिवलिंग के समक्ष जाकर उद्घोष किया—'जो भी राग और द्वेष से मुक्त हो चुका है, चाहे वह ब्रह्मा हो, विष्णु हो, शिव हो या जिन हो, मैं उसी को नमन करता हूँ!' इस उदात्त दृष्टि ने सभी आलोचकों को नतमस्तक कर दिया।",
+    "teaching": "Ahimsa is not merely a passive avoidance of physical harm, but an active, boundless compassion that embraces every breathing soul. Scholarship and intellect are hollow vanity unless they manifest as protective love for the humblest creature. A monarch’s true glory lies not in bloody military conquests or accumulated gold, but in establishing justice, sheltering the weak, and eliminating institutional cruelty from society.",
+    "teachingLocal": "अहिंसा ही परम धर्म और समाज की रीढ़ है। विद्वता तब तक व्यर्थ है जब तक वह मूक और निर्बल प्राणियों के प्रति दया न जगा सके। सच्चा राजा वही है जो तलवार के बल पर नहीं, अपितु प्रजा की रक्षा और नैतिक मूल्यों की स्थापना से शासन करता है।",
+    "moral": "Brilliant scholarship reaches its divine fulfillment only when married to ethical character and political courage. We must never allow rigid sectarian labels to blind us to universal truth, recognizing that true divinity resides wherever virtue, self-restraint, and compassion flourish.",
+    "moralLocal": "प्रखर ज्ञान तभी कल्याणकारी होता है जब वह करुणा और लोक-कल्याण से जुड़ता है। सांप्रदायिक संकीर्णता से ऊपर उठकर सत्य और सदाचार का आदर करना ही सच्ची प्रबुद्धता है।",
+    "legacy": "Acharya Hemachandra laid the enduring literary, cultural, and ethical foundation of Gujarat. His standardized grammar helped shape the Gujarati language, while his institutionalization of Ahimsa under King Kumarpal created a deeply rooted vegetarian and compassionate civic ethos that endured through centuries of political upheaval, directly nurturing the spiritual environment that produced Mahatma Gandhi’s philosophy of Satyagraha.",
+    "legacyLocal": "आचार्य हेमचंद्र ने गुजरात की भाषाई, साहित्यिक और सांस्कृतिक अस्मिता की आधारशिला रखी। उनकी अहिंसा-प्रेरित नीति ने सदियों तक समाज में शाकाहार और करुणा की संस्कृति को जीवित रखा, जिसका प्रभाव आगे चलकर महात्मा गांधी के अहिंसा आंदोलन में भी स्पष्ट परिलक्षित हुआ।",
+    "source": "Yoga Shastra & Trishashti-Shalakapurusha-Charitra (Acharya Hemachandra)",
+    "sourceLocal": "योगशास्त्र एवं त्रिषष्टि-शलाकापुरुष-चरित्र (आचार्य हेमचन्द्र)",
+    "sourceCitations": [
+      {
+        "sourceName": "Yoga Shastra",
+        "sourceRef": "Prakasha 1–2, On the Vows of the Layman",
+        "tier": 1
+      },
+      {
+        "sourceName": "Prabhavaka Charitra",
+        "sourceRef": "Life of Acharya Hemachandra",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Acharya Hemachandra in pristine white monastic robes presenting the palm-leaf manuscript of Siddha-Hema to King Siddharaja Jayasimha in the grand royal court of medieval Patan.",
+    "quote": {
+      "text": "Just as a mother protects her only child with her life, let your heart protect all living creatures, from the elephant down to the tiniest ant.",
+      "attribution": "Yoga Shastra, 2.18"
+    },
+    "quoteLocal": {
+      "text": "जिस प्रकार एक माता अपने इकलौते पुत्र की प्राण देकर भी रक्षा करती है, उसी प्रकार तुम्हारा हृदय विशाल गजराज से लेकर सूक्ष्म चींटी तक समस्त जीवों की रक्षा करे।",
+      "attribution": "योगशास्त्र, २.१८"
+    }
+  },
+  {
+    "id": "lonka-saha",
+    "name": "Lonka Saha",
+    "nameLocal": "लोंकाशाह",
+    "era": "c. 15th Century CE (fl. 1475 CE)",
+    "eraLocal": "लगभग १५वीं शताब्दी (१४७५ ईस्वी)",
+    "tradition": "jain",
+    "region": "Ahmedabad (Gujarat)",
+    "regionLocal": "अहमदाबाद (गुजरात)",
+    "emoji": "🖋️",
+    "tagline": "The visionary scribe and scriptural reformer of Ahmedabad who returned Jainism to its canonical Agama roots, founding the non-idolatrous Sthanakvasi movement.",
+    "taglineLocal": "अहमदाबाद के दूरदर्शी लेखक और शास्त्र-सुधारक, जिन्होंने जैन परंपरा को पुनः आगमों के मूल सिद्धांतों से जोड़ा और स्थानकवासी आंदोलन की नींव रखी।",
+    "journey": "In the vibrant mercantile metropolis of Ahmedabad during the late fifteenth century, amidst the grand architectural monuments of the Gujarat Sultanate, Lonka Saha served as a master scribe and chief administrative clerk. Renowned for his exquisite calligraphy, sharp philological mastery of ancient Prakrit and Apabhramsha, and immaculate integrity, Lonka Saha was commissioned by affluent Jain merchants and temple trustees to transcribe ancient palm-leaf manuscripts preserved in dark, subterranean temple vaults (Jnana Bhandars) to save them from natural decay and wartime destruction. As Lonka Saha spent consecutive years painstakingly copying the sacred Agamas—word by word, syllable by syllable—a revolutionary intellectual and spiritual awakening transformed his life.\n\nHaving direct, unmediated access to the foundational discourses of Bhagwan Mahavira—including the Acharanga, Sutrakritanga, and Uttaradhyayana Sutras—Lonka Saha was astonished by the stark contradiction between the original canonical teachings and the contemporary religious landscape of his day. In the original Agamas, Bhagwan Mahavira had proclaimed a path of radical inner purification, silent meditation, absolute non-possession (Aparigraha), rigorous self-restraint, and uncompromising compassion for all living beings, including the subtle life-forms inhabiting earth, water, fire, and air. Nowhere in the thirty-two authentic Agamas did the Tirthankara sanction the opulent, gold-encrusted temple rituals, astronomical expenditures, competitive ostentation, and institutional corruption that had come to dominate medieval Jain monasticism.\n\nLonka Saha observed with profound sorrow that monks (Yatis) had abandoned the homelessness of the true Shramana to live comfortably in wealthy monasteries (Upashrayas), amassing property, handling money, and conducting rituals that inadvertently caused harm to subtle life-forms during construction and lavish ceremonies. Refusing to remain complicit in spiritual decay, Lonka Saha stepped out of the scribe’s chambers to launch a fearless scriptural reform movement. Holding up the ancient Agamas before assemblies of scholars, monks, and householders, he demonstrated with undeniable textual evidence that true worship (Puja) is the contemplation and emulation of the Tirthankaras’ detachment, not the ceremonial adoration of stone idols. Despite facing ferocious ostracism from entrenched temple hierarchies, his clarion call awakened a vast community of seekers, laying the foundation for the Sthanakvasi and Terapanthi traditions that practice non-idolatrous, inward-focused spiritual sadhana.",
+    "journeyLocal": "पंद्रहवीं शताब्दी में अहमदाबाद में लोंकाशाह एक अत्यंत कुशल लेखक और ज्ञानी विद्वान थे। उनकी सुंदर लिखावट और प्राकृत-संस्कृत के गहरे ज्ञान के कारण, धनी श्रेष्ठी और संघपति उन्हें प्राचीन जैन ज्ञान-भंडारों की जीर्ण ताड़पत्र पाण्डुलिपियों की प्रतिलिपि तैयार करने का कार्य सौंपते थे। जब लोंकाशाह ने मूल जैन आगमों—आचारांग, सूत्रकृतांग, उत्तराध्ययन आदि—को शब्द-दर-शब्द लिखना प्रारंभ किया, तो उनके अंतःकरण में एक महान वैचारिक क्रांति घटित हुई।\n\nउन्होंने देखा कि मूल आगमों में भगवान महावीर ने जिस शुद्ध आत्म-कल्याण, आंतरिक अहिंसा, ध्यान और अपरिग्रह का उपदेश दिया था, वर्तमान समाज उससे बहुत दूर भटक चुका था। उस समय के मठवासी मुनि वैभवपूर्ण जीवन जी रहे थे, मंदिरों के नाम पर भारी धन संग्रह किया जा रहा था, और आडंबरपूर्ण उत्सवों में स्थावर जीवों (जल, अग्नि, वनस्पति) की हिंसा हो रही थी। आगमों में बाह्य मूर्तियों की पूजा के स्थान पर वीतराग गुणों के आंतरिक चिंतन को मोक्ष का मार्ग बताया गया था।\n\nलोंकाशाह ने निर्भीक होकर मूल आगमों के आधार पर सुधार की आवाज उठाई। उन्होंने शास्त्रार्थ कर यह प्रमाणित किया कि जिन-पूजा का वास्तविक अर्थ पाषाण की मूर्तियों को पूजना नहीं, अपितु तीर्थंकरों के गुणों को अपने जीवन में धारण करना है। मंदिर-व्यवस्थापकों के भारी विरोध और बहिष्कार के बावजूद उन्होंने सत्य का मार्ग नहीं छोड़ा। उनके इस आंदोलन से स्थानकवासी परंपरा का उदय हुआ, जिसने आडंबरों को त्यागकर सामायिक, स्वाध्याय और अहिंसा को पुनः जीवन का केंद्र बनाया।",
+    "trial": "Lonka Saha’s supreme trial was standing as an ordinary, defenseless lay householder against an entrenched, fabulously wealthy religious establishment of temple trustees, monastic abbots, and orthodox caste leaders. He was subjected to severe social boycotts, excommunication, public slander as a heretic, and continuous threats against his life. Yet he stood immovable as a mountain, brandishing neither weapons nor anger, relying exclusively on the undeniable authority of Bhagwan Mahavira’s original words recorded on ancient palm leaves.",
+    "trialLocal": "एक साधारण गृहस्थ होकर भी लोंकाशाह ने सदियों पुरानी रूढ़ियों और शक्तिशाली मठाधीशों की व्यवस्था को चुनौती दी। उन्हें जाति से बहिष्कृत करने के प्रयास हुए, अधर्मी कहा गया और धमकियां दी गईं। परंतु उन्होंने किसी आक्रोश के बिना केवल आगमों के प्रमाणों के बल पर अडिग रहकर सत्य का शंखनाद किया।",
+    "teaching": "The true temple of the Divine is your own pure soul; the true sacred ritual is the destruction of internal anger, pride, deceit, and greed. Do not pour out fortunes on external stone monuments while living souls suffer in neglect. Worship the Tirthankaras by embodying their virtues—practicing Ahimsa in every breath, living with simple non-possession, and meditating upon the unblemished self.",
+    "teachingLocal": "भगवान का सच्चा मंदिर तुम्हारी अपनी आत्मा है; और सच्ची पूजा अपने विकारों का विसर्जन करना है। बाह्य क्रियाकांडों और आडंबरों में उलझकर आत्मा के आंतरिक ज्ञान और दया को नहीं भूलना चाहिए।",
+    "moral": "When religious institutions lose their moral compass and substitute outward spectacle for inner virtue, a single courageous voice armed with truth can ignite a spiritual renaissance. Never trade the pure essence of spiritual truth for the comfortable acceptance of corrupt traditions.",
+    "moralLocal": "सत्य और प्रामाणिकता के बल पर एक अकेला व्यक्ति भी सदियों से जमी हुई रूढ़ियों को उखाड़ फेंकने का साहस जुटा सकता है। बाह्य दिखावे से मुक्त होकर मूल सिद्धांतों पर चलना ही सच्चा धर्म है।",
+    "legacy": "Lonka Saha’s scriptural revival movement revitalized Jainism during a critical period of medieval decline, giving birth to the vibrant Sthanakvasi tradition and later the Shvetambara Terapanth founded by Acharya Bhikshu. His insistence on direct study of the Agamas democratized religious knowledge, liberated thousands from costly superstitious rituals, and re-centered Jain practice upon inward meditation, scriptural study (Swadhyaya), and ethical simplicity.",
+    "legacyLocal": "लोंकाशाह के सुधारवादी आंदोलन ने जैन समाज में एक नई चेतना फूंकी। उनके विचारों ने स्थानकवासी और आगे चलकर आचार्य भिक्षु द्वारा स्थापित तेरापंथ संप्रदाय की आधारशिला रखी, जिससे लाखों श्रावकों ने सादगी और स्वाध्याय का मार्ग अपनाया।",
+    "source": "Pattavali & History of Jain Reforms (Pt. Sukhlal Sanghvi)",
+    "sourceLocal": "पट्टावली एवं जैन सुधार आंदोलन का इतिहास (पं. सुखलाल संघवी)",
+    "sourceCitations": [
+      {
+        "sourceName": "Pattavali of Sthanakvasi Tradition",
+        "sourceRef": "Account of Lonka Saha's Agamic Revival",
+        "tier": 2
+      },
+      {
+        "sourceName": "Acharanga Sutra Commentary",
+        "sourceRef": "On the Pure Conduct of the Shramana",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "15th-century Ahmedabad scribe Lonka Saha sitting by flickering oil lamp at his wooden desk, meticulously examining ancient Prakrit palm-leaf manuscripts with deep spiritual resolve.",
+    "quote": {
+      "text": "Venerate the virtues of the Tirthankaras within your heart, not the stone; for the soul alone is capable of attaining liberation through pure conduct.",
+      "attribution": "Lonka Saha's Address to the Sangha"
+    },
+    "quoteLocal": {
+      "text": "तीर्थंकरों के वीतराग गुणों की अपने हृदय में पूजा करो, पाषाण में नहीं; क्योंकि शुद्ध आचरण और आत्म-ध्यान से ही आत्मा मोक्ष को प्राप्त करती है।",
+      "attribution": "लोंकाशाह का संघ को संदेश"
+    }
+  },
+  {
+    "id": "shrimad-rajchandra",
+    "name": "Shrimad Rajchandra",
+    "nameLocal": "श्रीमद् राजचन्द्र",
+    "era": "1867–1901 CE",
+    "eraLocal": "१८६७-१९०१ ईस्वी",
+    "tradition": "jain",
+    "region": "Vavaniya / Rajkot (Gujarat)",
+    "regionLocal": "वावाणिया / राजकोट (गुजरात)",
+    "emoji": "🕊️",
+    "tagline": "The modern mystic, poet, and philosopher whose spiritual illumination, Atma Siddhi Shastra, and guidance shaped Mahatma Gandhi's philosophy of truth and non-violence.",
+    "taglineLocal": "आधुनिक युग के परम संत और दार्शनिक, जिनकी आत्मिक जागृति, 'आत्मसिद्धि शास्त्र' और मार्गदर्शन ने महात्मा गांधी के जीवन को सत्य और अहिंसा के मार्ग पर ढाला।",
+    "journey": "Born as Raichandbhai Mehta in the coastal Gujarati village of Vavaniya, Shrimad Rajchandra experienced spontaneous recollection of past lives (Jati-Smarana Jnana) at the tender age of seven upon witnessing the cremation of an elder neighbor, awakening an unquenchable thirst for absolute spiritual liberation. Blessed with an astonishing prodigy of consciousness, in his early teens he demonstrated the miraculous feat of Shatavadhana—performing one hundred distinct mental activities simultaneously without pencil or paper, including playing chess, composing poetry in multiple meters, solving complex mathematical problems, and identifying bells struck in randomized sequences. The governor of Bombay and royal princes offered him immense fame and wealth, but Shrimad renounced public demonstrations, recognizing that occult intellectual displays were merely subtle traps feeding the ego.\n\nUnlike traditional monastic renunciates who withdraw into mountain caves, Shrimad Rajchandra lived predominantly as a householder in Mumbai and Gujarat, engaging in the pearl and gemstone trade to fulfill family obligations while his consciousness remained permanently absorbed in unshakeable spiritual detachment. Handling diamonds and pearls worth fortunes during the day, his heart remained utterly untouched by greed or possessiveness, exemplifying the ancient ideal of King Janaka. During his twenties, he met a young, spiritually conflicted London-trained barrister named Mohandas Karamchand Gandhi in Mumbai. Gandhi was deeply unsettled by religious doubts and aggressively courted by Christian and Muslim intellectuals to convert. Shrimad's profound scriptural mastery, crystalline logic, and radiant living embodiment of truth made an indelible impression on Gandhi, who adopted him as his supreme spiritual guide and moral anchor. Through extensive philosophical correspondence while Gandhi was in South Africa, Shrimad rooted Gandhi deeply in Ahimsa, celibacy (Brahmacharya), and universal tolerance, providing the bedrock upon which the Indian independence struggle was built.\n\nIn 1896, in the serene hill retreat of Nadiad, in a single night of divine inspiration across less than two hours, Shrimad composed his spiritual magnum opus: the *Atma Siddhi Shastra*—a sublime Gujarati philosophical poem of 142 verses elucidating the six fundamental spiritual truths (Satpada): the existence of the soul, its eternity, its agency as the doer of karma, its experience of fruits, its capacity for liberation, and the practical path to Moksha. Living in intense meditative austerities in the forests of Idar, Shrimad lived a life of unblemished purity before shedding his physical body at the young age of thirty-three in Rajkot, leaving a timeless spiritual legacy for modern humanity.",
+    "journeyLocal": "गुजरात के वावाणिया ग्राम में जन्मे रायचंदभाई को मात्र सात वर्ष की आयु में एक पड़ोसी की अंत्येष्टि देखकर पूर्वजन्मों का जातिस्मरण ज्ञान जागृत हुआ, जिससे उनके हृदय में वैराग्य की तीव्र धारा फूट पड़ी। बाल्यकाल में ही उन्होंने 'शतावधान' की अलौकिक क्षमता का प्रदर्शन किया—एक साथ सौ विभिन्न बौद्धिक क्रियाएं बिना किसी कागज-कलम के करना, जिसमें शतरंज खेलना, विविध छंदों में काव्य रचना, जटिल गणितीय गणनाएं और पीछे बजने वाले घंटों की गिनती शामिल थी। मुंबई के गवर्नर और तत्कालीन राजाओं ने उन्हें सम्मानित किया, परंतु उन्होंने इस ख्याति को आत्म-साधना में बाधक मानकर इन प्रदर्शनों को तत्काल त्याग दिया।\n\nश्रीमद् राजचन्द्र ने कोई संन्यास वेश धारण नहीं किया; वे एक गृहस्थ व्यापारी के रूप में मुंबई में मोती और रत्नों का व्यापार करते रहे। सहस्रों रुपयों के बहुमूल्य हीरों के बीच रहते हुए भी उनका अंतःकरण सर्वथा निर्लिप्त रहा, ठीक वैसे ही जैसे कमल जल में रहकर भी जल से अछूता रहता है। १८९१ में जब बैरिस्टर मोहनदास करमचंद गांधी लंदन से लौटे, तो उनकी भेंट श्रीमद् जी से हुई। गांधी जी उस समय गंभीर धार्मिक संशयों से घिरे थे। श्रीमद् जी के निर्मल चरित्र, गहन तत्वज्ञान और समदर्शी व्यवहार ने गांधी जी को इतना प्रभावित किया कि उन्होंने श्रीमद् जी को अपना आध्यात्मिक पथप्रदर्शक स्वीकार किया। दक्षिण अफ्रीका प्रवास के दौरान श्रीमद् जी द्वारा भेजे गए पत्रों ने गांधी जी को सत्य, अहिंसा और ब्रह्मचर्य की ऐसी दृढ़ आधारशिला दी जिसने आगे चलकर भारतीय स्वाधीनता आंदोलन का स्वरूप निर्धारित किया।\n\n१८९६ में नाडियाड में एक ही रात्रि में, मात्र दो घंटे के आत्म-उल्लास में उन्होंने 'आत्मसिद्धि शास्त्र' की रचना की। १४२ दोहों का यह गुजराती ग्रंथ आत्म-दर्शन का अमर काव्य बन गया, जिसमें आत्मा के अस्तित्व, नित्यत्व, कर्तृत्व, भोक्तृत्व, मोक्ष और मोक्ष के उपाय—इन छह सत्यों का वैज्ञानिक विश्लेषण है। ईडर की गुफाओं में गहन ध्यान करते हुए, मात्र तैंतीस वर्ष की अल्पायु में उन्होंने राजकोट में समाधिपूर्वक देहत्याग किया।",
+    "trial": "Shrimad Rajchandra's most extraordinary trial was maintaining absolute, unbroken spiritual absorption while actively managing commercial business in the bustling markets of Mumbai. Surrounded by material wealth and commerce, he never compromised honesty by a single grain, demonstrating that true spiritual transcendence is realized not by escaping society, but by purifying the inner consciousness of all desire.",
+    "trialLocal": "श्रीमद् राजचन्द्र की सबसे बड़ी साधना सांसारिक व्यापार के कोलाहल के बीच रहकर भी अखंड आत्म-लीनता को बनाए रखना था। मुंबई के रत्न बाजार में व्यापार करते हुए भी उन्होंने कभी सत्य और प्रामाणिकता से समझौता नहीं किया। वे इस सत्य के साक्षात प्रमाण थे कि संन्यास केवल जंगल भागने का नाम नहीं, बल्कि संसार में रहते हुए भी भीतर से निष्काम और अनासक्त हो जाना है।",
+    "teaching": "The soul is an eternal, independent conscious reality, distinct from the physical body and mental modifications. Real religion is not sectarian dogmatism, blind rituals, or external identity, but the living cessation of ego, attachment, and aversion through direct self-realization (Atma-Jnana).",
+    "teachingLocal": "आत्मा एक शाश्वत, स्वतंत्र चैतन्य तत्व है जो देह और मन से सर्वथा भिन्न है। सच्चा धर्म किसी संप्रदाय की रूढ़ियों, बाह्य क्रियाकांडों या मत-मतांतरों में नहीं, बल्कि राग-द्वेष के क्षय और आत्म-साक्षात्कार में है। जब तक आत्मा का अपने शुद्ध स्वरूप में अनुभव नहीं होता, तब तक सारे बाह्य प्रयास व्यर्थ हैं।",
+    "moral": "Do not wait for ideal conditions or retirement to seek spiritual truth. In whatever circumstance or profession you find yourself, you can cultivate absolute detachment, integrity, and mindfulness in the present moment.",
+    "moralLocal": "आत्म-कल्याण के लिए किसी विशेष वेश या एकांत की प्रतीक्षा मत करो। तुम जहाँ भी हो, जिस परिस्थिति में हो, वहीं अपने मन को वासनाओं से मुक्त रखकर पवित्र और सत्यनिष्ठ जीवन जी सकते हो।",
+    "legacy": "Shrimad Rajchandra is recognized as one of the towering spiritual masters of modern India. His *Atma Siddhi Shastra* has been translated into dozens of world languages, while his profound guidance to Mahatma Gandhi forever embedded spiritual non-violence into the political conscience of the modern world.",
+    "legacyLocal": "श्रीमद् राजचन्द्र आधुनिक भारत के महानतम आध्यात्मिक विभूतियों में गिने जाते हैं। उनके 'आत्मसिद्धि शास्त्र' ने लाखों साधकों को आत्म-बोध की दिशा दी, और महात्मा गांधी के जीवन पर उनके आध्यात्मिक प्रभाव ने विश्व को अहिंसा और सत्याग्रह का अमोघ अस्त्र प्रदान किया।",
+    "source": "Atma Siddhi Shastra & Vachanamrut (Shrimad Rajchandra)",
+    "sourceLocal": "आत्मसिद्धि शास्त्र एवं वचनामृत (श्रीमद् राजचन्द्र)",
+    "sourceCitations": [
+      {
+        "sourceName": "Atma Siddhi Shastra",
+        "sourceRef": "Verses 43–45, The Six Fundamental Characteristics of the Soul",
+        "tier": 1
+      },
+      {
+        "sourceName": "The Story of My Experiments with Truth (M.K. Gandhi)",
+        "sourceRef": "Part 2, Chapter 1: Raychandbhai",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Portrait of young Shrimad Rajchandra in simple white Gujarati attire with tranquil, deeply luminous eyes, seated cross-legged on a wooden platform writing Atma Siddhi Shastra by a lantern.",
+    "quote": {
+      "text": "The soul exists; it is eternal; it is the doer of its actions and the reaper of their fruits; there is liberation from bondage, and there is a direct path to attain it.",
+      "attribution": "Atma Siddhi Shastra, Verse 43"
+    },
+    "quoteLocal": {
+      "text": "आत्मा छे, ते नित्य छे, छे कर्ता निज कर्म। छे भोक्ता वळी तेहनों, छे मोक्ष उपाय सुधर्म॥",
+      "attribution": "आत्मसिद्धि शास्त्र, गाथा ४३"
+    }
+  },
+  {
+    "id": "gautama-swami",
+    "name": "Gautama Swami (Indrabhuti)",
+    "nameLocal": "गौतम स्वामी (इंद्रभूति)",
+    "era": "c. 6th–5th Century BCE",
+    "eraLocal": "लगभग छठी-पांचवीं शताब्दी ईसा पूर्व",
+    "tradition": "jain",
+    "region": "Magadha / Rajgriha",
+    "regionLocal": "मगध / राजगृह",
+    "emoji": "📿",
+    "tagline": "The proud Vedic scholar whose vanity dissolved before Bhagwan Mahavira, becoming the foremost Ganadhara who compiled the sacred Agamas and attained Kevala Jnana through pure detachment.",
+    "taglineLocal": "महाविद्वान वैदिक पंडित जिनका दर्प भगवान महावीर के चरणों में विगलित हो गया, और जो द्वादशांगी आगमों के प्रधान संकलनकर्ता तथा प्रथम गणधर बने।",
+    "journey": "Born into an illustrious scholarly Brahmin family in the kingdom of Magadha, Indrabhuti Gautama was celebrated as the greatest intellectual and Vedic scholar of his era. Flanked by five hundred accomplished disciples, he had mastered the four Vedas, Upanishads, grammar, astronomy, and ritual sciences, boasting that no living scholar on earth could challenge his comprehension of cosmic truth. When the wealthy merchant Somil organised a colossal Vedic Yajna at Apapa (Pawapuri), thousands of scholars assembled, exalting Indrabhuti as the undisputed sun of scholarship. Suddenly, divine celestial vehicles were seen flying across the sky. Indrabhuti proudly assumed the gods were descending to honor his sacrifice, only to be informed that the deities were bypassing the sacrificial altar to pay homage to the newly enlightened twenty-fourth Tirthankara, Bhagwan Mahavira, who had attained Kevala Jnana and was presiding over his first divine assembly (Samavasarana) nearby.\n\nStung by wounded pride, Indrabhuti resolved to debate and publicly humiliate Mahavira. He walked into the Samavasarana with five hundred disciples, carrying a secret, unresolved philosophical doubt regarding the existence of the soul (Jiva) that he had never revealed to any living being. As Indrabhuti stepped into the sacred pavilion, Bhagwan Mahavira addressed him by his personal name, welcoming him with boundless love and omniscience: 'Welcome, Indrabhuti Gautama! You harbor doubt in your heart whether the soul is distinct from the physical body, or merely a transient byproduct of material elements.' Mahavira proceeded to quote Indrabhuti's own secret Vedic passages, resolving every metaphysical doubt with crystalline clarity and showing that the conscious knower is an eternal, independent reality.\n\nAt that very moment, the colossal mountain of Indrabhuti's pride shattered to dust. Tears of awe flowed from his eyes. He realized that intellectual arrogance is merely a prison of darkness compared to the radiant sun of spiritual omniscience. Falling at Mahavira's feet, Indrabhuti and his five hundred disciples renounced their sacred threads, sacrificial fire-altars, and scholarly fame to accept Shramana diksha, becoming Bhagwan Mahavira’s foremost disciple and chief Ganadhara under the name Gautama Swami. Blessed with photographic memory and supreme spiritual retention, Gautama Swami listened to the divine sound (Divyadhvani) of Mahavira and meticulously codified the teachings into the twelve sacred Agamas (Dvadashangi), creating the foundational canon of Jainism.",
+    "journeyLocal": "मगध के ब्राह्मण कुल में जन्मे इंद्रभूति गौतम अपने समय के प्रकांड वैदिक विद्वान थे। चारों वेदों, वेदांगों और दर्शनों के ज्ञाता गौतम के पास पांच सौ विद्वान शिष्य अध्ययन करते थे। उनके ज्ञान का इतना अहंकार था कि वे मानते थे कि भूमंडल पर उनके समान कोई दूसरा ज्ञानी नहीं है। जब पावापुरी में सोमिल नामक धनी श्रेष्ठी ने एक महायज्ञ का आयोजन किया, तो गौतम को उसका प्रधान आचार्य बनाया गया। अचानक आकाश में देवों के विमान उतरते दिखाई दिए। गौतम को लगा कि देव उनके यज्ञ का दर्शन करने आ रहे हैं, परंतु जब उन्हें ज्ञात हुआ कि देव भगवान महावीर के प्रथम समवशरण की ओर जा रहे हैं, तो उनका गर्व आहत हो गया।\n\nवे महावीर को शास्त्रार्थ में पराजित करने के उद्देश्य से अपने पांच सौ शिष्यों सहित समवशरण में पहुँचे। उनके मन में आत्मा के अस्तित्व को लेकर एक अत्यंत गुप्त संशय था, जो उन्होंने कभी किसी से प्रकट नहीं किया था। जैसे ही वे समवशरण में प्रविष्ट हुए, भगवान महावीर ने उन्हें नाम से पुकारा—'हे इंद्रभूति गौतम! तुम्हारा स्वागत है! तुम्हारे मन में यह संशय है कि क्या आत्मा देह से भिन्न कोई स्वतंत्र सत्ता है अथवा पंचभूतों का ही संयोग मात्र है?' महावीर ने वेदों की ऋचाओं का वास्तविक अर्थ उद्घाटित करते हुए उनके समस्त संशयों का तत्काल निवारण कर दिया।\n\nउस अलौकिक सर्वज्ञता और वात्सल्य के समक्ष गौतम का सारा अहंकार पल भर में पिघल गया। वे समझ गए कि कोरा पोथी-ज्ञान केवल अहंकार को बढ़ाता है, जबकि आत्म-ज्ञान ही वास्तविक मुक्ति है। उन्होंने तुरंत यज्ञोपवीत उतारकर अपने पांच सौ शिष्यों सहित भगवान महावीर के चरणों में दिगंबर दीक्षा अंगीकार की और उनके प्रथम गणधर बने। गौतम स्वामी ने महावीर की दिव्यध्वनि को द्वादशांगी आगमों के रूप में संकलित किया, जो आज तक जिनवाणी की अमर धरोहर हैं।",
+    "trial": "Gautama Swami's most poignant trial was his profound, overwhelming personal attachment (Sneha) to Bhagwan Mahavira. Despite attaining extraordinary spiritual powers (Labdhis) and supreme ascetic purity, Kevala Jnana remained just out of reach because his heart loved his Master too intensely. On the fateful night of Dipawali in Pawapuri, when Mahavira attained Nirvana, Gautama was dispatched to enlighten a distant householder. Hearing of Mahavira's passing, Gautama wept in agony: 'Lord, why did you leave me behind?' In that crucible of heartbreak, Gautama suddenly perceived that even divine attachment to a Tirthankara is still a bond of affection. The moment he severed that final thread of emotional attachment, absolute omniscience (Kevala Jnana) illumined his soul at dawn.",
+    "trialLocal": "गौतम स्वामी की सबसे कठिन परीक्षा भगवान महावीर के प्रति उनका अगाध व्यक्तिगत प्रेम (स्नेह) था। समस्त सिद्धियों और कठोर तप के बावजूद उन्हें केवलज्ञान नहीं हो रहा था क्योंकि उनका हृदय अपने गुरु के चरणों में बंधा हुआ था। दीपावली की रात्रि जब पावापुरी में भगवान महावीर ने निर्वाण प्राप्त किया, तो गौतम स्वामी पास नहीं थे। भगवान के महाप्रयाण का समाचार सुनकर वे विलाप करने लगे। परंतु उसी क्षण उन्हें ज्ञान हुआ कि तीर्थंकर के प्रति भी राग अंततः एक बंधन ही है। जैसे ही उन्होंने उस अंतिम राग-तंतु को विसर्जित किया, भोर की पहली किरण के साथ उन्हें परम केवलज्ञान प्राप्त हो गया।",
+    "teaching": "Scholarly erudition without spiritual humility is mere intellectual pride. The eternal soul cannot be known through dialectical debates, but through humble surrender of the ego, ethical self-restraint, and meditation upon the inner witness.",
+    "teachingLocal": "विनम्रता के बिना कोरा ज्ञान अहंकार का पोषण करता है। आत्मा को शास्त्रार्थ से नहीं, अपितु अहंकार के समर्पण और अंतर्मुखी साधना से ही जाना जा सकता है। जब तक हृदय में किसी भी प्रकार का राग शेष है, तब तक पूर्ण मुक्ति संभव नहीं है।",
+    "moral": "Even the highest form of love—devotion to a spiritual master—must ultimately transcend emotional dependency to merge into the formless truth of the divine self.",
+    "moralLocal": "गुरु के प्रति भी अत्यधिक मोह यदि राग का रूप ले ले, तो वह आध्यात्मिक यात्रा में अंतिम रुकावट बन सकता है। गुरु का सच्चा सम्मान उनके उपदेशों को अपने भीतर उतारकर स्वयं जागृत होना है।",
+    "legacy": "As the chief Ganadhara, Gautama Swami gave structured form to the entire oral canon of the Jain Agamas. Every sacred Agamic discourse traditionally opens with the venerated invocation of Gautama inquiring of Mahavira: 'Bhante!' (O Revered Lord!).",
+    "legacyLocal": "प्रथम गणधर के रूप में गौतम स्वामी ने संपूर्ण आगम साहित्य को शब्द और व्यवस्था दी। आज जैन शास्त्रों का प्रत्येक पाठ गौतम स्वामी द्वारा भगवान से पूछे गए प्रश्नों और उनके समाधान के रूप में ही सुरक्षित है।",
+    "source": "Bhagavati Sutra & Aupapatika Sutra",
+    "sourceLocal": "भगवती सूत्र एवं औपपातिक सूत्र",
+    "sourceCitations": [
+      {
+        "sourceName": "Bhagavati Sutra (Vyakhyaprajnapti)",
+        "sourceRef": "Shataka 1, Dialogue between Mahavira and Gautama",
+        "tier": 1
+      },
+      {
+        "sourceName": "Aupapatika Sutra",
+        "sourceRef": "Description of the Samavasarana and the Ganadharas",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Gautama Swami kneeling in awe and complete humility before the glowing golden Samavasarana of Bhagwan Mahavira, laying aside his Vedic staff and smiling in sudden enlightenment.",
+    "quote": {
+      "text": "As a drop of water on the tip of a blade of grass cannot endure the sun, so is the life of mortals; do not delay for a single moment in seeking spiritual liberation.",
+      "attribution": "Uttaradhyayana Sutra, 10.1"
+    },
+    "quoteLocal": {
+      "text": "जैसे घास के तिनके पर टिकी ओस की बूंद पल भर में विलीन हो जाती है, वैसे ही मानव जीवन अत्यंत क्षणभंगुर है; अतः हे गौतम, एक समय के लिए भी प्रमाद मत करो।",
+      "attribution": "उत्तराध्ययन सूत्र, १०.१"
+    }
+  },
+  {
+    "id": "chandanbala",
+    "name": "Sadhvi Chandanbala",
+    "nameLocal": "साध्वी चंदनबाला",
+    "era": "c. 6th Century BCE",
+    "eraLocal": "लगभग छठी शताब्दी ईसा पूर्व",
+    "tradition": "jain",
+    "region": "Champa / Kaushambi",
+    "regionLocal": "चंपा / कौशाम्बी",
+    "emoji": "🌸",
+    "tagline": "The captured princess sold into slavery whose unshakeable purity, devotion, and simple offering of dry lentil husks broke Bhagwan Mahavira's legendary five-month fast.",
+    "taglineLocal": "दासता में बेची गई राजकुमारी जिनकी असीम पवित्रता, निष्ठा और सूखे उड़द के बाकुलों के दान ने भगवान महावीर का पांच मास का कठिन अभिग्रह पूर्ण किया।",
+    "journey": "Originally named Princess Vasumati, she was the beloved, refined daughter of King Dadhivahana and Queen Dharini of the kingdom of Champa. During a catastrophic military invasion by King Shatanika of Kaushambi, Champa was sacked, and the young princess was seized in the chaos by an enemy general. Transported far from her homeland, she was heartlessly sold at an open slave market in Kaushambi to a wealthy merchant named Dhanavaha. Recognizing her innate nobility, modesty, and exceptional character, Dhanavaha treated her with parental affection, renaming her Chandana (Chandanbala) because her gentle, virtuous presence brought the cool fragrance of sandalwood into his household.\n\nHowever, Dhanavaha's insecure and suspicious wife, Mula, became consumed by paranoid jealousy, suspecting that her husband intended to marry the young maiden. Waiting until Dhanavaha was away on a prolonged trade journey, Mula struck with cruel savagery. She summoned a barber, had Chandanbala's lustrous hair violently shaved to the scalp, bound her delicate arms and ankles with heavy iron chains, and threw her into a subterranean dungeon, starving her for three days and nights without a sip of water.\n\nMeanwhile, Bhagwan Mahavira was wandering as an austere mendicant in the twelfth year of his severe penance, practicing absolute detachment. In Kaushambi, Mahavira resolved upon an extraordinary, seemingly impossible secret vow (Abhigraha) before he would accept food to break a continuous fast that had lasted five months and twenty-five days. His vow stipulated: he would accept alms only if the giver was a princess reduced to slavery, wearing iron chains, with a shaved head, confined between two thresholds, weeping with tears streaming down her face, smiling simultaneously with devotion, and offering nothing more than coarse boiled lentil husks (Bakula) from a broken winnowing basket. For months Mahavira walked silently through Kaushambi, turning away from opulent palaces offering royal feasts.\n\nOn the very day Dhanavaha returned, horrified to discover Chandanbala locked in the dark pit, he broke her dungeon door, retrieved a basket of dry boiled lentil husks from the cattle shed to feed her, and rushed to find a blacksmith to cut her chains. As Chandanbala stood at the threshold in chains, head shaved, weeping at her misery, she caught sight of the radiant Tirthankara walking past the alley. Overjoyed, she called out to offer him her humble lentil husks. Mahavira turned toward her, seeing all conditions fulfilled, but as he reached out his alms-bowl, he paused: she was not crying. Disappointed, he began to walk away. Desolate that her lord was leaving without food because of her unworthiness, tears burst from Chandanbala's eyes even as her lips smiled in desperate love. Mahavira immediately turned back and accepted the coarse husks from her cupped hands. Miraculously, celestial drums sounded across the heavens, flowers rained from the sky, her iron chains shattered into gold, her hair grew back in radiant black curls, and her slave rags transformed into celestial silk.",
+    "journeyLocal": "चंपा नगरी के राजा दधिवाहन और महारानी धारिणी की सुपुत्री राजकुमारी वसुमती अत्यंत सुसंस्कृत और धर्मपरायण थीं। कौशाम्बी के राजा शतानीक के आक्रमण के समय चंपा का पतन हो गया और एक सेनापति ने राजकुमारी का अपहरण कर लिया। उसने कौशाम्बी के दास बाजार में वसुमती को धनावह नामक श्रेष्ठी के हाथों बेच दिया। श्रेष्ठी ने राजकुमारी के शील और संस्कारों को देखकर उसे पुत्रीवत स्नेह दिया और उसका नाम 'चंदनबाला' रखा, क्योंकि उसकी उपस्थिति चंदन के समान शीतलता देती थी।\n\nपरंतु धनावह की पत्नी मूला अत्यंत ईर्ष्यालु थी। जब श्रेष्ठी व्यापार के लिए बाहर गया, तो मूला ने चंदनबाला पर अमानवीय अत्याचार किए। उसने चंदनबाला के सुंदर केश मुंडवा दिए, उसके पैरों में भारी लोहे की बेड़ियां डाल दीं और उसे एक अंधेरे तलघर में तीन दिनों तक भूखा-प्यासा कैद कर दिया।\n\nउधर भगवान महावीर अपनी कठोर साधना के बारहवें वर्ष में थे। कौशाम्बी में उन्होंने एक अत्यंत कठिन गुप्त अभिग्रह (संकल्प) लिया था कि वे पांच माह पच्चीस दिनों का उपवास तभी तोड़ेंगे जब आहार देने वाली—राजकुमारी हो जो दासी बन चुकी हो, जिसके सिर पर बाल न हों, पैरों में बेड़ियां हों, जो एक पैर देहरी के भीतर और एक बाहर रखे हो, जिसकी आंखों में आंसू हों और चेहरे पर मुस्कान हो, और जो सूप में रखे सूखे उड़द के बाकुलों का दान दे। भगवान नगर के बड़े-बड़े महलों से खाली हाथ लौट जाते थे।\n\nजब धनावह लौटा तो उसने चंदनबाला को तलघर से निकाला और लुहार को बुलाने गया। उसने चंदनबाला को खाने के लिए उड़द के बाकुले दिए। उसी समय भगवान महावीर वहाँ से गुजरे। चंदनबाला ने प्रभु को देखा तो अपने सारे दुख भूलकर उल्लास से आहार देने आगे बढ़ी। भगवान ने देखा कि उसके आंसू नहीं बह रहे हैं, तो वे लौटने लगे। प्रभु को लौटता देख चंदनबाला फूट-फूट कर रोने लगी—'हे नाथ! क्या मुझ दासी का आहार भी आपके योग्य नहीं?' उसके आंसुओं को देखते ही अभिग्रह पूर्ण हुआ और महावीर ने उसके हाथों से बाकुले स्वीकार किए। उसी क्षण देवों ने दुंदुभि बजाई, आकाश से पुष्प बरसे, लोहे की बेड़ियां कटकर स्वर्ण बन गईं और चंदनबाला का रूप पुनः दिव्य हो गया।",
+    "trial": "Chandanbala's ultimate trial was enduring the brutal degradation of royal slavery, dungeon torture, and starvation without allowing a single drop of bitterness, hatred, or vengeance to enter her heart. Even in her darkest hour in iron chains, her first thought upon seeing a hungry mendicant was selfless hospitality.",
+    "trialLocal": "चंदनबाला की सबसे बड़ी परीक्षा राजमहल के सुखों से सीधे दासता, अपमान और कालकोठरी की प्रताड़ना सहने के बाद भी अपने मन में मूला के प्रति लेशमात्र भी द्वेष न आने देना था। भूखी और जंजीरों में जकड़ी होने पर भी जब उसने प्रभु को देखा, तो अपने कष्ट भूलकर केवल दान का भाव रखना उसकी असीम पवित्रता का प्रमाण था।",
+    "teaching": "The purity of an offering depends entirely on the selflessness of the heart, not the material value of the gift. Unconditional patience and forgiveness in the face of cruelty can transform iron chains into liberation.",
+    "teachingLocal": "दान की महिमा वस्तु के मूल्य में नहीं, अपितु देने वाले के भाव की विशुद्धता में है। क्रूरता और अन्याय के सामने भी यदि मन में क्षमा और समता बनी रहे, तो लोहे की बेड़ियां भी आत्मिक मुक्ति का द्वार बन जाती हैं।",
+    "moral": "External adversity and physical degradation cannot touch a soul anchored in chastity and spiritual faith. When you offer whatever little you possess with absolute love, the Divine receives it as the greatest treasure.",
+    "moralLocal": "परिस्थितियां कितनी भी प्रतिकूल क्यों न हों, वे एक पवित्र अंतःकरण को कभी मैला नहीं कर सकतीं। अहंकाररहित होकर प्रेम से दिया गया तिनका भी ईश्वर के लिए सुवर्ण के समान होता है।",
+    "legacy": "Following Bhagwan Mahavira's Kevala Jnana, Chandanbala became the first female initiate of his monastic order, ordained as the supreme head (Pradhana Arya) of thirty-six thousand Jain nuns (Sadhvis), proving that womanhood holds equal and supreme potential for spiritual liberation.",
+    "legacyLocal": "भगवान महावीर के समवशरण में चंदनबाला ने प्रथम श्रमणी दीक्षा ली और ३६,००० साध्वियों के विशाल संघ की प्रधान आर्या (प्रमुख) बनीं। उन्होंने यह सिद्ध किया कि नारी चेतना त्याग, तपस्या और मोक्ष की सर्वोच्च अधिकारी है।",
+    "source": "Trishashti-Shalakapurusha-Charitra & Avashyaka Churni",
+    "sourceLocal": "त्रिषष्टि-शलाकापुरुष-चरित्र एवं आवश्यक चूर्णि",
+    "sourceCitations": [
+      {
+        "sourceName": "Trishashti-Shalakapurusha-Charitra",
+        "sourceRef": "Parva 10, The Fast and Abhigraha of Mahavira in Kaushambi",
+        "tier": 1
+      },
+      {
+        "sourceName": "Avashyaka Sutra",
+        "sourceRef": "Niryukti on Chandanbala's Alms-Giving",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Young Chandanbala standing in iron chains at the wooden threshold of a mud house, offering coarse lentil husks with tears streaming down her face to the serene, radiant Bhagwan Mahavira.",
+    "quote": {
+      "text": "Neither royal blood nor gold makes an offering sacred; it is the fragrance of selfless compassion and unblemished purity that reaches the Divine.",
+      "attribution": "Avashyaka Churni"
+    },
+    "quoteLocal": {
+      "text": "न राजकुल और न स्वर्ण दान को पावन बनाता है; देने वाले के अंतःकरण की निर्मल करुणा और पवित्रता ही दान को महादान बनाती है।",
+      "attribution": "आवश्यक चूर्णि"
+    }
+  },
+  {
+    "id": "sthulabhadra",
+    "name": "Acharya Sthulabhadra",
+    "nameLocal": "आचार्य स्थूलभद्र",
+    "era": "c. 3rd–2nd Century BCE",
+    "eraLocal": "लगभग तीसरी-दूसरी शताब्दी ईसा पूर्व",
+    "tradition": "jain",
+    "region": "Pataliputra (Magadha)",
+    "regionLocal": "पाटलिपुत्र (मगध)",
+    "emoji": "🛡️",
+    "tagline": "The Magadhan noble who abandoned a life of decadent luxury to triumph over desire in the house of a courtesan, later preserving the canonical Agamas at the Council of Pataliputra.",
+    "taglineLocal": "मगध के कुलीन युवक जिन्होंने विलास को त्यागकर वेश्या के भवन में कामवासना पर विजय प्राप्त की और पाटलिपुत्र की संगीति में जिनवाणी के आगमों को संरक्षित किया।",
+    "journey": "Sthulabhadra was born in the imperial capital of Pataliputra as the eldest son of Shakatala, the prime minister of the Nanda Empire. Endowed with breathtaking physical beauty, artistic refinement, and immense wealth, the young nobleman turned his back on imperial politics to immerse himself in the pleasures of the senses. For twelve uninterrupted years, Sthulabhadra resided in the palace of Kosa, the most celebrated and exquisite courtesan of Pataliputra, living in a golden dream of poetry, dance, music, and sensual luxury, completely indifferent to the world outside.\n\nThe turning point of his life arrived with the violent assassination of his father Shakatala during court intrigues. When the Nanda monarch summoned Sthulabhadra to assume his father's prime ministerial seat, Sthulabhadra experienced an overwhelming flash of spiritual revulsion toward courtly power and mortal impermanence. Instead of accepting the prime ministership, he handed the post to his younger brother, walked directly to the monastery of Acharya Sambhutavijaya, and requested initiation into the naked, homeless order of Shramanas. His sudden renunciation sent shockwaves through the empire.\n\nSthulabhadra threw himself into the most rigorous monastic penances. When the four-month monsoon retreat (Chaturmas) approached, during which monks must remain stationary to avoid harming insects spawned by rain, four senior disciples volunteered for extraordinary austerities (Dushkara Charya). One monk chose to spend the four months outside the mouth of a venomous serpent's den; another perched upon the lip of a deep crumbling well; the third sat upon a sharpened iron pike. Sthulabhadra stepped forward and requested the hardest test of all: to spend the entire four months of the monsoon inside the private pleasure chambers of his former lover, the courtesan Kosa.\n\nAcharya Sambhutavijaya granted permission, knowing Sthulabhadra's spiritual resolve. Sthulabhadra returned to Kosa's palace, taking up residence in a corner of her lavish bedchamber on bare straw. Kosa, overjoyed at his return, deployed every art of seduction, intoxicating perfume, romantic verse, dance, and touch to rekindle his passion. For one hundred and twenty continuous days, Sthulabhadra sat motionless in meditation, his eyes lowered, regarding Kosa not as an object of lust, but as a pure, divine soul bound by karma. He spoke to her only of the impermanence of youth, the beauty of the soul, and the path to liberation. At the end of four months, Sthulabhadra walked out of the palace completely untainted, while Kosa fell at his feet, renounced her profession, and embraced the vows of a devout Jain laywoman (Shravika).\n\nWhen the monks returned to report their penances, the Acharya praised the others for their physical endurance, but when Sthulabhadra bowed, the master stood up and embraced him with tears of veneration, proclaiming: 'Dushkaram! Dushkaram Kriyate!'—You alone performed the truly impossible, for you conquered the inner fires of desire! Following the great twelve-year famine, Sthulabhadra convened the historic Council of Pataliputra around 300 BCE, compiling the fragmented oral Agamas and preserving the sacred tradition.",
+    "journeyLocal": "पाटलिपुत्र में नंद साम्राज्य के प्रधानमंत्री शकटाल के कुल में जन्मे स्थूलभद्र असाधारण रूपवान, कला-पारखी और धनी युवक थे। सांसारिक सुखों में डूबे स्थूलभद्र ने बारह वर्षों तक पाटलिपुत्र की प्रसिद्ध नर्तकी और रूपसी कोषा के महल में संगीत, नृत्य और विलास का जीवन व्यतीत किया। उन्हें राज-काज और संसार की कोई चिंता न थी।\n\nपरंतु जब दरबारी षड्यंत्रों में उनके पिता शकटाल की हत्या हुई और राजा ने उन्हें प्रधानमंत्री का पद संभालने को कहा, तो स्थूलभद्र की अंतरात्मा कांप उठी। उन्होंने देखा कि जिस सत्ता और जीवन के लिए लोग षड्यंत्र करते हैं, वह कितना क्षणभंगुर है! उन्होंने पद का त्याग कर आचार्य संभूतविजय के चरणों में मुनि दीक्षा ले ली।\n\nदीक्षा के पश्चात् जब वर्षाकाल (चातुर्मास) आया, तो चार मुनियों ने घोर तपस्या के संकल्प लिए। एक मुनि ने सर्प के बिल के पास, दूसरे ने कुएं की मुंडेर पर, और तीसरे ने तीक्ष्ण आरा-यंत्र के पास चातुर्मास बिताने का व्रत लिया। परंतु स्थूलभद्र ने सबसे कठिन परीक्षा चुनी—अपनी पूर्व प्रेमिका कोषा के विलास-भवन में चातुर्मास करना।\n\nआचार्य की आज्ञा लेकर स्थूलभद्र कोषा के महल में गए और एक कोने में कुश के आसन पर ध्यानस्थ हो गए। कोषा ने उन्हें पुनः रिझाने के लिए अपने समस्त हाव-भाव, सौंदर्य, संगीत और स्पर्श का प्रयोग किया। परंतु चार मास तक स्थूलभद्र की दृष्टि विचलित नहीं हुई; वे निरंतर आत्मा के ध्यान में लीन रहे। उन्होंने कोषा को नश्वर देह के स्थान पर आत्मा की अमरता का उपदेश दिया। चार माह पश्चात जब वे लौटे, तो कोषा उनके वैराग्य से प्रभावित होकर स्वयं श्राविका बन चुकी थी। आचार्य ने अन्य मुनियों की तपस्या को सराहा, परंतु स्थूलभद्र के समक्ष खड़े होकर कहा—'दुष्करं कृतवान्!' (तुमने सचमुच असंभव कार्य किया है), क्योंकि तुमने काम-वासना के साक्षात समुद्र में रहकर भी स्वयं को निष्पाप रखा। आगे चलकर स्थूलभद्र ने पाटलिपुत्र संगीति का आयोजन कर आगमों को लिपिबद्ध कराने में ऐतिहासिक योगदान दिया।",
+    "trial": "Sthulabhadra's defining trial was spending four months in the intimate chambers of the courtesan he had adored for twelve years, resisting relentless seduction through the sheer force of pure meditation and mental celibacy (Brahmacharya). Conquering lust from within while surrounded by sensual luxury was the pinnacle of spiritual mastery.",
+    "trialLocal": "स्थूलभद्र की सबसे कठिन परीक्षा उस कामिनी के शयनकक्ष में चार महीने बिताना था जिससे वे बारह वर्षों तक प्रेम करते रहे थे। बाह्य रूप से कोई पहरा न होने पर भी अपने मन के भीतर काम-वासना के वेग को शांत रखना और पूर्ण वीतरागी बने रहना उनकी साधना का सर्वोच्च शिखर था।",
+    "teaching": "Physical austerities that torture the outer body are far easier than subduing the unruly mind and burning out sexual desire from within. Real celibacy (Brahmacharya) is not mere physical suppression, but the radiant joy of abiding in the pure consciousness of the soul.",
+    "teachingLocal": "शरीर को कष्ट देना या बाह्य तप करना आसान है, परंतु मन की वासनाओं पर विजय पाना अत्यंत कठिन है। ब्रह्मचर्य केवल शारीरिक नियंत्रण नहीं, बल्कि आत्मा के आनंद में लीन होकर वासना के बीजों को समूल नष्ट कर देना है।",
+    "moral": "No matter how deeply you have indulged in worldly pleasures in the past, a single decisive moment of spiritual awakening can transform your consciousness and make you a master of self-restraint.",
+    "moralLocal": "अतीत में चाहे जितने भी पाप या भोग रहे हों, यदि एक बार अंतःकरण में वैराग्य की ज्वाला प्रज्वलित हो जाए, तो मनुष्य अपनी दुर्बलताओं पर विजय प्राप्त कर वीतरागता के सर्वोच्च शिखर पर पहुँच सकता है।",
+    "legacy": "Acharya Sthulabhadra convened the Council of Pataliputra (c. 300 BCE), which collected and codified the surviving eleven Angas of the Jain Agamas after the Magadha famine, securing the continuity of the Shvetambara canonical lineage.",
+    "legacyLocal": "आचार्य स्थूलभद्र ने पाटलिपुत्र संगीति का नेतृत्व कर अकाल के पश्चात बिखरे हुए ग्यारह अंग आगमों का संकलन कराया, जिससे जैन धर्म की ज्ञान-परंपरा लुप्त होने से बच गई।",
+    "source": "Parishishta-Parvan (Acharya Hemachandra) & Avashyaka Niryukti",
+    "sourceLocal": "परिशिष्ट-पर्वन (आचार्य हेमचन्द्र) एवं आवश्यक निर्युक्ति",
+    "sourceCitations": [
+      {
+        "sourceName": "Parishishta-Parvan",
+        "sourceRef": "Sarga 8, The Austerity of Sthulabhadra in Kosa's Mansion",
+        "tier": 1
+      },
+      {
+        "sourceName": "Avashyaka Niryukti",
+        "sourceRef": "Gatha on the Four Heroes of the Chaturmas Vows",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Young ascetic Sthulabhadra sitting in unwavering meditation on a simple mat inside a lavishly decorated, silk-draped ancient Indian palace chamber, with incense rising and dancer Kosa bowing before him in spiritual reverence.",
+    "quote": {
+      "text": "Harder than walking on the edge of a sword, harder than swallowing blazing poison, is conquering lust in the midst of temptation.",
+      "attribution": "Parishishta-Parvan, 8.112"
+    },
+    "quoteLocal": {
+      "text": "तलवार की धार पर चलना और जलता हुआ विष पीना भी सरल हो सकता है, परंतु काम-वासना के साक्षात सम्मुख रहकर मन को पवित्र रखना सबसे कठिन साधना है।",
+      "attribution": "परिशिष्ट-पर्वन, ८.११२"
+    }
+  },
+  {
+    "id": "haribhadra",
+    "name": "Haribhadra Suri",
+    "nameLocal": "हरिभद्र सूरि",
+    "era": "c. 8th Century CE",
+    "eraLocal": "लगभग आठवीं शताब्दी ईस्वी",
+    "tradition": "jain",
+    "region": "Chitrakuta (Chittorgarh, Rajasthan)",
+    "regionLocal": "चित्रकूट (चित्तौड़गढ़, राजस्थान)",
+    "emoji": "☀️",
+    "tagline": "The proud royal Brahmin scholar humbled by a Jain nun, who mastered comparative Indian philosophy, overcame the poison of revenge, and pioneered universal inter-faith dialogue in Yogadrishtisamuccaya.",
+    "taglineLocal": "विद्वान राजपुरोहित जिनका दर्प एक जैन साध्वी ने तोड़ा, जिन्होंने प्रतिशोध की ज्वाला को करुणा में बदला और 'योगदृष्टिसमुच्चय' से सर्वधर्म समन्वय का मार्ग प्रशस्त किया।",
+    "journey": "Born in the historic citadel of Chitrakuta (Chittorgarh in Rajasthan), Haribhadra was an aristocratic Brahmin of formidable intellectual prowess who served as the chief royal priest to King Jitari. Puffed up with immense pride in his mastery of the six orthodox Darshanas, Vedic rituals, grammar, and logic, Haribhadra wore a golden belt around his waist, boasting that his colossal intellect would burst his belly if it were not bound by steel and gold. He declared a public challenge across India that he would immediately surrender and become the humble disciple of anyone who could recite a philosophical verse whose meaning he could not decipher.\n\nOne afternoon while riding in his royal palanquin through the streets of Chitrakuta, he heard a soft, melodic voice coming from a nearby resting hall. A Jain nun named Sadhvi Yakini Mahattara was reciting an ancient Prakrit gatha describing the cosmological lineage of the Tirthankaras: 'Chakkavatti Chakkavatti...' Haribhadra stopped his palanquin, listened intently, and realized with mounting horror and embarrassment that he could not understand the grammatical syntax or philosophical import of the verse. True to his solemn vow, he approached the venerable nun with folded hands, begging her to explain the meaning. With gentle dignity, the nun replied: 'Noble scholar, I am a renunciate who cannot teach a householder. If you wish to understand the depths of the Agamas, you must approach my preceptor Acharya Jinadatta.' Haribhadra went to Jinadatta, renounced his royal wealth, took monastic initiation, and forever after signed his scholarly works with filial gratitude as 'Yakini-Mahattara-Sunu'—the spiritual son of the nun Yakini.\n\nHaribhadra became one of the most prolific and revolutionary scholars in Indian philosophical history, authoring an astounding 1,444 treatises spanning Sanskrit and Prakrit. He was the first thinker in Indian intellectual history to write comparative philosophical compendiums—such as the *Shaddarshanasamuccaya*—presenting rival traditions (Nyaya, Vaisheshika, Sankhya, Yoga, Mimamsa, and Buddhism) with scrupulous fairness and objective appreciation. In his crowning spiritual masterpiece, the *Yogadrishtisamuccaya* (The Synthesis of Yogic Visions), he synthesized Patanjali's Ashtanga Yoga with Jain metaphysics, demonstrating that true spiritual awakening transcends sectarian terminology.",
+    "journeyLocal": "राजस्थान के ऐतिहासिक चित्तौड़गढ़ में जन्मे हरिभद्र राजा जितारि के राजपुरोहित थे। चारों वेदों, छहों दर्शनों और तर्कशास्त्र में अद्वितीय विद्वता के कारण उन्हें अपनी मेधा पर अपार अहंकार था। वे अपनी कमर पर सोने का पट्टा बांधकर चलते थे और कहते थे कि उनका विशाल ज्ञान उनके पेट को फाड़ न दे, इसलिए वे यह पट्टा बांधते हैं। उन्होंने प्रतिज्ञा की थी कि जो भी उन्हें ऐसा श्लोक सुना देगा जिसका अर्थ वे न समझ सकें, वे उसके आजीवन शिष्य बन जाएंगे।\n\nएक दिन जब वे पालकी में जा रहे थे, तो उन्होंने साध्वी याकिनी महत्तारा को एक प्राकृत गाथा का पाठ करते सुना। हरिभद्र ने बहुत प्रयास किया, परंतु वे उस गाथा का अर्थ न समझ सके। अपनी प्रतिज्ञा के अनुसार वे साध्वी के पास गए और अर्थ पूछा। साध्वी ने कहा कि वे साधु होकर किसी गृहस्थ को नहीं पढ़ा सकतीं; यदि ज्ञान पाना है तो उनके गुरु आचार्य जिनदत्त के पास जाना होगा। हरिभद्र ने आचार्य जिनदत्त के पास जाकर समस्त वैभव त्याग दिया और दीक्षा ग्रहण की। अपने अहंकार को तोड़ने वाली साध्वी के प्रति कृतज्ञता व्यक्त करते हुए उन्होंने जीवन भर अपने ग्रंथों में स्वयं को 'याकिनी महत्तारा सूनु' (साध्वी याकिनी का आध्यात्मिक पुत्र) लिखा।\n\nआचार्य हरिभद्र ने लगभग १४४४ ग्रंथों की रचना कर भारतीय दर्शन में क्रांति ला दी। वे भारत के पहले विचारक थे जिन्होंने 'षड्दर्शनसमुच्चय' लिखकर सभी दर्शनों—न्याय, वैशेषिक, सांख्य, योग, मीमांसा और बौद्ध—का बिना किसी पूर्वाग्रह के निष्पक्ष विवेचन किया। अपने अमर ग्रंथ 'योगदृष्टिसमुच्चय' में उन्होंने पतंजलि के योग और जैन दर्शन का सुंदर समन्वय प्रस्तुत किया और बताया कि सभी मार्गों का अंतिम लक्ष्य आत्मा का परमात्मा से मिलन है।",
+    "trial": "Haribhadra's supreme trial was overcoming the burning poison of personal vengeance. When his two beloved monastic nephews, Hansa and Paramahamsa, were murdered by fanatical sectarian monks at a rival university, Haribhadra was consumed by agonizing grief and fury. Using his occult powers, he prepared to destroy his nephews' murderers in boiling oil. His compassionate preceptor intervened by singing a verse of forgiveness, showing him that revenge would drag his own soul into hell. Weeping in remorse, Haribhadra extinguished his wrath, composed treatises on universal forgiveness, and redirected his grief into writing spiritual literature.",
+    "trialLocal": "हरिभद्र की सबसे कठिन परीक्षा प्रतिशोध की भयानक ज्वाला पर विजय पाना था। जब उनके प्रिय शिष्य और भांजे हंस और परमहंस की अन्य मतावलंबियों द्वारा हत्या कर दी गई, तो हरिभद्र शोक और क्रोध से पागल हो उठे। वे अपनी तांत्रिक शक्ति से हत्यारों को दंडित करने की योजना बनाने लगे। परंतु उनके गुरु ने समय पर उन्हें करुणा का पाठ पढ़ाया और समझाया कि प्रतिशोध से केवल अपनी ही आत्मा का पतन होता है। हरिभद्र का हृदय पश्चाताप से भर गया; उन्होंने क्रोध का त्याग कर दिया और अपनी सारी शक्ति ज्ञान के सृजन में लगा दी।",
+    "teaching": "Truth is not the monopoly of any single religious sect or prophet. Just as different physicians prescribe different medicines according to the patient's illness, so do enlightened masters teach different paths according to seekers' spiritual maturity. Cultivate non-dogmatic vision (Anekantavada) and boundless compassion.",
+    "teachingLocal": "सत्य किसी एक संप्रदाय या पंथ की बपौती नहीं है। जैसे एक कुशल वैद्य रोगी की अवस्था देखकर अलग-अलग औषधियां देता है, वैसे ही ज्ञानी पुरुष साधकों की योग्यता अनुसार भिन्न-भिन्न मार्ग बताते हैं। हठधर्मिता और सांप्रदायिकता को छोड़कर सभी के प्रति उदार और समन्वयकारी दृष्टिकोण रखना ही सच्चा धर्म है।",
+    "moral": "Intellectual brilliance without emotional humility is a curse. When grief or betrayal tempts you toward revenge, remember that forgiveness is the only fire that can purify tragedy into divine grace.",
+    "moralLocal": "अहंकार से युक्त ज्ञान मनुष्य को अंधा बना देता है। यदि जीवन में कभी घोर आघात या धोखा मिले, तो प्रतिशोध की आग में जलने के स्थान पर क्षमा और प्रेम से अपनी ऊर्जा को लोक-कल्याण में लगा देना चाहिए।",
+    "legacy": "Haribhadra Suri pioneered inter-religious harmony and comparative philosophy in ancient India. His *Shaddarshanasamuccaya* and *Yogadrishtisamuccaya* remain foundational classics studied across global academic universities for their enlightened pluralism and systematic rigor.",
+    "legacyLocal": "आचार्य हरिभद्र ने भारतीय दर्शन में तुलनात्मक अध्ययन और धार्मिक सहिष्णुता की नींव रखी। उनके ग्रंथ आज भी विश्व भर के विश्वविद्यालयों में दार्शनिक उदारवाद और अनेकांतवाद के अप्रतिम उदाहरण के रूप में पढ़ाए जाते हैं।",
+    "source": "Yogadrishtisamuccaya & Shaddarshanasamuccaya (Haribhadra Suri)",
+    "sourceLocal": "योगदृष्टिसमुच्चय एवं षड्दर्शनसमुच्चय (हरिभद्र सूरि)",
+    "sourceCitations": [
+      {
+        "sourceName": "Yogadrishtisamuccaya",
+        "sourceRef": "Chapter 1, The Eight Drishtis and the Unity of Truth",
+        "tier": 1
+      },
+      {
+        "sourceName": "Prabhavaka Charitra",
+        "sourceRef": "Life of Acharya Haribhadra Suri",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Royal Brahmin scholar Haribhadra standing before the venerable Jain nun Sadhvi Yakini Mahattara in a temple courtyard, unfastening his golden belt in humble intellectual surrender.",
+    "quote": {
+      "text": "I possess no bias toward Mahavira, nor prejudice against Kapila or Buddha; whoever's words are grounded in truth and reason, his path alone I accept.",
+      "attribution": "Lokatattvanirnaya, Verse 38"
+    },
+    "quoteLocal": {
+      "text": "पक्षपातो न मे वीरे, न द्वेषः कपिलादिषु। युक्तिमद्वचनं यस्य, तस्य कार्यः परिग्रहः॥",
+      "attribution": "लोकतत्वनिर्णय, श्लोक ३८"
+    }
+  },
+  {
+    "id": "yashovijaya",
+    "name": "Upadhyaya Yashovijaya",
+    "nameLocal": "उपाध्याय यशोविजय",
+    "era": "1624–1688 CE",
+    "eraLocal": "१६२४-१६८८ ईस्वी",
+    "tradition": "jain",
+    "region": "Kanoda (Gujarat) / Varanasi",
+    "regionLocal": "कनोड़ा (गुजरात) / वाराणसी",
+    "emoji": "⚖️",
+    "tagline": "The seventeenth-century master of Navya-Nyaya logic who studied undercover in Varanasi, synthesized dry epistemology with Kundakunda's inner mysticism, and rejuvenated Jain intellectual thought.",
+    "taglineLocal": "सत्रहवीं शताब्दी के नव्य-न्याय के प्रकांड विद्वान, जिन्होंने वाराणसी में तर्कशास्त्र का अध्ययन कर शुष्क न्याय को आत्मिक अध्यात्म के साथ समन्वित किया।",
+    "journey": "Regarded with veneration as the \"Laghu Hemachandra\" (The Younger Hemachandra), Upadhyaya Yashovijaya was the intellectual and spiritual colossus who dominated the seventeenth-century Indian philosophical renaissance. Born as Jasvant in the village of Kanoda in Gujarat, he exhibited luminous intellectual brilliance, extraordinary photographic memory, and profound spiritual receptivity from early childhood. Ordained into the Shvetambara monastic order by Acharya Nayavijaya, he was bestowed the monastic name Yashovijaya. At that time in Indian history, the traditional philosophical establishment was concentrated in the sacred city of Varanasi (Kashi), where Brahmin scholars of the Navya-Nyaya (New Logic) school had developed an extraordinarily rigorous, razor-sharp dialectical language that governed all serious theological, metaphysical, and legal discourse across the subcontinent.\n\nBecause orthodox pandits in Varanasi strictly barred non-Brahmin and Shramana ascetics from entering their esoteric academies, the Jain Sangha in Gujarat sent the young Yashovijaya and his companion to Varanasi disguised as traditional Brahmin students. For twelve unbroken years, living under rigorous ascetic discipline in secret, Yashovijaya studied under the most celebrated Nyaya masters of Kashi, mastering the dense dialectical treatises of Gangesha Upadhyaya, Raghunatha Shiromani, and Mathuranatha Tarkavagisha. His mastery of symbolic formal logic, epistemology, and polemical debate was so astonishing that the supreme council of Kashi pandits conferred upon him the highest academic titles of the realm: \"Nyaya-Visharada\" and \"Nyayacharya.\" When his true identity as a Jain monk was eventually discovered, the pandits were awed by his immaculate scholarship, intellectual honesty, and ethical purity, unanimously confirming his degrees with deep reverence and admiration.\n\nReturning to Gujarat, Yashovijaya did not use his formidable dialectical armory merely to win dry academic debates against rivals. Instead, he achieved a magnificent and unprecedented spiritual synthesis. He observed that dry intellectual dialectics without inner realization produces cynical pedants, while emotional devotion without logical discernment produces blind superstition and sectarian narrowness. Yashovijaya boldly unified the razor-sharp analytical precision of Navya-Nyaya with the luminous non-dual spiritual metaphysics of Acharya Kundakunda, Haribhadra Suri, and Anandghan. In monumental masterpieces including the Jnanasara, Adhyatmasara, Adhyatmapanishad, and his deep commentaries on Patanjali and the Yoga Shastra, he demonstrated that rigorous intellectual inquiry must never be an end in itself, but a diamond ladder that climbs toward silent meditative absorption in the pure, radiant soul.",
+    "journeyLocal": "सत्रहवीं शताब्दी में गुजरात के कनोड़ा ग्राम में जन्मे जसवंत (यशोविजय) को उनकी असाधारण प्रतिभा के कारण 'लघु हेमचंद्र' कहा जाता है। अल्पायु में ही मुनि दीक्षा लेने के पश्चात वे ज्ञान की खोज में निकले। उस समय संपूर्ण भारत में काशी (वाराणसी) नव्य-न्याय और तर्कशास्त्र का सर्वोच्च केंद्र था, परंतु वहाँ के रूढ़िवादी पंडित केवल ब्राह्मण छात्रों को ही यह गूढ़ विद्या सिखाते थे। जैन संघ ने युवा यशोविजय को अध्ययन हेतु एक ब्राह्मण छात्र के वेश में काशी भेजा।\n\nयशोविजय ने बारह वर्षों तक काशी के महानतम आचार्यों से गदाधर भट्टाचार्य और रघुनाथ शिरोमणि के नव्य-न्याय का गहन अध्ययन किया। उनकी तार्किक मेधा इतनी प्रखर थी कि काशी की विद्वत-सभा ने उन्हें 'न्यायविशारद' और 'न्यायाचार्य' की सर्वोच्च उपाधियों से सम्मानित किया। जब बाद में यह रहस्य खुला कि वे एक जैन यति हैं, तो पंडितों ने उनके निष्कलंक ज्ञान और सत्यनिष्ठा को देखकर उनकी उपाधियों का सहर्ष अनुमोदन किया।\n\nकाशी से लौटकर यशोविजय जी ने केवल शास्त्रार्थ नहीं किया, अपितु भारतीय दर्शन में एक अद्वितीय समन्वय स्थापित किया। उन्होंने देखा कि कोरा तर्क मनुष्य को अहंकारी बना देता है, और बिना विवेक की भक्ति अंधविश्वास बन जाती है। उन्होंने नव्य-न्याय के तीक्ष्ण तर्क को आचार्य कुन्दकुन्द के आत्म-अध्यात्म और हरिभद्र सूरि की योग-दृष्टि के साथ जोड़ दिया। उन्होंने 'ज्ञानसार', 'अध्यात्मसार', 'अध्यात्मोपनिषद्' और 'न्यायामृत' जैसे सैकड़ों अमर ग्रंथों की रचना कर यह सिद्ध किया कि समस्त तर्कों का अंतिम लक्ष्य आत्मा का अपने शुद्ध, वीतराग स्वरूप में स्थिर हो जाना है।",
+    "trial": "Yashovijaya endured twelve continuous years of scholastic isolation under a disguised identity in Varanasi, living under the constant threat of public exposure while maintaining strict monastic chastity and dietary purity in secret. After returning to Gujarat, he faced fierce suspicion from dogmatic traditionalists who accused him of corrupting pristine Jain doctrine with Hindu logic. With unshakeable composure, he proved through pristine Agamic citations that truth is fearless, and that rigorous logic is the finest servant of pure spiritual realization.",
+    "trialLocal": "काशी में बारह वर्षों तक गुप्त रूप से रहते हुए अपनी मुनि-चर्या की पवित्रता को बनाए रखना यशोविजय की कठिन परीक्षा थी। इसके पश्चात जब उन्होंने जैन दर्शन को नव्य-न्याय की कसौटी पर कसा, तो रूढ़िवादी विद्वानों ने उनका विरोध किया। परंतु उन्होंने निर्भीकता से सिद्ध किया कि सत्य कभी तर्क से नहीं डरता, बल्कि तर्क की कसौटी पर कसने से वह और अधिक कुंदन बन जाता है।",
+    "teaching": "Intellectual logic is merely a broom to sweep away the cobwebs of delusion; it can never replace the experiential nectar of direct self-realization (Atma-Jnana). When the mind is thoroughly purged of ego, sectarian malice, and possessiveness, analytical reasoning naturally quiets down and matures into profound meditation, revealing the unconditioned, blissful soul.",
+    "teachingLocal": "तर्क केवल अज्ञान के जाले साफ करने का साधन है, वह आत्म-अनुभूति का विकल्प नहीं हो सकता। जब मन राग और अहंकार से मुक्त होता है, तभी बुद्धि शांत होकर ध्यान में बदलती है और आत्मा के आनंद का साक्षात्कार होता है।",
+    "moral": "Never fear rigorous inquiry or genuine debate. Authentic faith does not shrink from honest questioning or seek shelter in blind dogmatism; rather, true spirituality is an unshakeable conviction tested by reason, anchored in compassionate ethics, and verified in the stillness of meditation.",
+    "moralLocal": "सच्चा धर्म कभी तार्किक प्रश्नों से नहीं भागता। विवेक, तर्क और आचरण की कसौटी पर जो खरा उतरे, वही सच्चा ज्ञान है; अंधविश्वास के स्थान पर विवेकपूर्ण श्रद्धा ही कल्याण का मार्ग है।",
+    "legacy": "Upadhyaya Yashovijaya was the last great universal polymath of classical Jain philosophy. Authoring over one hundred works in Sanskrit, Prakrit, and Gujarati, his writings rescued Jain thought from medieval intellectual stagnation, modernized its epistemological framework, and provided the philosophical bridge that enabled twentieth-century scholars to appreciate the profound analytical depth of Anekantavada.",
+    "legacyLocal": "उपाध्याय यशोविजय जैन दर्शन के अंतिम महान युगप्रवर्तक माने जाते हैं। उन्होंने मध्यकालीन जड़ता को तोड़कर जैन दर्शन को आधुनिक तार्किक स्वरूप दिया, जिसके कारण आज भी उनका साहित्य दार्शनिक अध्ययन की आधारशिला बना हुआ है।",
+    "source": "Jnanasara & Adhyatmasara (Upadhyaya Yashovijaya)",
+    "sourceLocal": "ज्ञानसार एवं अध्यात्मसार (उपाध्याय यशोविजय)",
+    "sourceCitations": [
+      {
+        "sourceName": "Jnanasara",
+        "sourceRef": "Ashtaka 1, The Nature of Pure Spiritual Knowledge",
+        "tier": 1
+      },
+      {
+        "sourceName": "Adhyatmasara",
+        "sourceRef": "Adhyatma Lakshana, Verses 1–10",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "17th-century scholar-monk Upadhyaya Yashovijaya sitting cross-legged in a Varanasi library debating with learned Brahmin pandits on the banks of the sacred Ganga, radiating calm intellectual mastery.",
+    "quote": {
+      "text": "Logic without spiritual contemplation is dry dust; contemplation without logic is blind delusion. Merge the two, and the luminous soul shines forth.",
+      "attribution": "Adhyatmasara, 1.4"
+    },
+    "quoteLocal": {
+      "text": "अध्यात्म के बिना कोरा तर्क शुष्क धूल है, और तर्क के बिना अध्यात्म अंधा भ्रम है। जब दोनों का संगम होता है, तभी आत्मा का दिव्य आलोक प्रकट होता है।",
+      "attribution": "अध्यात्मसार, १.४"
+    }
+  },
+  {
+    "id": "kumarpal",
+    "name": "King Kumarpal",
+    "nameLocal": "राजा कुमारपाल (परमअर्हत)",
+    "era": "1143–1172 CE",
+    "eraLocal": "११४३-११७२ ईस्वी",
+    "tradition": "jain",
+    "region": "Anhilwad Patan (Gujarat)",
+    "regionLocal": "अणहिलवाड़ पाटण (गुजरात)",
+    "emoji": "👑",
+    "tagline": "The Chaulukya emperor who rose from fugitive obscurity to the golden throne of Patan, transforming western India into an empire of non-violence under Acharya Hemachandra.",
+    "taglineLocal": "सोलंकी वंश के चक्रवर्ती सम्राट, जिन्होंने संकटों से उबरकर सिंहासन प्राप्त किया और आचार्य हेमचंद्र के मार्गदर्शन में संपूर्ण पश्चिमी भारत में अहिंसा का साम्राज्य स्थापित किया।",
+    "journey": "King Kumarpal of the Chaulukya (Solanki) dynasty remains celebrated in Indian history as the 'Paramarahata'—the supreme royal patron of non-violence. Born of modest lineage within the royal clan, the suspicious emperor Siddharaja Jayasimha viewed young Kumarpal as an existential threat to his direct succession and sought to assassinate him. For thirty years, Kumarpal lived the perilous life of a hunted fugitive, disguised as a wandering mendicant, fleeing across Gujarat, Malwa, and Rajasthan. During these harrowing years of destitution, he was sheltered by compassionate ordinary citizens—including an impoverished potter named Alinga, a farmer named Bosari, and a merchant named Udayana—experiences that forged in him deep empathy for the suffering of the common people.\n\nFollowing Siddharaja's demise without a male heir in 1143 CE, the royal council and ministers crowned the seasoned, resilient Kumarpal as the emperor of Anhilwad Patan at the mature age of fifty. Once securely on the throne, Kumarpal rewarded every humble friend who had sheltered him during his years in exile, elevating Alinga the potter to a high royal grant. Soon after his coronation, Kumarpal met the intellectual giant Acharya Hemachandra, forging one of the most transformative teacher-king relationships in world history. Inspired by Hemachandra’s profound spiritual discourses, Kumarpal formally embraced Jainism, taking the twelve sacred vows of a householder (Shravaka) and dedicating his imperial might to the service of righteousness.\n\nKumarpal enacted the historic *A-mari Pravartan* (Royal Edict of Non-Slaughter) across his vast empire extending over Gujarat, Saurashtra, Kutch, Malwa, and southern Rajasthan. Under imperial law, the slaughter of any animal, bird, or fish was strictly outlawed; hunting, animal combat, animal sacrifices in religious temples, and the sale of meat and liquor were completely prohibited. To ensure butchers and hunters were not driven into starvation, Kumarpal provided them three years of state grain and alternative ethical livelihoods from the imperial treasury. Most noble of all, Kumarpal abolished the predatory ancient law of *Rudanti-Dhana* (Tears Money), under which the state confiscated all property of men who died without sons, leaving grieving widows and daughters destitute. Kumarpal renounced millions in tax revenue, declaring: 'The tears of a widow shall never fill the royal treasury.' He constructed over fourteen hundred magnificent marble and stone temples, including the grand Taranga Hill temple and the restoration of Somnath, ushering in the golden age of Gujarat.",
+    "journeyLocal": "गुजरात के सोलंकी (चौलुक्य) राजवंश के सम्राट कुमारपाल को इतिहास में 'परमअर्हत' की उपाधि से स्मरण किया जाता है। उनका प्रारंभिक जीवन अत्यंत संघर्षमय रहा। तत्कालीन राजा सिद्धराज जयसिंह उन्हें अपना प्रतिद्वंद्वी मानकर उनकी हत्या करवाना चाहता था। कुमारपाल लगभग तीस वर्षों तक एक संन्यासी और सामान्य नागरिक के वेश में दर-दर भटकते रहे। इस कठिन समय में एक निर्धन कुम्हार आलिंग, एक किसान बोसरि और एक व्यापारी उदयन ने अपनी जान जोखिम में डालकर उनकी रक्षा की। इस निर्धनता और संकट ने कुमारपाल के हृदय में जनसाधारण के प्रति गहरी करुणा भर दी।\n\n११४३ ईस्वी में सिद्धराज के निधन के पश्चात, पचास वर्ष की आयु में कुमारपाल अणहिलवाड़ पाटण के सिंहासन पर आरूढ़ हुए। राजा बनते ही उन्होंने संकट के दिनों में सहायता करने वाले सभी निर्धन मित्रों को राज-सम्मान और संपत्तियां देकर कृतज्ञता का आदर्श प्रस्तुत किया। इसके पश्चात उनका संपर्क कलिकाल-सर्वज्ञ आचार्य हेमचंद्र से हुआ। हेमचंद्र के पावन उपदेशों से प्रभावित होकर कुमारपाल ने जैन धर्म अंगीकार किया और आजीवन अहिंसा, सत्य और अपरिग्रह के व्रतों का पालन करने का संकल्प लिया।\n\nकुमारपाल ने अपने संपूर्ण साम्राज्य—गुजरात, मालवा, राजस्थान और कच्छ—में 'अमारि घोषणा' (जीव-हिंसा पर पूर्ण प्रतिबंध) लागू की। राज्य भर में पशु-पक्षी हत्या, शिकार, मदिरापान, जुआ और पशु-बलि को दंडनीय अपराध घोषित किया गया। जो कसाई और शिकारी बेरोजगार हुए, उन्हें राज्य के कोष से तीन वर्ष तक अन्न और नए व्यापार हेतु धन दिया गया। उन्होंने उस क्रूर कानून 'रुदंति-धन' को समाप्त कर दिया जिसके तहत निःसंतान मृतक की संपत्ति राजकोष में जब्त कर ली जाती थी और विधवाएं बेसहारा हो जाती थीं। कुमारपाल ने कहा—'विधवा के आंसुओं से अर्जित धन से राजकोष कभी पवित्र नहीं हो सकता।' उन्होंने तारंगा पहाड़ी पर विशाल जैन मंदिर और सोमनाथ ज्योतिर्लिंग का जीर्णोद्धार कराकर गुजरात के सांस्कृतिक गौरव को अमर कर दिया।",
+    "trial": "Kumarpal endured thirty years of constant mortal terror as a hunted fugitive, sleeping in ravines, potter's kilns, and dense jungles. As an emperor, he faced immense resistance from revenue collectors and orthodox nobles who argued that banning animal slaughter, liquor, and the confiscation of widows' property would bankrupt the royal treasury, but he chose righteousness over gold.",
+    "trialLocal": "कुमारपाल की सबसे बड़ी परीक्षा तीस वर्षों तक प्राण बचाते हुए जंगलों और भट्ठियों में छिपकर भटकना था। राजा बनने के बाद जब उन्होंने जीव-हिंसा और विधवाओं की संपत्ति जब्त करने पर रोक लगाई, तो मंत्रियों ने चेतावनी दी कि इससे राज्य को भारी राजस्व का नुकसान होगा। परंतु कुमारपाल ने धन के स्थान पर धर्म और मानवीय करुणा को चुनकर अद्वितीय नैतिक साहस दिखाया।",
+    "teaching": "A ruler's greatest conquest is the conquest of his own passions, and his highest duty is the protection of the defenseless. True governance is not measured by the size of the treasury or the reach of the sword, but by the absence of fear among all living beings under the sovereign's watch.",
+    "teachingLocal": "राजा की सबसे बड़ी विजय अपनी इंद्रियों पर विजय है, और उसका सर्वोच्च कर्तव्य निर्बलों की रक्षा करना है। शासन की सफलता इस बात से नहीं मापी जाती कि खजाने में कितना स्वर्ण है, बल्कि इससे मापी जाती है कि राज्य का निर्बल से निर्बल जीव भी भयमुक्त होकर जीवन जी सके।",
+    "moral": "Power and authority are sacred trusts meant to relieve suffering, not tools for personal aggrandizement. When leaders align governance with compassion and justice, society enters an enduring golden age.",
+    "moralLocal": "सच्चा शासक वही है जो अपने पद और शक्ति का उपयोग दुर्बलों के आंसू पोंछने और समाज में न्याय स्थापित करने के लिए करे। धन और सत्ता तभी सार्थक हैं जब वे धर्म और करुणा के अधीन हों।",
+    "legacy": "King Kumarpal is celebrated alongside Ashoka as one of the very few imperial monarchs in world history who successfully organized an entire empire upon the foundation of non-violence. The architectural monuments he sponsored, especially the grand Ajitnath temple at Taranga Hill, remain standing as timeless wonders of Indian art.",
+    "legacyLocal": "सम्राट कुमारपाल को विश्व इतिहास में सम्राट अशोक के समकक्ष ऐसा दुर्लभ राजा माना जाता है जिसने संपूर्ण साम्राज्य में अहिंसा का राज्य स्थापित किया। उनके द्वारा निर्मित तारंगा हिल का भव्य अजितनाथ मंदिर और पालिताना के जिनालय आज भी उनकी धर्मनिष्ठा की गवाही देते हैं।",
+    "source": "Kumarpala-Pratibodha (Somaprabha) & Moharajaparajaya (Yashahpala)",
+    "sourceLocal": "कुमारपाल-प्रतिबोध (सोमप्रभ) एवं मोहराजपराजय (यशःपाल)",
+    "sourceCitations": [
+      {
+        "sourceName": "Kumarpala-Pratibodha",
+        "sourceRef": "Pratibodha 1, The Amari Edicts and Royal Vows of Kumarpal",
+        "tier": 1
+      },
+      {
+        "sourceName": "Prabhavaka Charitra",
+        "sourceRef": "Life of Acharya Hemachandra and King Kumarpal",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Emperor Kumarpal in royal golden robes and crown kneeling humbly before Acharya Hemachandra inside the marble palace hall of Patan, presenting an imperial copper-plate decree of Ahimsa.",
+    "quote": {
+      "text": "Let not a single living creature be harmed across my realm; for the tears of the helpless bring destruction upon the crown, while compassion upholds the world.",
+      "attribution": "Kumarpala Amari Inscription"
+    },
+    "quoteLocal": {
+      "text": "मेरे संपूर्ण राज्य में किसी भी प्राणी की हत्या न हो; क्योंकि असहायों के आंसू साम्राज्य को नष्ट कर देते हैं, जबकि करुणा ही संपूर्ण जगत को धारण करती है।",
+      "attribution": "कुमारपाल अमारि शिलालेख"
+    }
+  },
+  {
+    "id": "emperor-ashoka",
+    "name": "Emperor Ashoka the Great",
+    "nameLocal": "चक्रवर्ती सम्राट अशोक",
+    "era": "c. 304–232 BCE",
+    "eraLocal": "लगभग ३०४-२३२ ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Pataliputra / Magadha",
+    "regionLocal": "पाटलिपुत्र / मगध",
+    "emoji": "☸️",
+    "tagline": "The Mauryan emperor whose heart shattered at the bloody fields of Kalinga, renouncing imperial conquest by sword to inaugurate a golden era of Dhamma-vijaya across Asia.",
+    "taglineLocal": "मौर्य सम्राट जिनका हृदय कलिंग के रक्तपात को देखकर कांप उठा, जिन्होंने युद्ध-विजय का त्याग कर संपूर्ण एशिया में धम्म-विजय का शंखनाद किया।",
+    "journey": "Ashoka Maurya was the grandson of Chandragupta Maurya and the son of Emperor Bindusara, ascending the imperial throne of Pataliputra around 268 BCE after serving as a stern, formidable viceroy in the western frontier provinces of Ujjain and Taxila. In the eighth year of his coronation, seeking to complete the political unification of the Indian subcontinent and secure vital maritime trade routes to Southeast Asia, Ashoka launched a colossal military campaign against the sovereign, unyielding republic of Kalinga (modern Odisha). The war was fought with unprecedented ferocity. Over one hundred thousand soldiers and citizens were slaughtered on the battlefield, one hundred and fifty thousand were driven into captivity and bound in chains, and countless hundreds of thousands died in the agonizing aftermath of famine, epidemic, and displacement.\n\nWalking alone across the smoking wasteland along the Daya River, where the waters ran thick and crimson with human blood, Ashoka was confronted by the horrific reality of imperial ambition. Severed limbs, bloated corpses of young soldiers, starving orphans crying beside dead mothers, and grieving widows wandering through the ashes shattered the emperor’s conscience to its very foundations. Standing amidst the carnage, the mighty conqueror was seized by an earthquake of moral revulsion. He asked himself: \"What have I done? If this is victory, what then is defeat? Can the glory of a golden throne be bought with the slaughter of innocents?\"\n\nAt that supreme crossroads of historical destiny, Ashoka renounced the sword forever. Guided by the serene Buddhist monk Upagupta (and the young novice Samanera Nigrodha), Ashoka took refuge in the Triple Gem—the Buddha, the Dhamma, and the Sangha. He declared that henceforth the sound of the war drum (Bheri-ghosa) was permanently replaced by the reverberating trumpet of righteousness (Dhamma-ghosa), resolving that the only conquest worthy of a civilized sovereign is Dhamma-vijaya—conquest through compassion, truth, and moral example.\n\nAshoka transformed the entire apparatus of the state from an instrument of imperial conquest into a commonwealth of welfare and ethical upliftment. Across India, Pakistan, Afghanistan, Nepal, and Bangladesh, he had the Major and Minor Rock Edicts and Pillar Inscriptions carved in local Prakrit, Greek, and Aramaic scripts. He established state-funded medical hospitals for both humans and animals, ordered the planting of shade-giving banyan trees and herbal gardens, dug public wells every half-league along commercial highways, and appointed specialized welfare officers (Dhamma-mahamattas) to protect prisoners, widows, and vulnerable forest tribes. He convened the historic Third Buddhist Council at Pataliputra to resolve monastic corruption, sponsored the compilation of the Pali Tipitaka, and dispatched Buddhist peace missions across the known world—sending his own children, Prince Mahendra and Princess Sanghamitra, to Sri Lanka, and ambassadors to Hellenistic monarchs in Syria, Egypt, and Macedonia, permanently transforming Buddhism into an international civilization of non-violence.",
+    "journeyLocal": "मौर्य सम्राट अशोक पाटलिपुत्र के सिंहासन पर आसीन हुए। अपने शासन के आठवें वर्ष में उन्होंने कलिंग (ओडिशा) पर भीषण आक्रमण किया। इस युद्ध में एक लाख से अधिक सैनिक और नागरिक मारे गए, डेढ़ लाख बंदी बनाए गए और लाखों लोग अकाल व महामारी से नष्ट हो गए।\n\nयुद्धोपरांत जब अशोक दया नदी के किनारे रक्त से पटी युद्धभूमि में घूमे, तो कटे हुए अंगों, अनाथ बच्चों और विलाप करती स्त्रियों को देखकर उनका हृदय पश्चाताप से कांप उठा। उन्होंने विचार किया—'यह कैसी विजय है जो केवल विनाश लाती है?' उसी क्षण उन्होंने सदा के लिए युद्ध का त्याग कर दिया। बौद्ध भिक्षु उपगुप्त के सान्निध्य में उन्होंने तथागत बुद्ध के धम्म की शरण ली और घोषणा की कि अब 'भेरीघोष' (युद्ध का नगाड़ा) नहीं, बल्कि 'धम्मघोष' (सदाचार का शंखनाद) ही गूंजेगा।\n\nअशोक ने अपने विशाल साम्राज्य में शिलाओं और स्तंभों पर धम्म के आदेश खुदवाए। उन्होंने मानव और पशु दोनों के लिए चिकित्सालय बनवाए, मार्गों पर छायादार वृक्ष लगवाए और कुएं खुदवाए। उन्होंने अपने पुत्र महेंद्र और पुत्री संघमित्रा को धम्म के प्रचार हेतु श्रीलंका भेजा, जिससे बौद्ध धर्म एक विश्वव्यापी संस्कृति बना।",
+    "trial": "Ashoka's supreme trial was facing the crushing burden of his own horrific past in Kalinga and resisting the imperial impulse to retaliate with violence when frontier tribes revolted. He transformed an empire accustomed to terror into an administration anchored in compassion, enduring personal grief and political resistance to uphold Dhamma.",
+    "trialLocal": "अशोक की सबसे बड़ी परीक्षा कलिंग के नरसंहार के दारुण अपराध-बोध का सामना करना और फिर एक साम्राज्य को सैन्य शक्ति के स्थान पर अहिंसा से चलाना था। विरोधियों और सीमावर्ती जातियों के विद्रोह के बावजूद उन्होंने अपनी प्रतिज्ञा को कभी नहीं तोड़ा।",
+    "teaching": "True victory is not the conquest of lands through the slaughter of innocents, but the conquest of hearts through kindness, truth, and self-restraint. Regard all citizens as your own children, protect all living creatures, and respect all philosophical paths with broad-minded reverence.",
+    "teachingLocal": "सच्ची विजय भूमि को तलवार से जीतना नहीं, अपितु करुणा और धर्म से हृदयों को जीतना है। सभी प्रजाजनों को अपनी संतान के समान मानना, समस्त जीवों पर दया करना और सभी संप्रदायों का सम्मान करना ही सच्चा धम्म है।",
+    "moral": "No past mistake or violence is beyond redemption if one experiences genuine remorse and redirects power toward universal service and love.",
+    "moralLocal": "यदि मनुष्य में सच्चा पश्चाताप और हृदय-परिवर्तन हो, तो वह अपने क्रूर अतीत को मिटाकर विश्व के लिए करुणा और शांति का प्रकाश स्तंभ बन सकता है।",
+    "legacy": "Ashoka's Lion Capital of Sarnath and the Ashoka Chakra stand today as the official national emblem and central wheel of India's national flag. His spread of Buddhism across Asia altered the spiritual history of humanity.",
+    "legacyLocal": "सारनाथ का सिंह-शीर्ष और अशोक चक्र आज स्वतंत्र भारत का राष्ट्रीय प्रतीक और राष्ट्रध्वज का केंद्र है। उनके द्वारा प्रसारित धम्म ने संपूर्ण एशिया में शांति और करुणा की शाश्वत संस्कृति स्थापित की।",
+    "source": "Major Rock Edicts of Ashoka & Mahavamsa (Pali Chronicle)",
+    "sourceLocal": "अशोक के प्रमुख शिलालेख एवं महावंस (पालि इतिहास)",
+    "sourceCitations": [
+      {
+        "sourceName": "Rock Edict XIII (Kalinga Inscription)",
+        "sourceRef": "Inscriptions of Asoka, Shahbazgarhi/Girnar text",
+        "tier": 1
+      },
+      {
+        "sourceName": "Mahavamsa",
+        "sourceRef": "Chapter 5, The Third Buddhist Council",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Emperor Ashoka in simple Buddhist robes kneeling in deep remorse on the rocky banks of the Daya River, laying his royal sword upon a stone before a serene Buddhist monk at dawn.",
+    "quote": {
+      "text": "All men are my children. Just as I desire for my own children their welfare and happiness in this world and the next, so do I desire for all humanity.",
+      "attribution": "Major Rock Edict (Dhauli / Jaugada)"
+    },
+    "quoteLocal": {
+      "text": "समस्त मनुष्य मेरी संतान हैं। जिस प्रकार मैं अपनी संतानों के लिए इस लोक और परलोक में कल्याण की कामना करता हूँ, वैसी ही कामना मैं संपूर्ण मानव जाति के लिए करता हूँ।",
+      "attribution": "धौली / जौगढ़ शिलालेख"
+    }
+  },
+  {
+    "id": "ananda",
+    "name": "Venerable Ananda",
+    "nameLocal": "आयुष्मान आनंद",
+    "era": "c. 6th–5th Century BCE",
+    "eraLocal": "लगभग छठी-पांचवीं शताब्दी ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Kapilavastu / Rajagriha",
+    "regionLocal": "कपिलवस्तु / राजगृह",
+    "emoji": "🪷",
+    "tagline": "The Buddha's beloved cousin, devoted personal attendant, and the 'Guardian of the Dhamma' whose photographic memory preserved the Sutta Pitaka at the First Buddhist Council.",
+    "taglineLocal": "तथागत बुद्ध के प्रिय अनुज, निष्ठावान सेवक और 'धम्म के रक्षक', जिनकी अद्भुत स्मृति ने प्रथम बौद्ध संगीति में सुत्तपिटक को अमर कर दिया।",
+    "journey": "Ananda was born as a Shakyan prince of Kapilavastu, a cousin of Siddhartha Gautama. Joining the Sangha in the early years of the Buddha's ministry alongside other Shakya nobles, Ananda was distinguished by his gentle nature, deep empathy, emotional sensitivity, and breathtaking intellectual retention. In the twentieth year of his Buddhahood, finding that various temporary attendants were failing to manage the heavy demands of his expanding public ministry, the Buddha requested the Sangha to designate a permanent attendant. While senior disciples like Sariputta and Moggallana offered themselves, the Buddha remained silent. Finally, the assembly turned to Ananda, who agreed to serve on eight strict conditions designed to eliminate any suspicion of worldly privilege—including that he would never accept fine robes, special food, or private quarters meant for the Buddha, but insisted on the right to bring spiritual seekers with pressing questions into the Master's presence at any hour.\n\nFor twenty-five uninterrupted years, Ananda walked as the shadow of the Buddha. He washed the Master's robes, swept his dwelling, brought his water, arranged his audiences, protected his resting hours, and listened with profound attention to every single discourse delivered in villages, forests, and royal halls. Possessing a flawless photographic memory, Ananda retained every word, metaphor, parable, and dialogue spoken by the Buddha. When Mahapajapati Gotami, the Buddha's foster mother, walked barefoot with hundreds of women from Kapilavastu to Vaishali pleading for the ordination of women, and the Buddha hesitated, it was Ananda who stepped forward with compassionate advocacy. He asked the Master directly: 'Lord, are women capable of realizing the fruits of stream-entry, once-returning, non-returning, and Arahantship?' When the Buddha answered affirmatively, Ananda pleaded: 'Then, Lord, let women be admitted into the homeless life!' His courage established the Bhikkhuni Sangha.\n\nAt Kushinagar, as the Buddha lay dying between the twin Sal trees, Ananda broke down in bitter tears, leaning against a doorpost and weeping: 'I am still a mere learner with passions unextinguished, and my Master is about to pass into Parinirvana!' The Buddha called him to his bedside and comforted him: 'Enough, Ananda, do not grieve. For twenty-five years you have served me with loving-kindness in deed, speech, and thought, beyond measure. Strive on with diligence, and you too will soon be free.' Three months later, on the eve of the First Buddhist Council at Rajagriha, Ananda practiced unbroken mindfulness through the night. Just as he leaned back toward his pillow to rest his exhausted body, at the precise threshold between standing and lying down, his mind was liberated from all clinging, attaining full Arahantship. The next morning, he entered the Sattapanni Cave, ascended the Dhamma seat, and recited the Sutta Pitaka from memory, opening each discourse with the immortal phrase: 'Evam me sutam'—Thus have I heard.",
+    "journeyLocal": "शाक्य राजकुमार आनंद तथागत बुद्ध के चचेरे भाई थे। संघ में प्रविष्ट होने के पश्चात अपने सौम्य स्वभाव और अद्भुत धारणा-शक्ति के कारण वे सबके प्रिय बने। तथागत के संबोधि के बीसवें वर्ष में आनंद को बुद्ध का प्रधान सेवक नियुक्त किया गया। उन्होंने सेवक बनने से पूर्व आठ शर्तें रखीं ताकि कोई यह न समझे कि वे किसी लाभ के लिए सेवक बने हैं—उन्होंने बुद्ध के बचे हुए वस्त्र या विशेष भोजन लेने से इनकार किया, परंतु यह अधिकार मांगा कि वे किसी भी समय किसी दुखी साधक को बुद्ध के समक्ष ला सकें।\n\nपच्चीस वर्षों तक आनंद तथागत की छाया बनकर रहे। उन्होंने बुद्ध के प्रत्येक उपदेश को अक्षरशः अपनी स्मृति में अंकित कर लिया। जब बुद्ध की मौसी महाप्रजापती गौतमी महिलाओं के संघ में प्रवेश की प्रार्थना लेकर आईं, तो आनंद ने ही करुणापूर्वक बुद्ध से निवेदन किया कि क्या नारी निर्वाण प्राप्त करने में सक्षम नहीं है? जब बुद्ध ने कहा कि वह पूर्ण सक्षम है, तो आनंद के प्रयास से ही भिक्षुणी संघ की स्थापना संभव हुई।\n\nकुशीनगर में तथागत के महापरिनिर्वाण के समय आनंद फूट-फूट कर रोने लगे। बुद्ध ने उन्हें पास बुलाकर सांत्वना दी—'आनंद, शोक मत करो। तुमने पच्चीस वर्षों तक काया, वाणी और मन से मेरी निष्काम सेवा की है। तुम भी शीघ्र मुक्त हो जाओगे।' बुद्ध के महाप्रयाण के तीन माह बाद राजगृह की प्रथम बौद्ध संगीति से ठीक पहले की रात, आनंद ने गहन ध्यान किया और करवट बदलते ही उन्हें अरहंत पद (पूर्ण ज्ञान) प्राप्त हुआ। अगली सुबह उन्होंने संगीति में बैठकर अपनी स्मृति से संपूर्ण सुत्तपिटक का वाचन किया, जिसका प्रत्येक सूत्र 'एवं मे सुतं' (ऐसा मैंने सुना) से प्रारंभ होता है।",
+    "trial": "Ananda's defining trial was enduring the grief of the Buddha's Parinirvana while still un-enlightened, and facing exclusion from the First Council if he did not eradicate his subtle emotional attachments. He achieved liberation in a single night of intense mindfulness at the edge of physical exhaustion.",
+    "trialLocal": "आनंद की सबसे कठिन परीक्षा बुद्ध के वियोग के अगाध शोक को पार करना और प्रथम संगीति में प्रवेश पाने के लिए अपने अंतिम राग को समाप्त करना था। उन्होंने शारीरिक थकावट के चरम बिंदु पर भी होशपूर्वक ध्यान कर अरहंत पद प्राप्त किया।",
+    "teaching": "Selfless loving service to others is a sacred vehicle of spiritual practice. The teachings of the Dhamma are not dry dogmas, but living treasures of compassion to be remembered, practiced, and passed on with absolute fidelity to future generations.",
+    "teachingLocal": "दूसरों की निःस्वार्थ सेवा ही साधना का उच्चतम रूप है। तथागत की वाणी केवल सुनने के लिए नहीं, बल्कि जीवन में उतारने और सुरक्षित रखने के लिए है। करुणा और निष्ठा से ही सत्य का संरक्षण होता है।",
+    "moral": "Emotional sensitivity and deep devotion are not obstacles to awakening; when purified of personal grasping, devotion blossoms into supreme wisdom and universal love.",
+    "moralLocal": "हृदय की कोमलता और गुरु-भक्ति ज्ञान में बाधक नहीं, बल्कि साधक हैं। जब भक्ति से स्वार्थ मिट जाता है, तो वह तत्काल परम ज्ञान में रूपांतरित हो जाती है।",
+    "legacy": "Because of Ananda's extraordinary memory and recitation, thousands of suttas in the Digha, Majjhima, Samyutta, and Anguttara Nikayas were preserved for world history, cementing his title as Dhamma-bhandagarika (Treasurer of the Dhamma).",
+    "legacyLocal": "आनंद की स्मृति के कारण ही आज संपूर्ण सुत्तपिटक सुरक्षित है। उन्हें बौद्ध इतिहास में 'धम्म के कोषाध्यक्ष' के रूप में सदा श्रद्धा से स्मरण किया जाता है।",
+    "source": "Digha Nikaya (Maha-Parinibbana Sutta) & Cullavagga (Vinaya Pitaka)",
+    "sourceLocal": "दीघ निकाय (महापरिनिब्बान सुत्त) एवं चुल्लवग्ग (विनय पिटक)",
+    "sourceCitations": [
+      {
+        "sourceName": "Digha Nikaya",
+        "sourceRef": "DN 16, Maha-Parinibbana Sutta, Sections V–VI",
+        "tier": 1
+      },
+      {
+        "sourceName": "Vinaya Pitaka",
+        "sourceRef": "Cullavagga XI, The First Buddhist Council at Rajagriha",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Venerable Ananda standing on the stone platform inside Sattapanni Cave at Rajagriha, surrounded by 500 serene Arahants, softly reciting 'Evam me sutam' with radiant golden eyes.",
+    "quote": {
+      "text": "Eighty-two thousand teachings from the Buddha I have received, and two thousand from the monks; eighty-four thousand teachings in total dwell within my heart.",
+      "attribution": "Theragatha, Verse 1024"
+    },
+    "quoteLocal": {
+      "text": "बयासी हजार उपदेश मैंने तथागत से साक्षात सुने और दो हजार भिक्षुओं से प्राप्त किए; इस प्रकार चौरासी हजार धम्म-स्कंध मेरे हृदय में प्रकाशित हैं।",
+      "attribution": "थेरगाथा, गाथा १०२४"
+    }
+  },
+  {
+    "id": "sariputta",
+    "name": "Venerable Sariputta",
+    "nameLocal": "आयुष्मान सारिपुत्त",
+    "era": "c. 6th–5th Century BCE",
+    "eraLocal": "लगभग छठी-पांचवीं शताब्दी ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Magadha / Nalanda",
+    "regionLocal": "मगध / नालंदा",
+    "emoji": "⚖️",
+    "tagline": "The 'Marshal of the Dhamma' and foremost disciple of the Buddha in wisdom, whose analytical genius structured the psychological Abhidhamma philosophy.",
+    "taglineLocal": "तथागत के अग्रश्रावक और 'धम्म-सेनापति', जिनकी अद्वितीय प्रज्ञा और विश्लेषणात्मक मेधा ने अभिधम्म दर्शन की मनोवैज्ञानिक नींव रखी।",
+    "journey": "Born as Upatissa into an affluent, learned Brahmin family in the village of Nalaka near Rajagriha in Magadha, he was the childhood companion of Kolita (later Moggallana). Despite enjoying immense wealth, aristocratic privilege, and comprehensive mastery of Vedic literature, both youths realized the futility of mortal existence during an annual mountain festival (Giragga Samagga). Watching thousands of cheering citizens rejoicing before acrobats and musicians, a sudden realization struck Upatissa: in less than a single century, every single person in this roaring crowd—actors, spectators, and kings alike—will be a decaying corpse. Gripped by spiritual urgency (Samvega), they renounced their homes together, wandering across northern India under various renowned philosophers without finding inner peace or freedom from death.\n\nOne morning in the bustling streets of Rajagriha, Upatissa encountered the Buddhist monk Assaji walking with extraordinary serenity on his morning alms-round. Assaji’s gait was measured, his eyes cast down in mindfulness, and his countenance radiated unshakeable peace. Overcome by awe, Upatissa waited until Assaji finished his alms-round and inquired: \"Friend, your face is clear and radiant. Who is your teacher, and what doctrine does he proclaim?\" Assaji humbly replied that he was newly ordained, but recited the profound essence of dependent origination: \"Ye dhamma hetuppabhava, tesam hetum tathagato aha, tesan ca yo nirodho, evamvadi mahasamano\" (Of all phenomena arising from a cause, the Tathagata has revealed the cause, and also their cessation; this is the teaching of the Great Seer). Upon hearing merely the first two lines, the spiritual eye (Dhamma-cakkhu) opened within Upatissa’s mind, and he realized the first stage of enlightenment (Stream-Entry / Sotapatti).\n\nUpatissa rushed back to Kolita, repeated the sacred verse, and watched as Kolita also attained Stream-Entry in an instant. Together with two hundred and fifty disciples, they proceeded to the Veluvana bamboo grove to take ordination under the Buddha. Given the monastic name Sariputta (\"Son of Rupasari\"), he attained full Arahantship two weeks later inside the Sukarakhata cave on Vulture Peak, fanning the Buddha as the Master expounded the contemplation of feelings to the wanderer Dighanakha.\n\nThe Buddha declared Sariputta his foremost disciple in wisdom (Pannavatanam) and bestowed upon him the title of Dhamma-senapati (Marshal of the Dhamma). Just as a crown prince turns the wheel of imperial governance after the emperor, Sariputta turned the Wheel of the Dhamma after the Tathagata. Possessing peerless analytical genius, Sariputta dissected the human mind into its momentary constituent states of consciousness (Cittas) and mental factors (Cetasikas), laying the foundational architecture for the Abhidhamma Pitaka. Despite his exalted standing as second only to the Buddha, he was celebrated for his childlike humility, sweeping the monastery grounds himself, caring for sick novices, and bowing in gratitude every night toward the direction where his first preceptor Assaji resided.",
+    "journeyLocal": "नालंदा के समीप ब्राह्मण कुल में जन्मे उपतिस्स (सारिपुत्त) बचपन से ही मेधावी थे। अपने अभिन्न मित्र कोलित (मोग्गलान) के साथ एक उत्सव को देखते हुए उन्हें संसार की नश्वरता का गहरा बोध हुआ कि आज जो लोग नाच-गा रहे हैं, सौ वर्ष बाद इनमें से कोई जीवित नहीं रहेगा। दोनों मित्रों ने अमृत (सत्य) की खोज में संन्यास ले लिया। एक दिन राजगृह में उपतिस्स ने तथागत के शिष्य अस्सजि को शांत भाव से भिक्षाटन करते देखा।\n\nउनके अलौकिक तेज से प्रभावित होकर उपतिस्स ने उनसे उनके गुरु का उपदेश पूछा। अस्सजि ने प्रतीत्यसमुत्पाद का प्रसिद्ध श्लोक सुनाया—'ये धम्मा हेतुप्पभवा, तेसं हेतुं तथागतो आह...' (जो भी वस्तु कारण से उत्पन्न होती है, तथागत ने उसके कारण और उसके निरोध का मार्ग बताया है)। इस श्लोक की आधी पंक्ति सुनते ही उपतिस्स को स्रोतापन्न (प्रथम संबोधि) फल प्राप्त हो गया। वे दौड़कर कोलित के पास गए और दोनों ने वेणुवन जाकर बुद्ध की शरण ली।\n\nसारिपुत्त को तथागत ने 'धम्म-सेनापति' की उपाधि दी। वे संघ में प्रज्ञा (बुद्धि) में सर्वश्रेष्ठ माने गए। उन्होंने मन और चेतना का ऐसा सूक्ष्म विश्लेषण प्रस्तुत किया जो आगे चलकर अभिधम्मपिटक का आधार बना। इतनी महान प्रज्ञा के स्वामी होकर भी वे परम विनम्र थे; वे स्वयं विहारों में झाड़ू लगाते थे और जिस दिशा में उनके प्रथम गुरु अस्सजि रहते थे, रात को उसी दिशा में सिर करके सोते थे।",
+    "trial": "Sariputta endured severe physical exhaustion and terminal illness in his final months, traveling back to his ancestral home in Nalanda to teach his aging Brahmin mother, who had resented his Buddhist monasticism for decades. He patiently dissolved her doubts on his deathbed, leading her to awakening before peacefully attaining Parinirvana.",
+    "trialLocal": "सारिपुत्त की अंतिम परीक्षा अपने जीवन के अंतिम क्षणों में गंभीर रुग्णता के बावजूद अपनी वृद्ध माता के पास जाना था, जो जीवन भर उनके संन्यास से असंतुष्ट थीं। उन्होंने मृत्यु-शय्या पर अपनी माता को सत्य का उपदेश देकर संबोधि तक पहुँचाया और फिर शांतिपूर्वक महापरिनिर्वाण प्राप्त किया।",
+    "teaching": "All conditioned phenomena arise dependently on causes, and when those causes cease, the phenomena dissolve. Through mindful observation of impermanence, detachment arises naturally, leading the mind to the unconditioned peace of Nibbana.",
+    "teachingLocal": "संसार की प्रत्येक घटना और विचार कारणों पर निर्भर हैं; कारणों के समाप्त होते ही दुख का भी अंत हो जाता है। अनित्यता का निरंतर सजग दर्शन ही राग और द्वेष से मुक्ति दिलाकर परम शांति की ओर ले जाता है।",
+    "moral": "Supreme intellect reaches its divine potential only when united with profound humility, boundless patience, and filial gratitude.",
+    "moralLocal": "प्रखर ज्ञान तभी सार्थक है जब वह अहंकार को मिटाकर नम्रता, सेवा और कृतज्ञता का रूप धारण करे।",
+    "legacy": "Sariputta structured the analytical framework of the Abhidhamma and delivered foundational discourses in the Majjhima Nikaya, leaving an eternal blueprint for Buddhist psychology and meditation practice.",
+    "legacyLocal": "सारिपुत्त ने बौद्ध मनोविज्ञान और अभिधम्म के दार्शनिक ढांचे का निर्माण किया। उनके द्वारा दिए गए उपदेश आज भी गहन ध्यान और चेतना के अध्ययन का आधार हैं।",
+    "source": "Vinaya Pitaka (Mahavagga) & Majjhima Nikaya",
+    "sourceLocal": "विनय पिटक (महावग्ग) एवं मज्झिम निकाय",
+    "sourceCitations": [
+      {
+        "sourceName": "Vinaya Pitaka",
+        "sourceRef": "Mahavagga, Khandhaka 1, The Conversion of Sariputta and Moggallana",
+        "tier": 1
+      },
+      {
+        "sourceName": "Majjhima Nikaya",
+        "sourceRef": "MN 111, Anupada Sutta (One by One as They Occurred)",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Venerable Sariputta sitting on a stone beneath a lotus pond fanning the Buddha with a palm leaf, his face shining with intense, crystalline intellectual clarity and tranquility.",
+    "quote": {
+      "text": "Whatever is subject to origination is all subject to cessation.",
+      "attribution": "Vinaya Pitaka, Mahavagga"
+    },
+    "quoteLocal": {
+      "text": "जो कुछ भी उत्पन्न होने के स्वभाव वाला है, वह सब विलीन होने के स्वभाव वाला भी है।",
+      "attribution": "विनय पिटक, महावग्ग"
+    }
+  },
+  {
+    "id": "moggallana",
+    "name": "Maudgalyayana (Moggallana)",
+    "nameLocal": "आयुष्मान महामोग्गलान",
+    "era": "c. 6th–5th Century BCE",
+    "eraLocal": "लगभग छठी-पांचवीं शताब्दी ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Magadha / Rajagriha",
+    "regionLocal": "मगध / राजगृह",
+    "emoji": "⚡",
+    "tagline": "The foremost disciple in psychic and meditative powers (Iddhi) whose deep loyalty to the Buddha ended in supreme voluntary martyrdom, honoring the law of karma.",
+    "taglineLocal": "ऋद्धि और अलौकिक शक्तियों में तथागत के सर्वश्रेष्ठ शिष्य, जिन्होंने कर्म के सिद्धांत का आदर करते हुए स्वेच्छा से महाबलिदान स्वीकार किया।",
+    "journey": "Known in his youth as Kolita, he was born into an affluent Brahmin family in the village of Kolita near Rajagriha, growing up as the inseparable companion of Sariputta. Bound by their solemn pact to find the Deathless, Kolita embraced the homeless life alongside Sariputta, seeking spiritual truth through diverse ascetic orders until Sariputta heard Assaji’s discourse on dependent origination. The moment Sariputta repeated the sacred verse to Kolita, Kolita’s spiritual eye opened, attaining Stream-Entry (Sotapatti) on the spot. Both friends traveled immediately to Rajagriha, ordaining into the Sangha under Bhagwan Buddha.\n\nKolita, now named Maha-Moggallana, retired to the forest village of Kallavalaputta in Magadha to practice intense meditation. Overcome by heavy sloth and torpor (Thina-Middha), he struggled to stay awake. The Buddha clairvoyantly perceived his struggle, manifested before him, and instructed him in eight distinct methods to conquer drowsiness—such as washing the face with cold water, looking at the starry sky, pacing mindfully, and contemplating the perception of light. Applying these teachings with fierce resolve, Moggallana eradicated all mental defilements and attained full Arahantship within seven days of ordination.\n\nThe Buddha appointed Moggallana as his Second Chief Disciple, declaring him foremost among all disciples in psychic powers (Iddhimantanam). Moggallana could traverse realms of existence, project mental mind-made bodies, read the thoughts of others, and visit the suffering spirits in the Preta and Hell realms. He used his powers not for magical vanity, but to instruct humans on the undeniable reality of karma—showing that every act of cruelty produces inevitable agony, while ethical virtue brings celestial peace. When the schismatic Devadatta attempted to fracture the Sangha by leading away five hundred young monks, it was Moggallana and Sariputta who flew to Gayasisa, engaged the monks with Dhamma and psychic demonstration, and reunited the entire Sangha without shedding a drop of blood.",
+    "journeyLocal": "राजगृह के समीप ब्राह्मण कुल में जन्मे कोलित (मोग्गलान) सारिपुत्त के अभिन्न बालसखा थे। सत्य की खोज में दोनों ने साथ में गृहत्याग किया और जब सारिपुत्त ने उन्हें तथागत का प्रतीत्यसमुत्पाद सूत्र सुनाया, तो मोग्गलान को भी तत्काल स्रोतापन्न फल प्राप्त हो गया। दोनों मित्रों ने बुद्ध के चरणों में दीक्षा ग्रहण की।\n\nदीक्षा के बाद मगध के एक वन में साधना करते समय मोग्गलान को तीव्र निद्रा और आलस्य (थीन-मिद्ध) ने घेर लिया। बुद्ध ने दिव्य दृष्टि से यह देखकर उन्हें दर्शन दिए और आलस्य जीतने के उपाय सिखाए। बुद्ध के उपदेशों का पालन करते हुए मोग्गलान ने सात ही दिनों में समस्त आसक्तियों का नाश कर अरहंत पद प्राप्त कर लिया।\n\nतथागत ने मोग्गलान को संघ में 'ऋद्धिवान' (अलौकिक सिद्धियों के स्वामी) में सर्वोच्च स्थान दिया। वे मन की गति से किसी भी लोक में भ्रमण कर सकते थे। उन्होंने अपनी सिद्धियों का उपयोग कभी चमत्कार दिखाने के लिए नहीं, अपितु लोगों को कर्म के अटल सिद्धांत का बोध कराने के लिए किया। जब देवदत्त ने संघ में फूट डालकर पांच सौ भिक्षुओं को अलग कर लिया था, तब मोग्गलान और सारिपुत्त ने ही अपने ज्ञान और प्रभाव से सभी भिक्षुओं को पुनः संघ में जोड़कर एकता स्थापित की।",
+    "trial": "Moggallana's supreme trial was facing the consequences of ancient past karma. Jealous sectarian ascetics hired ruthless brigands to assassinate him in his cave. Twice, Moggallana used his psychic powers to dissolve his body and slip away. But on the third occasion, he perceived with clairvoyant insight that in a distant past life he had mistreated his aged parents, and this heavy karma was ripe. Knowing the law of karma is supreme, Moggallana willingly refrained from using his powers, allowing the assassins to beat his physical body to powder. With superhuman will, he reconstituted his body, flew to the Buddha to pay final homage, and attained Parinirvana.",
+    "trialLocal": "मोग्गलान की सबसे बड़ी परीक्षा कर्म के अटल नियम को स्वीकार करना था। उनके प्रभाव से ईर्ष्या करने वाले विरोधियों ने उन्हें मारने के लिए डाकू भेजे। दो बार वे अपनी ऋद्धि से अदृश्य हो गए, परंतु तीसरी बार उन्होंने दिव्य दृष्टि से देखा कि पूर्वजन्म में उन्होंने अपने अंधे माता-पिता के प्रति अपराध किया था, जिसका फल अब भोगना अनिवार्य था। उन्होंने अपनी सिद्धियों का प्रयोग नहीं किया और डाकुओं के प्रहारों को समभाव से सह लिया। अंत में तथागत को अंतिम प्रणाम कर उन्होंने महापरिनिर्वाण प्राप्त किया।",
+    "teaching": "No power in the universe, neither gods nor occult miracles, can cancel the fruit of karma. Violence and deceit inevitably return upon the doer, while pure mindfulness and detachment grant absolute freedom from suffering.",
+    "teachingLocal": "संसार की कोई भी शक्ति या चमत्कार कर्म के फल से नहीं बचा सकता। कर्म का नियम अटल है। जो जैसा करेगा, वैसा भरेगा; अतः मन को शुद्ध रखकर समता में स्थित रहना ही मोक्ष का एकमात्र मार्ग है।",
+    "moral": "Even the greatest spiritual master must humbly accept the universal laws of nature and karma. True spiritual mastery is not escaping physical death through miracles, but facing the dissolution of the body with radiant, fearless equanimity.",
+    "moralLocal": "चमत्कार या सिद्धियां कितनी भी बड़ी हों, वे प्रकृति और कर्म के नियमों से ऊपर नहीं हैं। वास्तविक सिद्धि मृत्यु या कष्ट से भागना नहीं, बल्कि उसे शांत और वीतराग भाव से स्वीकार करना है।",
+    "legacy": "Moggallana's life remains the immortal benchmark for monastic courage, loyalty, and the righteous use of spiritual power in Buddhism. His relics, alongside Sariputta’s, are venerated across the world at the Sanchi Stupa.",
+    "legacyLocal": "मोग्गलान का जीवन त्याग, निष्ठा और कर्म-सिद्धांत के प्रति समर्पण का सर्वोच्च उदाहरण है। सांची के स्तूप में सारिपुत्त और मोग्गलान की पावन धातुएं (अस्थियां) आज भी संपूर्ण विश्व द्वारा पूजी जाती हैं।",
+    "source": "Anguttara Nikaya (Etadagga Vagga) & Dhammapada Atthakatha",
+    "sourceLocal": "अंगुत्तर निकाय (एतदग्ग वग्ग) एवं धम्मपद अट्ठकथा",
+    "sourceCitations": [
+      {
+        "sourceName": "Anguttara Nikaya",
+        "sourceRef": "AN 1.14, Foremost Disciples: Moggallana in Psychic Power",
+        "tier": 1
+      },
+      {
+        "sourceName": "Dhammapada Commentary",
+        "sourceRef": "Story of the Death of Venerable Moggallana",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Venerable Maha-Moggallana seated in deep calm meditation on a mountain ridge in Rajagriha, surrounded by a subtle halo of radiant blue light, serene amidst crashing storm clouds.",
+    "quote": {
+      "text": "Neither in the sky nor in mid-ocean, nor entering a mountain cleft, is there a place on earth where one may escape the fruit of evil deeds.",
+      "attribution": "Dhammapada, Verse 127"
+    },
+    "quoteLocal": {
+      "text": "न आकाश में, न समुद्र के मध्य में, और न पर्वतों की गुफा में—संसार में ऐसा कोई स्थान नहीं है जहाँ जाकर मनुष्य अपने कर्मों के फल से बच सके।",
+      "attribution": "धम्मपद, गाथा १२७"
+    }
+  },
+  {
+    "id": "mahapajapati-gotami",
+    "name": "Mahapajapati Gotami",
+    "nameLocal": "महाप्रजापती गौतमी",
+    "era": "c. 6th–5th Century BCE",
+    "eraLocal": "लगभग छठी-पांचवीं शताब्दी ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Kapilavastu / Vaishali",
+    "regionLocal": "कपिलवस्तु / वैशाली",
+    "emoji": "👑",
+    "tagline": "The queen-mother who nursed the infant Buddha, renounced imperial palace luxury, and walked barefoot to establish the historic Bhikkhuni Sangha for female monastic liberation.",
+    "taglineLocal": "महारानी जिन्होंने शिशु बुद्ध का पालन-पोषण किया, राजसी वैभव त्याग कर नंगे पैर चलकर महिलाओं के लिए ऐतिहासिक भिक्षुणी संघ की स्थापना की।",
+    "journey": "Mahapajapati Gotami was the younger sister of Queen Maya and the maternal aunt of Prince Siddhartha. When Queen Maya passed away a mere seven days after giving birth to the future Buddha in Lumbini, Gotami stepped forward with boundless maternal devotion. Surrendering her own biological newborn son Prince Nanda to court wet-nurses, Gotami personally cradled, breastfed, and raised Siddhartha in the royal palace of Kapilavastu with unmatched tenderness. Under her loving guidance, Siddhartha grew into manhood, cherishing her as his true mother. Decades later, when the Buddha returned to Kapilavastu as the awakened Tathagata, and King Suddhodana subsequently attained liberation on his deathbed, Gotami felt the palace walls close in like a gilded cage, awakening an unquenchable thirst for the homeless life of Dhamma.\n\nApproaching the Buddha beneath the Banyan Grove in Kapilavastu, Queen Gotami pleaded for permission for women to enter the homeless life and receive monastic ordination. Bound by the deeply patriarchal social norms of ancient Indian society, where solitary women in dense forests faced horrific perils from bandits and wild beasts, the Buddha initially declined three consecutive times. Refusing to allow social conventions to extinguish the spiritual destiny of womanhood, Gotami took a daring, historic step. Shaving off her lustrous royal hair, putting on coarse ochre robes, and accompanied by five hundred noble Shakyan and Koliyan women, she walked barefoot for over three hundred miles across northern India from Kapilavastu to the Kutagara Hall in Vaishali.\n\nArriving in Vaishali with dust-caked robes, bleeding feet covered in blisters, and tear-streaked faces, Gotami and her companions stood weeping in sheer physical exhaustion outside the entrance of the Buddha’s monastery. Moved to profound tears by their heroic perseverance, Venerable Ananda approached the Buddha and presented an unanswerable spiritual challenge: \"Lord, if a woman goes forth from the home into homelessness in the Dhamma and Vinaya, is she capable of realizing the fruits of Stream-Entry, Once-Returning, Non-Returning, and supreme Arahantship?\" The Buddha replied unequivocally: \"She is capable, Ananda.\" Ananda then pleaded: \"Then, Lord, remembering how Mahapajapati Gotami nursed you and raised you, let women be admitted to the Sangha!\" The Buddha consented, establishing the Bhikkhuni Sangha under eight foundational guidelines. Ordained as the first Buddhist nun, Gotami practiced relentless meditation, attained full Arahantship, and led thousands of women to complete spiritual emancipation.",
+    "journeyLocal": "महाप्रजापती गौतमी महारानी माया की छोटी बहन और सिद्धार्थ की मौसी थीं। सिद्धार्थ के जन्म के सातवें दिन जब माता माया का देहांत हो गया, तो गौतमी ने अपने सगे पुत्र नंद को धाय को सौंपकर सिद्धार्थ को अपने स्तनों का दूध पिलाया और मातृत्व का सर्वोच्च स्नेह दिया। जब बुद्ध संबोधि प्राप्त कर कपिलवस्तु लौटे और कुछ समय बाद राजा शुद्धोधन का निर्वाण हुआ, तो गौतमी के मन में वैराग्य की तीव्र ज्वाला जाग उठी।\n\nउन्होंने बुद्ध से प्रार्थना की कि महिलाओं को भी संघ में प्रव्रज्या (संन्यास) की अनुमति दी जाए। तत्कालीन समाज की कठिन परिस्थितियों को देखते हुए बुद्ध ने तीन बार संकोच प्रकट किया। परंतु गौतमी का संकल्प अडिग था। उन्होंने अपने केश मुंडवाए, काषाय वस्त्र धारण किए और पांच सौ शाक्य राजकुमारियों व कुलीन स्त्रियों के साथ कपिलवस्तु से वैशाली तक तीन सौ मील की पदयात्रा नंगे पैर की।\n\nजब धूल से सनी, छालों से भरे पैरों के साथ वे वैशाली पहुँचीं, तो उनकी इस कठोर तपस्या को देखकर आयुष्मान आनंद द्रवित हो उठे। आनंद ने बुद्ध के समक्ष तर्क रखा कि क्या नारी निर्वाण पाने में सक्षम नहीं है? बुद्ध ने नारी की पूर्ण आध्यात्मिक क्षमता को स्वीकार करते हुए भिक्षुणी संघ की स्थापना की अनुमति दी। महाप्रजापती गौतमी प्रथम भिक्षुणी बनीं और उन्होंने कठोर साधना कर अरहंत पद प्राप्त किया। उन्होंने सिद्ध किया कि मोक्ष के मार्ग पर स्त्री और पुरुष में कोई भेद नहीं है।",
+    "trial": "Gotami's supreme trial was walking three hundred miles barefoot through scorching sun, dust, and danger with five hundred women, enduring physical exhaustion and public humiliation to knock at the gates of the Sangha. Her perseverance broke ancient gender barriers in world religion.",
+    "trialLocal": "गौतमी की सबसे बड़ी परीक्षा पांच सौ महिलाओं के साथ नंगे पांव सैकड़ों मील की यात्रा कर सामाजिक रूढ़ियों को तोड़ना था। पैरों में पड़े छालों और थकान के बावजूद उनका संकल्प नहीं डगमगाया और उन्होंने विश्व इतिहास में पहली बार नारी संन्यास का द्वार खुलवाया।",
+    "teaching": "The capacity for awakening and inner liberation has no gender. Spiritual realization depends not on outward bodily form or social status, but on unyielding resolve, ethical purity, and mindful meditation.",
+    "teachingLocal": "आत्म-जागृति और मुक्ति किसी लिंग की मोहताज नहीं है। साधना शरीर से नहीं, अंतरात्मा के संकल्प, शील और ध्यान से होती है। जो भी प्रमाद को त्याग कर धर्म के मार्ग पर चलेगा, वह अवश्य मुक्त होगा।",
+    "moral": "Do not allow societal prejudices or historical barriers to limit your spiritual aspirations. When you persist with pure intentions and selfless courage, even the most entrenched doors will open.",
+    "moralLocal": "सामाजिक बंधन या रूढ़ियां तुम्हारे आत्म-विकास को नहीं रोक सकतीं। यदि तुम्हारा संकल्प सच्चा और पवित्र है, तो मार्ग की सारी बाधाएं स्वतः दूर हो जाती हैं।",
+    "legacy": "Mahapajapati Gotami founded the Bhikkhuni lineage, giving birth to generations of enlightened female teachers whose profound realizations are eternally recorded in the sacred *Therigatha* (Verses of the Elder Nuns).",
+    "legacyLocal": "महाप्रजापती गौतमी ने भिक्षुणी संघ की स्थापना की। उनकी प्रेरणा से हजारों स्त्रियों ने निर्वाण प्राप्त किया, जिनकी अमृतवाणी आज बौद्ध धर्म के पावन ग्रंथ 'थेरीगाथा' में सुरक्षित है।",
+    "source": "Vinaya Pitaka (Cullavagga X) & Therigatha",
+    "sourceLocal": "विनय पिटक (चुल्लवग्ग १०) एवं थेरीगाथा",
+    "sourceCitations": [
+      {
+        "sourceName": "Vinaya Pitaka",
+        "sourceRef": "Cullavagga X, The Acceptance of Women into the Sangha",
+        "tier": 1
+      },
+      {
+        "sourceName": "Therigatha",
+        "sourceRef": "Verses of Mahapajapati Gotami (Thig 157–162)",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Queen-turned-nun Mahapajapati Gotami standing with bleeding bare feet in dusty ochre robes outside the gates of Vaishali, her head shaved and eyes shining with unyielding spiritual resolve.",
+    "quote": {
+      "text": "Lord, I once nursed your physical body with milk; but now, you have nourished my soul with the eternal milk of the Dhamma, liberating me from the cycle of rebirth.",
+      "attribution": "Apadana, Gotami Theriyapadana"
+    },
+    "quoteLocal": {
+      "text": "हे तथागत, मैंने कभी आपके भौतिक शरीर को दूध पिलाया था; परंतु आज आपने मुझे धम्म का अमृत पिलाकर जन्म-मरण के चक्र से सदा के लिए मुक्त कर दिया है।",
+      "attribution": "अपदान, गौतमी थेरी-अपदान"
+    }
+  },
+  {
+    "id": "nagarjuna",
+    "name": "Acharya Nagarjuna",
+    "nameLocal": "आचार्य नागार्जुन",
+    "era": "c. 150–250 CE",
+    "eraLocal": "लगभग १५०-२५० ईस्वी",
+    "tradition": "buddhist",
+    "region": "Nagarjunakonda (Andhra Pradesh) / Nalanda",
+    "regionLocal": "नागार्जुनकोंडा (आंध्र प्रदेश) / नालंदा",
+    "emoji": "🪐",
+    "tagline": "The philosophical titan of Madhyamaka whose dialectical doctrine of Shunyata (Emptiness) revolutionized global philosophy, steering between nihilism and eternalism.",
+    "taglineLocal": "माध्यमिक दर्शन के महान युगप्रवर्तक जिन्होंने 'शून्यता' के क्रांतिकारी सिद्धांत से संपूर्ण विश्व दर्शन को झकझोर दिया और शाश्वतवाद व उच्छेदवाद का अंत किया।",
+    "journey": "Born into an illustrious, aristocratic Brahmin family in the southern kingdom of Vidarbha, Nagarjuna was renowned from boyhood as a prodigy in the four Vedas, astronomy, medicine, statecraft, and the esoteric sciences. According to ancient biographical chronicles, in his reckless youth he mastered the occult art of invisibility with three companions, using the magic to enter the royal palace chambers unnoticed. When his companions were ambushed and executed by the king’s guards, and Nagarjuna barely escaped with his life by hiding behind the sovereign’s shadow, a lightning flash of spiritual horror pierced his consciousness. He realized that sensual craving is the direct womb of all mortal terror, tragedy, and destruction. Fleeing to the mountain forests, he embraced Buddhist monastic ordination, mastering the entire Tripitaka within ninety days and exhausting the known philosophical libraries of India.\n\nPerceiving that traditional scholars were mistaking conceptual classifications of Dharma for ultimate liberation, Nagarjuna traveled deep into the spiritual heartlands. According to profound Mahayana tradition, perceiving his pristine intellect, the Naga serpent guardians of the nether ocean invited him to their subterranean water palaces, revealing the long-hidden Prajnaparamita Sutras (Perfection of Wisdom discourses) entrusted to them by Bhagwan Buddha. Returning to northern and southern India with these foundational texts, Nagarjuna spent decades teaching at Nalanda Mahavihara as its supreme abbot, and later at the mountain citadel of Sri Parvata (Nagarjunakonda) on the banks of the Krishna River, generously patronized by the royal Satavahana dynasty.\n\nNagarjuna composed the immortal Mulamadhyamakakarika (Fundamental Verses on the Middle Way), igniting a permanent revolution in world philosophy. Founding the Madhyamaka school, he articulated the doctrine of Shunyata (Emptiness). With crystalline dialectical logic, he demonstrated that all phenomena are empty of independent, intrinsic existence (Svabhava-Shunya) because they arise exclusively through dependent origination (Pratityasamutpada). Emptiness, Nagarjuna fiercely clarified, is neither nihilism nor a blank void; rather, it is the dynamic openness and relational interdependence of reality that allows change, growth, compassion, and spiritual awakening to occur. His profound formulation of the Two Truths—conventional reality (Samvriti-Satya) and ultimate truth (Paramartha-Satya)—became the philosophical bedrock for Mahayana and Vajrayana Buddhism throughout India, Tibet, China, Korea, and Japan.",
+    "journeyLocal": "दक्षिण भारत के विदर्भ में जन्मे नागार्जुन बाल्यकाल से ही अद्भुत प्रतिभा के धनी थे। वेद, शास्त्र और तांत्रिक विधाओं में निष्णात नागार्जुन ने जब संसार में काम-वासना के विनाशकारी परिणाम देखे, तो उनके मन में तीव्र वैराग्य उत्पन्न हुआ। उन्होंने बौद्ध संघ में प्रव्रज्या ली और कुछ ही वर्षों में त्रिपिटक का संपूर्ण अध्ययन कर लिया।\n\nपरंपरा के अनुसार, पाताल लोक के नागों ने उनकी अद्वितीय प्रज्ञा देखकर उन्हें 'प्रज्ञापारमिता सूत्र' सौंपे, जो तथागत के गूढ़तम ज्ञान का भंडार थे। नागार्जुन ने नालंदा विश्वविद्यालय और आंध्र प्रदेश में कृष्णा नदी के तट पर स्थित श्रीपर्वत (नागार्जुनकोंडा) को अपनी साधना और ज्ञान का केंद्र बनाया। सातवाहन राजाओं ने उनके सम्मान में विशाल विहार बनवाए।\n\nनागार्जुन ने 'मूलमध्यमककारिका' की रचना कर दर्शन जगत में क्रांति ला दी। उन्होंने 'माध्यमिक दर्शन' की स्थापना की और 'शून्यता' का अमर सिद्धांत प्रतिपादित किया। उन्होंने सिद्ध किया कि संसार की कोई भी वस्तु स्वतंत्र या शाश्वत नहीं है; प्रत्येक वस्तु अन्य कारणों पर निर्भर होकर उत्पन्न होती है (प्रतीत्यसमुत्पाद)। शून्यता का अर्थ अभाव या शून्यवाद नहीं, बल्कि पदार्थों का स्वभाव-रहित और अंतर्संबंधित होना है। उन्होंने 'संवृति सत्य' (व्यावहारिक सत्य) और 'परमार्थ सत्य' (आत्यंतिक सत्य) का ऐसा अद्भुत विश्लेषण किया जिसने तिब्बत, चीन और जापान तक के दर्शन को हमेशा के लिए बदल दिया।",
+    "trial": "Nagarjuna faced fierce intellectual attacks from both orthodox Hindu dualists and dogmatic Buddhist Abhidharma scholars who accused him of nihilism. Through calm, uncompromising dialectical debate, he demonstrated that it is dogmatic grasping at permanent essences that creates nihilism, while Shunyata reveals boundless compassion and freedom.",
+    "trialLocal": "नागार्जुन की सबसे बड़ी परीक्षा समकालीन दार्शनिकों द्वारा उन पर 'शून्यवादी' (निराशावादी) होने के आरोपों का सामना करना था। उन्होंने अपने अचूक तर्कों से सिद्ध किया कि शून्यता संसार का विनाश नहीं, बल्कि मुक्ति और असीम करुणा का द्वार है।",
+    "teaching": "Whatever is dependently co-arisen, that we declare to be emptiness. Emptiness is the very openness that allows life to exist. Do not cling to dogmatic views, not even the view of emptiness; when you let go of all conceptual grasping, pristine awareness shines.",
+    "teachingLocal": "जो कुछ भी कारणों पर निर्भर होकर उत्पन्न हुआ है, वही शून्य है। शून्यता ही वह खुलापन है जिससे संसार में परिवर्तन और मुक्ति संभव होती है। किसी भी विचार या दृष्टि से चिपकना ही बंधन है; समस्त मानसिक धारणाओं का शांत हो जाना ही निर्वाण है।",
+    "moral": "Rigid dogmatism and intellectual pride are the deepest traps of the mind. By seeing the interdependent nature of all things, self-importance dissolves and universal compassion naturally flowers.",
+    "moralLocal": "कट्टरता और अहंकार मन के सबसे बड़े बंधन हैं। जब हम यह समझ लेते हैं कि हमारा अस्तित्व दूसरों से अलग नहीं बल्कि उनसे जुड़ा हुआ है, तो अहंकार स्वतः विसर्जित हो जाता है और हृदय करुणा से भर जाता है।",
+    "legacy": "Revered as the 'Second Buddha' in Mahayana and Vajrayana traditions, Nagarjuna’s Madhyamaka philosophy remains one of the most studied and respected systems in global philosophy, deeply resonating with modern quantum physics and existential thought.",
+    "legacyLocal": "महायान परंपरा में 'द्वितीय बुद्ध' के रूप में पूजित नागार्जुन का दर्शन आज भी विश्व के महानतम दार्शनिकों द्वारा सराहा जाता है। आधुनिक भौतिकी के क्वांटम सिद्धांत भी उनके शून्यता और सापेक्षता के विचारों से मेल खाते हैं।",
+    "source": "Mulamadhyamakakarika & Ratnavali (Acharya Nagarjuna)",
+    "sourceLocal": "मूलमध्यमककारिका एवं रत्नावली (आचार्य नागार्जुन)",
+    "sourceCitations": [
+      {
+        "sourceName": "Mulamadhyamakakarika",
+        "sourceRef": "Chapter 24, Examination of the Noble Truths (Verse 18)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Ratnavali (Precious Garland)",
+        "sourceRef": "Epistle to King Udayi on Righteous Governance",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Acharya Nagarjuna seated on a high cliff overlooking the swirling waters of the Krishna river at Sri Parvata, holding a glowing text with a serene serpent hood protecting his head.",
+    "quote": {
+      "text": "Whatever is dependently co-arisen, that is explained to be emptiness. That, being a dependent designation, is itself the Middle Way.",
+      "attribution": "Mulamadhyamakakarika, 24.18"
+    },
+    "quoteLocal": {
+      "text": "यः प्रतीत्यसमुत्पादः शून्यतां तां प्रचक्ष्महे। सा प्रज्ञप्तिरुपादाय प्रतिपत्सैव मध्यमा॥",
+      "attribution": "मूलमध्यमककारिका, २४.१८"
+    }
+  },
+  {
+    "id": "bodhidharma",
+    "name": "Bodhidharma",
+    "nameLocal": "बोधिधर्म",
+    "era": "c. 5th–6th Century CE",
+    "eraLocal": "लगभग ५वीं-६वीं शताब्दी ईस्वी",
+    "tradition": "buddhist",
+    "region": "Kanchipuram (Tamil Nadu) / Shaolin Temple (China)",
+    "regionLocal": "कांचीपुरम (तमिलनाडु) / शाओलिन मंदिर (चीन)",
+    "emoji": "🧘",
+    "tagline": "The Pallava prince who carried Dhyana to China, sat nine years facing a cave wall at Shaolin, and founded Chan (Zen) Buddhism and martial arts traditions.",
+    "taglineLocal": "पल्लव राजकुमार जिन्होंने भारत से 'ध्यान' की ज्योति चीन तक पहुँचाई, शाओलिन की गुफा में नौ वर्ष दीवार के सम्मुख ध्यान किया और 'ज़ेन' परंपरा की नींव रखी।",
+    "journey": "Bodhidharma was born as the third prince of the imperial Pallava dynasty in the ancient southern Indian capital of Kanchipuram. Renouncing his royal inheritance, palace luxuries, and martial command in his youth, he was initiated into the Buddhist monastic order by the revered master Prajnatara. Under Prajnatara, Bodhidharma absorbed the direct mind-to-mind transmission of meditative insight that traced back to the Buddha’s silent flower sermon on Vulture Peak. Honoring his preceptor’s dying mandate to carry the living spark of Dhyana to the northern lands of China, Bodhidharma undertook an arduous, perilous three-year sea voyage across the Bay of Bengal, the Strait of Malacca, and the South China Sea, finally arriving in Canton around 520 CE.\n\nUpon reaching Nanjing, the imperial capital of southern China, he was granted an audience with Emperor Wu of Liang, a pious monarch who had spent vast state fortunes constructing thousands of Buddhist temples, funding scriptural translations, and ordaining thousands of monks. Expecting divine praise, Emperor Wu asked: \"I have built countless monasteries, printed sacred sutras, and supported the Sangha throughout my reign. What merit have I accumulated?\" Bodhidharma looked directly into the emperor’s eyes and replied with shattering brevity: \"No merit whatsoever!\" The bewildered emperor demanded: \"What then is the highest principle of the sacred teachings?\" Bodhidharma replied: \"Vast emptiness, with nothing holy in it!\" In exasperation, the emperor asked: \"Who is it that stands before me?\" Bodhidharma calmly replied: \"I do not know.\"\n\nRecognizing that the royal court was trapped in external merit-making and intellectual dogma rather than direct spiritual awakening, Bodhidharma wrapped his coarse robes around his shoulders, traveled north across the roaring Yangtze River on a single reed, and ascended the misty peaks of the Songshan mountains to the Shaolin Monastery in Henan province. There, inside a secluded, wind-swept granite cave high above the temple, Bodhidharma sat facing a bare stone wall in unbroken, silent meditation (Wall-Gazing / Biguan) for nine consecutive years. His uncompromising silence ignited the Chan (Zen) tradition—a path pointing directly to the human mind, transcending dry scriptural pedantry. Observing that the Shaolin monks were physically frail from long sitting, he taught them Indian breath control (Pranayama) and eighteen dynamic physical postures derived from ancient Kalaripayattu and yoga, establishing the physical foundation of Shaolin Kung Fu.",
+    "journeyLocal": "कांचीपुरम के पल्लव राजवंश के तीसरे राजकुमार बोधिधर्म ने अल्पायु में ही राजसी वैभव त्याग कर आचार्य प्रज्ञातार से दीक्षा ली। अपने गुरु के आदेश का पालन करते हुए वे भारत से 'ध्यान' की मूल चेतना को पूर्व की ओर ले जाने के लिए तीन वर्ष की कठिन समुद्री यात्रा कर चीन पहुँचे।\n\nचीन के लियोंग सम्राट वू ने, जिसने हजारों मंदिर और मूर्तियां बनवाई थीं, बोधिधर्म को आमंत्रित किया और गर्व से पूछा—'मैंने इतने मंदिर बनवाए हैं, मुझे कितना पुण्य मिला?' बोधिधर्म ने निर्भीकता से उत्तर दिया—'रंचमात्र भी नहीं!' सम्राट ने स्तब्ध होकर पूछा—'तो फिर धर्म का सर्वोच्च सत्य क्या है?' बोधिधर्म बोले—'विशाल शून्यता, जिसमें कुछ भी पवित्र नहीं!' सम्राट ने पूछा—'तो मेरे सामने यह कौन खड़ा है?' बोधिधर्म ने कहा—'मैं नहीं जानता।'\n\nदरबार के आडंबर को देखकर वे शाओलिन के मोंट सोंग की गुफा में चले गए। वहाँ वे नौ वर्षों तक एक पत्थर की दीवार के सामने एकटक ध्यान (दीवार-दर्शन) में बैठे रहे। उनकी इस मौन साधना से 'चान' (ज़ेन) बौद्ध धर्म का जन्म हुआ, जो पोथियों के स्थान पर मन के साक्षात अनुभव पर बल देता है। उन्होंने शाओलिन के कमजोर भिक्षुओं को स्वस्थ और एकाग्र बनाने के लिए भारतीय कलरिपयट्टु और योग पर आधारित व्यायाम सिखाए, जिससे आगे चलकर प्रसिद्ध शाओलिन कुंग-फू का विकास हुआ।",
+    "trial": "Bodhidharma sat for nine continuous years facing a stone wall in the freezing winter blizzards and scorching summers of the Shaolin cave, conquering physical paralysis, demonic visions, and mortal exhaustion to prove that the awakened mind is utterly unshaken by external reality.",
+    "trialLocal": "शाओलिन की ठंडी गुफा में नौ वर्ष तक बिना हिले-डुले दीवार के सामने ध्यानस्थ बैठे रहना बोधिधर्म की अमानवीय परीक्षा थी। उन्होंने भूख, प्यास, शीत और शरीर के विकारों को जीतकर यह सिद्ध किया कि मन की शक्ति समस्त भौतिक सीमाओं से परे है।",
+    "teaching": "A special transmission outside the scriptures; not founded upon words and letters; pointing directly to the human mind; seeing into one's own nature and attaining Buddhahood. Awakening is not outside you; look directly within.",
+    "teachingLocal": "शास्त्रों से परे एक विशेष चेतना; जो शब्दों और अक्षरों पर निर्भर नहीं है; जो सीधे मनुष्य के मन की ओर संकेत करती है; अपने आत्म-स्वरूप का साक्षात कर बुद्धत्व को उपलब्ध होना। सत्य बाहर नहीं, तुम्हारे भीतर ही है।",
+    "moral": "Do not hide behind scriptures, ceremonies, or philanthropic vanity. Real spiritual transformation demands radical inner honesty, relentless discipline, and direct confrontation with your own mind.",
+    "moralLocal": "धार्मिक दिखावों या पुस्तकों के ज्ञान में मत उलझो। जब तक तुम स्वयं अपने मन के विकारों का सामना नहीं करते और भीतर नहीं झांकते, तब तक वास्तविक मुक्ति संभव नहीं है।",
+    "legacy": "Bodhidharma is revered as the First Patriarch of Chan (Zen) Buddhism in China, Japan, Korea, and Vietnam, and the spiritual father of the Shaolin martial arts, leaving an indelible imprint on East Asian spirituality and culture.",
+    "legacyLocal": "बोधिधर्म को चीन, जापान और पूर्व एशिया में ज़ेन बौद्ध धर्म का प्रथम पैट्रिआर्क (आदि गुरु) माना जाता है। शाओलिन मार्शल आर्ट्स और ज़ेन ध्यान की उनकी विरासत आज संपूर्ण विश्व को प्रेरित कर रही है।",
+    "source": "Records of the Transmission of the Lamp & Anthology of the Patriarchal Hall",
+    "sourceLocal": "ट्रांसमिशन ऑफ द लैंप एवं एन्थोलॉजी ऑफ द पैट्रिआर्कल हॉल",
+    "sourceCitations": [
+      {
+        "sourceName": "The Bodhidharma Anthology",
+        "sourceRef": "The Treatise on the Two Entrances and Four Practices",
+        "tier": 1
+      },
+      {
+        "sourceName": "Jingde Record of the Transmission of the Lamp",
+        "sourceRef": "Fascicle 3, Biography of Bodhidharma",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Fierce and deeply serene Bodhidharma with piercing dark eyes, sitting motionless in patched ochre robes inside the Shaolin mountain cave facing a bare stone wall at midnight.",
+    "quote": {
+      "text": "Not founded upon words and letters; pointing directly to the human mind; seeing into one's own nature and attaining Buddhahood.",
+      "attribution": "Bodhidharma's Zen Verse"
+    },
+    "quoteLocal": {
+      "text": "शब्दों और अक्षरों पर आधारित नहीं; सीधे मनुष्य के चित्त का संधान; अपने वास्तविक स्वभाव का दर्शन और बुद्धत्व की साक्षात प्राप्ति।",
+      "attribution": "बोधिधर्म का ज़ेन सूत्र"
+    }
+  },
+  {
+    "id": "padmasambhava",
+    "name": "Guru Padmasambhava (Rinpoche)",
+    "nameLocal": "गुरु पद्मसंभव (लोटस-बॉर्न)",
+    "era": "c. 8th Century CE",
+    "eraLocal": "लगभग आठवीं शताब्दी ईस्वी",
+    "tradition": "buddhist",
+    "region": "Oddiyana / Nalanda / Tibet",
+    "regionLocal": "ओड्डियान / नालंदा / तिब्बत",
+    "emoji": "⚡",
+    "tagline": "The 'Lotus-Born' Vajrayana master who subdued demonic forces, founded Samye Monastery, and embedded the Diamond Vehicle of Buddhism across the roof of the world.",
+    "taglineLocal": "वज्रयान के महान तांत्रिक सिद्ध, जिन्होंने तिब्बत की आसुरी शक्तियों को शांत कर सम्ये विहार की स्थापना की और हिमालय में बौद्ध धर्म की अमर ज्योति जलाई।",
+    "journey": "Known throughout the Himalayan world as Guru Rinpoche (The Precious Master) and revered in Tibetan tradition as the Second Buddha, Padmasambhava was born in the sacred northwestern kingdom of Oddiyana (in modern Swat/Kashmir). According to sacred biographies, he miraculously appeared as an eight-year-old child seated upon a blooming multicolored lotus blossom in the middle of Lake Dhanakosha, adopted by the pious King Indrabhuti. Renouncing courtly luxury to pursue the supreme truth, he traveled to the great monastic universities of northern India, receiving monastic ordination and intensive training at Nalanda and Vikramashila under great masters like Prabhahasti and Garab Dorje, swiftly mastering the outer Tripitaka and the innermost esoteric cycles of the Dzogchen and Tantric vehicles.\n\nIn the late eighth century, Emperor Trisong Detsen of Tibet sought to establish Buddhism as the spiritual foundation of his mountain realm, inviting the great scholar-monk Shantarakshita from Nalanda. However, construction of Tibet’s first Buddhist monastery at Samye was repeatedly sabotaged by severe natural disasters, violent earthquakes, lightning strikes, and virulent epidemics, which the local populace attributed to wrathful indigenous mountain spirits and Bon sorcerers hostile to the Dhamma. Recognizing that scholastic philosophy alone could not overcome these deep-seated atmospheric and psychological resistances, Shantarakshita advised the Tibetan king to summon the peerless yogic adept Padmasambhava.\n\nCrossing the high Himalayan passes into Tibet, Padmasambhava did not destroy the wrathful local deities, spirits, and demonesses through brute force. Instead, through supreme meditative power, non-dual realization, and compassionate wrath, he subdued and transformed them, binding them under sacred oath (Samaya) as eternal protectors (Dharmapalas) of the Dhamma. With the spiritual ecology of the land pacified, Samye Monastery was triumphantly consecrated in 779 CE. Beside his primary spiritual consort, the enlightened dakini Yeshe Tsogyal, Padmasambhava supervised the monumental translation of hundreds of Sanskrit and Prakrit scriptures into the Tibetan language. Perceiving that future eras would bring spiritual darkness and persecution, he miraculously concealed thousands of esoteric teachings and ritual treasures (Termas) inside mountain rocks, deep lakes, temple pillars, and the subtle consciousness of chosen disciples, to be discovered in future centuries by spiritual treasure-revealers (Terton) when humanity needed them most.",
+    "journeyLocal": "तिब्बती परंपरा में 'द्वितीय बुद्ध' के रूप में पूजित गुरु पद्मसंभव का प्राकट्य ओड्डियान राज्य के धनावकोश सरोवर में एक विशाल कमल के पुष्प पर बालक के रूप में हुआ था। राजा इंद्रभूति ने उनका लालन-पालन किया, परंतु राजसी सुखों का त्याग कर वे भारत के महान ज्ञान-केंद्रों नालंदा और विक्रमशिला पहुँचे। वहाँ उन्होंने त्रिपिटक, महायान और वज्रयान तंत्र का गहन अभ्यास कर पूर्ण सिद्धि प्राप्त की।\n\nआठवीं शताब्दी में तिब्बत के सम्राट थ्रिसोंग देत्सेन ने बौद्ध धर्म की स्थापना हेतु नालंदा से आचार्य शांतारक्षित को आमंत्रित किया। परंतु जब तिब्बत के प्रथम बौद्ध विहार 'सम्ये' का निर्माण प्रारंभ हुआ, तो भयंकर भूकम्पों, आकाशीय बिजली और महामारियों से निर्माण कार्य बार-बार ध्वस्त हो जाता था। शांतारक्षित ने सम्राट को परामर्श दिया कि इन आसुरी और तांत्रिक बाधाओं को शांत करने के लिए केवल गुरु पद्मसंभव ही सक्षम हैं।\n\nपद्मसंभव ने तिब्बत की पावन भूमि पर कदम रखा। उन्होंने अपनी अमोघ साधना, प्रचंड योगबल और करुणा से तिब्बत की उग्र शक्तियों और स्थानीय देवों को परास्त कर उन्हें धम्म की रक्षा की शपथ दिलाई। ७७९ ईस्वी में सम्ये विहार का निर्माण पूर्ण हुआ और तिब्बत में बौद्ध धर्म की जड़ें सदा के लिए जम गईं। उन्होंने महारानी येशे त्सोग्याल के सहयोग से सहस्रों संस्कृत ग्रंथों का तिब्बती में अनुवाद कराया। भविष्य के संकटों को भांपते हुए उन्होंने गुप्त आध्यात्मिक ज्ञान (तेरमा) को हिमालय की गुफाओं और झीलों में छुपा दिया, ताकि आने वाली पीढ़ियां संकट के समय उनका उद्धार कर सकें।",
+    "trial": "Padmasambhava faced the fiercely hostile mountain elements, xenophobic Bon shamans, and entrenched local demons across the rugged terrain of Tibet. He overcame every occult obstacle and assassination plot not with hatred or fear, but by transmuting violent energy into radiant enlightened awareness.",
+    "trialLocal": "पद्मसंभव की सबसे कठिन परीक्षा तिब्बत की बर्फीली घाटियों में स्थानीय तांत्रिकों और उग्र शक्तियों के घातक विरोध का सामना करना था। उन्होंने किसी हिंसा के बिना अपनी आंतरिक आध्यात्मिक ऊर्जा से शत्रुओं के विष को अमृत में बदल दिया।",
+    "teaching": "The true nature of your own mind is primordial purity and self-arising radiant clarity (Rigpa). Do not suppress thoughts, fears, or demons; look directly into the source of fear, and you will see that it is completely empty of inherent reality.",
+    "teachingLocal": "मन का वास्तविक स्वरूप आदि-विशुद्ध और स्वयंभू प्रकाश (रिगपा) है। भय, क्रोध या वासना को दबाओ मत; सीधे उनके मूल को देखो, और तुम पाओगे कि वे भ्रम मात्र और स्वभाव से शून्य हैं। अपने भीतर के बुद्ध को पहचानना ही परम मुक्ति है।",
+    "moral": "External obstacles and dark energies cannot harm a person who rests in fearless, non-dual presence. Whatever dark forces confront you can be transformed into allies on the spiritual path through absolute compassion and wisdom.",
+    "moralLocal": "बाहरी बाधाएं या विरोधी शक्तियां उस साधक का बाल भी बांका नहीं कर सकतीं जो आत्म-ज्ञान में स्थिर है। जीवन की हर विपत्ति को अपनी चेतना के बल पर आत्म-विकास का साधन बनाया जा सकता है।",
+    "legacy": "Padmasambhava established the Nyingma (Ancient) school of Tibetan Buddhism. His profound teachings, Terma revelations, and sacred image are enshrined in thousands of gompas and monasteries across Tibet, Bhutan, Ladakh, Nepal, and Sikkim.",
+    "legacyLocal": "गुरु पद्मसंभव ने तिब्बत में न्यिंग्मा परंपरा की नींव रखी। आज भी भूटान, लद्दाख, सिक्किम और तिब्बत के प्रत्येक मठ में 'गुरु रिन्पोछे' की प्रतिमा को साक्षात बुद्ध के समान पूजा जाता है।",
+    "source": "The Life of Padmasambhava & The Lotus Chronicle (Padma Kathang)",
+    "sourceLocal": "द लाइफ ऑफ पद्मसंभव एवं पद्म काथांग (पद्म आख्यान)",
+    "sourceCitations": [
+      {
+        "sourceName": "Padma Kathang (The Lotus Chronicle)",
+        "sourceRef": "Canto 55, The Subjugation of the Spirits of Tibet",
+        "tier": 1
+      },
+      {
+        "sourceName": "The Life and Liberation of Padmasambhava",
+        "sourceRef": "Part II: The Master in the Land of Snows",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Magnificent depiction of Guru Padmasambhava seated on a golden lotus throne against the snowy Himalayan peaks of Tibet, holding a vajra in his right hand and skull-cup in his left, with piercing enlightened eyes.",
+    "quote": {
+      "text": "Though my view is as vast as the sky, my conduct regarding cause and effect is as fine as barley flour.",
+      "attribution": "Padmasambhava's Precept"
+    },
+    "quoteLocal": {
+      "text": "यद्यपि मेरी दृष्टि आकाश के समान विशाल और अनंत है, परंतु कर्म और फल के सूक्ष्म नियमों के प्रति मेरा आचरण जौ के आटे से भी अधिक बारीक है।",
+      "attribution": "पद्मसंभव का उपदेश"
+    }
+  },
+  {
+    "id": "atisha",
+    "name": "Atisha Dipankara Srijnana",
+    "nameLocal": "अतीश दीपंकर श्रीज्ञान",
+    "era": "982–1054 CE",
+    "eraLocal": "९८२-१०५४ ईस्वी",
+    "tradition": "buddhist",
+    "region": "Vikramashila (Bengal) / Tibet",
+    "regionLocal": "विक्रमशिला (बंगाल) / तिब्बत",
+    "emoji": "🕯️",
+    "tagline": "The illustrious Bengali prince and chancellor of Vikramashila who undertook a perilous Himalayan crossing at age sixty to restore ethical purity and Lamrim teachings to Tibet.",
+    "taglineLocal": "बंगाल के राजपुत्र और विक्रमशिला के कुलपति, जिन्होंने ६० वर्ष की आयु में हिमालय पार कर तिब्बत में बौद्ध धर्म का नवजागरण किया और 'बोधिपथप्रदीप' की रचना की।",
+    "journey": "Born as Prince Chandragarbha into the royal family of the Pala Empire in Bikrampur (modern Bangladesh), he renounced his crown on the eve of marriage, guided by visions of the goddess Arya Tara. Taking monastic ordination under the Mahasamghika preceptor Shilarakshita, he was given the name Dipankara Srijnana ('Illuminator of Wisdom'). Seeking the direct transmission of Bodhicitta (the altruistic awakening mind), he undertook a perilous fourteen-month ocean voyage in a wooden merchant ship across tempestuous waters to the golden kingdom of Suvarnadvipa (Sumatra, Indonesia), studying for twelve continuous years under the supreme master Dharmakirti of Sumatra. Returning to India, his spiritual and intellectual authority was so preeminent that King Nayapala appointed him as the supreme Chancellor (Upadhyaya) of Vikramashila Mahavihara, the most prestigious university in Buddhist Asia.\n\nMeanwhile, in western Tibet (Ngari), Buddhism had fallen into severe degeneration following centuries of political fragmentation and the spread of corrupt, misunderstood tantric practices. King Yeshe-Ö of Guge sought desperately to invite Atisha to cleanse and revive the tradition. Captured by a hostile frontier ruler who demanded a ransom equal to the king’s weight in solid gold, the aging Yeshe-Ö sent a message to his nephew: 'Do not waste gold on an old king’s ransom; use this gold to bring the supreme master Atisha to Tibet!' Hearing of the king’s supreme sacrifice, Atisha was moved to tears. Despite his advanced age of sixty years and warnings that the freezing mountain climate would shorten his physical life by twenty years, Atisha proclaimed: 'If my life can benefit the people of Tibet and preserve the holy Dhamma, what matters twenty years?'\n\nCrossing the icy, treacherous mountain passes of Nepal and western Tibet on foot and horseback, Atisha arrived in Guge in 1042 CE. Refraining from flamboyant occult demonstrations, he began by teaching the bedrock fundamentals: karma, ethical conduct, mindfulness, and loving-kindness, earning the affectionate title 'The Refuge-Master' (Kyab-je). At the request of King Jangchub-Ö, Atisha composed his immortal masterpiece, the *Bodhipathapradipa* (Lamp for the Path to Enlightenment)—a sixty-eight verse treatise that systematized the entire Buddhist path into three capacities of practitioners, creating the revolutionary Lamrim (Stages of the Path) framework that guided all subsequent Tibetan traditions.",
+    "journeyLocal": "बंगाल के विक्रमपुर में पाल राजवंश के राजकुमार चंद्रगर्भ के रूप में जन्मे अतीश ने विवाह के दिन ही राजसी भोगों का त्याग कर दिया। उन्होंने आचार्य शीलरक्षित से दीक्षा ली और दीपंकर श्रीज्ञान नाम से प्रसिद्ध हुए। बोधिचित्त (संसार के समस्त जीवों की मुक्ति का संकल्प) की खोज में उन्होंने इंडोनेशिया के सुमात्रा द्वीप तक चौदह महीने की खतरनाक समुद्री यात्रा की और वहाँ बारह वर्षों तक आचार्य धर्मकीर्ति के सान्निध्य में साधना की। भारत लौटने पर पाल सम्राट नयपाल ने उन्हें विक्रमशिला महाविहार का प्रधान कुलपति नियुक्त किया।\n\nउधर तिब्बत में बौद्ध धर्म तांत्रिक विकृतियों के कारण पतन की ओर था। गूगे के राजा येशे-ओ ने अतीश को आमंत्रित करने के लिए स्वर्ण एकत्र करना प्रारंभ किया। जब एक शत्रु राजा ने राजा येशे-ओ को बंदी बनाकर उनके वजन के बराबर स्वर्ण की फिरौती मांगी, तो वृद्ध राजा ने कहा—'मेरे शरीर के लिए सोना मत बहाओ, इस सोने को भारत भेजकर अतीश को तिब्बत बुलाओ ताकि धर्म की रक्षा हो सके।' इस महात्याग को सुनकर अतीश का हृदय भर आया। चिकित्सकों की इस चेतावनी के बावजूद कि तिब्बत की बर्फीली ठंड उनकी आयु बीस वर्ष कम कर देगी, साठ वर्षीय अतीश ने कहा—'यदि मेरे जीवन से धर्म की रक्षा होती है, तो मुझे अपनी आयु की कोई चिंता नहीं।'\n\n१०४२ ईस्वी में वे तिब्बत पहुँचे। उन्होंने किसी आडंबर के बिना जनता को शील, अहिंसा और शरण-गमन का सरल पाठ पढ़ाया। उन्होंने 'बोधिपथप्रदीप' ग्रंथ की रचना की, जिसमें साधना के क्रमिक सोपानों (लाम-रिम) का ऐसा अद्भुत समन्वय किया कि तिब्बत में बौद्ध धर्म पुनः अपने शुद्ध और तेजस्वी रूप में स्थापित हो गया।",
+    "trial": "Atisha knowingly surrendered two decades of physical lifespan to make the perilous journey across the freezing Himalayan heights at the age of sixty, trading the warmth and comfort of Vikramashila’s royal university for the desolate stone huts of Tibet to fulfill a martyr-king’s prayer.",
+    "trialLocal": "साठ वर्ष की वृद्धावस्था में अपनी आयु के बीस वर्ष कम होने की चेतावनी जानते हुए भी दुर्गम बर्फीले हिमालय को पार कर तिब्बत जाना अतीश का सर्वोच्च त्याग था। उन्होंने सुख-सुविधाओं का त्याग कर ज्ञान की ज्योति जलाई।",
+    "teaching": "All Buddhist teachings converge upon a single reality: cultivating unconditional Bodhicitta—the compassionate resolve to attain awakening for the liberation of all sentient beings. Practice ethical discipline first, for without ethical restraint, meditation is merely an illusion.",
+    "teachingLocal": "समस्त बौद्ध साधनाओं का एकमात्र सार 'बोधिचित्त' है—संसार के सभी जीवों के दुखों को दूर करने की असीम करुणा। शील और सदाचार के बिना ध्यान का कोई मूल्य नहीं है; पहले अपने आचरण को पवित्र करो।",
+    "moral": "A great teacher never measures service by personal comfort, prestige, or physical survival. When duty calls to relieve suffering in dark places, step forward fearlessly with the lamp of truth.",
+    "moralLocal": "सच्चा संत कभी अपनी सुख-सुविधा या जीवन की चिंता नहीं करता। जहाँ भी अज्ञान और दुख का अंधकार हो, वहाँ दीपक बनकर ज्ञान का प्रकाश फैलाना ही सच्चा जीवन है।",
+    "legacy": "Atisha founded the Kadampa tradition, which directly inspired Je Tsongkhapa to establish the Gelug tradition of the Dalai Lamas. His *Bodhipathapradipa* established the Lamrim literature that remains the core curriculum of Tibetan monasteries today.",
+    "legacyLocal": "अतीश ने कंदम परंपरा की स्थापना की, जिससे आगे चलकर दलाई लामाओं की गेलुग परंपरा विकसित हुई। उनका 'बोधिपथप्रदीप' आज भी तिब्बती बौद्ध धर्म में साधना का अनिवार्य ग्रंथ है।",
+    "source": "Bodhipathapradipa & The Blue Annals (Gö Lotsawa)",
+    "sourceLocal": "बोधिपथप्रदीप एवं द ब्लू एनाल्स (गो लोत्सावा)",
+    "sourceCitations": [
+      {
+        "sourceName": "Bodhipathapradipa (Lamp for the Path to Enlightenment)",
+        "sourceRef": "Verses 1–5, The Three Capacities of Seekers",
+        "tier": 1
+      },
+      {
+        "sourceName": "The Blue Annals",
+        "sourceRef": "Book 5, The Arrival of the Venerable Lord Atisha in Tibet",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Venerable elderly monk Atisha Dipankara in warm woolen Tibetan robes carrying a small butter lamp, riding a sturdy mountain horse across a snowy Himalayan pass into a sunlit plateau.",
+    "quote": {
+      "text": "Those who, through their personal suffering, truly understand the suffering of others and wish to eliminate all misery from the world—they are the supreme practitioners of truth.",
+      "attribution": "Bodhipathapradipa, Verse 4"
+    },
+    "quoteLocal": {
+      "text": "जो अपने व्यक्तिगत दुखों के माध्यम से समस्त प्राणियों के दुखों को गहराई से अनुभव करते हैं और संपूर्ण जगत के क्लेशों को मिटाना चाहते हैं, वे ही सच्चे और सर्वश्रेष्ठ साधक हैं।",
+      "attribution": "बोधिपथप्रदीप, श्लोक ४"
+    }
+  },
+  {
+    "id": "thich-nhat-hanh",
+    "name": "Thich Nhat Hanh",
+    "nameLocal": "थिच नहत हान्ह",
+    "era": "1926–2022 CE",
+    "eraLocal": "१९२६-२०२२ ईस्वी",
+    "tradition": "buddhist",
+    "region": "Hue (Vietnam) / Plum Village (France)",
+    "regionLocal": "ह्यूए (वियतनाम) / प्लम विलेज (फ्रांस)",
+    "emoji": "🍃",
+    "tagline": "The Vietnamese Zen master and poet who coined 'Engaged Buddhism', walked through the horrors of war with mindfulness, and gifted global culture the gentle art of peaceful presence.",
+    "taglineLocal": "वियतनामी ज़ेन गुरु और कवि, जिन्होंने 'एंगेज्ड बुद्धिज्म' (सक्रिय बौद्ध धर्म) की नींव रखी, युद्ध की विभीषिका में भी शांति का मार्ग दिखाया और विश्व को 'माइंडफुलनेस' का उपहार दिया।",
+    "journey": "Born as Nguyen Xuan Bao in central Vietnam, he entered the Tu Hieu root temple near Hue as a novice monk at the age of sixteen, steeped in the traditional Vietnamese Zen (Thien) and Mahayana lineages. As the catastrophic Vietnam War exploded across his homeland in the 1960s, tearing ancient rural villages apart and showering rice paddies in napalm, chemical defoliants, artillery shells, and carpet bombs, Thich Nhat Hanh and his fellow monastics confronted a profound moral crossroads: should they remain sequestered in tranquil mountain monasteries practicing solitary meditation, or should they step out into the smoke, napalm, and fire to rescue the wounded, shelter thousands of displaced refugees, and stop the fratricidal carnage?\n\nChoosing to practice meditation in the crucible of real-world suffering, Thich Nhat Hanh coined the revolutionary concept of \"Engaged Buddhism\" (Dao Phat Di Vao Cuoc Doi). He founded the School of Youth for Social Service, organizing over ten thousand dedicated young volunteers who walked directly into war zones to rebuild bombed rural clinics, establish cooperative village schools, dig clean water wells, and rescue injured civilians without bearing arms or swearing allegiance to either the Communist North or the American-backed South. In 1966, he traveled across the United States and Europe on an urgent peace mission, appealing directly to political leaders and citizens to end the bloodshed. He met with civil rights leader Dr. Martin Luther King Jr., who was so profoundly moved by Thich Nhat Hanh’s spiritual authority, gentleness, and moral courage that King publicly nominated him for the Nobel Peace Prize in 1967 and made the historic decision to publicly denounce the Vietnam War.\n\nBecause of his uncompromising refusal to support either warring faction and his courageous defense of innocent peasant lives, both North and South Vietnamese regimes banned him from returning to his homeland, casting him into thirty-nine continuous years of painful political exile. Undeterred by isolation, he established the Plum Village spiritual community in southwestern France, transforming it into the world’s most vibrant, influential international center for mindfulness and reconciliation. Authoring over one hundred poetic, accessible masterpieces—including The Miracle of Mindfulness, Peace Is Every Step, and Old Path White Clouds—he taught millions across six continents how to wash dishes mindfully, breathe through emotional trauma, resolve conflict through compassionate listening, and recognize that \"Peace is every step; the shining red sun is my heart.\"",
+    "journeyLocal": "मध्य वियतनाम में जन्मे थिच नहत हान्ह सोलह वर्ष की आयु में ज़ेन भिक्षु बने। १९६० के दशक में जब उनके देश पर वियतनाम युद्ध का भीषण संकट आया और अमेरिकी बमवर्षकों ने गांवों को आग के हवाले करना प्रारंभ किया, तो उन्होंने और उनके साथी भिक्षुओं ने एक ऐतिहासिक निर्णय लिया। उन्होंने कहा कि जब जनता जल रही हो, तो हम मंदिर में बैठकर आंखें बंद नहीं कर सकते।\n\nउन्होंने 'एंगेज्ड बुद्धिज्म' (सक्रिय बौद्ध धर्म) की स्थापना की। उन्होंने हजारों युवाओं को लेकर युद्धग्रस्त क्षेत्रों में पुनर्निर्माण, अनाथालयों की स्थापना और घायलों की चिकित्सा का कार्य बिना किसी हथियार के किया। १९६६ में वे शांति की अपील लेकर अमेरिका गए, जहाँ डॉ. मार्टिन लूथर किंग जूनियर उनसे इतने प्रभावित हुए कि उन्होंने थिच नहत हान्ह को नोबेल शांति पुरस्कार हेतु नामांकित किया और युद्ध का विरोध किया।\n\nशांति का पक्ष लेने के कारण वियतनाम की दोनों सरकारों ने उन्हें देश से निष्कासित कर दिया। उनतालीस वर्षों के इस निर्वासन में उन्होंने फ्रांस में 'प्लम विलेज' की स्थापना की, जो आज विश्व में ध्यान और शांति का सबसे बड़ा केंद्र है। उन्होंने 'द मिरेकल ऑफ माइंडफुलनेस' जैसी पुस्तकों के माध्यम से संपूर्ण विश्व को सांस लेने, चलने और वर्तमान क्षण में जीने की कला सिखाई।",
+    "trial": "Thich Nhat Hanh endured thirty-nine years of forced exile from his beloved homeland, seeing his student volunteers murdered in the crossfire of the Vietnam War. Rather than surrendering to bitterness or hatred toward the soldiers who bombed his country, he practiced deep looking, transforming sorrow into inexhaustible loving-kindness.",
+    "trialLocal": "उनतालीस वर्षों तक अपनी मातृभूमि से निष्कासित रहना और अपने प्रिय शिष्यों को युद्ध में खोना उनकी सबसे बड़ी परीक्षा थी। परंतु उन्होंने कभी किसी पक्ष के प्रति घृणा नहीं की; उन्होंने आंसुओं को करुणा में बदलकर संपूर्ण विश्व को क्षमा का पाठ पढ़ाया।",
+    "teaching": "Mindfulness is the miracle that brings you back to the present moment. There is no way to peace; peace is the way. Smile, breathe, and go slowly—the pure land of the Buddha is available right here and right now in every mindful breath.",
+    "teachingLocal": "वर्तमान क्षण में होशपूर्वक जीना ही ध्यान का चमत्कार है। शांति का कोई अलग मार्ग नहीं है; शांत होकर चलना ही मार्ग है। प्रत्येक सांस में जीवन की सुंदरता को अनुभव करो; तथागत का बुद्धत्व इसी क्षण में उपलब्ध है।",
+    "moral": "True spiritual activism is free from anger and blame. You cannot bring peace to the world if your own heart is at war; first cultivate inner tranquility, and peace will flow naturally from your presence.",
+    "moralLocal": "क्रोध और बदले की भावना से कभी शांति नहीं आ सकती। यदि संसार को बदलना चाहते हो, तो पहले अपने भीतर के युद्ध को शांत करो; जब तुम शांत होगे, तो तुम्हारी उपस्थिति ही वातावरण को बदल देगी।",
+    "legacy": "Thich Nhat Hanh popularized global mindfulness and inter-being (interdependent co-existence) in the West, establishing dozens of monasteries worldwide and inspiring contemporary environmental, peace, and restorative justice movements.",
+    "legacyLocal": "उन्होंने पश्चिमी जगत में 'माइंडफुलनेस' की क्रांति ला दी। उनके द्वारा स्थापित मठ आज भी लाखों लोगों को तनाव, अवसाद और संघर्षों से मुक्त कर शांत जीवन जीने की प्रेरणा दे रहे हैं।",
+    "source": "The Miracle of Mindfulness & Peace Is Every Step (Thich Nhat Hanh)",
+    "sourceLocal": "द मिरेकल ऑफ माइंडफुलनेस एवं पीस इज एव्री स्टेप (थिच नहत हान्ह)",
+    "sourceCitations": [
+      {
+        "sourceName": "The Miracle of Mindfulness",
+        "sourceRef": "Chapter 1, Essential Sutra on Mindfulness",
+        "tier": 1
+      },
+      {
+        "sourceName": "Nomination Letter for the Nobel Peace Prize (Dr. Martin Luther King Jr.)",
+        "sourceRef": "Letter to Nobel Committee, January 1967",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Zen master Thich Nhat Hanh in simple brown Vietnamese monastic robes walking with gentle, mindful barefoot steps beneath flowering plum trees at dawn, a serene smile on his lips.",
+    "quote": {
+      "text": "Breathing in, I calm body and mind. Breathing out, I smile. Dwelling in the present moment, I know this is the only moment.",
+      "attribution": "Peace Is Every Step"
+    },
+    "quoteLocal": {
+      "text": "श्वास भीतर लेते हुए, मैं काया और चित्त को शांत करता हूँ। श्वास बाहर छोड़ते हुए, मैं मुस्कुराता हूँ। वर्तमान क्षण में स्थित होकर, मैं जानता हूँ कि यही एकमात्र क्षण है।",
+      "attribution": "पीस इज एव्री स्टेप"
+    }
+  },
+  {
+    "id": "br-ambedkar",
+    "name": "Dr. B.R. Ambedkar (Babasaheb)",
+    "nameLocal": "डॉ. भीमराव आंबेडकर (बाबासाहेब)",
+    "era": "1891–1956 CE",
+    "eraLocal": "१८९१-१९५६ ईस्वी",
+    "tradition": "buddhist",
+    "region": "Mhow (Madhya Pradesh) / Nagpur / Mumbai",
+    "regionLocal": "महू (मध्य प्रदेश) / नागपुर / मुंबई",
+    "emoji": "📜",
+    "tagline": "The architect of modern India's Constitution who spearheaded the renaissance of the Dhamma, liberating millions from untouchability through the path of reason, equality, and compassion.",
+    "taglineLocal": "भारतीय संविधान के मुख्य शिल्पी, जिन्होंने शोषितों को आत्म-सम्मान दिया और नागपुर में लाखों अनुयायियों के साथ तथागत के धम्म की शरण लेकर नवयान की क्रांति की।",
+    "journey": "Born as Bhimrao Ramji Ambedkar into the untouchable Mahar community in the military cantonment of Mhow, he endured the humiliating sting of systemic caste discrimination from his earliest school days—forced to sit on a rough gunny sack outside the classroom floor, denied water from the common school tap unless it was poured down his throat from a distance by a peon, and subjected to universal social ostracism that denied his very humanity. Defying every crushing socio-economic barrier through superhuman intellectual discipline, voracious reading, and unshakeable self-respect, he earned doctorates in economics from Columbia University in New York and the London School of Economics, and was called to the Bar at Gray’s Inn in London, emerging as one of the most comprehensively educated legal and economic minds of the twentieth century.\n\nReturning to India, Babasaheb dedicated his life with fierce, single-minded devotion to the total emancipation of India’s sixty million oppressed and ostracized citizens. He launched the historic Mahad Satyagraha in 1927 to assert the fundamental human right of untouchables to drink water from the public Chavadar Lake, publicly burning the Manusmriti to signify a complete break with institutional inequality. He founded pioneering journals including Mooknayak (Leader of the Silent) and Bahishkrit Bharat to give a roaring voice to the voiceless. Appointed as Chairman of the Drafting Committee of the Indian Constitution following Independence, Ambedkar authored the supreme democratic charter of the world’s largest republic, enshrining universal adult franchise, fundamental civil liberties, and the total constitutional abolition of untouchability.\n\nYet Babasaheb recognized with acute historical foresight that legal constitutionalism alone could not eradicate deeply ingrained caste prejudice; true human emancipation demanded a profound moral and spiritual revolution of the heart. Having rigorously studied all world religions for decades, on October 14, 1956, at the historic Deekshabhoomi in Nagpur, alongside his wife Dr. Savita Ambedkar and over five hundred thousand followers, Babasaheb formally took refuge in the Triple Gem under the venerable Burmese monk U Chandramani. Administering twenty-two solemn pledges to renounce superstition and caste hierarchies, he revived Buddhism in the land of its birth as Navayana—a path rooted not in fatalism or ritual superstition, but in the Buddha’s original ethical foundation of Prajna (rational wisdom), Karuna (compassion), and Samata (equality). Weeks before his death, he completed his spiritual masterwork, The Buddha and His Dhamma, offering an enduring manifesto of human dignity.",
+    "journeyLocal": "मध्य प्रदेश के महू में अछूत माने जाने वाले महार कुल में जन्मे भीमराव आंबेडकर ने बाल्यकाल से ही जातिगत भेदभाव और अपमान का घोर दंश झेला। विद्यालय में कक्षा के बाहर बोरे पर बैठना, मटके से पानी न पीने देना और हर कदम पर तिरस्कार—परंतु इन बाधाओं ने उनके संकल्प को और फौलादी बना दिया। उन्होंने कोलंबिया विश्वविद्यालय और लंदन स्कूल ऑफ इकोनॉमिक्स से डॉक्टरेट की उपाधियां प्राप्त कीं और बैरिस्टर बने।\n\nभारत लौटकर उन्होंने शोषितों और वंचितों के आत्म-सम्मान के लिए महाड़ का ऐतिहासिक सत्याग्रह किया, जिसमें सार्वजनिक तालाब से पानी पीने के मानवीय अधिकार को सिद्ध किया। स्वतंत्र भारत के प्रथम कानून मंत्री और संविधान की प्रारूप समिति के अध्यक्ष के रूप में उन्होंने भारतीय संविधान का निर्माण किया, जिसमें बंधुत्व, समानता और अस्पृश्यता के अंत की संवैधानिक गारंटी दी गई।\n\nपरंतु बाबासाहेब का मानना था कि कानून से अधिकार तो मिल सकते हैं, परंतु अंतर्मन की मुक्ति के लिए आध्यात्मिक क्रांति आवश्यक है। १४ अक्टूबर १९५६ को नागपुर की दीक्षाभूमि पर उन्होंने अपने पांच लाख अनुयायियों के साथ तथागत बुद्ध के धम्म की शरण ली और २२ प्रतिज्ञाएं दिलाईं। उन्होंने बौद्ध धर्म को 'नवयान' के रूप में पुनर्जीवित किया—एक ऐसा मार्ग जो प्रज्ञा, करुणा और समता पर आधारित है। अपने महापरिनिर्वाण से पूर्व उन्होंने 'द बुद्ध एंड हिज धम्म' की रचना कर मानवता को गरिमा का नया प्रकाश दिया।",
+    "trial": "Babasaheb fought against millennia of deeply entrenched caste bigotry, personal tragedies including the loss of his beloved wife and children to poverty in his youth, and relentless political opposition, never once succumbing to violence or bitterness, but wielding the pen, law, and moral reason as his weapons.",
+    "trialLocal": "सदियों पुरानी सामाजिक असमानता, घोर निर्धनता और अपनों को खोने के दारुण आघातों के बावजूद बाबासाहेब ने कभी हिंसा या कटुता का मार्ग नहीं चुना। उन्होंने केवल शिक्षा, संगठन और संविधान के बल पर शोषितों का उद्धार किया।",
+    "teaching": "Educate, Agitate, Organize. Religion must be judged by its social utility and whether it promotes liberty, equality, and fraternity. The Buddha's Dhamma is morality—not ritualism, not superstition, but love, reason, and social justice.",
+    "teachingLocal": "शिक्षित बनो, संगठित रहो, संघर्ष करो। धर्म वही सच्चा है जो स्वतंत्रता, समता और बंधुत्व सिखाए। तथागत का धम्म कोई अंधविश्वास या कर्मकांड नहीं, बल्कि नैतिकता, करुणा और न्याय का सजीव मार्ग है।",
+    "moral": "No human being is born degraded; your destiny is forged by your intellect, moral courage, and dedicated service to truth. Stand upright with dignity, for self-respect is the most sacred possession of human life.",
+    "moralLocal": "जन्म से कोई बड़ा या छोटा नहीं होता; मनुष्य अपने कर्मों और आत्म-सम्मान से महान बनता है। अपने अधिकारों के लिए सजग रहना और दूसरों के प्रति दयालु होना ही सच्ची मानवता है।",
+    "legacy": "Dr. Ambedkar is revered as the champion of human rights across the globe. His revival of Buddhism in 1956 sparked a massive spiritual movement that revitalized the Dhamma in modern India, inspiring oppressed communities worldwide.",
+    "legacyLocal": "बाबासाहेब आधुनिक भारत के महानतम जननायक हैं। उनके द्वारा दीक्षाभूमि में जलाई गई धम्म की ज्योति ने लाखों परिवारों को नई गरिमा और पहचान दी, और उनका चिंतन आज संपूर्ण विश्व में मानवाधिकारों का प्रेरणा स्रोत है।",
+    "source": "The Buddha and His Dhamma & Annihilation of Caste (Dr. B.R. Ambedkar)",
+    "sourceLocal": "द बुद्ध एंड हिज धम्म एवं एनीहिलेशन ऑफ कास्ट (डॉ. बी.आर. आंबेडकर)",
+    "sourceCitations": [
+      {
+        "sourceName": "The Buddha and His Dhamma",
+        "sourceRef": "Book IV, Part II: What is Dhamma?",
+        "tier": 1
+      },
+      {
+        "sourceName": "The Constituent Assembly Debates",
+        "sourceRef": "Final Address on November 25, 1949",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Dr. B.R. Ambedkar standing with profound dignity in pristine white attire at Deekshabhoomi in Nagpur, hands folded before a radiant statue of the Buddha, surrounded by half a million transformed citizens.",
+    "quote": {
+      "text": "I measure the progress of a community by the degree of progress which women have achieved. Cultivate self-respect, rely on your own strength, and follow the path of the Buddha.",
+      "attribution": "Babasaheb's Address"
+    },
+    "quoteLocal": {
+      "text": "मैं किसी समाज की प्रगति को उस प्रगति से मापता हूँ जो उस समाज की महिलाओं ने हासिल की है। आत्म-सम्मान से जियो, अपनी शक्ति पर विश्वास रखो और तथागत के बताए मार्ग पर चलो।",
+      "attribution": "बाबासाहेब का उद्बोधन"
+    }
+  },
+  {
+    "id": "sanghamitra",
+    "name": "Theri Sanghamitra",
+    "nameLocal": "थेरी संघमित्रा",
+    "era": "c. 282–203 BCE",
+    "eraLocal": "लगभग २८२-२०३ ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Pataliputra / Anuradhapura (Sri Lanka)",
+    "regionLocal": "पाटलिपुत्र / अनुराधापुर (श्रीलंका)",
+    "emoji": "🌱",
+    "tagline": "The Mauryan princess who renounced imperial royalty, braved ocean voyages, and carried the sacred Bodhi Tree sapling to plant the Bhikkhuni Sangha in Sri Lanka.",
+    "taglineLocal": "मौर्य राजकुमारी जिन्होंने राजसी सुख त्याग कर भिक्षुणी दीक्षा ली और समुद्र पार कर बोधिवृक्ष की पावन शाखा ले जाकर श्रीलंका में भिक्षुणी संघ की स्थापना की।",
+    "journey": "Princess Sanghamitra was the daughter of Emperor Ashoka and Queen Devi of Vidisha, born during Ashoka’s youthful viceroyalty in western India. Blessed with luminous grace, sharp intelligence, and profound ethical sensitivity, she witnessed the dramatic spiritual transformation of her imperial father following the devastating Kalinga War. Her husband Agribrahma and brother Mahendra both renounced the world to enter the homeless life of the Buddhist Sangha. Soon afterward, inspired by the noble teachings of the Buddha and realizing that royal titles and palace jewels could never bring lasting peace to the human heart, eighteen-year-old Sanghamitra requested ordination as a Buddhist nun (Bhikkhuni) under the venerable preceptress Ayupala, choosing a life of barefoot mendicancy and meditation over the splendor of Pataliputra’s royal court.\n\nAfter her brother Arahant Mahendra successfully introduced Buddhism to the island kingdom of Sri Lanka, converting King Devanampiya Tissa, the queen consort Anula and hundreds of noble court women pleaded to be admitted into the monastic order as nuns. Because the Vinaya strictly mandates that only fully ordained female preceptors can initiate female monastics, King Tissa sent royal envoys to Emperor Ashoka at Pataliputra, requesting that the venerable Theri Sanghamitra be dispatched to the island. Recognizing the supreme spiritual necessity of the mission, Ashoka tearfully parted with his beloved daughter.\n\nAccompanied by a retinue of enlightened nuns, Sanghamitra embarked on an epic and perilous voyage from the port of Tamralipti across the Bay of Bengal to Sri Lanka. Most sacred of all, she carried with her a southern sapling of the original, sacred Bodhi Tree (Jaya Sri Maha Bodhi) from Bodh Gaya, placed inside a pure golden vase. Miraculously weathering fierce oceanic tempests, Sanghamitra arrived at the port of Jambukola in Sri Lanka, where King Tissa waded neck-deep into the ocean to receive the sacred sapling upon his own royal head. Traveling inland to the capital city of Anuradhapura, the Bodhi sapling was planted in the Mahamevnawa Gardens, where it flourishes to this day as the oldest historically documented living tree in the world. Sanghamitra formally ordained Queen Anula and five hundred women, establishing the lineage of the Bhikkhuni Sangha in Sri Lanka and dedicating the remaining four decades of her life to teaching the Dhamma with boundless compassion.",
+    "journeyLocal": "सम्राट अशोक और महारानी देवी की सुपुत्री राजकुमारी संघमित्रा का जन्म विदिशा में हुआ था। कलिंग युद्ध के बाद जब उनके पिता अशोक ने बौद्ध धर्म अंगीकार किया और उनके भाई महेंद्र ने संन्यास लिया, तो अठारह वर्षीय संघमित्रा के मन में भी वैराग्य का उदय हुआ। उन्होंने राजमहल के समस्त ऐश्वर्य का परित्याग कर भिक्षुणी दीक्षा ग्रहण की और कठोर साधना में लीन हो गईं।\n\nजब उनके भाई महेंद्र ने श्रीलंका में धम्म का प्रचार किया, तो वहाँ की महारानी अनुला और सैकड़ों स्त्रियों ने भिक्षुणी बनने की इच्छा प्रकट की। बौद्ध नियमों के अनुसार स्त्रियों को दीक्षा केवल वरिष्ठ भिक्षुणी ही दे सकती थी। अतः श्रीलंका के राजा देवानांपिय तिस्स ने सम्राट अशोक से संघमित्रा को भेजने का अनुरोध किया। अशोक ने भारी मन से अपनी लाडली पुत्री को इस महान आध्यात्मिक अभियान के लिए विदा किया।\n\nसंघमित्रा ताम्रलिप्ति बंदरगाह से समुद्र मार्ग द्वारा श्रीलंका के लिए रवाना हुईं। वे अपने साथ बोधगया के मूल बोधिवृक्ष की एक पावन शाखा (दक्षिणी शाखा) स्वर्ण पात्र में लेकर गईं। श्रीलंका पहुँचने पर राजा तिस्स ने स्वयं समुद्र में उतरकर उस शाखा को सिर पर धारण किया। अनुराधापुर के महामेघवन में इस बोधिवृक्ष को रोपा गया, जो आज भी २२०० वर्षों से जीवित विश्व का सबसे प्राचीन ऐतिहासिक वृक्ष है। संघमित्रा ने महारानी अनुला सहित सैकड़ों स्त्रियों को दीक्षा देकर श्रीलंका में भिक्षुणी संघ की स्थापना की और अपने जीवन के अंतिम क्षण तक धम्म की सेवा की।",
+    "trial": "Sanghamitra faced the perilous dangers of ancient oceanic voyages across stormy seas and the heartbreak of permanent separation from her father and homeland, dedicating her youth and wisdom entirely to establishing spiritual independence for women in a distant land.",
+    "trialLocal": "संघमित्रा की सबसे कठिन परीक्षा तूफानी समुद्र की यात्रा करना और अपने पिता व देश को सदा के लिए छोड़कर एक अनजान द्वीप में धम्म का बीजारोपण करना था। उन्होंने अपने जीवन को नारी चेतना के उत्थान के लिए समर्पित कर दिया।",
+    "teaching": "The light of the Dhamma knows no national borders or gender boundaries. When compassion and wisdom are planted in the soil of pure intention, like the sacred Bodhi Tree, they take deep root and shelter generations of suffering souls.",
+    "teachingLocal": "सत्य और धम्म की कोई सीमा नहीं होती। जिस प्रकार बोधिवृक्ष की शाखा जहां भी रोपी जाए, वह छाया और शांति देती है, उसी प्रकार पवित्र संकल्प से किया गया कार्य सदियों तक मानवता को शीतलता प्रदान करता है।",
+    "moral": "True royalty is not measured by crowns and palaces, but by the willingness to surrender privilege and cross oceans to bring spiritual awakening and dignity to others.",
+    "moralLocal": "सच्चा बड़प्पन महलों में रहने में नहीं, बल्कि दूसरों के कल्याण के लिए अपने सुखों को त्यागने में है। त्याग और सेवा ही जीवन को अमर बनाते हैं।",
+    "legacy": "The Jaya Sri Maha Bodhi tree planted by Sanghamitra in Anuradhapura has been venerated continuously for over 2,200 years. Her establishment of the Bhikkhuni Sangha in Sri Lanka preserved the female monastic lineage across Southeast Asia.",
+    "legacyLocal": "संघमित्रा द्वारा रोपा गया 'जय श्री महाबोधि' वृक्ष आज भी अनुराधापुर में हरा-भरा खड़ा है। उनके द्वारा स्थापित भिक्षुणी संघ ने एशिया भर में स्त्रियों के आध्यात्मिक सशक्तिकरण की नींव रखी।",
+    "source": "Mahavamsa (The Great Chronicle of Sri Lanka) & Dipavamsa",
+    "sourceLocal": "महावंस (श्रीलंका का महाइतिहास) एवं दीपवंस",
+    "sourceCitations": [
+      {
+        "sourceName": "Mahavamsa",
+        "sourceRef": "Chapters 18–19, The Coming of the Bodhi Tree and Sanghamitta",
+        "tier": 1
+      },
+      {
+        "sourceName": "Dipavamsa",
+        "sourceRef": "Chapter 15, The Establishment of the Nuns' Order in Tambapanni",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Princess-nun Sanghamitra standing on the wooden prow of an ancient sailing ship entering the harbor of Sri Lanka, gently cradling a golden vessel containing the sprouting green branch of the sacred Bodhi Tree.",
+    "quote": {
+      "text": "With a heart established in peace, cross the turbulent oceans of the world, carrying the seed of awakening to all who thirst for liberation.",
+      "attribution": "Mahavamsa Chronicle"
+    },
+    "quoteLocal": {
+      "text": "शांत अंतःकरण के साथ संसार के तूफानी सागरों को पार करो, और जो भी मुक्ति के प्यासे हैं, उन तक बोधि का पावन बीज पहुँचाओ।",
+      "attribution": "महावंस इतिहास"
+    }
+  },
+  {
+    "id": "milinda",
+    "name": "King Milinda (Menander I)",
+    "nameLocal": "राजा मिलिंद (मिनांडर प्रथम)",
+    "era": "c. 165–130 BCE",
+    "eraLocal": "लगभग १६५-१३० ईसा पूर्व",
+    "tradition": "buddhist",
+    "region": "Sagala (Sialkot, Punjab) / Gandhara",
+    "regionLocal": "सागल (सियालकोट, पंजाब) / गांधार",
+    "emoji": "🏛️",
+    "tagline": "The Greek philosopher-king of northwestern India whose probing dialectical questions to the sage Nagasena gave world literature the philosophical masterpiece Milinda Panha.",
+    "taglineLocal": "उत्तर-पश्चिम भारत के इंडो-ग्रीक दार्शनिक सम्राट, जिनके प्रखर प्रश्नों और भिक्षु नागसेन के संवाद ने विश्व साहित्य को 'मिलिंदपञ्हो' जैसा अमर दर्शन दिया।",
+    "journey": "Menander I, known in Indian and Pali Buddhist literature as King Milinda, was the most celebrated sovereign of the Indo-Greek Kingdom, ruling a sprawling empire stretching from the Hindu Kush through the fertile valleys of Gandhara, Punjab, and Sindh from his glorious capital at Sagala (modern Sialkot in Punjab). Educated in classical Greek philosophy, Socratic dialectics, mathematics, astronomy, and rhetoric, Milinda was renowned not only as a formidable military general who struck gold coins across two continents, but as an insatiable intellectual who loved nothing more than engaging philosophers, Brahmins, and ascetics in rigorous public debates, systematically defeating and humiliating them with sharp Socratic logic.\n\nGrowing cynical and disillusioned that no philosopher in India could withstand his cross-examinations, Milinda famously lamented: 'Empty indeed is India! Like empty chaff is the whole continent! Is there no philosopher, Brahmin, or monk who can resolve my doubts and debate with me?' Hearing the king's challenge, the Sangha assembled and put forward the young, razor-sharp Buddhist elder Venerable Nagasena. The intellectual confrontation between the Greek warrior-king and the Buddhist monk took place in the royal pavilion at Sagala, witnessed by five hundred Greek courtiers (Yonakas) and thousands of monks and citizens.\n\nMilinda opened with an aggressive philosophical challenge: 'Reverend Sir, who are you? What is your name?' Nagasena replied: 'Sire, I am known as Nagasena, but Nagasena is merely a designation, a conceptual label; for in the ultimate truth, no permanent person or independent soul (Anatta) is found.' Shocked by this non-dual concept, Milinda demanded: 'If there is no permanent soul, who eats the food? Who practices morality? Who commits sin? If someone kills you, there is no murderer!' Nagasena countered with the famous Chariot Parable: 'Great King, did you come on foot or in a chariot?' 'In a chariot,' Milinda replied. Nagasena then systematically interrogated: 'Is the axle the chariot? Are the wheels the chariot? Is the chassis the chariot? Is the yoke the chariot?' Milinda conceded that none of these individual parts is the chariot. 'Just so,' Nagasena concluded, 'dependent upon the axle, wheels, chassis, and pole, the conventional term \"chariot\" arises; in the same way, dependent upon the five aggregates of form, feeling, perception, mental formations, and consciousness, the conventional label \"Nagasena\" exists, but no permanent soul is found.'\n\nAwed by Nagasena’s crystalline explanations over days of deep inquiry, Milinda’s skepticism dissolved into radiant faith. He embraced Buddhism, patronized the Sangha, struck coins bearing the eight-spoked Wheel of the Dhamma (Dhammachakra), built grand monasteries in Sagala, and according to Plutarch, when he passed away, his funeral ashes were divided among the cities of his empire and enshrined in sacred stupas.",
+    "journeyLocal": "इंडो-ग्रीक (यवन) साम्राज्य के प्रतापी राजा मिनांडर (जिन्हें पालि में राजा मिलिंद कहा गया) ने उत्तर-पश्चिम भारत, गांधार और पंजाब पर शासन किया। उनकी राजधानी सागल (वर्तमान सियालकोट) थी। यूनानी दर्शन, सुकराती तर्कशास्त्र और युद्धकला में निष्णात राजा मिलिंद को विद्वानों से शास्त्रार्थ करने का व्यसन था। वे भारत के बड़े-बड़े पंडितों और दार्शनिकों को अपने तर्कों से पराजित कर देते थे। निराश होकर उन्होंने एक बार कहा—'यह भारतवर्ष कितना रिक्त है! क्या यहाँ ऐसा कोई संन्यासी नहीं है जो मेरे संशयों का निवारण कर सके?'\n\nतब संघ ने युवा और प्रखर बौद्ध भिक्षु नागसेन को शास्त्रार्थ हेतु भेजा। पाँच सौ यवन सरदारों की उपस्थिति में राजसभा में यह ऐतिहासिक संवाद हुआ, जिसे 'मिलिंदपञ्हो' (मिलिंद के प्रश्न) के नाम से जाना जाता है। राजा ने पूछा—'हे भदंत, आपका नाम क्या है? आप कौन हैं?' नागसेन ने कहा—'महाराज, मुझे नागसेन कहा जाता है, परंतु यह केवल एक व्यावहारिक नाम है; वास्तव में यहाँ कोई स्वतंत्र 'आत्मा' नहीं है।'\n\nराजा ने आश्चर्य से पूछा—'यदि आत्मा नहीं है, तो कर्म कौन करता है? पाप-पुण्य का फल कौन भोगता है?' तब नागसेन ने 'रथ' का अमर दृष्टांत दिया—'महाराज, क्या पहिए रथ हैं? क्या धुरी रथ है? क्या लगाम रथ है?' राजा ने कहा—'नहीं, इन सबके मिलने से रथ की संज्ञा बनती है।' नागसेन ने समझाया—'ठीक वैसे ही रूप, वेदना, संज्ञा, संस्कार और विज्ञान—इन पांच स्कंधों के संयोग से मनुष्य कहलाता है, स्वतंत्र कोई आत्मा नहीं।' नागसेन के तर्कों से राजा मिलिंद इतने मुग्ध हुए कि उन्होंने बौद्ध धर्म स्वीकार कर लिया। उन्होंने अपने सिक्कों पर धम्मचक्र अंकित कराया और बुद्ध के अनन्य उपासक बने।",
+    "trial": "Milinda had to surrender his formidable intellectual vanity and pride in Greek dialectical superiority, humbly opening his mind to the counter-intuitive Eastern truth of Anatta (non-self) before a penniless Buddhist mendicant in full view of his royal court.",
+    "trialLocal": "राजा मिलिंद की सबसे बड़ी परीक्षा अपने यूनानी बौद्धिक अहंकार को त्यागना और एक अकिंचन भिक्षु के समक्ष सत्य की गहराई को स्वीकार कर नतमस्तक होना था। उन्होंने तर्क को अहंकार का अस्त्र न बनाकर सत्य-खोज का माध्यम बनाया।",
+    "teaching": "The self is not a static, immortal soul trapped in a physical shell, but a dynamic, ever-changing stream of interconnected mental and physical processes (Khandhas). When you see reality as it truly is, the delusion of 'I' and 'mine' dissolves, ending suffering.",
+    "teachingLocal": "मनुष्य कोई स्थिर या अपरिवर्तनीय आत्मा नहीं है, बल्कि विचारों और अनुभवों का निरंतर बहता हुआ प्रवाह है। जब 'मैं' और 'मेरा' का भ्रम टूट जाता है, तभी मनुष्य समस्त संशयों और दुखों से मुक्त होता है।",
+    "moral": "Do not use intellectual intelligence to defeat others or defend prejudices. Welcome genuine debate with an open heart, for true wisdom begins where personal vanity ends.",
+    "moralLocal": "बुद्धि का उपयोग दूसरों को नीचा दिखाने के लिए नहीं, बल्कि सत्य को जानने के लिए करो। जब मनुष्य अहंकार छोड़कर खुले मन से संवाद करता है, तभी उसे वास्तविक ज्ञान की प्राप्ति होती है।",
+    "legacy": "The dialogue between King Milinda and Nagasena, recorded in the *Milinda Panha*, stands as one of the greatest masterpieces of world philosophical literature, harmonizing ancient Greek logic with Indian Buddhist metaphysics.",
+    "legacyLocal": "राजा मिलिंद और नागसेन का संवाद 'मिलिंदपञ्हो' विश्व दर्शन का अमूल्य ग्रंथ है। इसने यूनानी सभ्यता और भारतीय बौद्ध दर्शन के अद्भुत मिलन का ऐसा उदाहरण प्रस्तुत किया जो आज भी अद्वितीय है।",
+    "source": "Milinda Panha (The Questions of King Milinda) & Plutarch's Moralia",
+    "sourceLocal": "मिलिंदपञ्हो (मिलिंद के प्रश्न) एवं प्लूटार्क की मोरालिया",
+    "sourceCitations": [
+      {
+        "sourceName": "Milinda Panha",
+        "sourceRef": "Book II, Chapter 1: The Simile of the Chariot",
+        "tier": 1
+      },
+      {
+        "sourceName": "Plutarch's Moralia",
+        "sourceRef": "Praecepta Gerendae Reipublicae (821D–E), On the Tomb of Menander",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Indo-Greek King Milinda in royal Hellenistic armor and diadem sitting in his palace hall in Sagala, leaning forward with intense curiosity to listen to the calm Buddhist monk Nagasena gesturing toward a wooden chariot.",
+    "quote": {
+      "text": "Just as the word 'chariot' is used when parts are assembled, so by convention do we say 'a living being' when the five aggregates are present.",
+      "attribution": "Milinda Panha, II.1"
+    },
+    "quoteLocal": {
+      "text": "जैसे भिन्न-भिन्न अंगों के जुड़ने से 'रथ' शब्द का प्रयोग होता है, वैसे ही पांच स्कंधों के संयोग से व्यावहारिक रूप में 'जीव' कहा जाता है।",
+      "attribution": "मिलिंदपञ्हो, २.१"
+    }
+  },
+  {
+    "id": "xuanzang",
+    "name": "Xuanzang (Hiuen Tsang)",
+    "nameLocal": "ह्वेन त्सांग (युआन च्वांग)",
+    "era": "602–664 CE",
+    "eraLocal": "६०२-६६४ ईस्वी",
+    "tradition": "buddhist",
+    "region": "Luoyang (China) / Nalanda / Silk Road",
+    "regionLocal": "लुओयांग (चीन) / नालंदा / रेशम मार्ग",
+    "emoji": "🗺️",
+    "tagline": "The intrepid Chinese pilgrim-scholar who defied imperial bans to undertake a 16-year epic journey across deserts and mountains to Nalanda, preserving Indian scriptures for humanity.",
+    "taglineLocal": "महान चीनी यात्री और विद्वान, जिन्होंने शाही प्रतिबंधों को तोड़कर नालंदा तक १६ वर्षों की दुर्गम यात्रा की और भारतीय ज्ञान-धरोहर को विश्व के लिए अमर कर दिया।",
+    "journey": "Born as Chen Hui near Luoyang in Henan during the Sui dynasty, he was ordained as a Buddhist monk at the age of thirteen, demonstrating an astonishing intellect that swiftly exhausted the Buddhist treatises available in China. Troubled by contradictory translations and obscure textual passages in Chinese sutras regarding the nature of Buddhahood and Yogacara philosophy, Xuanzang resolved upon an audacity of faith: he would travel to the source of the Dhamma—India—to study the original Sanskrit manuscripts at Nalanda Mahavihara. In 629 CE, when Emperor Taizong of the Tang dynasty issued an imperial decree forbidding citizens from traveling abroad due to border conflicts, twenty-seven-year-old Xuanzang slipped through the city gates of Chang'an under the cover of night, embarking on an epic sixteen-year, ten-thousand-mile odyssey alone on foot and horseback.\n\nHis journey was an epic of superhuman endurance. Crossing the scorching, bone-strewn sands of the Taklamakan Desert where hallucinations and mirages drove travelers mad, he dropped his water bag and nearly died of thirst during four days and five nights of delirious wandering, sustained only by reciting the Heart Sutra. He crossed the icy glaciers of the Tian Shan and Hindu Kush mountains where a third of his caravan froze to death, outwitted desert bandits, and navigated violent river pirates on the Ganga. Finally, in 637 CE, he arrived at the sacred gates of Nalanda Mahavihara in Bihar. The hundred-and-six-year-old supreme abbot, Acharya Silabhadra, broke into tears upon receiving him, revealing that the Bodhisattva Avalokiteshvara had prophesied in a dream that a Chinese monk would arrive to master the profound Yogacarabhumi Shastra.\n\nFor five intensive years, Xuanzang studied at Nalanda, mastering Sanskrit grammar, Buddhist logic, and Abhidharma philosophy, rising to become one of the university’s top scholars. Emperor Harsha Vardhana of Kanauj honored Xuanzang by convening a grand theological convocation in Kanauj attended by twenty kings and thousands of scholars, where Xuanzang defended Mahayana philosophy without a single opponent being able to refute his thesis. Turning down Harsha’s lavish offers of royal patronage, Xuanzang returned to China in 645 CE carrying six hundred and fifty-seven original Sanskrit manuscripts, several sacred Buddha relics, and golden statues on twenty pack-horses. Welcomed with imperial honors by Emperor Taizong, Xuanzang spent his remaining nineteen years heading a royal translation bureau, translating seventy-four monumental Sanskrit works into classical Chinese and writing the *Great Tang Records on the Western Regions*, the single most important historical and geographical document for modern archaeology in India and Central Asia.",
+    "journeyLocal": "चीन के लुओयांग में जन्मे ह्वेन त्सांग तेरह वर्ष की आयु में भिक्षु बने। चीनी भाषा में उपलब्ध बौद्ध ग्रंथों में विरोधाभास देखकर उनके मन में मूल संस्कृत ग्रंथों को उनके उद्गम स्थल—भारत—जाकर पढ़ने की तीव्र तड़प उठी। ६२९ ईस्वी में जब तांग सम्राट ने सीमा पार करने पर प्रतिबंध लगा रखा था, तो सत्ताईस वर्षीय ह्वेन त्सांग रात्रि के अंधेरे में गुप्त रूप से अकेले ही भारत की १६ वर्षों की ऐतिहासिक यात्रा पर निकल पड़े।\n\nउन्होंने तकलामकान रेगिस्तान के दहकते अंगारों को पार किया, जहाँ पानी की मशक गिर जाने पर वे चार दिन और पांच रात बिना जल के तड़पते रहे, परंतु 'हृदय सूत्र' के जाप से उनके प्राण बचे। उन्होंने हिंदूकुश और तियानशान के बर्फीले दर्रों को पार किया जहाँ उनके कई साथी बर्फ में जम कर मर गए। डाकुओं और गंगा के लुटेरों से बचते हुए अंततः वे ६३७ ईस्वी में नालंदा विश्वविद्यालय के द्वारों पर पहुँचे। नालंदा के १०६ वर्षीय कुलपति आचार्य शीलभद्र ने रोते हुए उनका स्वागत किया और बताया कि अवलोकितेश्वर ने स्वप्न में इस चीनी भिक्षु के आने का पूर्वाभास दिया था।\n\nह्वेन त्सांग ने नालंदा में पांच वर्षों तक संस्कृत और दर्शन का गहन अध्ययन किया। सम्राट हर्षवर्धन ने उनके सम्मान में कन्नौज में एक विशाल धर्मसभा का आयोजन किया, जिसमें बीस राजाओं और सहस्रों पंडितों के समक्ष ह्वेन त्सांग ने अपने ज्ञान का लोहा मनवाया। ६४५ ईस्वी में वे ६५७ दुर्लभ संस्कृत पाण्डुलिपियां घोड़ों पर लादकर चीन लौटे। सम्राट ताइजोंग ने उनका भव्य स्वागत किया। जीवन के अंतिम उन्नीस वर्षों में उन्होंने इन ग्रंथों का चीनी भाषा में अनुवाद किया और 'सी-यू-की' (पश्चिमी देशों का वृत्तांत) लिखा, जो आज भी भारत के प्राचीन इतिहास और पुरातत्व का सबसे प्रामाणिक दस्तावेज है।",
+    "trial": "Xuanzang survived near-death from dehydration in the desert, freezing blizzards in the mountains, capture by pirates who intended to sacrifice him on a river altar, and constant mortal danger across thousands of miles, relying solely on unshakeable faith in the Triple Gem.",
+    "trialLocal": "रेगिस्तान में प्यास से मृत्यु के निकट पहुँचना, बर्फीले तूफानों को झेलना और नदी के लुटेरों द्वारा बलि वेदी पर चढ़ाए जाने से बाल-बाल बचना ह्वेन त्सांग की भयानक परीक्षाएं थीं। उन्होंने प्राणों की बाजी लगाकर भारत की ज्ञान-संपदा को सुरक्षित किया।",
+    "teaching": "The pursuit of truth demands total surrender of personal comfort and fear. When your intention is pure and dedicated to the spiritual illumination of humanity, mountains move, deserts give way, and the Divine protects your steps.",
+    "teachingLocal": "सत्य की खोज में सुख-सुविधा और भय का पूर्ण विसर्जन करना पड़ता है। यदि तुम्हारा संकल्प मानवता को अज्ञान से मुक्त करने का है, तो प्रकृति और परमात्मा तुम्हारी रक्षा करते हैं और असंभव मार्ग भी खुल जाते हैं।",
+    "moral": "Cultural and geographical boundaries are artificial barriers before the universal thirst for wisdom. A true seeker travels to the ends of the earth to drink from the fountain of truth and shares it selflessly with the world.",
+    "moralLocal": "ज्ञान की कोई सीमा या देश नहीं होता। सच्चा साधक सत्य को खोजने के लिए पृथ्वी के किसी भी कोने में जा सकता है और उस ज्ञान को बिना किसी स्वार्थ के संपूर्ण मानवता में बांट देता है।",
+    "legacy": "Without Xuanzang's meticulous travelogue, modern archaeologists like Alexander Cunningham would never have rediscovered Nalanda, Sarnath, Kushinagar, or Lumbini. His translations preserved hundreds of lost Sanskrit philosophical masterpieces in the Chinese Buddhist Canon.",
+    "legacyLocal": "ह्वेन त्सांग के यात्रा-वृत्तांत के बिना आज नालंदा, सारनाथ, कुशीनगर और लुंबिनी जैसे बौद्ध तीर्थों की पुनः खोज असंभव थी। उनके अनुवादों के कारण भारत की वह दार्शनिक धरोहर आज तक सुरक्षित है जो मूल रूप से भारत में नष्ट हो गई थी।",
+    "source": "Great Tang Records on the Western Regions & The Life of Xuanzang (Huili)",
+    "sourceLocal": "ग्रेट तांग रिकॉर्ड्स ऑन द वेस्टर्न रीजन्स एवं द लाइफ ऑफ ह्वेन त्सांग (हुइली)",
+    "sourceCitations": [
+      {
+        "sourceName": "Great Tang Records on the Western Regions",
+        "sourceRef": "Fascicle IX, Description of Nalanda Mahavihara",
+        "tier": 1
+      },
+      {
+        "sourceName": "The Life of Hiuen-Tsiang (Huili & Yancong)",
+        "sourceRef": "Book III, Arrival at Nalanda and Studies under Silabhadra",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Master Xuanzang in pilgrim robes and travel sandals with a wooden scroll-backpack towering over his shoulders, walking purposefully across the golden sand dunes of the Silk Road with a walking staff.",
+    "quote": {
+      "text": "I would rather take one single step toward the West and die, than take a step backward to the East and live.",
+      "attribution": "Xuanzang's Vow at the Jade Gate"
+    },
+    "quoteLocal": {
+      "text": "पश्चिम (भारत) की ओर एक कदम बढ़ाकर मर जाना मुझे स्वीकार है, परंतु पूर्व (चीन) की ओर पीछे कदम हटाकर जीवित रहना मुझे स्वीकार नहीं।",
+      "attribution": "ह्वेन त्सांग की ऐतिहासिक प्रतिज्ञा"
+    }
+  },
+  {
+    "id": "eknath",
+    "name": "Sant Eknath",
+    "nameLocal": "संत एकनाथ",
+    "era": "1533–1599 CE",
+    "eraLocal": "१५३३-१५९९ ईस्वी",
+    "tradition": "hindu",
+    "region": "Paithan (Maharashtra)",
+    "regionLocal": "पैठण (महाराष्ट्र)",
+    "emoji": "💧",
+    "tagline": "The saint of Paithan who conquered anger through infinite patience, poured sacred Ganga water into the throat of a dying donkey, and restored Sant Dnyaneshwar's Bhavartha Dipika.",
+    "taglineLocal": "पैठण के परम संत जिन्होंने असीम शांति से क्रोध को जीता, प्यास से तड़पते गधे को गंगाजल पिलाया और ज्ञानेश्वरी का उद्धार किया।",
+    "journey": "Born into a devout family in the ancient pilgrimage city of Paithan on the banks of the Godavari River, Eknath lost both his parents in infancy and was lovingly raised by his grandfather Chakrapani. From early boyhood, his heart was drawn to divine contemplation. At the age of twelve, guided by a divine voice inside the temple of Shiva, he traveled to the hill fort of Daulatabad to seek spiritual discipleship under Swami Janardana, a saintly disciple of Lord Dattatreya. For six unbroken years, Eknath served his Guru with immaculate devotion, managing fort accounts by day and practicing intense meditation by night. Janardana Swami initiated him into the sublime mysteries of the Bhagavata Purana, directing him to undertake a barefoot pilgrimage across the sacred geography of India.\n\nEknath traveled to Kashi (Varanasi), where he spent years immersed in scriptural study and composed a landmark commentary on the Eleventh Canto of the Srimad Bhagavata, known affectionately across Maharashtra as the *Eknathi Bhagavata*. Returning to Paithan, he lived as an ideal householder saint (Grihastha), proving that true spirituality does not require abandonment of familial duties, but the consecration of all daily actions to God. During a period when conservative scholars strictly reserved religious wisdom for Sanskrit-knowing elites, Eknath fearlessly composed thousands of melodious abhangas, devotional songs, and theatrical spiritual folk-dramas (Bharuds) in the Marathi mother tongue, using humor and everyday allegories to awaken the masses to ethical living and divine devotion.\n\nHis compassion crossed every caste and species boundary. When an impoverished outcaste family invited him to their home for dinner on the day of ancestral rites (Shraddha), Eknath accepted their meal with joyous reverence, shocking the orthodox Brahmin assembly of Paithan who promptly placed him under social boycott. Unmoved by their condemnation, Eknath proved through miraculous spiritual realization that the Divine indwells every living being. One day, returning on foot from Prayagraj carrying two pots of sacred Ganga water intended for anointing the Lingam at Rameswaram thousands of miles south, he encountered a donkey collapsing on the scorching desert road, convulsing in the final agony of dehydration. While fellow pilgrims urged him to preserve the sacred water for the deity, Eknath knelt in the burning sand, cradled the dying animal’s head in his lap, and poured the entire vessel of Ganga water down its parched throat, proclaiming with tears of love: 'Here is my Lord Rameswaram, crying out in thirst!'",
+    "journeyLocal": "महाराष्ट्र के पावन तीर्थ पैठण में गोदावरी के तट पर जन्मे एकनाथ बाल्यकाल से ही ईश्वर-प्रेम में लीन रहते थे। बारह वर्ष की आयु में वे देवगिरि (दौलताबाद) के दुर्गपाल स्वामी जनार्दन के चरणों में पहुँचे, जो भगवान दत्तात्रेय के परम भक्त थे। एकनाथ ने छह वर्षों तक गुरु की ऐसी निष्काम सेवा की कि गुरु ने उन्हें भागवत धर्म के गूढ़ रहस्यों में दीक्षित किया।\n\nकाशी जाकर उन्होंने 'श्रीमद्भागवत' के एकादश स्कंध पर अपनी अमर मराठी टीका 'एकनाथी भागवत' लिखी। जब रूढ़िवादी पंडितों ने धर्म-ग्रंथों को केवल संस्कृत में सीमित कर रखा था, तब एकनाथ ने लोक-भाषा मराठी में भावपूर्ण 'अभंग' और 'भारूड़' रचकर सामान्य जनता को भक्ति का मार्ग दिखाया। उन्होंने पैठण में गृहस्थ आश्रम में रहकर सिद्ध किया कि परिवार में रहकर भी पूर्ण वीतराग जीवन जिया जा सकता है।\n\nउनकी करुणा जाति और योनि के समस्त भेदों से परे थी। जब एक निर्धन अछूत परिवार ने उन्हें अपने घर भोजन के लिए बुलाया, तो उन्होंने बिना किसी संकोच के उनका आतिथ्य स्वीकार किया, जिसके कारण तत्कालीन समाज ने उनका बहिष्कार कर दिया। उनकी सबसे प्रसिद्ध परीक्षा तब हुई जब वे प्रयागराज से रामेश्वरम में महादेव का अभिषेक करने हेतु कांवड़ में गंगाजल ला रहे थे। तपती दोपहर में एक गधा प्यास से छटपटाकर मरने की स्थिति में था। साथियों के विरोध के बावजूद एकनाथ ने रामेश्वरम के लिए लाया हुआ समस्त पवित्र गंगाजल उस मरते हुए गधे के मुख में उंडेल दिया और कहा—'मेरे रामेश्वरम तो इसी रूप में प्यासे खड़े थे!'",
+    "trial": "Eknath's most iconic trial was his miraculous conquest of anger. A mischievous skeptic in Paithan was hired to break Eknath's legendary equanimity. As Eknath emerged from the sacred Godavari after his morning bath, the man spat betel-juice onto his clean robes. Unshaken and smiling gently, Eknath simply turned back, bathed again, and stepped onto the shore. The man spat upon him again. Eknath bathed again. This was repeated one hundred and eight consecutive times without Eknath showing a flicker of annoyance. Exhausted and weeping in remorse, the antagonist collapsed at his feet, begging for forgiveness.",
+    "trialLocal": "संत एकनाथ की शांति की परीक्षा लेने के लिए एक ईर्ष्यालु व्यक्ति ने गोदावरी से स्नान कर लौटते समय उन पर पान की पीक थूक दी। एकनाथ बिना कुछ कहे पुनः स्नान करने चले गए। उस व्यक्ति ने लगातार १०८ बार उन पर थूका, और एकनाथ ने १०८ बार शांत भाव से स्नान किया। अंततः वह व्यक्ति उनके चरणों में गिरकर क्षमा मांगने लगा।",
+    "teaching": "God does not dwell exclusively in temple sanctums or sacred rivers; the Supreme Lord resides in the heart of every breathing creature—human, beast, and outcaste alike. True holiness is the complete eradication of anger, pride, and disgust.",
+    "teachingLocal": "ईश्वर केवल मंदिरों की मूर्तियों या तीर्थों में नहीं, बल्कि संसार के प्रत्येक प्राणी के हृदय में वास करता है। जब तक तुम्हारे मन में किसी भी जीव के प्रति घृणा या क्रोध है, तब तक तुम्हारी पूजा अधूरी है।",
+    "moral": "Patience and forbearance are the supreme weapons of a spiritual soul. Even the most hardened malice melts away when confronted with relentless, unshakeable forgiveness.",
+    "moralLocal": "क्रोध को केवल शांति और क्षमा से ही जीता जा सकता है। जब तुम बदले की भावना छोड़ देते हो, तो तुम्हारा सबसे बड़ा शत्रु भी तुम्हारे आगे नतमस्तक हो जाता है।",
+    "legacy": "Sant Eknath revitalized the Varkari tradition of Maharashtra, bridging classical scriptural scholarship with popular vernacular devotion. His critical editing and restoration of Sant Dnyaneshwar's *Bhavartha Dipika* (Dnyaneshwari) in 1584 saved the text from corruption.",
+    "legacyLocal": "संत एकनाथ ने महाराष्ट्र के वारकरी संप्रदाय को नई ऊर्जा दी। १५८४ में उन्होंने संत ज्ञानेश्वर की 'ज्ञानेश्वरी' की मूल प्रति का संशोधन कर उसे विकृत होने से बचाया। उनके अभंग आज भी महाराष्ट्र के घर-घर में गाए जाते हैं।",
+    "source": "Eknathi Bhagavata & Bhaktalilamrita (Mahipati)",
+    "sourceLocal": "एकनाथी भागवत एवं भक्तलीलामृत (महीपति)",
+    "sourceCitations": [
+      {
+        "sourceName": "Eknathi Bhagavata",
+        "sourceRef": "Adhyaya 11, Exposition on Bhagavata Dharma",
+        "tier": 1
+      },
+      {
+        "sourceName": "Bhaktalilamrita",
+        "sourceRef": "Chapters 13–24, Life and Miracles of Sant Eknath",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Sant Eknath kneeling with profound tenderness in the hot desert sand, cradling the head of a thirsty dying donkey in his arm while gently pouring sacred Ganga water into its open mouth from a brass pot.",
+    "quote": {
+      "text": "Whoever sees God in all beings, and serves the suffering without regard to caste or species, has truly bathed in all the sacred rivers of the world.",
+      "attribution": "Eknathi Bhagavata, 11.29"
+    },
+    "quoteLocal": {
+      "text": "जो समस्त प्राणियों में परमात्मा को देखता है और जाति या योनि का भेद किए बिना दुखियों की सेवा करता है, उसने संसार के समस्त तीर्थों में स्नान कर लिया है।",
+      "attribution": "एकनाथी भागवत, ११.२९"
+    }
+  },
+  {
+    "id": "maitreyi",
+    "name": "Brahmavadini Maitreyi",
+    "nameLocal": "ब्रह्मवादिनी मैत्रेयी",
+    "era": "Vedic Upanishadic Era",
+    "eraLocal": "वैदिक उपनिषद् काल",
+    "tradition": "hindu",
+    "region": "Mithila (Videha Kingdom)",
+    "regionLocal": "मिथिला (विदेह राज्य)",
+    "emoji": "🪔",
+    "tagline": "The Vedic philosopher-sage of the Brihadaranyaka Upanishad who rejected imperial wealth and gold, asking: 'What shall I do with that which cannot make me immortal?'",
+    "taglineLocal": "बृहदारण्यक उपनिषद् की प्रखर ब्रह्मवादिनी जिन्होंने समस्त धन-संपदा को ठुकरा कर पूछा—'जिससे मुझे अमृतत्व न मिले, उसका मैं क्या करूँ?'",
+    "journey": "Living during the golden philosophical epoch of the Videha Kingdom under the righteous King Janaka, Maitreyi was revered as one of the preeminent Brahmavadinis—female seers of the Rigvedic tradition who dedicated their lives to the contemplation and realization of Brahman. She was married to the legendary sage Maharishi Yajnavalkya, the supreme master of the Shukla Yajurveda. While Yajnavalkya’s second wife, Katyayani, was naturally inclined toward the domestic duties of home and agrarian estate, Maitreyi was renowned as an intellectual titan whose mind soared constantly in the transcendent realms of metaphysics, the nature of the self, and the mystery of cosmic reality.\n\nWhen Yajnavalkya reached the twilight of his earthly householder life and resolved to renounce all worldly ties to enter the fourth stage of life—the homelessness of the Sannyasin—he summoned Maitreyi and Katyayani to divide his vast wealth, comprising thousands of dairy cows, gold coins, landed estates, grain barns, and household treasures. Calling Maitreyi to his side, Yajnavalkya said: 'Beloved Maitreyi, I am departing from this house into the forest. Let me make a final settlement of all my wealth between you and Katyayani.'\n\nMaitreyi looked at her husband with piercing, unclouded philosophical vision and asked a historic question that reverberates through the millennia: 'My Lord, if this entire earth, filled to the brim with boundless gold, jewels, and imperial riches, were given to me, would I become immortal through it?' Yajnavalkya smiled gently and replied with absolute honesty: 'No, my dear. Your life would be like the life of the wealthy, full of physical conveniences; but through material wealth, there is no hope of immortality whatsoever.'\n\nHearing these words, Maitreyi uttered her immortal declaration: 'Yenaaham na amrita syaam, kim aham tena kuryaam?'—'What shall I do with that which cannot make me immortal? Whatever you know, my Lord, of the secret path to the Deathless, tell me that alone!' Overjoyed by her profound dispassion, Yajnavalkya sat beside her and delivered the celebrated discourse of the *Brihadaranyaka Upanishad*, revealing the sublime truth of the Atman: 'Verily, not for the sake of the husband is the husband dear, but for the sake of the Self (Atman) is the husband dear. Not for the sake of the wife is the wife dear, but for the sake of the Self is the wife dear... The Self alone is to be seen, heard, reflected upon, and deeply meditated upon; for when the Self is known, all this universe is known.'",
+    "journeyLocal": "राजा जनक की पावन नगरी मिथिला में जन्मी मैत्रेयी वैदिक काल की महानतम ब्रह्मवादिनी ऋषिका थीं। वे महर्षि याज्ञवल्क्य की विदुषी पत्नी थीं। जहां उनकी दूसरी पत्नी कात्यायनी गृहस्थ-कार्यों में कुशल थीं, वहीं मैत्रेयी का चित्त निरंतर ब्रह्म-विद्या और आत्मा के गूढ़ रहस्यों के चिंतन में लीन रहता था।\n\nजब महर्षि याज्ञवल्क्य ने गृहस्थ जीवन का त्याग कर वन में संन्यास लेने का निर्णय किया, तो उन्होंने अपनी समस्त संपत्ति—सहस्रों गाएं, स्वर्ण और भूमि—का दोनों पत्नियों में बंटवारा करने का प्रस्ताव रखा। उन्होंने मैत्रेयी से कहा कि वे अपना हिस्सा लेकर सुखपूर्वक रहें।\n\nमैत्रेयी ने उस समय वह ऐतिहासिक प्रश्न पूछा जिसने भारतीय दर्शन की दिशा बदल दी—'भगवन्! यदि यह संपूर्ण पृथ्वी धन और सुवर्ण से परिपूर्ण होकर मुझे मिल जाए, तो क्या उससे मैं अमर हो जाऊंगी?' याज्ञवल्क्य ने उत्तर दिया—'नहीं, तुम्हारा जीवन भी धनवानों जैसा साधन-संपन्न तो हो जाएगा, परंतु धन से अमरता की कोई आशा नहीं है।'\n\nयह सुनते ही मैत्रेयी ने समस्त धन-संपदा को एक तिनके के समान ठुकराते हुए कहा—'येनाहं नामृता स्यां किमहं तेन कुर्याम्?' (जिससे मुझे अमरता न मिले, उस धन का मैं क्या करूँ? आप मुझे वही ज्ञान दीजिए जिससे मुक्ति प्राप्त हो)। उनकी इस निष्काम पिपासा से गद्गद होकर याज्ञवल्क्य ने उन्हें 'बृहदारण्यक उपनिषद्' का वह अमर उपदेश दिया—'न वा अरे पत्युः कामाय पतिः प्रियो भवति, आत्मनस्तु कामाय पतिः प्रियो भवति...' (पति, पत्नी, संतान या धन स्वयं के लिए प्रिय नहीं होते, बल्कि आत्मा के लिए प्रिय होते हैं। आत्मा ही देखने योग्य, सुनने योग्य और ध्यान करने योग्य है)।",
+    "trial": "Maitreyi’s supreme trial was turning down vast imperial wealth, land, and security at the moment of her husband's departure, choosing the austere, uncertain path of self-inquiry because her soul refused to compromise with transient worldly mirages.",
+    "trialLocal": "सुरक्षा और विशाल धन-दौलत के प्रस्ताव को ठुकरा कर आत्म-ज्ञान के कठिन मार्ग को चुनना मैत्रेयी का महान त्याग था। उन्होंने यह सिद्ध किया कि एक विदुषी नारी के लिए भौतिक ऐश्वर्य नहीं, अपितु आत्म-साक्षात्कार ही जीवन का परम ध्येय है।",
+    "teaching": "Material wealth and worldly possessions can provide physical comfort, but they can never grant immortality or freedom from grief. The true source of all love and value in the universe is the radiant, eternal Self (Atman); know the Self, and all is known.",
+    "teachingLocal": "संसार का समस्त धन मिलकर भी मनुष्य को अमरता या वास्तविक शांति नहीं दे सकता। समस्त संबंधों और वस्तुओं का मूल आधार आत्मा ही है; आत्मा को जानना, सुनना और उसमें स्थित होना ही जीवन का सर्वोच्च कर्तव्य है।",
+    "moral": "Do not waste your precious human life accumulating possessions that end with the grave. Direct your intellect toward that eternal truth which outlasts time, decay, and death.",
+    "moralLocal": "उन नश्वर वस्तुओं के संग्रह में अपना जीवन व्यर्थ मत गंवाओ जो मृत्यु के साथ छूट जाने वाली हैं। अपनी ऊर्जा को उस अमर तत्व की खोज में लगाओ जो कभी नष्ट नहीं होता।",
+    "legacy": "Maitreyi stands in global philosophical history as the shining symbol of female intellectual and spiritual sovereignty, proving that the highest peaks of Vedic Upanishadic wisdom were scaled by women.",
+    "legacyLocal": "मैत्रेयी वैदिक दर्शन में नारी प्रज्ञा और वैराग्य का सर्वोच्च प्रतीक हैं। बृहदारण्यक उपनिषद् में उनका संवाद आज भी विश्व दर्शन में आत्म-अन्वेषण का सर्वोत्कृष्ट आख्यान माना जाता है।",
+    "source": "Brihadaranyaka Upanishad (Yajnavalkya-Maitreyi Samvada)",
+    "sourceLocal": "बृहदारण्यक उपनिषद् (याज्ञवल्क्य-मैत्रेयी संवाद)",
+    "sourceCitations": [
+      {
+        "sourceName": "Brihadaranyaka Upanishad",
+        "sourceRef": "Chapter 2, Brahmana 4 & Chapter 4, Brahmana 5",
+        "tier": 1
+      },
+      {
+        "sourceName": "Shatapatha Brahmana",
+        "sourceRef": "Kanda XIV, Adhyaya 5, Discourse on the Atman",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Brahmavadini Maitreyi seated gracefully in a Vedic forest hermitage facing Maharishi Yajnavalkya, declining heaps of gold coins with tranquil, luminous detachment, her hand raised in philosophical inquiry.",
+    "quote": {
+      "text": "What shall I do with that which cannot make me immortal? Teach me, my Lord, that alone which leads to the Deathless.",
+      "attribution": "Brihadaranyaka Upanishad, 2.4.3"
+    },
+    "quoteLocal": {
+      "text": "येनाहं नामृता स्यां किमहं तेन कुर्याम्? यदेव भगवान् वेद तदेव मे ब्रूहि॥",
+      "attribution": "बृहदारण्यक उपनिषद्, २.४.३"
+    }
+  },
+  {
+    "id": "markandeya",
+    "name": "Rishi Markandeya",
+    "nameLocal": "ऋषि मार्कण्डेय",
+    "era": "Ancient Puranic Era",
+    "eraLocal": "प्राचीन पौराणिक काल",
+    "tradition": "hindu",
+    "region": "Bhrigu Ashrama / Coastal Saurashtra",
+    "regionLocal": "भृगु आश्रम / सौराष्ट्र तट",
+    "emoji": "🔱",
+    "tagline": "The boy-sage whose unshakeable surrender to Mahadeva defeated Yamaraja's death-noose at age sixteen, blessed to witness cosmic dissolution and author the Devi Mahatmya.",
+    "taglineLocal": "बाल-ऋषि जिनकी शिव-भक्ति ने यमराज के मृत्यु-पाश को भी निष्फल कर दिया, जिन्हें १६ वर्ष की अमरता मिली और जिन्होंने 'दुर्गा सप्तशती' की रचना की।",
+    "journey": "Born as the miraculous son of Rishi Mrikandu and his virtuous wife Marudvati through severe austerities to Lord Shiva, Markandeya was granted under a solemn celestial covenant. Shiva offered Mrikandu a choice: 'Will you have a dull, wicked son who will live for a hundred years, or an exceptionally radiant, virtuous, and wise son who will live for only sixteen years?' Without hesitation, the parents chose the radiant son endowed with wisdom. From early childhood, Markandeya was bathed in Vedic study, humility, and sweet devotion to Mahadeva, growing into a youth of peerless purity. As his sixteenth birthday approached, noticing his parents weeping in secret anguish, Markandeya gently asked the reason for their grief. Upon learning of his destined short lifespan, he embraced his parents with fearless serenity, assuring them that destiny itself must bow before the feet of the Lord of Time (Kalantaka).\n\nMarkandeya retired to the seashore, consecrated a sacred clay Shiva Lingam upon the sand, and entered into unbroken meditative absorption, chanting the sacred Mahamrityunjaya mantra and the panchakshara mantra ('Om Namah Shivaya'). When the fateful moment arrived, Yamaraja, the Lord of Death, arrived personally riding his dark buffalo, bearing his dreaded death-noose (Yama-pasha). The celestial emissaries of Yama could not approach the boy due to the blazing fire of his devotion. Yamaraja stepped forward, cast his black noose, and looped it around the boy’s neck. As the cold noose tightened, Markandeya did not panic or flee; he threw both arms around the sacred Shiva Lingam in absolute surrender, crying out: 'O Mahadeva! O Refuge of the helpless!'\n\nInstantly, the stone Lingam split open with a thunderous roar. Out stepped Lord Shiva as Kalantaka—the Destroyer of Death Himself. With his third eye blazing, Mahadeva struck Yamaraja with his trident (Trishula) and planted his foot upon Death’s chest, protecting the helpless child. Yamaraja fell prostrate, begging for mercy and acknowledging the supreme sovereignty of devotion. Shiva restored Yamaraja and blessed the boy Markandeya: 'You shall forever remain sixteen years of age, unaffected by old age, disease, and death (Chiranjivi)!' Markandeya lived across countless cosmic dissolutions (Mahapralaya), beholding the divine child Krishna floating upon a banyan leaf (Vatapatrasayi) sucking his toe amidst the waters of deluge, and later composed the immortal *Markandeya Purana*, containing the foundational scripture of the Divine Mother—the *Devi Mahatmya* (Durga Saptashati).",
+    "journeyLocal": "ऋषि मृकण्डु और मरुद्वती ने पुत्र प्राप्ति हेतु भगवान शिव की कठोर तपस्या की। शिवजी ने प्रकट होकर वरदान दिया—'तुम्हें सौ वर्ष जीने वाला मूर्ख पुत्र चाहिए अथवा मात्र सोलह वर्ष की आयु वाला परम ज्ञानी और पुण्यात्मा पुत्र?' माता-पिता ने सोलह वर्ष के ज्ञानी पुत्र को चुना और बालक मार्कण्डेय का जन्म हुआ। मार्कण्डेय बाल्यकाल से ही अत्यंत तेजस्वी और शिव-भक्ति में लीन रहते थे। जब सोलहवां वर्ष समीप आया और माता-पिता को रोते देखा, तो मार्कण्डेय ने कहा—'आप चिंता न करें, काल के स्वामी महाकाल के चरणों में मृत्यु भी नतमस्तक होती है।'\n\nवे समुद्र तट पर शिवलिंग की स्थापना कर 'महामृत्युंजय मंत्र' और 'ॐ नमः शिवाय' का अखंड जाप करने लगे। नियत समय पर यमराज स्वयं अपने भैंसे पर सवार होकर काल-पाश लेकर आए। मार्कण्डेय के तपोबल के कारण यमदूत उनके पास न जा सके। तब यमराज ने स्वयं अपना भयानक पाश फेंका, जो बालक के गले के साथ शिवलिंग पर भी जा गिरा। बालक मार्कण्डेय ने दोनों भुजाओं से शिवलिंग को कसकर पकड़ लिया और पुकारा—'हे देवाधिदेव महादेव! रक्षा करो!'\n\nउसी क्षण शिवलिंग से प्रचंड गर्जना के साथ महाकाल प्रकट हो गए। उन्होंने यमराज की छाती पर त्रिशूल से प्रहार किया और मृत्यु को परास्त कर दिया। यमराज ने थर-थर कांपते हुए क्षमा मांगी। भगवान शिव ने प्रसन्न होकर बालक मार्कण्डेय को वरदान दिया—'तुम सदा सोलह वर्ष के ही रहोगे, काल और मृत्यु का तुम पर कभी कोई प्रभाव नहीं पड़ेगा।' मार्कण्डेय अमर (चिरंजीवी) हो गए। उन्होंने महाप्रलय के जल में वटपत्र पर शयन करते हुए बाल-मुकुंद के दर्शन किए और आगे चलकर 'मार्कण्डेय पुराण' व 'दुर्गा सप्तशती' की रचना की।",
+    "trial": "Markandeya faced the terrifying physical presence of Yamaraja and the suffocating noose of Death at the tender age of sixteen, conquering the instinctual mortal terror of demise by throwing his entire being into unconditional surrender at the feet of Shiva.",
+    "trialLocal": "सोलह वर्ष की सुकुमार आयु में साक्षात यमराज के मृत्यु-पाश का सामना करना और भयभीत हुए बिना केवल भगवान शिव के शिवलिंग को अपनी शरण बना लेना मार्कण्डेय की अगाध निष्ठा की अंतिम परीक्षा थी।",
+    "teaching": "Death, fear, and karmic destiny have dominion only over the physical body and the ego. When the soul surrenders completely to the Divine, identifying with the immortal Supreme Consciousness, Death itself is conquered.",
+    "teachingLocal": "मृत्यु और भय केवल शरीर और अहंकार को ही डरा सकते हैं। जब आत्मा स्वयं को अमर परमात्मा के चरणों में समर्पित कर देती है, तो मृत्यु का पाश भी मुक्ति का साधन बन जाता है। सच्ची भक्ति काल को भी जीत लेती है।",
+    "moral": "Do not fear the brevity of life or the inevitability of physical mortality. A single moment lived in pure, courageous devotion to truth is worth more than a century of fearful, selfish existence.",
+    "moralLocal": "जीवन के वर्षों की गिनती से अधिक जीवन की गहराई महत्वपूर्ण है। भय और स्वार्थ में सौ वर्ष जीने से श्रेष्ठ है कि मनुष्य सत्य और परमात्मा के प्रेम में निर्भय होकर जीवन जिए।",
+    "legacy": "Rishi Markandeya's supreme triumph over Death is celebrated as the origin of the Mahamrityunjaya victory. His compositions, particularly the *Devi Mahatmya*, form the liturgical heart of Navratri and Shakti worship across the Hindu world.",
+    "legacyLocal": "मार्कण्डेय ऋषि की साधना ने विश्व को मृत्युंजय चेतना का वरदान दिया। उनके द्वारा रचित 'दुर्गा सप्तशती' आज भी भारत भर में शक्ति-उपासना और नवरात्रि का सर्वोच्च प्राणवान ग्रंथ है।",
+    "source": "Markandeya Purana & Shiva Purana (Rudra Samhita)",
+    "sourceLocal": "मार्कण्डेय पुराण एवं शिव पुराण (रुद्र संहिता)",
+    "sourceCitations": [
+      {
+        "sourceName": "Shiva Purana",
+        "sourceRef": "Rudra Samhita, Yuddha Khanda: Deliverance of Markandeya",
+        "tier": 1
+      },
+      {
+        "sourceName": "Markandeya Purana",
+        "sourceRef": "Devi Mahatmya (Durga Saptashati), Chapters 1–13",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Sixteen-year-old Markandeya tightly embracing a glowing stone Shiva Lingam with tears of pure devotion, as Lord Shiva with trident and crescent moon steps out from the fractured stone, holding back the shadowed figure of Yamaraja.",
+    "quote": {
+      "text": "We worship the Three-Eyed Lord Shiva, the fragrant nourisher of all beings; may He liberate us from death unto immortality, even as a ripe cucumber falls severed from its vine.",
+      "attribution": "Rigveda, 7.59.12 (Mahamrityunjaya Mantra)"
+    },
+    "quoteLocal": {
+      "text": "त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्। उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय मामृतात्॥",
+      "attribution": "ऋग्वेद, ७.५९.१२ (महामृत्युंजय मंत्र)"
+    }
+  },
+  {
+    "id": "sister-nivedita",
+    "name": "Sister Nivedita (Margaret Noble)",
+    "nameLocal": "भगिनी निवेदिता (मार्गरेट नोबल)",
+    "era": "1867–1911 CE",
+    "eraLocal": "१८६७-१९११ ईस्वी",
+    "tradition": "hindu",
+    "region": "Ballymena (Ireland) / Kolkata (Bengal)",
+    "regionLocal": "आयरलैंड / कोलकाता (बंगाल)",
+    "emoji": "⚡",
+    "tagline": "The Irish lioness and foremost disciple of Swami Vivekananda who dedicated her entire life, intellect, and breath to the spiritual upliftment and freedom of Mother India.",
+    "taglineLocal": "स्वामी विवेकानंद की प्रखर शिष्या, जिन्होंने भारत को अपनी माता मानकर अपना सर्वस्व देश की स्वतंत्रता, नारी शिक्षा और पीड़ितों की सेवा में समर्पित कर दिया।",
+    "journey": "Born as Margaret Elizabeth Noble in County Tyrone, Ireland, she was an exceptionally brilliant educator and intellectual who ran an innovative school in London. In November 1895, in a quiet London drawing room, she first heard Swami Vivekananda speak. Captivated by his towering personality, fearless reason, and the oceanic breadth of Vedanta philosophy, she spent months questioning, debating, and testing every concept. Recognizing her lion-like courage, Vivekananda challenged her: 'India cannot yet produce great women, she must borrow them from other nations. Her culture, her history, her women need a voice. I will stand by you unto death, whether you work for India or not, whether you die for her or not.' Accepting the call of her spiritual destiny, Margaret sailed to Kolkata in January 1898.\n\nOn March 25, 1898, Vivekananda initiated her into the vows of Brahmacharya, giving her the sacred spiritual name Nivedita—'The Dedicated One'—consecrating her life as an offering to God and Mother India. She took up residence in a modest mud-and-brick house in the conservative, orthodox neighborhood of Bagbazar in North Kolkata. There, she established a revolutionary school for impoverished Indian girls and young widows, teaching them literacy, science, needlework, and patriotic pride. When the horrific bubonic plague epidemic devastated Kolkata in 1899, while citizens and British officials fled in terror, Sister Nivedita formed a relief squad of youths, personally cleaning filthy open sewers with broom and basket, disinfecting infected slums, and nursing dying, vomiting plague patients in her own lap with boundless maternal tenderness.\n\nFollowing Vivekananda’s Mahasamadhi in 1902, Nivedita threw herself into the storm of India’s freedom struggle. Resigning from the formal monastic committee of the Ramakrishna Math to protect the monastery from British sedition laws, she became the fiery muse of Indian nationalism. She financially supported scientists like Jagadish Chandra Bose when the colonial administration denied him research facilities, inspired artists like Abanindranath Tagore to create indigenous Indian art, and secretly guided young revolutionaries like Aurobindo Ghosh and Bagha Jatin. Exhausting her physical health through relentless labor, writing, and famine relief in Bengal, she passed away in Darjeeling at the young age of forty-three, whispering her final words: 'The boat is sinking, but I shall yet see the sunrise.'",
+    "journeyLocal": "आयरलैंड में जन्मी मार्गरेट नोबल लंदन की एक अत्यंत मेधावी और प्रतिष्ठित शिक्षिका थीं। १८९५ में लंदन में जब उन्होंने पहली बार स्वामी विवेकानंद के विचार सुने, तो वेदांत के सार्वभौमिक दर्शन ने उनके हृदय को झकझोर दिया। स्वामी जी ने उनकी असाधारण योग्यता देखकर उनसे कहा—'भारत को तुम्हारी आवश्यकता है। यदि तुम भारत के लिए कार्य करोगी, तो मैं मृत्यु पर्यंत तुम्हारे साथ खड़ा रहूंगा।' गुरु के आह्वान पर मार्गरेट अपना सुखद जीवन छोड़कर १८९८ में कोलकाता आ गईं।\n\nस्वामी विवेकानंद ने उन्हें ब्रह्मचर्य की दीक्षा देकर नाम दिया 'निवेदिता'—अर्थात जो पूर्णतः समर्पित हो चुकी है। वे उत्तर कोलकाता के बागबाजार में एक साधारण मकान में रहीं और भारतीय बालिकाओं व बाल-विधवाओं के लिए एक क्रांतिकारी विद्यालय प्रारंभ किया। १८९९ में जब कोलकाता में प्लेग की भयानक महामारी फैली और लोग डरकर भाग रहे थे, तब भगिनी निवेदिता ने अपनी जान जोखिम में डालकर स्वयं झाड़ू उठाकर गंदी नालियों को साफ किया और प्लेग से तड़पते हुए रोगियों को अपनी गोद में रखकर उनकी सेवा की।\n\n१९०२ में स्वामी जी के महासमाधि के पश्चात उन्होंने भारत के स्वाधीनता संग्राम में अपना जीवन झोंक दिया। उन्होंने जगदीश चंद्र बोस जैसे भारतीय वैज्ञानिकों को ब्रिटिश भेदभाव से बचाकर शोध कार्य में सहयोग दिया, अवनींद्रनाथ टैगोर को भारतीय कला के पुनरुत्थान हेतु प्रेरित किया और महर्षि अरविंद जैसे क्रांतिकारियों का मार्गदर्शन किया। बंगाल के अकाल और बाढ़ में सेवा करते हुए उनका स्वास्थ्य बिगड़ गया और मात्र तैंतालीस वर्ष की आयु में दार्जिलिंग में उनका देहावसान हुआ। उनकी समाधि पर लिखा है—'यहाँ भगिनी निवेदिता विश्राम कर रही हैं, जिन्होंने अपना सर्वस्व भारत को अर्पित कर दिया।'",
+    "trial": "Sister Nivedita endured the harsh colonial tropical climate, malicious harassment from British intelligence police who tracked her every move, the crushing loneliness of living as an alien woman in orthodox 19th-century Calcutta, and personal exhaustion during the bubonic plague, offering her life as an unreserved oblation.",
+    "trialLocal": "एक विदेशी महिला होकर १९वीं सदी के रूढ़िवादी समाज में स्वयं को ढालना, ब्रिटिश गुप्तचरों के उत्पीड़न को सहना और प्लेग जैसी जानलेवा महामारी के बीच दिन-रात मल-मूत्र साफ कर रोगियों की सेवा करना उनकी निष्काम साधना की अग्निपरीक्षा थी।",
+    "teaching": "True love for a nation is not empty rhetoric, but dedicated service to its humblest citizens. Educate women, cherish your indigenous culture with fierce dignity, and see the Divine Mother pulsating in the soul of your motherland.",
+    "teachingLocal": "देश-प्रेम केवल नारों में नहीं, बल्कि उसके दीन-हीन नागरिकों की सेवा में है। जब तक देश की नारी शिक्षित और सशक्त नहीं होगी, तब तक कोई राष्ट्र महान नहीं बन सकता। अपनी संस्कृति और स्वाभिमान की रक्षा के लिए सर्वस्व न्योछावर कर देना ही सच्ची साधना है।",
+    "moral": "Spiritual dedication knows no barriers of race, nationality, or birth. When an individual offers their heart with pure, unconditional love to a noble cause, their sacrifice becomes an eternal beacon of inspiration.",
+    "moralLocal": "सच्चे समर्पण के लिए जन्म या देश की सीमाएं कोई मायने नहीं रखतीं। यदि तुम्हारा हृदय पवित्र है, तो तुम किसी भी पराई भूमि को अपनी मां बनाकर उसके चरणों में अपना जीवन सार्थक कर सकते हो।",
+    "legacy": "Sister Nivedita is remembered as the 'Lokamata' (Mother of the People) in Bengal. Her school in Kolkata still educates thousands of girls, and her pioneering designs for India's national flag featuring Indra’s thunderbolt (Vajra) symbolized the power of supreme self-sacrifice.",
+    "legacyLocal": "रवींद्रनाथ टैगोर ने उन्हें 'लोकमता' कहा। उनके द्वारा स्थापित विद्यालय आज भी चल रहा है। उन्होंने भारत के राष्ट्रीय ध्वज के लिए 'वज्र' का प्रतीक सुझाया था, जो दधीचि के महात्याग और आत्म-बलिदान की अमर शक्ति का प्रतीक है।",
+    "source": "The Master as I Saw Him & The Web of Indian Life (Sister Nivedita)",
+    "sourceLocal": "द मास्टर ऐज आई सॉ हिम एवं द वेब ऑफ इंडियन लाइफ (भगिनी निवेदिता)",
+    "sourceCitations": [
+      {
+        "sourceName": "The Master as I Saw Him",
+        "sourceRef": "Chapter 1, The Inception of the Work in England",
+        "tier": 1
+      },
+      {
+        "sourceName": "Sister Nivedita of Ramakrishna-Vivekananda (Pravrajika Atmaprana)",
+        "sourceRef": "Chapter 7, The Plague and the Dedication",
+        "tier": 2
+      }
+    ],
+    "illustrationPrompt": "Sister Nivedita in simple flowing white robes with rudraksha beads walking through the narrow rain-slicked alleys of Bagbazar during the plague, holding a lamp and medicine basket to nurse an impoverished child.",
+    "quote": {
+      "text": "The whole of India is our motherland; her service is our religion; her freedom is our prayer. Let us offer our lives like fragrant flowers at her feet.",
+      "attribution": "Sister Nivedita's Call to Youth"
+    },
+    "quoteLocal": {
+      "text": "संपूर्ण भारत हमारी मातृभूमि है; उसकी सेवा ही हमारा धर्म है; उसकी स्वतंत्रता ही हमारी प्रार्थना है। आओ, हम अपने जीवन को उसके चरणों में सुगंधित पुष्पों की भांति अर्पित कर दें।",
+      "attribution": "भगिनी निवेदिता का आह्वान"
+    }
+  },
+  {
+    "id": "vyasa",
+    "name": "Maharishi Veda Vyasa",
+    "nameLocal": "महर्षि वेदव्यास (कृष्ण द्वैपायन)",
+    "era": "Dwapara Yuga / Treta Transition",
+    "eraLocal": "द्वापर युग / महाभारत काल",
+    "tradition": "hindu",
+    "region": "Kalpi / Kurukshetra / Badrinath",
+    "regionLocal": "कालपी / कुरुक्षेत्र / बद्रीनाथ",
+    "emoji": "📜",
+    "tagline": "The immortal Adi-Guru who organized the singular Veda into four, composed the colossal 100,000-verse Mahabharata, and gifted humanity the Bhagavata Purana.",
+    "taglineLocal": "सनातन संस्कृति के आदि-गुरु, जिन्होंने एक वेद को चार भागों में विभक्त किया, महाभारत महाकाव्य रचा और 'श्रीमद्भागवत' के माध्यम से भक्ति का अमृत दिया।",
+    "journey": "Born on an island in the Yamuna river to the great sage Parashara and the fisherwoman Satyavati (Matsyagandha), he was named Krishna Dvaipayana because of his dark complexion (Krishna) and his birthplace on an island (Dvaipa). Recognizing that as human civilization progressed into the spiritual degeneration of Kali Yuga, the intellectual capacity and lifespan of human beings would decline drastically, making it impossible for seekers to master the vast, unfragmented cosmic ocean of Vedic revelation, Vyasa undertook a monumental intellectual and spiritual organization. He divided the single eternal Veda into four distinct, coherent samhitas: Rigveda, Yajurveda, Samaveda, and Atharvaveda, entrusting each collection to his foremost disciples Paila, Vaishampayana, Jaimini, and Sumantu, earning the timeless title 'Veda Vyasa'—the Editor and Organizer of the Vedas.\n\nYet his literary and spiritual genius did not stop with Vedic preservation. Knowing that abstract ritual and metaphysical hymns would remain inaccessible to ordinary householders, farmers, and women, Vyasa composed the Fifth Veda—the colossal epic *Mahabharata*, consisting of one hundred thousand verses (Shatasahasri Samhita). Enlisting Lord Ganesha as his divine scribe under the mutual covenant that Ganesha would write without pause while Vyasa would dictate verses so deep that Ganesha would have to pause to comprehend them, Vyasa wove the encyclopedic tapestry of Indian civilization, embedding the crown jewel of world spiritual philosophy—the *Srimad Bhagavad Gita*—at its sacred center. He also authored the foundational *Brahma Sutras* (Vedanta Sutras), synthesizing the contradictory passages of the Upanishads into an indestructible edifice of non-dual philosophy.\n\nDespite having completed this superhuman labor of literature and philosophy, Vyasa sat despondent and sorrowful on the banks of the Saraswati River at Badarikashrama, feeling an unexplainable void and unrest in his soul. At that moment, the celestial sage Devarshi Narada arrived and revealed the subtle defect: 'O Vyasa, you have written of duty, war, politics, ritual, and philosophy; but you have not yet sung exclusively of the unconditioned love, beauty, and sublime sweetness of the Supreme Personality of Godhead, Lord Sri Krishna!' Awakened by Narada's guidance, Vyasa entered deep Samadhi and composed the twelve cantos of the *Srimad Bhagavata Purana*, pouring out the nectar of pure divine love (Prema Bhakti) and attaining absolute spiritual fulfillment before teaching it to his liberated son, Shukadeva.",
+    "journeyLocal": "यमुना के एक द्वीप पर महर्षि पराशर और सत्यवती के पुत्र के रूप में जन्मे कृष्ण द्वैपायन को साक्षात भगवान नारायण का साहित्यिक अवतार माना जाता है। उन्होंने देखा कि कलियुग के आगमन के साथ मनुष्यों की आयु, स्मृति और बुद्धि क्षीण हो जाएगी और वे एक विशाल वेद को धारण नहीं कर सकेंगे। अतः उन्होंने कृपापूर्वक उस आदि-वेद को चार भागों में विभक्त किया—ऋग्वेद, यजुर्वेद, सामवेद और अथर्ववेद। इस युगांतरकारी कार्य के कारण उन्हें 'वेदव्यास' की उपाधि प्राप्त हुई।\n\nसामान्य जन, स्त्रियों और श्रमजीवियों तक ज्ञान पहुँचाने के लिए उन्होंने 'पंचम वेद' के रूप में एक लाख श्लोकों वाले महाग्रंथ 'महाभारत' की रचना की। भगवान श्रीगणेश उनके लेखक बने। महाभारत के भीतर ही उन्होंने भगवान श्री कृष्ण द्वारा अर्जुन को दिए गए अमर उपदेश 'श्रीमद्भगवद्गीता' को संकलित किया। इसके अतिरिक्त उन्होंने समस्त उपनिषदों के सार रूप में 'ब्रह्मसूत्र' की रचना की, जो भारतीय दर्शन का सर्वोच्च प्रमाण-ग्रंथ बना।\n\nपरंतु इतना विशाल साहित्य रचने के बाद भी जब वे सरस्वती नदी के तट पर उदास और अशांत बैठे थे, तब देवर्षि नारद ने उन्हें बताया—'हे व्यास! आपने धर्म, अर्थ, काम और मोक्ष का विस्तार से वर्णन किया, परंतु भगवान श्री कृष्ण के पावन प्रेम और उनकी विशुद्ध भक्ति का विशद गान नहीं किया; इसीलिए आपका चित्त अशांत है।' नारद जी की प्रेरणा से व्यास जी ने समाधिस्थ होकर अठारह हजार श्लोकों वाले 'श्रीमद्भागवत महापुराण' की रचना की, जिसमें प्रेम-भक्ति की रसधार प्रवाहित कर उन्होंने परम तृप्ति प्राप्त की और यह ज्ञान अपने आत्मज्ञानी पुत्र शुकदेव जी को प्रदान किया।",
+    "trial": "Vyasa endured the heart-wrenching tragedy of watching his own descendants—the Kauravas and Pandavas—destroy themselves in the catastrophic fratricidal war of Kurukshetra. As both an eyewitness and chronicler of civilizational collapse, he bore the profound grief of holding up the mirror of Dharma to a dying age without succumbing to despair.",
+    "trialLocal": "व्यास जी की सबसे बड़ी परीक्षा कुरुक्षेत्र के महाविनाश को अपनी आंखों से देखना था। अपने ही कुल के विनाश के साक्षी होकर भी उन्होंने सत्य और धर्म का पक्ष कभी नहीं छोड़ा और उस महात्रासदी को मानवता के लिए एक अमर नीति-काव्य में बदल दिया।",
+    "teaching": "Dharma is eternal; pleasure and pain are transient. Listen to the essence of all religion: do not do unto others what you would find painful if done unto yourself. In just two half-verses, I state the essence of eighteen puranas: helping others is virtue; harming others is sin.",
+    "teachingLocal": "धर्म शाश्वत है, सुख-दुख अनित्य हैं। अठारह पुराणों का सार केवल दो वचनों में समाहित है—दूसरों का उपकार करना ही सबसे बड़ा पुण्य है, और दूसरों को पीड़ा पहुँचाना ही सबसे बड़ा पाप है। जो व्यवहार तुम्हें स्वयं के लिए अप्रिय लगे, वह दूसरों के साथ कभी मत करो।",
+    "moral": "Intellectual brilliance, philosophy, and worldly knowledge are incomplete without heart-centered devotion and selfless love. True wisdom finds its crown not in complex theories, but in pure kindness and surrender to the Divine.",
+    "moralLocal": "बड़ी-बड़ी पोथियां और दर्शन तब तक अधूरे हैं जब तक अंतःकरण में भगवान के प्रति प्रेम और जीवों के प्रति दया न हो। विद्या का सच्चा फल परोपकार और अंतर्मुखी शांति है।",
+    "legacy": "Maharishi Vyasa is celebrated as the Adi-Guru of Sanatana Dharma, commemorated every year on the full moon of Ashadha as Guru Purnima (Vyasa Purnima). His Mahabharata, Gita, Puranas, and Brahma Sutras constitute the spiritual backbone of Indian culture.",
+    "legacyLocal": "व्यास जी सनातन संस्कृति के गुरुओं के गुरु हैं। आषाढ़ पूर्णिमा को उनके सम्मान में 'गुरु पूर्णिमा' (व्यास पूर्णिमा) के रूप में मनाया जाता है। उनके द्वारा रचित साहित्य आज भी भारतीय चिंतन और आस्था का प्राण है।",
+    "source": "Mahabharata (Svargarohana Parva) & Srimad Bhagavata Purana",
+    "sourceLocal": "महाभारत (स्वर्गारोहण पर्व) एवं श्रीमद्भागवत महापुराण",
+    "sourceCitations": [
+      {
+        "sourceName": "Mahabharata",
+        "sourceRef": "Svargarohana Parva 5, Verses 49–51 (Bharata Savitri)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Srimad Bhagavata Purana",
+        "sourceRef": "Skandha 1, Adhyayas 4–7, The Conversation of Vyasa and Narada",
+        "tier": 1
+      }
+    ],
+    "illustrationPrompt": "Venerable Maharishi Veda Vyasa with long flowing grey beard and ascetic matted locks, dictating verses in a sacred mountain cave in Badrinath while Lord Ganesha sits writing with his broken tusk on palm leaves.",
+    "quote": {
+      "text": "In just two half-verses I proclaim that which has been stated in millions of scriptures: helping others is virtue; causing pain to others is sin.",
+      "attribution": "Ashtadasha Purana Sara"
+    },
+    "quoteLocal": {
+      "text": "श्लोकार्धेन प्रवक्ष्यामि यदुक्तं ग्रन्थकोटिभिः। परोपकारः पुण्याय पापाय परपीडनम्॥",
+      "attribution": "अष्टादश पुराण सार"
+    }
   }
 ];
 
