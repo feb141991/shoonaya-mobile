@@ -25,13 +25,18 @@ async function getApiAccessToken({ forceRefresh = false }: { forceRefresh?: bool
     return cachedAccessToken;
   }
 
-  const result = forceRefresh
-    ? await supabase.auth.refreshSession()
-    : await supabase.auth.getSession();
-  const session = result.data.session;
+  try {
+    const result = forceRefresh
+      ? await supabase.auth.refreshSession()
+      : await supabase.auth.getSession();
+    const session = result.data.session;
 
-  setApiAccessTokenFromSession(session);
-  return session?.access_token ?? null;
+    setApiAccessTokenFromSession(session);
+    return session?.access_token ?? null;
+  } catch {
+    // If Supabase auth is temporarily unreachable or network dropped, fail safe to cached token
+    return cachedAccessToken ?? null;
+  }
 }
 
 function canReplayBody(body: BodyInit | null | undefined): boolean {

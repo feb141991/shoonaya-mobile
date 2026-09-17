@@ -4,7 +4,15 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Alert, AppState, View } from 'react-native';
+import { Alert, AppState, LogBox, View } from 'react-native';
+
+LogBox.ignoreLogs([
+  'The network connection was lost',
+  'AuthRetryableFetchError',
+  'fetch failed: UnexpectedException',
+  'The Internet connection appears to be offline',
+  'Network request failed',
+]);
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
