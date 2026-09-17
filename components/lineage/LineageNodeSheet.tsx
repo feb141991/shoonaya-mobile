@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -14,6 +16,8 @@ import * as Haptics from 'expo-haptics';
 import { LineageNode } from '@/lib/lineage-data';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { apiFetch, isFetchCancelled } from '@/lib/api';
 
 interface LineageNodeSheetProps {
   node: LineageNode | null;
@@ -21,24 +25,100 @@ interface LineageNodeSheetProps {
   onClose: () => void;
 }
 
+type AudioState = 'idle' | 'loading' | 'playing' | 'paused';
+
 export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
 
-  if (!node) return null;
+  const [audioState, setAudioState] = useState<AudioState>('idle');
+  const audioPlayer = useAudioPlayer();
+  const currentAudioUrl = useRef<string | null>(null);
+  const currentTrackNodeId = useRef<string | null>(null);
 
-  const handleAudioPress = () => {
+  const stopAudio = useCallback(async () => {
+    try {
+      await audioPlayer.stop();
+    } catch {
+      // safe cleanup
+    }
+    setAudioState('idle');
+    currentAudioUrl.current = null;
+    currentTrackNodeId.current = null;
+  }, [audioPlayer]);
+
+  useEffect(() => {
+    if (!visible || (node && node.id !== currentTrackNodeId.current)) {
+      void stopAudio();
+    }
+  }, [visible, node?.id, stopAudio]);
+
+  const handleClose = useCallback(() => {
+    void stopAudio();
+    onClose();
+  }, [stopAudio, onClose]);
+
+  const handleAudioPress = useCallback(async () => {
+    if (!node?.stotraOrChant) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  };
+
+    if (audioState === 'playing') {
+      await audioPlayer.pause();
+      setAudioState('paused');
+      return;
+    }
+
+    if (audioState === 'paused' && currentAudioUrl.current) {
+      await audioPlayer.resume();
+      setAudioState('playing');
+      return;
+    }
+
+    setAudioState('loading');
+    try {
+      let playUrl = node.stotraOrChant.audioUrl;
+      if (!playUrl) {
+        const chantText = node.stotraOrChant.description || node.stotraOrChant.title;
+        const response = await apiFetch('/api/tts', {
+          method: 'POST',
+          body: JSON.stringify({ text: chantText, language: 'sa' }),
+        });
+
+        if (!response.ok) {
+          throw new Error('tts-failed');
+        }
+
+        const data = (await response.json()) as { audioContent?: string };
+        if (!data.audioContent) {
+          throw new Error('tts-no-audio');
+        }
+        playUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+      }
+
+      currentAudioUrl.current = playUrl;
+      currentTrackNodeId.current = node.id;
+      await audioPlayer.loadAndPlay(playUrl, false, () => {
+        setAudioState('idle');
+      });
+      setAudioState('playing');
+    } catch (err) {
+      if (!isFetchCancelled(err)) {
+        setAudioState('idle');
+        Alert.alert('Chanting Unavailable', 'Could not stream chanting at this time. Please check your connection.');
+      }
+    }
+  }, [audioPlayer, audioState, node]);
+
+  if (!node) return null;
 
   return (
     <Modal
       animationType="slide"
       transparent
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable
           style={[
             styles.sheetContainer,
@@ -70,7 +150,7 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
               </Text>
             </View>
             <Pressable
-              onPress={onClose}
+              onPress={handleClose}
               hitSlop={12}
               style={[
                 styles.closeButton,
@@ -148,10 +228,35 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
                 <PressableSurface
                   style={[styles.audioButton, { backgroundColor: theme.brand }]}
                   onPress={handleAudioPress}
-                  accessibilityLabel={`Listen to ${node.stotraOrChant.title}`}
+                  accessibilityLabel={
+                    audioState === 'playing'
+                      ? `Pause chanting for ${node.stotraOrChant.title}`
+                      : audioState === 'paused'
+                      ? `Resume chanting for ${node.stotraOrChant.title}`
+                      : `Listen to chanting for ${node.stotraOrChant.title}`
+                  }
                 >
-                  <Feather name="play" size={16} color="#FFFFFF" />
-                  <Text style={styles.audioButtonText}>Listen to Chanting</Text>
+                  {audioState === 'loading' ? (
+                    <>
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <Text style={styles.audioButtonText}>Loading Chanting...</Text>
+                    </>
+                  ) : audioState === 'playing' ? (
+                    <>
+                      <Feather name="pause" size={16} color="#FFFFFF" />
+                      <Text style={styles.audioButtonText}>Pause Chanting</Text>
+                    </>
+                  ) : audioState === 'paused' ? (
+                    <>
+                      <Feather name="play" size={16} color="#FFFFFF" />
+                      <Text style={styles.audioButtonText}>Resume Chanting</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Feather name="play" size={16} color="#FFFFFF" />
+                      <Text style={styles.audioButtonText}>Listen to Chanting</Text>
+                    </>
+                  )}
                 </PressableSurface>
               </View>
             ) : null}
@@ -320,6 +425,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    minHeight: MIN_TOUCH_TARGET,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: RADII.pill,

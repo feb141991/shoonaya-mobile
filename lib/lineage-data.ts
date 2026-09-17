@@ -23,6 +23,8 @@ export interface LineageNode {
     title: string;
     description: string;
     audioUrl?: string;
+    sourceName?: string;
+    licenseLabel?: string;
   };
   iconName?: string; // Feather icon or SacredIcon identifier
   colorAccent?: string;
