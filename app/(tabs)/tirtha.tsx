@@ -3,8 +3,10 @@ import {
   ActivityIndicator,
   Linking,
   Modal,
+  Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -12,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import * as Location from 'expo-location';
+import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_DEFAULT, type Region } from 'react-native-maps';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
@@ -94,7 +97,21 @@ const TRADITION_FILTERS: Array<{ key: TraditionFilter; label: string }> = [
   { key: 'jain', label: 'Jain' },
 ];
 
+function normalizeOsmSourceId(sourceId: string): string {
+  const parts = sourceId.split(':');
+  if (parts.length === 2) {
+    const rawSub = parts[0].toLowerCase();
+    const subType = rawSub === 'w' || rawSub === 'way' ? 'way' : rawSub === 'r' || rawSub === 'relation' ? 'relation' : 'node';
+    return `${subType}:${parts[1]}`;
+  }
+  return sourceId;
+}
+
 function tirthaPlaceId(temple: Temple): string {
+  if (temple.id.startsWith('osm:')) {
+    const rawSourceId = temple.id.slice('osm:'.length);
+    return `osm:${normalizeOsmSourceId(rawSourceId)}`;
+  }
   return temple.id;
 }
 
@@ -107,14 +124,16 @@ function templeToPlaceRow(temple: Temple) {
     sourceId = temple.id.slice('curated:'.length);
   } else if (temple.id.startsWith('osm:')) {
     source = 'osm';
-    sourceId = temple.id.slice('osm:'.length);
+    sourceId = normalizeOsmSourceId(temple.id.slice('osm:'.length));
   } else if (temple.id.startsWith('overpass:')) {
     source = 'overpass';
     sourceId = temple.id.slice('overpass:'.length);
   }
 
+  const normalizedId = source === 'osm' ? `osm:${sourceId}` : temple.id;
+
   return {
-    id: temple.id,
+    id: normalizedId,
     source,
     source_id: sourceId,
     name: temple.name,
@@ -148,6 +167,7 @@ export default function TirthaScreen() {
   const inputBg = theme.card;
   const brand = theme.brand;
   const textOnBrand = theme.textOnBrand;
+  const surface = isDark ? COLORS.surfaceSoftDark : COLORS.surfaceSoftLight;
 
   const mapRef = useRef<MapView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,6 +187,17 @@ export default function TirthaScreen() {
   const [community, setCommunity] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState('');
+  const [checkinError, setCheckinError] = useState('');
+
+  const openCheckIn = useCallback((temple: Temple) => {
+    setCheckinError('');
+    setSelectedTemple(temple);
+  }, []);
+
+  const closeCheckIn = useCallback(() => {
+    setSelectedTemple(null);
+    setCheckinError('');
+  }, []);
   const [locationBlocked, setLocationBlocked] = useState(false);
   const [radiusKm, setRadiusKm] = useState<number>(RADIUS_OPTIONS_KM[0]);
   const [traditionFilter, setTraditionFilter] = useState<TraditionFilter>('all');
@@ -262,9 +293,21 @@ export default function TirthaScreen() {
             .map((el: any) => {
               const tradition = inferTradition(el.tags ?? {});
               const defaultName = TRADITION_DEFAULT_NAMES[tradition];
-              const type = el.type ?? 'node';
+              const rawType = String(el.type ?? 'node').toLowerCase();
+              const type = rawType === 'w' || rawType === 'way' ? 'way' : rawType === 'r' || rawType === 'relation' ? 'relation' : 'node';
               const rawId = el.id;
-              const osmId = String(rawId).startsWith('osm:') ? String(rawId) : `osm:${type}:${rawId}`;
+              let osmId: string;
+              if (String(rawId).startsWith('osm:')) {
+                const parts = String(rawId).split(':');
+                if (parts.length === 3) {
+                  const subType = parts[1].toLowerCase() === 'w' || parts[1].toLowerCase() === 'way' ? 'way' : parts[1].toLowerCase() === 'r' || parts[1].toLowerCase() === 'relation' ? 'relation' : 'node';
+                  osmId = `osm:${subType}:${parts[2]}`;
+                } else {
+                  osmId = String(rawId);
+                }
+              } else {
+                osmId = `osm:${type}:${rawId}`;
+              }
               return {
                 id: osmId,
                 lat: el.lat ?? el.center?.lat ?? 0,
@@ -480,6 +523,7 @@ export default function TirthaScreen() {
 
   const submitCheckIn = useCallback(async () => {
     if (!selectedTemple) return;
+    setCheckinError('');
 
     try {
       const {
@@ -487,7 +531,7 @@ export default function TirthaScreen() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setNotice('Sign in to save a visit.');
+        setCheckinError('Please sign in to save visits to your Tirtha Passport.');
         return;
       }
 
@@ -498,7 +542,8 @@ export default function TirthaScreen() {
         body: JSON.stringify(templeToPlaceRow(selectedTemple)),
       });
       if (!placeResponse.ok) {
-        setNotice('Could not save this place.');
+        const errorData = (await placeResponse.json().catch(() => null)) as { error?: string } | null;
+        setCheckinError(errorData?.error || 'Could not save this place.');
         return;
       }
       const checkinResponse = await apiFetch('/api/tirtha/checkin', {
@@ -513,20 +558,22 @@ export default function TirthaScreen() {
 
       if (checkinResponse.ok) {
         await refreshPassport(user.id);
-        setSelectedTemple(null);
+        closeCheckIn();
         setIntention('');
         setCommunity(false);
         setCheckinMood('gratitude');
         setNotice('Visit saved to your Tirtha Passport.');
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        setNotice('Could not save check-in.');
+        const checkinErrData = (await checkinResponse.json().catch(() => null)) as { error?: string } | null;
+        setCheckinError(checkinErrData?.error || 'Could not save check-in.');
       }
     } catch {
-      setNotice('Could not save visit. Check your connection.');
+      setCheckinError('Could not save visit. Check your connection.');
     } finally {
       setSubmitting(false);
     }
-  }, [checkinMood, community, intention, refreshPassport, selectedTemple]);
+  }, [checkinMood, closeCheckIn, community, intention, refreshPassport, selectedTemple]);
 
   const searchCity = useCallback(async () => {
     if (!cityQuery.trim()) return;
@@ -716,7 +763,7 @@ export default function TirthaScreen() {
             }}
           >
             {([
-              ['map', 'Nearby (GPS)'],
+              ['map', 'Nearby'],
               ['yatras', 'Sacred Yatras'],
               ['passport', 'Passport'],
             ] as const).map(([key, label]) => {
@@ -1035,7 +1082,7 @@ export default function TirthaScreen() {
                       distanceLabel={userCoords ? formatDistance(userCoords, temple) : 'Nearby'}
                       saved={savedIds.has(tirthaPlaceId(temple))}
                       onSave={() => void toggleSave(temple)}
-                      onCheckIn={() => setSelectedTemple(temple)}
+                      onCheckIn={() => openCheckIn(temple)}
                       onFocusMap={() => focusTempleOnMap(temple)}
                     />
                   </View>
@@ -1157,9 +1204,16 @@ export default function TirthaScreen() {
         transparent
         visible={Boolean(selectedTemple)}
         animationType="slide"
-        onRequestClose={() => setSelectedTemple(null)}
+        onRequestClose={closeCheckIn}
       >
         <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+          {/* Tappable backdrop area that dismisses the sheet when tapping outside */}
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={closeCheckIn}
+            accessibilityLabel="Dismiss sheet"
+            accessibilityRole="button"
+          />
           <View
             style={{
               borderTopLeftRadius: 28,
@@ -1167,19 +1221,65 @@ export default function TirthaScreen() {
               backgroundColor: cardBg,
               borderWidth: 1,
               borderColor: border,
-              paddingTop: 22,
+              paddingTop: 16,
               paddingHorizontal: 22,
               paddingBottom: Math.max(22, insets.bottom + 12),
               gap: 14,
             }}
           >
+            {/* Grab handle */}
             <View style={{ alignItems: 'center' }}>
               <View style={{ width: 52, height: 4, borderRadius: 999, backgroundColor: border }} />
             </View>
-            <Text style={{ ...TYPE.metric, color: text }}>
-              {selectedTemple?.name ?? 'Temple check-in'}
-            </Text>
 
+            {/* Header with Title, optional Address, and Close ("X") button */}
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...TYPE.metric, color: text }}>
+                  {selectedTemple?.name ?? 'Temple check-in'}
+                </Text>
+                {selectedTemple?.address ? (
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, marginTop: 2 }} numberOfLines={1}>
+                    {selectedTemple.address}
+                  </Text>
+                ) : null}
+              </View>
+              <PressableSurface
+                onPress={closeCheckIn}
+                haptic="selection"
+                accessibilityLabel="Close sheet"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="x" size={18} color={dim} />
+              </PressableSurface>
+            </View>
+
+            {/* In-sheet error notice */}
+            {checkinError ? (
+              <View
+                style={{
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(224,104,76,0.12)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(224,104,76,0.3)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: '#E0684C' }}>
+                  {checkinError}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Mood selector */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {TIRTHA_MOODS.map((mood) => (
                 <PressableSurface
@@ -1209,6 +1309,7 @@ export default function TirthaScreen() {
               ))}
             </View>
 
+            {/* Intention Input */}
             <TextInput
               value={intention}
               onChangeText={setIntention}
@@ -1227,27 +1328,49 @@ export default function TirthaScreen() {
               }}
             />
 
+            {/* Community Switch */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: text }}>Share with community</Text>
               <Switch value={community} onValueChange={setCommunity} />
             </View>
 
-            <PressableSurface
-              onPress={() => void submitCheckIn()}
-              disabled={submitting}
-              style={{
-                borderRadius: 18,
-                backgroundColor: brand,
-                minHeight: MIN_TOUCH_TARGET,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: submitting ? 0.7 : 1,
-              }}
-            >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: textOnBrand }}>
-                {submitting ? 'Saving…' : 'Save visit'}
-              </Text>
-            </PressableSurface>
+            {/* Action buttons: Save visit & Cancel */}
+            <View style={{ gap: 10, marginTop: 4 }}>
+              <PressableSurface
+                onPress={() => void submitCheckIn()}
+                disabled={submitting}
+                style={{
+                  borderRadius: 18,
+                  backgroundColor: brand,
+                  minHeight: MIN_TOUCH_TARGET,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: textOnBrand }}>
+                  {submitting ? 'Saving…' : 'Save visit'}
+                </Text>
+              </PressableSurface>
+
+              <PressableSurface
+                onPress={closeCheckIn}
+                disabled={submitting}
+                style={{
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: border,
+                  backgroundColor: surface,
+                  minHeight: MIN_TOUCH_TARGET,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 14, color: dim }}>
+                  Cancel
+                </Text>
+              </PressableSurface>
+            </View>
           </View>
         </View>
       </Modal>
