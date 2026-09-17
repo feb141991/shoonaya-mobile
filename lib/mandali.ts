@@ -24,7 +24,7 @@
 import * as Crypto from 'expo-crypto';
 
 import { supabase } from '@/lib/supabase';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, isFetchCancelled } from '@/lib/api';
 import { dedupeNearbyMandalis } from '@/lib/mandaliLocation';
 import { attemptMandaliComposeWithRetry } from '@/lib/mandaliComposeRetry';
 import { recordMutationRetryOutcome } from '@/lib/telemetry';
@@ -286,14 +286,19 @@ export async function fetchNearbyMandalis(lat: number, lon: number): Promise<Nea
 
 export async function fetchNearbySeekers(userId: string, city: string | null, lat: number | null, lon: number | null): Promise<NearbySeeker[]> {
   if (!userId || (lat == null && !city)) return [];
-  const response = await apiFetch('/api/mandali/nearby');
-  if (!response.ok) return [];
-  const payload = await response.json() as { seekers: Array<{ id: string; username: string; avatar_url: string | null; distanceLabel: string }> };
-  return payload.seekers.map((seeker) => ({
-    ...seeker,
-    full_name: seeker.username,
-    city: null,
-  }));
+  try {
+    const response = await apiFetch('/api/mandali/nearby');
+    if (!response.ok) return [];
+    const payload = await response.json() as { seekers: Array<{ id: string; username: string; avatar_url: string | null; distanceLabel: string }> };
+    return payload.seekers.map((seeker) => ({
+      ...seeker,
+      full_name: seeker.username,
+      city: null,
+    }));
+  } catch (err) {
+    if (isFetchCancelled(err)) return [];
+    throw err;
+  }
 }
 
 // One atomic, server-identity-derived RPC for both location-based and
@@ -815,10 +820,15 @@ export async function respondToConnectionRequest(requestId: string, status: 'acc
 
 export async function fetchPendingConnectionRequests(userId: string): Promise<ConnectionRequestRow[]> {
   if (!userId) return [];
-  const response = await apiFetch('/api/mandali/connections/pending');
-  if (!response.ok) return [];
-  const payload = await response.json() as { requests: ConnectionRequestRow[] };
-  return payload.requests;
+  try {
+    const response = await apiFetch('/api/mandali/connections/pending');
+    if (!response.ok) return [];
+    const payload = await response.json() as { requests: ConnectionRequestRow[] };
+    return payload.requests;
+  } catch (err) {
+    if (isFetchCancelled(err)) return [];
+    throw err;
+  }
 }
 
 // ── Reactions (devotional set replacing the single upvote heart) ───────────

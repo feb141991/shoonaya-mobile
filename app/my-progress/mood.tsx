@@ -12,7 +12,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, isFetchCancelled } from '@/lib/api';
 
 // Mirrors MoodInsightMetrics returned by GET /api/mood/insights/{weekly,monthly}
 // (src/lib/mood/insights.ts on the web repo) — only the fields this screen reads.
@@ -45,7 +45,9 @@ export default function MoodInsightsScreen() {
         setMetrics(data);
       }
     } catch (e) {
-      console.error('[mood] Failed to fetch metrics', e);
+      if (!isFetchCancelled(e)) {
+        console.error('[mood] Failed to fetch metrics', e);
+      }
     }
   }, []);
 
@@ -57,7 +59,9 @@ export default function MoodInsightsScreen() {
         setAiReflection(data.summary);
       }
     } catch (e) {
-      console.error('[mood] Failed to fetch reflection', e);
+      if (!isFetchCancelled(e)) {
+        console.error('[mood] Failed to fetch reflection', e);
+      }
     }
   }, []);
 

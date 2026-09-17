@@ -12,6 +12,9 @@ LogBox.ignoreLogs([
   'fetch failed: UnexpectedException',
   'The Internet connection appears to be offline',
   'Network request failed',
+  'FetchRequestCanceledException',
+  'Fetch request has been canceled',
+  'FetchRequestCanceled',
 ]);
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

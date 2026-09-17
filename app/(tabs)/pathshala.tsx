@@ -27,7 +27,7 @@ import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { type PathshalaPath } from '@/lib/pathshala-types';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useScrollToTop } from '@/lib/useScrollToTop';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, isFetchCancelled } from '@/lib/api';
 import { useAppIdentity } from '@/lib/appIdentity';
 import {
   parseServerTimingHeader,
@@ -315,7 +315,9 @@ function PathshalaContent() {
           readyAt = Date.now();
         }
       } catch (error) {
-        console.error(error);
+        if (!isFetchCancelled(error)) {
+          console.error(error);
+        }
         if (!cacheHit) {
           setPaths([]);
           setEnrollments([]);

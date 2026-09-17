@@ -40,7 +40,7 @@ import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
 import { FestivalQuizMandaliStat } from '@/components/mandali/FestivalQuizMandaliStat';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, isFetchCancelled } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
@@ -1012,7 +1012,9 @@ export default function MandaliScreen() {
       });
       setNextCursor(page.nextCursor);
     } catch (error) {
-      console.error('[MandaliScreen] loadMorePosts failed', error);
+      if (!isFetchCancelled(error)) {
+        console.error('[MandaliScreen] loadMorePosts failed', error);
+      }
     } finally {
       setLoadingMore(false);
     }
@@ -1023,7 +1025,9 @@ export default function MandaliScreen() {
     try {
       await loadMandali();
     } catch (error) {
-      console.error('[MandaliScreen] pull-to-refresh failed', error);
+      if (!isFetchCancelled(error)) {
+        console.error('[MandaliScreen] pull-to-refresh failed', error);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -1168,9 +1172,11 @@ export default function MandaliScreen() {
         }
       })
       .catch((error) => {
-        console.error('[MandaliScreen] loadMandali failed', error);
-        if (telemetryUserIdRef.current) {
-          recordRefreshFailure({ kind: 'authenticated', userId: telemetryUserIdRef.current }, 'mandali');
+        if (!isFetchCancelled(error)) {
+          console.error('[MandaliScreen] loadMandali failed', error);
+          if (telemetryUserIdRef.current) {
+            recordRefreshFailure({ kind: 'authenticated', userId: telemetryUserIdRef.current }, 'mandali');
+          }
         }
       })
       .finally(() => setLoading(false));
@@ -1191,7 +1197,9 @@ export default function MandaliScreen() {
         if (!cancelled) setSeekers(rows);
       })
       .catch((error) => {
-        console.error('[MandaliScreen] fetchNearbySeekers failed', error);
+        if (!cancelled && !isFetchCancelled(error)) {
+          console.error('[MandaliScreen] fetchNearbySeekers failed', error);
+        }
         if (!cancelled) setSeekers([]);
       })
       .finally(() => {
@@ -1204,16 +1212,25 @@ export default function MandaliScreen() {
 
   const loadPendingRequests = useCallback(() => {
     if (!profile?.userId) return;
+    let cancelled = false;
     fetchPendingConnectionRequests(profile.userId)
-      .then((rows) => setPendingRequests(rows))
+      .then((rows) => {
+        if (!cancelled) setPendingRequests(rows);
+      })
       .catch((error) => {
-        console.error('[MandaliScreen] fetchPendingConnectionRequests failed', error);
-        setPendingRequests([]);
+        if (!cancelled && !isFetchCancelled(error)) {
+          console.error('[MandaliScreen] fetchPendingConnectionRequests failed', error);
+        }
+        if (!cancelled) setPendingRequests([]);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [profile?.userId]);
 
   useEffect(() => {
-    loadPendingRequests();
+    const cleanup = loadPendingRequests();
+    return cleanup;
   }, [loadPendingRequests]);
 
   // Resume queued reaction changes on foreground -- per the agreed retry
