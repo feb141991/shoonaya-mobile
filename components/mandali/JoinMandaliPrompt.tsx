@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET } from '@/lib/constants';
+import { isFetchCancelled } from '@/lib/api';
 import { fetchNearbyMandalis, forwardGeocode, joinExistingMandali, joinMandaliForLocation, reverseGeocode, type NearbyMandali } from '@/lib/mandali';
 import { mandaliJoinErrorMessage } from '@/lib/mandaliJoinError';
 import { mandaliLocationKey } from '@/lib/mandaliLocation';
@@ -70,7 +71,9 @@ async function reverseGeocodeWithNativeFallback(lat: number, lon: number): Promi
     const geocoded = await reverseGeocode(lat, lon);
     if (geocoded?.city) return geocoded;
   } catch (error) {
-    console.error('[JoinMandaliPrompt] reverseGeocode proxy failed', error);
+    if (!isFetchCancelled(error)) {
+      console.error('[JoinMandaliPrompt] reverseGeocode proxy failed', error);
+    }
   }
 
   try {
@@ -129,7 +132,9 @@ export function JoinMandaliPrompt({
     try {
       setNearby(await fetchNearbyMandalis(lat, lon));
     } catch (error) {
-      console.error('[JoinMandaliPrompt] fetchNearbyMandalis failed', error);
+      if (!isFetchCancelled(error)) {
+        console.error('[JoinMandaliPrompt] fetchNearbyMandalis failed', error);
+      }
       setNearby([]);
     } finally {
       setLoadingNearby(false);

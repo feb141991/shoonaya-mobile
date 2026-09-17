@@ -417,6 +417,7 @@ export async function fetchPostComments(postId: string, currentUserId?: string):
       return result.comments ?? [];
     }
   } catch (apiErr) {
+    if (isFetchCancelled(apiErr)) return [];
     console.warn('[fetchPostComments] /api/mandali/comments failed, falling back to direct Supabase:', apiErr);
   }
 

@@ -1979,7 +1979,18 @@ export default function MandaliScreen() {
     if (!profile) return;
     Alert.alert('Leave Mandali', `Leave ${profile.mandaliName ?? 'your Mandali'}? You can rejoin any time.`, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Leave', style: 'destructive', onPress: () => void leaveMandali(profile.userId).then(() => loadMandali()) },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: () => {
+          void leaveMandali(profile.userId)
+            .then(() => loadMandali())
+            .catch((error) => {
+              console.warn('[MandaliScreen] leaveMandali failed', error);
+              Alert.alert('Could not leave', 'Please check your connection and try again.');
+            });
+        },
+      },
     ]);
   }, [loadMandali, profile]);
 
