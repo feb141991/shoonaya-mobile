@@ -24,6 +24,7 @@ export interface TempleSanctumNode {
   stotraOrChant?: {
     title: string;
     description: string;
+    audioUrl?: string;
   };
   liveDarshanStreamId?: string; // YouTube or live darshan id if supported
   colorAccent: string;
@@ -75,6 +76,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         stotraOrChant: {
           title: 'Saurashtre Somanatham (Dvadasha Jyotirlinga Stotram)',
           description: 'Saurashtre Somanatham Cha Shrishaile Mallikarjunam — Adi Shankaracharya.',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/029-Siva%20Bhujangam.mp3',
         },
         colorAccent: '#D97706',
         latitude: 20.888,
@@ -136,6 +138,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         stotraOrChant: {
           title: 'Narmadastakam',
           description: 'Twadiya Pada Pankajam Namami Devi Narmade — Salutations to Mother Narmada.',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/025-Narmadashtakam.mp3',
         },
         colorAccent: '#7C3AED',
         latitude: 22.247,
@@ -177,6 +180,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         stotraOrChant: {
           title: 'Kashi Vishwanathashtakam',
           description: 'Ganga-Taranga-Ramaniya-Jata-Kalapam Gauri-Nirantara-Vibhushita-Vama-Bhagam.',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/014-Kalabhairavashtakam.mp3',
         },
         colorAccent: '#D97706',
         latitude: 25.311,
@@ -254,8 +258,9 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         significance: 'The western gateway to liberation (*Moksha Puri*), radiating royal grace and protective power.',
         offerings: ['52-Yard Flag (Dhwajarohan)', 'Tulsi Leaves', 'Makhan Mishri Prashad'],
         stotraOrChant: {
-          title: 'Dwarkadhish Aarti',
-          description: 'Aarti Kunj Bihari Ki, Shri Girdhar Krishna Murari Ki.',
+          title: 'Dwarkadhish Aarti & Achyutashtakam',
+          description: 'Aarti Kunj Bihari Ki, Shri Girdhar Krishna Murari Ki — Achyutam Keshavam.',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/001-Achyutashtakam.mp3',
         },
         colorAccent: '#EA580C',
         latitude: 22.237,
@@ -276,6 +281,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         stotraOrChant: {
           title: 'Jagannathashtakam',
           description: 'Kadachit Kalindi-Tata-Vipina-Sangita-Taralo Jagannatha-Swami Nayana-Patha-Gami Bhavatu Me.',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/013-Jagannathashtakam.mp3',
         },
         colorAccent: '#2563EB',
         latitude: 19.805,
@@ -326,6 +332,11 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         sthalaPurana: 'Established in 1606 by Guru Hargobind Ji as the Throne of the Timeless (Akal), symbolizing sovereignty, justice, and spiritual bravery (Miri-Piri).',
         significance: 'The supreme decision-making seat for the global Sikh Panth.',
         offerings: ['Karah Prashad', 'Shabad Kirtan', 'Langar Seva'],
+        stotraOrChant: {
+          title: 'Mool Mantar & Ardas',
+          description: 'Ik Onkar Satnaam Karta Purakh Nirbhau Nirvair Akal Moorat Ajooni Saibhang Gurprasaad',
+          audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/2b/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav.mp3',
+        },
         colorAccent: '#D97706',
         latitude: 31.62,
         longitude: 74.876,

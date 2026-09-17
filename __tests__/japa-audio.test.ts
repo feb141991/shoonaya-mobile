@@ -39,8 +39,52 @@ describe('Japa Ambient Audio & Tanpura Engine', () => {
         assert.ok(track.keyNote, `Sound ${track.id} must have a root key note`);
         assert.ok(track.audioUrl, `Sound ${track.id} must have an audio URL`);
         assert.match(track.audioUrl, /^https?:\/\//, `Sound ${track.id} audio URL must be valid HTTP(S)`);
+        assert.match(track.audioUrl, /\.mp3(\?.*)?$/i, `Sound ${track.id} must use cross-platform MP3 for iOS & Android playback`);
       }
     }
+  });
+
+  it('guarantees all devotional starter tracks use cross-platform MP3 streams', async () => {
+    const { DEVOTIONAL_STARTER_TRACKS } = await import('../lib/devotional-audio');
+    assert.ok(DEVOTIONAL_STARTER_TRACKS.length >= 4, 'Must contain canonical devotional starter tracks');
+    for (const track of DEVOTIONAL_STARTER_TRACKS) {
+      assert.ok(track.audioUrl, `Track ${track.id} must have an audio URL`);
+      assert.match(track.audioUrl, /\.mp3(\?.*)?$/i, `Track ${track.id} must use cross-platform MP3 format`);
+    }
+  });
+
+  it('verifies authentic human MP3 recordings on Sikh and Jain lineage nodes', async () => {
+    const { SACRED_LINEAGES } = await import('../lib/lineage-data');
+    const sikh = SACRED_LINEAGES['sikh-gurus'];
+    const guruNanak = sikh.nodes.find((n) => n.id === 'guru-nanak');
+    assert.ok(guruNanak?.stotraOrChant?.audioUrl, 'Guru Nanak must have authentic audio');
+    assert.match(guruNanak.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Guru Nanak audio must be MP3');
+
+    const guruGranth = sikh.nodes.find((n) => n.id === 'guru-granth-sahib');
+    assert.ok(guruGranth?.stotraOrChant?.audioUrl, 'Guru Granth Sahib must have authentic audio');
+    assert.match(guruGranth.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Guru Granth Sahib audio must be MP3');
+
+    const jain = SACRED_LINEAGES['jain-tirthankaras'];
+    const mahavira = jain.nodes.find((n) => n.id === 'mahavira');
+    assert.ok(mahavira?.stotraOrChant?.audioUrl, 'Mahavira must have authentic Navkar Mantra audio');
+    assert.match(mahavira.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Mahavira audio must be MP3');
+
+    const rishabha = jain.nodes.find((n) => n.id === 'rishabhanatha');
+    assert.ok(rishabha?.stotraOrChant?.audioUrl, 'Rishabhanatha must have authentic audio');
+    assert.match(rishabha.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Rishabhanatha audio must be MP3');
+  });
+
+  it('verifies Virtual Sanctum cornerstone temples specify valid MP3 stotras', async () => {
+    const { SACRED_YATRA_CIRCUITS } = await import('../lib/yatra-data');
+    const jyotirlingas = SACRED_YATRA_CIRCUITS['12-jyotirlingas'];
+    const somnath = jyotirlingas.temples.find((t) => t.id === 'somnath');
+    assert.ok(somnath?.stotraOrChant?.audioUrl, 'Somnath must have stotra audio URL');
+    assert.match(somnath.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Somnath stotra audio must be MP3');
+
+    const charDham = SACRED_YATRA_CIRCUITS['char-dham'];
+    const puri = charDham.temples.find((t) => t.id === 'puri-jagannath');
+    assert.ok(puri?.stotraOrChant?.audioUrl, 'Puri must have Jagannathashtakam audio URL');
+    assert.match(puri.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Puri stotra audio must be MP3');
   });
 
   it('resolves each canonical Tanpura drone key', () => {

@@ -209,8 +209,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
           'Extensive journeys (Udasis) across India, Tibet, Middle East, and Sri Lanka',
         ],
         stotraOrChant: {
-          title: 'Mool Mantar',
+          title: 'Mool Mantar (Shudh Ucharan)',
           description: 'Ik Onkar Satnaam Karta Purakh Nirbhau Nirvair Akal Moorat Ajooni Saibhang Gurprasaad',
+          audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/2b/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav.mp3',
         },
         colorAccent: '#D97706',
       },
@@ -297,6 +298,11 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
           'Eternal spiritual guide of the Sikh Panth',
           'Synthesizes universal non-dual truth, selfless love, and righteous action',
         ],
+        stotraOrChant: {
+          title: 'Mool Mantar (Opening Mangalacharan)',
+          description: 'Ik Onkar Satnaam Karta Purakh Nirbhau Nirvair Akal Moorat Ajooni Saibhang Gurprasaad',
+          audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/2b/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav.mp3',
+        },
         colorAccent: '#CA8A04',
       },
     ],
@@ -333,8 +339,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
           'Established fundamental principles of ethical living',
         ],
         stotraOrChant: {
-          title: 'Bhaktamara Stotra (Adinatha Stuti)',
+          title: 'Navkar Mantra & Adinatha Stuti',
           description: 'Bhaktamara-Pranata-Mauli-Mani-Prabhanaam-Uddyotakam Dalita-Papa-Tamo-Vitanam',
+          audioUrl: 'https://archive.org/download/navkarmantraoption2/Navkar%20Mantra%20%28Option%202%29.mp3',
         },
         colorAccent: '#D97706',
       },
@@ -369,6 +376,7 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
         stotraOrChant: {
           title: 'Namokar Mahamantra',
           description: 'Namo Arihantanam, Namo Siddhanam, Namo Ayariyanam, Namo Uvajjhayanam, Namo Loe Savva Sahunam',
+          audioUrl: 'https://archive.org/download/navkarmantraoption2/Navkar%20Mantra%20%28Option%201%29.mp3',
         },
         colorAccent: '#EA580C',
       },

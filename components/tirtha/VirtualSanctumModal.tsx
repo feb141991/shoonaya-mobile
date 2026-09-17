@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Modal,
   Pressable,
@@ -18,6 +19,8 @@ import { TempleSanctumNode } from '@/lib/yatra-data';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FlowerShowerOverlay } from '@/components/ui/FlowerShowerOverlay';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { apiFetch } from '@/lib/api';
 
 interface VirtualSanctumModalProps {
   temple: TempleSanctumNode | null;
@@ -37,9 +40,93 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
   const [showFlowerShower, setShowFlowerShower] = useState(false);
   const [activeTab, setActiveTab] = useState<'darshan' | 'purana' | 'rituals'>('darshan');
 
+  // Audio player state
+  const audioPlayer = useAudioPlayer();
+  const [audioState, setAudioState] = useState<'idle' | 'loading' | 'playing' | 'paused'>('idle');
+  const currentAudioUrl = useRef<string | null>(null);
+
   // Animation values for Bell & Diya Glow
   const bellAnim = useRef(new Animated.Value(0)).current;
   const diyaGlowAnim = useRef(new Animated.Value(0)).current;
+
+  // Stop audio on dismiss or temple switch
+  useEffect(() => {
+    if (!visible) {
+      void audioPlayer.stop();
+      setAudioState('idle');
+      currentAudioUrl.current = null;
+    }
+  }, [visible, audioPlayer]);
+
+  useEffect(() => {
+    return () => {
+      void audioPlayer.stop();
+      setAudioState('idle');
+      currentAudioUrl.current = null;
+    };
+  }, [temple?.id, audioPlayer]);
+
+  const handleClose = () => {
+    void audioPlayer.stop();
+    setAudioState('idle');
+    currentAudioUrl.current = null;
+    onClose();
+  };
+
+  const handleToggleAudio = async () => {
+    if (!temple?.stotraOrChant) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (audioState === 'playing') {
+      await audioPlayer.pause();
+      setAudioState('paused');
+      return;
+    }
+
+    if (audioState === 'paused') {
+      await audioPlayer.resume();
+      setAudioState('playing');
+      return;
+    }
+
+    setAudioState('loading');
+    try {
+      if (temple.stotraOrChant.audioUrl) {
+        currentAudioUrl.current = temple.stotraOrChant.audioUrl;
+        await audioPlayer.loadAndPlay(temple.stotraOrChant.audioUrl, false, () => {
+          setAudioState('idle');
+        });
+        setAudioState('playing');
+      } else {
+        const textToRecite = `${temple.stotraOrChant.title}. ${temple.stotraOrChant.description}`;
+        const response = await apiFetch('/api/tts', {
+          method: 'POST',
+          body: JSON.stringify({
+            text: textToRecite,
+            language: 'sa-IN',
+            speed: 0.85,
+            pipelineTags: {
+              content_type: 'stotram',
+              delivery_intent: 'recitation',
+            },
+          }),
+        });
+
+        if (!response.ok) throw new Error('tts-failed');
+        const data = (await response.json()) as { audioContent?: string };
+        if (!data.audioContent) throw new Error('tts-no-audio');
+
+        const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+        currentAudioUrl.current = audioUrl;
+        await audioPlayer.loadAndPlay(audioUrl, false, () => {
+          setAudioState('idle');
+        });
+        setAudioState('playing');
+      }
+    } catch {
+      setAudioState('idle');
+    }
+  };
 
   if (!temple) return null;
 
@@ -97,9 +184,9 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
       animationType="slide"
       transparent
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable
           style={[
             styles.sheetContainer,
@@ -132,7 +219,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               </Text>
             </View>
             <Pressable
-              onPress={onClose}
+              onPress={handleClose}
               hitSlop={12}
               style={[
                 styles.closeButton,
@@ -393,14 +480,57 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                 {temple.stotraOrChant ? (
                   <View style={[styles.stotraCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)', borderColor: theme.borderSoft }]}>
                     <View style={styles.stotraHeader}>
-                      <Feather name="volume-2" size={18} color={goldAccent} />
-                      <Text style={[styles.stotraTitle, { color: theme.text }]}>
-                        {temple.stotraOrChant.title}
-                      </Text>
+                      <View style={styles.stotraHeaderLeft}>
+                        <Feather name="volume-2" size={18} color={goldAccent} />
+                        <Text style={[styles.stotraTitle, { color: theme.text }]} numberOfLines={1}>
+                          {temple.stotraOrChant.title}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={handleToggleAudio}
+                        accessibilityRole="button"
+                        accessibilityLabel={audioState === 'playing' ? 'Pause stotra audio' : 'Play stotra audio'}
+                        hitSlop={8}
+                        style={[
+                          styles.stotraPlayBtn,
+                          {
+                            backgroundColor: audioState === 'playing' ? goldAccent : isDark ? 'rgba(197, 160, 89, 0.18)' : 'rgba(197, 160, 89, 0.12)',
+                            borderColor: goldAccent,
+                          },
+                        ]}
+                      >
+                        {audioState === 'loading' ? (
+                          <ActivityIndicator size="small" color={goldAccent} />
+                        ) : (
+                          <>
+                            <Feather
+                              name={audioState === 'playing' ? 'pause' : 'play'}
+                              size={13}
+                              color={audioState === 'playing' ? '#1a120b' : goldAccent}
+                            />
+                            <Text
+                              style={[
+                                styles.stotraPlayText,
+                                { color: audioState === 'playing' ? '#1a120b' : goldAccent },
+                              ]}
+                            >
+                              {audioState === 'playing' ? 'Pause' : audioState === 'paused' ? 'Resume' : 'Chant'}
+                            </Text>
+                          </>
+                        )}
+                      </Pressable>
                     </View>
                     <Text style={[styles.stotraDesc, { color: theme.dim }]}>
                       {temple.stotraOrChant.description}
                     </Text>
+                    {temple.stotraOrChant.audioUrl ? (
+                      <View style={styles.stotraProvenance}>
+                        <Feather name="disc" size={11} color={goldAccent} />
+                        <Text style={[styles.stotraProvenanceText, { color: goldAccent }]}>
+                          Authentic Chanting Recording
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
               </View>
@@ -792,16 +922,49 @@ const styles = StyleSheet.create({
   stotraHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
+  },
+  stotraHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
   },
   stotraTitle: {
     fontFamily: FONTS.serifBold,
     fontSize: 14,
+    flexShrink: 1,
+  },
+  stotraPlayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADII.pill,
+    borderWidth: 1,
+    minHeight: 30,
+  },
+  stotraPlayText: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 12,
   },
   stotraDesc: {
     fontFamily: FONTS.sans,
     fontSize: 12,
     lineHeight: 17,
+  },
+  stotraProvenance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 2,
+  },
+  stotraProvenanceText: {
+    fontFamily: FONTS.sansMedium,
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
   liveDarshanBtn: {
     marginTop: 18,
