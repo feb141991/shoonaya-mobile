@@ -792,6 +792,259 @@ export const DHARM_VEERS: DharmVeer[] = [
       "text": "यथा च सर्वभूतेषु सर्वव्यापी जगन्मयः। तथा मे दनुजाः सर्वे शस्त्राण्यायान्तु संक्षयम्॥",
       "attribution": "भक्त प्रह्लाद (विष्णु पुराण १.१७)"
     }
+  },
+  {
+    "id": "rani-lakshmibai",
+    "name": "Rani Lakshmibai",
+    "nameLocal": "रानी लक्ष्मीबाई",
+    "era": "1828 – 1858 CE",
+    "eraLocal": "१८२८ – १८५८ ई.",
+    "tradition": "hindu",
+    "region": "Jhansi, Bundelkhand",
+    "regionLocal": "झाँसी, बुंदेलखंड",
+    "emoji": "🐎",
+    "tagline": "The warrior-queen of Jhansi whose unyielding stand against imperial annexation became the immortal symbol of Swadharma, resistance, and valor.",
+    "taglineLocal": "झाँसी की वीरांगना रानी जिन्होंने साम्राज्यवादी अन्याय के विरुद्ध स्वधर्म, स्वाभिमान और अदम्य शौर्य का अमर इतिहास रचा।",
+    "journey": "Born as Manikarnika Tambe in the sacred city of Varanasi, she was raised in the court of the Peshwa at Bithoor after the early loss of her mother. Educated far beyond conventional royal customs, Manu mastered horse-riding, archery, marksmanship, and swordcraft alongside Nana Sahib and Tatya Tope. In 1842, she married Maharaja Gangadhar Rao Newalkar of Jhansi and assumed the title Rani Lakshmibai. Following the Maharaja's untimely passing in 1853 and the tragic loss of their infant son, the British East India Company under Governor-General Lord Dalhousie invoked the Doctrine of Lapse—summarily rejecting her adopted son Damodar Rao’s rightful claim and decreeing the annexation of Jhansi. Faced with imperial eviction and an insulting pension, Lakshmibai famously declared: ‘Main meri Jhansi nahi doongi’ (I shall never surrender my Jhansi).\n\nWhen the Great Rebellion of 1857 swept across northern India, Lakshmibai assumed direct military and civil leadership over Jhansi. She fortified the formidable stone ramparts, established munitions foundries, organized volunteer infantry units, and formed the Durga Dal—a specialized fighting regiment of women led by her trusted commander Jhalkaribai. For months she governed with impeccable justice and communal harmony, earning the deep devotion of Hindu and Muslim soldiers alike. When British forces under Major General Sir Hugh Rose laid siege to Jhansi in March 1858, the Queen personally directed artillery fire from the battlements, inspiring her garrison to repel intense bombardments and storming assaults for over two weeks.",
+    "journeyLocal": "काशी की पावन भूमि पर मणिकर्णिका (मनु) के रूप में जन्मी लक्ष्मीबाई का बाल्यकाल बिठूर में पेशवा बाजीराव द्वितीय की छत्रछाया में बीता। परंपरागत सीमाओं को तोड़ते हुए मनु ने घुड़सवारी, मल्लविद्या, धनुर्विद्या और तलवारबाजी में असाधारण निपुणता प्राप्त की। १८४२ में उनका विवाह झाँसी के नरेश महाराज गंगाधर राव नेवालकर से हुआ और वे रानी लक्ष्मीबाई के नाम से प्रतिष्ठित हुईं। १८५३ में महाराज के आकस्मिक निधन तथा अपने नवजात शिशु के वियोग के पश्चात, ब्रिटिश ईस्ट इंडिया कंपनी के गवर्नर जनरल लॉर्ड डलहौजी ने कुख्यात 'हड़प नीति' (डॉक्ट्रिन ऑफ लैप्स) लागू कर दी। उन्होंने दत्तक पुत्र दामोदर राव के उत्तराधिकार को अवैध घोषित करते हुए झाँसी को ब्रिटिश साम्राज्य में मिलाने का फरमान जारी किया। अंग्रेजों के इस अपमानजनक आदेश को ठुकराते हुए महारानी ने निर्भीक गर्जना की: 'मैं अपनी झाँसी नहीं दूँगी!'\n\n१८५७ के प्रथम स्वाधीनता संग्राम में जब विद्रोह की ज्वाला प्रज्वलित हुई, तब रानी ने झाँसी की कमान अपने हाथों में ले ली। उन्होंने दुर्ग के परकोटों को सुदृढ़ किया, तोपखाने स्थापित किए, और झलकारी बाई के नेतृत्व में वीरांगनाओं का अजेय 'दुर्गा दल' गठित किया। जब मार्च १८५८ में मेजर जनरल सर ह्यू रोज के नेतृत्व में विशाल ब्रिटिश सेना ने झाँसी के दुर्ग को घेर लिया, तब रानी ने स्वयं मोर्चे पर खड़े होकर तोपों का संचालन किया और दो सप्ताह तक भीषण गोलाबारी का डटकर मुकाबला किया।",
+    "trial": "Surrounded by superior siege artillery and breached walls, Rani Lakshmibai executed a daring tactical breakout. Strapping her ten-year-old adopted son Damodar Rao securely to her back, she mounted her legendary warhorse Sarangi and leapt down from the palace ramparts into the darkness, cutting through the enemy lines with a handful of loyal cavalry riders.\n\nShe rode over a hundred miles without rest to Kalpi, joining forces with Tatya Tope and the Nawab of Banda. Together they captured the historic Gwalior Fort in a strategic counterstroke. On June 17, 1858, at the Battle of Kotah-ki-Serai near Gwalior, clad in warrior armor and wielding twin sabers, the Queen commanded her troops against the British 8th King's Royal Irish Hussars. Struck down in close cavalry combat while preventing capture, she instructed her surviving hermit-warriors to cremate her body instantly so that imperial troops could never touch or desecrate her mortal remains.",
+    "trialLocal": "दुर्ग की दीवारें टूटने पर रानी ने एक अप्रतिम साहसिक निर्णय लिया। उन्होंने अपने दस वर्षीय दत्तक पुत्र दामोदर राव को अपनी पीठ पर बांधा और स्वामीभक्त अश्व पर सवार होकर दुर्ग की विशाल प्राचीर से छलांग लगा दी। मुट्ठी भर निष्ठावान घुड़सवारों के साथ वे ब्रिटिश घेरा चीरते हुए निकल गईं और रात भर में १०० मील से अधिक की दूरी तय करके कालपी पहुँचीं।\n\nकालपी में तात्या टोपे के साथ मिलकर उन्होंने रणनीति बनाई और ऐतिहासिक ग्वालियर दुर्ग पर अधिकार कर लिया। १७ जून १८५८ को कोटा की सराय के मैदान में ब्रिटिश हुसार सेना के विरुद्ध अंतिम युद्ध में रानी दोनों हाथों में तलवारें थामकर रणचंडी की भांति लड़ीं। वीरगति प्राप्त करने से पूर्व उन्होंने अपने संन्यासी योद्धाओं को यह अंतिम आज्ञा दी कि उनके शरीर को ब्रिटिश स्पर्श न कर सकें, और उसी क्षण रणभूमि के समीप उनका अंतिम संस्कार संपन्न हुआ।",
+    "teaching": "Rani Lakshmibai taught that Swadharma and national sovereignty are sacred trusts demanding supreme commitment regardless of the odds. She proved that leadership is defined not by gender or imperial sanction, but by fearless self-sacrifice, moral dignity, and unyielding defense of one's homeland against exploitation.",
+    "teachingLocal": "महारानी लक्ष्मीबाई ने सिखाया कि स्वधर्म और मातृभूमि की रक्षा सर्वोच्च कर्तव्य है। साधन सीमित हों या शत्रु असीम, स्वाभिमानी आत्मा कभी पराधीनता स्वीकार नहीं करती। सच्चा नेतृत्व लिंग या सत्ता की मोहताज नहीं, बल्कि चरित्र, साहस और निःस्वार्थ त्याग से सिद्ध होता है।",
+    "moral": "True courage lies in standing resolute against institutional injustice even when solitude and sacrifice are inevitable. Physical defeat cannot extinguish the spirit of righteous resistance; it transforms sacrifice into an eternal beacon for generations.",
+    "moralLocal": "अत्याचार कितना भी शक्तिशाली क्यों न हो, न्याय और स्वाभिमान के लिए किया गया संघर्ष कभी व्यर्थ नहीं जाता। देह का अंत हो सकता है, किंतु स्वधर्म की रक्षा में दिया गया बलिदान युगों-युगों तक आने वाली पीढ़ियों को प्रेरित करता है।",
+    "legacy": "Rani Lakshmibai's martyrdom became the enduring spark of the Indian independence movement, celebrated across centuries in Subhadra Kumari Chauhan’s iconic verses and revered in every Indian household. Her formidable adversary, Major General Sir Hugh Rose, acknowledged her unmatched genius, recording in his military dispatches: ‘She was the bravest and best military leader of the rebels; a woman who had a man's courage and a chief's head.’",
+    "legacyLocal": "रानी लक्ष्मीबाई भारतीय स्वाधीनता संग्राम की अमर प्रेरणा बन गईं। सुभद्रा कुमारी चौहान की कालजयी पंक्तियों 'खूब लड़ी मर्दानी वह तो झाँसी वाली रानी थी' ने देश के हर नागरिक में देशभक्ति का संचार किया। उनके घोर विरोधी मेजर जनरल ह्यू रोज ने भी उनके सम्मान में लिखा था: 'वह विद्रोहियों में सबसे बहादुर और सर्वोत्तम सैन्य कमांडर थीं।'",
+    "source": "History of the Indian Mutiny 1857-58 (Col. G. B. Malleson, 1897), Dispatches of Maj. Gen. Sir Hugh Rose (1858)",
+    "sourceLocal": "हिस्ट्री ऑफ द इंडियन म्यूटिनी (कर्नल जी. बी. मालेसन, १८९७), मेजर जनरल सर ह्यू रोज का आधिकारिक सैन्य विवरण (१८५८)",
+    "sourceCitations": [
+      {
+        "sourceName": "Col. G. B. Malleson — History of the Indian Mutiny of 1857-8",
+        "sourceRef": "Vol. V, Chapter II (The Siege and Storm of Jhansi, and Gwalior Campaign)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Maj. Gen. Sir Hugh Rose — Official Despatches to the Military Secretary",
+        "sourceRef": "Despatch of 1858 (Operations in Central India & Battle of Kotah-ki-Serai)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "Main meri Jhansi nahi doongi — I shall not give up my Jhansi.",
+      "attribution": "Rani Lakshmibai to Major Malcolm, March 1854"
+    },
+    "quoteLocal": {
+      "text": "मैं अपनी झाँसी नहीं दूँगी!",
+      "attribution": "रानी लक्ष्मीबाई (मार्च १८५४)"
+    }
+  },
+  {
+    "id": "chhatrapati-shivaji",
+    "name": "Chhatrapati Shivaji Maharaj",
+    "nameLocal": "छत्रपती शिवाजी महाराज",
+    "era": "1630 – 1680 CE",
+    "eraLocal": "१६३० – १६८० ई.",
+    "tradition": "hindu",
+    "region": "Maharashtra, Deccan",
+    "regionLocal": "महाराष्ट्र, दक्खन",
+    "emoji": "🚩",
+    "tagline": "The visionary sovereign who established Hindavi Swarajya through guerrilla mastery, naval pioneering, and unyielding adherence to righteous governance.",
+    "taglineLocal": "हिंदवी स्वराज्य के संस्थापक और कुशल रणनीतिकार जिन्होंने गोरिल्ला युद्ध, नौसेना निर्माण और धर्मनिष्ठ शासन से अजेय साम्राज्य की नींव रखी।",
+    "journey": "Born at the hill-fort of Shivneri to Shahaji Bhonsle and Jijabai, Shivaji was nurtured by his mother on the heroic epics of the Ramayana and Mahabharata, instilling in him a deep reverence for Dharma and self-rule. At the young age of sixteen in 1645, Shivaji gathered his devoted Mavala comrades at the sacred shrine of Rohideshwar, cutting his finger and offering blood to Lord Shiva with the solemn oath to establish Hindavi Swarajya—self-rule grounded in righteousness and justice. Rejecting submission to the decaying Adilshahi and Mughal dynasties, Shivaji captured Torna Fort with lightning speed, followed rapidly by Chakan, Kondana, and Purandar. Recognizing the distinct geography of the Western Ghats, he pioneered Ganimi Kava—an innovative system of mountain guerrilla warfare, leveraging speed, concealment, deception, and precise ambushes to neutralize vastly larger, heavily armored imperial hosts.\n\nBeyond his land army, Shivaji displayed extraordinary geopolitical foresight by creating India's first modern indigenous maritime force. He constructed impregnable sea fortresses including Sindhudurg, Vijaydurg, and Suvarnadurg, establishing naval shipyards that defended the Konkan coast from European colonizers and pirate fleets. Yet Shivaji's genius was not solely military; it was profoundly institutional. In his civil administration, he abolished the oppressive Jagirdari system, introduced direct cash salaries for soldiers to prevent agrarian looting, established strict environmental laws protecting sandalwood and teak trees, and formulated the Rajavyavahara Kosha to revive Sanskrit terminology in administrative law. On June 6, 1674, Shivaji was crowned Chhatrapati at Raigad in a Vedic ceremony led by Pandit Gaga Bhatt, formally reviving sovereign Hindu kingship in the Deccan.",
+    "journeyLocal": "शिवनेरी दुर्ग में माता जीजाबाई और शहाजी भोंसले के यहाँ जन्मे शिवाजी को उनकी माता ने रामायण और महाभारत के प्रेरक प्रसंगों से संस्कारित किया। मात्र १६ वर्ष की अल्पायु में १६४५ में रोहिडेश्वर महादेव के पावन मंदिर में शिवाजी ने अपने निष्ठावान मावला साथियों के साथ अपनी उंगली काटकर रक्त अर्पित करते हुए 'हिंदवी स्वराज्य' की स्थापना की अमर प्रतिज्ञा ली। आदिलशाही और मुग़ल सत्ता की अधीनता को नकारते हुए उन्होंने सबसे पहले तोरणा दुर्ग जीता, जिसके बाद चाकण, कोंढाणा और पुरंदर पर अपना आधिपत्य स्थापित किया। पश्चिमी घाट के दुर्गम भूगोल को पहचानते हुए उन्होंने 'गनिमी कावा' (गुरिल्ला युद्ध) की नई युद्ध-प्रणाली विकसित की, जिससे मुट्ठी भर सैनिकों के बल पर विशाल शत्रु-सेनाओं को परास्त किया।\n\nथल सेना के साथ-साथ शिवाजी ने भारत में पहली आधुनिक स्वदेशी नौसेना की नींव रखी। उन्होंने सिंधुदुर्ग, विजयदुर्ग और सुवर्णदुर्ग जैसे अजेय जलदुर्गों का निर्माण कराया और कोंकण तट को विदेशी आक्रांताओं तथा समुद्री लुटेरों से सुरक्षित किया। शिवाजी का शासन केवल युद्ध तक सीमित नहीं था; उन्होंने जागीरदारी प्रथा समाप्त कर किसानों को कर-राहत दी, सैनिकों को नकद वेतन देना प्रारंभ किया, और संस्कृत शब्दावली के पुनरुद्धार हेतु 'राज्यव्यवहार कोश' की रचना कराई। ६ जून १६७४ को रायगढ़ दुर्ग में पंडित गागाभट्ट द्वारा वैदिक पद्धति से उनका राज्याभिषेक हुआ और वे छत्रपति के रूप में प्रतिष्ठित हुए।",
+    "trial": "Shivaji's life was defined by continuous mortal trials against overwhelming imperial coalitions. In 1659, the Adilshahi sultanate dispatched their towering general Afzal Khan with a massive army, vowing to drag Shivaji to Bijapur in iron chains. Meeting in a secluded pavilion at the foot of Pratapgad Fort under a declared truce, Afzal Khan feigned an embrace and attempted to strangle Shivaji while stabbing him with a dagger. Anticipating treachery, Shivaji wore hidden chainmail beneath his tunic and wielded a concealed wagh-nakh (tiger claws), disemboweling the giant and routing the stunned Adilshahi army in the dense surrounding jungles.\n\nIn 1666, Shivaji faced his most perilous diplomatic crucible when he traveled to Agra on imperial guarantees to meet Mughal Emperor Aurangzeb. Placed under house arrest surrounded by heavy artillery and guards, Shivaji feigned severe illness, distributing enormous baskets of sweets and fruits to sadhus and brahmins as religious charity. On August 17, 1666, Shivaji and his young son Sambhaji hid inside the empty sweet baskets, slipped past the imperial pickets, and traveled across thousands of miles disguised as wandering sannyasis to return safely to Raigad, transforming an imperial cage into a legendary escape that shook the Mughal court to its foundations.",
+    "trialLocal": "छत्रपति शिवाजी का संपूर्ण जीवन भीषण संघर्षों और अग्नि-परीक्षाओं से भरा रहा। १६५९ में बीजापुर सल्तनत ने अपने क्रूर सेनापति अफजल खान को विशाल सेना के साथ भेजा, जिसने शिवाजी को बंदी बनाने की प्रतिज्ञा की थी। प्रतापगढ़ की तलहटी में शांति-वार्ता के बहाने अफजल खान ने आलिंगन करते हुए शिवाजी पर कटार से घातक वार किया। किंतु सतर्क शिवाजी ने वस्त्रों के भीतर चिलखत (कवच) पहन रखा था; उन्होंने तत्काल बघनखे से पलटवार कर अफजल खान का वध कर दिया और बीजापुर की सेना को पराजित किया।\n\n१६६६ में जब वे मुग़ल सम्राट औरंगज़ेब के बुलावे पर आगरा गए, तो उन्हें विश्वासघात करके बंदी बना लिया गया। कड़े पहरे के बीच शिवाजी ने अस्वस्थता का स्वांग रचा और साधु-संतों को दान देने के बहाने मिठाइयों के बड़े-बड़े टोकरे बाहर भेजने शुरू किए। १७ अगस्त १६६६ को वे अपने नन्हे पुत्र संभाजी के साथ टोकरों में छिपकर मुग़ल पहरेदारों की आँखों में धूल झोंकते हुए सुरक्षित निकल गए और संन्यासी का वेश बनाकर हजारों मील की यात्रा कर सकुशल महाराष्ट्र लौट आए।",
+    "teaching": "Shivaji taught that statecraft and military strength must always be subordinate to moral righteousness. Power is a sacred trust to protect the weak, cultivate agricultural prosperity, and defend spiritual liberty. He established unprecedented codes of warfare: strictly prohibiting harm to women, non-combatants, and crops, and mandating that any captured holy texts, whether the Vedas or the Quran, be treated with solemn reverence.",
+    "teachingLocal": "छत्रपति शिवाजी ने सिखाया कि शक्ति और शासन का एकमात्र उद्देश्य प्रजा की रक्षा और धर्म की प्रतिष्ठा है। उन्होंने युद्ध के ऐसे उच्च नैतिक मानदंड स्थापित किए जिनमें महिलाओं, बच्चों, किसानों और पूजा-स्थलों पर प्रहार सर्वथा वर्जित था। उनके राज्य में शत्रु के धार्मिक ग्रंथों का भी पूर्ण सम्मान किया जाता था।",
+    "moral": "Strategic foresight, unyielding self-respect, and moral integrity can overcome seemingly insurmountable imperial monopolies. True sovereignty begins when a people awaken to their inherent dignity and dedicate their collective strength to the welfare of all.",
+    "moralLocal": "अटल स्वाभिमान, कुशल रणनीति और चारित्रिक पवित्रता के सम्मुख संसार की बड़ी से बड़ी साम्राज्यवादी शक्ति भी नतमस्तक हो जाती है। सच्चा नेतृत्व वही है जो जन-जन में स्वतंत्रता और स्वावलंबन का विश्वास जगा दे।",
+    "legacy": "Chhatrapati Shivaji Maharaj fundamentally altered the course of Indian history, dismantling the myth of foreign imperial invincibility and laying the bedrock for the Maratha confederacy that eventually extended across northern and central India. His naval doctrines, mountain warfare strategies, and enlightened administrative ethics continue to inspire India’s armed forces, with the modern Indian Navy drawing its naval ensign from his royal seal (Rajmudra).",
+    "legacyLocal": "छत्रपति शिवाजी महाराज ने विदेशी दासता के मिथक को तोड़कर भारत में राष्ट्रीय चेतना और स्वधर्म-गौरव का पुनर्जागरण किया। उनके द्वारा स्थापित हिंदवी स्वराज्य ने आगे चलकर अखिल भारतीय मराठा परिसंघ का रूप लिया। भारतीय नौसेना ने अपने ध्वज पर छत्रपति शिवाजी महाराज की राजमुद्रा को स्थान देकर उनके युगांतकारी समुद्री योगदान को अमर सम्मान दिया है।",
+    "source": "Sabhasad Bakhar (Krishnaji Anant Sabhasad, 1697 CE), Sri Shivabharata (Kavindra Paramananda, 1674 CE), Shivaji and His Times (Sir Jadunath Sarkar, 1919)",
+    "sourceLocal": "सभासद बखर (कृष्णाजी अनंत सभासद, १६९७ ई.), श्री शिवभारत (कविंद्र परमानंद, १६७४ ई.), शिवाजी एंड हिज टाइम्स (सर जदुनाथ सरकार, १९१९)",
+    "sourceCitations": [
+      {
+        "sourceName": "Krishnaji Anant Sabhasad — Sabhasad Bakhar (1697 CE)",
+        "sourceRef": "Life and Campaigns of Chhatrapati Shivaji Maharaj",
+        "tier": 1
+      },
+      {
+        "sourceName": "Kavindra Paramananda — Sri Shivabharata (1674 CE)",
+        "sourceRef": "Cantos 1–32 (Contemporary Sanskrit court epic on Shivaji)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "This kingdom's establishment is not for personal vanity; it is the will of the Divine Almighty.",
+      "attribution": "Chhatrapati Shivaji Maharaj — Letter to Dadaji Naras Prabhu, 1645"
+    },
+    "quoteLocal": {
+      "text": "हे राज्य व्हावे, हे तो श्रींची इच्छा!",
+      "attribution": "छत्रपती शिवाजी महाराज (१६४५)"
+    }
+  },
+  {
+    "id": "maharana-pratap",
+    "name": "Maharana Pratap",
+    "nameLocal": "महाराणा प्रताप",
+    "era": "1540 – 1597 CE",
+    "eraLocal": "१५४० – १५९७ ई.",
+    "tradition": "hindu",
+    "region": "Mewar, Rajasthan",
+    "regionLocal": "मेवाड़, राजस्थान",
+    "emoji": "⚔️",
+    "tagline": "The lion of Mewar who rejected royal luxury and imperial vassalage, enduring decades of forest warfare to keep the flame of Rajput independence burning.",
+    "taglineLocal": "मेवाड़ के अमर प्रतापी सूर्य जिन्होंने मुग़ल अधीनता को ठुकराकर वनों में घास की रोटियां खाईं, किंतु स्वाभिमान और स्वतंत्रता का ध्वज कभी झुकने नहीं दिया।",
+    "journey": "Maharana Pratap Singh I was born at Kumbhalgarh Fort to Maharana Udai Singh II and Rani Jaiwanta Bai, inheriting the illustrious Sisodia Rajput dynasty of Mewar—the sole royal house in northern India that steadfastly refused matrimonial alliances or political subjugation to the expanding Mughal empire. Ascending the throne of Mewar in 1572 amidst severe internal strife and regional isolation, Pratap rejected every lucrative diplomatic embassy sent by Emperor Akbar offering immense riches and imperial rank in exchange for paying personal court and bowing before Delhi. Pratap declared that sovereignty and the sacred soil of Eklingji could never be bartered for comfortable servitude.\n\nKnowing that open warfare against the colossal resources of the Mughal empire would be suicide on the plains, Pratap fortified the rugged gorges of the Aravalli hills. He enlisted the indigenous Bhil tribals as brothers-in-arms under Rana Punja Bhil, mastering guerrilla mountain warfare and establishing supply chains in the deep wilderness. On June 18, 1576, Pratap met the imperial forces under Man Singh I at the narrow mountain pass of Haldighati. Clad in heavy armor and riding his devoted blue stallion Chetak, Pratap led a thunderous cavalry charge directly into the heart of the Mughal center. Though heavily outnumbered and wounded by multiple arrows and spears, Pratap fought with mythic fury, while his noble steed Chetak leapt upon the war elephant of the imperial general, sacrificing his life in a legendary final leap across a mountain stream to carry his wounded master to safety.",
+    "journeyLocal": "कुंभलगढ़ दुर्ग में जन्मे महाराणा प्रताप मेवाड़ के सूर्यवंशी सिसोदिया राजवंश के गौरव थे। जब संपूर्ण उत्तर भारत मुग़ल सत्ता के सामने नतमस्तक हो रहा था, तब १५७२ में मेवाड़ के सिंहासन पर आसीन होकर प्रताप ने मुग़ल सम्राट अकबर की अधीनता स्वीकार करने से स्पष्ट इनकार कर दिया। अकबर द्वारा भेजे गए संधि-प्रस्तावों और सुख-सुविधाओं के प्रलोभनों को ठुकराते हुए उन्होंने घोषणा की कि एकलिंगजी की पावन भूमि कभी विदेशी दासता स्वीकार नहीं करेगी।\n\nमुग़ल साम्राज्य के असीम संसाधनों का सामना करने के लिए प्रताप ने अरावली की पहाड़ियों को अपना रक्षा-कवच बनाया। उन्होंने राणा पूंजा भील के नेतृत्व में स्थानीय भील योद्धाओं को अपना भाई बनाकर संगठित किया और छापामार युद्ध की रणनीति अपनाई। १८ जून १५७६ को हल्दीघाटी के ऐतिहासिक दर्रे में मानसिंह के नेतृत्व वाली मुग़ल सेना के साथ भीषण संग्राम हुआ। अपने स्वामीभक्त अश्व चेतक पर सवार होकर प्रताप ने युद्धभूमि में अद्वितीय पराक्रम दिखाया। चेतक ने घायल अवस्था में भी एक विशाल बरसाती नाले को लांघकर अपने स्वामी के प्राणों की रक्षा की और उनके चरणों में अपने प्राण त्याग दिए।",
+    "trial": "Following Haldighati, Pratap was driven deep into the wild forests of the Aravallis, with imperial garrisons encircling every city in Mewar. For years, the Maharana, his queen, and his young children lived as wandering exiles, sleeping upon the stony forest floor, enduring bitter mountain winters, and subsisting on wild roots and rotis made from ground grass seed (ghas ki roti). Mughal patrols relentlessly pursued them, forcing the royal family to flee at midnight across rocky ridges with infant princes tucked inside wicker baskets.\n\nIn his darkest hour of financial exhaustion, when it seemed his army could no longer be sustained, his loyal hereditary minister Bhama Shah arrived at his forest camp. Bhama Shah placed his entire ancestral fortune—twenty-five lakh rupees and twenty thousand gold mohurs—at Pratap's feet, enough to maintain an army of twenty-five thousand soldiers for twelve full years. Revitalized by this selfless act of devotion, Maharana Pratap launched a sweeping military counter-offensive in 1582 at the Battle of Dewair, capturing Mughal outposts in rapid succession and liberating nearly all of Mewar, including Kumbhalgarh, Gogunda, and Udaipur, before passing away as an undefeated, free sovereign in his capital at Chavand.",
+    "trialLocal": "हल्दीघाटी के पश्चात प्रताप को सपरिवार अरावली के बीहड़ जंगलों में शरण लेनी पड़ी। मुग़ल चौकियां मेवाड़ के चारों ओर फैली थीं। वर्षों तक महाराणा, उनकी महारानी और नन्हे राजकुमारों ने वनों में भटकते हुए घास के बीजों की रोटियां खाईं और शिलाओं पर शयन किया। मुग़ल सैनिकों की लगातार दबिश के कारण उन्हें रातों-रात नन्हे बच्चों को टोकरियों में छिपाकर एक पहाड़ी से दूसरी पहाड़ी पर भागना पड़ता था।\n\nजब धन और रसद के अभाव में सेना बिखरने की कगार पर थी, तब मेवाड़ के निष्ठावान दानवीर भामाशाह ने अपनी जीवन भर की संचित संपदा—२५ लाख रुपये और २० हजार स्वर्ण मुद्राएं—प्रताप के चरणों में समर्पित कर दीं, जिससे २५ हजार सैनिकों का १२ वर्ष तक भरण-पोषण हो सकता था। इस सहयोग से शक्ति पाकर महाराणा ने १५८२ में दिवेर के युद्ध में मुग़लों को करारी शिकस्त दी और एक-एक करके कुंभलगढ़, गोगुंदा और उदयपुर सहित संपूर्ण मेवाड़ को स्वतंत्र करा लिया।",
+    "teaching": "Maharana Pratap taught that freedom is non-negotiable and that dignity outweighs physical comfort. A leader’s true strength is measured not by palace opulence, but by their willingness to suffer alongside their people in defense of their foundational values and sacred heritage.",
+    "teachingLocal": "महाराणा प्रताप ने सिखाया कि आत्मसम्मान और स्वतंत्रता का कोई विकल्प नहीं होता। महलों के सुख-साधन और दासता से भरी विलासिता की तुलना में स्वाभिमान के साथ वनों में संघर्ष करना कोटि-कोटि गुना श्रेष्ठ है। सच्चा नेता वही है जो अपने सिद्धांतों के लिए सर्वस्व न्योछावर करने को तत्पर रहे।",
+    "moral": "Material luxury and imperial favor bought at the price of self-respect are forms of gilded slavery. When an individual stands resolute on the rock of righteousness, no earthly empire can crush their spirit.",
+    "moralLocal": "स्वाभिमान को बेचकर प्राप्त किया गया वैभव सोने की बेड़ियों के समान है। जो मनुष्य धर्म और राष्ट्र की रक्षा के लिए अडिग रहता है, इतिहास उसी का वंदन करता है।",
+    "legacy": "Maharana Pratap’s lifelong defiance transformed him into the timeless archetype of patriotic valor across the Indian subcontinent. His alliance with the indigenous Bhils established an enduring model of cross-community brotherhood in arms. Centuries later, his legend inspired freedom fighters across the nation, from the Marathas and Bundelas to the revolutionary leaders of the Indian independence movement.",
+    "legacyLocal": "महाराणा प्रताप का जीवन भारतवर्ष में राष्ट्रभक्ति और त्याग का अमर प्रतीक बन गया। भील समाज के साथ उनका आत्मीय संबंध सामाजिक समरसता की अनुपम मिसाल है। उनके अदम्य शौर्य ने छत्रपति शिवाजी से लेकर आधुनिक स्वाधीनता सेनानियों तक सभी को स्वाभिमान की प्रेरणा दी।",
+    "source": "Rajprasasti Mahakavyam (Ranachhoda Bhatta, 1676 CE), Amar Kavya Vamshavali, Annals and Antiquities of Rajasthan (Lt. Col. James Tod, 1829)",
+    "sourceLocal": "राजप्रशस्ति महाकाव्यम् (रणछोड़ भट्ट, १६७६ ई.), अमरकाव्य वंशावली, एनल्स एंड एंटीक्विटीज ऑफ राजस्थान (जेम्स टॉड, १८२९)",
+    "sourceCitations": [
+      {
+        "sourceName": "Ranachhoda Bhatta — Rajprasasti Mahakavyam (1676 CE)",
+        "sourceRef": "Sanskrit Inscriptions at Rajsamand Lake (Cantos on Maharana Pratap)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Lt. Col. James Tod — Annals and Antiquities of Rajasthan (1829)",
+        "sourceRef": "Vol. I, Annals of Mewar, Chapters IX–X",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "My mother, if you bear a son, let him be like Rana Pratap, at whose very name Akbar startles awake as if a serpent lay at his pillow.",
+      "attribution": "Rajasthani Folk Bardic Lore (Doha on Rana Pratap)"
+    },
+    "quoteLocal": {
+      "text": "मईया एहड़ो पूत जण जेहड़ो राणा प्रताप। अकबर सूतो ओझके जाण सिराणै साँप॥",
+      "attribution": "राजस्थानी लोक दोहा"
+    }
+  },
+  {
+    "id": "guru-gobind-singh",
+    "name": "Guru Gobind Singh Ji",
+    "nameLocal": "गुरु गोबिंद सिंह जी",
+    "namePa": "ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ",
+    "era": "1666 – 1708 CE",
+    "eraLocal": "१६६६ – १७०८ ई.",
+    "eraPa": "੧੬੬੬ – ੧੭੦੮ ਈ.",
+    "tradition": "sikh",
+    "region": "Anandpur Sahib, Punjab",
+    "regionLocal": "आनंदपुर साहिब, पंजाब",
+    "regionPa": "ਅਨੰਦਪੁਰ ਸਾਹਿਬ, ਪੰਜਾਬ",
+    "emoji": "🦅",
+    "tagline": "The tenth Sikh Guru who transformed sparrows into hawks, established the Khalsa Panth to vanquish tyranny, and vested eternal Guruship in the Guru Granth Sahib.",
+    "taglineLocal": "दसवें सिख गुरु जिन्होंने चिड़ियों से बाज लड़ाए, खालसा पंथ की स्थापना की और गुरु ग्रंथ साहिब को शाश्वत गुरु पद पर प्रतिष्ठित किया।",
+    "taglinePa": "ਦਸਵੇਂ ਪਾਤਸ਼ਾਹ ਜਿਨ੍ਹਾਂ ਨੇ ਚਿੜੀਆਂ ਤੋਂ ਬਾਜ ਤੁੜਾਏ, ਖਾਲਸਾ ਪੰਥ ਦੀ ਸਾਜਨਾ ਕੀਤੀ ਅਤੇ ਸ਼ਬਦ ਗੁਰੂ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਨੂੰ ਸਦੀਵੀ ਗੁਰਗੱਦੀ ਬਖ਼ਸ਼ੀ।",
+    "journey": "Born in Patna Sahib to the ninth Guru, Tegh Bahadur, and Mata Gujri, Gobind Rai grew up steeped in classical spiritual wisdom, martial prowess, and multilingual scholarship, mastering Sanskrit, Persian, Arabic, Braj, and Punjabi. In 1675, when a delegation of Kashmiri Pandits sought protection from forced conversions, his father declared that a supreme soul must sacrifice his life to awaken the nation’s conscience. The nine-year-old Gobind Rai courageously remarked: \"Father, who in this land is more worthy of that sacrifice than you?\" Following Guru Tegh Bahadur's martyrdom at Chandni Chowk in Delhi, Guru Gobind Singh assumed the spiritual leadership of the Sikhs, determined to forge a people so fearless that no tyrant could ever oppress them again.\n\nOn the historic day of Vaisakhi in 1699 at Anandpur Sahib, before a gathering of eighty thousand disciples, Guru Gobind Singh drew a naked sword and demanded five heads for the faith. Five devoted Sikhs from diverse castes and corners of India stepped forward—the Panj Pyare (Five Beloved Ones). Administering Khande Di Pahul (nectar stirred with a double-edged sword), he inaugurated the Khalsa Panth, giving them the surname Singh (Lion) and Kaur (Princess). In an act of unparalleled spiritual humility, the Guru then knelt before the Panj Pyare, requesting that they initiate him into the Khalsa, declaring: \"Waho Waho Gobind Singh, Aape Gur Chela\" (Hail Gobind Singh, who is simultaneously the Guru and the disciple).",
+    "journeyLocal": "पटना साहिब में नौवें गुरु तेग बहादुर जी और माता गुजरी जी के यहाँ जन्मे गोबिंद राय बाल्यकाल से ही शास्त्र और शस्त्र दोनों में पारंगत थे। १६७५ में जब कश्मीरी पंडितों की रक्षा हेतु गुरु तेग बहादुर जी ने शहादत का विचार किया, तब मात्र नौ वर्ष के बालक गोबिंद राय ने कहा: 'पिता जी! आपसे बढ़कर बलिदानी महापुरुष इस धरती पर और कौन हो सकता है?' पिता के बलिदान के पश्चात गुरु पद संभालते हुए उन्होंने मुग़ल अत्याचार के विरुद्ध समाज में अदम्य साहस का संचार किया।\n\n१६९९ की बैसाखी को आनंदपुर साहिब में अस्सी हजार की संगत के सम्मुख गुरु जी ने नंगी तलवार लहराकर शीश की मांग की। विभिन्न जातियों और प्रांतों से उठे पाँच निष्ठावान शिष्यों को उन्होंने अमृत छकाकर 'पंज प्यारे' के रूप में प्रतिष्ठित किया और 'खालसा पंथ' की स्थापना की। फिर स्वयं उनके सम्मुख नतमस्तक होकर अमृत की याचना की, जिससे यह अमर उद्घोष गूंज उठा: 'वाहो वाहो गोबिंद सिंह आपे गुर चेला'!",
+    "journeyPa": "ਪਟਨਾ ਸਾਹਿਬ ਵਿਖੇ ਨੌਵੇਂ ਪਾਤਸ਼ਾਹ ਸ੍ਰੀ ਗੁਰੂ ਤੇਗ ਬਹਾਦਰ ਜੀ ਅਤੇ ਮਾਤਾ ਗੁਜਰੀ ਜੀ ਦੇ ਗ੍ਰਹਿ ਵਿਖੇ ਪ੍ਰਗਟ ਹੋਏ ਬਾਲ ਗੋਬਿੰਦ ਰਾਇ ਜੀ ਨੇ ਬਚਪਨ ਤੋਂ ਹੀ ਰੂਹਾਨੀ ਵਿੱਦਿਆ ਅਤੇ ਸ਼ਸਤਰ ਵਿੱਦਿਆ ਵਿਚ ਮੁਹਾਰਤ ਹਾਸਲ ਕੀਤੀ। ੧੬੭੫ ਵਿਚ ਜਦੋਂ ਕਸ਼ਮੀਰੀ ਪੰਡਿਤ ਫ਼ਰਿਆਦ ਲੈ ਕੇ ਆਏ, ਤਾਂ ਨੌਂ ਸਾਲ ਦੀ ਉਮਰ ਵਿਚ ਬਾਲਕ ਗੋਬਿੰਦ ਰਾਇ ਜੀ ਨੇ ਪਿਤਾ ਜੀ ਨੂੰ ਤਿਲਕ-ਜੰਞੂ ਦੀ ਰਾਖੀ ਲਈ ਦਿੱਲੀ ਸ਼ਹੀਦੀ ਦੇਣ ਲਈ ਪ੍ਰੇਰਿਆ। ਪਿਤਾ ਦੀ ਲਾਸਾਨੀ ਸ਼ਹਾਦਤ ਤੋਂ ਬਾਅਦ ਗੁਰਗੱਦੀ ਸੰਭਾਲਦਿਆਂ ਜ਼ੁਲਮ ਦਾ ਟਾਕਰਾ ਕਰਨ ਲਈ ਕੌਮ ਨੂੰ ਤਿਆਰ ਕੀਤਾ।\n\n੧੬੯੯ ਦੀ ਵਿਸਾਖੀ ਨੂੰ ਸ੍ਰੀ ਅਨੰਦਪੁਰ ਸਾਹਿਬ ਵਿਖੇ ਸੀਸ ਭੇਟ ਮੰਗ ਕੇ ਪੰਜਾਂ ਪਿਆਰਿਆਂ ਦੀ ਚੋਣ ਕੀਤੀ ਅਤੇ ਖੰਡੇ ਬਾਟੇ ਦੀ ਪਾਹੁਲ ਛਕਾ ਕੇ ਖ਼ਾਲਸਾ ਪੰਥ ਸਾਜਿਆ। ਫਿਰ ਆਪ ਪੰਜਾਂ ਪਿਆਰਿਆਂ ਅੱਗੇ ਨਤਮਸਤਕ ਹੋ ਕੇ ਅੰਮ੍ਰਿਤ ਛਕਿਆ, ਜਿਸ ਤੋਂ 'ਵਾਹੁ ਵਾਹੁ ਗੋਬਿੰਦ ਸਿੰਘ ਆਪੇ ਗੁਰ ਚੇਲਾ' ਦਾ ਅਦੁੱਤੀ ਸਿਧਾਂਤ ਪ੍ਰਗਟ ਹੋਇਆ।",
+    "trial": "Guru Gobind Singh’s life was an unbroken crucible of supreme sacrifice. Besieged at Anandpur Sahib for months by combined Mughal imperial armies and hill chieftains, the Sikhs evacuated the fort in December 1705 under sworn safe-passage oaths on the Quran and cows, which the enemy treacherously violated. At the flooded Sirsa River, the Guru’s family was separated amidst furious combat. At the epic Battle of Chamkaur, the Guru with just forty starving Sikhs held a mud fortress against a besieging army of hundreds of thousands. There, he blessed and sent his eldest sons, Sahibzada Ajit Singh (18) and Sahibzada Jujhar Singh (14), into the battlefield, watching them achieve martyrdom with serene gratitude to the Almighty.\n\nMeanwhile, at Sirhind, his two younger sons, Sahibzada Zorawar Singh (9) and Sahibzada Fateh Singh (7), along with their grandmother Mata Gujri, were captured. Refusing to renounce their faith despite promises of princely estates and threats of torture, the young Sahibzade were bricked alive on the orders of Nawab Wazir Khan. Walking barefoot through the thorny forests of Machhiwara, having sacrificed his four sons, his father, and thousands of disciples, Guru Gobind Singh composed the immortal epistle Zafarnama (Epistle of Victory) in exquisite Persian verse to Emperor Aurangzeb, declaring: \"When all other means have failed, it is righteous to draw the sword.\" In 1708 at Hazur Sahib, Nanded, the Guru ended human Guruship, bowing before the Sri Guru Granth Sahib and commanding the Panth to revere the Shabad (divine word) as the eternal living Guru forevermore.",
+    "trialLocal": "गुरु गोबिंद सिंह जी का संपूर्ण जीवन त्याग और बलिदान का अनुपम इतिहास है। आनंदपुर साहिब के घेरे के दौरान मुग़लों ने क़ुरान की कसमें खाकर सुरक्षित मार्ग का वचन दिया, किंतु पीछे से हमला कर दिया। सरसा नदी पर परिवार बिछड़ गया। चमकौर की कच्ची गढ़ी में मात्र चालीस भूखे सिखों के साथ लाखों की शाही सेना का सामना करते हुए गुरु जी ने अपने दोनों बड़े साहिबजादों—अजीत सिंह और जुझार सिंह—को अपने हाथों से रणभूमि में भेजा और उनकी शहादत पर प्रभु का शुकराना अदा किया।\n\nउधर सरहिंद में नवाब वज़ीर ख़ान ने छोटे साहिबजादों—जोरावर सिंह (९) और फतेह सिंह (७)—को धर्म न छोड़ने पर जीवित दीवारों में चिनवा दिया। माछीवाड़े के कंटीले जंगलों में नंगे पांव विचरते हुए भी गुरु जी ने बादशाह औरंगज़ेब को 'ज़फ़रनामा' (विजय-पत्र) लिखकर ललकारा। १७०८ में नांदेड़ (हजूर साहिब) में उन्होंने देहधारी गुरु-परंपरा समाप्त कर श्री गुरु ग्रंथ साहिब जी को शाश्वत गुरु पद सौंपा।",
+    "trialPa": "ਅਨੰਦਪੁਰ ਸਾਹਿਬ ਦੇ ਕਿਲ੍ਹੇ ਨੂੰ ਮੁਗ਼ਲ ਅਤੇ ਪਹਾੜੀ ਰਾਜਿਆਂ ਦੀਆਂ ਫ਼ੌਜਾਂ ਵੱਲੋਂ ਲੰਮਾ ਸਮਾਂ ਘੇਰਾ ਪਾਉਣ ਤੋਂ ਬਾਅਦ, ਝੂਠੀਆਂ ਕਸਮਾਂ ਤੋੜ ਕੇ ਪਿੱਛੋਂ ਹਮਲਾ ਕੀਤਾ ਗਿਆ। ਸਰਸਾ ਨਦੀ ਦੇ ਕੰਢੇ ਪਰਿਵਾਰ ਵਿਛੋੜਾ ਪੈ ਗਿਆ। ਚਮਕੌਰ ਦੀ ਕੱਚੀ ਗੜ੍ਹੀ ਵਿਚ ਚਾਲੀ ਭੁੱਖੇ ਸਿੰਘਾਂ ਨਾਲ ਲੱਖਾਂ ਦੀ ਫ਼ੌਜ ਦਾ ਮੁਕਾਬਲਾ ਕਰਦਿਆਂ ਵੱਡੇ ਸਾਹਿਬਜ਼ਾਦੇ ਬਾਬਾ ਅਜੀਤ ਸਿੰਘ ਅਤੇ ਬਾਬਾ ਜੁਝਾਰ ਸਿੰਘ ਜੀ ਨੂੰ ਆਪਣੇ ਹੱਥੀਂ ਸ਼ਹੀਦ ਕਰਵਾਇਆ।\n\nਦੂਜੇ ਪਾਸੇ ਸਰਹਿੰਦ ਵਿਖੇ ਛੋਟੇ ਸਾਹਿਬਜ਼ਾਦੇ ਬਾਬਾ ਜ਼ੋਰਾਵਰ ਸਿੰਘ ਅਤੇ ਬਾਬਾ ਫ਼ਤਿਹ ਸਿੰਘ ਜੀ ਨੂੰ ਨੀਹਾਂ ਵਿਚ ਚਿਣ ਕੇ ਸ਼ਹੀਦ ਕਰ ਦਿੱਤਾ ਗਿਆ। ਮਾਛੀਵਾੜੇ ਦੇ ਜੰਗਲਾਂ ਵਿਚ ਕੰਡਿਆਂ 'ਤੇ ਚੱਲਦਿਆਂ ਵੀ ਅਕਾਲ ਪੁਰਖ ਦਾ ਸ਼ੁਕਰਾਨਾ ਕਰਦਿਆਂ ਔਰੰਗਜ਼ੇਬ ਨੂੰ 'ਜ਼ਫ਼ਰਨਾਮਾ' ਭੇਜਿਆ। ੧੭੦੮ ਵਿਚ ਸੱਚਖੰਡ ਸ੍ਰੀ ਹਜ਼ੂਰ ਸਾਹਿਬ ਵਿਖੇ ਦੇਹਧਾਰੀ ਗੁਰੂ ਪਰੰਪਰਾ ਸਮਾਪਤ ਕਰਕੇ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਨੂੰ ਸਦੀਵੀ ਗੁਰਗੱਦੀ ਬਖ਼ਸ਼ਿਸ਼ ਕੀਤੀ।",
+    "teaching": "Guru Gobind Singh revealed the philosophy of Sant-Sipahi (Saint-Soldier). Spiritual devotion and righteous defense must be inseparable; the sword is not for conquest, vengeance, or oppression, but an instrument of divine justice to protect the vulnerable when all peaceful avenues of reconciliation have been exhausted. He obliterated caste distinctions, declaring that the light of the Creator shines identically within all humanity: \"Manas ki jaat sabhe eke paihchanbo\" (Recognize all of humanity as one single caste).",
+    "teachingLocal": "गुरु गोबिंद सिंह जी ने 'संत-सिपाही' का सिद्धांत दिया कि आत्मिक साधना और आत्मरक्षा एक-दूसरे के पूरक हैं। तलवार किसी पर अत्याचार करने के लिए नहीं, बल्कि पीड़ितों की रक्षा हेतु अंतिम उपाय के रूप में उठाई जानी चाहिए। उन्होंने संपूर्ण मानव जाति को एक समान मानकर जातिवाद को समूल नष्ट कर दिया: 'मानस की जात सभै एकै पहिचानबो'।",
+    "teachingPa": "ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ ਨੇ ਸੰਤ-ਸਿਪਾਹੀ ਦਾ ਸੰਕਲਪ ਦਿੱਤਾ ਕਿ ਭਗਤੀ ਅਤੇ ਸ਼ਕਤੀ ਆਪਸ ਵਿਚ ਜੁੜੇ ਹੋਏ ਹਨ। ਤਲਵਾਰ ਅੱਤਿਆਚਾਰ ਲਈ ਨਹੀਂ, ਸਗੋਂ ਮਜ਼ਲੂਮਾਂ ਦੀ ਰੱਖਿਆ ਲਈ ਅੰਤਿਮ ਚਾਰੇ ਵਜੋਂ ਉਠਾਈ ਜਾਂਦੀ ਹੈ। ਉਹਨਾਂ ਨੇ ਜਾਤ-ਪਾਤ ਦਾ ਖ਼ਾਤਮਾ ਕਰਕੇ ਸਾਰੀ ਮਾਨਵਤਾ ਨੂੰ ਇੱਕ ਜਾਣਨ ਦਾ ਉਪਦੇਸ਼ ਦਿੱਤਾ: 'ਮਾਨਸ ਕੀ ਜਾਤ ਸਭੈ ਏਕੈ ਪਹਿਚਾਨਬੋ'।",
+    "moral": "No loss, persecution, or sacrifice can diminish the victory of truth. When one surrenders completely to the Divine Will (Hukam), even death is transformed into a triumphant celebration of honor, righteousness, and spiritual liberation.",
+    "moralLocal": "सत्य और धर्म के मार्ग पर किया गया सर्वोच्च बलिदान भी पराजय नहीं, बल्कि शाश्वत विजय है। ईश्वर के विधान पर अटल विश्वास रखने वाला मनुष्य कभी हताश नहीं होता और सदैव चढ़दी कला में रहता है।",
+    "moralPa": "ਸੱਚ ਅਤੇ ਧਰਮ ਦੇ ਰਾਹ 'ਤੇ ਚੱਲਦਿਆਂ ਕੋਈ ਵੀ ਕੁਰਬਾਨੀ ਵਿਅਰਥ ਨਹੀਂ ਜਾਂਦੀ। ਪ੍ਰਮਾਤਮਾ ਦੇ ਭਾਣੇ ਨੂੰ ਮਿੱਠਾ ਮੰਨ ਕੇ ਜੀਊਣ ਵਾਲਾ ਮਨੁੱਖ ਹਰ ਹਾਲ ਵਿਚ ਅਡੋਲ ਅਤੇ ਚੜ੍ਹਦੀ ਕਲਾ ਵਿਚ ਰਹਿੰਦਾ ਹੈ।",
+    "legacy": "Guru Gobind Singh bestowed an indestructible identity upon the Sikh nation through the Khalsa, giving the 5 Ks (Kesh, Kangha, Kara, Kachhera, Kirpan) and the eternal sovereignty of the Shabad Guru. His poetic masterworks in the Dasam Granth and Zafarnama continue to inspire unyielding courage across the globe, embodying the immortal maxim: \"Deh Shiva bar mohi ehai, shubh karman te kabhun na taron\" (Grant me this boon, O Lord, that I may never waver from righteous deeds).",
+    "legacyLocal": "गुरु गोबिंद सिंह जी ने खालसा पंथ की स्थापना कर सिखों को पंच ककार और अद्वितीय पहचान प्रदान की। उन्होंने 'शब्द गुरु' श्री गुरु ग्रंथ साहिब जी को सर्वोच्च सत्ता बनाकर समाज को रूढ़ियों से मुक्त किया। उनके काव्य और उनका अमर जीवन युगों-युगों तक अन्याय के विरुद्ध लड़ने की प्रेरणा देते रहेंगे।",
+    "legacyPa": "ਗੁਰੂ ਸਾਹਿਬ ਨੇ ਖ਼ਾਲਸਾ ਪੰਥ ਦੀ ਸਿਰਜਣਾ ਕਰਕੇ ਸਿੱਖਾਂ ਨੂੰ ਨਿਆਰੀ ਪਛਾਣ ਅਤੇ ਚੜ੍ਹਦੀ ਕਲਾ ਦੀ ਦਾਤ ਬਖ਼ਸ਼ੀ। ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਨੂੰ ਗੁਰਗੱਦੀ ਸੌਂਪ ਕੇ ਸ਼ਬਦ ਗੁਰੂ ਦੇ ਲੜ ਲਾਇਆ ਅਤੇ ਜ਼ੁਲਮ ਦੇ ਖ਼ਿਲਾਫ਼ ਸਦਾ ਲਈ ਲੜਨ ਦੀ ਪ੍ਰੇਰਨਾ ਦਿੱਤੀ।",
+    "source": "Dasam Granth (Bachittar Natak, Zafarnama), Sri Gur Sobha (Kavi Senapati, 1711 CE), Mahan Kosh (Bhai Kahn Singh Nabha)",
+    "sourceLocal": "दसम ग्रंथ (बचित्तर नाटक, ज़फ़रनामा), श्री गुर सोभा (कवि सेनापति, १७११ ई.), महान कोश (भाई काह्न सिंह नाभा)",
+    "sourcePa": "ਦਸਮ ਗ੍ਰੰਥ (ਬਚਿੱਤਰ ਨਾਟਕ, ਜ਼ਫ਼ਰਨਾਮਾ), ਸ੍ਰੀ ਗੁਰ ਸੋਭਾ (ਕਵੀ ਸੈਨਾਪਤੀ, ੧੭੧੧ ਈ.), ਮਹਾਨ ਕੋਸ਼ (ਭਾਈ ਕਾਨ੍ਹ ਸਿੰਘ ਨਾਭਾ)",
+    "sourceCitations": [
+      {
+        "sourceName": "Guru Gobind Singh Ji — Zafarnama (Epistle of Victory, 1705 CE)",
+        "sourceRef": "Verses 22–24 (The Principle of Righteous Resistance)",
+        "tier": 1
+      },
+      {
+        "sourceName": "Kavi Senapati — Sri Gur Sobha (1711 CE)",
+        "sourceRef": "Chapters 5–18 (Eyewitness chronicle of the Khalsa and Anandpur Sahib)",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "When all other recourse has failed, it is righteous to take sword in hand.",
+      "attribution": "Guru Gobind Singh Ji — Zafarnama, Verse 22"
+    },
+    "quoteLocal": {
+      "text": "चूँ कार अज़ हमह हीलते दर गुज़श्त। हलाल अस्त बुरदन ब शमशीर दस्त॥",
+      "attribution": "गुरु गोबिंद सिंह जी (ज़फ़रनामा, बंद २२)"
+    },
+    "quotePa": {
+      "text": "ਚੂੰ ਕਾਰ ਅਜ਼ ਹਮਹ ਹੀਲਤੇ ਦਰ ਗੁਜ਼ਸ਼ਤ ॥ ਹਲਾਲ ਅਸਤ ਬੁਰਦਨ ਬ ਸ਼ਮਸ਼ੀਰ ਦਸਤ ॥",
+      "attribution": "ਸ੍ਰੀ ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ (ਜ਼ਫ਼ਰਨਾਮਾ, ਬੰਦ ੨੨)"
+    }
+  },
+  {
+    "id": "baba-deep-singh",
+    "name": "Baba Deep Singh Ji",
+    "nameLocal": "बाबा दीप सिंह जी",
+    "namePa": "ਬਾਬਾ ਦੀਪ ਸਿੰਘ ਜੀ",
+    "era": "1682 – 1757 CE",
+    "eraLocal": "१६८२ – १७५७ ई.",
+    "eraPa": "੧੬੮੨ – ੧੭੫੭ ਈ.",
+    "tradition": "sikh",
+    "region": "Damdama Sahib & Amritsar, Punjab",
+    "regionLocal": "दमदमा साहिब व अमृतसर, पंजाब",
+    "regionPa": "ਦਮਦਮਾ ਸਾਹਿਬ ਤੇ ਅੰਮ੍ਰਿਤਸਰ, ਪੰਜਾਬ",
+    "emoji": "⚔️",
+    "tagline": "The venerable scholar-warrior who scribed the Guru Granth Sahib and fought with his head upon his palm to liberate Sri Harmandir Sahib at age 75.",
+    "taglineLocal": "पूज्य विद्वान-योद्धा जिन्होंने गुरु ग्रंथ साहिब के पावन स्वरूपों की हस्तलिखित प्रतियां तैयार कीं और ७५ वर्ष की आयु में हरिमंदिर साहिब की मुक्ति हेतु शीश हथेली पर रखकर युद्ध किया।",
+    "taglinePa": "ਮਹਾਨ ਵਿਦਵਾਨ ਤੇ ਜਰਨੈਲ ਜਿਨ੍ਹਾਂ ਨੇ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਦੇ ਸਰੂਪ ਲਿਖੇ ਅਤੇ ੭੫ ਸਾਲ ਦੀ ਉਮਰ ਵਿਚ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੀ ਪਵਿੱਤਰਤਾ ਲਈ ਸੀਸ ਤਲੀ 'ਤੇ ਧਰ ਕੇ ਲੜੇ।",
+    "journey": "Born in the village of Pahuwind in Amritsar district to Bhai Bhagtu and Mata Jioni, Deepa received the baptism of the double-edged sword (Khande Di Pahul) from Guru Gobind Singh Ji himself at Anandpur Sahib in 1700. Immersing himself in spiritual studies and martial training under the direct supervision of the Tenth Master, Baba Deep Singh mastered Gurmukhi, Persian, and Sanskrit. When Guru Gobind Singh stayed at Talwandi Sabo (Guru Ki Kashi, Damdama Sahib) in 1706, Baba Deep Singh and Bhai Mani Singh served as the primary scribes, assisting the Guru in preparing the definitive, complete Damdami Bir of the Sri Guru Granth Sahib, incorporating the sacred hymns of the ninth Guru, Tegh Bahadur.\n\nFollowing the departure of Guru Gobind Singh to the Deccan, Baba Deep Singh remained at Damdama Sahib as the chief custodian and spiritual preceptor of the Sikh center. A profound scholar as well as a master calligrapher, Baba Deep Singh painstakingly hand-copied four complete volumes of the Sri Guru Granth Sahib, dispatching them to the four historical Takhts: Sri Akal Takht Sahib, Takht Sri Patna Sahib, Takht Sri Damdama Sahib, and Takht Sri Hazur Sahib. Later, he joined Baba Banda Singh Bahadur in 1709 to punish the tyrants of Sirhind and protect the agrarian populace. As the head of the Shahid Misl, Baba Deep Singh was revered across the Panth as a living saint who spent his days teaching Gurbani to thousands of scholars while maintaining continuous preparedness for righteous defense.",
+    "journeyLocal": "अमृतसर जिले के पहुविंड गाँव में जन्मे बाबा दीप सिंह जी ने १७०० में आनंदपुर साहिब में स्वयं गुरु गोबिंद सिंह जी के कर-कमलों से खंडे बाटे का अमृत छका। दशमेश पिता की छत्रछाया में उन्होंने गुरमुखी, फ़ारसी और संस्कृत में अद्वितीय विद्वत्ता प्राप्त की। १७०६ में जब गुरु गोबिंद सिंह जी तलवंडी साबो (दमदमा साहिब, गुरु की काशी) पधारे, तब बाबा दीप सिंह जी और भाई मनी सिंह जी ने मुख्य लेखक की भूमिका निभाते हुए गुरु तेग बहादुर जी की बाणी को सम्मिलित कर श्री गुरु ग्रंथ साहिब जी के संपूर्ण 'दमदमी बीड़' के पावन स्वरूप को लिपिबद्ध किया।\n\nगुरु जी के दक्षिण गमन के पश्चात बाबा दीप सिंह जी दमदमा साहिब में गुरबाणी शिक्षण और सिख केंद्र के मुख्य संरक्षक बने रहे। उन्होंने अपने हाथों से श्री गुरु ग्रंथ साहिब जी के चार पावन स्वरूप तैयार कर चारों ऐतिहासिक तख्तों पर भिजवाए। १७०९ में उन्होंने बाबा बंदा सिंह बहादुर के साथ मिलकर अत्याचारियों को दंड दिया। 'शहीद मिसल' के प्रमुख के रूप में वे एक ऐसे संत-योद्धा थे जो दिन-रात गुरबाणी का पाठ और अध्यापन करते थे और धर्म-रक्षा के लिए सदैव तत्पर रहते थे।",
+    "journeyPa": "ਅੰਮ੍ਰਿਤਸਰ ਜ਼ਿਲ੍ਹੇ ਦੇ ਪਿੰਡ ਪਹੂਵਿੰਡ ਵਿਖੇ ਜਨਮੇ ਬਾਬਾ ਦੀਪ ਸਿੰਘ ਜੀ ਨੇ ੧੭੦੦ ਵਿਚ ਸ੍ਰੀ ਅਨੰਦਪੁਰ ਸਾਹਿਬ ਵਿਖੇ ਕਲਗੀਧਰ ਪਾਤਸ਼ਾਹ ਦੇ ਹੱਥੋਂ ਅੰਮ੍ਰਿਤ ਛਕਿਆ। ਦਸਮ ਪਾਤਸ਼ਾਹ ਦੀ ਛਤਰ-ਛਾਇਆ ਹੇਠ ਗੁਰਮੁਖੀ, ਫ਼ਾਰਸੀ ਅਤੇ ਸੰਸਕ੍ਰਿਤ ਦੀ ਉੱਚ ਵਿੱਦਿਆ ਹਾਸਲ ਕੀਤੀ। ੧੭੦੬ ਵਿਚ ਤਲਵੰਡੀ ਸਾਬੋ (ਸ੍ਰੀ ਦਮਦਮਾ ਸਾਹਿਬ) ਵਿਖੇ ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ਜੀ ਦੀ ਹਜ਼ੂਰੀ ਵਿਚ ਭਾਈ ਮਨੀ ਸਿੰਘ ਜੀ ਦੇ ਨਾਲ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਦੀ ਪਵਿੱਤਰ 'ਦਮਦਮੀ ਬੀੜ' ਲਿਖਣ ਦੀ ਮਹਾਨ ਸੇਵਾ ਨਿਭਾਈ।\n\nਸ੍ਰੀ ਦਮਦਮਾ ਸਾਹਿਬ ਵਿਖੇ ਗੁਰਮਤਿ ਵਿੱਦਿਆ ਦਾ ਕੇਂਦਰ ਚਲਾਉਂਦਿਆਂ ਬਾਬਾ ਜੀ ਨੇ ਆਪਣੇ ਹੱਥੀਂ ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ ਦੇ ਚਾਰ ਪਾਵਨ ਸਰੂਪ ਲਿਖ ਕੇ ਚਾਰਾਂ ਤਖ਼ਤਾਂ 'ਤੇ ਭੇਜੇ। ੧੭੦੯ ਵਿਚ ਬਾਬਾ ਬੰਦਾ ਸਿੰਘ ਬਹਾਦਰ ਨਾਲ ਜ਼ਾਲਮਾਂ ਨੂੰ ਸੋਧਣ ਵਿਚ ਅਹਿਮ ਯੋਗਦਾਨ ਪਾਇਆ। 'ਸ਼ਹੀਦ ਮਿਸਲ' ਦੇ ਮੁਖੀ ਵਜੋਂ ਉਹ ਉੱਘੇ ਵਿਦਵਾਨ ਅਤੇ ਅਦੁੱਤੀ ਜਰਨੈਲ ਸਨ।",
+    "trial": "In 1757, the Afghan conqueror Ahmad Shah Abdali launched his fourth brutal invasion of India. Appointing his son Timur Shah and general Jahan Khan as governors of Lahore, Abdali ordered the total destruction of Sri Harmandir Sahib in Amritsar. The Afghan army desecrated the sanctum sanctorum, blew up the sacred causeway with gunpowder, and filled the holy Amrit Sarovar with debris and animal carcasses to extinguish the spiritual heart of Sikhi.\n\nWhen news of this sacrilege reached Baba Deep Singh at Damdama Sahib, the 75-year-old warrior-saint immediately vowed to liberate the Golden Temple or lay down his life in the Parikrama. Drawing a line in the soil with his heavy eighteen-ser (approx. 14 kg) double-edged Khanda, he proclaimed: \"Only those who are prepared to lay down their heads for the Guru should cross this line.\" Five thousand Khalsa warriors crossed the line without hesitation. Clad in yellow robes and reciting Gurbani, the Khalsa advanced towards Amritsar. At the Battle of Gohalwar, six miles from Amritsar, they collided with twenty thousand Afghan troops. In fierce hand-to-hand combat, Baba Deep Singh fought his way through enemy ranks until he engaged Afghan commander Jamal Khan in a duel. Both commanders struck simultaneous blows, decapitating one another. As Baba Deep Singh fell, a fellow warrior reminded him of his sacred vow to reach Sri Darbar Sahib. Imbued with superhuman spiritual resolve, the saint-warrior lifted his severed head with his left hand, gripped his Khanda in his right, and continued cutting through the Afghan lines until he collapsed on the sacred marble Parikrama of Sri Harmandir Sahib, fulfilling his vow with his final breath.",
+    "trialLocal": "१७५७ में अहमद शाह अब्दाली के चौथे आक्रमण के समय उसके सेनापति जहान ख़ान ने अमृतसर पर हमला कर श्री हरिमंदिर साहिब को अपवित्र कर दिया। पवित्र अमृत सरोवर को मिट्टी और मलबे से भर दिया गया ताकि सिखों के आध्यात्मिक केंद्र को नष्ट किया जा सके।\n\nजब यह समाचार दमदमा साहिब पहुँचा, तो ७५ वर्षीय बाबा दीप सिंह जी ने हरिमंदिर साहिब को मुक्त कराने या अपने प्राणों की आहुति देने का संकल्प लिया। उन्होंने अपने अठारह सेर (लगभग १४ किलो) वजनी खंडे से ज़मीन पर लकीर खींचकर ललकारा: 'जो गुरु के लिए शीश न्योछावर करने को तैयार हो, वही इस लकीर को पार करे।' पाँच हज़ार सिंहों ने तत्काल लकीर पार की। अमृतसर से कुछ मील दूर गोहलवड़ के मैदान में बीस हज़ार अफ़गान सैनिकों से भीषण युद्ध हुआ। युद्ध में अफ़गान सेनापति जमाल ख़ान के साथ द्वंद्व में दोनों के एक साथ वार से बाबा जी का शीश धड़ से अलग हो गया। पास खड़े सिंह द्वारा प्रण स्मरण कराने पर, बाबा जी ने अपने बाएँ हाथ पर अपना शीश टिकाया, दाएँ हाथ से खंडा घुमाते हुए शत्रुओं का संहार किया और हरिमंदिर साहिब की पावन परिक्रमा में पहुँचकर अपना शीश अर्पित कर प्रण पूरा किया।",
+    "trialPa": "੧੭੫੭ ਵਿਚ ਅਹਿਮਦ ਸ਼ਾਹ ਅਬਦਾਲੀ ਦੇ ਜਰਨੈਲ ਜਹਾਨ ਖ਼ਾਨ ਨੇ ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ 'ਤੇ ਹਮਲਾ ਕਰਕੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੀ ਬੇਅਦਬੀ ਕੀਤੀ ਅਤੇ ਪਵਿੱਤਰ ਅੰਮ੍ਰਿਤ ਸਰੋਵਰ ਨੂੰ ਪੂਰ ਦਿੱਤਾ। ਇਸ ਬੇਅਦਬੀ ਦੀ ਖ਼ਬਰ ਸੁਣ ਕੇ ੭੫ ਸਾਲਾ ਬਾਬਾ ਦੀਪ ਸਿੰਘ ਜੀ ਨੇ ਦਰਬਾਰ ਸਾਹਿਬ ਨੂੰ ਆਜ਼ਾਦ ਕਰਵਾਉਣ ਦਾ ਪ੍ਰਣ ਲਿਆ।\n\nਸ੍ਰੀ ਦਮਦਮਾ ਸਾਹਿਬ ਵਿਖੇ ੧੮ ਸੇਰ ਦੇ ਖੰਡੇ ਨਾਲ ਧਰਤੀ 'ਤੇ ਲਕੀਰ ਖਿੱਚ ਕੇ ਫ਼ੁਰਮਾਇਆ: 'ਜਿਹੜਾ ਗੁਰੂ ਦੇ ਲੇਖੇ ਸਿਰ ਲਾਉਣਾ ਚਾਹੁੰਦਾ ਹੈ, ਉਹ ਇਸ ਲਕੀਰ ਨੂੰ ਟੱਪੇ।' ਪੰਜ ਹਜ਼ਾਰ ਸਿੰਘਾਂ ਨੇ ਖ਼ੁਸ਼ੀ-ਖ਼ੁਸ਼ੀ ਲਕੀਰ ਟੱਪੀ। ਗੋਹਲਵੜ ਦੇ ਮੈਦਾਨ ਵਿਚ ਅਫ਼ਗਾਨ ਫ਼ੌਜ ਨਾਲ ਗਹਿਗੱਚ ਲੜਾਈ ਹੋਈ। ਜਮਾਲ ਖ਼ਾਨ ਨਾਲ ਲੜਦਿਆਂ ਬਾਬਾ ਜੀ ਦਾ ਸੀਸ ਧੜ ਤੋਂ ਜੁਦਾ ਹੋ ਗਿਆ। ਇੱਕ ਸਾਥੀ ਸਿੰਘ ਵੱਲੋਂ ਪ੍ਰਣ ਯਾਦ ਕਰਵਾਉਣ 'ਤੇ ਬਾਬਾ ਜੀ ਨੇ ਖੱਬੇ ਹੱਥ ਦੀ ਤਲੀ 'ਤੇ ਆਪਣਾ ਸੀਸ ਟਿਕਾ ਕੇ, ਸੱਜੇ ਹੱਥ ਨਾਲ ਖੰਡਾ ਚਲਾਉਂਦਿਆਂ ਦੁਸ਼ਮਣਾਂ ਦਾ ਸਫ਼ਾਇਆ ਕੀਤਾ ਅਤੇ ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੀ ਪਰਿਕਰਮਾ ਵਿਚ ਪਹੁੰਚ ਕੇ ਸੀਸ ਭੇਟ ਕਰਕੇ ਆਪਣਾ ਬਚਨ ਨਿਭਾਇਆ।",
+    "teaching": "Baba Deep Singh demonstrated that scholarship without courage is hollow, and strength without spiritual contemplation is blind. The sanctity of sacred spaces and the defense of spiritual freedom demand uncompromising devotion. The physical body is merely an instrument; when the soul is anchored in the Divine, spiritual will overcomes all mortal limitations.",
+    "teachingLocal": "बाबा दीप सिंह जी ने सिद्ध किया कि भक्ति और शक्ति, ज्ञान और शौर्य का समन्वय ही पूर्ण जीवन है। धर्म-स्थलों की पवित्रता और सत्य की रक्षा के लिए लिया गया संकल्प सांसारिक सीमाओं और मृत्यु के भय से परे होता है।",
+    "teachingPa": "ਬਾਬਾ ਦੀਪ ਸਿੰਘ ਜੀ ਨੇ ਸਾਬਤ ਕੀਤਾ ਕਿ ਗਿਆਨ ਅਤੇ ਸ਼ਕਤੀ ਦਾ ਸੁਮੇਲ ਹੀ ਅਸਲ ਜੀਵਨ ਹੈ। ਗੁਰਧਾਮਾਂ ਦੀ ਪਵਿੱਤਰਤਾ ਅਤੇ ਧਰਮ ਦੀ ਰੱਖਿਆ ਲਈ ਕਿਸੇ ਵੀ ਕੁਰਬਾਨੀ ਤੋਂ ਪਿੱਛੇ ਨਹੀਂ ਹਟਣਾ ਚਾਹੀਦਾ। ਸਰੀਰ ਨਾਸ਼ਵਾਨ ਹੈ ਪਰ ਆਤਮਿਕ ਸੰਕਲਪ ਅਤੇ ਅਣਖ ਸਦਾ ਅਮਰ ਰਹਿੰਦੇ ਹਨ।",
+    "moral": "A life dedicated to truth knows no decay, exhaustion, or fear of death. When a vow is taken in selfless service to the Divine, the power of faith transcends the laws of nature.",
+    "moralLocal": "ईश्वर और धर्म के लिए निष्काम भाव से किया गया संकल्प प्रकृति के नियमों को भी बदल देता है। सत्य के मार्ग पर चलने वाले को वृद्धावस्था या मृत्यु कभी पराजित नहीं कर सकती।",
+    "moralPa": "ਗੁਰੂ ਦੇ ਭਰੋਸੇ 'ਤੇ ਲਿਆ ਗਿਆ ਪ੍ਰਣ ਕਦੇ ਅਧੂਰਾ ਨਹੀਂ ਰਹਿੰਦਾ। ਨੇਕੀ ਅਤੇ ਧਰਮ ਦੇ ਮਾਰਗ 'ਤੇ ਚੱਲਦਿਆਂ ਮਨੁੱਖ ਮੌਤ ਦੇ ਭੈਅ ਤੋਂ ਮੁਕਤ ਹੋ ਕੇ ਅਕਾਲ ਪੁਰਖ ਦੀ ਗੋਦ ਦਾ ਆਨੰਦ ਮਾਣਦਾ ਹੈ।",
+    "legacy": "Baba Deep Singh’s supreme sacrifice is etched eternally into Sikh consciousness, commemorated daily in the global Ardas. The Shahidganj Gurdwara stands on the sacred spot in the Parikrama where he laid down his head, and his historic Khanda is preserved at Sri Akal Takht Sahib as an enduring symbol of spiritual defiance and fearlessness.",
+    "legacyLocal": "बाबा दीप सिंह जी का बलिदान संपूर्ण मानवता के लिए प्रेरणा का स्रोत है और सिख अरदास का अभिन्न अंग है। हरिमंदिर साहिब की परिक्रमा में गुरुद्वारा शहीद बंगा उनकी अटूट आस्था का साक्षी है, और उनका खंडा श्री अकाल तख्त साहिब पर श्रद्धा से सुरक्षित है।",
+    "legacyPa": "ਬਾਬਾ ਦੀਪ ਸਿੰਘ ਜੀ ਦੀ ਸ਼ਹਾਦਤ ਸਿੱਖ ਕੌਮ ਦੀ ਅਰਦਾਸ ਦਾ ਅਨਿੱਖੜਵਾਂ ਅੰਗ ਹੈ। ਸ੍ਰੀ ਹਰਿਮੰਦਰ ਸਾਹਿਬ ਦੀ ਪਰਿਕਰਮਾ ਵਿੱਚ ਗੁਰਦੁਆਰਾ ਸ਼ਹੀਦ ਬਾਬਾ ਦੀਪ ਸਿੰਘ ਜੀ ਉਹਨਾਂ ਦੇ ਅਡੋਲ ਸਿਦਕ ਦੀ ਗਵਾਹੀ ਭਰਦਾ ਹੈ। ਉਹਨਾਂ ਦਾ ਖੰਡਾ ਸ੍ਰੀ ਅਕਾਲ ਤਖ਼ਤ ਸਾਹਿਬ 'ਤੇ ਸ਼ਰਧਾ ਨਾਲ ਸੰਭਾਲਿਆ ਗਿਆ ਹੈ।",
+    "source": "Prachin Panth Prakash (Rattan Singh Bhangu, 1841 CE), Sri Gur Pratap Suraj Granth (Kavi Santokh Singh, 1843 CE)",
+    "sourceLocal": "प्राचीन पंथ प्रकाश (रतन सिंह भंगू, १८४१ ई.), श्री गुर प्रताप सूरज ग्रंथ (कवि संतोख सिंह, १८४३ ई.)",
+    "sourcePa": "ਪ੍ਰਾਚੀਨ ਪੰਥ ਪ੍ਰਕਾਸ਼ (ਰਤਨ ਸਿੰਘ ਭੰਗੂ, ੧੮੪੧ ਈ.), ਸ੍ਰੀ ਗੁਰ ਪ੍ਰਤਾਪ ਸੂਰਜ ਗ੍ਰੰਥ (ਕਵੀ ਸੰਤੋਖ ਸਿੰਘ, ੧੮੪੩ ਈ.)",
+    "sourceCitations": [
+      {
+        "sourceName": "Rattan Singh Bhangu — Prachin Panth Prakash (1841 CE)",
+        "sourceRef": "Episode of Shahid Baba Deep Singh and the Battle of Gohalwar",
+        "tier": 1
+      },
+      {
+        "sourceName": "Kavi Santokh Singh — Sri Gur Pratap Suraj Granth (Suraj Prakash, 1843 CE)",
+        "sourceRef": "Ain 2, Account of the Liberation of Sri Amritsar",
+        "tier": 1
+      }
+    ],
+    "quote": {
+      "text": "If you desire to play the game of love with Me, come onto My street with your head upon the palm of your hand.",
+      "attribution": "Guru Nanak Dev Ji — Sri Guru Granth Sahib, Ang 1412"
+    },
+    "quoteLocal": {
+      "text": "जउ तउ प्रेम खेलन का चाउ। सिरु धरि तली गली मेरी आउ॥",
+      "attribution": "गुरु नानक देव जी (श्री गुरु ग्रंथ साहिब, अंग १४१२)"
+    },
+    "quotePa": {
+      "text": "ਜਉ ਤਉ ਪ੍ਰੇਮ ਖੇਲਣ ਕਾ ਚਾਉ ॥ ਸਿਰੁ ਧਰਿ ਤਲੀ ਗਲੀ ਮੇਰੀ ਆਉ ॥",
+      "attribution": "ਸ੍ਰੀ ਗੁਰੂ ਨਾਨਕ ਦੇਵ ਜੀ (ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ, ਅੰਗ ੧੪੧੨)"
+    }
   }
 ];
 

@@ -4,7 +4,7 @@ import { DHARM_VEERS, selectDharmVeerOfTheDayFromRoster } from '../lib/dharm-vee
 
 describe('Dharm Veer Canonical 500+ Words & Verification Suite', () => {
   it('contains all cornerstone heroes offline in DHARM_VEERS', () => {
-    assert.equal(DHARM_VEERS.length, 13);
+    assert.equal(DHARM_VEERS.length, 18);
   });
 
   it('guarantees each hero has >= 500 words in core narrative', () => {
@@ -59,7 +59,7 @@ describe('Dharm Veer Canonical 500+ Words & Verification Suite', () => {
 
   it('guarantees complete trilingual Punjabi Gurmukhi localizations for Sikh heroes', () => {
     const sikhHeroes = DHARM_VEERS.filter((h) => h.tradition === 'sikh');
-    assert.equal(sikhHeroes.length, 3, 'Expected 3 Sikh cornerstone heroes');
+    assert.equal(sikhHeroes.length, 5, 'Expected 5 Sikh cornerstone heroes');
 
     for (const hero of sikhHeroes) {
       assert.ok(hero.namePa, `${hero.id} missing namePa`);
