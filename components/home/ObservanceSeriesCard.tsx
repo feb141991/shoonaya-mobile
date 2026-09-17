@@ -14,6 +14,7 @@ import {
   getSafeNativeSeriesName,
   nativeCalendarDayDistance,
 } from '@/lib/observance-series-card-helpers';
+import { resolveSeriesChildSlug } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
 import { SACRED_DAYS_CARD_HEIGHT } from '@/lib/sacred-days-deck';
 
@@ -67,11 +68,13 @@ export function ObservanceSeriesCard({
   const daysLeft = targetDate ? nativeCalendarDayDistance(spiritualDate, targetDate) ?? 0 : 0;
   const isToday = daysLeft === 0;
   const { title, subtitle, description } = getSafeNativeEditorialCopy(activeChild, lang, context);
-  const href = activeChild.routeKind === 'vrat' && activeChild.routeSlug
-    ? `/vrat/${encodeURIComponent(activeChild.routeSlug)}`
-    : activeChild.routeKind === 'festival' && activeChild.routeSlug
-      ? `/festival/${encodeURIComponent(activeChild.routeSlug)}`
-      : null;
+  const childSlug = resolveSeriesChildSlug({
+    name: activeChild.title,
+    routeSlug: activeChild.slug || activeChild.routeSlug,
+    date: activeChild.civilDate,
+    sequence: activeChild.sequence,
+  }) || activeChild.slug || activeChild.routeSlug;
+  const href = childSlug ? `/festival/${encodeURIComponent(childSlug)}` : null;
   const iconName: SacredIconName = series.mode === 'daily_journey' ? 'vrat' : 'panchang';
   const isConcluded = series.status === 'concluding' || (activeChild.sequence === totalCount && isToday);
   const statusLine = series.status === 'upcoming'

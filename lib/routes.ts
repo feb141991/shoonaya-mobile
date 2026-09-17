@@ -1,4 +1,5 @@
 import type { Href } from 'expo-router';
+import { getSeriesChildContent, getSeriesGroupContent } from './observance-series-content';
 
 // Maps a web-shaped path — from home-summary's practice/dharmVeer/panchang
 // hrefs, or from a push notification's action_url / url data field —
@@ -52,7 +53,14 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/yatra')) return '/(tabs)/tirtha';
   if (pathname.startsWith('/panchang')) return '/panchang';
   if (pathname.startsWith('/rashiphala') || pathname.startsWith('/rashiphal')) return '/rashiphala' as Href;
-  if (pathname.startsWith('/vrat/')) return path as Href;
+  if (pathname.startsWith('/vrat/')) {
+    const slug = pathname.slice('/vrat/'.length);
+    if (getSeriesChildContent(slug) || getSeriesGroupContent(slug)) {
+      const search = path.includes('?') ? `?${path.split('?')[1]}` : '';
+      return `/festival/${slug}${search}` as Href;
+    }
+    return path as Href;
+  }
   if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/festival/')) return path as Href;
   if (pathname.startsWith('/quiz')) return '/quiz';

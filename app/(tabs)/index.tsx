@@ -55,6 +55,7 @@ import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/
 import { readNotificationsCache, deriveUnreadCount } from '@/lib/notificationsCache';
 import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
+import { resolveSeriesChildHref } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
@@ -519,13 +520,23 @@ function PanchangPill({
     };
 
     if (kind === 'observance') {
+      const resolvedObservanceHref = summary.observance
+        ? resolveSeriesChildHref({
+            href: summary.observance.href,
+            routeSlug: summary.observance.routeSlug,
+            name: summary.observance.name,
+            date: summary.observance.date,
+            seriesList: summary.series,
+          }) || summary.observance.href
+        : null;
+
       add(summary.observance ? {
         key: 'observance',
         icon: summary.observance.emoji ?? '🪔',
         label: formatObservancePillLabel(summary.observance.label, summary.observance.name, summary.observance.daysLeft),
         dedupeKey: summary.observance.name ? summary.observance.name.trim().toLowerCase() : undefined,
         monthLabel: summary.observance.monthLabel,
-        href: summary.observance.href,
+        href: resolvedObservanceHref,
       } : null);
       // Genuinely different upcoming observances (next Ekadashi, next
       // Amavasya, next festival...) from the same DB-backed window, rather
@@ -533,13 +544,21 @@ function PanchangPill({
       // those are derived from the exact same source as summary.observance
       // and were previously deduped away as near-duplicates anyway.
       (summary.upcomingObservances ?? []).forEach((entry, i) => {
+        const resolvedEntryHref = resolveSeriesChildHref({
+          href: entry.href,
+          routeSlug: entry.routeSlug,
+          name: entry.name,
+          date: entry.date,
+          seriesList: summary.series,
+        }) || entry.href;
+
         add({
           key: `upcoming-${i}`,
           icon: entry.emoji ?? '🪔',
           label: formatObservancePillLabel(entry.label, entry.name, entry.daysLeft),
           dedupeKey: entry.name ? entry.name.trim().toLowerCase() : undefined,
           monthLabel: entry.monthLabel,
-          href: entry.href,
+          href: resolvedEntryHref,
         });
       });
       if (rows.length === 0 && (summary.vratLabel || summary.festivalLabel)) {

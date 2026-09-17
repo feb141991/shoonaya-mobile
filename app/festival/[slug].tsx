@@ -24,6 +24,7 @@ import {
   resolveFestivalShareHeadline,
 } from '@/lib/festival-content-helpers';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
+import { spiritualDate } from '@/lib/spiritualDate';
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
@@ -55,7 +56,7 @@ type LiveObservanceStory = {
 };
 
 export default function FestivalDetailScreen() {
-  const params = useLocalSearchParams<{ slug: string }>();
+  const params = useLocalSearchParams<{ slug: string; day?: string; seq?: string; date?: string; child?: string }>();
   const slug = params.slug ?? '';
   const router = useRouter();
 
@@ -85,9 +86,24 @@ export default function FestivalDetailScreen() {
 
   useEffect(() => {
     if (seriesGroup && seriesGroup.children.length > 0 && slug === seriesGroup.definitionKey) {
+      if (params.child) {
+        const matchingChild = seriesGroup.children.find((c) => c.slug === params.child);
+        if (matchingChild) {
+          router.replace(`/festival/${matchingChild.slug}`);
+          return;
+        }
+      }
+      const targetSeq = Number(params.day || params.seq);
+      if (targetSeq >= 1 && targetSeq <= seriesGroup.children.length) {
+        const matchingChild = seriesGroup.children[targetSeq - 1];
+        if (matchingChild) {
+          router.replace(`/festival/${matchingChild.slug}`);
+          return;
+        }
+      }
       router.replace(`/festival/${seriesGroup.children[0].slug}`);
     }
-  }, [seriesGroup, slug, router]);
+  }, [seriesGroup, slug, router, params.day, params.seq, params.child]);
 
   useEffect(() => {
     let cancelled = false;
@@ -164,6 +180,15 @@ export default function FestivalDetailScreen() {
         const observances: ClientObservanceResult[] = Array.isArray(data?.observances) ? data.observances : [];
         const matching = observances.filter((o) => o.route_slug === slug || o.slug === slug);
         setOccurrence(matching.find((o) => o.isPrimary) ?? matching[0] ?? null);
+
+        if (seriesGroup && slug === seriesGroup.definitionKey && !params.day && !params.seq && !params.child) {
+          const today = spiritualDate(deviceTimezone);
+          const targetDate = params.date || today;
+          const todayOccurrence = matching.find((o) => o.date === targetDate && seriesGroup.children.some((c) => c.slug === o.slug));
+          if (todayOccurrence?.slug) {
+            router.replace(`/festival/${todayOccurrence.slug}`);
+          }
+        }
       })
       .catch(() => {
         if (!cancelled && !controller.signal.aborted) setOccurrence(null);

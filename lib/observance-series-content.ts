@@ -144,3 +144,136 @@ export function formatSeriesDayLabel(
   const dayPrefix = isHi ? `दिन ${child.sequence}` : isPa ? `ਦਿਨ ${child.sequence}` : `Day ${child.sequence}`;
   return specific ? `${dayPrefix} · ${specific}` : dayPrefix;
 }
+
+function cleanTitle(t?: string | null): string {
+  return (t || '').toLowerCase().split(/[—–(/]/)[0].trim();
+}
+
+export interface ResolveSeriesChildInput {
+  name?: string | null;
+  routeSlug?: string | null;
+  href?: string | null;
+  date?: string | null;
+  sequence?: number | null;
+  seriesList?: any[];
+}
+
+const SERIES_GROUP_ALIASES: Record<string, string> = {
+  'sharad-navratri': 'sharad-navratri',
+  'chaitra-navratri': 'chaitra-navratri',
+  'diwali-five-days': 'diwali-five-days',
+  'diwali': 'diwali-five-days',
+  'ganeshotsav': 'ganeshotsav',
+  'ganesh-chaturthi': 'ganeshotsav',
+  'chhath-puja-four-days': 'chhath-puja-four-days',
+  'chhath-puja': 'chhath-puja-four-days',
+  'paryushana-parva': 'paryushana-parva',
+  'paryushana': 'paryushana-parva',
+};
+
+/**
+ * Resolves the exact child slug for a day of a multi-day observance series.
+ * Ensures clicking a pill, card, or link for Day 2, 3, 4 etc. opens that specific
+ * day's content directly, rather than resetting to Day 1.
+ */
+export function resolveSeriesChildSlug(input: ResolveSeriesChildInput): string | null {
+  const { name = '', routeSlug = '', href = '', date = '', sequence = null, seriesList = [] } = input || {};
+  const normName = (name || '').toLowerCase();
+
+  // Extract routeSlug from href if not explicitly provided
+  let effectiveRouteSlug = (routeSlug || '').toLowerCase();
+  if (!effectiveRouteSlug && href) {
+    const match = href.match(/\/(?:festival|vrat)\/([^?#/]+)/);
+    if (match) effectiveRouteSlug = decodeURIComponent(match[1]).toLowerCase();
+  }
+
+  // 1. From seriesList (calendar occurrence data with civilDate)
+  for (const s of seriesList) {
+    if (Array.isArray(s.children)) {
+      if (date) {
+        const byDate = s.children.find((c: any) => c.civilDate === date);
+        if (byDate?.slug) return byDate.slug;
+      }
+      if (typeof sequence === 'number') {
+        const bySeq = s.children.find((c: any) => c.sequence === sequence);
+        if (bySeq?.slug) return bySeq.slug;
+      }
+      const byTitle = s.children.find((c: any) => c.title && normName.includes(c.title.toLowerCase()));
+      if (byTitle?.slug) return byTitle.slug;
+    }
+  }
+
+  // 2. Try to extract Day number from name e.g. "Day 3", "Day 4", "दिन 3", "ਦਿਨ 3"
+  const dayMatch = normName.match(/(?:day|दिन|ਦਿਨ)\s*(\d+)/i);
+  const targetSeq = typeof sequence === 'number' ? sequence : (dayMatch ? parseInt(dayMatch[1], 10) : null);
+
+  const groupKey = SERIES_GROUP_ALIASES[effectiveRouteSlug] || Object.keys(SERIES_GROUP_ALIASES).find((k) => normName.includes(k.replace(/-/g, ' ')));
+
+  if (groupKey) {
+    const canonicalKey = SERIES_GROUP_ALIASES[groupKey];
+    const group = OBSERVANCE_SERIES_CONTENT_SNAPSHOT.series.find((s) => s.definitionKey === canonicalKey);
+    if (group && group.children.length > 0) {
+      // If a day number is detected (e.g. Day 4 of Ganeshotsav), return that exact child!
+      if (targetSeq && targetSeq >= 1 && targetSeq <= group.children.length) {
+        return group.children[targetSeq - 1].slug;
+      }
+      // Check specific child title keywords inside the group
+      for (const child of group.children) {
+        const enTitle = child.canonicalTitle?.value?.en || '';
+        const hiTitle = child.canonicalTitle?.value?.hi || '';
+        const paTitle = child.canonicalTitle?.value?.pa || '';
+        const enClean = cleanTitle(enTitle);
+        const hiClean = cleanTitle(hiTitle);
+        const paClean = cleanTitle(paTitle);
+
+        if (enClean && normName.includes(enClean)) return child.slug;
+        if (hiClean && normName.includes(hiClean)) return child.slug;
+        if (paClean && normName.includes(paClean)) return child.slug;
+
+        // Substring checks for parts after dash e.g. "Chandraghanta", "Kharna", "Nahay Khay"
+        const parts = enTitle.split(/[—–]/);
+        if (parts.length > 1) {
+          const sub = cleanTitle(parts[1]);
+          if (sub && normName.includes(sub)) return child.slug;
+        }
+      }
+    }
+  }
+
+  // 3. Scan all children across all series for specific title matches
+  for (const [slug, child] of Object.entries(OBSERVANCE_SERIES_CHILD_CONTENT_BY_SLUG)) {
+    const enClean = cleanTitle(child.canonicalTitle?.value?.en);
+    const hiClean = cleanTitle(child.canonicalTitle?.value?.hi);
+    const paClean = cleanTitle(child.canonicalTitle?.value?.pa);
+
+    if (enClean && normName.includes(enClean)) return slug;
+    if (hiClean && normName.includes(hiClean)) return slug;
+    if (paClean && normName.includes(paClean)) return slug;
+
+    const parts = (child.canonicalTitle?.value?.en || '').split(/[—–]/);
+    if (parts.length > 1) {
+      const sub = cleanTitle(parts[1]);
+      if (sub && normName.includes(sub)) return slug;
+    }
+  }
+
+  // 4. Fallback to direct child slug match ONLY if not ambiguous cluster slug
+  if (effectiveRouteSlug && OBSERVANCE_SERIES_CHILD_CONTENT_BY_SLUG[effectiveRouteSlug]) {
+    return effectiveRouteSlug;
+  }
+
+  return null;
+}
+
+/**
+ * Resolves the destination URL for an observance entry, ensuring multi-day series items
+ * navigate directly to `/festival/<childSlug>` for the specified or current day.
+ */
+export function resolveSeriesChildHref(input: ResolveSeriesChildInput): string | null {
+  const childSlug = resolveSeriesChildSlug(input);
+  if (childSlug) {
+    return `/festival/${encodeURIComponent(childSlug)}`;
+  }
+  return input.href || null;
+}
+

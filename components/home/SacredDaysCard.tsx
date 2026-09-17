@@ -7,6 +7,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
 import { COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import { getNativeSeriesCardCopy } from '@/lib/observance-series-card-helpers';
+import { resolveSeriesChildHref } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
 import {
   pickSacredDayLocalizedText,
@@ -63,13 +64,18 @@ export function SacredDaysCard({
     ? [COLORS.navGlassTopDark, COLORS.navGlassBottomDark]
     : [COLORS.navGlassTopLight, COLORS.navGlassBottomLight];
   const ctaTextColor = isDark ? COLORS.textOnBrandDark : COLORS.textOnBrandLight;
+  const resolvedHref = resolveSeriesChildHref({
+    href: entry.href,
+    routeSlug: entry.routeSlug,
+    name: entry.name,
+  }) || entry.href;
 
   return (
     <PressableSurface
       haptic="selection"
       accessibilityLabel={`${displayName}, ${daysBadgeLabel(entry.daysLeft, lang)}${displayDescription ? `. ${displayDescription}` : ''}`}
       accessibilityHint={copy.learnMore}
-      onPress={() => router.push(resolveNativeRoute(entry.href) as Href)}
+      onPress={() => router.push(resolveNativeRoute(resolvedHref) as Href)}
       style={{
         height: SACRED_DAYS_CARD_HEIGHT,
         borderRadius: RADII.xl,
