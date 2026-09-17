@@ -75,6 +75,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
         stotraOrChant: {
           title: 'Nirvana Shatkam',
           description: 'Mano-Buddhi-Ahankara Chittaani Naaham (Chidananda Rupah Shivoham Shivoham)',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/026-Nirvana%20Shatkam.mp3',
+          sourceName: 'Stotras of Sri Sankara Bhagavatpada',
+          licenseLabel: 'Public Domain Mark 1.0',
         },
         colorAccent: '#D97706',
       },
@@ -96,6 +99,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
         stotraOrChant: {
           title: 'Sharada Bhujanga Prayata Ashtakam',
           description: 'Composed by Adi Shankara in devotion to Goddess Sharada at Sringeri.',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/028-Sarada%20Bhujangam.mp3',
+          sourceName: 'Stotras of Sri Sankara Bhagavatpada',
+          licenseLabel: 'Public Domain Mark 1.0',
         },
         colorAccent: '#B45309',
       },
@@ -117,6 +123,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
         stotraOrChant: {
           title: 'Jagannathashtakam',
           description: 'Kadachit Kalindi-Tata-Vipina-Sangita-Taralo (Jagannatha Swami Nayana-Patha-Gami Bhavatu Me)',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/013-Jagannathashtakam.mp3',
+          sourceName: 'Stotras of Sri Sankara Bhagavatpada',
+          licenseLabel: 'Public Domain Mark 1.0',
         },
         colorAccent: '#EA580C',
       },
@@ -138,6 +147,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
         stotraOrChant: {
           title: 'Acyutashtakam',
           description: 'Acyutam Keshavam Rama Narayanam Krishna Damodaram Vasudevam Harim',
+          audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/001-Achyutashtakam.mp3',
+          sourceName: 'Stotras of Sri Sankara Bhagavatpada',
+          licenseLabel: 'Public Domain Mark 1.0',
         },
         colorAccent: '#D97706',
       },
@@ -159,6 +171,9 @@ export const SACRED_LINEAGES: Record<string, Lineage> = {
         stotraOrChant: {
           title: 'Totakashtakam',
           description: 'Viditakhila-Shastra-Sudha-Jaladhe Mahito-Panishat-Kathitartha-Nidhe',
+          audioUrl: 'https://archive.org/download/thotakashtakam/thotakashtakam.mp3',
+          sourceName: 'Hinduonline Traditional Sanskrit Archive',
+          licenseLabel: 'Public Domain / Open Devotional',
         },
         colorAccent: '#4F46E5',
       },

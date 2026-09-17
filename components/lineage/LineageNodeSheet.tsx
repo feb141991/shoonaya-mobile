@@ -222,6 +222,14 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
                     {node.stotraOrChant.title}
                   </Text>
                 </View>
+                {node.stotraOrChant.sourceName ? (
+                  <View style={styles.provenanceBadge}>
+                    <Feather name="disc" size={11} color={theme.brand} />
+                    <Text style={[styles.stotraSource, { color: theme.brand }]}>
+                      Authentic Chanting · {node.stotraOrChant.sourceName}
+                    </Text>
+                  </View>
+                ) : null}
                 <Text style={[styles.stotraDesc, { color: theme.dim }]}>
                   {node.stotraOrChant.description}
                 </Text>
@@ -412,6 +420,18 @@ const styles = StyleSheet.create({
   stotraTitle: {
     fontFamily: FONTS.serifBold,
     fontSize: 15,
+  },
+  provenanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  stotraSource: {
+    fontFamily: FONTS.sansMedium,
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
   stotraDesc: {
     fontFamily: FONTS.sans,
