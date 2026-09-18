@@ -356,7 +356,7 @@ export async function createMandaliPost(payload: {
   postType: 'update' | 'event' | 'question' | 'announcement';
   eventDate?: string | null;
   eventLocation?: string | null;
-}): Promise<void> {
+}): Promise<{ id: string }> {
   const { userId, ...postFields } = payload;
   const clientOperationId = Crypto.randomUUID();
   const body = JSON.stringify({ ...postFields, clientOperationId });
@@ -367,6 +367,12 @@ export async function createMandaliPost(payload: {
     recordMutationRetryOutcome({ kind: 'authenticated', userId }, 'mandali_posts', outcome, attempts)
   );
   if (!response || !response.ok) throw new Error('Could not create post');
+  // Same contract as createMandaliComment below: the backend already returns
+  // {id}, previously discarded here, which is what let the caller show the
+  // new post instantly instead of waiting on a full feed reload.
+  const result = await response.json() as { id?: string };
+  if (!result.id) throw new Error('Post response was incomplete');
+  return { id: result.id };
 }
 
 export async function updateMandaliPost(payload: {

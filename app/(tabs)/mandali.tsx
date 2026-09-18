@@ -16,7 +16,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
+import { FlashList, type FlashListRef, type ListRenderItemInfo } from '@shopify/flash-list';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -558,6 +558,7 @@ export default function MandaliScreen() {
   // internally, since this effect's deps don't include `profile`.
   const routeOpenCacheHitRef = useRef(false);
   const telemetryUserIdRef = useRef<string | null>(null);
+  const feedListRef = useRef<FlashListRef<MandaliFeedItem>>(null);
   // Resolved as soon as loadMandali knows the user id, independent of
   // `profile` state -- read by the reaction outbox's resume path (mount and
   // app-foreground) so it never depends on a possibly-stale profile closure.
@@ -1950,7 +1951,7 @@ export default function MandaliScreen() {
         setBlendedPosts(patch);
       } else {
         if (!profile?.mandaliId) return;
-        await createMandaliPost({
+        const { id: newPostId } = await createMandaliPost({
           userId: profile.userId,
           content,
           postType: composeType,
@@ -1959,11 +1960,62 @@ export default function MandaliScreen() {
         });
         resetComposeState();
         setSheetVisible(false);
-        try {
-          await loadMandali();
-        } catch (reloadErr) {
+
+        // Server already confirmed the create above -- same "insert after
+        // await succeeds, dedup-guarded" shape as submitComment's
+        // optimisticComment, so there's nothing to roll back here.
+        const newPost: PostRow = {
+          id: newPostId,
+          created_at: new Date().toISOString(),
+          author_id: profile.userId,
+          mandali_id: profile.mandaliId,
+          content,
+          type: composeType,
+          upvotes: 0,
+          comment_count: 0,
+          event_date: eventDate,
+          event_location: eventLocation,
+          profiles: {
+            full_name: profile.displayName || 'You',
+            username: profile.displayName || 'You',
+            avatar_url: null,
+            sampradaya: null,
+            spiritual_level: null,
+          },
+        };
+        const updatedPosts = posts.some((p) => p.id === newPostId) ? posts : [newPost, ...posts];
+        setPosts(updatedPosts);
+
+        void writeMandaliCache(
+          { kind: 'authenticated', userId: profile.userId },
+          {
+            displayName: profile.displayName,
+            mandaliId: profile.mandaliId,
+            mandaliName: profile.mandaliName,
+            city: profile.city,
+            country: profile.country,
+            latitude: profile.latitude,
+            longitude: profile.longitude,
+            posts: updatedPosts,
+            blendedPosts,
+            comments,
+            rsvps,
+            members,
+            nextCursor,
+          }
+        );
+
+        requestAnimationFrame(() => {
+          feedListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        });
+
+        // Background refresh for freshness (other members' posts, RSVPs,
+        // etc.) -- fire-and-forget, since the poster's own view is already
+        // correct from the optimistic update above and shouldn't be blocked
+        // on a full reload the way it was before this change.
+        void loadMandali().catch((reloadErr) => {
           console.warn('[MandaliScreen] Post persisted, but background feed refresh encountered error:', reloadErr);
-        }
+        });
         return;
       }
       resetComposeState();
@@ -1973,7 +2025,7 @@ export default function MandaliScreen() {
     } finally {
       setPosting(false);
     }
-  }, [composeBody, composeEventDate, composeEventLoc, composeType, editingPost, loadMandali, profile, resetComposeState]);
+  }, [composeBody, composeEventDate, composeEventLoc, composeType, editingPost, loadMandali, profile, resetComposeState, posts, blendedPosts, comments, rsvps, members, nextCursor]);
 
   const handleLeave = useCallback(() => {
     if (!profile) return;
@@ -2409,6 +2461,7 @@ export default function MandaliScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
       <FlashList
+        ref={feedListRef}
         data={feedItems}
         renderItem={renderFeedItem}
         keyExtractor={keyExtractor}
