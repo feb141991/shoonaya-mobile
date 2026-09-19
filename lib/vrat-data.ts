@@ -658,6 +658,51 @@ Break your fast only after midnight puja is complete. Sing bhajans, kirtans, and
     pujaItems: ['Panchamrit (milk, curd, honey, ghee, sugar)', 'Tulsi leaves', 'Makhan (butter) and mishri', 'Yellow and blue flowers', 'Small flute', 'Peacock feather', 'Incense and diya'],
   },
 
+  'radha-ashtami': {
+    id: 'radha-ashtami',
+    emoji: '🌸',
+    name: 'Radha Ashtami',
+    nameLocal: 'राधा अष्टमी',
+    tagline: 'The appearance of Srimati Radharani — the supreme embodiment of divine love.',
+    taglineLocal: 'परम प्रेमस्वरूपा श्री राधारानी का पावन प्राकट्य दिवस।',
+    significance: `Radha Ashtami celebrates the appearance of Srimati Radharani, the eternal consort and supreme pleasure potency (Hladini Shakti) of Lord Krishna. She appeared on Bhadrapada Shukla Ashtami in Raval and was nurtured in Barsana by King Vrishabhanu and Queen Kirtida.
+
+In Vaishnava tradition, Krishna is the supreme truth, and Radha is the supreme devotion that unlocks that truth. Devotees believe that without Radha's grace, Krishna's inner realm of divine love cannot be entered. Observing Radha Ashtami brings pure devotion, spiritual purity, and removal of internal obstacles.`,
+    significanceLocal: `राधा अष्टमी भगवान श्री कृष्ण की आह्लादिनी शक्ति और नित्य संगिनी श्री राधारानी के प्राकट्य का पावन उत्सव है। भाद्रपद शुक्ल अष्टमी को बरसाना व रावल धाम में उनका अवतरण हुआ।
+
+वैष्णव परंपरा में श्री कृष्ण परम सत्य हैं और श्री राधा उस सत्य को पाने वाली पराभक्ति हैं। मान्यता है कि श्री राधा रानी की कृपा के बिना श्री कृष्ण के दिव्य प्रेम की प्राप्ति संभव नहीं है। राधा अष्टमी का व्रत करने से अंतःकरण पवित्र होता है और निष्काम भक्ति प्राप्त होती है।`,
+    practice: `Fast until midday (Madhyahna 12:00 PM). Bathe the Radha-Krishna deities with panchamrit (milk, yogurt, ghee, honey, and jaggery) and scented flower petals at noon.
+
+Offer yellow and blue lotus flowers, fragrant garlands, and Chappan Bhog or dairy sweets. Chant the holy names of Radha and Krishna, Radha Kripa Kataksha Stotra, and Sri Radha Sahasranama. Break fast after the midday aarti with sattvic anukalpa prasad.`,
+    practiceLocal: `मध्याह्न (दोपहर 12:00 बजे) तक उपवास रखें। दोपहर 12 बजे श्री राधा-कृष्ण विग्रह का पंचामृत (दूध, दही, घी, शहद, गंगाजल) व सुवासित पुष्पों से महाभिषेक करें।
+
+नीलकमल, मालती व गेंदे के पुष्प, नवीन वस्त्र व छप्पन भोग या मावे की मिठाई अर्पित करें। राधा कृपा कटाक्ष स्तोत्र, श्री राधा सहस्रनाम व युगल महामंत्र का संकीर्तन करें। मध्याह्न आरती के उपरांत सात्विक फलाहार या अनुकल्प प्रसाद से व्रत खोलें।`,
+    mantra: 'Om Vrishabhanujayai Vidmahe Krishnapriyayai Dhimahi Tanno Radha Prachodayat',
+    mantraLocal: 'तप्तकाञ्चनगौराङ्गि राधे वृन्दावनेश्वरि। वृषभानुसुते देवि प्रणमामि हरिप्रिये॥',
+    fastingType: 'partial',
+    breakFastTime: 'After midday (Madhyahna 12:00 PM) aarti and puja',
+    dos: [
+      'Fast until midday (Madhyahna / 12:00 PM)',
+      'Perform or attend the midday Mahabhisheka of Sri Radha-Krishna',
+      'Offer blue or yellow lotus flowers, incense, and fresh sweets',
+      'Chant Radha Gayatri and the Hare Krishna mahamantra',
+      'Break fast after the noon arati with sattvic anukalpa prasad',
+    ],
+    donts: [
+      'Do not consume grains or cooked food before midday aarti',
+      'Do not consume onion, garlic, or non-sattvic food',
+      'Avoid angry or critical speech on this sacred day of love and devotion',
+    ],
+    pujaItems: [
+      'Radha-Krishna deity or sacred picture',
+      'Panchamrit (milk, yogurt, ghee, honey, sugar candy)',
+      'Blue and yellow lotus flowers / fresh garlands',
+      'Sandalwood paste and saffron',
+      'Pure ghee lamp and aromatic dhoop',
+      'Dairy sweets (pedas, kheer, makhana)',
+    ],
+  },
+
   'holi': {
     id: 'holi',
     emoji: '🎨',
@@ -738,6 +783,7 @@ const NAMED_VRAT_ALIASES: Array<{ canonical: string; aliases: string[] }> = [
   { canonical: 'navratri', aliases: ['navratri', 'navaratri'] },
   { canonical: 'diwali', aliases: ['diwali', 'deepavali', 'divali'] },
   { canonical: 'janmashtami', aliases: ['janmashtami', 'krishna jayanti', 'gokulashtami'] },
+  { canonical: 'radha-ashtami', aliases: ['radha ashtami', 'radha-ashtami', 'radhashtami', 'radha jayanti'] },
   { canonical: 'holi', aliases: ['holi', 'holika'] },
   { canonical: 'gurpurab', aliases: ['gurpurab', 'guru nanak', 'gurupurab'] },
 ];

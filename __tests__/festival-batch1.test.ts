@@ -15,6 +15,7 @@ const ALL_HINDU_SLUGS = [
   'raksha-bandhan',
   'ganesh-chaturthi',
   'krishna-janmashtami',
+  'radha-ashtami',
   'chhath-puja',
   'maha-shivaratri',
   'dhanteras',
@@ -156,8 +157,8 @@ const ALL_AUTHORED_SLUGS = [
 ];
 
 describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () => {
-  it('contains all 114 authored festival entries in snapshot', () => {
-    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 114);
+  it('contains all 115 authored festival entries in snapshot', () => {
+    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 115);
     for (const slug of ALL_HINDU_SLUGS) {
       const festival = lookupFestivalContent(slug);
       assert.ok(festival, `Expected festival content for "${slug}"`);

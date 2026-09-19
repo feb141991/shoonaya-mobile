@@ -223,6 +223,10 @@ export function useAiChat(options: UseAiChatOptions = {}) {
     }
   }, [profile, initialPrompt, initialSent, sendMessage]);
 
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
+
   return {
     messages,
     input,
@@ -234,5 +238,6 @@ export function useAiChat(options: UseAiChatOptions = {}) {
     language,
     setLanguage,
     sendMessage,
+    clearMessages,
   };
 }
