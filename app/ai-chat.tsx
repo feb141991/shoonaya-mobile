@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Easing,
   FlatList,
   KeyboardAvoidingView,
   type NativeScrollEvent,
@@ -19,9 +20,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { BackButton } from '@/components/ui/BackButton';
+import { SacredIcon } from '@/components/ui/SacredIcon';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
@@ -94,7 +97,8 @@ function TypingDots({ color }: { color: string }) {
 
 function renderFormattedMessage(
   text: string,
-  theme: ReturnType<typeof themeColor> & { userBubble: string }
+  theme: ReturnType<typeof themeColor>,
+  isDark: boolean
 ) {
   if (!text) return null;
 
@@ -106,7 +110,7 @@ function renderFormattedMessage(
         color: theme.text,
         fontFamily: FONTS.sans,
         fontSize: 15,
-        lineHeight: 22,
+        lineHeight: 23,
       }}
     >
       {parts.map((p, idx) =>
@@ -116,9 +120,10 @@ function renderFormattedMessage(
             style={{
               fontFamily: FONTS.serifBold,
               color: theme.brandStrong,
+              backgroundColor: isDark ? 'rgba(197, 160, 89, 0.20)' : 'rgba(197, 160, 89, 0.14)',
             }}
           >
-            {p.text}
+            {` 📜 ${p.text} `}
           </Text>
         ) : (
           p.text
@@ -150,13 +155,35 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   onCopy,
 }: ChatItemProps) {
   const isUser = item.role === 'user';
+  const animY = useRef(new Animated.Value(12)).current;
+  const animOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(animOpacity, {
+        toValue: 1,
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(animY, {
+        toValue: 0,
+        damping: 18,
+        stiffness: 240,
+        mass: 0.7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [animOpacity, animY]);
 
   return (
-    <View
+    <Animated.View
       style={{
         alignSelf: isUser ? 'flex-end' : 'flex-start',
-        maxWidth: isUser ? '82%' : '86%',
+        maxWidth: isUser ? '84%' : '88%',
         marginBottom: 14,
+        opacity: animOpacity,
+        transform: [{ translateY: animY }],
       }}
     >
       <Pressable
@@ -169,34 +196,117 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         }}
         disabled={!item.text}
         style={({ pressed }) => ({
-          borderRadius: 20,
-          borderBottomRightRadius: isUser ? 4 : 20,
-          borderBottomLeftRadius: isUser ? 20 : 4,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          backgroundColor: isUser ? theme.userBubble : theme.card,
-          borderWidth: isUser ? 0 : 1,
-          borderColor: isUser ? 'transparent' : theme.premiumBorder,
+          borderRadius: 22,
+          borderBottomRightRadius: isUser ? 5 : 22,
+          borderBottomLeftRadius: isUser ? 22 : 5,
+          overflow: 'hidden',
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           opacity: pressed && !isUser ? 0.92 : 1,
         })}
       >
         {isUser ? (
-          <Text
+          <LinearGradient
+            colors={isDark ? [theme.brand, COLORS.brandGoldDark] : [COLORS.brandGoldLight, theme.brand]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
-              color: COLORS.ink,
-              fontFamily: FONTS.sansMedium,
-              fontSize: 15,
-              lineHeight: 22,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderRadius: 22,
+              borderBottomRightRadius: 6,
+              borderBottomLeftRadius: 22,
             }}
           >
-            {item.text}
-          </Text>
-        ) : item.text ? (
-          renderFormattedMessage(item.text, theme)
-        ) : streaming ? (
-          <TypingDots color={theme.brand} />
-        ) : null}
+            <Text
+              style={{
+                color: COLORS.ink,
+                fontFamily: FONTS.sansMedium,
+                fontSize: 15,
+                lineHeight: 22,
+              }}
+            >
+              {item.text}
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.055)' : 'rgba(255, 255, 255, 0.94)',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(218, 165, 32, 0.22)' : 'rgba(218, 165, 32, 0.32)',
+              borderRadius: 22,
+              borderBottomLeftRadius: 5,
+            }}
+          >
+            {/* Sacred Assistant Insignia Header */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                marginBottom: 8,
+                opacity: 0.9,
+              }}
+            >
+              <View
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: theme.brandSoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 11, lineHeight: 13 }}>🕉️</Text>
+              </View>
+              <Text
+                style={{
+                  fontFamily: FONTS.serifBold,
+                  fontSize: 12,
+                  color: theme.brandStrong,
+                  letterSpacing: 0.3,
+                }}
+              >
+                Dharma Mitra
+              </Text>
+              <Text
+                style={{
+                  fontFamily: FONTS.serif,
+                  fontSize: 11,
+                  color: theme.dim,
+                  fontStyle: 'italic',
+                }}
+              >
+                · दिव्य वाणी
+              </Text>
+            </View>
+
+            {item.text ? (
+              <>
+                {renderFormattedMessage(item.text, theme, isDark)}
+                {!streaming && (
+                  <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 2, opacity: 0.65 }}>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.serif,
+                        fontSize: 11,
+                        color: theme.brandStrong,
+                        letterSpacing: 3,
+                      }}
+                    >
+                      — ॐ —
+                    </Text>
+                  </View>
+                )}
+              </>
+            ) : streaming ? (
+              <TypingDots color={theme.brand} />
+            ) : null}
+          </View>
+        )}
       </Pressable>
 
       {!isUser && Boolean(item.text) && (
@@ -275,7 +385,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
           )}
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 });
 
@@ -465,6 +575,34 @@ export default function AiChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
+      {/* Sacred ambient background glow per app/(tabs)/japa.tsx precedent */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 40,
+          right: -80,
+          width: 220,
+          height: 220,
+          borderRadius: 110,
+          backgroundColor: theme.brandSoft,
+          opacity: isDark ? 0.45 : 0.65,
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 380,
+          left: -90,
+          width: 240,
+          height: 240,
+          borderRadius: 120,
+          backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight,
+          opacity: isDark ? 0.35 : 0.50,
+        }}
+      />
+
       <View
         style={{
           flex: 1,
@@ -509,7 +647,7 @@ export default function AiChatScreen() {
             </View>
           </View>
 
-          {/* Action pills: EN/HI & Clear */}
+          {/* Action pills: EN/HI/PA & Clear */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View
               style={{
@@ -521,7 +659,7 @@ export default function AiChatScreen() {
                 borderColor: theme.borderSoft,
               }}
             >
-              {(['en', 'hi'] as const).map((option) => {
+              {(['en', 'hi', 'pa'] as const).map((option) => {
                 const active = activeLanguage === option;
                 return (
                   <Pressable
@@ -577,30 +715,45 @@ export default function AiChatScreen() {
         {/* Chat Stream / Empty State */}
         {messages.length === 0 ? (
           <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 4, gap: 14 }}>
-            <View style={{ alignItems: 'center', marginBottom: 8 }}>
+            <View style={{ alignItems: 'center', marginBottom: 12 }}>
               <View
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
                   backgroundColor: theme.brandSoft,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 12,
+                  boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+                  borderWidth: 1,
+                  borderColor: theme.premiumBorder,
                 }}
               >
-                <Feather name="compass" size={24} color={theme.brand} />
+                <SacredIcon name="ai-guide" fallbackGlyph="compass" size={28} color={theme.brand} />
               </View>
+              <Text
+                style={{
+                  color: theme.brandStrong,
+                  fontFamily: FONTS.serifBold,
+                  fontSize: 13,
+                  letterSpacing: 1,
+                  textTransform: 'uppercase',
+                  marginBottom: 4,
+                }}
+              >
+                {greeting}
+              </Text>
               <Text
                 style={{
                   color: theme.text,
                   fontFamily: FONTS.serifBold,
-                  fontSize: 20,
+                  fontSize: 24,
                   textAlign: 'center',
-                  marginBottom: 4,
+                  marginBottom: 6,
                 }}
               >
-                Ask Dharma Mitra
+                Dharma Mitra
               </Text>
               <Text
                 style={{
@@ -609,10 +762,10 @@ export default function AiChatScreen() {
                   fontSize: 14,
                   textAlign: 'center',
                   lineHeight: 20,
-                  maxWidth: 280,
+                  maxWidth: 290,
                 }}
               >
-                Dharmic guidance grounded in scripture, spiritual inquiry, and daily practice.
+                Dharmic guidance grounded in sacred scriptures, spiritual inquiry, and daily sadhana.
               </Text>
             </View>
 
@@ -638,7 +791,7 @@ export default function AiChatScreen() {
                         color: theme.text,
                         fontFamily: FONTS.sansMedium,
                         fontSize: 14,
-                        lineHeight: 20,
+                        lineHeight: 22,
                         flex: 1,
                         marginRight: 10,
                       }}

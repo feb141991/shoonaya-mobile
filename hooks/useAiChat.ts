@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { supabase } from '@/lib/supabase';
+
+export const CHAT_LANGUAGE_STORAGE_KEY = '@shoonaya/chat_language';
 
 export type ChatMessage = {
   id: string;
@@ -55,7 +58,39 @@ export function useAiChat(options: UseAiChatOptions = {}) {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [usageLabel, setUsageLabel] = useState<string | null>(null);
-  const [language, setLanguage] = useState<string | null>(null);
+  const [language, setLanguageState] = useState<string | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem(CHAT_LANGUAGE_STORAGE_KEY)
+      .then((saved) => {
+        if (saved && (saved === 'en' || saved === 'hi' || saved === 'pa')) {
+          setLanguageState(saved);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const setLanguage = useCallback((nextLang: string) => {
+    setLanguageState(nextLang);
+    void AsyncStorage.setItem(CHAT_LANGUAGE_STORAGE_KEY, nextLang).catch(() => {});
+
+    void (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('profiles')
+            .update({ app_language: nextLang })
+            .eq('id', user.id);
+          setProfile((prev) => (prev ? { ...prev, appLanguage: nextLang } : prev));
+        }
+      } catch {
+        // Non-blocking sync
+      }
+    })();
+  }, []);
+
+  const activeLanguage = language ?? profile?.appLanguage ?? 'en';
 
   // Real used/limit, fetched from the same route the PWA's AIChatClient
   // reads (/api/ai/chat/usage) — replaces a previously hardcoded, incorrect
@@ -158,7 +193,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
             city: profile.city,
             country: profile.country,
             seeking: profile.seeking,
-            appLanguage: language ?? profile.appLanguage,
+            appLanguage: activeLanguage,
             meaningLanguage: profile.meaningLanguage,
             transliterationLanguage: profile.transliterationLanguage,
           }),
@@ -213,7 +248,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
         setStreaming(false);
       }
     },
-    [input, messages, profile, streaming, refreshUsage, language, errorMessage]
+    [input, messages, profile, streaming, refreshUsage, activeLanguage, errorMessage]
   );
 
   useEffect(() => {
@@ -235,7 +270,8 @@ export function useAiChat(options: UseAiChatOptions = {}) {
     usageLabel,
     profile,
     loadingProfile,
-    language,
+    language: activeLanguage,
+    activeLanguage,
     setLanguage,
     sendMessage,
     clearMessages,

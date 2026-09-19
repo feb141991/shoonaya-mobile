@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Easing,
   FlatList,
   KeyboardAvoidingView,
   type NativeScrollEvent,
@@ -92,7 +93,11 @@ function TypingDots({ color }: { color: string }) {
   );
 }
 
-function renderFormattedMessage(text: string, theme: ReturnType<typeof themeColor>) {
+function renderFormattedMessage(
+  text: string,
+  theme: ReturnType<typeof themeColor>,
+  isDark: boolean
+) {
   if (!text) return null;
 
   const parts = parseAiMessageCitations(text);
@@ -103,7 +108,7 @@ function renderFormattedMessage(text: string, theme: ReturnType<typeof themeColo
         color: theme.text,
         fontFamily: FONTS.sans,
         fontSize: 15,
-        lineHeight: 22,
+        lineHeight: 23,
       }}
     >
       {parts.map((p, idx) =>
@@ -113,9 +118,10 @@ function renderFormattedMessage(text: string, theme: ReturnType<typeof themeColo
             style={{
               fontFamily: FONTS.serifBold,
               color: theme.brandStrong,
+              backgroundColor: isDark ? 'rgba(197, 160, 89, 0.20)' : 'rgba(197, 160, 89, 0.14)',
             }}
           >
-            {p.text}
+            {` 📜 ${p.text} `}
           </Text>
         ) : (
           p.text
@@ -147,22 +153,44 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
   onCopy,
 }: ChatItemProps) {
   const isUser = item.role === 'user';
+  const animY = useRef(new Animated.Value(12)).current;
+  const animOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(animOpacity, {
+        toValue: 1,
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(animY, {
+        toValue: 0,
+        damping: 18,
+        stiffness: 240,
+        mass: 0.7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [animOpacity, animY]);
 
   return (
-    <View
+    <Animated.View
       style={{
         alignSelf: isUser ? 'flex-end' : 'flex-start',
-        maxWidth: isUser ? '82%' : '86%',
+        maxWidth: isUser ? '84%' : '88%',
         marginBottom: 12,
+        opacity: animOpacity,
+        transform: [{ translateY: animY }],
       }}
     >
       <Pressable
         onLongPress={() => onCopy(item)}
         disabled={!item.text}
         style={({ pressed }) => ({
-          borderRadius: 20,
-          borderBottomRightRadius: isUser ? 4 : 20,
-          borderBottomLeftRadius: isUser ? 20 : 4,
+          borderRadius: 22,
+          borderBottomRightRadius: isUser ? 5 : 22,
+          borderBottomLeftRadius: isUser ? 22 : 5,
           overflow: 'hidden',
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
           opacity: pressed && !isUser ? 0.92 : 1,
@@ -170,12 +198,15 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
       >
         {isUser ? (
           <LinearGradient
-            colors={[theme.brand, isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight]}
+            colors={isDark ? [theme.brand, COLORS.brandGoldDark] : [COLORS.brandGoldLight, theme.brand]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
               paddingHorizontal: 16,
               paddingVertical: 12,
+              borderRadius: 22,
+              borderBottomRightRadius: 6,
+              borderBottomLeftRadius: 22,
             }}
           >
             <Text
@@ -193,16 +224,76 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
           <View
             style={{
               paddingHorizontal: 16,
-              paddingVertical: 12,
-              backgroundColor: theme.card,
+              paddingVertical: 14,
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.055)' : 'rgba(255, 255, 255, 0.94)',
               borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              borderRadius: 20,
-              borderBottomLeftRadius: 4,
+              borderColor: isDark ? 'rgba(218, 165, 32, 0.22)' : 'rgba(218, 165, 32, 0.32)',
+              borderRadius: 22,
+              borderBottomLeftRadius: 5,
             }}
           >
+            {/* Sacred Assistant Insignia Header */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                marginBottom: 8,
+                opacity: 0.9,
+              }}
+            >
+              <View
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: theme.brandSoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 11, lineHeight: 13 }}>🕉️</Text>
+              </View>
+              <Text
+                style={{
+                  fontFamily: FONTS.serifBold,
+                  fontSize: 12,
+                  color: theme.brandStrong,
+                  letterSpacing: 0.3,
+                }}
+              >
+                Dharma Mitra
+              </Text>
+              <Text
+                style={{
+                  fontFamily: FONTS.serif,
+                  fontSize: 11,
+                  color: theme.dim,
+                  fontStyle: 'italic',
+                }}
+              >
+                · दिव्य वाणी
+              </Text>
+            </View>
+
             {item.text ? (
-              renderFormattedMessage(item.text, theme)
+              <>
+                {renderFormattedMessage(item.text, theme, isDark)}
+                {!streaming && (
+                  <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 2, opacity: 0.65 }}>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.serif,
+                        fontSize: 11,
+                        color: theme.brandStrong,
+                        letterSpacing: 3,
+                      }}
+                    >
+                      — ॐ —
+                    </Text>
+                  </View>
+                )}
+              </>
             ) : streaming ? (
               <TypingDots color={theme.brand} />
             ) : null}
@@ -270,7 +361,7 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
           )}
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 });
 
@@ -443,6 +534,34 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
         <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}>
+          {/* Sacred ambient background glow */}
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 20,
+              right: -70,
+              width: 200,
+              height: 200,
+              borderRadius: 100,
+              backgroundColor: theme.brandSoft,
+              opacity: isDark ? 0.40 : 0.60,
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 320,
+              left: -80,
+              width: 220,
+              height: 220,
+              borderRadius: 110,
+              backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight,
+              opacity: isDark ? 0.30 : 0.45,
+            }}
+          />
+
           {/* Header */}
           <View
             style={{
@@ -542,7 +661,7 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
                 borderColor: theme.borderSoft,
               }}
             >
-              {(['en', 'hi'] as const).map((option) => {
+              {(['en', 'hi', 'pa'] as const).map((option) => {
                 const active = activeLanguage === option;
                 return (
                   <Pressable
