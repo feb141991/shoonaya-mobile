@@ -15,6 +15,8 @@ LogBox.ignoreLogs([
   'FetchRequestCanceledException',
   'Fetch request has been canceled',
   'FetchRequestCanceled',
+  '[expo-notifications] Error reading persisted server registration info',
+  'ERR_NOTIFICATIONS_KEYCHAIN_ACCESS',
 ]);
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
