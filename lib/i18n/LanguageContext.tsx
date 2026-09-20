@@ -15,6 +15,7 @@ import {
   isAppLanguage,
 } from '@/lib/language-runtime';
 import { supabase } from '@/lib/supabase';
+import { useAppIdentity, getAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 
 export const APP_LANGUAGE_STORAGE_KEY = '@shoonaya/app_language';
 export const LEGACY_CHAT_LANGUAGE_KEY = '@shoonaya/chat_language';
@@ -40,17 +41,15 @@ export function LanguageProvider({
   children,
 }: LanguageProviderProps) {
   const [language, setLanguageState] = useState<AppLanguage>(initialLanguage);
+  const identity = useAppIdentity();
 
+  // Instant paint from whichever local cache has a value -- offline-first,
+  // zero mount flicker. Runs once; the identity-driven effect below is what
+  // reconciles with the actual source of truth (the profile row).
   useEffect(() => {
     let cancelled = false;
-
-    async function hydrateLanguage() {
+    (async () => {
       try {
-        // 1. Instant paint from whichever local cache has a value -- offline-first,
-        // zero mount flicker. This is a first approximation only: it must not be
-        // the last word, or a language change made on another device (or by an
-        // admin/support action on the profile row) would never reach this device
-        // as long as *any* local cache value already existed here.
         const stored = await AsyncStorage.getItem(APP_LANGUAGE_STORAGE_KEY);
         if (stored && isAppLanguage(stored)) {
           if (!cancelled) setLanguageState(stored);
@@ -61,56 +60,70 @@ export function LanguageProvider({
             void AsyncStorage.setItem(APP_LANGUAGE_STORAGE_KEY, chatStored).catch(() => {});
           }
         }
-
-        // 2. Reconcile with the profile -- the actual source of truth -- in the
-        // background. Always runs, even when a cached value was just applied
-        // above, so a value set on a different device is picked up here instead
-        // of being permanently shadowed by a stale local cache.
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('app_language')
-            .eq('id', user.id)
-            .single();
-
-          if (!cancelled && data?.app_language && isAppLanguage(data.app_language)) {
-            setLanguageState(data.app_language);
-            void AsyncStorage.setItem(APP_LANGUAGE_STORAGE_KEY, data.app_language).catch(() => {});
-          }
-        }
       } catch {
         // Failsafe: remain on default language without crashing
       }
-    }
-
-    void hydrateLanguage();
-
-    // Listen to auth changes so signing in immediately syncs user's stored language
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user?.id) {
-        try {
-          const { data } = await supabase
-            .from('profiles')
-            .select('app_language')
-            .eq('id', session.user.id)
-            .single();
-
-          if (data?.app_language && isAppLanguage(data.app_language)) {
-            setLanguageState(data.app_language);
-            void AsyncStorage.setItem(APP_LANGUAGE_STORAGE_KEY, data.app_language).catch(() => {});
-          }
-        } catch {
-          // ignore
-        }
-      }
-    });
-
+    })();
     return () => {
       cancelled = true;
-      subscription?.unsubscribe();
     };
   }, []);
+
+  // F03 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): this used to run
+  // its own one-shot Supabase user lookup plus its own dedicated auth-state
+  // subscription, duplicating the root's already-published identity
+  // (app/_layout.tsx). That had two real bugs, not just an architecture
+  // smell: (1) the mount-only lookup never re-ran on a later account
+  // switch except via the separate subscription, which itself (2) had no
+  // generation guard, so a slow profile read from an earlier
+  // identity could resolve after a newer one and overwrite it with stale
+  // data -- and did nothing at all on sign-out (`if (session?.user?.id)`
+  // skipped the null-session case), leaving a just-signed-out user's
+  // app_language visible to whoever uses the device next.
+  useEffect(() => {
+    if (identity.kind === 'loading') return;
+
+    if (identity.kind !== 'authenticated') {
+      // Signed out or guest: stop showing a just-signed-out user's synced
+      // language. Falls back to the device cache (the same source the
+      // mount effect above reads), not a hardcoded default, so an explicit
+      // guest-set language survives sign-out. This does not fully
+      // identity-scope language storage the way Home/Profile/Mandali
+      // caches are scoped -- APP_LANGUAGE_STORAGE_KEY remains one
+      // device-wide key that every authenticated reconciliation below
+      // overwrites, so a second account signing in right after a first
+      // can still see a brief flash of the first account's language until
+      // its own reconciliation resolves. Tracked as a residual gap in
+      // docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md, not silently
+      // dropped -- a full fix needs identity-scoped storage, out of scope
+      // for this pass.
+      (async () => {
+        const stored = await AsyncStorage.getItem(APP_LANGUAGE_STORAGE_KEY).catch(() => null);
+        if (stored && isAppLanguage(stored)) setLanguageState(stored);
+      })();
+      return;
+    }
+
+    const { isCurrent } = captureAppIdentity();
+    const userId = identity.userId;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('app_language')
+          .eq('id', userId)
+          .single();
+
+        if (!isCurrent()) return;
+        if (data?.app_language && isAppLanguage(data.app_language)) {
+          setLanguageState(data.app_language);
+          void AsyncStorage.setItem(APP_LANGUAGE_STORAGE_KEY, data.app_language).catch(() => {});
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  }, [identity]);
 
   const setLanguage = useCallback(async (newLang: AppLanguage) => {
     if (!isAppLanguage(newLang)) return;
@@ -126,20 +139,21 @@ export function LanguageProvider({
       // ignore
     }
 
-    // Sync to Supabase profile in the background
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+    // Sync to Supabase profile in the background -- reads the root-owned
+    // identity synchronously instead of a third redundant getUser() call.
+    const currentIdentity = getAppIdentity();
+    if (currentIdentity.kind === 'authenticated') {
+      try {
         await supabase
           .from('profiles')
           .update({
             app_language: newLang,
             meaning_language: newLang,
           })
-          .eq('id', user.id);
+          .eq('id', currentIdentity.userId);
+      } catch {
+        // Non-blocking sync
       }
-    } catch {
-      // Non-blocking sync
     }
   }, []);
 

@@ -177,6 +177,34 @@ their remaining scope is separately closed.
   the four have been exercised as real device-level integration tests
   (not possible under this project's plain `tsx --test` runner without a
   React Native test renderer, which does not exist in this repo yet).
+- **F03 -- resolved (2026-09-20).** Confirmed both named files still had
+  their own independent auth ownership, unrelated to the earlier language-
+  architecture-unification pass this session did (that fixed reader/
+  global-scope conflation, a different bug). `lib/i18n/LanguageContext.tsx`
+  ran a one-shot user lookup on mount plus its own dedicated auth-state
+  subscription, with two real bugs beyond duplication: the subscription had
+  no generation guard (a slow profile read from an earlier identity could
+  resolve after a newer one and overwrite it), and it did nothing at all on
+  sign-out, leaving a just-signed-out user's `app_language` visible to
+  whoever used the device next. `components/home/SacredCalendarSheet.tsx`
+  ran a second, independent auth-state subscription purely to close itself
+  on an account switch -- a legitimate purpose, but no reason it needed its
+  own subscription to do it. Both now consume `useAppIdentity()`
+  (`lib/appIdentity.ts`); `LanguageContext` additionally uses
+  `captureAppIdentity()`'s lease to guard the async profile reconciliation
+  against the exact race described above, and falls back to the device
+  cache (not a hardcoded default) on sign-out/guest so an explicitly-set
+  guest language survives. Widened `__tests__/app-identity-ownership.test.ts`
+  (previously scanned only the tab screens) to cover both files, plus a
+  dedicated assertion in `__tests__/language-context.test.ts` -- confirmed
+  both fail against the pre-fix source before the fix was applied. **Not
+  attempted:** full identity-scoped language storage (separate cache keys
+  per user/guest, matching how Home/Profile/Mandali caches are scoped) --
+  `APP_LANGUAGE_STORAGE_KEY` remains one device-wide key, so a second
+  account signing in immediately after a first can still see a brief flash
+  of the first account's language until its own reconciliation resolves.
+  That is a larger, explicitly out-of-scope change for this pass, not a
+  silently dropped fix.
 
 ## Frozen baseline (2026-09-20)
 

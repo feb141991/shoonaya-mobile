@@ -9,6 +9,7 @@ import { useReducedMotion } from '@/components/ui/Motion';
 import { COLORS, FONTS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 const COPY = {
   en: { title: 'Sacred Calendar', intro: 'Keep verified sacred days in your calendar.', subscribe: 'Subscribe for updates', download: 'Download calendar file', snapshot: 'Save a one-time copy. It will not receive updates.', close: 'Close', retry: 'Retry', profile: 'Review calendar settings', missing: 'Choose your calendar profile, tradition and location in Settings first.', unavailable: 'Subscriptions are not available yet. You can still download a calendar file or try again later.', failed: 'The calendar could not be loaded. Please try again.', signin: 'Sign in to use your Sacred Calendar.', includes: 'All verified sacred days', empty: 'No verified events are available for these settings yet.', preview: 'Upcoming preview', add: 'Add subscription', copy: 'Copy subscription link', copied: 'Link copied', opened: 'Subscription link opened. Finish adding it in your calendar app.', handoff: 'Could not open a calendar app. Copy the link and follow the instructions below.', revoke: 'Revoke subscription link', revoked: 'Link revoked. Remove the subscribed calendar from your calendar app as well.', privacy: 'Anyone with this link can read this calendar. Keep it private. Revoke it here to stop access.', refresh: 'Calendar apps refresh on their own schedule. Manage reminders in your calendar app.', settings: 'These settings stay with this subscription. To change them, revoke the link, update Calendar settings and subscribe again.', instructions: 'Apple Calendar: use Add subscription. Google Calendar on a computer: Other calendars → From URL. Outlook on the web: Add calendar → Subscribe from web. Paste the copied link.', busy: 'Preparing calendar…' },
@@ -32,12 +33,20 @@ export function SacredCalendarSheet({ onClose, onDownload, downloading, lang }: 
   const owner = useRef<string | null>(null);
   const mounted = useRef(true);
   const inFlight = useRef(false);
+  const identity = useAppIdentity();
+  // F03 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): replaces a
+  // private dedicated auth-state subscription with the root-owned identity
+  // (app/_layout.tsx) -- same safety behavior (close this sheet if the
+  // viewing account changes while it's open), one fewer independent auth
+  // listener in the tree.
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (owner.current && session?.user.id !== owner.current) { mounted.current = false; onClose(); }
-    });
-    return () => { mounted.current = false; listener.subscription.unsubscribe(); };
-  }, [onClose]);
+    if (!owner.current) return;
+    const stillSameUser = identity.kind === 'authenticated' && identity.userId === owner.current;
+    if (!stillSameUser) { mounted.current = false; onClose(); }
+  }, [identity, onClose]);
+  useEffect(() => {
+    return () => { mounted.current = false; };
+  }, []);
 
   const request = async (method: 'GET' | 'POST' | 'DELETE' = 'GET') => {
     if (inFlight.current) return;

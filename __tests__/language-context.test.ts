@@ -65,4 +65,19 @@ describe('Unified Language Architecture & Provider Integrity', () => {
     const chatSheet = readFileSync(join(process.cwd(), 'components/home/DharmaMitraChatSheet.tsx'), 'utf8');
     assert.ok(chatSheet.includes("language === 'hi' ? 'दिव्य वाणी' : language === 'pa' ? 'ਦਿਵਯ ਬਾਣੀ' : 'Divine Voice'"));
   });
+
+  // F03 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): LanguageContext
+  // used to run its own supabase.auth.getUser()/onAuthStateChange instead
+  // of the root-owned identity, duplicating ownership and missing the
+  // sign-out case entirely (no branch for a null session).
+  it('consumes the root-owned identity instead of its own auth subscription', () => {
+    assert.doesNotMatch(contextSource, /supabase\.auth\.getUser\(\)/);
+    assert.doesNotMatch(contextSource, /supabase\.auth\.onAuthStateChange/);
+    assert.match(contextSource, /useAppIdentity\(\)/);
+    assert.match(contextSource, /captureAppIdentity\(\)/);
+    assert.match(contextSource, /getAppIdentity\(\)/);
+    // The sign-out/guest branch must exist and must not be a no-op --
+    // the old code silently left a just-signed-out user's language visible.
+    assert.match(contextSource, /if \(identity\.kind !== 'authenticated'\)\s*\{/);
+  });
 });

@@ -25,6 +25,8 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
   const bhakti = fs.readFileSync(path.join(process.cwd(), 'app/(tabs)/bhakti.tsx'), 'utf8');
   const tirtha = fs.readFileSync(path.join(process.cwd(), 'app/(tabs)/tirtha.tsx'), 'utf8');
   const login = fs.readFileSync(path.join(process.cwd(), 'app/(auth)/login.tsx'), 'utf8');
+  const languageContext = fs.readFileSync(path.join(process.cwd(), 'lib/i18n/LanguageContext.tsx'), 'utf8');
+  const sacredCalendarSheet = fs.readFileSync(path.join(process.cwd(), 'components/home/SacredCalendarSheet.tsx'), 'utf8');
 
   assert.match(root, /supabase\.auth\.onAuthStateChange/);
   assert.match(root, /authRouteGenerationRef/);
@@ -74,4 +76,15 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
   // A guest transition has no Supabase auth event, so it must publish the
   // identity itself before entering the tab navigator.
   assert.match(login, /await setGuestMode\(true\);[\s\S]*?setAppIdentity\(\{ kind: 'guest' \}\);\s*router\.replace\('\/\(tabs\)'\);/);
+
+  // F03 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): widens this
+  // ownership scan beyond the tab screens above to two files the finding
+  // named directly -- previously invisible to this test entirely, which
+  // is exactly how their own duplicate auth subscriptions went unnoticed.
+  assert.doesNotMatch(languageContext, /supabase\.auth\.getUser\(\)/);
+  assert.doesNotMatch(languageContext, /supabase\.auth\.onAuthStateChange/);
+  assert.match(languageContext, /useAppIdentity\(\)/);
+
+  assert.doesNotMatch(sacredCalendarSheet, /supabase\.auth\.onAuthStateChange/);
+  assert.match(sacredCalendarSheet, /useAppIdentity\(\)/);
 });
