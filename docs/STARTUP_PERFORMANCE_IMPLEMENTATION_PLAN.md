@@ -65,6 +65,11 @@ ready for device validation after Phase 0 evidence is collected.
   reconciliation outside the first-paint path.
 - Measure before and after using the Phase 0 matrix.
 
+Implementation status: complete in code. Both tab hubs consume the root-owned
+identity, reject stale completions after account changes, and preserve their
+existing background refresh behavior. Phase 0 real-device measurements remain
+the release gate for performance claims.
+
 ## Phase 3 — Profile
 
 - Cache only render-safe profile and progress-summary fields.

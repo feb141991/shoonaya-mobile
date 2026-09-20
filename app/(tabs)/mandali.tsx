@@ -45,7 +45,8 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
 import { resolveDisplayName } from '@/lib/displayName';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { setGuestMode } from '@/lib/guestSession';
+import { useAppIdentity, getAppIdentity } from '@/lib/appIdentity';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
 import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
 import {
@@ -504,6 +505,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
 // updates live without the user pulling to refresh.
 export default function MandaliScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
 
@@ -551,18 +553,12 @@ export default function MandaliScreen() {
   const [fullyLoadedCommentPostIds, setFullyLoadedCommentPostIds] = useState<Set<string>>(new Set());
   const [loadingCommentsForPostId, setLoadingCommentsForPostId] = useState<string | null>(null);
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
-  // Set by loadMandali when the cache-hit branch actually painted, and with
-  // the resolved user id -- read by the mount effect's telemetry after the
-  // promise settles. Reading `profile` state there instead would see the
-  // stale closure from mount, not the setProfile() call loadMandali makes
-  // internally, since this effect's deps don't include `profile`.
-  const routeOpenCacheHitRef = useRef(false);
-  const telemetryUserIdRef = useRef<string | null>(null);
   const feedListRef = useRef<FlashListRef<MandaliFeedItem>>(null);
   // Resolved as soon as loadMandali knows the user id, independent of
   // `profile` state -- read by the reaction outbox's resume path (mount and
   // app-foreground) so it never depends on a possibly-stale profile closure.
   const resolvedUserIdRef = useRef<string | null>(null);
+  const mandaliLoadGenerationRef = useRef(0);
   // Sorted, joined post-id string used ONLY to scope the reaction/comment/
   // RSVP realtime subscriptions below (Postgres Changes' `in.()` filter
   // needs a static string) and as a stable effect dependency -- resubscribes
@@ -602,9 +598,16 @@ export default function MandaliScreen() {
   // lib/mandali.ts's setPostReaction/etc directly, so the outbox stays
   // testable with a fake action the way lib/sankalpaOutbox.ts is testable
   // with a fake fetchImpl.
-  const performReactionAction = useCallback<PerformReactionAction>(async (targetType, targetId, desiredReaction) => {
-    const userId = resolvedUserIdRef.current;
-    if (!userId) throw new Error('No authenticated user for reaction sync');
+  const performReactionActionForUser = useCallback(async (
+    userId: string,
+    targetType: Parameters<PerformReactionAction>[0],
+    targetId: string,
+    desiredReaction: ReactionType | null
+  ) => {
+    const identity = getAppIdentity();
+    if (identity.kind !== 'authenticated' || identity.userId !== userId) {
+      throw new Error('Reaction sync identity changed');
+    }
     if (targetType === 'post') {
       if (desiredReaction == null) await removePostReaction(targetId, userId);
       else await setPostReaction(targetId, userId, desiredReaction);
@@ -614,40 +617,103 @@ export default function MandaliScreen() {
     }
   }, []);
 
+  const performReactionAction = useCallback<PerformReactionAction>(async (targetType, targetId, desiredReaction) => {
+    const userId = resolvedUserIdRef.current;
+    if (!userId) throw new Error('No authenticated user for reaction sync');
+    await performReactionActionForUser(userId, targetType, targetId, desiredReaction);
+  }, [performReactionActionForUser]);
+
   const refreshFailedReactionTargets = useCallback(async (userId: string) => {
     const failed = await listFailedReactionChanges(userId);
+    const identity = getAppIdentity();
+    if (identity.kind !== 'authenticated' || identity.userId !== userId) return;
     setFailedReactionTargets(new Set(failed.map((f) => `${f.targetType}:${f.targetId}`)));
   }, []);
 
-  const loadMandali = useCallback(async () => {
-    const guest = await isGuestMode();
-    setIsGuest(guest);
+  const resetMandaliIdentityState = useCallback(() => {
+    setProfile(null);
+    setPosts([]);
+    setBlendedPosts([]);
+    setComments([]);
+    setRsvps([]);
+    setMembers([]);
+    setMyReactions({});
+    setMyCommentReactions({});
+    setFailedReactionTargets(new Set());
+    setSeekers([]);
+    setPendingRequests([]);
+    setExpandedPostId(null);
+    setNextCursor(null);
+    setLoadingMore(false);
+    setFullyLoadedCommentPostIds(new Set());
+    setLoadingCommentsForPostId(null);
+    setSelectedMember(null);
+    setConnectionStatus('none');
+    setConnectionBusy(false);
+    setRequestsSheetVisible(false);
+    setPostOptionsPost(null);
+    setCommenting(null);
+    setPosting(false);
+    setSheetVisible(false);
+    setEditingPost(null);
+    setComposeBody('');
+    setComposeType('update');
+    setComposeEventDate('');
+    setComposeEventLoc('');
+    visiblePostIdsRef.current = new Set();
+    resolvedUserIdRef.current = null;
+  }, []);
 
-    if (guest) {
+  const loadMandali = useCallback(async (): Promise<{ cacheHit: boolean; readyAt: number }> => {
+    const loadGeneration = ++mandaliLoadGenerationRef.current;
+    let readyAt = Date.now();
+    const identity = getAppIdentity();
+    const isCurrentLoad = () => {
+      if (mandaliLoadGenerationRef.current !== loadGeneration) return false;
+      const currentIdentity = getAppIdentity();
+      return identity.kind === 'authenticated'
+        ? currentIdentity.kind === 'authenticated' && currentIdentity.userId === identity.userId
+        : currentIdentity.kind === identity.kind;
+    };
+    if (identity.kind === 'loading') return { cacheHit: false, readyAt };
+
+    if (identity.kind === 'guest') {
+      resetMandaliIdentityState();
+      setIsGuest(true);
       setLoading(false);
       setRefreshing(false);
-      return;
+      return { cacheHit: false, readyAt: Date.now() };
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    if (identity.kind === 'unauthenticated') {
+      resetMandaliIdentityState();
+      setIsGuest(false);
+      setLoading(false);
       router.replace('/(auth)/login');
-      return;
+      return { cacheHit: false, readyAt: Date.now() };
     }
-    telemetryUserIdRef.current = user.id;
 
-    const cacheIdentity: MandaliCacheIdentity = { kind: 'authenticated', userId: user.id };
+    if (resolvedUserIdRef.current && resolvedUserIdRef.current !== identity.userId) {
+      resetMandaliIdentityState();
+    }
+    setIsGuest(false);
+    const userId = identity.userId;
+    const shouldHydrateFromCache = resolvedUserIdRef.current !== userId;
+    if (shouldHydrateFromCache) setLoading(true);
+    let cacheHit = false;
+
+    const cacheIdentity: MandaliCacheIdentity = { kind: 'authenticated', userId };
 
     // Stale-while-revalidate: render whatever was cached for THIS identity
     // instantly (if anything), then keep going into the network fetch
     // below regardless -- this is a bridge to the fresh response, not a
     // substitute for it, same pattern as Home's homeCoordinator.
-    const cached = await readMandaliCache(cacheIdentity);
+    const cached = shouldHydrateFromCache ? await readMandaliCache(cacheIdentity) : null;
+    if (!isCurrentLoad()) return { cacheHit: false, readyAt };
     if (cached) {
+      cacheHit = true;
       setProfile({
-        userId: user.id,
+        userId,
         // Old cached payloads predate displayName -- resolveDisplayName's
         // own fallback only fires on blank input, so an old payload
         // (undefined) needs this explicit default to avoid literally
@@ -674,8 +740,9 @@ export default function MandaliScreen() {
         )
       );
       visiblePostIdsRef.current = new Set([...cached.payload.posts, ...cached.payload.blendedPosts].map((p) => p.id));
+      resolvedUserIdRef.current = userId;
       setLoading(false);
-      routeOpenCacheHitRef.current = true;
+      readyAt = Date.now();
     }
 
     type FeedPayload = {
@@ -703,10 +770,11 @@ export default function MandaliScreen() {
     // loadMorePosts below fetches subsequent pages with ?cursor.
     let feed: FeedPayload | null = null;
     try {
-      const feedResponse = await apiFetch('/api/mandali/feed?limit=20');
+      const feedResponse = await apiFetch('/api/mandali/feed?limit=20', { expectedUserId: userId });
+      if (!isCurrentLoad()) return { cacheHit, readyAt };
       const feedServerTiming = parseServerTimingHeader(feedResponse.headers.get('Server-Timing'));
       if (feedServerTiming) {
-        recordServerTiming({ kind: 'authenticated', userId: user.id }, 'mandali', feedServerTiming);
+        recordServerTiming({ kind: 'authenticated', userId }, 'mandali', feedServerTiming);
       }
       if (feedResponse.ok) {
         feed = (await feedResponse.json()) as FeedPayload;
@@ -717,6 +785,7 @@ export default function MandaliScreen() {
       console.warn('[MandaliScreen] /api/mandali/feed fetch failed, attempting direct Supabase fallback:', feedErr);
     }
 
+    if (!isCurrentLoad()) return { cacheHit, readyAt };
     if (!feed) {
       // Mirrors the real /api/mandali/feed route's use of getUserSafetyState +
       // filterAuthoredItems/filterProfileRows (backend's src/lib/user-safety.ts)
@@ -727,13 +796,14 @@ export default function MandaliScreen() {
         supabase
           .from('profiles')
           .select('id, full_name, username, mandali_id, city, country, latitude, longitude, mandalis(name)')
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle(),
-        fetchSafetyState(user.id).catch((safetyErr) => {
+        fetchSafetyState(userId).catch((safetyErr) => {
           console.warn('[MandaliScreen] fetchSafetyState failed, fallback feed will be unfiltered:', safetyErr);
           return { excludedAuthorIds: new Set<string>(), hiddenContentKeys: new Set<string>() };
         }),
       ]);
+      if (!isCurrentLoad()) return { cacheHit, readyAt };
 
       const mandaliId = myProfile?.mandali_id ?? null;
       let fetchedPosts: PostRow[] = [];
@@ -770,7 +840,7 @@ export default function MandaliScreen() {
           const { data: myUpvotes } = await supabase
             .from('post_upvotes')
             .select('post_id, reaction_type')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .in('post_id', postIds);
 
           const upvoteMap = new Map((myUpvotes ?? []).map((u) => [u.post_id, (u.reaction_type ?? 'love') as ReactionType]));
@@ -869,10 +939,12 @@ export default function MandaliScreen() {
         nextCursor: null,
       };
     }
+    if (!isCurrentLoad()) return { cacheHit, readyAt };
+    if (feed.profile?.id && feed.profile.id !== userId) return { cacheHit, readyAt };
     const profileRow = feed.profile;
     const mandaliRelation = Array.isArray(profileRow?.mandalis) ? profileRow.mandalis[0] : profileRow?.mandalis;
     const context: ProfileContext = {
-      userId: user.id,
+      userId,
       displayName: resolveDisplayName(profileRow?.full_name, profileRow?.username),
       mandaliId: profileRow?.mandali_id ?? null,
       mandaliName: (mandaliRelation as { name?: string } | null)?.name ?? null,
@@ -883,7 +955,9 @@ export default function MandaliScreen() {
     };
     setProfile(context);
     resolvedUserIdRef.current = context.userId;
-    void resumePendingReactionChanges(context.userId, performReactionAction).then(() =>
+    const performLoadedUserReaction: PerformReactionAction = (targetType, targetId, desiredReaction) =>
+      performReactionActionForUser(context.userId, targetType, targetId, desiredReaction);
+    void resumePendingReactionChanges(context.userId, performLoadedUserReaction).then(() =>
       refreshFailedReactionTargets(context.userId)
     );
     void refreshFailedReactionTargets(context.userId);
@@ -900,7 +974,8 @@ export default function MandaliScreen() {
       setNextCursor(null);
       setFullyLoadedCommentPostIds(new Set());
       void clearMandaliCache(cacheIdentity);
-      return;
+      if (!cacheHit) readyAt = Date.now();
+      return { cacheHit, readyAt };
     }
 
     const visiblePosts = feed.posts;
@@ -949,14 +1024,16 @@ export default function MandaliScreen() {
     // fetches its full thread separately (see toggleComments).
     const previewComments = allPosts.flatMap((post) => post.commentPreview ?? []);
     setComments(previewComments);
+    if (!cacheHit) readyAt = Date.now();
 
     const allCommentIds = previewComments.map((comment) => comment.id);
     if (allCommentIds.length > 0) {
       const { data: commentUpvoteRows } = await supabase
         .from('comment_upvotes')
         .select('comment_id, reaction_type')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .in('comment_id', allCommentIds);
+      if (!isCurrentLoad()) return { cacheHit, readyAt };
       setMyCommentReactions(
         Object.fromEntries(
           (commentUpvoteRows ?? []).map((row) => [row.comment_id, (row.reaction_type ?? 'love') as ReactionType])
@@ -983,7 +1060,8 @@ export default function MandaliScreen() {
       members: visibleMembers,
       nextCursor: feed.nextCursor,
     });
-  }, [router, performReactionAction, refreshFailedReactionTargets]);
+    return { cacheHit, readyAt };
+  }, [router, performReactionActionForUser, refreshFailedReactionTargets, resetMandaliIdentityState]);
 
   // Fetches the next page of the local Mandali feed (blended posts are
   // first-page-only, so this only ever appends to `posts`). Guarded against
@@ -1160,29 +1238,46 @@ export default function MandaliScreen() {
   }, [profile?.userId]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     const startedAt = Date.now();
-    routeOpenCacheHitRef.current = false;
+    const identityAtStart = appIdentity;
+    let active = true;
     loadMandali()
-      .then(() => {
-        if (telemetryUserIdRef.current) {
+      .then((result) => {
+        const currentIdentity = getAppIdentity();
+        if (
+          active &&
+          identityAtStart.kind === 'authenticated' &&
+          currentIdentity.kind === 'authenticated' &&
+          currentIdentity.userId === identityAtStart.userId
+        ) {
           recordRouteOpen(
-            { kind: 'authenticated', userId: telemetryUserIdRef.current },
+            { kind: 'authenticated', userId: identityAtStart.userId },
             'mandali',
-            { cacheHit: routeOpenCacheHitRef.current, durationMs: Date.now() - startedAt }
+            { cacheHit: result.cacheHit, durationMs: result.readyAt - startedAt }
           );
         }
       })
       .catch((error) => {
-        if (!isFetchCancelled(error)) {
+        const currentIdentity = getAppIdentity();
+        const stillSameIdentity =
+          active &&
+          identityAtStart.kind === 'authenticated' &&
+          currentIdentity.kind === 'authenticated' &&
+          currentIdentity.userId === identityAtStart.userId;
+        if (stillSameIdentity && !isFetchCancelled(error)) {
           console.error('[MandaliScreen] loadMandali failed', error);
-          if (telemetryUserIdRef.current) {
-            recordRefreshFailure({ kind: 'authenticated', userId: telemetryUserIdRef.current }, 'mandali');
-          }
+          recordRefreshFailure({ kind: 'authenticated', userId: identityAtStart.userId }, 'mandali');
         }
       })
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadMandali]);
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+      mandaliLoadGenerationRef.current += 1;
+    };
+  }, [appIdentity, loadMandali]);
 
   useEffect(() => {
     if (!profile?.userId) return;
@@ -2395,7 +2490,9 @@ export default function MandaliScreen() {
           surface={theme.surface}
           brand={theme.brand}
           cardBg={theme.card}
-          onJoined={loadMandali}
+          onJoined={async () => {
+            await loadMandali();
+          }}
         />
       ) : null}
     </>

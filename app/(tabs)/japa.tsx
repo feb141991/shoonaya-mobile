@@ -33,7 +33,7 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { getAppIdentity } from '@/lib/appIdentity';
+import { getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import {
   readPendingJapaCompletions,
   writePendingJapaCompletion,
@@ -49,8 +49,6 @@ import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
-import { supabase } from '@/lib/supabase';
-import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { getJapaMantrasForTradition, getJapaPracticeType, type JapaMantra } from '@/lib/traditions';
 import { getNityaRankProgress } from '@/lib/nitya-rank';
@@ -718,6 +716,7 @@ function StaticSceneBackdrop() {
 
 export default function JapaScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const japaShareCardRef = useRef<View>(null);
   const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
@@ -771,6 +770,7 @@ export default function JapaScreen() {
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const userIdRef = useRef<string | null>(null);
+  const contextLoadGenerationRef = useRef(0);
   const lastPersistedDurationRef = useRef(0);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
@@ -984,6 +984,8 @@ export default function JapaScreen() {
 
   const refreshSyncQueue = useCallback(async (userId: string) => {
     const result = await readPendingJapaCompletions(userId);
+    const currentIdentity = getAppIdentity();
+    if (currentIdentity.kind !== 'authenticated' || currentIdentity.userId !== userId) return;
     setSyncQueueItems((previous) => foldSyncQueueItems(previous, result));
     setSyncQueueUnavailable(result.status !== 'ok');
   }, []);
@@ -998,6 +1000,16 @@ export default function JapaScreen() {
 
   const loadContext = useCallback(async () => {
     let cacheApplied = false;
+    const loadGeneration = ++contextLoadGenerationRef.current;
+    const identityAtStart = getAppIdentity();
+    const isCurrentLoad = () => {
+      if (contextLoadGenerationRef.current !== loadGeneration) return false;
+      const currentIdentity = getAppIdentity();
+      if (identityAtStart.kind === 'authenticated') {
+        return currentIdentity.kind === 'authenticated' && currentIdentity.userId === identityAtStart.userId;
+      }
+      return currentIdentity.kind === identityAtStart.kind;
+    };
     const recordOpen = (identity: { kind: 'guest' } | { kind: 'authenticated'; userId: string }, cacheHit: boolean) => {
       if (routeOpenRecordedRef.current) return;
       const currentIdentity = getAppIdentity();
@@ -1009,13 +1021,11 @@ export default function JapaScreen() {
       recordRouteOpen(identity, 'japa', { cacheHit, durationMs: Date.now() - routeOpenStartedAtRef.current });
     };
     try {
-      const [guest, sessionResult] = await Promise.all([
-        isGuestMode(),
-        supabase.auth.getSession(),
-      ]);
-      setIsGuest(guest);
+      const identity = identityAtStart;
+      if (identity.kind === 'loading') return;
 
-      if (guest) {
+      if (identity.kind === 'guest') {
+        setIsGuest(true);
         userIdRef.current = null;
         void clearJapaContextCache();
         setSyncQueueItems([]);
@@ -1025,6 +1035,7 @@ export default function JapaScreen() {
         setJapaAlreadyDoneToday(false);
         setStreak(0);
         const guestLifetime = await AsyncStorage.getItem(JAPA_GUEST_LIFETIME_KEY);
+        if (!isCurrentLoad()) return;
         if (guestLifetime) {
           try {
             const parsed = JSON.parse(guestLifetime) as Partial<JapaLifetimeData>;
@@ -1043,9 +1054,23 @@ export default function JapaScreen() {
         return;
       }
 
-      const user = sessionResult.data.session?.user;
-      if (!user) return;
-      userIdRef.current = user.id;
+      if (identity.kind === 'unauthenticated') {
+        setIsGuest(false);
+        userIdRef.current = null;
+        setSyncQueueItems([]);
+        setSyncQueueUnavailable(false);
+        setTradition('hindu');
+        setActiveSymbolId(null);
+        setJapaAlreadyDoneToday(false);
+        setStreak(0);
+        setLifetime(EMPTY_LIFETIME);
+        return;
+      }
+
+      setIsGuest(false);
+      setLoading(true);
+      const userId = identity.userId;
+      userIdRef.current = userId;
 
       // Resolve a completion left over from a previous session that never
       // got acknowledged (e.g. the app was killed after the request was
@@ -1057,32 +1082,32 @@ export default function JapaScreen() {
       // rather than double-awarding karma/streak. Silent recovery attempt,
       // never surfaced as an error here; left pending on failure so the
       // next mount retries again.
-      const cached = await readJapaContextCache(user.id);
-      const cacheOwner = getAppIdentity();
-      if (cacheOwner.kind !== 'authenticated' || cacheOwner.userId !== user.id) return;
+      const cached = await readJapaContextCache(userId);
+      if (!isCurrentLoad()) return;
       if (cached) {
         applyJapaContext(cached);
         cacheApplied = true;
         setLoading(false);
-        recordOpen({ kind: 'authenticated', userId: user.id }, true);
+        recordOpen({ kind: 'authenticated', userId }, true);
       }
-      const response = await apiFetch('/api/japa/context', { expectedUserId: user.id });
+      const response = await apiFetch('/api/japa/context', { expectedUserId: userId });
+      if (!isCurrentLoad()) return;
       const japaServerTiming = parseServerTimingHeader(response.headers.get('Server-Timing'));
-      if (japaServerTiming) recordServerTiming({ kind: 'authenticated', userId: user.id }, 'japa', japaServerTiming);
+      if (japaServerTiming) recordServerTiming({ kind: 'authenticated', userId }, 'japa', japaServerTiming);
       if (!response.ok) throw new Error('japa-context-failed');
       const context = normalizeJapaContext(await response.json());
       if (!context) throw new Error('japa-context-invalid');
-      const currentIdentity = getAppIdentity();
-      if (currentIdentity.kind !== 'authenticated' || currentIdentity.userId !== user.id) return;
+      if (!isCurrentLoad()) return;
       applyJapaContext(context);
       cacheApplied = true;
       setLoading(false);
-      await writeJapaContextCache(user.id, context);
-      recordOpen({ kind: 'authenticated', userId: user.id }, false);
+      await writeJapaContextCache(userId, context);
+      recordOpen({ kind: 'authenticated', userId }, false);
 
       // Recover after rendering usable context, not on the first-paint path.
       let recovered = false;
-      const pendingQueue = await readPendingJapaCompletions(user.id);
+      const pendingQueue = await readPendingJapaCompletions(userId);
+      if (!isCurrentLoad()) return;
       // 'unavailable' (a corrupt/unreadable queue) is not evidence there's
       // nothing to recover -- skip recovery this launch rather than
       // pretending it's confirmed empty; the next launch gets another try.
@@ -1091,12 +1116,14 @@ export default function JapaScreen() {
         // failed-item UI), same convention as reactionOutbox's
         // resumePendingReactionChanges -- they are not auto-retried here.
         for (const pendingCompletion of pendingQueue.items.filter((entry) => entry.status === 'pending')) {
+          if (!isCurrentLoad()) return;
           const outcome = await attemptAndReconcilePendingCompletion(
-            user.id,
+            userId,
             pendingCompletion,
-            (path, options) => apiFetch(path, { ...options, expectedUserId: user.id }),
-            (label, attempts) => recordMutationRetryOutcome({ kind: 'authenticated', userId: user.id }, 'japa', label, attempts)
+            (path, options) => apiFetch(path, { ...options, expectedUserId: userId }),
+            (label, attempts) => recordMutationRetryOutcome({ kind: 'authenticated', userId }, 'japa', label, attempts)
           );
+          if (!isCurrentLoad()) return;
           if (outcome.kind === 'success') {
             recovered = true;
           } else if (outcome.kind === 'uncertain') {
@@ -1113,16 +1140,17 @@ export default function JapaScreen() {
       }
 
       if (recovered) {
-        const latest = await apiFetch('/api/japa/context', { expectedUserId: user.id });
+        const latest = await apiFetch('/api/japa/context', { expectedUserId: userId });
+        if (!isCurrentLoad()) return;
         const updated = latest.ok ? normalizeJapaContext(await latest.json()) : null;
-        const identityNow = getAppIdentity();
-        if (updated && identityNow.kind === 'authenticated' && identityNow.userId === user.id) {
+        if (updated && isCurrentLoad()) {
           applyJapaContext(updated);
-          await writeJapaContextCache(user.id, updated);
+          await writeJapaContextCache(userId, updated);
         }
       }
-      await refreshSyncQueue(user.id);
+      await refreshSyncQueue(userId);
     } catch {
+      if (!isCurrentLoad()) return;
       const identity = getAppIdentity();
       if (identity.kind === 'authenticated') recordRefreshFailure(identity, 'japa');
       if (!cacheApplied) {
@@ -1132,13 +1160,19 @@ export default function JapaScreen() {
         setStreak(0);
       }
     } finally {
-      setLoading(false);
+      if (isCurrentLoad()) setLoading(false);
     }
   }, [applyJapaContext, refreshSyncQueue]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
+    routeOpenStartedAtRef.current = Date.now();
+    routeOpenRecordedRef.current = false;
     void loadContext();
-  }, [loadContext]);
+    return () => {
+      contextLoadGenerationRef.current += 1;
+    };
+  }, [appIdentity, loadContext]);
 
   useEffect(() => {
     if (syncReviewVisible && syncFailedCount === 0) setSyncReviewVisible(false);
