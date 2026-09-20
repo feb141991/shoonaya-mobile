@@ -63,7 +63,9 @@ type NotificationType =
   | 'connection_cancelled'
   | 'user_blocked'
   | 'content_reported'
-  | 'post_reaction';
+  | 'post_reaction'
+  | 'mood'
+  | 'mood_checkin';
 
 type NotificationAdditionalData = {
   type?: NotificationType;
@@ -334,6 +336,8 @@ function routeForNotificationTap(data: NotificationAdditionalData): Href {
     case 'brahma_muhurta': return '/nitya-karma';
     case 'japa': return '/japa';
     case 'streak': return '/(tabs)';
+    case 'mood':
+    case 'mood_checkin': return '/mood';
     case 'mandali_mention':
     case 'connection_request':
     case 'connection_accepted':

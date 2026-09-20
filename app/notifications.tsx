@@ -427,8 +427,14 @@ export default function NotificationsScreen() {
         queueOperation({ kind: 'mark_read', notificationId: row.id });
       }
 
-      if (row.action_url) {
-        const route = resolveNativeRoute(row.action_url, '/notifications');
+      const targetUrl =
+        row.action_url ||
+        (row.type === 'mood_checkin' || row.notification_key?.startsWith('mood')
+          ? '/mood'
+          : null);
+
+      if (targetUrl) {
+        const route = resolveNativeRoute(targetUrl, '/notifications');
         if (route !== '/notifications') {
           router.push(route as Href);
         }

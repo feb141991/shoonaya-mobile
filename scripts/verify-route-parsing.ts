@@ -114,6 +114,9 @@ assertEqual('resolveNativeRoute("/settings/notifications")', resolveNativeRoute(
 assertEqual('resolveNativeRoute("/nitya-ashrama")', resolveNativeRoute('/nitya-ashrama'), '/nitya-ashrama');
 assertEqual('resolveNativeRoute("/nitya-dincharya")', resolveNativeRoute('/nitya-dincharya'), '/nitya-dincharya');
 assertEqual('resolveNativeRoute("/nitya-plans")', resolveNativeRoute('/nitya-plans'), '/nitya-plans');
+// Mood check-in notification routing (PWA /discover/mood and native /mood)
+assertEqual('resolveNativeRoute("/discover/mood")', resolveNativeRoute('/discover/mood'), '/mood');
+assertEqual('resolveNativeRoute("/mood")', resolveNativeRoute('/mood'), '/mood');
 // Unchanged neighbor, regression check.
 assertEqual('resolveNativeRoute("/nitya-karma")', resolveNativeRoute('/nitya-karma'), '/nitya-karma');
 

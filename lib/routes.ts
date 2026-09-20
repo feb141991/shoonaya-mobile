@@ -79,7 +79,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/nitya-plans')) return '/nitya-plans' as Href;
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';
   if (pathname.startsWith('/mandali')) return '/mandali';
-  if (pathname.startsWith('/mood')) return '/mood' as Href;
+  if (pathname.startsWith('/discover/mood') || pathname.startsWith('/mood')) return '/mood' as Href;
   // Mood's recommendation stack (lib/mood/engine.ts on web) always includes
   // a fixed "Live Darshan" card with href '/live-darshan' — a real native
   // screen (app/live-darshan.tsx) that had no dispatch line here, so it was
