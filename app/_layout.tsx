@@ -123,6 +123,11 @@ function RootLayout() {
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
   const startupStartedAtRef = useRef(Date.now());
+  // Set true only if the 6-second emergency fail-safe below actually fires.
+  // Lets markInteractive/the local receipt distinguish readiness reached
+  // normally from readiness forced open after session/profile resolution
+  // stalled (see F01/F02, docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md).
+  const emergencyFallbackUsedRef = useRef(false);
   const readyToRender = appIsReady && authReady;
   const isReaderScreen = rootSegment === 'pathshala' && segments.length >= 3;
   const isAiChatScreen = rootSegment === 'ai-chat';
@@ -210,18 +215,35 @@ function RootLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startupSceneOpacity]);
 
+  // F01 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): readyToRender
+  // alone means root mount + auth resolution, not real interactivity -- the
+  // startup overlay (showStartupScene) can still be crossfading out, and
+  // the destination screen underneath can still be loading. resolveStartupSurface
+  // already encodes the correct combined state (see __tests__/startup-visibility.test.ts):
+  // 'app' is the one state where the overlay is gone AND the app is ready.
+  // Gating on that instead of bare readyToRender is a real, contained fix;
+  // it does not attempt to also wait for a specific destination screen's own
+  // content (e.g. Home's cache hydration) to report itself ready, which
+  // would need a cross-component signal this pass does not add.
+  const isAppInteractive = resolveStartupSurface({ readyToRender, showStartupScene }) === 'app';
+
   useEffect(() => {
     startupLifecycleRef.current?.updateReady(readyToRender);
-    if (readyToRender) {
-      markInteractive();
+    if (isAppInteractive) {
+      // viaEmergencyFallback distinguishes normal readiness from the
+      // 6-second escape hatch below reaching readiness by force -- both
+      // used to report identically as "ready" with no way to tell them
+      // apart in Observe metrics or the local receipt.
+      markInteractive({ params: { viaEmergencyFallback: emergencyFallbackUsedRef.current } });
       void AsyncStorage.setItem('shoonaya:startup:last-receipt', JSON.stringify({
         status: 'ready',
         elapsedMs: Date.now() - startupStartedAtRef.current,
         route: segmentsRef.current.rootSegment ?? 'unknown',
+        viaEmergencyFallback: emergencyFallbackUsedRef.current,
         recordedAt: new Date().toISOString(),
       })).catch(() => {});
     }
-  }, [readyToRender, markInteractive]);
+  }, [readyToRender, isAppInteractive, markInteractive]);
 
   // Leaves a privacy-safe local receipt when startup remains unresolved. This
   // performs no network work and never gates rendering; it exists solely to
@@ -587,6 +609,7 @@ function RootLayout() {
     if (readyToRender) return;
 
     const timer = setTimeout(() => {
+      emergencyFallbackUsedRef.current = true;
       setAuthReady(true);
       markAuthReady();
       setAppIsReady(true);
