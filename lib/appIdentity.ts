@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 export type AppIdentity =
   | { kind: 'loading' }
   | { kind: 'guest' }
-  | { kind: 'authenticated'; userId: string }
+  | { kind: 'authenticated'; userId: string; email?: string | null }
   | { kind: 'unauthenticated' };
 
 let currentIdentity: AppIdentity = { kind: 'loading' };
@@ -13,7 +13,9 @@ export function setAppIdentity(identity: AppIdentity): void {
   const unchanged =
     identity.kind === currentIdentity.kind &&
     (identity.kind !== 'authenticated' ||
-      (currentIdentity.kind === 'authenticated' && identity.userId === currentIdentity.userId));
+      (currentIdentity.kind === 'authenticated' &&
+        identity.userId === currentIdentity.userId &&
+        identity.email === currentIdentity.email));
   if (unchanged) return;
 
   currentIdentity = identity;

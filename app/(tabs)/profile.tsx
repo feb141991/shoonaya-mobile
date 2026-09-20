@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,7 +36,16 @@ import { API_BASE, COLORS, FONTS, OFFICIAL_EMAIL, SHADOWS, SOCIAL_LINKS, TYPE, t
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { setGuestMode } from '@/lib/guestSession';
+import { useAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import {
+  getProfileCacheSnapshot,
+  getOrReadProfileCache,
+  writeProfileCache,
+  clearAllProfileCaches,
+  type ProfileCacheIdentity,
+  type CachedProfileRenderModel,
+} from '@/lib/profileCache';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
@@ -212,25 +221,171 @@ function isValidUsername(value: string) {
   return /^[a-z0-9_]{3,24}$/.test(value.trim().toLowerCase());
 }
 
+function buildProfileFromCache(cached: CachedProfileRenderModel): {
+  profile: ProfileData;
+  summary: ProgressSummary;
+  editState: EditState;
+} {
+  const profile: ProfileData = {
+    ...cached.profile,
+    is_pro: false,
+    subscription_status: 'free',
+  };
+  const summary: ProgressSummary = {
+    profile: {
+      id: cached.profile.id,
+      fullName: cached.profile.full_name,
+      username: cached.profile.username,
+      avatarUrl: cached.profile.avatar_url,
+      tradition: cached.profile.tradition,
+      sampradaya: cached.profile.sampradaya,
+      ishtaDevata: cached.profile.ishta_devata,
+      city: cached.profile.city,
+      country: cached.profile.country,
+      lifeStage: cached.profile.life_stage,
+      appLanguage: cached.profile.app_language,
+      activeSymbolId: cached.profile.active_symbol_id,
+      sevaScore: cached.profile.seva_score,
+      isPro: false,
+      subscriptionStatus: 'free',
+    },
+    completion: {
+      pct: cached.summary.completion.pct,
+      missing: cached.summary.completion.missing,
+      coreComplete: cached.summary.completion.coreComplete,
+    },
+    progress: cached.summary.progress,
+  };
+  const editState: EditState = {
+    fullName: cached.profile.full_name,
+    username: cached.profile.username || cached.profile.id.replace(/-/g, '').slice(0, 10),
+    sampradaya: cached.profile.sampradaya,
+    ishtaDevata: cached.profile.ishta_devata,
+    appLanguage: cached.profile.app_language,
+  };
+  return {
+    profile,
+    summary,
+    editState,
+  };
+}
+
+function profileIdentityKey(identity: ReturnType<typeof getAppIdentity>): string {
+  return identity.kind === 'authenticated' ? `user:${identity.userId}` : identity.kind;
+}
+
+function isSameProfileIdentity(
+  left: ReturnType<typeof getAppIdentity>,
+  right: ReturnType<typeof getAppIdentity>
+): boolean {
+  return profileIdentityKey(left) === profileIdentityKey(right);
+}
+
+const GUEST_PROFILE_DATA: ProfileData = {
+  id: 'guest',
+  full_name: 'Atithi Seeker',
+  username: 'atithi',
+  avatar_url: null,
+  tradition: 'hindu',
+  sampradaya: '',
+  ishta_devata: '',
+  city: '',
+  country: '',
+  life_stage: '',
+  app_language: 'en',
+  active_symbol_id: null,
+  seva_score: 0,
+  is_pro: false,
+  subscription_status: 'free',
+  kul_id: null,
+  kul_name: null,
+};
+
+const GUEST_SUMMARY_DATA: ProgressSummary = {
+  profile: {
+    id: 'guest',
+    fullName: 'Atithi Seeker',
+    username: 'atithi',
+    avatarUrl: null,
+    tradition: 'hindu',
+    sampradaya: '',
+    ishtaDevata: '',
+    city: '',
+    country: '',
+    lifeStage: '',
+    appLanguage: 'en',
+    activeSymbolId: null,
+    sevaScore: 0,
+    isPro: false,
+    subscriptionStatus: 'free',
+  },
+  completion: {
+    pct: 0,
+    missing: [],
+  },
+  progress: {
+    practices: { completed: 0, total: 5 },
+    streaks: { shloka: 0, bestShloka: 0, nitya: 0, bestNitya: 0 },
+    pathshala: { completedLessons: 0 },
+    quiz: { doneToday: false },
+    highlights: {
+      totalBeads: 0,
+      totalRounds: 0,
+      totalMinutes: 0,
+      totalSessions: 0,
+      topMantra: null,
+      nityaDays: 0,
+      pathshalaEntriesOpened: 0,
+      bookmarkedVerses: 0,
+    },
+  },
+};
+
+const GUEST_EDIT_STATE: EditState = {
+  fullName: 'Atithi Seeker',
+  username: 'atithi',
+  sampradaya: '',
+  ishtaDevata: '',
+  appLanguage: 'en',
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const [loading, setLoading] = useState(true);
+  const appIdentity = useAppIdentity();
+
+  const initialCache = useMemo(() => {
+    if (appIdentity.kind === 'guest') {
+      return {
+        profile: GUEST_PROFILE_DATA,
+        summary: GUEST_SUMMARY_DATA,
+        editState: GUEST_EDIT_STATE,
+      };
+    }
+    if (appIdentity.kind === 'authenticated') {
+      const snapshot = getProfileCacheSnapshot(appIdentity);
+      if (snapshot) return buildProfileFromCache(snapshot);
+    }
+    return null;
+  }, [appIdentity]);
+
+  const [loading, setLoading] = useState(!initialCache);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(initialCache?.profile ?? null);
   const [reportLoading, setReportLoading] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const [summary, setSummary] = useState<ProgressSummary | null>(null);
-  const [editState, setEditState] = useState<EditState>(INITIAL_EDIT);
-  const [email, setEmail] = useState('');
-  const [isGuest, setIsGuest] = useState(false);
+  const [summary, setSummary] = useState<ProgressSummary | null>(initialCache?.summary ?? null);
+  const [editState, setEditState] = useState<EditState>(initialCache?.editState ?? INITIAL_EDIT);
+  const [email, setEmail] = useState(appIdentity.kind === 'authenticated' ? appIdentity.email ?? '' : '');
+  const [entitlementsVerified, setEntitlementsVerified] = useState(appIdentity.kind === 'guest');
+  const [isGuest, setIsGuest] = useState(appIdentity.kind === 'guest');
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [locationSyncing, setLocationSyncing] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -239,93 +394,103 @@ export default function ProfileScreen() {
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   const profileShareCardRef = useRef<View>(null);
+  const profileLoadGenerationRef = useRef(0);
+
+  const previousIdentityRef = useRef<string>(profileIdentityKey(appIdentity));
+
+  useLayoutEffect(() => {
+    const currentKey = profileIdentityKey(appIdentity);
+    if (previousIdentityRef.current !== currentKey) {
+      previousIdentityRef.current = currentKey;
+      setIsGuest(appIdentity.kind === 'guest');
+      setLoadError(false);
+      if (appIdentity.kind === 'guest') {
+        setProfile(GUEST_PROFILE_DATA);
+        setSummary(GUEST_SUMMARY_DATA);
+        setEditState(GUEST_EDIT_STATE);
+        setEmail('');
+        setEntitlementsVerified(true);
+        setLoading(false);
+      } else if (appIdentity.kind === 'authenticated') {
+        const snapshot = getProfileCacheSnapshot(appIdentity);
+        if (snapshot) {
+          const hydrated = buildProfileFromCache(snapshot);
+          setProfile(hydrated.profile);
+          setSummary(hydrated.summary);
+          setEditState(hydrated.editState);
+          setEmail(appIdentity.email ?? '');
+          setEntitlementsVerified(false);
+          setLoading(false);
+        } else {
+          setProfile(null);
+          setSummary(null);
+          setEditState(INITIAL_EDIT);
+          setEmail(appIdentity.email ?? '');
+          setEntitlementsVerified(false);
+          setLoading(true);
+        }
+      } else {
+        setProfile(null);
+        setSummary(null);
+        setEditState(INITIAL_EDIT);
+        setEmail('');
+        setEntitlementsVerified(false);
+        setLoading(true);
+      }
+    }
+  }, [appIdentity]);
 
   const loadProfile = useCallback(async () => {
-    const guest = await isGuestMode();
+    const identity = appIdentity;
+    const loadGeneration = ++profileLoadGenerationRef.current;
+    const isCurrentLoad = () =>
+      profileLoadGenerationRef.current === loadGeneration &&
+      isSameProfileIdentity(getAppIdentity(), identity);
+    const guest = identity.kind === 'guest';
     setIsGuest(guest);
 
     if (guest) {
       setEmail('');
-      setProfile({
-        id: 'guest',
-        full_name: 'Atithi Seeker',
-        username: 'atithi',
-        avatar_url: null,
-        tradition: 'hindu',
-        sampradaya: '',
-        ishta_devata: '',
-        city: '',
-        country: '',
-        life_stage: '',
-        app_language: 'en',
-        active_symbol_id: null,
-        seva_score: 0,
-        is_pro: false,
-        subscription_status: 'free',
-        kul_id: null,
-        kul_name: null,
-      });
-      setSummary({
-        profile: {
-          id: 'guest',
-          fullName: 'Atithi Seeker',
-          username: 'atithi',
-          avatarUrl: null,
-          tradition: 'hindu',
-          sampradaya: '',
-          ishtaDevata: '',
-          city: '',
-          country: '',
-          lifeStage: '',
-          appLanguage: 'en',
-          activeSymbolId: null,
-          sevaScore: 0,
-          isPro: false,
-          subscriptionStatus: 'free',
-        },
-        completion: {
-          pct: 0,
-          missing: [],
-        },
-        progress: {
-          practices: { completed: 0, total: 5 },
-          streaks: { shloka: 0, bestShloka: 0, nitya: 0, bestNitya: 0 },
-          pathshala: { completedLessons: 0 },
-          quiz: { doneToday: false },
-          highlights: {
-            totalBeads: 0,
-            totalRounds: 0,
-            totalMinutes: 0,
-            totalSessions: 0,
-            topMantra: null,
-            nityaDays: 0,
-            pathshalaEntriesOpened: 0,
-            bookmarkedVerses: 0,
-          },
-        },
-      });
+      setProfile(GUEST_PROFILE_DATA);
+      setSummary(GUEST_SUMMARY_DATA);
       setAvatarFailed(false);
-      setEditState({
-        fullName: 'Atithi Seeker',
-        username: 'atithi',
-        sampradaya: '',
-        ishtaDevata: '',
-        appLanguage: 'en',
-      });
+      setEditState(GUEST_EDIT_STATE);
+      setEntitlementsVerified(true);
+      setLoading(false);
       return;
     }
 
-    // authData doesn't depend on the progress-summary response (or vice
-    // versa) — only the profileRow query below genuinely needs
-    // payload.profile.id, so that's the only leg that stays sequential.
-    const [response, { data: authData }] = await Promise.all([
-      apiFetch('/api/native/progress-summary'),
-      supabase.auth.getUser(),
-    ]);
+    if (identity.kind !== 'authenticated') {
+      return;
+    }
+
+    const cacheIdentity: ProfileCacheIdentity = {
+      kind: 'authenticated',
+      userId: identity.userId,
+    };
+
+    // Fast-path: If profile state is not yet hydrated, check disk cache
+    const cached = getProfileCacheSnapshot(cacheIdentity) ?? (await getOrReadProfileCache(cacheIdentity));
+    if (!isCurrentLoad()) return;
+    if (cached) {
+      const hydrated = buildProfileFromCache(cached);
+      setProfile((cur) => cur ?? hydrated.profile);
+      setSummary((cur) => cur ?? hydrated.summary);
+      setEditState((cur) => (cur === INITIAL_EDIT ? hydrated.editState : cur));
+      setEmail(identity.email ?? '');
+      setEntitlementsVerified(false);
+      setLoading(false);
+    }
+
+    // Network revalidation
+    const response = await apiFetch('/api/native/progress-summary', {
+      expectedUserId: identity.userId,
+    });
+    if (!isCurrentLoad()) return;
 
     const profileServerTiming = parseServerTimingHeader(response.headers.get('Server-Timing'));
-    if (profileServerTiming && authData.user?.id) {
-      recordServerTiming({ kind: 'authenticated', userId: authData.user.id }, 'profile', profileServerTiming);
+    if (profileServerTiming) {
+      recordServerTiming(cacheIdentity, 'profile', profileServerTiming);
     }
 
     if (response.status === 401) {
@@ -338,14 +503,20 @@ export default function ProfileScreen() {
     }
 
     const payload = (await response.json()) as ProgressSummary;
+    if (!isCurrentLoad()) return;
+    if (payload.profile.id !== identity.userId) {
+      throw new Error('Profile response owner did not match the active account');
+    }
     setSummary(payload);
-    setEmail(authData.user?.email ?? '');
+    const userEmail = identity.email ?? '';
+    setEmail(userEmail);
 
     const { data: profileRow } = await supabase
       .from('profiles')
       .select('kul_id, kuls(name)')
       .eq('id', payload.profile.id)
       .single();
+    if (!isCurrentLoad()) return;
 
     const kulName = getKulName((profileRow?.kuls ?? null) as KulRelation);
 
@@ -370,6 +541,7 @@ export default function ProfileScreen() {
     };
 
     setProfile(nextProfile);
+    setEntitlementsVerified(true);
     setAvatarFailed(false);
 
     if (nextProfile) {
@@ -381,17 +553,55 @@ export default function ProfileScreen() {
         appLanguage: nextProfile.app_language,
       });
     }
-  }, [router]);
+
+    // Persist safe render model to cache
+    void writeProfileCache(cacheIdentity, {
+      profile: {
+        id: nextProfile.id,
+        full_name: nextProfile.full_name,
+        username: nextProfile.username,
+        avatar_url: nextProfile.avatar_url,
+        tradition: nextProfile.tradition,
+        sampradaya: nextProfile.sampradaya,
+        ishta_devata: nextProfile.ishta_devata,
+        city: nextProfile.city,
+        country: nextProfile.country,
+        life_stage: nextProfile.life_stage,
+        app_language: nextProfile.app_language,
+        active_symbol_id: nextProfile.active_symbol_id,
+        seva_score: nextProfile.seva_score,
+        kul_id: nextProfile.kul_id,
+        kul_name: nextProfile.kul_name,
+      },
+      summary: {
+        completion: {
+          pct: payload.completion.pct,
+          missing: payload.completion.missing,
+          coreComplete: payload.completion.coreComplete,
+        },
+        progress: payload.progress,
+      },
+    });
+  }, [appIdentity, router]);
 
   useEffect(() => {
+    const effectIdentityKey = profileIdentityKey(appIdentity);
+    const isCurrentEffect = () => profileIdentityKey(getAppIdentity()) === effectIdentityKey;
     setLoadError(false);
     fetchTraditionsCatalog().then(setCatalog).catch(() => {});
     loadProfile()
-      .catch(() => {
+      .catch((err) => {
+        if (!isCurrentEffect()) return;
+        console.warn('[profile] loadProfile error', err);
         setLoadError(true);
       })
-      .finally(() => setLoading(false));
-  }, [loadProfile]);
+      .finally(() => {
+        if (isCurrentEffect()) setLoading(false);
+      });
+    return () => {
+      profileLoadGenerationRef.current += 1;
+    };
+  }, [appIdentity, loadProfile]);
 
   const streak = summary?.progress?.streaks?.shloka ?? 0;
   const progressData = summary?.progress;
@@ -426,6 +636,7 @@ export default function ProfileScreen() {
           ishta_devata: editState.ishtaDevata || null,
           app_language: editState.appLanguage,
         }),
+        expectedUserId: profile.id,
       });
 
       if (!response.ok) throw new Error(await readApiError(response));
@@ -443,6 +654,7 @@ export default function ProfileScreen() {
     setSigningOut(true);
     try {
       await clearAllHomeCaches();
+      await clearAllProfileCaches();
       await clearAllOnboardingDrafts();
       await supabase.auth.signOut();
     } finally {
@@ -456,6 +668,7 @@ export default function ProfileScreen() {
     const response = await apiFetch('/api/native/profile', {
       method: 'PATCH',
       body: JSON.stringify({ avatar_url: avatarUrl }),
+      expectedUserId: profile.id,
     });
 
     if (response.ok) return;
@@ -514,7 +727,18 @@ export default function ProfileScreen() {
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       const publicUrl = data.publicUrl;
       await updateAvatarUrl(publicUrl);
-      setProfile((current) => current ? { ...current, avatar_url: `${publicUrl}?t=${Date.now()}` } : current);
+      const displayUrl = `${publicUrl}?t=${Date.now()}`;
+      setProfile((current) => current ? { ...current, avatar_url: displayUrl } : current);
+      const identity = getAppIdentity();
+      if (identity.kind === 'authenticated') {
+        const snap = getProfileCacheSnapshot(identity);
+        if (snap) {
+          void writeProfileCache(identity, {
+            ...snap,
+            profile: { ...snap.profile, avatar_url: displayUrl },
+          });
+        }
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not update profile picture';
       Alert.alert('Photo update failed', message);
@@ -533,6 +757,16 @@ export default function ProfileScreen() {
         await supabase.storage.from('avatars').remove([path]);
       }
       setProfile((current) => current ? { ...current, avatar_url: null } : current);
+      const identity = getAppIdentity();
+      if (identity.kind === 'authenticated') {
+        const snap = getProfileCacheSnapshot(identity);
+        if (snap) {
+          void writeProfileCache(identity, {
+            ...snap,
+            profile: { ...snap.profile, avatar_url: null },
+          });
+        }
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not remove profile picture';
       Alert.alert('Photo removal failed', message);
@@ -744,7 +978,10 @@ export default function ProfileScreen() {
 
   const traditionMeta = TRADITION_META[profile.tradition];
   const initials = profile.full_name.trim().slice(0, 1).toUpperCase() || 'S';
-  const subscriptionLabel = profile.is_pro ? 'Pro Member' : 'Free Plan';
+  const isVerifiedPro = entitlementsVerified && profile.is_pro;
+  const subscriptionLabel = entitlementsVerified
+    ? (profile.is_pro ? 'Pro Member' : 'Free Plan')
+    : 'Plan status pending';
   const username = profile.username || profile.id.replace(/-/g, '').slice(0, 10);
   const spiritualLevel = getSpiritualLevel(profile.seva_score);
   const levelPct = spiritualLevel.next > spiritualLevel.current
@@ -926,16 +1163,16 @@ export default function ProfileScreen() {
                   borderRadius: 999,
                   paddingHorizontal: 12,
                   paddingVertical: 5,
-                  backgroundColor: profile.is_pro ? theme.brandSoft : theme.glass,
+                  backgroundColor: isVerifiedPro ? theme.brandSoft : theme.glass,
                   borderWidth: 1,
-                  borderColor: profile.is_pro ? theme.premiumBorder : theme.borderSoft,
+                  borderColor: isVerifiedPro ? theme.premiumBorder : theme.borderSoft,
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 5,
                 }}
               >
-                <Feather name="star" size={13} color={profile.is_pro ? theme.brand : theme.dim} />
-                <Text style={{ ...TYPE.chip, color: profile.is_pro ? theme.brand : theme.dim }}>{subscriptionLabel}</Text>
+                <Feather name={entitlementsVerified ? 'star' : 'clock'} size={13} color={isVerifiedPro ? theme.brand : theme.dim} />
+                <Text style={{ ...TYPE.chip, color: isVerifiedPro ? theme.brand : theme.dim }}>{subscriptionLabel}</Text>
               </View>
             </View>
             <View

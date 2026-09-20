@@ -41,6 +41,7 @@ import {
   type Temple,
 } from '@/lib/overpass';
 import { supabase } from '@/lib/supabase';
+import { useAppIdentity } from '@/lib/appIdentity';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 
@@ -158,6 +159,7 @@ export default function TirthaScreen() {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const appIdentity = useAppIdentity();
   const theme = themeColor(isDark);
   const bg = theme.bg;
   const cardBg = theme.card;
@@ -181,6 +183,7 @@ export default function TirthaScreen() {
   const [passportTab, setPassportTab] = useState<PassportTab>('map');
   const [savedPlaces, setSavedPlaces] = useState<TirthaSaveRow[]>([]);
   const [visits, setVisits] = useState<TirthaVisitRow[]>([]);
+  const [passportOwnerId, setPassportOwnerId] = useState<string | null>(null);
   const [selectedTemple, setSelectedTemple] = useState<Temple | null>(null);
   const [checkinMood, setCheckinMood] = useState<MoodKey>('gratitude');
   const [intention, setIntention] = useState('');
@@ -212,6 +215,12 @@ export default function TirthaScreen() {
   const suggestionDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggestionReqId = useRef(0);
   const nearbyReqId = useRef(0);
+  const passportReqId = useRef(0);
+  const appIdentityRef = useRef(appIdentity);
+  appIdentityRef.current = appIdentity;
+  const currentPassportUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
+  const visibleSavedPlaces = passportOwnerId === currentPassportUserId ? savedPlaces : [];
+  const visibleVisits = passportOwnerId === currentPassportUserId ? visits : [];
 
   // Clear debounce timer and invalidate in-flight suggestions on unmount.
   useEffect(() => {
@@ -240,6 +249,7 @@ export default function TirthaScreen() {
   );
 
   const refreshPassport = useCallback(async (userId: string) => {
+    const reqId = ++passportReqId.current;
     try {
       const [savesResult, visitsResult] = await Promise.all([
         supabase
@@ -254,6 +264,13 @@ export default function TirthaScreen() {
           .order('visited_at', { ascending: false }),
       ]);
 
+      const currentIdentity = appIdentityRef.current;
+      if (
+        reqId !== passportReqId.current ||
+        currentIdentity.kind !== 'authenticated' ||
+        currentIdentity.userId !== userId
+      ) return;
+      setPassportOwnerId(userId);
       setSavedPlaces((savesResult.data as unknown as TirthaSaveRow[] | null) ?? []);
       setVisits((visitsResult.data as unknown as TirthaVisitRow[] | null) ?? []);
     } catch {
@@ -376,9 +393,7 @@ export default function TirthaScreen() {
       }
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const passportUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
 
         const locationChain = async () => {
           const permission = await Location.getForegroundPermissionsAsync();
@@ -418,7 +433,7 @@ export default function TirthaScreen() {
           }
         };
 
-        await Promise.all([user ? refreshPassport(user.id) : Promise.resolve(), locationChain()]);
+        await Promise.all([passportUserId ? refreshPassport(passportUserId) : Promise.resolve(), locationChain()]);
       } catch {
         setNotice('Could not load Tirtha right now. Check your connection and try again.');
       } finally {
@@ -427,7 +442,7 @@ export default function TirthaScreen() {
         setRefreshing(false);
       }
     },
-    [loadNearby, refreshPassport]
+    [appIdentity, loadNearby, refreshPassport]
   );
 
   const requestLocation = useCallback(async () => {
@@ -469,19 +484,19 @@ export default function TirthaScreen() {
     void initialize();
   }, [initialize]);
 
-  const savedIds = useMemo(() => new Set(savedPlaces.map((row) => row.place_id)), [savedPlaces]);
+  const savedIds = useMemo(
+    () => new Set(visibleSavedPlaces.map((row) => row.place_id)),
+    [visibleSavedPlaces]
+  );
 
   const toggleSave = useCallback(
     async (temple: Temple) => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
+        if (appIdentity.kind !== 'authenticated') {
           setNotice('Sign in to save places.');
           return;
         }
+        const userId = appIdentity.userId;
 
         const placeId = tirthaPlaceId(temple);
         const exists = savedIds.has(placeId);
@@ -489,6 +504,7 @@ export default function TirthaScreen() {
           const saveResponse = await apiFetch('/api/tirtha/save', {
             method: 'POST',
             body: JSON.stringify({ place_id: placeId, action: 'unsave' }),
+            expectedUserId: userId,
           });
           if (!saveResponse.ok) {
             setNotice('Could not remove this place.');
@@ -498,6 +514,7 @@ export default function TirthaScreen() {
           const placeResponse = await apiFetch('/api/tirtha/place', {
             method: 'POST',
             body: JSON.stringify(templeToPlaceRow(temple)),
+            expectedUserId: userId,
           });
           if (!placeResponse.ok) {
             setNotice('Could not save this place.');
@@ -506,6 +523,7 @@ export default function TirthaScreen() {
           const saveResponse = await apiFetch('/api/tirtha/save', {
             method: 'POST',
             body: JSON.stringify({ place_id: placeId, action: 'save' }),
+            expectedUserId: userId,
           });
           if (!saveResponse.ok) {
             setNotice('Could not save this place.');
@@ -513,12 +531,12 @@ export default function TirthaScreen() {
           }
         }
 
-        await refreshPassport(user.id);
+        await refreshPassport(userId);
       } catch {
         setNotice('Could not save this place. Check your connection.');
       }
     },
-    [refreshPassport, savedIds]
+    [appIdentity, refreshPassport, savedIds]
   );
 
   const submitCheckIn = useCallback(async () => {
@@ -526,20 +544,18 @@ export default function TirthaScreen() {
     setCheckinError('');
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (appIdentity.kind !== 'authenticated') {
         setCheckinError('Please sign in to save visits to your Tirtha Passport.');
         return;
       }
+      const userId = appIdentity.userId;
 
       setSubmitting(true);
       const placeId = tirthaPlaceId(selectedTemple);
       const placeResponse = await apiFetch('/api/tirtha/place', {
         method: 'POST',
         body: JSON.stringify(templeToPlaceRow(selectedTemple)),
+        expectedUserId: userId,
       });
       if (!placeResponse.ok) {
         const errorData = (await placeResponse.json().catch(() => null)) as { error?: string } | null;
@@ -554,10 +570,13 @@ export default function TirthaScreen() {
           darshan_mood: checkinMood,
           intention: intention.trim() || null,
         }),
+        expectedUserId: userId,
       });
 
       if (checkinResponse.ok) {
-        await refreshPassport(user.id);
+        await refreshPassport(userId);
+        const currentIdentity = appIdentityRef.current;
+        if (currentIdentity.kind !== 'authenticated' || currentIdentity.userId !== userId) return;
         closeCheckIn();
         setIntention('');
         setCommunity(false);
@@ -573,7 +592,15 @@ export default function TirthaScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [checkinMood, closeCheckIn, community, intention, refreshPassport, selectedTemple]);
+  }, [
+    appIdentity,
+    checkinMood,
+    closeCheckIn,
+    community,
+    intention,
+    refreshPassport,
+    selectedTemple,
+  ]);
 
   const searchCity = useCallback(async () => {
     if (!cityQuery.trim()) return;
@@ -1105,18 +1132,18 @@ export default function TirthaScreen() {
             >
               <View>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Saved places</Text>
-                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{savedPlaces.length}</Text>
+                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{visibleSavedPlaces.length}</Text>
               </View>
               <View>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>Visits</Text>
-                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{visits.length}</Text>
+                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 28, color: text }}>{visibleVisits.length}</Text>
               </View>
             </View>
 
             {/* Saved Places List */}
             <View style={{ gap: 10 }}>
               <Text style={{ ...TYPE.section, color: text }}>Saved Places</Text>
-              {savedPlaces.map((save) => {
+              {visibleSavedPlaces.map((save) => {
                 const displayName = getPlaceDisplayName(save.place_id, save.place);
                 return (
                   <View
@@ -1142,7 +1169,7 @@ export default function TirthaScreen() {
                   </View>
                 );
               })}
-              {savedPlaces.length === 0 ? (
+              {visibleSavedPlaces.length === 0 ? (
                 <View
                   style={{
                     borderRadius: 18,
@@ -1162,7 +1189,7 @@ export default function TirthaScreen() {
             {/* Visits List */}
             <View style={{ gap: 10 }}>
               <Text style={{ ...TYPE.section, color: text }}>Visits & Darshan</Text>
-              {visits.map((visit) => {
+              {visibleVisits.map((visit) => {
                 const displayName = getPlaceDisplayName(visit.place_id, visit.place);
                 return (
                   <View
@@ -1186,7 +1213,7 @@ export default function TirthaScreen() {
                   </View>
                 );
               })}
-              {visits.length === 0 ? (
+              {visibleVisits.length === 0 ? (
                 <EmptyState
                   icon="map-pin"
                   title="No visits yet"

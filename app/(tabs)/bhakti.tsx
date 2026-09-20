@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
@@ -17,6 +17,9 @@ import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
+import { useAppIdentity } from '@/lib/appIdentity';
+import { getProfileCacheSnapshot } from '@/lib/profileCache';
+import { getHomeCacheSnapshot } from '@/lib/homeCache';
 
 // Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip
 // and one unified Explore grid. Content-heavy destinations fetch from canonical
@@ -130,54 +133,98 @@ export default function BhaktiScreen() {
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
+  const appIdentity = useAppIdentity();
 
-  const [tradition, setTradition] = useState('hindu');
-  const [japaStreak, setJapaStreak] = useState(0);
+  // Instantaneous synchronous hydration from memory snapshots
+  const initialSnapshot = useMemo(() => {
+    if (appIdentity.kind === 'authenticated') {
+      const profileSnap = getProfileCacheSnapshot(appIdentity);
+      const homeSnap = getHomeCacheSnapshot(appIdentity);
+      const trad = profileSnap?.profile?.tradition || homeSnap?.payload?.profile?.tradition || 'hindu';
+      const streak = profileSnap?.summary?.progress?.streaks?.shloka ?? 0;
+      return { tradition: trad, streak };
+    }
+    return { tradition: 'hindu', streak: 0 };
+  }, [appIdentity]);
+
+  const [tradition, setTradition] = useState(initialSnapshot.tradition);
+  const [japaStreak, setJapaStreak] = useState(initialSnapshot.streak);
   const [sessionCountToday, setSessionCountToday] = useState(0);
+  const identityKey = appIdentity.kind === 'authenticated' ? `user:${appIdentity.userId}` : appIdentity.kind;
+  const [dataIdentityKey, setDataIdentityKey] = useState(identityKey);
+  const dataIdentityKeyRef = useRef(identityKey);
+
+  const lastLoadedRef = useRef<{ userId: string; timestamp: number } | null>(null);
+
+  // State survives a tab component's lifetime. Mask it synchronously whenever
+  // the owner changes so no frame from the previous account can be painted.
+  const stateMatchesIdentity = dataIdentityKey === identityKey;
+  const visibleTradition = stateMatchesIdentity ? tradition : initialSnapshot.tradition;
+  const visibleJapaStreak = stateMatchesIdentity ? japaStreak : initialSnapshot.streak;
+  const visibleSessionCountToday = stateMatchesIdentity ? sessionCountToday : 0;
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       async function loadData() {
-        let userTradition = 'hindu';
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const today = new Date().toISOString().slice(0, 10);
-            const [{ data: profile }, { data: sadhana }, { count }] = await Promise.all([
-              supabase.from('profiles').select('tradition').eq('id', user.id).single(),
-              supabase.from('daily_sadhana').select('streak_count').eq('user_id', user.id).eq('date', today).single(),
-              supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', `${today}T00:00:00`),
-            ]);
-            userTradition = profile?.tradition ?? 'hindu';
-            if (active) {
-              setTradition(userTradition);
-              setJapaStreak(sadhana?.streak_count ?? 0);
-              setSessionCountToday(count ?? 0);
-            }
+        if (appIdentity.kind !== 'authenticated') {
+          if (active) {
+            setTradition('hindu');
+            setJapaStreak(0);
+            setSessionCountToday(0);
+            dataIdentityKeyRef.current = identityKey;
+            setDataIdentityKey(identityKey);
           }
-        } catch (e) {
-          // ignore — daily stotram fetch below still runs with the default tradition
+          return;
         }
 
+        const userId = appIdentity.userId;
+        const now = Date.now();
+        // Deduplicate repeated focus queries within 30 seconds unless identity changed
+        if (
+          dataIdentityKeyRef.current === identityKey &&
+          lastLoadedRef.current?.userId === userId &&
+          now - lastLoadedRef.current.timestamp < 30_000
+        ) {
+          return;
+        }
+
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const [{ data: profile }, { data: sadhana }, { count }] = await Promise.all([
+            supabase.from('profiles').select('tradition').eq('id', userId).single(),
+            supabase.from('daily_sadhana').select('streak_count').eq('user_id', userId).eq('date', today).single(),
+            supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', `${today}T00:00:00`),
+          ]);
+          if (active) {
+            if (profile?.tradition) setTradition(profile.tradition);
+            setJapaStreak(sadhana?.streak_count ?? 0);
+            setSessionCountToday(count ?? 0);
+            dataIdentityKeyRef.current = identityKey;
+            setDataIdentityKey(identityKey);
+            lastLoadedRef.current = { userId, timestamp: now };
+          }
+        } catch {
+          // ignore
+        }
       }
       void loadData();
       return () => { active = false; };
-    }, [])
+    }, [appIdentity, identityKey])
   );
 
-  const hero = TRADITION_HERO[tradition] ?? TRADITION_HERO.hindu;
+  const hero = TRADITION_HERO[visibleTradition] ?? TRADITION_HERO.hindu;
   // Stotrams & Hymns / Sacred Chants route to the Phase 5 Sacred Library
   // pre-filtered by tradition, matching PWA's BhaktiClient.tsx `cards.map`
   // transform (jain gets the Hindu/Jain shared stotram set; buddhist gets
   // its own chant set).
   const activeCards = CONTENT_CARDS
     .map((c): BhaktiCard => {
-      if (c.id === 'stotrams-hymns') return { ...c, href: `/bhakti/browse?tradition=${tradition === 'jain' ? 'jain' : 'hindu'}` as Href };
+      if (c.id === 'stotrams-hymns') return { ...c, href: `/bhakti/browse?tradition=${visibleTradition === 'jain' ? 'jain' : 'hindu'}` as Href };
       if (c.id === 'sacred-chants') return { ...c, href: '/bhakti/browse?tradition=buddhist' as Href };
       return c;
     })
-    .filter(c => !c.traditions || c.traditions.includes(tradition));
+    .filter(c => !c.traditions || c.traditions.includes(visibleTradition));
 
   const handleCardPress = (card: BhaktiCard) => {
     try { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
@@ -248,10 +295,10 @@ export default function BhaktiScreen() {
           <Text style={{ ...TYPE.hero, color: theme.text, marginTop: 2 }}>Bhakti</Text>
           <Text style={{ ...TYPE.body, color: theme.dim, marginTop: 4 }}>{hero.greeting}</Text>
 
-          {(japaStreak > 0 || sessionCountToday > 0) && (
+          {(visibleJapaStreak > 0 || visibleSessionCountToday > 0) && (
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-              {japaStreak > 0 ? <StatPill icon="zap" label={`${japaStreak}-day streak`} accent={theme.brand} /> : null}
-              {sessionCountToday > 0 ? <StatPill icon="heart" label={`${sessionCountToday} today`} accent={theme.brand} /> : null}
+              {visibleJapaStreak > 0 ? <StatPill icon="zap" label={`${visibleJapaStreak}-day streak`} accent={theme.brand} /> : null}
+              {visibleSessionCountToday > 0 ? <StatPill icon="heart" label={`${visibleSessionCountToday} today`} accent={theme.brand} /> : null}
             </View>
           )}
         </LinearGradient>
@@ -269,7 +316,7 @@ export default function BhaktiScreen() {
                   {row.map((card, columnIndex) => (
                     <MotionView
                       key={card.id}
-                      animationKey={`${tradition}-${card.id}`}
+                      animationKey={`${visibleTradition}-${card.id}`}
                       delay={Math.min(rowIndex * 2 + columnIndex, 5) * 32}
                       distance={6}
                       style={{ flex: 1 }}

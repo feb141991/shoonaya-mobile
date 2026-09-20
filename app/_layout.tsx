@@ -65,6 +65,7 @@ import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { clearAllHomeDiscoveryStates } from '@/lib/homeDiscovery';
+import { clearAllProfileCaches, clearProfileCache, getOrReadProfileCache } from '@/lib/profileCache';
 import {
   getNotificationPermissionState,
   initPushNotifications,
@@ -301,7 +302,17 @@ function RootLayout() {
       setApiAccessTokenFromSession(session);
 
       const routeKey = session?.user.id ?? null;
-      if (lastAuthRouteKeyRef.current === routeKey) return;
+      const previousRouteKey = lastAuthRouteKeyRef.current;
+      if (lastAuthRouteKeyRef.current === routeKey) {
+        if (session) {
+          setAppIdentity({
+            kind: 'authenticated',
+            userId: session.user.id,
+            email: session.user.email ?? null,
+          });
+        }
+        return;
+      }
       lastAuthRouteKeyRef.current = routeKey;
       const routeGeneration = ++authRouteGenerationRef.current;
       const isCurrentRoute = () => authRouteGenerationRef.current === routeGeneration;
@@ -337,12 +348,14 @@ function RootLayout() {
         void clearAllReactionOutboxes();
         void clearAllOnboardingDrafts();
         void clearAllHomeDiscoveryStates();
+        void clearAllProfileCaches();
 
         // If guest mode is active, allow tabs and bypass login
         const guest = await isGuestMode();
         if (!isCurrentRoute()) return;
         if (guest) {
           void getOrReadHomeCache({ kind: 'guest' });
+          void getOrReadProfileCache({ kind: 'guest' });
           setAppIdentity({ kind: 'guest' });
           if (inAuthGroup) {
             router.replace('/(tabs)');
@@ -360,8 +373,16 @@ function RootLayout() {
       // Root is the sole session owner. Publish identity before slower
       // preference/profile revalidation so mounted screens never need their
       // own Supabase auth subscriptions or getSession() calls.
+      if (previousRouteKey && previousRouteKey !== session.user.id) {
+        void clearProfileCache({ kind: 'authenticated', userId: previousRouteKey });
+      }
       void getOrReadHomeCache({ kind: 'authenticated', userId: session.user.id });
-      setAppIdentity({ kind: 'authenticated', userId: session.user.id });
+      void getOrReadProfileCache({ kind: 'authenticated', userId: session.user.id });
+      setAppIdentity({
+        kind: 'authenticated',
+        userId: session.user.id,
+        email: session.user.email ?? null,
+      });
 
       const preferenceGeneration = setStartupPreferenceIdentity(session.user.id);
       const authenticatedStartupPrefs = await getStartupPreferences(session.user.id);
