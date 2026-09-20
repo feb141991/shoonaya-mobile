@@ -14,6 +14,7 @@ import { apiFetch } from '@/lib/api';
 import { APP_VERSION } from '@/lib/appVersion';
 import { captureAppIdentity } from '@/lib/appIdentity';
 import { getTelemetrySummary, TELEMETRY_SCHEMA_VERSION, type TelemetryIdentity } from '@/lib/telemetry';
+import { isTelemetryUploadThrottled, decideTelemetryUploadAfterSummary } from '@/lib/telemetryUploadPolicy';
 
 const LAST_UPLOAD_KEY = 'shoonaya_telemetry_v1_last_upload';
 const UPLOAD_THROTTLE_MS = 60 * 60 * 1000;
@@ -28,9 +29,11 @@ const UPLOAD_THROTTLE_MS = 60 * 60 * 1000;
  *
  * Identity-race guarded the same way app/(tabs)/profile.tsx guards its own
  * writes: captureAppIdentity()'s lease expires on ANY identity transition
- * (including A -> B -> A), checked with isCurrent() right before sending,
- * plus expectedUserId on the actual request so apiFetch re-verifies the
- * live session at send time too. Without this, the two awaits below
+ * (including A -> B -> A), checked via decideTelemetryUploadAfterSummary
+ * (lib/telemetryUploadPolicy.ts, directly unit tested for account-switch,
+ * sign-out and throttle-timing regressions) right before sending, plus
+ * expectedUserId on the actual request so apiFetch re-verifies the live
+ * session at send time too. Without this, the two awaits below
  * (AsyncStorage read, getTelemetrySummary) give an account switch or
  * sign-out enough of a window to attach this identity's summary to a
  * different session's Bearer token -- apiFetch always sends whatever
@@ -41,16 +44,16 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
   const { isCurrent } = captureAppIdentity();
   try {
     const lastUploadRaw = await AsyncStorage.getItem(LAST_UPLOAD_KEY);
-    const lastUpload = lastUploadRaw ? Number(lastUploadRaw) : 0;
-    if (Number.isFinite(lastUpload) && Date.now() - lastUpload < UPLOAD_THROTTLE_MS) return;
+    const lastUpload = lastUploadRaw ? Number(lastUploadRaw) : null;
+    if (isTelemetryUploadThrottled(lastUpload, Date.now(), UPLOAD_THROTTLE_MS)) return;
 
     const summary = await getTelemetrySummary(identity);
-    if (summary.totalEvents === 0) return;
-    if (!isCurrent()) return;
+    const decision = decideTelemetryUploadAfterSummary(identity, isCurrent, summary.totalEvents);
+    if (decision.action === 'skip') return;
 
     const response = await apiFetch('/api/native/telemetry-summary', {
       method: 'POST',
-      ...(identity.kind === 'authenticated' ? { expectedUserId: identity.userId } : {}),
+      ...(decision.expectedUserId ? { expectedUserId: decision.expectedUserId } : {}),
       body: JSON.stringify({
         schemaVersion: TELEMETRY_SCHEMA_VERSION,
         appVersion: APP_VERSION,

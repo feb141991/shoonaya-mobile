@@ -92,6 +92,47 @@ Some branches overlap; the diagram is dependencies, not measured duration. Child
 
 F02 is a code-level wait-cycle finding with a timed escape, not a claim that all users encounter a six-second launch. F11/F18/F20 need profiling to establish cost. F12's safety fallback needs correctness review even if its performance cost is small.
 
+## Resolution log
+
+Status per item, not a general execution record. Entries here are removed from
+the open backlog only to the extent stated; partial fixes stay partial until
+their remaining scope is separately closed.
+
+- **F06 -- resolved and regression-tested (2026-09-20).** `telemetryUpload.ts`
+  now captures an identity lease via `lib/appIdentity.ts`'s
+  `captureAppIdentity()` before the AsyncStorage/`getTelemetrySummary` awaits,
+  and the pure decision (`lib/telemetryUploadPolicy.ts`'s
+  `decideTelemetryUploadAfterSummary`) refuses to send when that lease is no
+  longer current -- the same revision-counter mechanism `app/(tabs)/profile.tsx`
+  already uses, which expires on any identity transition including A → B → A,
+  not just "is the user id still equal." `expectedUserId` is also passed on the
+  request itself so `apiFetch` re-verifies the live session at the actual send
+  moment. Regression coverage added in
+  `__tests__/telemetryUploadPolicy.test.ts` (11 cases): account switch (A→B),
+  sign-out (A→logout), the reverse direction (guest→authenticated), the A→B→A
+  non-revival case, unchanged-identity sends with correct `expectedUserId`
+  presence/absence, empty-summary skip, and throttle/delayed-upload timing
+  (before-window, exact-boundary, multi-day-delayed, no-prior-timestamp,
+  corrupt-timestamp-fails-safe). `401 replay` specifically (the request
+  succeeding on retry after a token refresh mid-flight) is not separately
+  covered -- `apiFetch`'s own refresh-and-retry path is exercised elsewhere,
+  not by this feature's tests. Native commits `4840142`, plus policy
+  extraction/tests (pending commit as of this entry).
+- **F07 -- partially resolved (2026-09-20).** Fixed: backend time-window counts
+  (`submissions_1h`, `submissions_24h`, `distinct_authenticated_users_24h`)
+  now come from real range-scoped `count: exact` queries against the full
+  table instead of being derived from the capped 100-row `recent` list, which
+  silently under-reported once daily submissions exceeded 100 rows. Backend
+  commit `1a8a80d`. **Still open, not attempted:** native build number/OTA
+  update ID/launch-type/sample-window identity are not in the upload payload;
+  uploads remain overlapping rolling summaries (each snapshot re-reads up to
+  the same 500-event rolling buffer, not a non-overlapping window); there is
+  no idempotent batch ID; the admin view still lists individual per-device
+  summaries rather than mergeable histograms, and does not average or present
+  a cross-device p95. These require a payload/schema change (native + backend
+  contract) and are deliberately deferred to a separate, explicitly-scoped
+  pass -- not bundled into this fix.
+
 ## Measurement contract
 
 Use monotonic durations (`performance.now` or platform trace clocks), with UTC timestamps only for correlation. Never subtract JS and native clocks without an established clock mapping. Definitions must be versioned so a changed marker cannot masquerade as a speed improvement.
