@@ -407,20 +407,7 @@ export default function VratDetailScreen() {
                 </PressableSurface>
               </View>
             )
-          ) : (
-            <View
-              style={{
-                marginTop: 12,
-                padding: 8,
-                borderRadius: RADII.sm,
-                backgroundColor: theme.cardSoft,
-              }}
-            >
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, textAlign: 'center' }}>
-                Educational Catalogue Overview · See upcoming calendar for dated fasts
-              </Text>
-            </View>
-          )}
+          ) : null}
         </Card>
 
         {/* Action CTA: Mark as Observed (only when occurrence is eligible today) */}
