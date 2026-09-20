@@ -1,17 +1,17 @@
 /**
- * Local, privacy-safe performance telemetry -- route-open timing, cache
- * hit/miss, refresh failures, and mutation retry outcomes for the caches
- * built this session (Home, Mandali, Settings, Notifications).
+ * Local-first, privacy-safe performance telemetry -- route-open timing,
+ * cache hit/miss, refresh failures, and mutation retry outcomes for the
+ * caches built this session (Home, Mandali, Settings, Notifications).
  *
  * Deliberately NOT routed through lib/analytics.ts: that facade is the
  * consent-gated *product/marketing* analytics pipeline (app_opened,
  * onboarding_completed, ...), currently a no-op stub pending a consented
  * provider. This is a different category -- internal engineering
- * observability, not a tracking channel -- and stays local-only, never
- * transmitted anywhere. It exists specifically to answer the "do route
- * timings actually show a need for a content cache" question the
- * Bhakti/Dharm Veer/Pathshala caching phase is gated on, rather than
- * guessing.
+ * observability, not a tracking channel. It exists specifically to answer
+ * the "do route timings actually show a need for a content cache" question
+ * the Bhakti/Dharm Veer/Pathshala caching phase is gated on, and (as of
+ * 2026-09-20) to give Phase 0 of docs/STARTUP_PERFORMANCE_IMPLEMENTATION_PLAN.md
+ * real-device measurements without reading them off one physical device.
  *
  * Privacy classification: every event records only a route identifier
  * (an internal screen name, e.g. "mandali", never a URL with query
@@ -21,6 +21,24 @@
  * identity-scoped and purged on sign-out/account-switch like every other
  * cache this session, on the same account-hygiene principle, not because
  * the content itself is sensitive.
+ *
+ * Transmission (as of 2026-09-20, explicit product decision -- this is a
+ * change from this module's original local-only design): the aggregated
+ * summary this file computes (never raw events, never anything beyond the
+ * shapes above) is uploaded to the backend, throttled to roughly once per
+ * hour per install. This file stays free of react-native/network imports
+ * on purpose -- it is covered by __tests__/telemetry.test.ts under this
+ * project's plain `tsx --test` runner, which has no React Native transform,
+ * so anything that pulls in `react-native` (even transitively, e.g. via
+ * lib/api.ts) breaks that test file's ability to import this module at
+ * all. The actual upload trigger lives in lib/telemetryUpload.ts, which
+ * imports getTelemetrySummary from here and is triggered from
+ * app/_layout.tsx on backgrounding. See src/lib/native-telemetry-contract.ts
+ * and src/app/api/native/telemetry-summary/route.ts (backend repo) for the
+ * receiving contract, and /admin's "Native Startup Performance" monitoring
+ * tab for the viewer. Authenticated uploads carry the user's id (the same
+ * per-user partition this module already used locally); guest uploads
+ * carry no identifier at all.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

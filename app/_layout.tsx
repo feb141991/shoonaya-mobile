@@ -61,6 +61,7 @@ import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
 import { clearAllPathshalaCaches } from '@/lib/pathshalaCache';
 import { clearAllTelemetry } from '@/lib/telemetry';
+import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
@@ -82,7 +83,7 @@ import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
-import { setAppIdentity } from '@/lib/appIdentity';
+import { setAppIdentity, getAppIdentity } from '@/lib/appIdentity';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
 
@@ -560,6 +561,22 @@ function RootLayout() {
         supabase.auth.startAutoRefresh();
       } else {
         supabase.auth.stopAutoRefresh();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // ── Upload the aggregated startup-performance telemetry on background ──
+  // Self-throttled to once per hour per install inside maybeUploadTelemetrySummary,
+  // so this can fire on every background transition without spamming the backend.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'background') return;
+      const identity = getAppIdentity();
+      if (identity.kind === 'guest') {
+        void maybeUploadTelemetrySummary({ kind: 'guest' });
+      } else if (identity.kind === 'authenticated') {
+        void maybeUploadTelemetrySummary({ kind: 'authenticated', userId: identity.userId });
       }
     });
     return () => subscription.remove();
