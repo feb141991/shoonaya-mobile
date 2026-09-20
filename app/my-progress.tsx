@@ -20,6 +20,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { useAppIdentity } from '@/lib/appIdentity';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 import {
   malaSessionDurationSeconds,
@@ -411,6 +412,7 @@ export default function MyProgressScreen() {
 
   const theme = themeColor(isDark);
 
+  const appIdentity = useAppIdentity();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
@@ -419,7 +421,11 @@ export default function MyProgressScreen() {
   const loadData = useCallback(async () => {
     setLoadError(false);
 
-    if (await isGuestMode()) {
+    if (appIdentity.kind === 'loading') {
+      return;
+    }
+
+    if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
       // Progress history is inherently tied to a real account — there is no
       // generic content to show, so land on a "sign in to continue" state
       // instead of hitting the API and following its 401 straight to login.
@@ -427,12 +433,7 @@ export default function MyProgressScreen() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
-    }
-
+    setIsGuest(false);
     const thirtyAgo = daysAgoISO(29);
 
     let res: Response;
@@ -537,11 +538,12 @@ export default function MyProgressScreen() {
       streak,
       dowCounts,
     });
-  }, [router]);
+  }, [router, appIdentity]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     loadData().finally(() => setLoading(false));
-  }, [loadData]);
+  }, [loadData, appIdentity]);
 
   if (loading) {
     return (

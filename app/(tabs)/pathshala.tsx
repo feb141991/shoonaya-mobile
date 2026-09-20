@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -28,7 +28,7 @@ import { type PathshalaPath } from '@/lib/pathshala-types';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch, isFetchCancelled } from '@/lib/api';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 import {
   parseServerTimingHeader,
   recordRefreshFailure,
@@ -236,11 +236,27 @@ function PathshalaContent() {
   // overlapping opens and account switches).
   const pathshalaLoadGenRef = useRef(new LoadGenerationGuard());
 
+  useLayoutEffect(() => {
+    pathshalaLoadGenRef.current.cancel();
+    dataLoadedRef.current = false;
+    setPaths([]);
+    setEnrollments([]);
+    setTradition('hindu');
+    setSacredText(null);
+    setLoading(appIdentity.kind === 'authenticated' || appIdentity.kind === 'loading');
+    setRefreshing(false);
+    return () => pathshalaLoadGenRef.current.cancel();
+  }, [appIdentity]);
+
   const loadData = useCallback(async (refresh = false): Promise<{
     outcome: 'ready' | 'failed';
+    token: number;
     cacheHit: boolean;
     readyAt: number;
   }> => {
+    const token = pathshalaLoadGenRef.current.start();
+    const lease = captureAppIdentity();
+    const isCurrentLoad = () => lease.isCurrent() && pathshalaLoadGenRef.current.isCurrent(token);
     if (refresh || dataLoadedRef.current) {
       setRefreshing(true);
     } else {
@@ -250,14 +266,15 @@ function PathshalaContent() {
     let outcome: 'ready' | 'failed' = 'ready';
     let cacheHit = false;
     let readyAt = Date.now();
-    const identity = appIdentityRef.current;
+    const identity = lease.identity;
     try {
       if (identity.kind !== 'authenticated') {
         setEnrollments([]);
-        return { outcome: 'failed', cacheHit: false, readyAt };
+        return { outcome: 'failed', cacheHit: false, readyAt, token };
       }
 
       const cached = await readPathshalaCache(identity.userId);
+      if (!isCurrentLoad()) return { outcome: 'failed', cacheHit, readyAt, token };
       if (cached) {
         cacheHit = true;
         setPaths(cached.paths);
@@ -274,6 +291,7 @@ function PathshalaContent() {
           apiFetch('/api/pathshala/context', { expectedUserId: identity.userId }),
         ]);
 
+        if (!isCurrentLoad()) return { outcome: 'failed', cacheHit, readyAt, token };
         const serverTiming = parseServerTimingHeader(contextRes.headers.get('Server-Timing'));
         if (serverTiming) {
           recordServerTiming({ kind: 'authenticated', userId: identity.userId }, 'pathshala', serverTiming);
@@ -282,6 +300,7 @@ function PathshalaContent() {
         const fetchedPaths = pathsRes.ok ? parsePathsResponse(await pathsRes.json()) : null;
         const context = contextRes.ok ? parsePathshalaContext(await contextRes.json()) : null;
 
+        if (!isCurrentLoad()) return { outcome: 'failed', cacheHit, readyAt, token };
         if (fetchedPaths) {
           setPaths(fetchedPaths);
         } else if (!cacheHit) {
@@ -308,6 +327,7 @@ function PathshalaContent() {
           });
         }
 
+        if (!isCurrentLoad()) return { outcome: 'failed', cacheHit, readyAt, token };
         if (!fetchedPaths || !context) {
           outcome = cacheHit ? 'ready' : 'failed';
           recordRefreshFailure({ kind: 'authenticated', userId: identity.userId }, 'pathshala');
@@ -315,6 +335,7 @@ function PathshalaContent() {
           readyAt = Date.now();
         }
       } catch (error) {
+        if (!isCurrentLoad()) return { outcome: 'failed', cacheHit, readyAt, token };
         if (!isFetchCancelled(error)) {
           console.error(error);
         }
@@ -327,17 +348,17 @@ function PathshalaContent() {
         recordRefreshFailure({ kind: 'authenticated', userId: identity.userId }, 'pathshala');
       }
 
-      return { outcome, cacheHit, readyAt };
+      return { outcome, cacheHit, readyAt, token };
     } catch {
-      return { outcome: 'failed', cacheHit, readyAt };
+      return { outcome: 'failed', cacheHit, readyAt, token };
     } finally {
-      // Always runs, regardless of which return path was taken above --
-      // previously the `!pathsRes.ok` early return (and the `!user` one)
-      // skipped this, which could leave the screen stuck on `loading` and
-      // let dataLoadedRef.current never flip true for a logged-out session.
-      dataLoadedRef.current = true;
-      setLoading(false);
-      setRefreshing(false);
+      // Only the owning request can finish loading; a delayed response must
+      // not hide the spinner belonging to a newer account or refresh.
+      if (isCurrentLoad()) {
+        dataLoadedRef.current = true;
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
@@ -357,9 +378,8 @@ function PathshalaContent() {
       // (e.g. the user left and reopened before this one finished), so an
       // interrupted load can never double-count as two "first opens".
       const identityAtStart = appIdentityRef.current;
-      const token = pathshalaLoadGenRef.current.start();
       void loadData().then((result) => {
-        const canRecord = shouldRecordRouteOpen(pathshalaLoadGenRef.current, token, identityAtStart, appIdentityRef.current);
+        const canRecord = shouldRecordRouteOpen(pathshalaLoadGenRef.current, result.token, identityAtStart, appIdentityRef.current);
         if (isFirstLoad && result.outcome === 'ready' && canRecord && identityAtStart.kind === 'authenticated') {
           recordRouteOpen(
             { kind: 'authenticated', userId: identityAtStart.userId },

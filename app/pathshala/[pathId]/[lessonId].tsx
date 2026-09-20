@@ -30,6 +30,7 @@ import { PathshalaCompletionModal } from '@/components/pathshala/PathshalaComple
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -96,6 +97,7 @@ export default function LessonReaderScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
+  const appIdentity = useAppIdentity();
   const isDark = scheme === 'dark';
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
@@ -271,15 +273,12 @@ export default function LessonReaderScreen() {
 
   useEffect(() => {
     const loadContext = async () => {
-      if (!pathId) {
-        setLoadingState(false);
+      if (!pathId || appIdentity.kind === 'loading') {
         return;
       }
 
-      const guest = await isGuestMode();
-      setIsGuest(guest);
-
-      if (guest) {
+      if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
+        setIsGuest(true);
         setUserId('guest');
         setCompletedLessons([]);
         setLanguage('en');
@@ -287,17 +286,8 @@ export default function LessonReaderScreen() {
         return;
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setLoadingState(false);
-        router.replace('/(auth)/login');
-        return;
-      }
-
-      setUserId(user.id);
+      setIsGuest(false);
+      setUserId(appIdentity.userId);
 
       const enrollmentResponse = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`).catch(() => null);
 
@@ -312,7 +302,7 @@ export default function LessonReaderScreen() {
     };
 
     void loadContext();
-  }, [pathId, router]);
+  }, [pathId, appIdentity]);
 
   // Stop audio when navigating away
   useEffect(() => {

@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
+import { useAppIdentity } from '@/lib/appIdentity';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 type LedgerRow = {
@@ -34,6 +35,7 @@ export default function LedgerScreen() {
   const handleBack = useFallbackBackHandler('/my-progress', true);
 
   const theme = themeColor(isDark);
+  const appIdentity = useAppIdentity();
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -43,16 +45,16 @@ export default function LedgerScreen() {
   const loadData = useCallback(async () => {
     setLoadError(false);
 
-    if (await isGuestMode()) {
+    if (appIdentity.kind === 'loading') {
+      return;
+    }
+
+    if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
       setIsGuest(true);
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
-    }
+    setIsGuest(false);
 
     let res: Response;
     try {
@@ -68,11 +70,12 @@ export default function LedgerScreen() {
 
     const payload = (await res.json()) as { ledger: LedgerRow[] };
     setLedger(payload.ledger || []);
-  }, [router]);
+  }, [router, appIdentity]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     loadData().finally(() => setLoading(false));
-  }, [loadData]);
+  }, [loadData, appIdentity]);
 
   if (loading) {
     return (

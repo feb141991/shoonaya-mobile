@@ -37,7 +37,7 @@ import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
-import { useAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import { useAppIdentity, getAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 import {
   getProfileCacheSnapshot,
   getOrReadProfileCache,
@@ -404,6 +404,10 @@ export default function ProfileScreen() {
       previousIdentityRef.current = currentKey;
       setIsGuest(appIdentity.kind === 'guest');
       setLoadError(false);
+      setAvatarUploading(false);
+      setSaving(false);
+      setLocationSyncing(false);
+      setEditVisible(false);
       if (appIdentity.kind === 'guest') {
         setProfile(GUEST_PROFILE_DATA);
         setSummary(GUEST_SUMMARY_DATA);
@@ -613,6 +617,8 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     if (!profile) return;
+    const { identity, isCurrent } = captureAppIdentity();
+    if (identity.kind !== 'authenticated' || identity.userId !== profile.id) return;
     const nextUsername = editState.username.trim().toLowerCase();
     if (!isValidUsername(nextUsername)) {
       Alert.alert('Check username', 'Use 3-24 lowercase letters, numbers, or underscores.');
@@ -639,14 +645,16 @@ export default function ProfileScreen() {
         expectedUserId: profile.id,
       });
 
+      if (!isCurrent()) return;
       if (!response.ok) throw new Error(await readApiError(response));
 
       await loadProfile();
-      setEditVisible(false);
+      if (isCurrent()) setEditVisible(false);
     } catch (error) {
+      if (!isCurrent()) return;
       Alert.alert('Could not save profile', error instanceof Error ? error.message : 'Please try again.');
     } finally {
-      setSaving(false);
+      if (isCurrent()) setSaving(false);
     }
   };
 
@@ -662,18 +670,19 @@ export default function ProfileScreen() {
     }
   };
 
-  const updateAvatarUrl = async (avatarUrl: string | null) => {
-    if (!profile) throw new Error('Profile is not loaded');
+  const updateAvatarUrl = async (avatarUrl: string | null, ownerId: string, isCurrent: () => boolean) => {
+    if (!isCurrent()) return;
 
     const response = await apiFetch('/api/native/profile', {
       method: 'PATCH',
       body: JSON.stringify({ avatar_url: avatarUrl }),
-      expectedUserId: profile.id,
+      expectedUserId: ownerId,
     });
 
-    if (response.ok) return;
+    if (!isCurrent() || response.ok) return;
 
     const apiError = await readApiError(response);
+    if (!isCurrent()) return;
     console.warn('[profile] avatar API save failed; falling back to RLS profile update', apiError);
 
     // The PWA still writes avatar_url directly under the user's own-row RLS
@@ -682,7 +691,7 @@ export default function ProfileScreen() {
     const { error } = await supabase
       .from('profiles')
       .update({ avatar_url: avatarUrl })
-      .eq('id', profile.id);
+      .eq('id', ownerId);
 
     if (error) {
       throw new Error(`${apiError}; direct profile save failed: ${error.message}`);
@@ -691,9 +700,13 @@ export default function ProfileScreen() {
 
   const pickAvatar = async () => {
     if (!profile || avatarUploading) return;
+    const { identity, isCurrent } = captureAppIdentity();
+    if (identity.kind !== 'authenticated' || identity.userId !== profile.id) return;
+    const ownerId = identity.userId;
     setAvatarUploading(true);
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!isCurrent()) return;
       if (!permission.granted) {
         Alert.alert('Permission needed', 'Allow photo access to update your profile picture.');
         return;
@@ -707,6 +720,7 @@ export default function ProfileScreen() {
         base64: true,
       });
 
+      if (!isCurrent()) return;
       if (result.canceled) return;
       const asset = result.assets[0];
       if (!asset?.base64) throw new Error('Could not read selected image');
@@ -717,19 +731,20 @@ export default function ProfileScreen() {
       const contentType = asset.mimeType ?? 'image/jpeg';
       if (!contentType.startsWith('image/')) throw new Error('Please select an image file');
       const extension = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-      const path = `${profile.id}/avatar.${extension}`;
+      const path = `${ownerId}/avatar.${extension}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(path, decode(asset.base64), { contentType, upsert: true, cacheControl: '3600' });
+      if (!isCurrent()) return;
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       const publicUrl = data.publicUrl;
-      await updateAvatarUrl(publicUrl);
+      await updateAvatarUrl(publicUrl, ownerId, isCurrent);
+      if (!isCurrent()) return;
       const displayUrl = `${publicUrl}?t=${Date.now()}`;
-      setProfile((current) => current ? { ...current, avatar_url: displayUrl } : current);
-      const identity = getAppIdentity();
+      setProfile((current) => current?.id === ownerId ? { ...current, avatar_url: displayUrl } : current);
       if (identity.kind === 'authenticated') {
         const snap = getProfileCacheSnapshot(identity);
         if (snap) {
@@ -740,24 +755,29 @@ export default function ProfileScreen() {
         }
       }
     } catch (err) {
+      if (!isCurrent()) return;
       const message = err instanceof Error ? err.message : 'Could not update profile picture';
       Alert.alert('Photo update failed', message);
     } finally {
-      setAvatarUploading(false);
+      if (isCurrent()) setAvatarUploading(false);
     }
   };
 
   const removeAvatar = async () => {
     if (!profile || avatarUploading) return;
+    const { identity, isCurrent } = captureAppIdentity();
+    if (identity.kind !== 'authenticated' || identity.userId !== profile.id) return;
+    const ownerId = identity.userId;
     setAvatarUploading(true);
     try {
       const path = resolveAvatarPath(profile.avatar_url);
-      await updateAvatarUrl(null);
+      await updateAvatarUrl(null, ownerId, isCurrent);
+      if (!isCurrent()) return;
       if (path) {
         await supabase.storage.from('avatars').remove([path]);
       }
-      setProfile((current) => current ? { ...current, avatar_url: null } : current);
-      const identity = getAppIdentity();
+      if (!isCurrent()) return;
+      setProfile((current) => current?.id === ownerId ? { ...current, avatar_url: null } : current);
       if (identity.kind === 'authenticated') {
         const snap = getProfileCacheSnapshot(identity);
         if (snap) {
@@ -768,10 +788,11 @@ export default function ProfileScreen() {
         }
       }
     } catch (err) {
+      if (!isCurrent()) return;
       const message = err instanceof Error ? err.message : 'Could not remove profile picture';
       Alert.alert('Photo removal failed', message);
     } finally {
-      setAvatarUploading(false);
+      if (isCurrent()) setAvatarUploading(false);
     }
   };
 
@@ -806,11 +827,16 @@ export default function ProfileScreen() {
 
   const updateLocation = async () => {
     if (!profile || locationSyncing) return;
+    const { identity, isCurrent } = captureAppIdentity();
+    if (identity.kind !== 'authenticated' || identity.userId !== profile.id) return;
     setLocationSyncing(true);
     setLocationError(null);
     const result = await requestAndSyncDeviceLocation(profile.id);
+    if (!isCurrent()) return;
     if (result.ok) {
-      setProfile((current) => (current ? { ...current, city: result.city } : current));
+      setProfile((current) => (current?.id === identity.userId ? { ...current, city: result.city } : current));
+      const snapshot = getProfileCacheSnapshot(identity);
+      if (snapshot) void writeProfileCache(identity, { ...snapshot, profile: { ...snapshot.profile, city: result.city } });
     } else {
       setLocationError(result.reason);
     }

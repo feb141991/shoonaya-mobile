@@ -128,11 +128,14 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
   };
 }
 
+import { useAppIdentity } from '@/lib/appIdentity';
+
 export default function DharmVeerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const appIdentity = useAppIdentity();
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -187,6 +190,8 @@ export default function DharmVeerDetailScreen() {
   };
 
   const load = useCallback(async () => {
+    if (appIdentity.kind === 'loading') return;
+
     setLoadError(false);
     setNotFound(false);
 
@@ -196,23 +201,10 @@ export default function DharmVeerDetailScreen() {
     }
 
     try {
-      const guest = await isGuestMode();
+      const guest = appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated';
       setIsGuest(guest);
-
-      let tz = 'UTC';
-      let uid = 'guest';
-      if (!guest) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          uid = user.id;
-          const { data: profileRow } = await supabase
-            .from('profiles')
-            .select('timezone')
-            .eq('id', user.id)
-            .single();
-          if (profileRow?.timezone) tz = profileRow.timezone;
-        }
-      }
+      const uid = appIdentity.kind === 'authenticated' ? appIdentity.userId : 'guest';
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       setProfile({ userId: uid, timezone: tz, appLanguage: language, meaningLanguage: language });
 
       let roster: DharmVeer[] = [];
@@ -247,10 +239,11 @@ export default function DharmVeerDetailScreen() {
       }
 
       setHero(match);
-    } catch {
+    } catch (err) {
+      console.error('[DV] load error:', err);
       setLoadError(true);
     }
-  }, [id]);
+  }, [id, appIdentity, language]);
 
   useEffect(() => {
     setLoading(true);

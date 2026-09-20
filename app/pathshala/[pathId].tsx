@@ -10,8 +10,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import type { PathshalaPath } from '@/lib/pathshala-types';
-import { supabase } from '@/lib/supabase';
-import { isGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 type LessonEntry = {
   id: string;
@@ -36,15 +35,18 @@ type EnrollmentPayload = {
   pathId: string;
   currentLesson: number;
   completedLessons: number[];
-  status: string | null;
+  progressPercent: number;
+  lastReadAt: string | null;
+  enrolledAt: string;
 };
 
 type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
 
-export default function PathLessonListScreen() {
+export default function PathDetailScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const appIdentity = useAppIdentity();
   const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
@@ -92,27 +94,18 @@ export default function PathLessonListScreen() {
   }, [pathId]);
 
   const loadProgress = useCallback(async () => {
-    if (!pathId) {
+    if (!pathId || appIdentity.kind === 'loading') {
       return;
     }
 
-    const guest = await isGuestMode();
-    setIsGuest(guest);
-
-    if (guest) {
+    if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
+      setIsGuest(true);
       setCompletedLessons([]);
       setCurrentLesson(0);
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.replace('/(auth)/login');
-      return;
-    }
+    setIsGuest(false);
 
     try {
       const response = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`);
@@ -130,7 +123,7 @@ export default function PathLessonListScreen() {
 
     setCompletedLessons([]);
     setCurrentLesson(0);
-  }, [pathId, router]);
+  }, [pathId, appIdentity]);
 
   useFocusEffect(
     useCallback(() => {

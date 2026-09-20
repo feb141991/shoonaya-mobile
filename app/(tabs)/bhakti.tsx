@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
@@ -17,7 +17,8 @@ import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
+import { FocusQuery } from '@/lib/focusQuery';
 import { getProfileCacheSnapshot } from '@/lib/profileCache';
 import { getHomeCacheSnapshot } from '@/lib/homeCache';
 
@@ -152,9 +153,11 @@ export default function BhaktiScreen() {
   const [sessionCountToday, setSessionCountToday] = useState(0);
   const identityKey = appIdentity.kind === 'authenticated' ? `user:${appIdentity.userId}` : appIdentity.kind;
   const [dataIdentityKey, setDataIdentityKey] = useState(identityKey);
-  const dataIdentityKeyRef = useRef(identityKey);
 
-  const lastLoadedRef = useRef<{ userId: string; timestamp: number } | null>(null);
+  const focusQueryRef = useRef(new FocusQuery<{ tradition: string; streak: number; count: number }>(30_000));
+  useLayoutEffect(() => {
+    focusQueryRef.current.clear();
+  }, [appIdentity]);
 
   // State survives a tab component's lifetime. Mask it synchronously whenever
   // the owner changes so no frame from the previous account can be painted.
@@ -166,43 +169,37 @@ export default function BhaktiScreen() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
+      const lease = captureAppIdentity();
       async function loadData() {
         if (appIdentity.kind !== 'authenticated') {
           if (active) {
             setTradition('hindu');
             setJapaStreak(0);
             setSessionCountToday(0);
-            dataIdentityKeyRef.current = identityKey;
             setDataIdentityKey(identityKey);
           }
           return;
         }
 
         const userId = appIdentity.userId;
-        const now = Date.now();
-        // Deduplicate repeated focus queries within 30 seconds unless identity changed
-        if (
-          dataIdentityKeyRef.current === identityKey &&
-          lastLoadedRef.current?.userId === userId &&
-          now - lastLoadedRef.current.timestamp < 30_000
-        ) {
-          return;
-        }
-
         try {
-          const today = new Date().toISOString().slice(0, 10);
-          const [{ data: profile }, { data: sadhana }, { count }] = await Promise.all([
-            supabase.from('profiles').select('tradition').eq('id', userId).single(),
-            supabase.from('daily_sadhana').select('streak_count').eq('user_id', userId).eq('date', today).single(),
-            supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', `${today}T00:00:00`),
-          ]);
-          if (active) {
-            if (profile?.tradition) setTradition(profile.tradition);
-            setJapaStreak(sadhana?.streak_count ?? 0);
-            setSessionCountToday(count ?? 0);
-            dataIdentityKeyRef.current = identityKey;
+          const result = await focusQueryRef.current.load(userId, async () => {
+            const today = new Date().toISOString().slice(0, 10);
+            const [profile, sadhana, sessions] = await Promise.all([
+              supabase.from('profiles').select('tradition').eq('id', userId).single(),
+              supabase.from('daily_sadhana').select('streak_count').eq('user_id', userId).eq('date', today).maybeSingle(),
+              supabase.from('mala_sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', `${today}T00:00:00`),
+            ]);
+            if (profile.error || sadhana.error || sessions.error) {
+              throw profile.error ?? sadhana.error ?? sessions.error;
+            }
+            return { tradition: profile.data?.tradition ?? 'hindu', streak: sadhana.data?.streak_count ?? 0, count: sessions.count ?? 0 };
+          });
+          if (active && lease.isCurrent()) {
+            setTradition(result.tradition);
+            setJapaStreak(result.streak);
+            setSessionCountToday(result.count);
             setDataIdentityKey(identityKey);
-            lastLoadedRef.current = { userId, timestamp: now };
           }
         } catch {
           // ignore

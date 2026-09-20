@@ -20,6 +20,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { RASHI_LIST } from '@/lib/jyotish';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 type RashiHoroscope = {
   rashi: string;
@@ -78,9 +79,12 @@ export default function RashiphalaScreen() {
   const isDark = scheme === 'dark';
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
+  const appIdentity = useAppIdentity();
 
   const [selectedRashi, setSelectedRashi] = useState<string>('aries');
-  const [timezone, setTimezone] = useState<string>('Asia/Kolkata');
+  const [timezone, setTimezone] = useState<string>(() => {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+  });
   const [data, setData] = useState<RashiHoroscope | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -111,14 +115,17 @@ export default function RashiphalaScreen() {
   // Load initial context (rashi, timezone)
   useEffect(() => {
     let active = true;
+    if (appIdentity.kind === 'loading') {
+      return;
+    }
+
     async function loadContext() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
+        if (appIdentity.kind === 'authenticated') {
           const { data: profile } = await supabase
             .from('profiles')
             .select('rashi, timezone')
-            .eq('id', user.id)
+            .eq('id', appIdentity.userId)
             .single();
           if (active) {
             const profileRashi = normalizeRashiKey(profile?.rashi);
@@ -134,7 +141,7 @@ export default function RashiphalaScreen() {
     }
     void loadContext();
     return () => { active = false; };
-  }, []);
+  }, [appIdentity]);
 
   // Fetch horoscope when selectedRashi or timezone changes
   useEffect(() => {
@@ -249,7 +256,7 @@ export default function RashiphalaScreen() {
             <PressableSurface
               onPress={() => {
                 setInitialLoad(false);
-                setSelectedRashi((current) => normalizeRashiKey(current) ?? 'aries');
+                setSelectedRashi((current: string) => normalizeRashiKey(current) ?? 'aries');
                 setReloadToken((current) => current + 1);
               }}
               style={{

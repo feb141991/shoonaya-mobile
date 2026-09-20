@@ -7,6 +7,7 @@ export type AppIdentity =
   | { kind: 'unauthenticated' };
 
 let currentIdentity: AppIdentity = { kind: 'loading' };
+let identityRevision = 0;
 const listeners = new Set<() => void>();
 
 export function setAppIdentity(identity: AppIdentity): void {
@@ -18,12 +19,24 @@ export function setAppIdentity(identity: AppIdentity): void {
         identity.email === currentIdentity.email));
   if (unchanged) return;
 
+  if (identity.kind !== currentIdentity.kind ||
+    (identity.kind === 'authenticated' && currentIdentity.kind === 'authenticated' &&
+      identity.userId !== currentIdentity.userId)) {
+    identityRevision += 1;
+  }
   currentIdentity = identity;
   listeners.forEach((listener) => listener());
 }
 
 export function getAppIdentity(): AppIdentity {
   return currentIdentity;
+}
+
+/** A lease expires on any identity transition, including A → B → A. */
+export function captureAppIdentity() {
+  const identity = currentIdentity;
+  const revision = identityRevision;
+  return { identity, isCurrent: () => revision === identityRevision };
 }
 
 function subscribe(listener: () => void): () => void {

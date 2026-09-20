@@ -62,7 +62,7 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
   assert.doesNotMatch(bhakti, /supabase\.auth\.getUser/);
   assert.match(bhakti, /useAppIdentity\(\)/);
   assert.match(bhakti, /stateMatchesIdentity/);
-  assert.match(bhakti, /dataIdentityKeyRef/);
+  assert.match(bhakti, /focusQueryRef/);
 
   assert.doesNotMatch(tirtha, /supabase\.auth\.onAuthStateChange/);
   assert.doesNotMatch(tirtha, /supabase\.auth\.getUser/);
