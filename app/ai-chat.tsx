@@ -30,6 +30,7 @@ import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts } from '@/lib/dharma-mitra-content';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 function TypingDots({ color }: { color: string }) {
   const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -154,6 +155,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   onReport,
   onCopy,
 }: ChatItemProps) {
+  const { language } = useLanguage();
   const isUser = item.role === 'user';
   const animY = useRef(new Animated.Value(12)).current;
   const animOpacity = useRef(new Animated.Value(0)).current;
@@ -280,7 +282,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                   fontStyle: 'italic',
                 }}
               >
-                · दिव्य वाणी
+                · {language === 'hi' ? 'दिव्य वाणी' : language === 'pa' ? 'ਦਿਵਯ ਬਾਣੀ' : 'Divine Voice'}
               </Text>
             </View>
 

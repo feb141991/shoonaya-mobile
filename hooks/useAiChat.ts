@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import type { AppLanguage } from '@/lib/language-runtime';
 
 export const CHAT_LANGUAGE_STORAGE_KEY = '@shoonaya/chat_language';
 
@@ -58,39 +60,14 @@ export function useAiChat(options: UseAiChatOptions = {}) {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [usageLabel, setUsageLabel] = useState<string | null>(null);
-  const [language, setLanguageState] = useState<string | null>(null);
-
-  useEffect(() => {
-    AsyncStorage.getItem(CHAT_LANGUAGE_STORAGE_KEY)
-      .then((saved) => {
-        if (saved && (saved === 'en' || saved === 'hi' || saved === 'pa')) {
-          setLanguageState(saved);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage();
 
   const setLanguage = useCallback((nextLang: string) => {
-    setLanguageState(nextLang);
-    void AsyncStorage.setItem(CHAT_LANGUAGE_STORAGE_KEY, nextLang).catch(() => {});
+    void setGlobalLanguage(nextLang as AppLanguage);
+    setProfile((prev) => (prev ? { ...prev, appLanguage: nextLang } : prev));
+  }, [setGlobalLanguage]);
 
-    void (async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from('profiles')
-            .update({ app_language: nextLang })
-            .eq('id', user.id);
-          setProfile((prev) => (prev ? { ...prev, appLanguage: nextLang } : prev));
-        }
-      } catch {
-        // Non-blocking sync
-      }
-    })();
-  }, []);
-
-  const activeLanguage = language ?? profile?.appLanguage ?? 'en';
+  const activeLanguage = globalLanguage;
 
   // Real used/limit, fetched from the same route the PWA's AIChatClient
   // reads (/api/ai/chat/usage) — replaces a previously hardcoded, incorrect

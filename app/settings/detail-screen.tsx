@@ -42,6 +42,7 @@ import { replayHomeDiscovery } from '@/lib/homeDiscovery';
 import { resetFirstWeekGuideCue } from '@/lib/firstWeekGuideStorage';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { SUPPORTED_APP_LANGUAGES, type AppLanguage } from '@/lib/language-runtime';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   readSettingsCache,
   writeSettingsCache,
@@ -240,6 +241,7 @@ async function openLegalUrl(path: '/terms' | '/privacy' | '/sources') {
 
 export function SettingsDetailScreen({ section }: { section: SettingsSectionKey }) {
   const router = useRouter();
+  const { setLanguage } = useLanguage();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -949,7 +951,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                             key={lang.key}
                             label={lang.label}
                             selected={settings[row.key] === lang.key}
-                            onPress={() => { void persistSettings({ ...settings, [row.key]: lang.key }); }}
+                            onPress={() => {
+                              if (row.key === 'app_language' && (lang.key === 'en' || lang.key === 'hi' || lang.key === 'pa')) {
+                                void setLanguage(lang.key as AppLanguage);
+                              }
+                              void persistSettings({ ...settings, [row.key]: lang.key });
+                            }}
                           />
                         ))}
                       </View>

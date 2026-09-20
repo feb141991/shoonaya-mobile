@@ -29,6 +29,7 @@ import { AuthGate } from '@/components/ui/AuthGate';
 import { PathshalaCompletionModal } from '@/components/pathshala/PathshalaCompletionModal';
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -121,7 +122,16 @@ export default function LessonReaderScreen() {
   const entry = lesson?.entries[verseIndex] ?? lesson?.entries[0];
 
   const [fontSize, setFontSize] = useState<ReaderFontSize>('normal');
-  const [language, setLanguage] = useState<'en' | 'hi'>('en');
+  // `appLang` (global) seeds this lesson's initial reading language, but the
+  // in-page toggle (and the guest-mode reset below) must stay page-local:
+  // it's a "read this lesson in a different language" preview, not an
+  // account-wide setting, and must not overwrite the user's global
+  // app_language/Supabase profile. Previously this aliased straight to the
+  // global setter, which meant any guest opening a lesson had their
+  // account-wide language silently forced to English (see the guest branch
+  // below) -- a real, reported regression, not a hypothetical one.
+  const { language: appLang } = useLanguage();
+  const [language, setLanguage] = useState<'en' | 'hi'>(appLang === 'hi' ? 'hi' : 'en');
   const [saving, setSaving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
@@ -289,19 +299,7 @@ export default function LessonReaderScreen() {
 
       setUserId(user.id);
 
-      // Language preference stays a direct Supabase read — out of scope for
-      // this slice (Slice 4D only migrates guided_path_progress usage).
-      const [profileResult, enrollmentResponse] = await Promise.all([
-        supabase.from('profiles').select('app_language, meaning_language').eq('id', user.id).maybeSingle(),
-        apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`).catch(() => null),
-      ]);
-
-      if (profileResult.data) {
-        const profile = profileResult.data as ProfileRow;
-        if (profile.meaning_language === 'hi' || (profile.meaning_language !== 'en' && profile.app_language === 'hi')) {
-          setLanguage('hi');
-        }
-      }
+      const enrollmentResponse = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`).catch(() => null);
 
       if (enrollmentResponse && enrollmentResponse.ok) {
         const body = (await enrollmentResponse.json()) as { enrollment: EnrollmentPayload | null };

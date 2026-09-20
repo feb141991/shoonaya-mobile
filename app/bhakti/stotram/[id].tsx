@@ -19,6 +19,7 @@ import { ReaderShell } from '@/components/reader/ReaderShell';
 import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type StotramVerse = {
   number: number;
@@ -75,7 +76,12 @@ export default function StotramDetailScreen() {
   const [stotram, setStotram] = useState<Stotram | null>(null);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [lang, setLang] = useState<'en' | 'hi' | 'pa'>('en');
+  // `language` (global) seeds this page's initial reading language, but the
+  // in-page toggle below must stay page-local: it's a "read this one page in
+  // a different language" preview, not an account-wide setting, and must not
+  // overwrite the user's global app_language/Supabase profile.
+  const { language } = useLanguage();
+  const [readerLanguage, setReaderLanguage] = useState(language);
   const [fontStep, setFontStep] = useState(1); // 'md'
   const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
 
@@ -101,22 +107,6 @@ export default function StotramDetailScreen() {
       if (!loadedStotram) {
         setLoadError(true);
         return;
-      }
-      const hasHindi = loadedStotram.verses.length > 0 && loadedStotram.verses.every((verse) => Boolean(verse.meaning_hi));
-      const hasPunjabi = loadedStotram.verses.length > 0 && loadedStotram.verses.every((verse) => Boolean(verse.meaning_pa));
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && (hasHindi || hasPunjabi)) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('app_language, meaning_language')
-          .eq('id', user.id)
-          .maybeSingle();
-        const preferences = resolveReadablePreferences({
-          appLanguage: profile?.app_language,
-          meaningLanguage: profile?.meaning_language,
-        });
-        if (preferences.effectiveMeaningLanguage === 'hi' && hasHindi) setLang('hi');
-        if (preferences.effectiveMeaningLanguage === 'pa' && hasPunjabi) setLang('pa');
       }
     } catch {
       setLoadError(true);
@@ -146,8 +136,14 @@ export default function StotramDetailScreen() {
   const textToCopy = stotram ? `${stotram.title}\n\n${stotram.verses.map(v => v.sanskrit + '\n' + v.meaning).join('\n\n')}` : '';
   const textToShare = stotram ? `Read the ${stotram.title} on the Shoonaya App! 🙏` : '';
 
-  const hasHindi = Boolean(stotram?.verses.length && stotram.verses.every((verse) => verse.meaning_hi));
-  const hasPunjabi = Boolean(stotram?.verses.length && stotram.verses.every((verse) => verse.meaning_pa));
+  const hasHindi = Boolean(stotram?.verses.length && stotram.verses.every((verse) => Boolean(verse.meaning_hi)));
+  const hasPunjabi = Boolean(stotram?.verses.length && stotram.verses.every((verse) => Boolean(verse.meaning_pa)));
+  const activeLang: 'en' | 'hi' | 'pa' =
+    readerLanguage === 'hi' && hasHindi
+      ? 'hi'
+      : readerLanguage === 'pa' && hasPunjabi
+        ? 'pa'
+        : 'en';
   const capabilities = useMemo(() => buildReadableCapabilities({
     original: stotram?.verses[0]?.sanskrit ?? '',
     transliteration: stotram?.verses[0]?.transliteration,
@@ -173,9 +169,9 @@ export default function StotramDetailScreen() {
   const activeVerseIndex = activeVerse ?? 0;
   const verseForAudio = stotram?.verses[activeVerseIndex];
   const meaningForLanguage = (verse: StotramVerse) => (
-    lang === 'hi' && verse.meaning_hi
+    activeLang === 'hi' && verse.meaning_hi
       ? verse.meaning_hi
-      : lang === 'pa' && verse.meaning_pa
+      : activeLang === 'pa' && verse.meaning_pa
         ? verse.meaning_pa
         : verse.meaning
   );
@@ -225,8 +221,8 @@ export default function StotramDetailScreen() {
         ...(hasHindi ? [{ code: 'hi' as const, label: 'हिं' }] : []),
         ...(hasPunjabi ? [{ code: 'pa' as const, label: 'ਪੰ' }] : []),
       ]}
-      currentLanguage={lang}
-      setLanguage={setLang}
+      currentLanguage={activeLang}
+      setLanguage={(code) => setReaderLanguage(code as any)}
       showTransliterationToggle
       isTransliterationOn={state.showTransliteration}
       onToggleTransliteration={handlers.toggleTransliteration}
@@ -243,7 +239,7 @@ export default function StotramDetailScreen() {
           [verseForAudio.sanskrit, verseForAudio.transliteration, meaningForLanguage(verseForAudio)].join('\n\n'),
           {
             quality: 'pandit',
-            language: lang === 'hi' ? 'hi-IN' : lang === 'pa' ? 'pa-IN' : 'sa-IN',
+            language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'sa-IN',
             rate: ttsRate,
             pipelineTags: {
               content_type: 'stotram',

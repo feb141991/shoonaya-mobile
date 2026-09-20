@@ -28,6 +28,7 @@ import { spiritualDate } from '@/lib/spiritualDate';
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const FONT_PRESETS = [
   { label: 'A-', value: 0 },
@@ -69,7 +70,12 @@ export default function FestivalDetailScreen() {
   const [occurrenceLoading, setOccurrenceLoading] = useState(true);
   const [liveStory, setLiveStory] = useState<LiveObservanceStory | null>(null);
   const [storyLoading, setStoryLoading] = useState(true);
-  const [lang, setLang] = useState<'en' | 'local'>('en');
+  // `language` (global) seeds this page's initial reading language, but the
+  // in-page toggle below must stay page-local: it's a "read this one page in
+  // a different language" preview, not an account-wide setting, and must not
+  // overwrite the user's global app_language/Supabase profile.
+  const { language } = useLanguage();
+  const [readerLanguage, setReaderLanguage] = useState(language);
   const [fontStep, setFontStep] = useState(1);
   const [sharing, setSharing] = useState(false);
   const [copiedMantra, setCopiedMantra] = useState(false);
@@ -77,7 +83,7 @@ export default function FestivalDetailScreen() {
   const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
   const shareCardRef = useRef<View | null>(null);
 
-  const resolvedLang: 'en' | 'hi' = lang === 'local' ? 'hi' : 'en';
+  const resolvedLang: 'en' | 'hi' | 'pa' = readerLanguage;
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   const festival = useMemo(() => lookupFestivalContent(slug), [slug]);
@@ -329,28 +335,40 @@ export default function FestivalDetailScreen() {
   const traditionKey = festival?.tradition || liveStory?.tradition || seriesContext?.tradition || '';
   const traditionLabel =
     traditionKey === 'hindu'
-      ? (resolvedLang === 'hi' ? 'सनातन परंपरा' : 'Sanatana Tradition')
+      ? (resolvedLang === 'pa' ? 'ਸਨਾਤਨ ਪਰੰਪਰਾ' : resolvedLang === 'hi' ? 'सनातन परंपरा' : 'Sanatana Tradition')
       : traditionKey === 'sikh'
-      ? (resolvedLang === 'hi' ? 'सिख परंपरा' : 'Sikh Tradition')
+      ? (resolvedLang === 'pa' ? 'ਸਿੱਖ ਪਰੰਪਰਾ' : resolvedLang === 'hi' ? 'सिख परंपरा' : 'Sikh Tradition')
       : traditionKey === 'jain'
-      ? (resolvedLang === 'hi' ? 'जैन परंपरा' : 'Jain Tradition')
+      ? (resolvedLang === 'pa' ? 'ਜੈਨ ਪਰੰਪਰਾ' : resolvedLang === 'hi' ? 'ਜੈਨ परंपरा' : 'Jain Tradition')
       : traditionKey === 'buddhist'
-      ? (resolvedLang === 'hi' ? 'बौद्ध परंपरा' : 'Buddhist Tradition')
-      : (resolvedLang === 'hi' ? 'पावन पर्व' : 'Sacred Observance');
+      ? (resolvedLang === 'pa' ? 'ਬੌਧ ਪਰੰਪਰਾ' : resolvedLang === 'hi' ? 'बौद्ध परंपरा' : 'Buddhist Tradition')
+      : (resolvedLang === 'pa' ? 'ਪਾਵਨ ਪਰਬ' : resolvedLang === 'hi' ? 'पावन पर्व' : 'Sacred Observance');
 
-  const hasLocalFestival = Boolean(
+  const hasHindiFestival = Boolean(
     liveStory?.translations?.hi?.significance ||
     (festival && resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi')) ||
     Boolean(seriesChild?.significance?.value?.hi)
   );
 
+  const hasPunjabiFestival = Boolean(
+    liveStory?.translations?.pa?.significance ||
+    (festival && resolveFestivalText(festival.name, 'pa') && resolveFestivalText(festival.significance, 'pa')) ||
+    Boolean(seriesChild?.significance?.value?.pa)
+  );
+
+  const availableLanguages = [
+    { code: 'en' as const, label: 'EN' },
+    ...(hasHindiFestival ? [{ code: 'hi' as const, label: 'HI' }] : []),
+    ...(hasPunjabiFestival ? [{ code: 'pa' as const, label: 'PA' }] : []),
+  ];
+
   const availableSections = useMemo(() => {
     const list: { key: string; label: string; icon: string }[] = [];
-    if (significance) list.push({ key: 'essence', label: resolvedLang === 'hi' ? 'महत्व' : 'Essence', icon: '📖' });
-    if (rituals.length > 0) list.push({ key: 'rituals', label: resolvedLang === 'hi' ? 'विधि' : 'Rituals', icon: '🪔' });
-    if (dos.length > 0 || donts.length > 0) list.push({ key: 'conduct', label: resolvedLang === 'hi' ? 'नियम' : 'Conduct', icon: '⚖️' });
-    if (pujaItems.length > 0) list.push({ key: 'samagri', label: resolvedLang === 'hi' ? 'सामग्री' : 'Samagri', icon: '🌸' });
-    if (mantraText || mantraTranslation) list.push({ key: 'mantra', label: resolvedLang === 'hi' ? 'मंत्र' : 'Mantra', icon: '🕉️' });
+    if (significance) list.push({ key: 'essence', label: resolvedLang === 'pa' ? 'ਮਹੱਤਵ' : resolvedLang === 'hi' ? 'महत्व' : 'Essence', icon: '📖' });
+    if (rituals.length > 0) list.push({ key: 'rituals', label: resolvedLang === 'pa' ? 'ਵਿਧੀ' : resolvedLang === 'hi' ? 'विधि' : 'Rituals', icon: '🪔' });
+    if (dos.length > 0 || donts.length > 0) list.push({ key: 'conduct', label: resolvedLang === 'pa' ? 'ਨਿਯਮ' : resolvedLang === 'hi' ? 'नियम' : 'Conduct', icon: '⚖️' });
+    if (pujaItems.length > 0) list.push({ key: 'samagri', label: resolvedLang === 'pa' ? 'ਸਮੱਗਰੀ' : resolvedLang === 'hi' ? 'सामग्री' : 'Samagri', icon: '🌸' });
+    if (mantraText || mantraTranslation) list.push({ key: 'mantra', label: resolvedLang === 'pa' ? 'ਮੰਤਰ' : resolvedLang === 'hi' ? 'मंत्र' : 'Mantra', icon: '🕉️' });
     return list;
   }, [significance, rituals.length, dos.length, donts.length, pujaItems.length, mantraText, mantraTranslation, resolvedLang]);
 
@@ -380,11 +398,11 @@ export default function FestivalDetailScreen() {
   };
 
   const getRitualPhase = (idx: number, total: number) => {
-    if (total === 1) return resolvedLang === 'hi' ? 'प्रधान विधि' : 'Sacred Rite';
-    if (idx === 0) return resolvedLang === 'hi' ? 'प्रातः · प्रभात' : 'Prabhat · Dawn';
-    if (idx === 1 && total > 2) return resolvedLang === 'hi' ? 'मध्याह्न · पूजा' : 'Madhyahna · Noon';
-    if (idx === total - 1) return resolvedLang === 'hi' ? 'सायंकाल · संध्या' : 'Sandhya · Evening';
-    return resolvedLang === 'hi' ? 'भोग व अर्पण' : 'Bhog · Offering';
+    if (total === 1) return resolvedLang === 'pa' ? 'ਪ੍ਰਧਾਨ ਵਿਧੀ' : resolvedLang === 'hi' ? 'प्रधान विधि' : 'Sacred Rite';
+    if (idx === 0) return resolvedLang === 'pa' ? 'ਪ੍ਰਭਾਤ · ਸਵੇਰ' : resolvedLang === 'hi' ? 'प्रातः · प्रभात' : 'Prabhat · Dawn';
+    if (idx === 1 && total > 2) return resolvedLang === 'pa' ? 'ਦੁਪਹਿਰ · ਪੂਜਾ' : resolvedLang === 'hi' ? 'मध्याह्न · पूजा' : 'Madhyahna · Noon';
+    if (idx === total - 1) return resolvedLang === 'pa' ? 'ਸੰਧਿਆ · ਸ਼ਾਮ' : resolvedLang === 'hi' ? 'सायंकाल · संध्या' : 'Sandhya · Evening';
+    return resolvedLang === 'pa' ? 'ਭੋਗ ਤੇ ਭੇਟ' : resolvedLang === 'hi' ? 'भोग व अर्पण' : 'Bhog · Offering';
   };
 
   return (
@@ -397,9 +415,9 @@ export default function FestivalDetailScreen() {
       fontPresets={FONT_PRESETS}
       fontStep={fontStep}
       setFontStep={setFontStep}
-      languages={hasLocalFestival ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिंदी' }] : undefined}
-      currentLanguage={lang}
-      setLanguage={setLang}
+      languages={availableLanguages.length > 1 ? availableLanguages : undefined}
+      currentLanguage={resolvedLang}
+      setLanguage={(code) => setReaderLanguage(code as any)}
       onShare={publishable ? handleShare : undefined}
       scrollViewRef={scrollViewRef}
       onScroll={handleScroll}

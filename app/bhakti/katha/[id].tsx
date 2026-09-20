@@ -18,6 +18,7 @@ import { ReaderShell } from '@/components/reader/ReaderShell';
 import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type FullKatha = {
   id: string;
@@ -94,7 +95,12 @@ export default function KathaReaderScreen() {
   const [showPhal, setShowPhal] = useState(false);
   const [liked, setLiked] = useState(false);
   const [marking, setMarking] = useState(false);
-  const [lang, setLang] = useState<'en' | 'hi' | 'pa'>('en');
+  // `language` (global) seeds this page's initial reading language, but the
+  // in-page toggle below must stay page-local: it's a "read this one page in
+  // a different language" preview, not an account-wide setting, and must not
+  // overwrite the user's global app_language/Supabase profile.
+  const { language } = useLanguage();
+  const [readerLanguage, setReaderLanguage] = useState(language);
   const [fontStep, setFontStep] = useState(1); // 'md'
   const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
 
@@ -111,24 +117,6 @@ export default function KathaReaderScreen() {
       if (!loadedKatha) {
         setLoadError(true);
         return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('app_language, meaning_language')
-          .eq('id', user.id)
-          .maybeSingle();
-        const preferences = resolveReadablePreferences({
-          appLanguage: profile?.app_language,
-          meaningLanguage: profile?.meaning_language,
-        });
-        if (preferences.effectiveMeaningLanguage === 'hi' && loadedKatha.bodyHi?.length) {
-          setLang('hi');
-        } else if (preferences.effectiveMeaningLanguage === 'pa' && loadedKatha.bodyPa?.length) {
-          setLang('pa');
-        }
       }
     } catch {
       setLoadError(true);
@@ -164,19 +152,25 @@ export default function KathaReaderScreen() {
 
   const hasHindi = Boolean(katha?.titleHi && katha?.bodyHi?.length && katha?.phalHi);
   const hasPunjabi = Boolean(katha?.titlePa && katha?.bodyPa?.length && katha?.phalPa);
-  const titleToShow = lang === 'hi' && katha?.titleHi
+  const activeLang: 'en' | 'hi' | 'pa' =
+    readerLanguage === 'hi' && hasHindi
+      ? 'hi'
+      : readerLanguage === 'pa' && hasPunjabi
+        ? 'pa'
+        : 'en';
+  const titleToShow = activeLang === 'hi' && katha?.titleHi
     ? katha.titleHi
-    : lang === 'pa' && katha?.titlePa
+    : activeLang === 'pa' && katha?.titlePa
       ? katha.titlePa
       : katha?.title ?? '';
-  const bodyToShow = lang === 'hi' && katha?.bodyHi?.length
+  const bodyToShow = activeLang === 'hi' && katha?.bodyHi?.length
     ? katha.bodyHi
-    : lang === 'pa' && katha?.bodyPa?.length
+    : activeLang === 'pa' && katha?.bodyPa?.length
       ? katha.bodyPa
       : katha?.body ?? [];
-  const phalToShow = lang === 'hi' && katha?.phalHi
+  const phalToShow = activeLang === 'hi' && katha?.phalHi
     ? katha.phalHi
-    : lang === 'pa' && katha?.phalPa
+    : activeLang === 'pa' && katha?.phalPa
       ? katha.phalPa
       : katha?.phal ?? '';
   const textToCopy = katha ? `${titleToShow}\n\n${bodyToShow.join('\n\n')}\n\nPhal:\n${phalToShow}` : '';
@@ -246,11 +240,11 @@ export default function KathaReaderScreen() {
         ...(hasHindi ? [{ code: 'hi' as const, label: 'हिं' }] : []),
         ...(hasPunjabi ? [{ code: 'pa' as const, label: 'ਪੰ' }] : []),
       ]}
-      currentLanguage={lang}
-      setLanguage={setLang}
+      currentLanguage={activeLang}
+      setLanguage={(code) => setReaderLanguage(code as any)}
       onTTS={() => handlers.toggleTTS(textToCopy, {
         quality: 'pandit',
-        language: lang === 'hi' ? 'hi-IN' : lang === 'pa' ? 'pa-IN' : 'en-IN',
+        language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',
         speed: isPanchatantra ? 0.86 : 0.78,
         rate: ttsRate,
         pipelineTags: {

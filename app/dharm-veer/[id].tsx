@@ -31,7 +31,8 @@ import { DharmVeerHeroBanner } from '@/components/dharm-veer/DharmVeerHeroBanner
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
-import { getInitialReaderDisplayMode, resolveReadablePreferences, resolveLocalContentLanguage } from '@/lib/readable-preferences';
+import { resolveReadablePreferences, resolveLocalContentLanguage } from '@/lib/readable-preferences';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 function getLocalSpiritualDate(tz: string, rolloverHour: number = 4): string {
   try {
@@ -147,7 +148,14 @@ export default function DharmVeerDetailScreen() {
     meaningLanguage: string | null;
   } | null>(null);
 
-  const [lang, setLang] = useState<'en' | 'local'>('en');
+  // `language` (global) is kept for the Ask-AI/reflection profile below,
+  // which legitimately calls a backend AI feature in the user's account
+  // language. The reader's own local content-display toggle further down
+  // must stay page-local instead ("read this hero's story in a different
+  // language" is a preview, not an account-wide setting) -- see
+  // readerLanguage.
+  const { language } = useLanguage();
+  const [readerLanguage, setReaderLanguage] = useState(language);
   const [fontStep, setFontStep] = useState(1); // 'md'
 
   // Explicit Inspiration state
@@ -193,23 +201,19 @@ export default function DharmVeerDetailScreen() {
 
       let tz = 'UTC';
       let uid = 'guest';
-      let appLanguage: string | null = null;
-      let meaningLanguage: string | null = null;
       if (!guest) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           uid = user.id;
           const { data: profileRow } = await supabase
             .from('profiles')
-            .select('timezone, app_language, meaning_language')
+            .select('timezone')
             .eq('id', user.id)
             .single();
           if (profileRow?.timezone) tz = profileRow.timezone;
-          appLanguage = profileRow?.app_language ?? null;
-          meaningLanguage = profileRow?.meaning_language ?? null;
         }
       }
-      setProfile({ userId: uid, timezone: tz, appLanguage, meaningLanguage });
+      setProfile({ userId: uid, timezone: tz, appLanguage: language, meaningLanguage: language });
 
       let roster: DharmVeer[] = [];
       if (!guest) {
@@ -243,18 +247,6 @@ export default function DharmVeerDetailScreen() {
       }
 
       setHero(match);
-      const hasLocalContent = Boolean(
-        match.nameLocal
-        && match.taglineLocal
-        && match.journeyLocal
-        && match.trialLocal
-        && match.teachingLocal
-        && match.moralLocal,
-      );
-      setLang(getInitialReaderDisplayMode(
-        resolveReadablePreferences({ appLanguage, meaningLanguage }),
-        hasLocalContent,
-      ));
     } catch {
       setLoadError(true);
     }
@@ -382,44 +374,48 @@ export default function DharmVeerDetailScreen() {
   };
 
   const preferences = useMemo(() => resolveReadablePreferences({
-    appLanguage: profile?.appLanguage,
-    meaningLanguage: profile?.meaningLanguage,
-  }), [profile?.appLanguage, profile?.meaningLanguage]);
+    appLanguage: readerLanguage,
+    meaningLanguage: readerLanguage,
+  }), [readerLanguage]);
   const localContentLanguage = resolveLocalContentLanguage(preferences);
+  const showLocal = readerLanguage === 'hi' || readerLanguage === 'pa';
+  const hasCompleteLocalContent = !!hero?.nameLocal && !!hero?.journeyLocal;
+  const hasHindi = Boolean(hasCompleteLocalContent && hero?.trialLocal);
+  const hasPunjabi = Boolean(hero?.namePa && hero?.journeyPa && hero?.trialPa);
 
   // namePa has no fallback-to-Hindi step here since a name is a proper noun,
   // not prose -- Hindi nameLocal is still the right "local" default when no
   // Punjabi name exists, matching pickDharmVeerLocalizedText's own chain.
-  const title = lang === 'local'
+  const title = showLocal
     ? (localContentLanguage === 'pa' ? hero?.namePa || hero?.nameLocal || hero?.name : hero?.nameLocal || hero?.name)
     : hero?.name;
-  const era = lang === 'local' && hero?.eraLocal ? hero.eraLocal : hero?.era;
-  const region = lang === 'local' && hero?.regionLocal ? hero.regionLocal : hero?.region;
-  const tagline = lang === 'local'
+  const era = showLocal && hero?.eraLocal ? hero.eraLocal : hero?.era;
+  const region = showLocal && hero?.regionLocal ? hero.regionLocal : hero?.region;
+  const tagline = showLocal
     ? pickDharmVeerLocalizedText(hero?.tagline, hero?.taglineLocal, hero?.taglinePa, localContentLanguage)
     : hero?.tagline;
-  const journeyText = lang === 'local'
+  const journeyText = showLocal
     ? pickDharmVeerLocalizedText(hero?.journey, hero?.journeyLocal, hero?.journeyPa, localContentLanguage)
     : hero?.journey;
-  const trialText = lang === 'local'
+  const trialText = showLocal
     ? pickDharmVeerLocalizedText(hero?.trial, hero?.trialLocal, hero?.trialPa, localContentLanguage)
     : hero?.trial;
-  const teachingText = lang === 'local'
+  const teachingText = showLocal
     ? pickDharmVeerLocalizedText(hero?.teaching, hero?.teachingLocal, hero?.teachingPa, localContentLanguage)
     : hero?.teaching;
-  const moralText = lang === 'local'
+  const moralText = showLocal
     ? pickDharmVeerLocalizedText(hero?.moral, hero?.moralLocal, hero?.moralPa, localContentLanguage)
     : hero?.moral;
-  const legacyText = lang === 'local'
+  const legacyText = showLocal
     ? pickDharmVeerLocalizedText(hero?.legacy, hero?.legacyLocal, hero?.legacyPa, localContentLanguage)
     : hero?.legacy;
-  const sourceText = lang === 'local'
+  const sourceText = showLocal
     ? pickDharmVeerLocalizedText(hero?.source, hero?.sourceLocal, hero?.sourcePa, localContentLanguage)
     : hero?.source;
-  const quoteText = lang === 'local'
+  const quoteText = showLocal
     ? (localContentLanguage === 'pa' ? hero?.quotePa?.text : undefined) || hero?.quoteLocal?.text || hero?.quote?.text
     : hero?.quote?.text;
-  const quoteAttribution = lang === 'local'
+  const quoteAttribution = showLocal
     ? (localContentLanguage === 'pa' ? hero?.quotePa?.attribution : undefined) || hero?.quoteLocal?.attribution || hero?.quote?.attribution
     : hero?.quote?.attribution;
 
@@ -442,9 +438,12 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
 
   const textToShare = hero ? `🙏 Jai Shri Hari! Read this inspiring Dharm Veer story of '${title}' on the Shoonaya App. Download now to grow your Sadhana.` : '';
 
-  // A missing decorative tagline must not suppress a fully translated reader.
-  const hasCompleteLocalContent = !!hero?.nameLocal && !!hero?.journeyLocal && !!hero?.trialLocal && !!hero?.teachingLocal && !!hero?.moralLocal;
-  const readerCopy = getReaderCopy(lang === 'local' ? localContentLanguage : 'en');
+  const availableLanguages = [
+    { code: 'en' as const, label: 'EN' },
+    ...(hasHindi ? [{ code: 'hi' as const, label: 'HI' }] : []),
+    ...(hasPunjabi ? [{ code: 'pa' as const, label: 'PA' }] : []),
+  ];
+  const readerCopy = getReaderCopy(showLocal ? localContentLanguage : 'en');
   const meta = hero ? TRADITION_META[hero.tradition] : null;
   const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)';
 
@@ -504,9 +503,9 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         fontPresets={FONT_PRESETS}
         fontStep={fontStep}
         setFontStep={setFontStep}
-        languages={hasCompleteLocalContent ? [{ code: 'en', label: 'EN' }, { code: 'local', label: getReaderCopy(localContentLanguage).toggleLabel }] : undefined}
-        currentLanguage={lang}
-        setLanguage={setLang}
+        languages={availableLanguages.length > 1 ? availableLanguages : undefined}
+        currentLanguage={showLocal ? localContentLanguage : 'en'}
+        setLanguage={(code) => setReaderLanguage(code as any)}
         onCopy={() => handlers.copyText(textToCopy, 'Story')}
         isCopied={state.isCopied}
         onShare={() => handlers.share(textToShare)}

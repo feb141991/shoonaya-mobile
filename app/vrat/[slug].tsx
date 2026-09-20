@@ -30,6 +30,7 @@ import { isGuestMode } from '@/lib/guestSession';
 import { ReaderShell } from '@/components/reader/ReaderShell';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
 // screens share the same ReaderShell toolbar component, this is just the
@@ -51,6 +52,12 @@ export default function VratDetailScreen() {
   const isDark = colorScheme === 'dark';
   const theme = themeColor(isDark);
 
+  // `language` (global) seeds this page's initial reading language, but the
+  // in-page toggle below (line ~280) must stay page-local: it's a "read this
+  // one page in a different language" preview, not an account-wide setting,
+  // and must not overwrite the user's global app_language/Supabase profile.
+  const { language } = useLanguage();
+  const [readerLanguage, setReaderLanguage] = useState(language);
   const [isGuest, setIsGuest] = useState(false);
   const [observedToday, setObservedToday] = useState(false);
   const [observeCount, setObserveCount] = useState(0);
@@ -60,7 +67,6 @@ export default function VratDetailScreen() {
   const [occurrence, setOccurrence] = useState<ClientObservanceResult | null>(null);
   const [occurrenceLoading, setOccurrenceLoading] = useState(false);
 
-  const [lang, setLang] = useState<'en' | 'local'>('en');
   const [fontStep, setFontStep] = useState(1);
 
   // Non-blocking success/error feedback -- matches the local toast pattern
@@ -235,12 +241,13 @@ export default function VratDetailScreen() {
     }
   };
 
-  const selectedName = lang === 'local' && vrat.nameLocal ? vrat.nameLocal : vrat.name;
-  const selectedTagline = lang === 'local' && vrat.taglineLocal ? vrat.taglineLocal : vrat.tagline;
-  const selectedSignificance = lang === 'local' && vrat.significanceLocal ? vrat.significanceLocal : vrat.significance;
-  const selectedPractice = lang === 'local' && vrat.practiceLocal ? vrat.practiceLocal : vrat.practice;
-  const selectedMantra = lang === 'local' && vrat.mantraLocal ? vrat.mantraLocal : vrat.mantra;
   const hasLocalVrat = Boolean(vrat.nameLocal && vrat.taglineLocal && vrat.significanceLocal && vrat.practiceLocal);
+  const showLocal = (readerLanguage === 'hi' || readerLanguage === 'pa') && hasLocalVrat;
+  const selectedName = showLocal && vrat.nameLocal ? vrat.nameLocal : vrat.name;
+  const selectedTagline = showLocal && vrat.taglineLocal ? vrat.taglineLocal : vrat.tagline;
+  const selectedSignificance = showLocal && vrat.significanceLocal ? vrat.significanceLocal : vrat.significance;
+  const selectedPractice = showLocal && vrat.practiceLocal ? vrat.practiceLocal : vrat.practice;
+  const selectedMantra = showLocal && vrat.mantraLocal ? vrat.mantraLocal : vrat.mantra;
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   // Same rendered-image-card approach as app/shloka.tsx's share (via
@@ -274,10 +281,10 @@ export default function VratDetailScreen() {
       fontPresets={FONT_PRESETS}
       fontStep={fontStep}
       setFontStep={setFontStep}
-      languages={hasLocalVrat ? [{ code: 'en', label: 'EN' }, { code: 'local', label: 'हिंदी' }] : undefined}
-      currentLanguage={lang}
+      languages={hasLocalVrat ? [{ code: 'en' as const, label: 'EN' }, { code: 'hi' as const, label: 'हिंदी' }] : undefined}
+      currentLanguage={readerLanguage === 'hi' || readerLanguage === 'pa' ? 'hi' : 'en'}
       onShare={handleShare}
-      setLanguage={setLang}
+      setLanguage={(code) => setReaderLanguage(code as any)}
     >
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header Card */}
