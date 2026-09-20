@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { apiFetch } from '@/lib/api';
 import { APP_VERSION } from '@/lib/appVersion';
+import { captureAppIdentity } from '@/lib/appIdentity';
 import { getTelemetrySummary, TELEMETRY_SCHEMA_VERSION, type TelemetryIdentity } from '@/lib/telemetry';
 
 const LAST_UPLOAD_KEY = 'shoonaya_telemetry_v1_last_upload';
@@ -24,8 +25,20 @@ const UPLOAD_THROTTLE_MS = 60 * 60 * 1000;
  * backgrounding. Never throws, never awaited by anything that affects app
  * behavior -- a failed or skipped upload just means this hour's snapshot is
  * read next time instead.
+ *
+ * Identity-race guarded the same way app/(tabs)/profile.tsx guards its own
+ * writes: captureAppIdentity()'s lease expires on ANY identity transition
+ * (including A -> B -> A), checked with isCurrent() right before sending,
+ * plus expectedUserId on the actual request so apiFetch re-verifies the
+ * live session at send time too. Without this, the two awaits below
+ * (AsyncStorage read, getTelemetrySummary) give an account switch or
+ * sign-out enough of a window to attach this identity's summary to a
+ * different session's Bearer token -- apiFetch always sends whatever
+ * token is current at the moment it actually fires, not the one active
+ * when this function was called.
  */
 export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): Promise<void> {
+  const { isCurrent } = captureAppIdentity();
   try {
     const lastUploadRaw = await AsyncStorage.getItem(LAST_UPLOAD_KEY);
     const lastUpload = lastUploadRaw ? Number(lastUploadRaw) : 0;
@@ -33,9 +46,11 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
 
     const summary = await getTelemetrySummary(identity);
     if (summary.totalEvents === 0) return;
+    if (!isCurrent()) return;
 
     const response = await apiFetch('/api/native/telemetry-summary', {
       method: 'POST',
+      ...(identity.kind === 'authenticated' ? { expectedUserId: identity.userId } : {}),
       body: JSON.stringify({
         schemaVersion: TELEMETRY_SCHEMA_VERSION,
         appVersion: APP_VERSION,
@@ -44,7 +59,7 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
       }),
     });
 
-    if (response.ok) {
+    if (response.ok && isCurrent()) {
       await AsyncStorage.setItem(LAST_UPLOAD_KEY, String(Date.now()));
     }
   } catch (error) {
