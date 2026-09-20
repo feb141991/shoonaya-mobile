@@ -267,6 +267,26 @@ their remaining scope is separately closed.
   and `resilientFetch` retrying transient failures without method/
   idempotency classification -- are still open, unrelated to the safety fix
   above.
+- **F11 -- resolved (2026-09-20).** Confirmed: `app/(tabs)/mandali.tsx`'s
+  realtime Postgres-changes subscription and its connection-request polling
+  effect were both gated only on `profile?.mandaliId`/`profile?.userId`
+  state, with no focus check -- and React Navigation's native-stack keeps a
+  tab screen mounted (with its `profile` state intact) when another tab is
+  active, so both kept running indefinitely for a screen the user was not
+  looking at, exactly as the finding describes. Fixed with `useIsFocused()`
+  gating both effects (added to the realtime effect's existing early-return
+  guard and dependency array, rather than restructuring it into
+  `useFocusEffect` given its already-rich dependency list of realtime
+  handler callbacks). Paired with a separate, minimal `useFocusEffect` that
+  triggers one `loadMandali()` call specifically on returning to focus
+  after having been blurred (never on the initial mount, which the existing
+  identity-driven load effect already covers) -- this closes the gap a
+  pause-only fix would otherwise open: without a catch-up refresh, changes
+  that happened while the subscription was paused would never be reflected
+  when the user returns, only genuinely new changes after that point.
+  Regression test (source-regression,
+  `__tests__/mandali-realtime-focus-lifecycle.test.ts`) confirmed failing
+  against the pre-fix source.
 
 ## Frozen baseline (2026-09-20)
 

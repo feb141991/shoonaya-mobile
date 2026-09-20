@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { FlashList, type FlashListRef, type ListRenderItemInfo } from '@shopify/flash-list';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect, useIsFocused } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -508,6 +508,12 @@ export default function MandaliScreen() {
   const appIdentity = useAppIdentity();
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
+  // F11 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): gates the
+  // realtime subscription and connection-request polling below on focus --
+  // React Navigation's native-stack keeps this screen mounted (with
+  // `profile` state intact) when another tab is active, so without this
+  // both kept running indefinitely for a tab the user was not looking at.
+  const isFocused = useIsFocused();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -1335,9 +1341,26 @@ export default function MandaliScreen() {
   }, [profile?.userId]);
 
   useEffect(() => {
+    if (!isFocused) return;
     const cleanup = loadPendingRequests();
     return cleanup;
-  }, [loadPendingRequests]);
+  }, [loadPendingRequests, isFocused]);
+
+  // F11: catch up on anything missed while the realtime subscription below
+  // was paused (unfocused) -- "mark dirty and refresh once on return," not
+  // just pause-and-hope-nothing-changed. Skips the very first focus (mount)
+  // since the identity-driven load effect already covers that case.
+  const hasBeenBlurredRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (hasBeenBlurredRef.current) {
+        void loadMandali();
+      }
+      return () => {
+        hasBeenBlurredRef.current = true;
+      };
+    }, [loadMandali])
+  );
 
   // Resume queued reaction changes on foreground -- per the agreed retry
   // policy, retries happen when the app is actually in front with network
@@ -1359,7 +1382,10 @@ export default function MandaliScreen() {
   // RSVPs are patched incrementally (see the three handlers above) since
   // they're both far more frequent and structurally trivial.
   useEffect(() => {
-    if (!profile?.mandaliId) return;
+    // F11: pause the subscription entirely while this tab is not focused
+    // (see isFocused's own comment) instead of keeping it open for a
+    // screen the user is not looking at.
+    if (!profile?.mandaliId || !isFocused) return;
 
     const channelBuilder = supabase
       .channel(`mandali:${profile.mandaliId}`)
@@ -1384,7 +1410,7 @@ export default function MandaliScreen() {
       channel.unsubscribe();
       void supabase.removeChannel(channel);
     };
-  }, [profile?.mandaliId, visiblePostIdsKey, handleCommentRealtimeChange, handleRsvpRealtimeChange, handleUpvoteRealtimeChange, scheduleRealtimeReload]);
+  }, [profile?.mandaliId, isFocused, visiblePostIdsKey, handleCommentRealtimeChange, handleRsvpRealtimeChange, handleUpvoteRealtimeChange, scheduleRealtimeReload]);
 
   const filteredPosts = useMemo(
     () => (activeFilter === 'all' ? posts : posts.filter((p) => p.type === activeFilter)),
