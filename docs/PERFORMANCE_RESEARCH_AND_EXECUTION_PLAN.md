@@ -133,6 +133,40 @@ their remaining scope is separately closed.
   contract) and are deliberately deferred to a separate, explicitly-scoped
   pass -- not bundled into this fix.
 
+## Frozen baseline (2026-09-20)
+
+Step 2 of the agreed bounded scope. This is a **source-level** baseline only
+-- no build has been produced or installed against it, so it does not by
+itself satisfy the "installed-artifact manifest" this document's benchmark
+protocol calls for. It exists so that once a physical-device run (step 5) is
+actually performed, there is an exact, named commit pair to build from and
+compare against, rather than an undated "current main."
+
+| Repository | Commit (full SHA) |
+|---|---|
+| `shoonaya-mobile` (native) | `fcf9bbf927857d51ad1dfce2eca3543bab1a7e9c` |
+| `Sanatan Sangam/Shoonaya` (backend) | `1a8a80dee63f2dc192ab4c24ad13e50e2cb84b68` |
+
+Native version identity at this commit (`app.json`/`eas.json`):
+
+- `version`: `1.0.0`; iOS `buildNumber`: `7`; Android `versionCode`: not set
+  in `app.json` -- expected, not a gap: `eas.json`'s `appVersionSource:
+  "remote"` means EAS assigns and tracks it remotely per build, it is not
+  meant to be a static local value.
+- `runtimeVersion.policy`: `appVersion` -- an OTA update only applies to a
+  running native build with a matching app version; a native-code change
+  requires a new store/EAS build, not just a JS update.
+- EAS Update is configured (`updates.url` present) and channels exist for
+  `development`/`preview`/`production` (`eas.json`), but no update has been
+  published against this exact commit, so there is no OTA update ID to
+  record yet. `production` uses `autoIncrement: true` for build numbering.
+
+What "freezing" this baseline does NOT include, and step 5 still needs before
+any real measurement: an actual `eas build`, the resulting build/OTA
+identifiers it produces, and installation on the primary devices named in
+the benchmark matrix (an older supported physical iPhone and a low/mid-range
+physical Android, plus one recent device per platform).
+
 ## Measurement contract
 
 Use monotonic durations (`performance.now` or platform trace clocks), with UTC timestamps only for correlation. Never subtract JS and native clocks without an established clock mapping. Definitions must be versioned so a changed marker cannot masquerade as a speed improvement.
