@@ -94,12 +94,30 @@ async function readEnvelope(identity: TelemetryIdentity): Promise<TelemetryEnvel
 // wait for the previous one to finish landing before it reads.
 const writeChains = new Map<string, Promise<void>>();
 
+// F08 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): clearTelemetry/
+// clearAllTelemetry used to just AsyncStorage.removeItem with no
+// coordination against writeChains -- a route-open recorded right before a
+// sign-out could still be mid-flight (queued behind a previous write on the
+// same identity's chain) when the clear ran, then land afterward and
+// resurrect an entry the clear was supposed to remove. Bumped by every
+// clear call; appendEvent captures the generation when it starts and
+// re-checks it immediately before persisting, so a clear landing in
+// between means the write is silently dropped instead of un-clearing data.
+// One global counter (not per-identity) is deliberately simple: an
+// unrelated identity's in-flight write being skipped by someone else's
+// clear costs one rolling, low-value telemetry event, not correctness --
+// this is "a lightweight local signal, not a durable audit log" per the
+// comment below, not worth a per-key generation map to save that one event.
+let clearGeneration = 0;
+
 async function appendEvent(identity: TelemetryIdentity, event: TelemetryEvent): Promise<void> {
   const key = getTelemetryKey(identity);
+  const generationAtStart = clearGeneration;
   const previous = writeChains.get(key) ?? Promise.resolve();
   const next = previous
     .catch(() => {}) // a prior failure must not permanently wedge this identity's chain
     .then(async () => {
+      if (clearGeneration !== generationAtStart) return;
       const envelope = await readEnvelope(identity);
       // Rolling window -- this is a lightweight local signal, not a durable
       // audit log; capping keeps it from growing unbounded across a long
@@ -274,6 +292,7 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
 }
 
 export async function clearTelemetry(identity: TelemetryIdentity): Promise<void> {
+  clearGeneration += 1;
   try {
     await AsyncStorage.removeItem(getTelemetryKey(identity));
   } catch (error) {
@@ -282,6 +301,7 @@ export async function clearTelemetry(identity: TelemetryIdentity): Promise<void>
 }
 
 export async function clearAllTelemetry(): Promise<void> {
+  clearGeneration += 1;
   try {
     const keys = await AsyncStorage.getAllKeys();
     const telemetryKeys = keys.filter((k) => k === 'shoonaya_telemetry_v1_guest' || k.startsWith('shoonaya_telemetry_v1_user_'));

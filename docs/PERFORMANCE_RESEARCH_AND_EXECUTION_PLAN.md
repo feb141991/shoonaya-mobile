@@ -287,6 +287,52 @@ their remaining scope is separately closed.
   Regression test (source-regression,
   `__tests__/mandali-realtime-focus-lifecycle.test.ts`) confirmed failing
   against the pre-fix source.
+- **F08 -- resolved, the correctness half (2026-09-20).** Confirmed:
+  `clearTelemetry`/`clearAllTelemetry` called `AsyncStorage.removeItem`/
+  `multiRemove` directly with zero coordination against `writeChains` (the
+  per-identity promise chain `appendEvent` already serializes writes
+  through). A route-open recorded right before a sign-out could still be
+  queued behind a prior write on the same identity's chain when the clear
+  ran, then land afterward and resurrect an entry the clear was supposed to
+  remove. Fixed with a single global `clearGeneration` counter, bumped by
+  every clear call; `appendEvent` captures it when a write starts and
+  re-checks it immediately before persisting, dropping the write silently
+  if a clear landed in between. Deliberately one global counter, not a
+  per-identity map: an unrelated identity's in-flight write being skipped
+  by someone else's clear costs one rolling, low-value telemetry event
+  (this is explicitly "a lightweight local signal, not a durable audit
+  log" per the code's own existing comment), not a correctness problem
+  worth a more complex per-key structure to avoid. Regression tests added
+  to the existing `__tests__/telemetry.test.ts` -- a genuinely
+  deterministic race, not a timing-dependent flake: `recordRouteOpen` is
+  fire-and-forget and captures its generation synchronously, so calling
+  `clearTelemetry` with no `await` in between reliably wins the race every
+  time. Confirmed failing (`1 !== 0`) against the pre-fix source. **Not
+  attempted:** F08's profiling half (measuring the actual serialization/
+  storage cost of each append, and replacing per-milestone full-buffer
+  writes with a smaller crash/stall receipt) needs device measurement, not
+  code inspection.
+- **F14 -- investigated, not a confirmed bug (2026-09-20).** Checked
+  directly rather than assumed: both `app/(tabs)/mandali.tsx`'s
+  `loadMandali` and `app/(tabs)/pathshala.tsx`'s load function already use
+  the same `captureAppIdentity()`/generation-guard rigor as Home/Profile
+  (`isCurrentLoad()` checked at every await boundary, including immediately
+  around their respective cache writes) -- contrary to the finding's
+  characterization of Mandali/Pathshala as having only "simpler read/write/
+  remove storage." Both `lib/mandaliCache.ts` and `lib/pathshalaCache.ts`
+  also independently re-validate the stored identity against the requested
+  identity at read time before ever returning cached data, so a write
+  landing under the wrong identity's key cannot be read back as that
+  identity's data even in principle. The finding's secondary concern
+  ("language/tradition/location/content-version invalidation independently
+  of user ID") does not clearly apply to what is actually cached here
+  either: tradition is immutable post-signup (`profile.tsx`'s own comment:
+  "tradition is locked at signup"), and Pathshala's cached payload has no
+  language field or language-parameterized fetch at all to go stale.
+  Concluding this finding was likely accurate against an earlier state of
+  these files (this document itself notes concurrent activity during its
+  own review) and has since been superseded by work elsewhere in this
+  session -- not forcing a fix onto code that is already correctly guarded.
 
 ## Frozen baseline (2026-09-20)
 

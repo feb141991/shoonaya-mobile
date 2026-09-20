@@ -240,3 +240,33 @@ describe('Telemetry -- server timing capture and aggregation', () => {
     assert.equal(summary.outbox[0].success, 1);
   });
 });
+
+describe('Telemetry -- clear-generation barrier (F08, docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md)', () => {
+  it('drops a write queued before a clear instead of resurrecting it afterward', async () => {
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-clear-race' };
+    await clearTelemetry(identity);
+
+    // recordRouteOpen is fire-and-forget: appendEvent captures the current
+    // clearGeneration synchronously, then queues its actual read/write as a
+    // microtask. Calling clearTelemetry synchronously right after -- no
+    // await in between -- reliably wins the race deterministically (the
+    // generation bump happens before that microtask ever runs), rather
+    // than depending on arbitrary timing.
+    recordRouteOpen(identity, 'home', { cacheHit: true, durationMs: 5 });
+    await clearTelemetry(identity);
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    assert.equal(summary.totalEvents, 0, 'a write queued before the clear must not un-clear the identity it was cleared for');
+  });
+
+  it('does not affect a write recorded after the clear has already happened', async () => {
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-clear-after' };
+    await clearTelemetry(identity);
+    recordRouteOpen(identity, 'home', { cacheHit: true, durationMs: 5 });
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    assert.equal(summary.totalEvents, 1, 'a write starting after the clear has fully completed must not be dropped');
+  });
+});
