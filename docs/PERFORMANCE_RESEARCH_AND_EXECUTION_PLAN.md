@@ -132,6 +132,51 @@ their remaining scope is separately closed.
   a cross-device p95. These require a payload/schema change (native + backend
   contract) and are deliberately deferred to a separate, explicitly-scoped
   pass -- not bundled into this fix.
+- **F01 -- resolved (2026-09-20).** `markInteractive()` now gates on
+  `resolveStartupSurface({readyToRender, showStartupScene}) === 'app'`
+  (`lib/startup-visibility.ts`, already tested) instead of bare
+  `readyToRender`, closing the gap where the startup overlay could still be
+  crossfading out when the `tti` metric fired. The 6-second emergency
+  fallback path now tags `viaEmergencyFallback` on both the Observe metric
+  and the local startup receipt, so forced readiness is distinguishable
+  from normal readiness. **Not attempted:** waiting for the destination
+  screen's own content (e.g. Home's cache hydration) to report itself
+  ready -- that needs a cross-component readiness signal this pass does
+  not add; `markInteractive` still fires on overlay-gone + root-ready, not
+  on "Home has painted its real content." Native commit `9d50798`
+  (source-regression test included, confirmed failing against the pre-fix
+  source before the fix was applied).
+- **F02 -- reproduced and fixed (2026-09-20).** Confirmed by direct source
+  trace, not just accepted from the finding: cold start's `prepare()`
+  awaited `routeForSession(session)` to completion before calling
+  `markAuthReady()`; `routeForSession`'s missing-profile repair path (a
+  real, reachable OAuth-trigger-failure recovery case, not hypothetical)
+  calls `apiFetch('/api/native/profile/bootstrap', ...)` internally, and
+  `apiFetch` awaits `waitForAuthReady()` before firing any request --
+  which cannot resolve until `markAuthReady()` runs, the very call
+  `routeForSession`'s completion was gating. A genuine deadlock, broken
+  only by the 6-second emergency fallback, for exactly the accounts the
+  repair path exists to help. Reproduced in
+  `__tests__/coldStartAuthGateOrdering.test.ts` using `lib/authReadyGate.ts`'s
+  real exported functions (not a hand-rolled fake) to mirror the exact
+  control-flow shape read out of `app/_layout.tsx`; confirmed the
+  reproduction actually deadlocks before writing the fix. Fixed by moving
+  `markAuthReady()` to fire immediately after the session token is known
+  (right after `setApiAccessTokenFromSession`), decoupled from
+  `routeForSession`'s completion -- matching `waitForAuthReady`'s own
+  documented contract ("the session is known," not "routing has also
+  finished"). `setAuthReady(true)` (visual overlay-hide gating) deliberately
+  stays positioned after `routeForSession`, per the proposed remedy's
+  "separate session-resolution readiness from route/profile readiness" --
+  the user should still not see a screen flash before routing decisions
+  (onboarding vs. Home vs. login) are made. Native commit (pending as of
+  this entry). **Not addressed:** the doc's fuller ask ("test missing
+  profile, failed profile lookup, expired session and OAuth") is only
+  partially covered -- the reproduction test exercises the missing-profile
+  deadlock shape specifically, not the other three scenarios, and none of
+  the four have been exercised as real device-level integration tests
+  (not possible under this project's plain `tsx --test` runner without a
+  React Native test renderer, which does not exist in this repo yet).
 
 ## Frozen baseline (2026-09-20)
 

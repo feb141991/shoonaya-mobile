@@ -675,10 +675,24 @@ function RootLayout() {
 
         if (!mounted) return;
 
+        // F02 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): this must
+        // fire here, not after routeForSession returns. routeForSession's
+        // missing-profile repair path calls apiFetch('/api/native/profile/bootstrap',
+        // ...) internally, and apiFetch awaits waitForAuthReady() before
+        // firing any request. Gating markAuthReady() behind routeForSession's
+        // own completion made that a real deadlock for exactly the accounts
+        // the repair path exists to help -- broken only by the 6-second
+        // emergency fallback below, meaning every affected cold start paid
+        // the full 6 seconds before its own repair request could even be
+        // sent. waitForAuthReady's own contract (lib/authReadyGate.ts) is
+        // "the session is known," not "routing has also finished" -- calling
+        // it right after setApiAccessTokenFromSession matches that contract
+        // instead of conflating it with routeForSession's broader scope.
+        markAuthReady();
+
         await routeForSession(session);
 
         setAuthReady(true);
-        markAuthReady();
       } catch (e) {
         console.error('Initialization error:', e);
         setAuthReady(true); // Proceed anyway
