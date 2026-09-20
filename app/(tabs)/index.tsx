@@ -58,7 +58,7 @@ import { navScrollHandler } from '@/lib/navScrollBus';
 import { resolveSeriesChildHref } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
 import { useScrollToTop } from '@/lib/useScrollToTop';
-import { clearHomeCache, readHomeCache, writeHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
+import { clearHomeCache, readHomeCache, writeHomeCache, getHomeCacheSnapshot, getOrReadHomeCache, type CachedHomeRenderModel, type CacheIdentity } from '@/lib/homeCache';
 import { getStartupPreferences } from '@/lib/startup-scenes/preferences';
 import {
   HomeSummaryCoordinator,
@@ -414,6 +414,22 @@ const INITIAL_STATE: HomeSummary = {
 };
 
 
+export function buildHomeStateFromPayload(payload: HomeSummary | CachedHomeRenderModel): HomeSummary {
+  return {
+    ...INITIAL_STATE,
+    ...payload,
+    profile: { ...INITIAL_STATE.profile, ...payload.profile },
+    hero: { ...INITIAL_STATE.hero, ...payload.hero },
+    date: { ...INITIAL_STATE.date, ...payload.date },
+    sacredText: { ...INITIAL_STATE.sacredText, ...payload.sacredText },
+    panchang: { ...INITIAL_STATE.panchang, ...payload.panchang },
+    nextPractice: { ...INITIAL_STATE.nextPractice, ...payload.nextPractice },
+    practices: (payload.practices as HomeSummary['practices']) ?? [],
+    dharmVeer: { ...INITIAL_STATE.dharmVeer, ...payload.dharmVeer },
+    sankalpa: (payload as HomeSummary).sankalpa ?? null,
+  };
+}
+
 function resolveAssetUrl(url: string | null | undefined) {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
@@ -721,16 +737,27 @@ function HomeContent() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const appIdentity = useAppIdentity();
-  const [loading, setLoading] = useState(true);
+  const initialSnapshot = useMemo(() => {
+    if (appIdentity.kind === 'authenticated' || appIdentity.kind === 'guest') {
+      return getHomeCacheSnapshot(appIdentity);
+    }
+    return null;
+  }, []);
+
+  const [loading, setLoading] = useState(() => !initialSnapshot);
   const [refreshing, setRefreshing] = useState(false);
-  const [state, setState] = useState<HomeSummary>(INITIAL_STATE);
+  const [state, setState] = useState<HomeSummary>(() =>
+    initialSnapshot ? buildHomeStateFromPayload(initialSnapshot.payload) : INITIAL_STATE
+  );
   const [loadError, setLoadError] = useState(false);
   // True right after a stale-spiritual-date cache hit is applied -- Panchang/
   // vrat and practice-completion status in `state` have been reset to a
   // neutral pending state (see withDateSensitiveFieldsPending) and should
   // not be read as confirmed "nothing today" until the network response
   // that follows clears this flag.
-  const [sectionsPending, setSectionsPending] = useState(false);
+  const [sectionsPending, setSectionsPending] = useState(
+    () => initialSnapshot?.payload.panchang?.calendarStatus === 'pending'
+  );
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [moodStatus, setMoodStatus] = useState<HomeLiveMoodStatus | null>(null);
@@ -964,26 +991,14 @@ function HomeContent() {
   const dharmVeerColor = PRACTICE_COLOR.dharmveer;
 
   const requestGenRef = useRef(0);
-  const hasValidStateRef = useRef(false);
+  const hasValidStateRef = useRef(Boolean(initialSnapshot));
   const lastLoadedAtRef = useRef(0);
   const lastIdentityKeyRef = useRef<string | null>(null);
 
   const reducedMotion = useReducedMotion();
 
   const applyPayload = useCallback((payload: HomeSummary | CachedHomeRenderModel) => {
-    setState({
-      ...INITIAL_STATE,
-      ...payload,
-      profile: { ...INITIAL_STATE.profile, ...payload.profile },
-      hero: { ...INITIAL_STATE.hero, ...payload.hero },
-      date: { ...INITIAL_STATE.date, ...payload.date },
-      sacredText: { ...INITIAL_STATE.sacredText, ...payload.sacredText },
-      panchang: { ...INITIAL_STATE.panchang, ...payload.panchang },
-      nextPractice: { ...INITIAL_STATE.nextPractice, ...payload.nextPractice },
-      practices: (payload.practices as HomeSummary['practices']) ?? [],
-      dharmVeer: { ...INITIAL_STATE.dharmVeer, ...payload.dharmVeer },
-      sankalpa: (payload as HomeSummary).sankalpa ?? null,
-    });
+    setState(buildHomeStateFromPayload(payload));
     hasValidStateRef.current = true;
   }, []);
 
@@ -1083,21 +1098,37 @@ function HomeContent() {
 
   const coordinatorRef = useRef<HomeSummaryCoordinator | null>(null);
   if (!coordinatorRef.current) {
-    coordinatorRef.current = new HomeSummaryCoordinator({
-      fetchApi: apiFetch,
-      onApplyPayload: (payload) => applyPayload(payload),
-      onSetLoading: (loading) => setLoading(loading),
-      onSetError: (error) => setLoadError(error),
-      onSetSectionsPending: (pending) => setSectionsPending(pending),
-      onRedirectToLogin: () => router.replace('/(auth)/login'),
-      onPrefetchHeroImage: (url) => {
-        const assetUrl = resolveAssetUrl(url);
-        if (assetUrl) {
-          void Image.prefetch(assetUrl).catch(() => {});
-        }
+    coordinatorRef.current = new HomeSummaryCoordinator(
+      {
+        fetchApi: apiFetch,
+        onApplyPayload: (payload) => applyPayload(payload),
+        onSetLoading: (loading) => setLoading(loading),
+        onSetError: (error) => setLoadError(error),
+        onSetSectionsPending: (pending) => setSectionsPending(pending),
+        onRedirectToLogin: () => router.replace('/(auth)/login'),
+        onPrefetchHeroImage: (url) => {
+          const assetUrl = resolveAssetUrl(url);
+          if (assetUrl) {
+            void Image.prefetch(assetUrl).catch(() => {});
+          }
+        },
+        buildGuestPayload,
       },
-      buildGuestPayload,
-    });
+      initialSnapshot
+        ? {
+            hasValidState: true,
+            lastLoadedAt: initialSnapshot.savedAt,
+            lastCalendarLoadedAt: initialSnapshot.dateSensitiveStale
+              ? 0
+              : initialSnapshot.calendarSavedAt,
+            lastIdentityKey: getIdentityKey(
+              appIdentity.kind === 'authenticated'
+                ? { kind: 'authenticated', userId: appIdentity.userId }
+                : { kind: 'guest' }
+            ),
+          }
+        : undefined
+    );
   }
 
   // Root owns Supabase session restoration and auth events. Home consumes its
@@ -1116,15 +1147,33 @@ function HomeContent() {
     setIsGuest(nextIdentity.kind === 'guest');
 
     if (!identityChanged) return;
-    coordinatorRef.current?.invalidateMemoryState(nextKey);
-    setState(INITIAL_STATE);
+
+    const matchingSnapshot =
+      nextIdentity.kind === 'authenticated' || nextIdentity.kind === 'guest'
+        ? getHomeCacheSnapshot(nextIdentity)
+        : null;
+
+    if (matchingSnapshot) {
+      coordinatorRef.current?.setHydratedFromSnapshot(
+        nextKey,
+        matchingSnapshot.savedAt,
+        matchingSnapshot.dateSensitiveStale ? 0 : matchingSnapshot.calendarSavedAt
+      );
+      applyPayload(matchingSnapshot.payload);
+      setLoading(false);
+      setSectionsPending(matchingSnapshot.payload.panchang?.calendarStatus === 'pending');
+    } else {
+      coordinatorRef.current?.invalidateMemoryState(nextKey);
+      setState(INITIAL_STATE);
+      setLoading(true);
+    }
 
     if (nextIdentity.kind === 'unauthenticated') {
       router.replace('/(auth)/login');
     } else {
       void coordinatorRef.current?.loadHome(nextIdentity);
     }
-  }, [appIdentity, router]);
+  }, [appIdentity, applyPayload, router]);
 
   // Focus effect: Resolves identity FIRST on every focus before evaluating freshness or reloading
   useFocusEffect(

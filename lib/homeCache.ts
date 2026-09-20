@@ -428,25 +428,136 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
  * Still returns null if the cache is absent, corrupt, or belongs to a
  * different identity -- those aren't safe to partially show.
  */
-export async function readHomeCache(
-  identity: CacheIdentity,
-  fallbackTimezone?: string,
-  now: Date = new Date()
-): Promise<{
+export type HomeCacheSnapshot = {
   payload: CachedHomeRenderModel;
   savedAt: number;
   calendarSavedAt: number;
   timezone: string;
   spiritualDate: string;
   dateSensitiveStale: boolean;
-  // The spiritual date this read was actually evaluated against -- the same
-  // value used internally to decide dateSensitiveStale. Callers passing a
-  // stale cache into withDateSensitiveFieldsPending should use this exact
-  // value as targetIsoDate, not recompute it separately (this function's
-  // envelope.timezone-vs-fallbackTimezone precedence means a naive
-  // recomputation elsewhere could disagree with the one used here).
   expectedSpiritualDate: string;
-} | null> {
+};
+
+export type ReadHomeCacheResult = HomeCacheSnapshot | null;
+
+const inFlightDiskReadMap = new Map<string, Promise<ReadHomeCacheResult>>();
+const memorySnapshotMap = new Map<string, HomeCacheSnapshot>();
+const keyInvalidationGeneration = new Map<string, number>();
+let globalInvalidationGeneration = 0;
+let clearAllInFlight: Promise<void> | null = null;
+
+function getKeyInvalidationGeneration(key: string): number {
+  return keyInvalidationGeneration.get(key) ?? 0;
+}
+
+function invalidateKey(key: string): void {
+  keyInvalidationGeneration.set(key, getKeyInvalidationGeneration(key) + 1);
+}
+
+function prepareSnapshotForNow(snapshot: HomeCacheSnapshot, now: Date): HomeCacheSnapshot {
+  const expectedSpiritualDate = spiritualDate(snapshot.timezone, now);
+  const dateSensitiveStale =
+    !snapshot.spiritualDate || snapshot.spiritualDate !== expectedSpiritualDate;
+
+  return {
+    ...snapshot,
+    expectedSpiritualDate,
+    dateSensitiveStale,
+    payload: dateSensitiveStale
+      ? withDateSensitiveFieldsPending(snapshot.payload, expectedSpiritualDate)
+      : snapshot.payload,
+  };
+}
+
+/**
+ * Synchronously retrieves the in-memory cache snapshot for this exact identity,
+ * or null if none has been read into memory yet.
+ * Never returns data from another identity.
+ */
+export function getHomeCacheSnapshot(
+  identity: CacheIdentity,
+  now: Date = new Date()
+): HomeCacheSnapshot | null {
+  const key = getHomeCacheKey(identity);
+  const snapshot = memorySnapshotMap.get(key);
+  return snapshot ? prepareSnapshotForNow(snapshot, now) : null;
+}
+
+/**
+ * Returns an existing in-flight read promise if one was already initiated
+ * (e.g. by root layout during session resolution), or initiates a fresh read.
+ * Upon resolution, updates the keyed in-memory snapshot for synchronous access.
+ */
+export function getOrReadHomeCache(
+  identity: CacheIdentity,
+  fallbackTimezone?: string,
+  now: Date = new Date()
+): Promise<ReadHomeCacheResult> {
+  const key = getHomeCacheKey(identity);
+  const existing = inFlightDiskReadMap.get(key);
+  if (existing) {
+    return existing;
+  }
+
+  const globalGenerationAtStart = globalInvalidationGeneration;
+  const keyGenerationAtStart = getKeyInvalidationGeneration(key);
+  const pendingClearAll = clearAllInFlight;
+
+  let readPromise!: Promise<ReadHomeCacheResult>;
+  readPromise = (async () => {
+    try {
+      // A logout/account-switch purge may still be removing persisted keys.
+      // Reads started after that purge begins must wait until it finishes so
+      // they cannot resurrect a value that was about to be deleted.
+      if (pendingClearAll) {
+        await pendingClearAll;
+      }
+      const result = await readHomeCache(identity, fallbackTimezone, now);
+      const isStillCurrent =
+        globalGenerationAtStart === globalInvalidationGeneration &&
+        keyGenerationAtStart === getKeyInvalidationGeneration(key);
+
+      if (isStillCurrent) {
+        if (result?.payload) {
+          // Keep the raw validated payload plus its real freshness metadata.
+          // getHomeCacheSnapshot re-evaluates spiritual-date freshness every
+          // time it is read, including after an in-process midnight rollover.
+          memorySnapshotMap.set(key, result);
+        } else {
+          memorySnapshotMap.delete(key);
+        }
+      }
+      return result;
+    } catch (err) {
+      if (
+        globalGenerationAtStart === globalInvalidationGeneration &&
+        keyGenerationAtStart === getKeyInvalidationGeneration(key)
+      ) {
+        memorySnapshotMap.delete(key);
+      }
+      throw err;
+    } finally {
+      // An invalidation can allow a newer read for the same key to start
+      // before this one settles. Never let the older promise unregister it.
+      if (inFlightDiskReadMap.get(key) === readPromise) {
+        inFlightDiskReadMap.delete(key);
+      }
+    }
+  })();
+
+  inFlightDiskReadMap.set(key, readPromise);
+  return readPromise;
+}
+
+/**
+ * Reads and validates cached home summary for the given identity.
+ * Recomputes spiritual date freshness.
+ */
+export async function readHomeCache(
+  identity: CacheIdentity,
+  fallbackTimezone?: string,
+  now: Date = new Date()
+): Promise<ReadHomeCacheResult> {
   const key = getHomeCacheKey(identity);
   try {
     const raw = await AsyncStorage.getItem(key);
@@ -542,6 +653,15 @@ export async function writeHomeCache(
   };
 
   try {
+    memorySnapshotMap.set(key, {
+      payload: sanitized,
+      savedAt: envelope.savedAt,
+      calendarSavedAt: envelope.calendarSavedAt,
+      timezone: canonicalTimezone,
+      spiritualDate: date,
+      dateSensitiveStale: false,
+      expectedSpiritualDate: date,
+    });
     await AsyncStorage.setItem(key, JSON.stringify(envelope));
   } catch (error) {
     console.warn('[HomeCache] write failed', error);
@@ -555,6 +675,9 @@ export async function clearHomeCache(identity?: CacheIdentity): Promise<void> {
   try {
     if (identity) {
       const key = getHomeCacheKey(identity);
+      invalidateKey(key);
+      inFlightDiskReadMap.delete(key);
+      memorySnapshotMap.delete(key);
       await AsyncStorage.removeItem(key);
     } else {
       await clearAllHomeCaches();
@@ -567,17 +690,31 @@ export async function clearHomeCache(identity?: CacheIdentity): Promise<void> {
 /**
  * Purge all home cache entries across all accounts and guest sessions.
  */
-export async function clearAllHomeCaches(): Promise<void> {
-  try {
-    const keys = await AsyncStorage.getAllKeys();
-    const homeCacheKeys = keys.filter(
-      (k) => k === GUEST_KEY || k.startsWith(USER_KEY_PREFIX) || k.startsWith('shoonaya_home_cache_')
-    );
-    if (homeCacheKeys.length > 0) {
-      await AsyncStorage.multiRemove(homeCacheKeys);
+export function clearAllHomeCaches(): Promise<void> {
+  globalInvalidationGeneration += 1;
+  inFlightDiskReadMap.clear();
+  memorySnapshotMap.clear();
+  keyInvalidationGeneration.clear();
+
+  const clearPromise = (async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const homeCacheKeys = keys.filter(
+        (k) => k === GUEST_KEY || k.startsWith(USER_KEY_PREFIX) || k.startsWith('shoonaya_home_cache_')
+      );
+      if (homeCacheKeys.length > 0) {
+        await AsyncStorage.multiRemove(homeCacheKeys);
+      }
+      await clearAllHomeDiscoveryStates();
+    } catch (error) {
+      console.warn('[HomeCache] clearAll failed', error);
     }
-    await clearAllHomeDiscoveryStates();
-  } catch (error) {
-    console.warn('[HomeCache] clearAll failed', error);
-  }
+  })();
+
+  clearAllInFlight = clearPromise;
+  return clearPromise.finally(() => {
+    if (clearAllInFlight === clearPromise) {
+      clearAllInFlight = null;
+    }
+  });
 }

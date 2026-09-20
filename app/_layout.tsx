@@ -82,6 +82,7 @@ import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity } from '@/lib/appIdentity';
+import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
 
 // Keep splash screen visible until we are ready
@@ -341,6 +342,7 @@ function RootLayout() {
         const guest = await isGuestMode();
         if (!isCurrentRoute()) return;
         if (guest) {
+          void getOrReadHomeCache({ kind: 'guest' });
           setAppIdentity({ kind: 'guest' });
           if (inAuthGroup) {
             router.replace('/(tabs)');
@@ -358,6 +360,7 @@ function RootLayout() {
       // Root is the sole session owner. Publish identity before slower
       // preference/profile revalidation so mounted screens never need their
       // own Supabase auth subscriptions or getSession() calls.
+      void getOrReadHomeCache({ kind: 'authenticated', userId: session.user.id });
       setAppIdentity({ kind: 'authenticated', userId: session.user.id });
 
       const preferenceGeneration = setStartupPreferenceIdentity(session.user.id);

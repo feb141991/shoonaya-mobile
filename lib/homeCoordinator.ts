@@ -1,4 +1,4 @@
-import { readHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsPending, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
+import { readHomeCache, getOrReadHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsPending, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
@@ -131,6 +131,19 @@ export class HomeSummaryCoordinator {
     this.deps.onSetError(false);
   }
 
+  public setHydratedFromSnapshot(
+    identityKey: string | null,
+    savedAt: number,
+    calendarSavedAt: number
+  ) {
+    this.state.hasValidState = true;
+    this.state.lastLoadedAt = savedAt;
+    this.state.lastCalendarLoadedAt = calendarSavedAt;
+    this.state.lastIdentityKey = identityKey;
+    this.deps.onSetLoading(false);
+    this.deps.onSetError(false);
+  }
+
   public async onFocus(identity: HomeAuthIdentity): Promise<void> {
     const currentIdentityKey = getIdentityKey(identity);
 
@@ -212,7 +225,7 @@ export class HomeSummaryCoordinator {
 
     // 1. If we don't have valid state rendered yet, read stale-while-revalidate cache
     if (!this.state.hasValidState && !isManualRefresh) {
-      const cached = await readHomeCache(cacheIdentity, timezone);
+      const cached = await getOrReadHomeCache(cacheIdentity, timezone);
       if (cached && requestGen === this.state.requestGen && this.state.lastIdentityKey === currentIdentityKey) {
         this.deps.onApplyPayload(
           cached.dateSensitiveStale
@@ -226,7 +239,12 @@ export class HomeSummaryCoordinator {
         // never been fetched and request it fresh every time -- defeating
         // most of the benefit on the single most common flow (reopening a
         // backgrounded/killed app).
-        this.state.lastCalendarLoadedAt = cached.calendarSavedAt;
+        // A spiritual-day rollover always requires a full Calendar response.
+        // Even a recently saved envelope belongs to the previous day; using
+        // its timestamp would incorrectly select ?skipCalendar=true.
+        this.state.lastCalendarLoadedAt = cached.dateSensitiveStale
+          ? 0
+          : cached.calendarSavedAt;
         this.deps.onSetLoading(false);
         cacheApplied = true;
         if (!wasAlreadyValid) {
@@ -329,7 +347,7 @@ export class HomeSummaryCoordinator {
         // extra real fetch next time, same as any other cache miss.
         let calendarSavedAt = Date.now();
         if (!payload.panchang) {
-          const cachedCalendar = await readHomeCache(cacheIdentity, timezone);
+          const cachedCalendar = await getOrReadHomeCache(cacheIdentity, timezone);
           if (cachedCalendar) {
             payload.panchang = cachedCalendar.payload.panchang;
             payload.hero = cachedCalendar.payload.hero;

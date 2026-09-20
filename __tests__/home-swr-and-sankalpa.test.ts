@@ -620,6 +620,7 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
 
     it('stale spiritual date: identity renders instantly from cache, but Panchang/vrat/practice status are withheld as pending until the network response lands', async () => {
       let homeSummaryNetworkRequests = 0;
+      let requestedPath = '';
       let appliedPayloads: any[] = [];
       let pendingStates: boolean[] = [];
 
@@ -637,8 +638,9 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       );
 
       const coordinator = new HomeSummaryCoordinator({
-        fetchApi: async () => {
+        fetchApi: async (path) => {
           homeSummaryNetworkRequests++;
+          requestedPath = path;
           return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
         },
         onApplyPayload: (p) => appliedPayloads.push(p),
@@ -671,6 +673,11 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
 
       assert.deepEqual(pendingStates, [true, false], 'Pending flagged true on the stale cache apply, then false once fresh data lands');
       assert.equal(homeSummaryNetworkRequests, 1);
+      assert.equal(
+        requestedPath,
+        '/api/native/home-summary',
+        'A spiritual-date rollover must fetch Calendar even when its saved timestamp is recent'
+      );
     });
 
     it('fresh spiritual date: cache applies with Panchang/vrat/practice data intact, never marked pending', async () => {
