@@ -242,6 +242,31 @@ their remaining scope is separately closed.
   regression, asserts the early paint is positioned before the kul lookup
   in source order, and that previously-known kul fields are preserved
   rather than blanked).
+- **F12 -- partially resolved (2026-09-20), the safety half only.** Flagged
+  for early confirmation ahead of the rest of this backlog because it read
+  as a possible correctness/safety bug, not only a performance one --
+  confirmed as exactly that, and worse than the finding's own wording
+  suggested. `app/(tabs)/mandali.tsx`'s direct-Supabase fallback (used when
+  `/api/mandali/feed` itself fails) calls `fetchSafetyState` to build a
+  blocked/muted-author exclusion set, with an explicit comment explaining
+  that without it "a blocked/muted member's posts and comments... would
+  leak straight through." Its own `.catch()` substituted an empty exclusion
+  set on failure and the code proceeded to fetch and render posts, comments,
+  and members anyway -- reproducing the exact leak the comment warns
+  against, just triggered by the safety lookup itself failing (a second,
+  independent failure on top of the primary feed route already having
+  failed) rather than being skipped. Fixed by tracking whether the lookup
+  actually succeeded (`safetyStateAvailable`) and reusing the existing
+  "no mandaliId -> fetch nothing" path when it did not, so a failed safety
+  check now means "show nothing from this fallback," never "show everything
+  unfiltered." Regression test (source-regression,
+  `__tests__/mandali-fallback-safety-fail-closed.test.ts`) confirmed failing
+  against the pre-fix source. **Not addressed:** F12's other two parts --
+  "Mandali feed failure starts a direct-Supabase fallback with additional
+  reads" (bounding how much degraded-mode work this fallback does at all)
+  and `resilientFetch` retrying transient failures without method/
+  idempotency classification -- are still open, unrelated to the safety fix
+  above.
 
 ## Frozen baseline (2026-09-20)
 

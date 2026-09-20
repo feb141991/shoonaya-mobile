@@ -792,6 +792,15 @@ export default function MandaliScreen() {
       // -- without this, a blocked/muted member's posts and comments (and their
       // own row in the member list) would leak straight through this fallback,
       // since it reads posts/profiles directly with no server-side filtering.
+      // F12 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): a failed
+      // fetchSafetyState previously resolved to an EMPTY exclusion set here
+      // and the code below proceeded to fetch and render posts/comments/
+      // members anyway -- exactly the leak the comment above warns against,
+      // just triggered by the safety lookup itself failing instead of being
+      // skipped. safetyStateAvailable gates all content fetching below so a
+      // failed safety check means "show nothing from this fallback," never
+      // "show everything unfiltered."
+      let safetyStateAvailable = true;
       const [{ data: myProfile }, safetyState] = await Promise.all([
         supabase
           .from('profiles')
@@ -799,13 +808,14 @@ export default function MandaliScreen() {
           .eq('id', userId)
           .maybeSingle(),
         fetchSafetyState(userId).catch((safetyErr) => {
-          console.warn('[MandaliScreen] fetchSafetyState failed, fallback feed will be unfiltered:', safetyErr);
+          console.warn('[MandaliScreen] fetchSafetyState failed, fallback feed will show no posts or members rather than unfiltered ones:', safetyErr);
+          safetyStateAvailable = false;
           return { excludedAuthorIds: new Set<string>(), hiddenContentKeys: new Set<string>() };
         }),
       ]);
       if (!isCurrentLoad()) return { cacheHit, readyAt };
 
-      const mandaliId = myProfile?.mandali_id ?? null;
+      const mandaliId = safetyStateAvailable ? (myProfile?.mandali_id ?? null) : null;
       let fetchedPosts: PostRow[] = [];
       let fetchedMembers: Array<{ id: string; username: string; avatar_url: string | null; seva_score: number }> = [];
 
