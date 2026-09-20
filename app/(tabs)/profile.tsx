@@ -25,7 +25,7 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { type AppLanguage } from '@/lib/language-runtime';
 import { type ProfileSuggestion } from '@/lib/profile-suggestions';
-import { recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
+import { recordServerTiming, parseServerTimingHeader, recordRouteOpen } from '@/lib/telemetry';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -395,6 +395,13 @@ export default function ProfileScreen() {
 
   const profileShareCardRef = useRef<View>(null);
   const profileLoadGenerationRef = useRef(0);
+  // F05 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): Profile recorded
+  // server-timing but never a route-open, so it never appeared in the
+  // routes table (opens, cache-hit rate, avg/p95 duration) at all. Tracks
+  // the identity key an open was already recorded for, so a background
+  // refresh (post-save reload, manual retry) doesn't get double-counted
+  // as a second "open" -- only the first successful load per identity is.
+  const profileRouteOpenRecordedForRef = useRef<string | null>(null);
 
   const previousIdentityRef = useRef<string>(profileIdentityKey(appIdentity));
 
@@ -446,6 +453,7 @@ export default function ProfileScreen() {
 
   const loadProfile = useCallback(async () => {
     const identity = appIdentity;
+    const loadStartedAt = Date.now();
     const loadGeneration = ++profileLoadGenerationRef.current;
     const isCurrentLoad = () =>
       profileLoadGenerationRef.current === loadGeneration &&
@@ -473,6 +481,8 @@ export default function ProfileScreen() {
       userId: identity.userId,
     };
 
+    const identityKey = `authenticated:${identity.userId}`;
+
     // Fast-path: If profile state is not yet hydrated, check disk cache
     const cached = getProfileCacheSnapshot(cacheIdentity) ?? (await getOrReadProfileCache(cacheIdentity));
     if (!isCurrentLoad()) return;
@@ -484,6 +494,10 @@ export default function ProfileScreen() {
       setEmail(identity.email ?? '');
       setEntitlementsVerified(false);
       setLoading(false);
+      if (profileRouteOpenRecordedForRef.current !== identityKey) {
+        profileRouteOpenRecordedForRef.current = identityKey;
+        recordRouteOpen(cacheIdentity, 'profile', { cacheHit: true, durationMs: Date.now() - loadStartedAt });
+      }
     }
 
     // Network revalidation
@@ -514,6 +528,48 @@ export default function ProfileScreen() {
     setSummary(payload);
     const userEmail = identity.email ?? '';
     setEmail(userEmail);
+
+    // F10 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): paint the main
+    // profile as soon as the progress-summary response is in hand, instead
+    // of blocking every load on a second network round-trip that exists
+    // purely to fetch one relational display field (kul_id/kul_name).
+    // Preserves any previously-known kul fields across this early paint
+    // (e.g. a background revalidation of an already-rendered screen)
+    // rather than blanking them while the lookup below is in flight; a
+    // genuinely first-ever load has no prior profile and correctly shows
+    // kul fields as null until the lookup resolves a few lines down.
+    setProfile((cur) => ({
+      id: payload.profile.id,
+      full_name: payload.profile.fullName,
+      username: payload.profile.username,
+      avatar_url: payload.profile.avatarUrl,
+      tradition: payload.profile.tradition,
+      sampradaya: payload.profile.sampradaya,
+      ishta_devata: payload.profile.ishtaDevata,
+      city: payload.profile.city,
+      country: payload.profile.country,
+      life_stage: payload.profile.lifeStage,
+      app_language: payload.profile.appLanguage,
+      active_symbol_id: payload.profile.activeSymbolId,
+      seva_score: payload.profile.sevaScore,
+      is_pro: payload.profile.isPro,
+      subscription_status: payload.profile.subscriptionStatus,
+      kul_id: cur && cur.id === payload.profile.id ? cur.kul_id : null,
+      kul_name: cur && cur.id === payload.profile.id ? cur.kul_name : null,
+    }));
+    setEntitlementsVerified(true);
+    setAvatarFailed(false);
+    setEditState({
+      fullName: payload.profile.fullName,
+      username: payload.profile.username || payload.profile.id.replace(/-/g, '').slice(0, 10),
+      sampradaya: payload.profile.sampradaya,
+      ishtaDevata: payload.profile.ishtaDevata,
+      appLanguage: payload.profile.appLanguage,
+    });
+    if (profileRouteOpenRecordedForRef.current !== identityKey) {
+      profileRouteOpenRecordedForRef.current = identityKey;
+      recordRouteOpen(cacheIdentity, 'profile', { cacheHit: false, durationMs: Date.now() - loadStartedAt });
+    }
 
     const { data: profileRow } = await supabase
       .from('profiles')

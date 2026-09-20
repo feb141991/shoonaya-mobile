@@ -166,6 +166,15 @@ export class HomeSummaryCoordinator {
 
     // If we have valid state and it's fresh (<5m), no mandatory reload needed unless stale
     if (this.state.hasValidState && !isStale) {
+      // F05 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): this is the
+      // fastest possible outcome -- content already valid in memory, zero
+      // work needed -- and until now it recorded nothing. loadHome's own
+      // recordRouteOpen calls are gated on !wasAlreadyValid, so they never
+      // fire for this path either; the fastest opens were silently
+      // disappearing from the telemetry dataset instead of anchoring it.
+      const telemetryIdentity: TelemetryIdentity =
+        identity.kind === 'authenticated' ? { kind: 'authenticated', userId: identity.userId } : { kind: 'guest' };
+      recordRouteOpen(telemetryIdentity, 'home', { cacheHit: true, durationMs: 0 });
       return;
     }
 

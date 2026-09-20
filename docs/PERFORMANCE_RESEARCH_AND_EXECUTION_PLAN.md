@@ -205,6 +205,43 @@ their remaining scope is separately closed.
   of the first account's language until its own reconciliation resolves.
   That is a larger, explicitly out-of-scope change for this pass, not a
   silently dropped fix.
+- **F05 -- resolved (2026-09-20).** Confirmed both named gaps. Home
+  (`lib/homeCoordinator.ts`): `onFocus`'s memory-snapshot fast path (content
+  already valid, not stale -- the fastest possible outcome) returned
+  without calling `recordRouteOpen`, and `loadHome`'s own calls are gated
+  on `!wasAlreadyValid` so they never cover this path either -- the
+  fastest, most successful opens were silently absent from exactly the
+  dataset this session just built upload/admin infrastructure around.
+  Fixed by recording a `cacheHit: true, durationMs: 0` open on that path
+  (an honest measurement -- zero additional work happens there). Profile
+  (`app/(tabs)/profile.tsx`): had `recordServerTiming` but zero
+  `recordRouteOpen` call sites at all, so it never appeared in the routes
+  table regardless of outcome. Fixed with two call sites (cache-hit and
+  network-resolved), gated by a per-identity ref so a background refresh
+  (post-save reload, manual retry) is not double-counted as a second open.
+  Regression tests: `__tests__/homeCoordinatorTelemetry.test.ts` (a real
+  behavioral test against `HomeSummaryCoordinator`, not source regex --
+  confirmed failing against the pre-fix source) and
+  `__tests__/profile-load-telemetry-and-waterfall.test.ts` (source-regression,
+  `profile.tsx` cannot be executed under this project's `tsx --test` runner).
+- **F10 -- resolved (2026-09-20).** Confirmed: `loadProfile` awaited
+  `/api/native/progress-summary`, then a second, direct `profiles`/`kuls`
+  lookup before the profile was painted at all -- blocking every load on a
+  network round-trip that exists purely to fetch one relational display
+  field (`kul_id`/`kul_name`). Fixed via the doc's own "or" remedy (paint
+  before enrichment, rather than changing the backend DTO): the profile is
+  now painted immediately once the progress-summary response resolves,
+  with `kul_id`/`kul_name` preserved from the previous render (or `null` on
+  a genuinely first load) until the kul lookup resolves a moment later and
+  repaints with the real value. Deliberately did not pursue the DTO-change
+  alternative (adding kul fields to the canonical `progress-summary`
+  response) -- that is a cross-repo, shared-contract change needing native
+  + backend + PWA audit, out of proportion for this pass; the extra request
+  itself still happens, just no longer blocks visible content. Regression
+  test: `__tests__/profile-load-telemetry-and-waterfall.test.ts` (source-
+  regression, asserts the early paint is positioned before the kul lookup
+  in source order, and that previously-known kul fields are preserved
+  rather than blanked).
 
 ## Frozen baseline (2026-09-20)
 
