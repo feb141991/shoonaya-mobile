@@ -31,7 +31,12 @@ import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } 
 import { transmitAppleAuthorizationCode } from '@/lib/appleAuthToken';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
-import { classifySignInErrorMessage } from '@/lib/authErrorMessages';
+import {
+  classifySignInErrorMessage,
+  classifySignUpErrorMessage,
+  classifyForgotPasswordErrorMessage,
+  classifyOAuthErrorMessage,
+} from '@/lib/authErrorMessages';
 import { setGuestMode } from '@/lib/guestSession';
 import { setAppIdentity } from '@/lib/appIdentity';
 
@@ -652,8 +657,10 @@ export default function LoginScreen() {
         }
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Google sign-in failed.';
-      setErrorMessage(message);
+      const message = classifyOAuthErrorMessage(error, 'Google');
+      if (message) {
+        setErrorMessage(message);
+      }
     } finally {
       setActiveAction(null);
     }
@@ -711,28 +718,8 @@ export default function LoginScreen() {
         }
       }
     } catch (error) {
-      const code = getNativeErrorCode(error);
-      const message = error instanceof Error ? error.message : 'Apple sign-in failed.';
-
-      if (__DEV__) {
-        console.log('[auth] Apple sign-in failed:', { code, message });
-      }
-
-      if (
-        code === 'ERR_REQUEST_CANCELED' ||
-        message === 'The authorization attempt was canceled.'
-      ) {
-        setActiveAction(null);
-        return;
-      }
-
-      if (
-        code === 'ERR_REQUEST_UNKNOWN' ||
-        message.includes('AuthenticationServices.AuthorizationError') ||
-        message.includes('Apple authorization failed')
-      ) {
-        setErrorMessage('Apple sign-in could not start on this simulator. Confirm the simulator is signed into an Apple ID and the Apple App ID com.shoonaya.app has Sign in with Apple enabled, then rebuild.');
-      } else {
+      const message = classifyOAuthErrorMessage(error, 'Apple');
+      if (message) {
         setErrorMessage(message);
       }
     } finally {
@@ -774,7 +761,7 @@ export default function LoginScreen() {
       // navigator once the session is actually established -- this screen
       // never navigates itself, here or in handleSignUp below.
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Sign-in failed. Please try again.');
+      setErrorMessage(classifySignInErrorMessage(error));
     } finally {
       setActiveAction(null);
     }
@@ -808,7 +795,7 @@ export default function LoginScreen() {
       });
 
       if (error) {
-        setErrorMessage(error.message);
+        setErrorMessage(classifySignUpErrorMessage(error.message));
         return;
       }
 
@@ -824,7 +811,7 @@ export default function LoginScreen() {
       // handled identically to sign-in success above: this screen still
       // never navigates itself before that session actually exists.
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not create account. Please try again.');
+      setErrorMessage(classifySignUpErrorMessage(error));
     } finally {
       setActiveAction(null);
     }
@@ -846,14 +833,14 @@ export default function LoginScreen() {
         redirectTo: `${API_BASE}/reset-password`,
       });
       if (error) {
-        setErrorMessage(error.message);
+        setErrorMessage(classifyForgotPasswordErrorMessage(error.message));
         return;
       }
       // Non-enumerating: Supabase itself does not error for an
       // unregistered address here, and this copy must not either.
       setNoticeMessage('If that email has an account, a password reset link is on its way.');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not send a reset link. Please try again.');
+      setErrorMessage(classifyForgotPasswordErrorMessage(error));
     } finally {
       setActiveAction(null);
     }
