@@ -4,6 +4,8 @@ import type { Session } from '@supabase/supabase-js';
 import { isFetchCancelled } from './fetch-error';
 import { DEFAULT_API_TIMEOUT_MS } from './api-policy';
 import { waitForAuthReady } from './authReadyGate';
+import { sessionHasUsableAccessToken } from './api-auth-policy';
+import { createSingleFlight } from './async-single-flight';
 
 export { isFetchCancelled };
 
@@ -26,28 +28,33 @@ export type ApiFetchOptions = RequestInit & {
 };
 
 let cachedAccessToken: string | null | undefined;
+let cachedSession: Session | null = null;
+const refreshSingleFlight = createSingleFlight<Session | null>();
 
 export function setApiAccessTokenFromSession(session: Session | null) {
+  cachedSession = session;
   cachedAccessToken = session?.access_token ?? null;
 }
 
-async function getApiAccessToken({ forceRefresh = false }: { forceRefresh?: boolean } = {}): Promise<string | null> {
-  if (!forceRefresh && cachedAccessToken) {
-    return cachedAccessToken;
-  }
+async function refreshApiSession(): Promise<Session | null> {
+  return refreshSingleFlight.run(async () => {
+    const result = await supabase.auth.refreshSession();
+    if (result.error) throw result.error;
+    setApiAccessTokenFromSession(result.data.session);
+    return result.data.session;
+  });
+}
 
-  try {
-    const result = forceRefresh
-      ? await supabase.auth.refreshSession()
-      : await supabase.auth.getSession();
-    const session = result.data.session;
+async function getApiAccessToken(): Promise<string | null> {
+  if (sessionHasUsableAccessToken(cachedSession)) return cachedSession!.access_token;
 
-    setApiAccessTokenFromSession(session);
-    return session?.access_token ?? null;
-  } catch {
-    // If Supabase auth is temporarily unreachable or network dropped, fail safe to cached token
-    return cachedAccessToken ?? null;
-  }
+  const result = await supabase.auth.getSession();
+  if (result.error) throw result.error;
+  setApiAccessTokenFromSession(result.data.session);
+
+  if (!result.data.session) return null;
+  if (sessionHasUsableAccessToken(result.data.session)) return result.data.session.access_token;
+  return (await refreshApiSession())?.access_token ?? null;
 }
 
 function canReplayBody(body: BodyInit | null | undefined): boolean {
@@ -60,8 +67,6 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   // race Supabase's session restore and fire without a token. Resolves
   // immediately once _layout.tsx calls markAuthReady() -- a one-time wait
   // per app launch, not a per-request cost.
-  await waitForAuthReady();
-
   const { timeoutMs = DEFAULT_API_TIMEOUT_MS, expectedUserId, expectedGuest, ...fetchOptions } = options;
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Content-Type') && options.body) {
@@ -69,18 +74,46 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const controller = fetchOptions.signal ? null : new AbortController();
-  const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  const controller = new AbortController();
+  const callerSignal = fetchOptions.signal;
+  const forwardAbort = () => controller.abort(callerSignal?.reason);
+  if (callerSignal?.aborted) forwardAbort();
+  else callerSignal?.addEventListener('abort', forwardAbort, { once: true });
+  const timeout = setTimeout(() => {
+    const error = new Error('API request timed out');
+    error.name = 'AbortError';
+    controller.abort(error);
+  }, timeoutMs);
+
+  const abortable = async <T>(operation: Promise<T>): Promise<T> => {
+    if (controller.signal.aborted) throw controller.signal.reason;
+    return new Promise<T>((resolve, reject) => {
+      const onAbort = () => reject(controller.signal.reason);
+      controller.signal.addEventListener('abort', onAbort, { once: true });
+      operation.then(
+        (value) => {
+          controller.signal.removeEventListener('abort', onAbort);
+          resolve(value);
+        },
+        (error) => {
+          controller.signal.removeEventListener('abort', onAbort);
+          reject(error);
+        },
+      );
+    });
+  };
 
   const requestWithToken = async (accessToken: string | null) => {
     if (expectedUserId) {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await abortable(supabase.auth.getSession());
+      if (error) throw error;
       if (session?.user.id !== expectedUserId) {
         throw new Error('Japa completion owner is no longer signed in');
       }
       accessToken = session.access_token;
     } else if (expectedGuest) {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await abortable(supabase.auth.getSession());
+      if (error) throw error;
       if (session) {
         throw new Error('Guest request owner signed in before send');
       }
@@ -93,12 +126,15 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
     return fetch(`${API_BASE}${normalizedPath}`, {
       ...fetchOptions,
       headers: requestHeaders,
-      signal: fetchOptions.signal ?? controller?.signal,
+      signal: controller.signal,
     });
   };
 
   try {
-    const accessToken = await getApiAccessToken();
+    // The deadline covers the startup auth gate, session lookup/refresh,
+    // owner verification and transport instead of starting only at fetch().
+    await abortable(waitForAuthReady());
+    const accessToken = await abortable(getApiAccessToken());
     const response = await requestWithToken(accessToken);
 
     // React Native pauses Supabase's refresh timer while backgrounded. A
@@ -109,11 +145,19 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
       return response;
     }
 
-    const refreshedToken = await getApiAccessToken({ forceRefresh: true });
+    // Another concurrent request may already have refreshed the token while
+    // this rejected request was in flight. Prefer that token before starting
+    // one shared forced refresh.
+    const alreadyRotatedToken = sessionHasUsableAccessToken(cachedSession)
+      && cachedAccessToken !== accessToken
+      ? cachedAccessToken
+      : null;
+    const refreshedToken = alreadyRotatedToken ?? (await abortable(refreshApiSession()))?.access_token ?? null;
     if (!refreshedToken || refreshedToken === accessToken) return response;
 
     return requestWithToken(refreshedToken);
   } finally {
-    if (timeout) clearTimeout(timeout);
+    clearTimeout(timeout);
+    callerSignal?.removeEventListener('abort', forwardAbort);
   }
 }

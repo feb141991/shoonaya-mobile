@@ -60,6 +60,7 @@ import { clearAllMandaliCaches } from '@/lib/mandaliCache';
 import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
 import { clearAllPathshalaCaches } from '@/lib/pathshalaCache';
+import { clearJapaContextCache } from '@/lib/japaContextCache';
 import { clearAllTelemetry } from '@/lib/telemetry';
 import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
@@ -344,6 +345,10 @@ function RootLayout() {
       const inAuthGroup = rootSegment === '(auth)';
 
       if (!session) {
+        // Mask the previous account immediately. Cleanup is asynchronous,
+        // so waiting until after it completes leaves the old user's screen
+        // visible during sign-out/account loss.
+        setAppIdentity({ kind: 'loading' });
         // A sign-out or account switch always clears a stale failure
         // screen from a *previous* user -- it must never persist across
         // identities.
@@ -366,6 +371,7 @@ function RootLayout() {
         void clearAllSettingsCaches();
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
+        void clearJapaContextCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -397,6 +403,22 @@ function RootLayout() {
       // preference/profile revalidation so mounted screens never need their
       // own Supabase auth subscriptions or getSession() calls.
       if (previousRouteKey && previousRouteKey !== session.user.id) {
+        // Cache keys are owner-scoped, but an account switch is also a purge
+        // boundary. Clear every private render cache; the cache modules'
+        // storage barriers prevent an older write from restoring a removed
+        // entry after this point.
+        setAppIdentity({ kind: 'loading' });
+        void clearAllHomeCaches();
+        void clearAllMandaliCaches();
+        void clearAllSettingsCaches();
+        void clearAllNotificationsCaches();
+        void clearAllPathshalaCaches();
+        void clearJapaContextCache();
+        void clearAllTelemetry();
+        void clearAllSankalpaOutboxes();
+        void clearAllReactionOutboxes();
+        void clearAllOnboardingDrafts();
+        void clearAllHomeDiscoveryStates();
         void clearProfileCache({ kind: 'authenticated', userId: previousRouteKey });
       }
       void getOrReadHomeCache({ kind: 'authenticated', userId: session.user.id });
@@ -466,6 +488,7 @@ function RootLayout() {
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: p }) => {
+            if (!isCurrentRoute()) return;
             if (p?.onboarding_completed === false) {
               void AsyncStorage.setItem(cacheKey, 'false').catch(() => {});
               router.replace('/(auth)/onboarding');
@@ -578,6 +601,9 @@ function RootLayout() {
   // marking today's shloka read) can fail with a stale/expired token even
   // though the user never signed out.
   useEffect(() => {
+    if (AppState.currentState === 'active') {
+      supabase.auth.startAutoRefresh();
+    }
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         supabase.auth.startAutoRefresh();
@@ -585,7 +611,10 @@ function RootLayout() {
         supabase.auth.stopAutoRefresh();
       }
     });
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      supabase.auth.stopAutoRefresh();
+    };
   }, []);
 
   // ── Upload the aggregated startup-performance telemetry on background ──
@@ -717,14 +746,22 @@ function RootLayout() {
       });
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-      try {
-        setApiAccessTokenFromSession(session);
-        await routeForSession(session);
-      } catch (e) {
-        console.error('Auth state routing error:', e);
-      }
+      // Keep the auth callback synchronous. routeForSession can perform API
+      // work (including a token refresh during profile repair); running that
+      // work inside an auth event callback can make refresh completion wait
+      // on callback completion. The route generation still discards stale
+      // deferred work after a newer auth event.
+      setApiAccessTokenFromSession(session);
+      void Promise.resolve().then(async () => {
+        if (!mounted) return;
+        try {
+          await routeForSession(session);
+        } catch (e) {
+          console.error('Auth state routing error:', e);
+        }
+      });
     });
 
     return () => {

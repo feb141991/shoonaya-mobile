@@ -31,11 +31,16 @@ describe('Profile loadProfile: route-open telemetry and kul waterfall (docs/PERF
     const summaryIndex = profile.indexOf("setSummary(payload);");
     const earlyPaintIndex = profile.indexOf('F10 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md)');
     const kulLookupIndex = profile.indexOf("from('profiles')\n      .select('kul_id, kuls(name)')");
+    const loaderReleaseIndex = profile.indexOf('setLoading(false);', earlyPaintIndex);
 
     assert.ok(summaryIndex > -1 && earlyPaintIndex > -1 && kulLookupIndex > -1, 'expected markers not found in source');
     assert.ok(
       summaryIndex < earlyPaintIndex && earlyPaintIndex < kulLookupIndex,
       'setProfile must be called (early paint) between the progress-summary response and the kul lookup, not only after it'
+    );
+    assert.ok(
+      loaderReleaseIndex > earlyPaintIndex && loaderReleaseIndex < kulLookupIndex,
+      'the full-screen loading gate must be released before optional kul enrichment begins',
     );
   });
 

@@ -566,6 +566,10 @@ export default function ProfileScreen() {
       ishtaDevata: payload.profile.ishtaDevata,
       appLanguage: payload.profile.appLanguage,
     });
+    // The core progress-summary is now visible and usable. Kul enrichment
+    // below is optional display metadata and must not keep a cold-load user
+    // behind the full-screen loader.
+    setLoading(false);
     if (profileRouteOpenRecordedForRef.current !== identityKey) {
       profileRouteOpenRecordedForRef.current = identityKey;
       recordRouteOpen(cacheIdentity, 'profile', { cacheHit: false, durationMs: Date.now() - loadStartedAt });

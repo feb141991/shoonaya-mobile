@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { canRetryTransientTransportFailure } from '@/lib/api-auth-policy';
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const EXPO_PUBLIC_SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,6 +18,7 @@ if (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY) {
  */
 const resilientFetch: typeof fetch = async (input, init) => {
   const maxRetries = 2;
+  const mayRetry = canRetryTransientTransportFailure(init?.method);
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fetch(input, init);
@@ -27,7 +29,10 @@ const resilientFetch: typeof fetch = async (input, init) => {
         msg.includes('Network request failed') ||
         msg.includes('Internet connection appears to be offline');
 
-      if (attempt < maxRetries && isTransient) {
+      // A transport error does not prove that a mutation was rejected by the
+      // server. Replaying POST/PATCH/PUT/DELETE here can duplicate a write.
+      // Durable mutation retries belong to the feature's idempotent outbox.
+      if (mayRetry && attempt < maxRetries && isTransient) {
         await new Promise((res) => setTimeout(res, 250 * (attempt + 1)));
         continue;
       }
