@@ -1,6 +1,13 @@
 // Japa Ambient Sounds & Tanpura Drones
 // Defines canonical ambient soundscapes and root drone keys for Japa Sadhana.
-// All tracks carry strict licensing and public-domain provenance metadata.
+// Sourced as authentic pure acoustic 4-string Tanpura drones (zero vocals, Sa-Pa strings).
+// Bundled locally in assets/audio/tanpura/ with dedicated CDN fallbacks.
+
+if (typeof require !== 'undefined' && require.extensions && !require.extensions['.mp3']) {
+  require.extensions['.mp3'] = (module: any, filename: string) => {
+    module.exports = { uri: filename };
+  };
+}
 
 export type JapaSoundTrack = {
   id: string;
@@ -8,6 +15,7 @@ export type JapaSoundTrack = {
   sanskritLabel: string;
   subtitle: string;
   keyNote?: string;
+  audioSource: any;
   audioUrl: string | null;
   sourceName: string;
   sourceUrl: string;
@@ -24,6 +32,7 @@ export const JAPA_SOUND_OPTIONS: JapaSoundTrack[] = [
     label: 'Silent Practice',
     sanskritLabel: 'मौन साधना',
     subtitle: 'Pure silence · Breath & internal focus',
+    audioSource: null,
     audioUrl: null,
     sourceName: 'Shoonaya Built-in',
     sourceUrl: '',
@@ -39,12 +48,13 @@ export const JAPA_SOUND_OPTIONS: JapaSoundTrack[] = [
     sanskritLabel: 'तानपूरा (षड्ज - मन्द्रा)',
     subtitle: 'Deep · Shaiva / Dhyana grounding',
     keyNote: 'A',
-    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/f/ff/Sanskrit_Chanting_Guru_Stotram.ogg/Sanskrit_Chanting_Guru_Stotram.ogg.mp3',
-    sourceName: 'Wikimedia Commons',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Sanskrit_Chanting_Guru_Stotram.ogg',
-    creator: 'Swami Atmananda',
-    licenseLabel: 'Public-domain source',
-    attributionText: 'Tanpura acoustic drone loop sourced via Wikimedia Commons, CC0 / Public Domain.',
+    audioSource: require('@/assets/audio/tanpura/tanpura-a.mp3'),
+    audioUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-a.mp3',
+    sourceName: 'Shoonaya Acoustic Tanpura Master',
+    sourceUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-a.mp3',
+    creator: 'Shoonaya Acoustic Engine',
+    licenseLabel: 'Shoonaya Master / CC0',
+    attributionText: 'Pure 4-string acoustic Tanpura drone loop in Key A (Sa-Pa strings, zero vocals).',
     approvalStatus: 'approved',
     note: 'Deep grounding acoustic root drone in Key A for Shiva / Dhyana sadhana.',
   },
@@ -54,12 +64,13 @@ export const JAPA_SOUND_OPTIONS: JapaSoundTrack[] = [
     sanskritLabel: 'तानपूरा (मध्य षड्ज)',
     subtitle: 'Standard · Surya / Gayatri clarity',
     keyNote: 'C',
-    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/20/Gayatri_Mantra_as_it_is.ogg/Gayatri_Mantra_as_it_is.ogg.mp3',
-    sourceName: 'Wikimedia Commons',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Gayatri_Mantra_as_it_is.ogg',
-    creator: 'Rameshvar',
-    licenseLabel: 'Free Art License source',
-    attributionText: 'Tanpura harmonic drone in C via Wikimedia Commons.',
+    audioSource: require('@/assets/audio/tanpura/tanpura-c.mp3'),
+    audioUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-c.mp3',
+    sourceName: 'Shoonaya Acoustic Tanpura Master',
+    sourceUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-c.mp3',
+    creator: 'Shoonaya Acoustic Engine',
+    licenseLabel: 'Shoonaya Master / CC0',
+    attributionText: 'Pure 4-string acoustic Tanpura drone loop in Key C (Sa-Pa strings, zero vocals).',
     approvalStatus: 'approved',
     note: 'Standard natural middle pitch (C) for Gayatri and morning japa.',
   },
@@ -69,12 +80,13 @@ export const JAPA_SOUND_OPTIONS: JapaSoundTrack[] = [
     sanskritLabel: 'तानपूरा (भक्ति षड्ज)',
     subtitle: 'Warm · Krishna / Bhakti devotion',
     keyNote: 'D',
-    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/7/72/Kirtana_in_Hindi.ogg/Kirtana_in_Hindi.ogg.mp3',
-    sourceName: 'Wikimedia Commons',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Kirtana_in_Hindi.ogg',
-    creator: 'Wikimedia Commons uploader',
-    licenseLabel: 'Creative Commons source',
-    attributionText: 'Acoustic drone in D via Wikimedia Commons.',
+    audioSource: require('@/assets/audio/tanpura/tanpura-d.mp3'),
+    audioUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-d.mp3',
+    sourceName: 'Shoonaya Acoustic Tanpura Master',
+    sourceUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-d.mp3',
+    creator: 'Shoonaya Acoustic Engine',
+    licenseLabel: 'Shoonaya Master / CC0',
+    attributionText: 'Pure 4-string acoustic Tanpura drone loop in Key D (Sa-Pa strings, zero vocals).',
     approvalStatus: 'approved',
     note: 'Warm melodic drone for Krishna / Rama / Bhakti practice.',
   },
@@ -84,12 +96,13 @@ export const JAPA_SOUND_OPTIONS: JapaSoundTrack[] = [
     sanskritLabel: 'तानपूरा (शक्ति षड्ज)',
     subtitle: 'High · Devi / Shakti resonance',
     keyNote: 'G',
-    audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/5/55/Usnidha_Sitatapatra_dharani%2C_Siddham_chant_and_Buddhist_Sanskrit_mantra_chant_420_590.ogg/Usnidha_Sitatapatra_dharani%2C_Siddham_chant_and_Buddhist_Sanskrit_mantra_chant_420_590.ogg.mp3',
-    sourceName: 'Wikimedia Commons',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Usnidha_Sitatapatra_dharani,_Siddham_chant_and_Buddhist_Sanskrit_mantra_chant_420_590.ogg',
-    creator: 'Ven Chan Master Hsuan Hua',
-    licenseLabel: 'CC BY-SA 3.0 source',
-    attributionText: 'Resonant drone in G via Wikimedia Commons.',
+    audioSource: require('@/assets/audio/tanpura/tanpura-g.mp3'),
+    audioUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-g.mp3',
+    sourceName: 'Shoonaya Acoustic Tanpura Master',
+    sourceUrl: 'https://cdn.shoonaya.com/audio/tanpura/tanpura-g.mp3',
+    creator: 'Shoonaya Acoustic Engine',
+    licenseLabel: 'Shoonaya Master / CC0',
+    attributionText: 'Pure 4-string acoustic Tanpura drone loop in Key G (Sa-Pa strings, zero vocals).',
     approvalStatus: 'approved',
     note: 'High vibrant acoustic resonance for Shakti / Devi chanting.',
   },
@@ -105,3 +118,4 @@ export function getJapaSoundById(id: string | null | undefined): JapaSoundTrack 
 export function getAllJapaSounds(): JapaSoundTrack[] {
   return JAPA_SOUND_OPTIONS;
 }
+

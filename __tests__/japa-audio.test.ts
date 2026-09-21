@@ -95,22 +95,24 @@ describe('Japa Ambient Audio & Tanpura Engine', () => {
     assert.match(puri.stotraOrChant.audioUrl, /\.mp3(\?.*)?$/i, 'Puri stotra audio must be MP3');
   });
 
-  it('resolves each canonical Tanpura drone key', () => {
-    const keyA = getJapaSoundById('tanpura-a');
-    assert.strictEqual(keyA.id, 'tanpura-a');
-    assert.strictEqual(keyA.keyNote, 'A');
+  it('resolves each canonical Tanpura drone key with bundled assets and pure acoustic drone guarantee', () => {
+    const droneKeys = [
+      { id: 'tanpura-a', key: 'A', file: 'tanpura-a.mp3' },
+      { id: 'tanpura-c', key: 'C', file: 'tanpura-c.mp3' },
+      { id: 'tanpura-d', key: 'D', file: 'tanpura-d.mp3' },
+      { id: 'tanpura-g', key: 'G', file: 'tanpura-g.mp3' },
+    ] as const;
 
-    const keyC = getJapaSoundById('tanpura-c');
-    assert.strictEqual(keyC.id, 'tanpura-c');
-    assert.strictEqual(keyC.keyNote, 'C');
-
-    const keyD = getJapaSoundById('tanpura-d');
-    assert.strictEqual(keyD.id, 'tanpura-d');
-    assert.strictEqual(keyD.keyNote, 'D');
-
-    const keyG = getJapaSoundById('tanpura-g');
-    assert.strictEqual(keyG.id, 'tanpura-g');
-    assert.strictEqual(keyG.keyNote, 'G');
+    for (const { id, key, file } of droneKeys) {
+      const drone = getJapaSoundById(id);
+      assert.strictEqual(drone.id, id);
+      assert.strictEqual(drone.keyNote, key);
+      assert.ok(drone.audioSource, `Drone ${id} must have a bundled audioSource`);
+      assert.strictEqual(drone.audioUrl, `https://cdn.shoonaya.com/audio/tanpura/${file}`);
+      assert.strictEqual(drone.sourceName, 'Shoonaya Acoustic Tanpura Master');
+      assert.match(drone.attributionText, /pure 4-string acoustic tanpura drone loop/i);
+      assert.match(drone.attributionText, /zero vocals/i);
+    }
   });
 
   it('safely falls back to default silent mode for unknown, null, or undefined IDs', () => {

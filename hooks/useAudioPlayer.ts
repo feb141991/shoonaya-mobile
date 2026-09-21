@@ -4,8 +4,10 @@ import { useFocusEffect } from 'expo-router';
 
 type AudioRate = 0.75 | 1.0 | 1.25;
 
+type AudioSource = string | number | { uri: string };
+
 type UseAudioPlayerResult = {
-  loadAndPlay: (url: string, loop?: boolean, onComplete?: () => void) => Promise<void>;
+  loadAndPlay: (source: AudioSource, loop?: boolean, onComplete?: () => void) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   stop: () => Promise<void>;
@@ -65,14 +67,14 @@ export function useAudioPlayer(): UseAudioPlayerResult {
   );
 
   const loadAndPlay = useCallback(
-    async (url: string, loop = false, onComplete?: () => void) => {
+    async (source: AudioSource, loop = false, onComplete?: () => void) => {
       const stopping = stop();
       const generation = generationRef.current;
       await stopping;
       await configureAudioMode();
       if (!focusedRef.current || generation !== generationRef.current) return;
 
-      const player = createAudioPlayer({ uri: url });
+      const player = createAudioPlayer(source);
       player.loop = loop;
       player.volume = 1.0;
       const subscription = player.addListener('playbackStatusUpdate', (status) => {

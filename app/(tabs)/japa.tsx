@@ -913,17 +913,18 @@ export default function JapaScreen() {
   // Ambient sound lifecycle — plays seamless loop during active practice,
   // pauses when stop sheet opens, and unloads on exit or screen blur.
   useEffect(() => {
-    if (screen !== 'practice' || showStopSheet || selectedSoundId === 'off' || !activeSound.audioUrl) {
+    const soundTarget = activeSound.audioSource ?? activeSound.audioUrl;
+    if (screen !== 'practice' || showStopSheet || selectedSoundId === 'off' || !soundTarget) {
       void audio.stop();
       return;
     }
 
-    void audio.loadAndPlay(activeSound.audioUrl, true);
+    void audio.loadAndPlay(soundTarget, true);
 
     return () => {
       void audio.stop();
     };
-  }, [screen, showStopSheet, selectedSoundId, activeSound.audioUrl, audio]);
+  }, [screen, showStopSheet, selectedSoundId, activeSound.audioSource, activeSound.audioUrl, audio]);
 
   useEffect(() => {
     if (mantraIndex >= mantraOptions.length) setMantraIndex(0);
