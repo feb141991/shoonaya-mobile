@@ -1,6 +1,7 @@
 # Home Viewport Profiling Report
 
-**Profile Timestamp:** 2026-09-21T21:43:25.905Z  
+**Profile Timestamp:** 2026-09-21T23:54:22.983Z<br>
+**Execution Mode:** mocked coordinator, payload, and fetch; this is an architectural contract check, not a physical-device measurement.<br>
 **Overall Architectural Conformance:** ✅ CONFORMANT
 
 ---
@@ -18,8 +19,8 @@
 ## 2. Viewport Composition & Parsing
 
 - **Canonical Payload Size:** 1.32 KB
-- **JSON Parse Duration:** 0.02 ms
-- **Initial Composition Latency:** 51.92 ms
+- **JSON Parse Duration:** 0.01 ms
+- **Initial Composition Latency:** 31.42 ms
 
 ### Sections Successfully Initialized:
 - [x] **Hero Section:** Present

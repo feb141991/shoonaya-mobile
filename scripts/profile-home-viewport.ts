@@ -208,7 +208,8 @@ export async function profileHomeViewport(): Promise<ViewportProfileResult> {
 export function formatViewportReport(result: ViewportProfileResult): string {
   return `# Home Viewport Profiling Report
 
-**Profile Timestamp:** ${result.timestamp}  
+**Profile Timestamp:** ${result.timestamp}<br>
+**Execution Mode:** mocked coordinator, payload, and fetch; this is an architectural contract check, not a physical-device measurement.<br>
 **Overall Architectural Conformance:** ${result.overallPassed ? '✅ CONFORMANT' : '❌ VIOLATION'}
 
 ---
