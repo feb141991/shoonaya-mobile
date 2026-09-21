@@ -20,7 +20,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { selectDharmVeer, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
+import { selectDharmVeer, selectDharmVeerOfTheDayFromRoster, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
@@ -134,39 +134,8 @@ export default function DharmVeerScreen() {
       }
       setReadIds(ids);
 
-      const lastSelectedDate = await AsyncStorage.getItem('shoonaya-dharmveer-last-selected-date');
-      const lastSelectedId = await AsyncStorage.getItem('shoonaya-dharmveer-last-selected-id');
-      const historyIds = Array.from(ids);
-
-      const saveSelection = async (selected: DharmVeer) => {
-        const newHistory = [...historyIds.filter(id => id !== selected.id), selected.id].slice(-14);
-        await AsyncStorage.setItem('shoonaya-dharmveer-history', JSON.stringify(newHistory));
-        await AsyncStorage.setItem('shoonaya-dharmveer-last-selected-date', todayDate);
-        await AsyncStorage.setItem('shoonaya-dharmveer-last-selected-id', selected.id);
-      };
-
-      if (lastSelectedDate === todayDate && lastSelectedId) {
-        const found = rosterData.find(h => h.id === lastSelectedId);
-        if (found) {
-          setLiveTodayHero(found);
-        } else {
-          const selected = selectDharmVeer({
-            userTradition: resolvedTradition,
-            historyIds,
-            roster: rosterData,
-          });
-          setLiveTodayHero(selected);
-          await saveSelection(selected);
-        }
-      } else {
-        const selected = selectDharmVeer({
-          userTradition: resolvedTradition,
-          historyIds,
-          roster: rosterData,
-        });
-        setLiveTodayHero(selected);
-        await saveSelection(selected);
-      }
+      const todayHero = selectDharmVeerOfTheDayFromRoster(rosterData, resolvedTradition, todayDate);
+      setLiveTodayHero(todayHero);
     } catch (e) {}
   }, [appIdentity, router]);
 

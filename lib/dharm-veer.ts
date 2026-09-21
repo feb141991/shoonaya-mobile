@@ -3862,15 +3862,25 @@ export const TRADITION_META: Record<string, { label: string; labelLocal: string;
  */
 export function selectDharmVeerOfTheDayFromRoster(
   roster: DharmVeer[],
-  userTradition?: string | null
+  userTradition?: string | null,
+  dateOrDateStr?: string | Date
 ): DharmVeer {
   const effectiveRoster = roster.length > 0 ? roster : DHARM_VEERS;
 
-  const epoch = new Date('2024-01-01').getTime();
-  const now   = new Date();
-  // Use spiritual date (midnight IST offset) so it changes consistently
-  const ist   = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-  const dayN  = Math.floor((ist.getTime() - epoch) / (1000 * 60 * 60 * 24));
+  const epoch = new Date('2024-01-01T00:00:00.000Z').getTime();
+  let dayN: number;
+
+  if (typeof dateOrDateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateOrDateStr)) {
+    const target = new Date(`${dateOrDateStr}T12:00:00.000Z`).getTime();
+    dayN = Math.floor((target - epoch) / (1000 * 60 * 60 * 24));
+  } else if (dateOrDateStr instanceof Date) {
+    dayN = Math.floor((dateOrDateStr.getTime() - epoch) / (1000 * 60 * 60 * 24));
+  } else {
+    const now   = new Date();
+    // Fallback: Use spiritual date (midnight IST offset) so it changes consistently
+    const ist   = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    dayN  = Math.floor((ist.getTime() - epoch) / (1000 * 60 * 60 * 24));
+  }
   const slot  = dayN; // one hero per day
 
   if (!userTradition) {

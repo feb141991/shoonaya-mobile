@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '@/lib/constants';
 import { type DharmVeer } from '@/lib/dharm-veer';
@@ -41,8 +42,12 @@ export function DharmVeerHeroBanner({
         <View style={styles.imageContainer}>
           <Image
             source={artworkSource}
-            style={styles.image}
-            resizeMode="cover"
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            contentPosition={hero.id === 'chanakya' || hero.id === 'sri-krishna' || hero.id === 'sri-rama' ? 'center' : 'top'}
+            priority="high"
+            cachePolicy="memory-disk"
+            transition={200}
             accessibilityLabel={`${hero.name} classical painting`}
           />
 
@@ -127,7 +132,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: 300,
+    height: 340,
     borderRadius: 24,
     overflow: 'hidden',
     position: 'relative',
@@ -149,7 +154,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 140,
+    height: 110,
   },
   floatingBadgesRow: {
     position: 'absolute',
