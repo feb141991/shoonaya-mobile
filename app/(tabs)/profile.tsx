@@ -1478,7 +1478,7 @@ export default function ProfileScreen() {
           )}
         </PressableSurface>
 
-        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
+        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: undefined, gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <View
               style={{
@@ -1516,7 +1516,7 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
+        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: undefined, gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 21 }}>{traditionMeta.emoji}</Text>
