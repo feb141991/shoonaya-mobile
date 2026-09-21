@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createCacheStorageBarrier } from './cacheStorageBarrier';
 
 import { spiritualDate } from '@/lib/spiritualDate';
 
@@ -24,6 +24,8 @@ type CachedJapaContext = {
   cachedAt: string;
   context: JapaContext;
 };
+
+const cacheStorage = createCacheStorageBarrier((key) => key === JAPA_CONTEXT_CACHE_KEY);
 
 export function normalizeJapaContext(value: unknown): JapaContext | null {
   if (!value || typeof value !== 'object') return null;
@@ -57,8 +59,9 @@ export function normalizeJapaContext(value: unknown): JapaContext | null {
 
 export async function readJapaContextCache(userId: string): Promise<JapaContext | null> {
   try {
-    const raw = await AsyncStorage.getItem(JAPA_CONTEXT_CACHE_KEY);
-    if (!raw) return null;
+    const stored = await cacheStorage.read(JAPA_CONTEXT_CACHE_KEY);
+    if (!stored) return null;
+    const raw = stored.value;
     const cached = JSON.parse(raw) as CachedJapaContext;
     if (cached.schemaVersion !== 1 || cached.userId !== userId) return null;
     const context = normalizeJapaContext(cached.context);
@@ -76,9 +79,9 @@ export async function writeJapaContextCache(userId: string, context: JapaContext
     cachedAt: new Date().toISOString(),
     context,
   };
-  await AsyncStorage.setItem(JAPA_CONTEXT_CACHE_KEY, JSON.stringify(payload));
+  await cacheStorage.setItem(JAPA_CONTEXT_CACHE_KEY, JSON.stringify(payload));
 }
 
 export async function clearJapaContextCache(): Promise<void> {
-  await AsyncStorage.removeItem(JAPA_CONTEXT_CACHE_KEY);
+  await cacheStorage.removeItem(JAPA_CONTEXT_CACHE_KEY);
 }

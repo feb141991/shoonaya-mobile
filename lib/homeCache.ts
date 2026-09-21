@@ -1,6 +1,6 @@
 import type { ObservanceSeries } from './observance-series-contract.generated';
 import type { HomeObservanceStoryCard } from './observance-story-contract.generated';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createCacheStorageBarrier } from './cacheStorageBarrier';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { clearAllHomeDiscoveryStates } from './homeDiscovery';
 
@@ -141,6 +141,8 @@ export type HomeCacheEnvelope<T = CachedHomeRenderModel> = {
 
 const GUEST_KEY = 'shoonaya_home_cache_v1_guest';
 const USER_KEY_PREFIX = 'shoonaya_home_cache_v1_user_';
+
+const cacheStorage = createCacheStorageBarrier((key) => key.startsWith('shoonaya_home_cache_'));
 
 export function getHomeCacheKey(identity: CacheIdentity): string {
   if (identity.kind === 'guest') {
@@ -527,7 +529,7 @@ export function getOrReadHomeCache(
           memorySnapshotMap.delete(key);
         }
       }
-      return result;
+      return isStillCurrent ? result : null;
     } catch (err) {
       if (
         globalGenerationAtStart === globalInvalidationGeneration &&
@@ -560,25 +562,26 @@ export async function readHomeCache(
 ): Promise<ReadHomeCacheResult> {
   const key = getHomeCacheKey(identity);
   try {
-    const raw = await AsyncStorage.getItem(key);
-    if (!raw) return null;
+    const stored = await cacheStorage.read(key);
+    if (!stored) return null;
+    const raw = stored.value;
 
     let envelope: HomeCacheEnvelope<CachedHomeRenderModel>;
     try {
       envelope = JSON.parse(raw);
     } catch {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
     if (!envelope || envelope.schemaVersion !== HOME_CACHE_SCHEMA_VERSION) {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
     if (identity.kind === 'guest') {
       if (envelope.identity?.kind !== 'guest') {
-        await AsyncStorage.removeItem(key).catch(() => {});
+        await stored.discard().catch(() => {});
         return null;
       }
     } else {
@@ -586,7 +589,7 @@ export async function readHomeCache(
         envelope.identity?.kind !== 'authenticated' ||
         envelope.identity.userId !== identity.userId
       ) {
-        await AsyncStorage.removeItem(key).catch(() => {});
+        await stored.discard().catch(() => {});
         return null;
       }
     }
@@ -597,7 +600,7 @@ export async function readHomeCache(
     const dateSensitiveStale = !envelope.spiritualDate || envelope.spiritualDate !== expectedSpiritualDate;
 
     if (!validateHomeSummaryPayload(envelope.payload)) {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
@@ -639,6 +642,8 @@ export async function writeHomeCache(
   if (!validateHomeSummaryPayload(payload)) return;
   const sanitized = sanitizeForHomeCache(payload);
   const key = getHomeCacheKey(identity);
+  invalidateKey(key);
+  inFlightDiskReadMap.delete(key);
   const canonicalTimezone = safeTimezone(timezone);
   const date = currentSpiritualDate || spiritualDate(canonicalTimezone);
 
@@ -662,7 +667,7 @@ export async function writeHomeCache(
       dateSensitiveStale: false,
       expectedSpiritualDate: date,
     });
-    await AsyncStorage.setItem(key, JSON.stringify(envelope));
+    await cacheStorage.setItem(key, JSON.stringify(envelope));
   } catch (error) {
     console.warn('[HomeCache] write failed', error);
   }
@@ -678,7 +683,7 @@ export async function clearHomeCache(identity?: CacheIdentity): Promise<void> {
       invalidateKey(key);
       inFlightDiskReadMap.delete(key);
       memorySnapshotMap.delete(key);
-      await AsyncStorage.removeItem(key);
+      await cacheStorage.removeItem(key);
     } else {
       await clearAllHomeCaches();
     }
@@ -698,13 +703,7 @@ export function clearAllHomeCaches(): Promise<void> {
 
   const clearPromise = (async () => {
     try {
-      const keys = await AsyncStorage.getAllKeys();
-      const homeCacheKeys = keys.filter(
-        (k) => k === GUEST_KEY || k.startsWith(USER_KEY_PREFIX) || k.startsWith('shoonaya_home_cache_')
-      );
-      if (homeCacheKeys.length > 0) {
-        await AsyncStorage.multiRemove(homeCacheKeys);
-      }
+      await cacheStorage.clearAll();
       await clearAllHomeDiscoveryStates();
     } catch (error) {
       console.warn('[HomeCache] clearAll failed', error);

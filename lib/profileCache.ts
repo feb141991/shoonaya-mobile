@@ -5,7 +5,7 @@
  * such as email are deliberately excluded. Those values must come from the
  * live authenticated session or API response.
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createCacheStorageBarrier } from './cacheStorageBarrier';
 
 export const PROFILE_CACHE_SCHEMA_VERSION = 1;
 
@@ -68,6 +68,8 @@ type ProfileCacheEnvelope = {
 
 const GUEST_KEY = 'shoonaya_profile_cache_v1_guest';
 const USER_KEY_PREFIX = 'shoonaya_profile_cache_v1_user_';
+
+const cacheStorage = createCacheStorageBarrier((key) => key === GUEST_KEY || key.startsWith(USER_KEY_PREFIX));
 
 export function getProfileCacheKey(identity: ProfileCacheIdentity): string {
   return identity.kind === 'guest' ? GUEST_KEY : `${USER_KEY_PREFIX}${identity.userId}`;
@@ -253,14 +255,15 @@ export function getOrReadProfileCache(identity: ProfileCacheIdentity): Promise<C
 export async function readProfileCache(identity: ProfileCacheIdentity): Promise<CachedProfileRenderModel | null> {
   const key = getProfileCacheKey(identity);
   try {
-    const raw = await AsyncStorage.getItem(key);
-    if (!raw) return null;
+    const stored = await cacheStorage.read(key);
+    if (!stored) return null;
+    const raw = stored.value;
 
     let envelope: ProfileCacheEnvelope;
     try {
       envelope = JSON.parse(raw) as ProfileCacheEnvelope;
     } catch {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
@@ -276,7 +279,7 @@ export async function readProfileCache(identity: ProfileCacheIdentity): Promise<
       !sanitized ||
       !profileOwnerMatches
     ) {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
@@ -299,10 +302,12 @@ export async function writeProfileCache(identity: ProfileCacheIdentity, payload:
     savedAt: Date.now(),
     payload: sanitized,
   };
+  invalidateKey(key);
+  inFlightDiskReadMap.delete(key);
   memorySnapshotMap.set(key, sanitized);
 
   try {
-    await AsyncStorage.setItem(key, JSON.stringify(envelope));
+    await cacheStorage.setItem(key, JSON.stringify(envelope));
   } catch (error) {
     console.warn('[ProfileCache] write failed', error);
   }
@@ -318,7 +323,7 @@ export async function clearProfileCache(identity?: ProfileCacheIdentity): Promis
     invalidateKey(key);
     memorySnapshotMap.delete(key);
     inFlightDiskReadMap.delete(key);
-    await AsyncStorage.removeItem(key);
+    await cacheStorage.removeItem(key);
   } catch (error) {
     console.warn('[ProfileCache] clear failed', error);
   }
@@ -332,9 +337,7 @@ export function clearAllProfileCaches(): Promise<void> {
 
   const clearPromise = (async () => {
     try {
-      const keys = await AsyncStorage.getAllKeys();
-      const profileKeys = keys.filter((key) => key === GUEST_KEY || key.startsWith(USER_KEY_PREFIX));
-      if (profileKeys.length > 0) await AsyncStorage.multiRemove(profileKeys);
+      await cacheStorage.clearAll();
     } catch (error) {
       console.warn('[ProfileCache] clearAll failed', error);
     }

@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -109,8 +109,11 @@ describe('Home Prewarming, Snapshot Hydration & Identity Isolation', () => {
   };
 
   beforeEach(async () => {
+    mock.timers.enable({ apis: ['Date'], now: new Date('2026-09-20T12:00:00.000Z') });
     await clearAllHomeCaches();
   });
+
+  afterEach(() => mock.timers.reset());
 
   it('deduplicates concurrent in-flight disk reads into a single promise per identity', async () => {
     const identity: CacheIdentity = { kind: 'authenticated', userId: 'user-dedupe-1' };

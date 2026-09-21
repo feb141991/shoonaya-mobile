@@ -19,8 +19,9 @@ Both repositories had existing edits and concurrent activity during review, incl
 Native validation performed with the repository's existing commands:
 
 - `npm run typecheck`: passed, no TypeScript errors.
-- `npm test`: 648 passed, 0 failed, 0 skipped, 0 cancelled; 115 suites.
+- `npm test`: 648 passed, 0 failed, 0 skipped, 0 cancelled; 115 suites (20 September 2026; stale as of 21 September, see below).
 - These tests establish limited functional/structural properties, not launch speed. In particular, the auth-ownership test examines selected screen files and misses providers/components.
+- **Update 2026-09-21.** Suite has grown to 703 tests / 125 suites since the above count. An external review run on 2026-09-21 reported `702 passed, 1 failed` -- a date-dependent failure in `__tests__/home-prewarm-and-snapshot.test.ts` (a Home snapshot stored under a mocked 2026-09-20 clock, then read back against a real, unmocked "now"), diagnosed as passing in isolation under a frozen clock (7/7) but not the full run. Re-run independently three times against current source, same command (`npm test`): all three reported `703 passed, 0 failed, 0 skipped, 0 cancelled`. The failure did not reproduce here. Given the test's own line 201 passes an explicit `new Date('2026-09-21T12:00:00.000Z')` rather than reading the real clock, the most likely explanation is that the reviewer's run happened before the environment's real date rolled over to 2026-09-21 (a genuinely date-sensitive fixture, just not necessarily via the mechanism assumed) -- not a fix landing in between. This is recorded rather than resolved either way: the fixture's dependence on real wall-clock date proximity is itself the defect worth closing (freeze/inject time fully, per the review's own recommendation), regardless of which specific run happened to pass.
 
 Graph reports were consulted as required. The native graph contains substantial Pods/header noise and is dated before current changes; direct source inspection is authoritative here. Refresh the source-scoped graph as part of subsequent code delivery.
 
@@ -279,6 +280,21 @@ their remaining scope is separately closed.
   confirmed failing against the pre-fix source) and
   `__tests__/profile-load-telemetry-and-waterfall.test.ts` (source-regression,
   `profile.tsx` cannot be executed under this project's `tsx --test` runner).
+  **Update 2026-09-21, external review -- relabeled from "resolved" to
+  partial; the original label overstated this.** The fix closed the two
+  named gaps (fastest opens no longer silently absent from the dataset) but
+  did not make the resulting measurements trustworthy as a full per-
+  navigation distribution: Home's fresh-memory path records
+  `durationMs: 0`, which describes coordinator work done on that path, not
+  the destination's actual render/navigation duration -- it must not be
+  read as "this open took zero time." Profile's two call sites record once
+  per mounted identity, so guest visits and repeated tab-return opens are
+  not represented equivalently to a first authenticated load. Pathshala has
+  the same first-load-only limitation. Closing this fully needs a
+  versioned per-flow start/completion pair with explicit valid-empty/error/
+  timeout/abandonment outcomes, not another one-off call-site fix -- tracked
+  together with F01's still-open destination-readiness gap, since both are
+  measurement-semantics work on the same telemetry surface.
 - **F10 -- resolved (2026-09-20).** Confirmed: `loadProfile` awaited
   `/api/native/progress-summary`, then a second, direct `profiles`/`kuls`
   lookup before the profile was painted at all -- blocking every load on a
@@ -297,6 +313,21 @@ their remaining scope is separately closed.
   regression, asserts the early paint is positioned before the kul lookup
   in source order, and that previously-known kul fields are preserved
   rather than blanked).
+  **Update 2026-09-21, external review -- reopened; "resolved" was wrong.**
+  Re-verified directly against current `app/(tabs)/profile.tsx`: the early
+  `setProfile` call (line 541) does run before the kul lookup, and it does
+  make `profile` non-null sooner. But the render gate at line 1031 is
+  `if (loading || !profile)` -- an OR -- and `loading` is not cleared by
+  that early paint at all. It is only cleared by the calling effect's
+  `.finally(() => setLoading(false))` (line 658), which fires after
+  `loadProfile()`'s whole promise settles, i.e. after the kul lookup below
+  it also resolves. So the loading screen stays up for the full original
+  waterfall regardless of the early internal-state paint; the regression
+  test only checked source order of the `setProfile` calls, never the
+  actual rendered/gating behavior, so it could not have caught this. The
+  fix that is actually needed is releasing `loading` (or an equivalent
+  "primary content ready" flag) at the same point the early `setProfile`
+  runs, independent of the kul lookup's completion -- not yet done.
 - **F12 -- partially resolved (2026-09-20), the safety half only.** Flagged
   for early confirmation ahead of the rest of this backlog because it read
   as a possible correctness/safety bug, not only a performance one --
@@ -342,6 +373,18 @@ their remaining scope is separately closed.
   Regression test (source-regression,
   `__tests__/mandali-realtime-focus-lifecycle.test.ts`) confirmed failing
   against the pre-fix source.
+  **Update 2026-09-21, external review -- relabeled from "resolved" to
+  partial.** Re-verified directly: the realtime subscription and
+  connection-request polling effects are correctly focus-gated as described
+  above. But a third effect on the same screen -- the nearby-seekers fetch
+  (`fetchNearbySeekers`, around line 1299) -- has dependency array
+  `[profile?.userId, profile?.city, profile?.latitude, profile?.longitude]`
+  with no `isFocused` check at all, so it still fires on identity/location
+  change regardless of whether this tab is the visible one. The original
+  finding's "seekers/connection-request effects" wording covered this case;
+  the fix only closed two of the three. Also unmeasured either way: no
+  hidden-tab network/render/CPU comparison has been run to quantify the
+  offscreen-work savings this finding was ultimately about.
 - **F08 -- resolved, the correctness half (2026-09-20).** Confirmed:
   `clearTelemetry`/`clearAllTelemetry` called `AsyncStorage.removeItem`/
   `multiRemove` directly with zero coordination against `writeChains` (the
@@ -414,6 +457,32 @@ their remaining scope is separately closed.
   these files (this document itself notes concurrent activity during its
   own review) and has since been superseded by work elsewhere in this
   session -- not forcing a fix onto code that is already correctly guarded.
+  **Update 2026-09-21, external review -- reopened; "not a confirmed bug"
+  was wrong.** The identity-ownership question this entry actually checked
+  (can a write land under the wrong identity's key) is a different question
+  from the one the finding's remedy asks for: a write-versus-clear race on
+  the SAME identity's key. A deterministic reproduction against this
+  session's own cache functions, using a delayed-write storage adapter
+  (`cache-purge-repro.ts`, results in `cache-purge-results.jsonl`, both
+  outside this repo), restored an entry for Home, Profile, Mandali and
+  Pathshala after their respective `clearAll*Caches()` had already
+  completed. Re-verified directly: `writeHomeCache`
+  (`lib/homeCache.ts:629`) writes `memorySnapshotMap` and calls
+  `cacheStorage.setItem(...)` with no check against `clearAllInFlight` or
+  any generation counter at the point of writing -- `clearAllInFlight` is
+  only consulted by reads (`getOrReadHomeCache`), not by this write path,
+  so a write already past that point when `clearAllHomeCaches()` runs can
+  still land afterward and resurrect the entry the clear was supposed to
+  remove. This is the identical bug shape already found and fixed in F08
+  for telemetry (a write not coordinated against a concurrent clear),
+  just not yet ported to the Home/Profile/Mandali/Pathshala cache writers.
+  This does not reopen the identity-ownership conclusion above, which
+  remains correct and unrelated -- both are true: a write cannot land
+  under the wrong identity's key, and a write CAN land after a clear for
+  the right one. Needs the same per-key write/clear serialization (or an
+  equivalent generation check inside the write function itself, checked
+  immediately before `setItem`) F08 added for telemetry, applied to each
+  of these four cache writers.
 - **New finding (external review, 2026-09-21) -- resolved: reader/progress
   account-switch protection.** Not one of the original F01-F21 findings;
   raised by a later external review that specifically re-checked screens

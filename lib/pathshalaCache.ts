@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createCacheStorageBarrier } from './cacheStorageBarrier';
 
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { spiritualDate } from '@/lib/spiritualDate';
@@ -37,6 +37,8 @@ type PathshalaCacheEnvelope = {
   payload: PathshalaCachePayload;
 };
 
+const cacheStorage = createCacheStorageBarrier((key) => key.startsWith('shoonaya_pathshala_cache_v1_user_'));
+
 function cacheKey(userId: string): string {
   return `shoonaya_pathshala_cache_v1_user_${userId}`;
 }
@@ -57,14 +59,15 @@ function isValidPayload(value: unknown): value is PathshalaCachePayload {
 export async function readPathshalaCache(userId: string, now: Date = new Date()): Promise<PathshalaCachePayload | null> {
   const key = cacheKey(userId);
   try {
-    const raw = await AsyncStorage.getItem(key);
-    if (!raw) return null;
+    const stored = await cacheStorage.read(key);
+    if (!stored) return null;
+    const raw = stored.value;
 
     let parsed: Partial<PathshalaCacheEnvelope>;
     try {
       parsed = JSON.parse(raw) as Partial<PathshalaCacheEnvelope>;
     } catch {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
@@ -73,7 +76,7 @@ export async function readPathshalaCache(userId: string, now: Date = new Date())
       parsed.userId !== userId ||
       !isValidPayload(parsed.payload)
     ) {
-      await AsyncStorage.removeItem(key).catch(() => {});
+      await stored.discard().catch(() => {});
       return null;
     }
 
@@ -95,7 +98,7 @@ export async function writePathshalaCache(userId: string, payload: PathshalaCach
     payload,
   };
   try {
-    await AsyncStorage.setItem(cacheKey(userId), JSON.stringify(envelope));
+    await cacheStorage.setItem(cacheKey(userId), JSON.stringify(envelope));
   } catch (error) {
     console.warn('[PathshalaCache] write failed', error);
   }
@@ -103,9 +106,7 @@ export async function writePathshalaCache(userId: string, payload: PathshalaCach
 
 export async function clearAllPathshalaCaches(): Promise<void> {
   try {
-    const keys = await AsyncStorage.getAllKeys();
-    const pathshalaKeys = keys.filter((key) => key.startsWith('shoonaya_pathshala_cache_v1_user_'));
-    if (pathshalaKeys.length > 0) await AsyncStorage.multiRemove(pathshalaKeys);
+    await cacheStorage.clearAll();
   } catch (error) {
     console.warn('[PathshalaCache] clearAll failed', error);
   }
