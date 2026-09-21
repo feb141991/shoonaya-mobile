@@ -476,7 +476,7 @@ export const OFFICIAL_EMAIL = 'info@shoonaya.com';
 export const SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/shoonayaapp',
   facebook: 'https://www.facebook.com/profile.php?id=61590436598797',
-  linkedin: 'https://www.linkedin.com/company/120373989',
+  linkedin: 'https://www.linkedin.com/company/shoonaya',
   website: 'https://www.shoonaya.com',
   email: `mailto:${OFFICIAL_EMAIL}`,
 } as const;
