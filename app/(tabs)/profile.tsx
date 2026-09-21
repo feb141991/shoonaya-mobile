@@ -1482,13 +1482,13 @@ export default function ProfileScreen() {
           )}
         </PressableSurface>
 
-        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: undefined, gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
+        <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <View
               style={{
-              width: 42,
-              height: 42,
-              borderRadius: 16,
+                width: 42,
+                height: 42,
+                borderRadius: 16,
                 backgroundColor: theme.brandSoft,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1496,40 +1496,29 @@ export default function ProfileScreen() {
             >
               <Feather name="user-plus" size={19} color={theme.brand} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ ...TYPE.label, color: theme.text }}>Bring someone to the path</Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>Share Shoonaya with a friend or family member</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>Share Shoonaya with friends or family</Text>
             </View>
             <PressableSurface
               haptic="selection"
               accessibilityLabel="Invite someone to Shoonaya"
               onPress={() => { void shareInviteLink(); }}
               style={{
-                minHeight: 44,
-                borderRadius: 16,
+                minHeight: 40,
+                borderRadius: 14,
                 backgroundColor: theme.brand,
-                paddingHorizontal: 18,
+                paddingHorizontal: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 8,
+                gap: 6,
               }}
             >
-              <Feather name="share-2" size={17} color={isDark ? COLORS.darkBg : COLORS.ink} />
+              <Feather name="share-2" size={16} color={isDark ? COLORS.darkBg : COLORS.ink} />
               <Text style={{ ...TYPE.label, color: isDark ? COLORS.darkBg : COLORS.ink }}>Invite</Text>
             </PressableSurface>
           </View>
-        </Card>
-
-        <Card tone="auto" style={{ backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: undefined, gap: 10, paddingHorizontal: 0, paddingVertical: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 21 }}>{traditionMeta.emoji}</Text>
-            </View>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ ...TYPE.label, color: theme.text }}>Share your journey</Text>
-              <Text numberOfLines={1} style={{ ...TYPE.caption, color: theme.dim }}>{streak}-day streak · {profile.seva_score} seva · {pathLabel}</Text>
-            </View>
-          </View>
+          <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <PressableSurface
               haptic="selection"
@@ -1538,15 +1527,18 @@ export default function ProfileScreen() {
               disabled={shareLoading}
               style={{
                 flex: 1,
-                minHeight: 48,
-                borderRadius: 16,
+                minHeight: 44,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.borderSoft,
                 backgroundColor: theme.glass,
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexDirection: 'row',
                 gap: 7,
               }}
             >
-              <Feather name="share-2" size={18} color={theme.text} />
+              <Feather name="share-2" size={16} color={theme.text} />
               <Text style={{ ...TYPE.label, color: theme.text }}>Share card</Text>
             </PressableSurface>
             <PressableSurface
@@ -1555,15 +1547,18 @@ export default function ProfileScreen() {
               onPress={() => { void copyInvite(); }}
               style={{
                 flex: 1,
-                minHeight: 48,
-                borderRadius: 16,
+                minHeight: 44,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
                 backgroundColor: theme.brandSoft,
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexDirection: 'row',
                 gap: 7,
               }}
             >
-              <Feather name="link" size={18} color={theme.brand} />
+              <Feather name="link" size={16} color={theme.brand} />
               <Text style={{ ...TYPE.label, color: theme.brand }}>Copy link</Text>
             </PressableSurface>
           </View>
