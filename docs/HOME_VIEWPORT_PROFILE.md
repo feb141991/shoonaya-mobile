@@ -1,6 +1,6 @@
 # Home Viewport Profiling Report
 
-**Profile Timestamp:** 2026-09-21T21:33:31.078Z  
+**Profile Timestamp:** 2026-09-21T21:43:25.905Z  
 **Overall Architectural Conformance:** ✅ CONFORMANT
 
 ---
@@ -10,7 +10,7 @@
 | Metric | Measured | Target Budget | Conformance |
 | :--- | :--- | :--- | :--- |
 | **Cold Mount Requests** | **1** request | $\le 1$ request | ✅ PASS |
-| **SWR Focus Return Latency** | **91.07ms** | $< 20ms$ | ✅ PASS |
+| **SWR Focus Return Latency** | **0.05ms** | $< 20ms$ | ✅ PASS |
 | **Revalidation Background Requests** | **0** | $\le 1$ background fetch | ✅ PASS |
 
 ---
@@ -18,8 +18,8 @@
 ## 2. Viewport Composition & Parsing
 
 - **Canonical Payload Size:** 1.32 KB
-- **JSON Parse Duration:** 0.03 ms
-- **Initial Composition Latency:** 90.99 ms
+- **JSON Parse Duration:** 0.02 ms
+- **Initial Composition Latency:** 51.92 ms
 
 ### Sections Successfully Initialized:
 - [x] **Hero Section:** Present

@@ -38,6 +38,7 @@ export interface ViewportProfileResult {
   coldMountRequestBudget: number;
   coldMountPassed: boolean;
   swrImmediateHit: boolean;
+  swrDurationMs: number;
   swrSubsequentRequests: number;
   swrPassed: boolean;
   parseDurationMs: number;
@@ -183,10 +184,17 @@ export async function profileHomeViewport(): Promise<ViewportProfileResult> {
     coldMountRequestBudget: 1,
     coldMountPassed,
     swrImmediateHit,
+    swrDurationMs,
     swrSubsequentRequests,
     swrPassed,
     parseDurationMs,
     compositionDurationMs: coldDurationMs,
+    // Cold-mount composition + SWR combined -- a run-wall-clock total, not
+    // the "< 20ms" SWR budget itself (that is swrDurationMs alone). Keep
+    // these separate in the report: a past bug displayed this combined
+    // number in the SWR Focus Return Latency row while the pass/fail flag
+    // was actually computed from swrDurationMs, so the printed ~91ms could
+    // show "PASS" against a target it was never checked against.
     totalDurationMs: coldDurationMs + swrDurationMs,
     payloadSizeBytes,
     sectionsDetected,
@@ -210,7 +218,7 @@ export function formatViewportReport(result: ViewportProfileResult): string {
 | Metric | Measured | Target Budget | Conformance |
 | :--- | :--- | :--- | :--- |
 | **Cold Mount Requests** | **${result.coldMountRequests}** request | $\\le 1$ request | ${result.coldMountPassed ? '✅ PASS' : '❌ FAIL'} |
-| **SWR Focus Return Latency** | **${result.totalDurationMs}ms** | $< 20ms$ | ${result.swrImmediateHit ? '✅ PASS' : '❌ FAIL'} |
+| **SWR Focus Return Latency** | **${result.swrDurationMs}ms** | $< 20ms$ | ${result.swrImmediateHit ? '✅ PASS' : '❌ FAIL'} |
 | **Revalidation Background Requests** | **${result.swrSubsequentRequests}** | $\\le 1$ background fetch | ${result.swrPassed ? '✅ PASS' : '❌ FAIL'} |
 
 ---
