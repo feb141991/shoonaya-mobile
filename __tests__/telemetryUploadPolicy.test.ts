@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { captureAppIdentity, setAppIdentity } from '../lib/appIdentity';
 import { isTelemetryUploadThrottled, decideTelemetryUploadAfterSummary } from '../lib/telemetryUploadPolicy';
@@ -70,7 +71,7 @@ test('switching away and back to the same account still counts as changed (A to 
   assert.deepEqual(decision, { action: 'skip', reason: 'identity-changed' });
 });
 
-test('an unchanged identity sends, with expectedUserId for authenticated and none for guest', () => {
+test('an unchanged identity sends, with expectedUserId for authenticated and expectedGuest for guest', () => {
   setAppIdentity({ kind: 'authenticated', userId: 'user-a' });
   const authIdentity = { kind: 'authenticated' as const, userId: 'user-a' };
   const authLease = captureAppIdentity();
@@ -82,9 +83,14 @@ test('an unchanged identity sends, with expectedUserId for authenticated and non
   setAppIdentity({ kind: 'guest' });
   const guestIdentity = { kind: 'guest' as const };
   const guestLease = captureAppIdentity();
+  // expectedGuest: true is what closes the gap an external review found:
+  // without it, apiFetch had no send-time owner check at all for guest
+  // uploads, so a sign-in landing inside apiFetch's own internal awaits
+  // (after this decision is made) could silently attach a real user's
+  // Bearer token to a guest-captured summary.
   assert.deepEqual(
     decideTelemetryUploadAfterSummary(guestIdentity, guestLease.isCurrent, 5),
-    { action: 'send' }
+    { action: 'send', expectedGuest: true }
   );
 });
 
@@ -123,4 +129,23 @@ test('no prior upload timestamp is never throttled', () => {
 
 test('a corrupt stored timestamp fails safe (never blocks future uploads)', () => {
   assert.equal(isTelemetryUploadThrottled(NaN, Date.now(), 60 * 60 * 1000), false);
+});
+
+// apiFetch itself (lib/api.ts) imports the real Supabase client, so its
+// send-time checks are not directly behavior-tested here (matching this
+// project's existing convention -- expectedUserId's own send-time check
+// has never had a direct behavioral test either, only source-regression
+// checks that callers pass it). Source-regression only: confirms the
+// expectedGuest mechanism this fix relies on actually exists in apiFetch,
+// not just in the policy/wrapper layer above it.
+test('apiFetch defines and checks expectedGuest at send time (source regression)', () => {
+  const apiSource = readFileSync(new URL('../lib/api.ts', import.meta.url), 'utf8');
+  assert.match(apiSource, /expectedGuest\?: boolean;/);
+  assert.match(apiSource, /else if \(expectedGuest\)\s*\{/);
+  assert.match(apiSource, /throw new Error\('Guest request owner signed in before send'\);/);
+});
+
+test('telemetryUpload.ts passes expectedGuest through for the guest send path (source regression)', () => {
+  const uploadSource = readFileSync(new URL('../lib/telemetryUpload.ts', import.meta.url), 'utf8');
+  assert.match(uploadSource, /expectedGuest: true/);
 });

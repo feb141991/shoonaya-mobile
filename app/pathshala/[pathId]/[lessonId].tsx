@@ -30,7 +30,7 @@ import { PathshalaCompletionModal } from '@/components/pathshala/PathshalaComple
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -271,13 +271,22 @@ export default function LessonReaderScreen() {
     void loadPath();
   }, [pathId]);
 
+  // Account-switch protection: without a captured lease + expectedUserId, a
+  // slow /api/pathshala/progress response for a previous account could land
+  // after a switch and overwrite the next account's completedLessons with
+  // stale progress -- the same class of race already fixed in
+  // Profile/Tirtha/Bhakti/Mandali/LanguageContext this session, previously
+  // missing here.
   useEffect(() => {
+    const { isCurrent } = captureAppIdentity();
+
     const loadContext = async () => {
       if (!pathId || appIdentity.kind === 'loading') {
         return;
       }
 
       if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
+        if (!isCurrent()) return;
         setIsGuest(true);
         setUserId('guest');
         setCompletedLessons([]);
@@ -286,19 +295,30 @@ export default function LessonReaderScreen() {
         return;
       }
 
+      if (!isCurrent()) return;
       setIsGuest(false);
       setUserId(appIdentity.userId);
+      // Clear the previous account's progress immediately -- otherwise it
+      // stays visible under the loading state while the new account's
+      // enrollment is still being fetched.
+      setCompletedLessons([]);
 
-      const enrollmentResponse = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`).catch(() => null);
+      const enrollmentResponse = await apiFetch(
+        `/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`,
+        { expectedUserId: appIdentity.userId }
+      ).catch(() => null);
+
+      if (!isCurrent()) return;
 
       if (enrollmentResponse && enrollmentResponse.ok) {
         const body = (await enrollmentResponse.json()) as { enrollment: EnrollmentPayload | null };
+        if (!isCurrent()) return;
         if (body.enrollment) {
           setCompletedLessons(body.enrollment.completedLessons ?? []);
         }
       }
 
-      setLoadingState(false);
+      if (isCurrent()) setLoadingState(false);
     };
 
     void loadContext();

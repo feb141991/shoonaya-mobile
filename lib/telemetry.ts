@@ -94,20 +94,27 @@ async function readEnvelope(identity: TelemetryIdentity): Promise<TelemetryEnvel
 // wait for the previous one to finish landing before it reads.
 const writeChains = new Map<string, Promise<void>>();
 
-// F08 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): clearTelemetry/
-// clearAllTelemetry used to just AsyncStorage.removeItem with no
-// coordination against writeChains -- a route-open recorded right before a
-// sign-out could still be mid-flight (queued behind a previous write on the
-// same identity's chain) when the clear ran, then land afterward and
-// resurrect an entry the clear was supposed to remove. Bumped by every
-// clear call; appendEvent captures the generation when it starts and
-// re-checks it immediately before persisting, so a clear landing in
-// between means the write is silently dropped instead of un-clearing data.
-// One global counter (not per-identity) is deliberately simple: an
-// unrelated identity's in-flight write being skipped by someone else's
-// clear costs one rolling, low-value telemetry event, not correctness --
-// this is "a lightweight local signal, not a durable audit log" per the
-// comment below, not worth a per-key generation map to save that one event.
+// F08 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md). Original fix
+// (2026-09-20) added a single generation check at the START of appendEvent's
+// write, before its own `await readEnvelope` -- an external review
+// correctly found this insufficient and reproduced it: a clear landing
+// AFTER that check has already passed, but WHILE readEnvelope/setItem are
+// still in flight, still lands and resurrects data the clear was supposed
+// to remove. Checking once before an await does not survive that await.
+//
+// Real fix (2026-09-21): clears now route through the SAME per-identity
+// writeChains queue appends already use, so a clear can never run
+// concurrently with an append for the same key -- only strictly before or
+// after it in the order each was initiated. The generation counter still
+// exists and is still checked (now at two points: once before the read,
+// once again right after it resolves, immediately before the write) so an
+// append already mid-flight when a clear is queued behind it correctly
+// no-ops instead of writing after the clear catches up. One global counter
+// (not per-identity) is still deliberately simple: an unrelated identity's
+// in-flight write being skipped by someone else's clear costs one rolling,
+// low-value telemetry event, not correctness -- this is "a lightweight
+// local signal, not a durable audit log" per the comment below, not worth a
+// per-key generation map to save that one event.
 let clearGeneration = 0;
 
 async function appendEvent(identity: TelemetryIdentity, event: TelemetryEvent): Promise<void> {
@@ -119,6 +126,11 @@ async function appendEvent(identity: TelemetryIdentity, event: TelemetryEvent): 
     .then(async () => {
       if (clearGeneration !== generationAtStart) return;
       const envelope = await readEnvelope(identity);
+      // Re-checked here, not just before the read above -- the read itself
+      // is the async gap a clear queued behind this write (see
+      // clearKeyChained) needs to have actually run within before this
+      // check, since clears now share this same per-key chain.
+      if (clearGeneration !== generationAtStart) return;
       // Rolling window -- this is a lightweight local signal, not a durable
       // audit log; capping keeps it from growing unbounded across a long
       // install lifetime.
@@ -131,6 +143,20 @@ async function appendEvent(identity: TelemetryIdentity, event: TelemetryEvent): 
   } catch (error) {
     console.warn('[Telemetry] record failed', error);
   }
+}
+
+// Routes a clear through the same per-key chain appendEvent uses, so a
+// clear can never interleave with an in-flight append for that key -- it
+// either runs strictly before whatever is already queued (nothing to race)
+// or strictly after (appendEvent's own generation re-check, above, makes
+// anything already queued ahead of it a no-op once its turn comes).
+async function clearKeyChained(key: string): Promise<void> {
+  const previous = writeChains.get(key) ?? Promise.resolve();
+  const next = previous.catch(() => {}).then(async () => {
+    await AsyncStorage.removeItem(key);
+  });
+  writeChains.set(key, next);
+  await next;
 }
 
 export function recordRouteOpen(
@@ -293,8 +319,9 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
 
 export async function clearTelemetry(identity: TelemetryIdentity): Promise<void> {
   clearGeneration += 1;
+  const key = getTelemetryKey(identity);
   try {
-    await AsyncStorage.removeItem(getTelemetryKey(identity));
+    await clearKeyChained(key);
   } catch (error) {
     console.warn('[Telemetry] clear failed', error);
   }
@@ -305,8 +332,14 @@ export async function clearAllTelemetry(): Promise<void> {
   try {
     const keys = await AsyncStorage.getAllKeys();
     const telemetryKeys = keys.filter((k) => k === 'shoonaya_telemetry_v1_guest' || k.startsWith('shoonaya_telemetry_v1_user_'));
-    if (telemetryKeys.length > 0) {
-      await AsyncStorage.multiRemove(telemetryKeys);
+    // Union with writeChains' own keyset: an identity with a pending
+    // append that has never yet persisted to AsyncStorage would not show
+    // up in getAllKeys() at all, but still needs its chain cleared so that
+    // pending append's generation re-check (above) actually fires against
+    // the bumped generation instead of racing an untracked key.
+    const keysToChain = new Set<string>([...telemetryKeys, ...writeChains.keys()]);
+    if (keysToChain.size > 0) {
+      await Promise.all(Array.from(keysToChain).map((k) => clearKeyChained(k)));
     }
   } catch (error) {
     console.warn('[Telemetry] clearAll failed', error);

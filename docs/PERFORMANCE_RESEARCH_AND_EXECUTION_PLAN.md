@@ -118,6 +118,27 @@ their remaining scope is separately closed.
   covered -- `apiFetch`'s own refresh-and-retry path is exercised elsewhere,
   not by this feature's tests. Native commits `4840142`, plus policy
   extraction/tests (pending commit as of this entry).
+  **Update 2026-09-21, external review**: correctly found the guest send
+  path still had no send-time owner check at all -- `expectedUserId` only
+  ever gets attached for the authenticated branch, so a guest upload had
+  nothing closing the gap between `decideTelemetryUploadAfterSummary`'s
+  `isCurrent()` check and `apiFetch`'s own internal awaits
+  (`waitForAuthReady`, token resolution). A sign-in landing in that window
+  would have let `apiFetch` attach the newly-authenticated session's Bearer
+  token to a request whose body still carried the guest's summary. Fixed
+  by adding a symmetric `expectedGuest` option to `apiFetch`
+  (`lib/api.ts`) -- asserts no session exists at the actual send moment,
+  mirroring `expectedUserId`'s existing mechanism exactly, and throws the
+  same way on mismatch. `decideTelemetryUploadAfterSummary`'s guest branch
+  now returns `{action: 'send', expectedGuest: true}` instead of a bare
+  `{action: 'send'}`. Regression: updated
+  `__tests__/telemetryUploadPolicy.test.ts` for the new return shape, plus
+  source-regression checks confirming the mechanism exists in both
+  `lib/api.ts` and `lib/telemetryUpload.ts` (direct behavioral testing of
+  `apiFetch` itself isn't done anywhere in this codebase, guest or
+  authenticated -- it imports the real Supabase client -- matching the
+  existing convention that only the decision/policy layer above it is
+  unit tested).
 - **F07 -- partially resolved (2026-09-20).** Fixed: backend time-window counts
   (`submissions_1h`, `submissions_24h`, `distinct_authenticated_users_24h`)
   now come from real range-scoped `count: exact` queries against the full
@@ -132,20 +153,23 @@ their remaining scope is separately closed.
   a cross-device p95. These require a payload/schema change (native + backend
   contract) and are deliberately deferred to a separate, explicitly-scoped
   pass -- not bundled into this fix.
-- **F01 -- resolved (2026-09-20).** `markInteractive()` now gates on
+- **F01 -- partially resolved (2026-09-20; relabeled from "resolved" on
+  2026-09-21 per external review -- the original label overstated this).**
+  `markInteractive()` now gates on
   `resolveStartupSurface({readyToRender, showStartupScene}) === 'app'`
   (`lib/startup-visibility.ts`, already tested) instead of bare
   `readyToRender`, closing the gap where the startup overlay could still be
   crossfading out when the `tti` metric fired. The 6-second emergency
   fallback path now tags `viaEmergencyFallback` on both the Observe metric
   and the local startup receipt, so forced readiness is distinguishable
-  from normal readiness. **Not attempted:** waiting for the destination
-  screen's own content (e.g. Home's cache hydration) to report itself
-  ready -- that needs a cross-component readiness signal this pass does
-  not add; `markInteractive` still fires on overlay-gone + root-ready, not
-  on "Home has painted its real content." Native commit `9d50798`
-  (source-regression test included, confirmed failing against the pre-fix
-  source before the fix was applied).
+  from normal readiness. **Not attempted, and the reason this stays
+  partial:** waiting for the destination screen's own content (e.g. Home's
+  cache hydration) to report itself ready -- that needs a cross-component
+  readiness signal this pass does not add; `markInteractive` still fires
+  once the overlay is gone and root/auth state is resolved, even if Home
+  underneath is still loading. Native commit `9d50798` (source-regression
+  test included, confirmed failing against the pre-fix source before the
+  fix was applied).
 - **F02 -- reproduced and fixed (2026-09-20).** Confirmed by direct source
   trace, not just accepted from the finding: cold start's `prepare()`
   awaited `routeForSession(session)` to completion before calling
@@ -312,6 +336,32 @@ their remaining scope is separately closed.
   storage cost of each append, and replacing per-milestone full-buffer
   writes with a smaller crash/stall receipt) needs device measurement, not
   code inspection.
+  **Update 2026-09-21, external review**: correctly found the above fix
+  still had a real gap and reproduced it (isolated repro before this
+  update: expected 0 events after a mid-flight clear, actual 1). The
+  single check ran once, before `appendEvent`'s own `await readEnvelope` --
+  it caught a clear landing before that check ran at all, but not one
+  landing *during* `readEnvelope`/`setItem`, after the check had already
+  passed. Checking once before an await does not survive that await. Real
+  fix: `clearTelemetry`/`clearAllTelemetry` now route through the exact
+  same per-identity `writeChains` queue appends already use (new
+  `clearKeyChained` helper), so a clear can never run concurrently with an
+  append for the same key -- only strictly before or after it, in the
+  order each was initiated. `appendEvent` also gained a second generation
+  check immediately after `readEnvelope` resolves (not just before it), so
+  a write already past the first check when a clear gets queued behind it
+  still correctly no-ops once its turn comes. `clearAllTelemetry` also now
+  unions `AsyncStorage.getAllKeys()` with `writeChains.keys()` before
+  chaining, closing a related gap: an identity with a pending append that
+  had never yet persisted wouldn't show up in `getAllKeys()` at all.
+  Regression: new test in `__tests__/telemetry.test.ts` using a
+  temporarily-slowed `AsyncStorage.getItem` (not microtask-counting, which
+  proved unreliable -- an initial version of this test using
+  `await Promise.resolve()` to land the clear "mid-flight" passed against
+  *both* the old and new code, meaning it wasn't actually exercising the
+  gap) to land the clear deterministically while `readEnvelope` is
+  genuinely in flight. Confirmed failing (`1 !== 0`) against the
+  single-check version before this update landed.
 - **F14 -- investigated, not a confirmed bug (2026-09-20).** Checked
   directly rather than assumed: both `app/(tabs)/mandali.tsx`'s
   `loadMandali` and `app/(tabs)/pathshala.tsx`'s load function already use

@@ -17,7 +17,8 @@ export function isTelemetryUploadThrottled(
 
 export type TelemetryUploadDecision =
   | { action: 'skip'; reason: 'empty' | 'identity-changed' }
-  | { action: 'send'; expectedUserId?: string };
+  | { action: 'send'; expectedUserId: string }
+  | { action: 'send'; expectedGuest: true };
 
 /**
  * Called once the summary is already in hand (after the AsyncStorage/
@@ -28,6 +29,15 @@ export type TelemetryUploadDecision =
  * transition since that capture, including a switch away and back
  * (A -> B -> A), which a plain "is the userId still the same" comparison
  * would miss.
+ *
+ * The isCurrent() check above only covers up to the point this function
+ * returns -- apiFetch itself has its own internal awaits (waitForAuthReady,
+ * token resolution) after that, which is a second window for the same
+ * class of race. expectedUserId/expectedGuest on the returned decision are
+ * what close that second window: apiFetch re-verifies the live session
+ * immediately before actually sending, for both the authenticated case
+ * (already existed) and the guest case (external review found this half
+ * missing -- a guest send had no send-time owner check at all).
  */
 export function decideTelemetryUploadAfterSummary(
   identity: TelemetryIdentity,
@@ -38,5 +48,5 @@ export function decideTelemetryUploadAfterSummary(
   if (!isCurrent()) return { action: 'skip', reason: 'identity-changed' };
   return identity.kind === 'authenticated'
     ? { action: 'send', expectedUserId: identity.userId }
-    : { action: 'send' };
+    : { action: 'send', expectedGuest: true };
 }

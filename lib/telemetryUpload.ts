@@ -53,7 +53,7 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
 
     const response = await apiFetch('/api/native/telemetry-summary', {
       method: 'POST',
-      ...(decision.expectedUserId ? { expectedUserId: decision.expectedUserId } : {}),
+      ...('expectedUserId' in decision ? { expectedUserId: decision.expectedUserId } : { expectedGuest: true }),
       body: JSON.stringify({
         schemaVersion: TELEMETRY_SCHEMA_VERSION,
         appVersion: APP_VERSION,

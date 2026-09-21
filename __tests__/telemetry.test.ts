@@ -269,4 +269,45 @@ describe('Telemetry -- clear-generation barrier (F08, docs/PERFORMANCE_RESEARCH_
     const summary = await getTelemetrySummary(identity);
     assert.equal(summary.totalEvents, 1, 'a write starting after the clear has fully completed must not be dropped');
   });
+
+  it('drops a write even when the clear lands mid-flight, after the first generation check already passed (external review regression)', async () => {
+    // Reproduces the exact gap an external review found in the original
+    // fix: a single check before appendEvent's own `await readEnvelope`
+    // only catches a clear that happens before that check runs at all --
+    // it does not survive a clear landing DURING readEnvelope, after the
+    // check has already passed. Verified with an isolated reproduction
+    // script (matching this module's real structure) before this fix:
+    // expected 0 events after a mid-flight clear, actual 1.
+    //
+    // Microtask-counting (e.g. a bare `await Promise.resolve()`) is not a
+    // reliable way to land a clear "during" an in-flight read -- the exact
+    // number of microtask ticks before appendEvent's callback body starts
+    // running depends on internal promise-chaining depth, not something a
+    // test should assume. Instead, temporarily slow down the real
+    // AsyncStorage.getItem this module calls, so the mid-flight window is
+    // an actual, controlled span of time rather than a guess.
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-clear-midflight' };
+    await clearTelemetry(identity);
+
+    const originalGetItem = AsyncStorage.getItem;
+    AsyncStorage.getItem = (async (key: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return originalGetItem(key);
+    }) as typeof AsyncStorage.getItem;
+
+    try {
+      recordRouteOpen(identity, 'home', { cacheHit: true, durationMs: 5 });
+      // The write is now genuinely inside its slowed-down readEnvelope
+      // await, past the first generation check. Land the clear here.
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await clearTelemetry(identity);
+      // Let the slowed write finish resolving before reading the summary.
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    } finally {
+      AsyncStorage.getItem = originalGetItem;
+    }
+
+    const summary = await getTelemetrySummary(identity);
+    assert.equal(summary.totalEvents, 0, 'a clear landing mid-flight must still win, not just a clear landing before the write starts at all');
+  });
 });

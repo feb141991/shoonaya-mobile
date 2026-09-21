@@ -12,6 +12,17 @@ export type ApiFetchOptions = RequestInit & {
   timeoutMs?: number;
   /** Bind durable private writes to their original owner, including 401 replay. */
   expectedUserId?: string;
+  /**
+   * Assert no user is signed in at the actual send moment -- the guest-side
+   * counterpart to expectedUserId. Without this, a guest-owned request has
+   * no send-time owner check at all: if a sign-in completes while this
+   * call's own internal awaits are still in flight, the request goes out
+   * carrying whatever session is now current, silently attaching the
+   * guest-captured body to a real user's Bearer token. Throws the same way
+   * expectedUserId's mismatch does, caught by the caller same as any other
+   * apiFetch rejection.
+   */
+  expectedGuest?: boolean;
 };
 
 let cachedAccessToken: string | null | undefined;
@@ -51,7 +62,7 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   // per app launch, not a per-request cost.
   await waitForAuthReady();
 
-  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, expectedUserId, ...fetchOptions } = options;
+  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, expectedUserId, expectedGuest, ...fetchOptions } = options;
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Content-Type') && options.body) {
     headers.set('Content-Type', 'application/json');
@@ -68,6 +79,12 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
         throw new Error('Japa completion owner is no longer signed in');
       }
       accessToken = session.access_token;
+    } else if (expectedGuest) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        throw new Error('Guest request owner signed in before send');
+      }
+      accessToken = null;
     }
     const requestHeaders = new Headers(headers);
     if (accessToken) requestHeaders.set('Authorization', `Bearer ${accessToken}`);

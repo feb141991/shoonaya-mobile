@@ -16,7 +16,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
 
 type LedgerRow = {
@@ -42,7 +42,13 @@ export default function LedgerScreen() {
   const [isGuest, setIsGuest] = useState(false);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
 
+  // Account-switch protection: without a captured lease, a slow response
+  // for a previous identity could still land and overwrite the next
+  // identity's freshly-loaded (or guest) state -- the same class of race
+  // already fixed in Profile/Tirtha/Bhakti/Mandali/LanguageContext this
+  // session, previously missing here.
   const loadData = useCallback(async () => {
+    const { isCurrent } = captureAppIdentity();
     setLoadError(false);
 
     if (appIdentity.kind === 'loading') {
@@ -50,31 +56,45 @@ export default function LedgerScreen() {
     }
 
     if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
+      if (!isCurrent()) return;
       setIsGuest(true);
       return;
     }
 
+    if (!isCurrent()) return;
     setIsGuest(false);
 
     let res: Response;
     try {
-      res = await apiFetch('/api/native/karma-ledger');
+      res = await apiFetch('/api/native/karma-ledger', { expectedUserId: appIdentity.userId });
     } catch {
+      if (!isCurrent()) return;
       setLoadError(true);
       return;
     }
+    if (!isCurrent()) return;
     if (!res.ok) {
       setLoadError(true);
       return;
     }
 
     const payload = (await res.json()) as { ledger: LedgerRow[] };
+    if (!isCurrent()) return;
     setLedger(payload.ledger || []);
   }, [router, appIdentity]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
-    loadData().finally(() => setLoading(false));
+    const { isCurrent } = captureAppIdentity();
+    // Clear the previous identity's ledger immediately, before the new
+    // identity's load even starts -- otherwise stale karma history from
+    // the old account stays visible (or briefly flashes) while the new
+    // account's data is still loading.
+    setLedger([]);
+    setLoading(true);
+    loadData().finally(() => {
+      if (isCurrent()) setLoading(false);
+    });
   }, [loadData, appIdentity]);
 
   if (loading) {
