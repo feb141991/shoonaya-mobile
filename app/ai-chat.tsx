@@ -29,7 +29,7 @@ import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
-import { getTraditionGreeting, getTraditionPrompts } from '@/lib/dharma-mitra-content';
+import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 function TypingDots({ color }: { color: string }) {
@@ -141,6 +141,7 @@ type ChatItemProps = {
   streaming: boolean;
   isReported: boolean;
   isCopied: boolean;
+  traditionSymbol: string;
   onReport: (msg: ChatMessage) => void;
   onCopy: (msg: ChatMessage) => void;
 };
@@ -152,6 +153,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   streaming,
   isReported,
   isCopied,
+  traditionSymbol,
   onReport,
   onCopy,
 }: ChatItemProps) {
@@ -262,7 +264,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 11, lineHeight: 13 }}>🕉️</Text>
+                <Text style={{ fontSize: 11, lineHeight: 13 }}>{traditionSymbol}</Text>
               </View>
               <Text
                 style={{
@@ -394,11 +396,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
 export default function AiChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { initialMessage } = useLocalSearchParams<{ initialMessage?: string }>();
+  const { initialMessage, tradition: traditionParam } = useLocalSearchParams<{ initialMessage?: string; tradition?: string }>();
   const initialPrompt = useMemo(
     () => (Array.isArray(initialMessage) ? initialMessage[0] : initialMessage),
     [initialMessage]
   );
+  const explicitTradition = Array.isArray(traditionParam) ? traditionParam[0] : traditionParam;
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
@@ -423,9 +426,10 @@ export default function AiChatScreen() {
     onUnauthenticated: () => router.replace('/(auth)/login'),
   });
 
+  const effectiveTradition = explicitTradition ?? profile?.tradition;
   const activeLanguage = language ?? profile?.appLanguage ?? 'en';
-  const greeting = getTraditionGreeting(profile?.tradition);
-  const suggestedPrompts = getTraditionPrompts(profile?.tradition);
+  const greeting = getTraditionGreeting(effectiveTradition);
+  const suggestedPrompts = getTraditionPrompts(effectiveTradition);
 
   const theme = useMemo(() => {
     const base = themeColor(isDark);
@@ -547,6 +551,8 @@ export default function AiChatScreen() {
     [sendMessage]
   );
 
+  const traditionSymbol = getTraditionSymbol(effectiveTradition);
+
   const renderMessage = useCallback(
     ({ item }: { item: ChatMessage }) => (
       <ChatMessageBubble
@@ -556,11 +562,12 @@ export default function AiChatScreen() {
         streaming={streaming && item.role === 'model' && !item.text}
         isReported={reportedMessageIds.has(item.id)}
         isCopied={copiedId === item.id}
+        traditionSymbol={traditionSymbol}
         onReport={handleReportAiMessage}
         onCopy={handleCopyMessage}
       />
     ),
-    [theme, isDark, streaming, reportedMessageIds, copiedId, handleReportAiMessage, handleCopyMessage]
+    [theme, isDark, streaming, reportedMessageIds, copiedId, traditionSymbol, handleReportAiMessage, handleCopyMessage]
   );
 
   if (loadingProfile) {

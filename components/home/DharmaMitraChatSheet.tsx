@@ -27,7 +27,7 @@ import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
-import { getTraditionGreeting, getTraditionPrompts } from '@/lib/dharma-mitra-content';
+import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 function TypingDots({ color }: { color: string }) {
@@ -139,6 +139,7 @@ type ChatItemProps = {
   streaming: boolean;
   isReported: boolean;
   isCopied: boolean;
+  traditionSymbol: string;
   onReport: (msg: ChatMessage) => void;
   onCopy: (msg: ChatMessage) => void;
 };
@@ -150,6 +151,7 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
   streaming,
   isReported,
   isCopied,
+  traditionSymbol,
   onReport,
   onCopy,
 }: ChatItemProps) {
@@ -254,7 +256,7 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 11, lineHeight: 13 }}>🕉️</Text>
+                <Text style={{ fontSize: 11, lineHeight: 13 }}>{traditionSymbol}</Text>
               </View>
               <Text
                 style={{
@@ -512,6 +514,8 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
     [sendMessage]
   );
 
+  const traditionSymbol = getTraditionSymbol(tradition);
+
   const renderMessage = useCallback(
     ({ item }: { item: ChatMessage }) => (
       <ScrollChatMessageBubble
@@ -521,11 +525,12 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
         streaming={streaming && item.role === 'model' && !item.text}
         isReported={reportedMessageIds.has(item.id)}
         isCopied={copiedId === item.id}
+        traditionSymbol={traditionSymbol}
         onReport={handleReportAiMessage}
         onCopy={handleCopyMessage}
       />
     ),
-    [theme, isDark, streaming, reportedMessageIds, copiedId, handleReportAiMessage, handleCopyMessage]
+    [theme, isDark, streaming, reportedMessageIds, copiedId, traditionSymbol, handleReportAiMessage, handleCopyMessage]
   );
 
   return (

@@ -166,7 +166,7 @@ const READY_COPY: Record<TraditionKey, { heading: string; body: string; bodyHi: 
   hindu: { heading: '🪔 Hari Om', body: 'Your sadhana path is ready. Begin with Japa.', bodyHi: 'आपका साधना मार्ग तैयार है। जप से शुरू करें।' },
   sikh: { heading: '☬ Waheguru Ji', body: 'Your nitnem awaits. Begin your practice.', bodyHi: 'आपका नितनेम तैयार है। अपना अभ्यास शुरू करें।' },
   buddhist: { heading: '☸️ Namo Buddhaya', body: 'Your meditation path is ready.', bodyHi: 'आपका ध्यान मार्ग तैयार है।' },
-  jain: { heading: '🤲 Jai Jinendra', body: 'Your samayika path begins now.', bodyHi: 'आपका सामायिक मार्ग अब प्रारंभ होता है।' },
+  jain: { heading: '🙏 Jai Jinendra', body: 'Your samayika path begins now.', bodyHi: 'आपका सामायिक मार्ग अब प्रारंभ होता है।' },
   none: { heading: '✨ Welcome Seeker', body: 'Your mindful journey begins now. Explore universal wisdom.', bodyHi: 'आपकी ध्यान यात्रा प्रारंभ होती है। सार्वभौमिक ज्ञान की खोज करें।' },
 };
 

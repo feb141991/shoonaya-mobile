@@ -111,7 +111,7 @@ export const ISHTA_DEVATAS_BY_TRADITION: Record<TraditionKey, IshtaOption[]> = {
     { value: 'other', label: 'Other', emoji: '✨' },
   ],
   jain: [
-    { value: 'mahavir', label: 'Bhagwan Mahavir', emoji: '🤲' },
+    { value: 'mahavir', label: 'Bhagwan Mahavir', emoji: '🪷' },
     { value: 'parshvanath', label: 'Bhagwan Parshvanath', emoji: '🌿' },
     { value: 'rishabhanatha', label: 'Adinath Rishabha', emoji: '✨' },
     { value: 'other', label: 'Other', emoji: '✨' },
@@ -275,7 +275,7 @@ export function getStaticTraditionsCatalog(): DynamicTraditionCategory[] {
     key,
     label_en: key === 'none' ? 'Universal / Exploring' : key.charAt(0).toUpperCase() + key.slice(1),
     label_hi: key === 'none' ? 'सार्वभौमिक / अन्वेषण' : key === 'hindu' ? 'हिंदू' : key === 'sikh' ? 'सिख' : key === 'buddhist' ? 'बौद्ध' : 'जैन',
-    emoji: key === 'none' ? '✨' : key === 'hindu' ? '🪔' : key === 'sikh' ? '☬' : key === 'buddhist' ? '☸️' : '🤲',
+    emoji: key === 'none' ? '✨' : key === 'hindu' ? '🪔' : key === 'sikh' ? '☬' : key === 'buddhist' ? '☸️' : '🪷',
     sub_label_en: '',
     sub_label_hi: '',
     subcategories_label_en: getSampradayaLabel(key),

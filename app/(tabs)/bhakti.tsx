@@ -31,7 +31,7 @@ const TRADITION_HERO: Record<string, { greeting: string; sub: string }> = {
   hindu:    { greeting: 'Jai Sri Ram 🙏',           sub: 'Bhakti, Kathas & Sacred Practice' },
   sikh:     { greeting: 'Waheguru Ji Ka Khalsa ☬',  sub: 'Bani, Sakhis & Naam Simran'       },
   buddhist: { greeting: 'Namo Buddhaya ☸️',          sub: 'Dhamma Stories & Sacred Chants'   },
-  jain:     { greeting: 'Jai Jinendra 🤲',           sub: 'Kathas, Stotrams & Simran'        },
+  jain:     { greeting: 'Jai Jinendra 🙏',           sub: 'Kathas, Stotrams & Simran'        },
 };
 
 // Two icon treatments in one unified grid:

@@ -1,14 +1,27 @@
 // Tradition-aware copy for the Dharma Mitra AI chat entry points (floating
-// sheet + full-page /ai-chat screen). Matches the PWA's AIChatFAB.tsx exactly
-// so both apps read the same greetings/prompts per tradition.
+// sheet + full-page /ai-chat screen). Matches the PWA's AIChatFAB.tsx
+// while ensuring universal fallbacks for neutral seekers across all traditions.
 
-export const DEFAULT_TRADITION = 'hindu';
+export const DEFAULT_TRADITION = 'neutral';
+
+export const TRADITION_SYMBOLS: Record<string, string> = {
+  hindu: '🕉️',
+  sikh: '☬',
+  buddhist: '☸️',
+  jain: '🪷',
+  neutral: '✨',
+  none: '✨',
+  all: '✨',
+};
 
 export const TRADITION_GREETINGS: Record<string, string> = {
   hindu: 'Hari Om 🕉️',
   sikh: 'Sat Sri Akal ☬',
   buddhist: 'Namo Buddhaya ☸️',
-  jain: 'Jai Jinendra 🤲',
+  jain: 'Jai Jinendra 🙏',
+  neutral: 'Namaste 🙏',
+  none: 'Namaste 🙏',
+  all: 'Namaste 🙏',
 };
 
 export const TRADITION_PROMPTS: Record<string, string[]> = {
@@ -36,12 +49,38 @@ export const TRADITION_PROMPTS: Record<string, string[]> = {
     'Explain Anekantavada',
     'What are the Five Major Vows?',
   ],
+  neutral: [
+    'How can I cultivate inner peace today?',
+    'How do I start a daily meditation practice?',
+    'What is the core meaning of dharma and karma?',
+    'How to overcome mental restlessness and fear?',
+  ],
+  none: [
+    'How can I cultivate inner peace today?',
+    'How do I start a daily meditation practice?',
+    'What is the core meaning of dharma and karma?',
+    'How to overcome mental restlessness and fear?',
+  ],
+  all: [
+    'How can I cultivate inner peace today?',
+    'How do I start a daily meditation practice?',
+    'What is the core meaning of dharma and karma?',
+    'How to overcome mental restlessness and fear?',
+  ],
 };
 
-export function getTraditionGreeting(tradition: string | null | undefined) {
-  return TRADITION_GREETINGS[tradition ?? DEFAULT_TRADITION] ?? TRADITION_GREETINGS[DEFAULT_TRADITION];
+export function getTraditionSymbol(tradition: string | null | undefined): string {
+  if (!tradition) return TRADITION_SYMBOLS.neutral;
+  return TRADITION_SYMBOLS[tradition.toLowerCase()] ?? TRADITION_SYMBOLS.neutral;
 }
 
-export function getTraditionPrompts(tradition: string | null | undefined) {
-  return TRADITION_PROMPTS[tradition ?? DEFAULT_TRADITION] ?? TRADITION_PROMPTS[DEFAULT_TRADITION];
+export function getTraditionGreeting(tradition: string | null | undefined): string {
+  if (!tradition) return TRADITION_GREETINGS.neutral;
+  return TRADITION_GREETINGS[tradition.toLowerCase()] ?? TRADITION_GREETINGS.neutral;
 }
+
+export function getTraditionPrompts(tradition: string | null | undefined): string[] {
+  if (!tradition) return TRADITION_PROMPTS.neutral;
+  return TRADITION_PROMPTS[tradition.toLowerCase()] ?? TRADITION_PROMPTS.neutral;
+}
+
