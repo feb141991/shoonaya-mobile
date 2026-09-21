@@ -153,6 +153,37 @@ their remaining scope is separately closed.
   a cross-device p95. These require a payload/schema change (native + backend
   contract) and are deliberately deferred to a separate, explicitly-scoped
   pass -- not bundled into this fix.
+  **Update 2026-09-21, external review**: correctly found two remaining
+  gaps in the fix above. (1) `distinct_authenticated_users_24h` was still
+  computed by fetching up to `DISTINCT_USERS_SCAN_LIMIT` (5000) raw
+  `user_id` rows and deduplicating client-side -- correct at current
+  volume, but silently under-reports once authenticated submissions in the
+  24h window exceed that cap, with the same "no signal that truncation
+  happened" character as the original bug. (2) none of the four
+  `Promise.all` results checked `.error` before defaulting via `?? 0` --
+  a failed count query became indistinguishable from a genuine "zero
+  submissions" period. Fixed: (1) new migration
+  `20260921015101_count_distinct_native_telemetry_users.sql` adds a real
+  `count_distinct_native_telemetry_users(p_since)` SQL function
+  (`security invoker`, service-role-only execute grant, matching this
+  table's own RLS convention) doing an actual `COUNT(DISTINCT user_id)` in
+  Postgres with no row cap; the aggregator now calls it via `.rpc(...)`
+  instead of dereferencing rows client-side. (2) every count field
+  (`submissions_1h/24h/lifetime`, `distinct_authenticated_users_24h`) is
+  now `number | null`, with `null` meaning "the query failed, value
+  unknown" -- distinct from a genuine 0 -- and the admin UI
+  (`NativeStartupTelemetrySection.tsx`) renders `null` as "Unavailable" in
+  rose-colored text rather than silently showing 0. A separate
+  `recent_fetch_error` boolean surfaces a failure of the per-submission
+  list independently of the counts (which are fetched separately and can
+  succeed even if the list fetch fails, or vice versa). Not applied to
+  production yet -- this migration needs to be applied before the RPC call
+  will resolve instead of erroring (which the new error-honesty change
+  would at least now report correctly as "Unavailable" rather than a
+  silent 0). This backend repo has no `npm test` script (confirmed
+  unchanged from earlier in this session); verification here is
+  `npx tsc --noEmit` (clean) plus direct code review, not an automated
+  regression test.
 - **F01 -- partially resolved (2026-09-20; relabeled from "resolved" on
   2026-09-21 per external review -- the original label overstated this).**
   `markInteractive()` now gates on
@@ -383,6 +414,31 @@ their remaining scope is separately closed.
   these files (this document itself notes concurrent activity during its
   own review) and has since been superseded by work elsewhere in this
   session -- not forcing a fix onto code that is already correctly guarded.
+- **New finding (external review, 2026-09-21) -- resolved: reader/progress
+  account-switch protection.** Not one of the original F01-F21 findings;
+  raised by a later external review that specifically re-checked screens
+  F14's investigation hadn't covered. Confirmed real:
+  `app/my-progress/ledger.tsx`'s `loadData` and
+  `app/pathshala/[pathId]/[lessonId].tsx`'s `loadContext` both fetched
+  user-scoped data (karma ledger, lesson progress) with no
+  `captureAppIdentity()` lease, no `expectedUserId` on the request, and no
+  guard before applying the response to state -- a slow response for a
+  previous account could land after a switch and overwrite the next
+  account's state with stale data, and the previous account's content
+  stayed visible on screen while the new account's load was still in
+  flight. The exact same class of bug already fixed this session in
+  Profile/Tirtha/Bhakti/Mandali/LanguageContext, just not yet applied to
+  these two screens. Fixed with the identical established pattern:
+  `captureAppIdentity()`'s lease checked via `isCurrent()` before every
+  state update after an await, `expectedUserId` bound on the request so
+  `apiFetch` re-verifies at send time too, and the previous identity's
+  content (`ledger`/`completedLessons`) cleared synchronously before the
+  new identity's load starts rather than left visible under/around the
+  loading state. Regression tests (source-regression, both screens import
+  react-native/expo-router and cannot be executed under this project's
+  plain `tsx --test` runner):
+  `__tests__/reader-progress-account-switch-protection.test.ts`, confirmed
+  failing against the pre-fix source before the fix was applied.
 
 ## Frozen baseline (2026-09-20)
 
