@@ -411,85 +411,75 @@ export async function createMandaliComment(payload: { postId: string; userId: st
   return result.id;
 }
 
+export type CommentsPage = {
+  comments: CommentRow[];
+  nextCursor: string | null;
+};
+
+// Backend-only default page size -- large enough that virtually every real
+// thread in this community app loads in full on one request (this is a
+// devotional-circle app, not a high-volume public feed), while still
+// bounding the pathological case instead of the unbounded `select('*')`
+// this used to be. The backend contract (GET /api/mandali/comments) does
+// support cursor-based "load more" beyond this; native does not yet expose
+// a load-more affordance, a deliberate, separately-schedulable scope
+// boundary, not a correctness gap -- the bound itself is what mattered.
+const DEFAULT_COMMENT_PAGE_LIMIT = 100;
+
 // Full comment thread (root + replies) for one post -- fetched lazily when
 // a post's comment section is expanded, rather than upfront for every post
 // in the feed. The feed response itself only carries a 2-comment preview
 // per post (see MandaliFeedPost.commentPreview).
-export async function fetchPostComments(postId: string, currentUserId?: string): Promise<CommentRow[]> {
+//
+// No direct-Supabase fallback (removed 2026-09-22, reliability plan Stage
+// 3): it duplicated the backend's safety-filtering and author-join logic
+// in a second place, risking drift, and silently falling back to a
+// slower, less-safe path on any backend hiccup hid real outages instead of
+// surfacing them. A genuine failure (anything other than this request
+// being cancelled, e.g. the post was collapsed again before the response
+// landed) now throws -- the caller renders a real "couldn't load, retry"
+// state instead.
+export async function fetchPostComments(
+  postId: string,
+  currentUserId?: string,
+  options?: { cursor?: string | null; limit?: number }
+): Promise<CommentsPage> {
+  const params = new URLSearchParams({ postId });
+  if (options?.cursor) params.set('cursor', options.cursor);
+  params.set('limit', String(options?.limit ?? DEFAULT_COMMENT_PAGE_LIMIT));
+
   try {
-    const response = await apiFetch(`/api/mandali/comments?postId=${encodeURIComponent(postId)}`);
-    if (response.ok) {
-      const result = (await response.json()) as { comments: CommentRow[] };
-      return result.comments ?? [];
-    }
+    const response = await apiFetch(`/api/mandali/comments?${params.toString()}`);
+    if (!response.ok) throw new Error(`Could not load comments (${response.status})`);
+    const result = (await response.json()) as CommentsPage;
+    return { comments: result.comments ?? [], nextCursor: result.nextCursor ?? null };
   } catch (apiErr) {
-    if (isFetchCancelled(apiErr)) return [];
-    console.warn('[fetchPostComments] /api/mandali/comments failed, falling back to direct Supabase:', apiErr);
+    if (isFetchCancelled(apiErr)) return { comments: [], nextCursor: null };
+    throw apiErr;
   }
+}
 
-  // Direct Supabase fallback when backend API is unreachable or returned an error
+// Looks up exactly one comment, author-hydrated the same way a full-thread
+// fetch's rows are -- used by the realtime new-comment path (see
+// app/(tabs)/mandali.tsx's handleCommentRealtimeChange/patchNewComment) so
+// enriching one incoming comment no longer means re-fetching the entire
+// thread just to find it. Returns null both for a genuinely missing/
+// filtered comment and for a cancelled request -- the caller already
+// treats "nothing to add" as a no-op for both cases.
+export async function fetchSingleComment(
+  postId: string,
+  commentId: string,
+  currentUserId?: string
+): Promise<CommentRow | null> {
+  const params = new URLSearchParams({ postId, commentId });
   try {
-    const safetyState = currentUserId
-      ? await fetchSafetyState(currentUserId).catch(() => ({
-          excludedAuthorIds: new Set<string>(),
-          hiddenContentKeys: new Set<string>(),
-        }))
-      : { excludedAuthorIds: new Set<string>(), hiddenContentKeys: new Set<string>() };
-
-    const { data: rawComments, error } = await supabase
-      .from('post_comments')
-      .select('id, post_id, author_id, body, created_at, upvotes, is_highlighted, client_operation_id')
-      .eq('post_id', postId)
-      .is('deleted_at', null)
-      .order('is_highlighted', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.warn('[fetchPostComments] Direct Supabase comments query error:', error);
-      return [];
-    }
-
-    const comments = (rawComments ?? []).filter(
-      (c) =>
-        !safetyState.excludedAuthorIds.has(c.author_id) &&
-        !safetyState.hiddenContentKeys.has(`mandali_comment:${c.id}`)
-    );
-
-    if (comments.length === 0) return [];
-
-    const authorIds = Array.from(new Set(comments.map((c) => c.author_id)));
-    const { data: authors } = await supabase
-      .from('public_profiles')
-      .select('id, full_name, username, avatar_url')
-      .in('id', authorIds);
-
-    const authorMap = new Map((authors ?? []).map((a) => [a.id, a]));
-
-    return comments.map((c) => {
-      const auth = authorMap.get(c.author_id);
-      return {
-        id: c.id,
-        post_id: c.post_id,
-        author_id: c.author_id,
-        body: c.body,
-        parent_id: null,
-        created_at: c.created_at,
-        updated_at: null,
-        deleted_at: null,
-        upvotes: c.upvotes ?? 0,
-        is_highlighted: c.is_highlighted ?? false,
-        profiles: auth
-          ? {
-              full_name: auth.full_name || auth.username || 'Seeker',
-              username: auth.username || 'Seeker',
-              avatar_url: auth.avatar_url,
-            }
-          : null,
-      };
-    });
-  } catch (err) {
-    console.warn('[fetchPostComments] Direct Supabase fallback failed:', err);
-    return [];
+    const response = await apiFetch(`/api/mandali/comments?${params.toString()}`);
+    if (!response.ok) throw new Error(`Could not load comment (${response.status})`);
+    const result = (await response.json()) as { comment: CommentRow | null };
+    return result.comment ?? null;
+  } catch (apiErr) {
+    if (isFetchCancelled(apiErr)) return null;
+    throw apiErr;
   }
 }
 

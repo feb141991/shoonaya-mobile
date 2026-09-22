@@ -311,6 +311,8 @@ export function PostComments({
   comments,
   expanded,
   loadingFull = false,
+  loadFailed = false,
+  onRetryLoad,
   onToggleExpand,
   userId,
   posting,
@@ -338,6 +340,11 @@ export function PostComments({
   // True while the full thread is being fetched after first expand (the
   // feed response only carries a 2-comment preview per post upfront).
   loadingFull?: boolean;
+  // True when that fetch failed (a real error, not a cancellation) and no
+  // direct-Supabase fallback ran to paper over it -- see lib/mandali.ts's
+  // fetchPostComments. Mutually exclusive with loadingFull.
+  loadFailed?: boolean;
+  onRetryLoad?: () => void;
   onToggleExpand: () => void;
   userId: string;
   posting: boolean;
@@ -412,6 +419,23 @@ export function PostComments({
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <ActivityIndicator size="small" color={dim} />
           <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim }}>Loading comments…</Text>
+        </View>
+      ) : loadFailed ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Feather name="cloud-off" size={13} color={dim} />
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 11.5, color: dim, flexShrink: 1 }}>
+            Couldn&apos;t load comments.
+          </Text>
+          {onRetryLoad ? (
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Retry loading comments"
+              onPress={onRetryLoad}
+              style={{ paddingHorizontal: 4, paddingVertical: 2 }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11.5, color: brand }}>Retry</Text>
+            </PressableSurface>
+          ) : null}
         </View>
       ) : null}
 

@@ -53,7 +53,7 @@ import {
   recordRefreshFailure,
   recordServerTiming,
   parseServerTimingHeader,
-  recordDuplicateRequestDetected,
+  recordDuplicateRequestAvoided,
   recordInteractionTiming,
   type TelemetryIdentity,
 } from '@/lib/telemetry';
@@ -76,6 +76,7 @@ import {
   fetchPendingConnectionRequests,
   fetchPostComments,
   fetchSafetyState,
+  fetchSingleComment,
   leaveMandali,
   removeCommentReaction,
   reportMandaliComment,
@@ -93,6 +94,7 @@ import {
   highlightMandaliComment,
   formatRelativeTime,
   type CommentRow,
+  type CommentsPage,
   type ConnectionRequestRow,
   type ConnectionStatus,
   type MandaliPostType,
@@ -195,6 +197,8 @@ type MandaliPostCardProps = {
   myReaction: ReactionType | null;
   expanded: boolean;
   loadingComments: boolean;
+  commentsLoadFailed: boolean;
+  onRetryLoadComments: (postId: string) => void;
   postingComment: boolean;
   theme: MandaliTheme;
   onRsvp: (postId: string, status: RsvpStatus) => void;
@@ -227,6 +231,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
   myReaction,
   expanded,
   loadingComments,
+  commentsLoadFailed,
+  onRetryLoadComments,
   postingComment,
   theme,
   onRsvp,
@@ -473,6 +479,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
         comments={comments}
         expanded={expanded}
         loadingFull={loadingComments}
+        loadFailed={commentsLoadFailed}
+        onRetryLoad={() => onRetryLoadComments(post.id)}
         onToggleExpand={() => onToggleComments(post.id)}
         userId={userId ?? ''}
         postAuthorId={post.author_id}
@@ -566,13 +574,19 @@ export default function MandaliScreen() {
   // the feed response, and expanding re-fetches the full thread once.
   const [fullyLoadedCommentPostIds, setFullyLoadedCommentPostIds] = useState<Set<string>>(new Set());
   const [loadingCommentsForPostId, setLoadingCommentsForPostId] = useState<string | null>(null);
-  // Stage 0 measured, Stage 3 fixed: toggleComments and the useEffect below
-  // used to both fetch under the identical guard condition, so every
-  // expanded post fired this fetch twice. toggleComments no longer fetches
-  // at all (see its own comment) -- this ref now exists purely as a
-  // permanent regression detector for the one remaining call site, via
-  // recordDuplicateRequestDetected in the effect below.
-  const commentFetchInFlightRef = useRef<Set<string>>(new Set());
+  // A real (non-cancelled) fetchPostComments failure -- no direct-Supabase
+  // fallback runs anymore (removed 2026-09-22, reliability plan Stage 3),
+  // so a genuine backend outage now surfaces here instead of silently
+  // falling back to a slower, less-safe path. Cleared on retry.
+  const [commentLoadFailedPostIds, setCommentLoadFailedPostIds] = useState<Set<string>>(new Set());
+  // Per-post single-flight (Stage 3): maps a postId currently being
+  // fetched to the one in-flight request for it. A second trigger for the
+  // same postId (e.g. rapid collapse-then-re-expand before the first
+  // fetch resolves) reuses this promise instead of firing a second
+  // identical network request -- Stage 0's telemetry
+  // (recordDuplicateRequestAvoided/Detected) measures whether this is
+  // actually catching anything.
+  const commentFetchInFlightRef = useRef<Map<string, Promise<CommentsPage>>>(new Map());
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
   const feedListRef = useRef<FlashListRef<MandaliFeedItem>>(null);
   // Resolved as soon as loadMandali knows the user id, independent of
@@ -1098,13 +1112,37 @@ export default function MandaliScreen() {
   // first-page-only, so this only ever appends to `posts`). Guarded against
   // overlapping calls and a missing cursor (either no next page, or the
   // screen is mid-initial-load).
+  //
+  // Identity-generation guard (added 2026-09-22, reliability plan Stage 3):
+  // this used to apply its response unconditionally. A user scrolling to
+  // trigger this, then signing out or switching accounts before the
+  // response landed, would append the PREVIOUS account's posts/comments/
+  // reactions onto whatever the new identity's feed had already loaded --
+  // the exact cross-identity data leak AGENTS.md's cache-isolation rules
+  // prohibit. loadMandali's own mandaliLoadGenerationRef (bumped on every
+  // identity change, see the cleanup of the effect that calls loadMandali)
+  // is reused here rather than introducing a second counter -- captured
+  // read-only at the start (this is a continuation of the current load,
+  // not a new one) and re-checked, generation AND actual identity, before
+  // every state mutation below, mirroring loadMandali's own isCurrentLoad.
   const loadMorePosts = useCallback(async () => {
     if (loadingMore || !nextCursor) return;
+    const loadGeneration = mandaliLoadGenerationRef.current;
+    const identityAtStart = getAppIdentity();
+    const isCurrentLoad = () => {
+      if (mandaliLoadGenerationRef.current !== loadGeneration) return false;
+      const currentIdentity = getAppIdentity();
+      return identityAtStart.kind === 'authenticated'
+        ? currentIdentity.kind === 'authenticated' && currentIdentity.userId === identityAtStart.userId
+        : currentIdentity.kind === identityAtStart.kind;
+    };
     setLoadingMore(true);
     try {
       const response = await apiFetch(`/api/mandali/feed?cursor=${encodeURIComponent(nextCursor)}&limit=20`);
+      if (!isCurrentLoad()) return;
       if (!response.ok) return;
       const page = await response.json() as { posts: PostRow[]; nextCursor: string | null };
+      if (!isCurrentLoad()) return;
       setPosts((current) => {
         const seen = new Set(current.map((p) => p.id));
         return [...current, ...page.posts.filter((p) => !seen.has(p.id))];
@@ -1122,11 +1160,11 @@ export default function MandaliScreen() {
       });
       setNextCursor(page.nextCursor);
     } catch (error) {
-      if (!isFetchCancelled(error)) {
+      if (!isFetchCancelled(error) && isCurrentLoad()) {
         console.error('[MandaliScreen] loadMorePosts failed', error);
       }
     } finally {
-      setLoadingMore(false);
+      if (isCurrentLoad()) setLoadingMore(false);
     }
   }, [loadingMore, nextCursor]);
 
@@ -1171,14 +1209,17 @@ export default function MandaliScreen() {
   // than the viewer once profiles reads were locked down to own-row-only
   // (supabase/migrations/20260824162430_lock_down_profiles_reads.sql) --
   // exactly the case this handler exists for (its one caller already
-  // skips INSERTs authored by the viewer). fetchPostComments goes through
-  // the server-owned safe DTO (loadPostComments -> loadSafeAuthors, admin
-  // client) the same way the "expand thread" path above already does, so
-  // this reuses that instead of adding a second cross-user profile fetch
-  // path.
+  // skips INSERTs authored by the viewer). fetchSingleComment goes through
+  // the same server-owned safe DTO (loadSingleComment -> loadSafeAuthors,
+  // admin client) the "expand thread" path uses, but looks up just this
+  // one comment -- fetching the whole thread here (the previous
+  // implementation) meant every realtime comment from another mandali
+  // member re-read the entire thread just to enrich the one new row.
+  // A thrown failure is swallowed: this is a background enrichment for an
+  // already-visible realtime event, not a blocking load -- the user can
+  // still get the full, correct thread by collapsing and re-expanding.
   const patchNewComment = useCallback(async (postId: string, commentId: string) => {
-    const fullComments = await fetchPostComments(postId, profile?.userId);
-    const normalized = fullComments.find((c) => c.id === commentId);
+    const normalized = await fetchSingleComment(postId, commentId, profile?.userId);
     if (!normalized) return;
     setComments((current) => (current.some((c) => c.id === normalized.id) ? current : [...current, normalized]));
   }, [profile?.userId]);
@@ -2211,43 +2252,77 @@ export default function MandaliScreen() {
     setExpandedPostId((current) => (current === postId ? null : postId));
   }, []);
 
+  // Forces a re-fetch: clears both the "already loaded" and "failed" marks
+  // for this post so the effect below's guard condition is true again on
+  // the next render.
+  const retryLoadComments = useCallback((postId: string) => {
+    setFullyLoadedCommentPostIds((current) => {
+      if (!current.has(postId)) return current;
+      const next = new Set(current);
+      next.delete(postId);
+      return next;
+    });
+    setCommentLoadFailedPostIds((current) => {
+      if (!current.has(postId)) return current;
+      const next = new Set(current);
+      next.delete(postId);
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
-    if (expandedPostId && !fullyLoadedCommentPostIds.has(expandedPostId)) {
-      const telemetryIdentity: TelemetryIdentity =
-        appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
-      // Kept as a permanent regression detector, not just a one-time
-      // measurement: commentFetchInFlightRef now has exactly one writer
-      // (this effect), so isDuplicateFetch should always read false here.
-      // If it ever reads true again -- e.g. a future change reintroduces a
-      // second call site, or React re-runs this effect concurrently for
-      // the same postId -- Stage 0's telemetry will show it immediately
-      // instead of the bug silently coming back unnoticed.
-      const isDuplicateFetch = commentFetchInFlightRef.current.has(expandedPostId);
-      if (isDuplicateFetch) {
-        recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
-      }
-      commentFetchInFlightRef.current.add(expandedPostId);
+    if (!expandedPostId || fullyLoadedCommentPostIds.has(expandedPostId)) return;
+    const postId = expandedPostId;
+    const telemetryIdentity: TelemetryIdentity =
+      appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+
+    // Per-post single-flight: reuse an already-in-flight request for this
+    // exact postId instead of starting a second one. isDuplicateFetch
+    // should be rare in practice (mainly a rapid collapse-then-re-expand
+    // before the first fetch resolves) -- Stage 0's telemetry measures the
+    // real rate rather than assuming it never happens.
+    const existingRequest = commentFetchInFlightRef.current.get(postId);
+    let request: Promise<CommentsPage>;
+    if (existingRequest) {
+      request = existingRequest;
+      recordDuplicateRequestAvoided(telemetryIdentity, 'mandali', 'state_effect');
+    } else {
       const commentFetchStartedAt = Date.now();
-      setLoadingCommentsForPostId(expandedPostId);
-      fetchPostComments(expandedPostId, profile?.userId)
-        .then((fullComments) => {
-          setComments((currentComments) => {
-            const withoutThisPost = currentComments.filter((c) => c.post_id !== expandedPostId);
-            return [...withoutThisPost, ...fullComments];
-          });
-          setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(expandedPostId));
-          if (!isDuplicateFetch) {
-            recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
-          }
-        })
-        .catch((error) => {
-          console.warn('[MandaliScreen] fetchPostComments failed', error);
-        })
-        .finally(() => {
-          commentFetchInFlightRef.current.delete(expandedPostId);
-          setLoadingCommentsForPostId(null);
-        });
+      request = fetchPostComments(postId, profile?.userId);
+      commentFetchInFlightRef.current.set(postId, request);
+      // Attached only by the trigger that actually created the request, so
+      // this fires once per real network call, not once per trigger that
+      // happened to observe it. Failure is handled by the shared
+      // .catch() below instead -- this listener only cares about success.
+      request.then(() => {
+        recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
+      }, () => {});
     }
+
+    setLoadingCommentsForPostId(postId);
+
+    request
+      .then((page) => {
+        setComments((currentComments) => {
+          const withoutThisPost = currentComments.filter((c) => c.post_id !== postId);
+          return [...withoutThisPost, ...page.comments];
+        });
+        setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(postId));
+      })
+      .catch((error) => {
+        console.warn('[MandaliScreen] fetchPostComments failed', error);
+        setCommentLoadFailedPostIds((current) => new Set(current).add(postId));
+      })
+      .finally(() => {
+        // Guards against an older, already-superseded request's finally
+        // callback deleting a newer request's map entry (only reachable
+        // if a retry started a fresh request for the same postId while
+        // this one was still settling).
+        if (commentFetchInFlightRef.current.get(postId) === request) {
+          commentFetchInFlightRef.current.delete(postId);
+        }
+        setLoadingCommentsForPostId((current) => (current === postId ? null : current));
+      });
   }, [expandedPostId, fullyLoadedCommentPostIds, profile?.userId, appIdentity]);
 
   const renderPost = useCallback((post: PostRow) => {
@@ -2261,6 +2336,8 @@ export default function MandaliScreen() {
         myReaction={myReactions[post.id] ?? null}
         expanded={expandedPostId === post.id}
         loadingComments={loadingCommentsForPostId === post.id}
+        commentsLoadFailed={commentLoadFailedPostIds.has(post.id)}
+        onRetryLoadComments={retryLoadComments}
         postingComment={commenting === post.id}
         theme={theme}
         onRsvp={handleRsvp}
@@ -2285,7 +2362,7 @@ export default function MandaliScreen() {
         onReportComment={handleReportComment}
       />
     );
-  }, [commenting, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, retryLoadComments, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>
