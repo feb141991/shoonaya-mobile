@@ -566,11 +566,12 @@ export default function MandaliScreen() {
   // the feed response, and expanding re-fetches the full thread once.
   const [fullyLoadedCommentPostIds, setFullyLoadedCommentPostIds] = useState<Set<string>>(new Set());
   const [loadingCommentsForPostId, setLoadingCommentsForPostId] = useState<string | null>(null);
-  // Stage 0 baseline measurement only -- toggleComments and the useEffect
-  // below both fetch under the identical guard condition, so a post that's
-  // expanded fires this fetch twice today. This ref lets both call sites
-  // detect (via recordDuplicateRequestDetected) when they land on a postId
-  // the other one is already fetching, without changing what either does.
+  // Stage 0 measured, Stage 3 fixed: toggleComments and the useEffect below
+  // used to both fetch under the identical guard condition, so every
+  // expanded post fired this fetch twice. toggleComments no longer fetches
+  // at all (see its own comment) -- this ref now exists purely as a
+  // permanent regression detector for the one remaining call site, via
+  // recordDuplicateRequestDetected in the effect below.
   const commentFetchInFlightRef = useRef<Set<string>>(new Set());
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
   const feedListRef = useRef<FlashListRef<MandaliFeedItem>>(null);
@@ -2198,63 +2199,29 @@ export default function MandaliScreen() {
     ]);
   }, [handleLeave, profile?.mandaliName]);
 
+  // Stage 3 fix (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md's
+  // reliability plan): this used to also fire fetchPostComments directly,
+  // duplicating the useEffect below under the identical guard condition --
+  // Stage 0's telemetry (recordDuplicateRequestDetected) confirmed every
+  // comment expansion fired the network request twice. toggleComments now
+  // only owns the expand/collapse state transition; the effect below is
+  // the single place that reacts to expandedPostId changing and decides
+  // whether a fetch is needed, regardless of what caused the change.
   const toggleComments = useCallback((postId: string) => {
-    setExpandedPostId((current) => {
-      const next = current === postId ? null : postId;
-      // Fetch the full thread the first time a post is expanded -- until
-      // now `comments` only holds this post's 2-comment preview from the
-      // feed response. Fire-and-forget: the loading state is tracked via
-      // loadingCommentsForPostId, not awaited here, so the expand itself
-      // isn't blocked on the network.
-      if (next && !fullyLoadedCommentPostIds.has(next)) {
-        const telemetryIdentity: TelemetryIdentity =
-          appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
-        // Captured before the set is touched: toggleComments always runs
-        // (and reaches this add()) before the mirroring useEffect below can
-        // fire, so this call site is always the primary fetch today -- but
-        // read from state rather than assumed, so this stays correct if
-        // that ordering ever changes. Only the primary fetch's duration
-        // feeds interaction_timing; recording the duplicate's timing too
-        // would double-count one user tap as two samples and inflate the
-        // p95 with a number that isn't a second, distinct interaction.
-        const isDuplicateFetch = commentFetchInFlightRef.current.has(next);
-        if (isDuplicateFetch) {
-          recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
-        }
-        commentFetchInFlightRef.current.add(next);
-        const commentFetchStartedAt = Date.now();
-        setLoadingCommentsForPostId(next);
-        fetchPostComments(next, profile?.userId)
-          .then((fullComments) => {
-            setComments((currentComments) => {
-              const withoutThisPost = currentComments.filter((c) => c.post_id !== next);
-              return [...withoutThisPost, ...fullComments];
-            });
-            setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(next));
-            if (!isDuplicateFetch) {
-              recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
-            }
-          })
-          .catch((error) => {
-            console.warn('[MandaliScreen] fetchPostComments failed', error);
-          })
-          .finally(() => {
-            commentFetchInFlightRef.current.delete(next);
-            setLoadingCommentsForPostId((current) => (current === next ? null : current));
-          });
-      }
-      return next;
-    });
-  }, [fullyLoadedCommentPostIds, profile?.userId, appIdentity]);
+    setExpandedPostId((current) => (current === postId ? null : postId));
+  }, []);
 
   useEffect(() => {
     if (expandedPostId && !fullyLoadedCommentPostIds.has(expandedPostId)) {
       const telemetryIdentity: TelemetryIdentity =
         appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
-      // See the matching comment in toggleComments above: this call site is
-      // always the duplicate in practice, but that is read from state, not
-      // assumed, and only the primary fetch (isDuplicateFetch === false)
-      // contributes to interaction_timing.
+      // Kept as a permanent regression detector, not just a one-time
+      // measurement: commentFetchInFlightRef now has exactly one writer
+      // (this effect), so isDuplicateFetch should always read false here.
+      // If it ever reads true again -- e.g. a future change reintroduces a
+      // second call site, or React re-runs this effect concurrently for
+      // the same postId -- Stage 0's telemetry will show it immediately
+      // instead of the bug silently coming back unnoticed.
       const isDuplicateFetch = commentFetchInFlightRef.current.has(expandedPostId);
       if (isDuplicateFetch) {
         recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
