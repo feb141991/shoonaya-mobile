@@ -34,7 +34,7 @@ import {
   type FailureReason,
   type TelemetryIdentity,
 } from '@/lib/telemetry';
-import { isFetchCancelled } from '@/lib/fetch-error';
+import { classifyProfileLoadFailure, getProfileFailureCopy, ProfileLoadError } from '@/lib/profileLoadPolicy';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -381,7 +381,7 @@ export default function ProfileScreen() {
   }, [appIdentity]);
 
   const [loading, setLoading] = useState(!initialCache);
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState<FailureReason | null>(null);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
@@ -419,7 +419,7 @@ export default function ProfileScreen() {
     if (previousIdentityRef.current !== currentKey) {
       previousIdentityRef.current = currentKey;
       setIsGuest(appIdentity.kind === 'guest');
-      setLoadError(false);
+      setLoadError(null);
       setAvatarUploading(false);
       setSaving(false);
       setLocationSyncing(false);
@@ -521,8 +521,10 @@ export default function ProfileScreen() {
     }
 
     if (response.status === 401) {
-      router.replace('/(auth)/login');
-      return;
+      // apiFetch has already performed its one shared session refresh and
+      // safe replay. A second 401 is a confirmed auth failure, not a network
+      // error and must not be shown as a generic profile retry screen.
+      throw new ProfileLoadError('unauthorized', 'Profile session is no longer valid');
     }
 
     if (!response.ok) {
@@ -660,24 +662,21 @@ export default function ProfileScreen() {
   useEffect(() => {
     const effectIdentityKey = profileIdentityKey(appIdentity);
     const isCurrentEffect = () => profileIdentityKey(getAppIdentity()) === effectIdentityKey;
-    setLoadError(false);
+    setLoadError(null);
     fetchTraditionsCatalog().then(setCatalog).catch(() => {});
     loadProfile()
       .catch((err) => {
         if (!isCurrentEffect()) return;
         console.warn('[profile] loadProfile error', err);
-        setLoadError(true);
         const telemetryIdentity: TelemetryIdentity =
           appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
-        const message = err instanceof Error ? err.message : '';
-        const reason: FailureReason = isFetchCancelled(err)
-          ? 'timeout'
-          : message === 'Profile response owner did not match the active account'
-            ? 'owner_mismatch'
-            : message === 'Could not load progress summary'
-              ? 'server_error'
-              : 'network';
+        const reason = classifyProfileLoadFailure(err);
         recordRefreshFailure(telemetryIdentity, 'profile', { reason, hadCachedData: Boolean(profile) });
+        if (reason === 'unauthorized') {
+          router.replace('/(auth)/login');
+          return;
+        }
+        setLoadError(reason);
       })
       .finally(() => {
         if (isCurrentEffect()) setLoading(false);
@@ -1060,6 +1059,7 @@ export default function ProfileScreen() {
   // always paired with setProfile(null) at every call site in this file);
   // this records the real rate instead of trusting that reading.
   const isProfileBlockingScreenShown = loading || !profile;
+  const profileFailureCopy = loadError ? getProfileFailureCopy(loadError) : null;
   const profileLoaderShownAtRef = useRef<number | null>(null);
   const profileLoaderHadUsableDataRef = useRef(false);
   useEffect(() => {
@@ -1088,14 +1088,30 @@ export default function ProfileScreen() {
           {loadError ? (
             <EmptyState
               icon="wifi-off"
-              title="Could not load profile"
-              subtitle="Check your connection, then try again."
-              ctaLabel="Retry"
+              title={profileFailureCopy?.title ?? 'Could not load profile'}
+              subtitle={profileFailureCopy?.subtitle ?? 'Check your connection, then try again.'}
+              ctaLabel={profileFailureCopy?.ctaLabel ?? 'Retry'}
               onCta={() => {
                 setLoading(true);
-                setLoadError(false);
+                setLoadError(null);
                 loadProfile()
-                  .catch(() => setLoadError(true))
+                  .catch((error) => {
+                    const reason = classifyProfileLoadFailure(error);
+                    if (reason === 'unauthorized') {
+                      router.replace('/(auth)/login');
+                      return;
+                    }
+                    const retryIdentity = getAppIdentity();
+                    const telemetryIdentity: TelemetryIdentity =
+                      retryIdentity.kind === 'authenticated'
+                        ? { kind: 'authenticated', userId: retryIdentity.userId }
+                        : { kind: 'guest' };
+                    recordRefreshFailure(telemetryIdentity, 'profile', {
+                      reason,
+                      hadCachedData: Boolean(profile),
+                    });
+                    setLoadError(reason);
+                  })
                   .finally(() => setLoading(false));
               }}
             />
