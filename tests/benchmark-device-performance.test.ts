@@ -71,6 +71,7 @@ test('Benchmark Runner -- simulation and budget evaluation', async (t) => {
     const markdown = formatMarkdownReport(report);
     assert.ok(markdown.includes('# Device Performance Baseline Report'));
     assert.ok(markdown.includes('✅ ALL BUDGETS MET'));
+    assert.ok(markdown.includes('synthetic simulation; not a physical-device measurement'));
   });
 
   await t.test('evaluates failing budget when p95 exceeds strict limit', async () => {

@@ -408,7 +408,8 @@ export async function runReleaseJourneys(): Promise<ReleaseHarnessReport> {
 export function formatReleaseJourneysReport(report: ReleaseHarnessReport): string {
   return `# End-to-End Release Journeys Verification Report
 
-**Execution Timestamp:** ${report.timestamp}  
+**Execution Timestamp:** ${report.timestamp}<br>
+**Execution Mode:** mocked Node harness; not a store-build or physical-device journey.<br>
 **Overall Status:** ${report.allPassed ? '✅ ALL RELEASE JOURNEYS VERIFIED' : '❌ VERIFICATION FAILURE'}  
 **Journeys Passed:** ${report.passedJourneys} / ${report.totalJourneys}
 

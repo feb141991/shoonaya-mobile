@@ -1,6 +1,7 @@
 # Device Performance Baseline Report
 
-**Execution Timestamp:** 2026-09-21T21:32:32.803Z  
+**Execution Timestamp:** 2026-09-22T00:08:39.923Z<br>
+**Evidence Class:** synthetic simulation; not a physical-device measurement<br>
 **Platform:** `simulated` (emulator-5554)  
 **Iterations:** 30 runs  
 **Overall Budget Status:** ✅ ALL BUDGETS MET
@@ -11,24 +12,24 @@
 
 | Launch Type | Target p95 Budget | Measured Min | **Measured p50** | **Measured p75** | **Measured p95** | Measured Max | Mean ± StdDev | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Cold Launch** | $\le$ 2500ms | 821ms | **1183ms** | **1318.5ms** | **1674.1ms** | 1769ms | 1210.03ms ± 231.14ms | ✅ PASS |
-| **Warm Launch** | $\le$ 800ms | 155ms | **214ms** | **233ms** | **305.45ms** | 415ms | 220.23ms ± 51.71ms | ✅ PASS |
+| **Cold Launch** | $\le$ 2500ms | 874ms | **1212ms** | **1338.25ms** | **1626.1ms** | 1688ms | 1222.33ms ± 201.45ms | ✅ PASS |
+| **Warm Launch** | $\le$ 800ms | 158ms | **214.5ms** | **245.5ms** | **274.9ms** | 290ms | 219.8ms ± 34.38ms | ✅ PASS |
 
 ---
 
 ## 2. Percentile Distribution Analysis
 
 - **Cold Launch Stability**:
-  - **p50 (Median):** 1183ms
-  - **p75:** 1318.5ms
-  - **p95:** 1674.1ms (Safety margin: 825.9000000000001ms under budget)
-  - **Spread (Max - Min):** 948ms
+  - **p50 (Median):** 1212ms
+  - **p75:** 1338.25ms
+  - **p95:** 1626.1ms (Safety margin: 873.9000000000001ms under budget)
+  - **Spread (Max - Min):** 814ms
 
 - **Warm Launch Stability**:
-  - **p50 (Median):** 214ms
-  - **p75:** 233ms
-  - **p95:** 305.45ms (Safety margin: 494.55ms under budget)
-  - **Spread (Max - Min):** 260ms
+  - **p50 (Median):** 214.5ms
+  - **p75:** 245.5ms
+  - **p95:** 274.9ms (Safety margin: 525.1ms under budget)
+  - **Spread (Max - Min):** 132ms
 
 ---
 
@@ -36,16 +37,16 @@
 
 | Run # | Cold Launch (ms) | Warm Launch (ms) | Source |
 | :--- | :--- | :--- | :--- |
-| Run 1 | 1675ms | 250ms | simulated |
-| Run 2 | 1220ms | 341ms | simulated |
-| Run 3 | 1292ms | 415ms | simulated |
-| Run 4 | 1673ms | 213ms | simulated |
-| Run 5 | 939ms | 224ms | simulated |
-| Run 6 | 1769ms | 170ms | simulated |
-| Run 7 | 1296ms | 206ms | simulated |
-| Run 8 | 1331ms | 184ms | simulated |
-| Run 9 | 1005ms | 191ms | simulated |
-| Run 10 | 1226ms | 215ms | simulated |
+| Run 1 | 1449ms | 202ms | simulated |
+| Run 2 | 874ms | 205ms | simulated |
+| Run 3 | 1097ms | 211ms | simulated |
+| Run 4 | 1654ms | 230ms | simulated |
+| Run 5 | 1028ms | 202ms | simulated |
+| Run 6 | 1199ms | 244ms | simulated |
+| Run 7 | 1025ms | 260ms | simulated |
+| Run 8 | 1207ms | 212ms | simulated |
+| Run 9 | 1217ms | 158ms | simulated |
+| Run 10 | 1331ms | 232ms | simulated |
 
 ---
 

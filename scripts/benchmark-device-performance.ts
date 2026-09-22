@@ -204,7 +204,13 @@ export async function runBenchmarkSeries(options: {
 
   let deviceId = options.deviceId ?? detectAdbDevice();
   const hasLiveDevice = Boolean(deviceId && isPackageInstalledAdb(deviceId, packageName));
-  const forceSimulated = options.simulated || !hasLiveDevice;
+  if (!options.simulated && !hasLiveDevice) {
+    throw new Error(
+      `No attached Android device with ${packageName} was found. `
+      + 'Use --simulated only for a synthetic contract run; it is not a physical-device benchmark.',
+    );
+  }
+  const forceSimulated = Boolean(options.simulated);
 
   const samples: MeasurementSample[] = [];
   const coldDurations: number[] = [];
@@ -293,7 +299,8 @@ export function formatMarkdownReport(report: BenchmarkReport): string {
 
   return `# Device Performance Baseline Report
 
-**Execution Timestamp:** ${report.timestamp}  
+**Execution Timestamp:** ${report.timestamp}<br>
+**Evidence Class:** ${report.platform === 'simulated' ? 'synthetic simulation; not a physical-device measurement' : 'attached Android device'}<br>
 **Platform:** \`${report.platform}\` (${report.deviceId})  
 **Iterations:** ${report.iterations} runs  
 **Overall Budget Status:** ${report.passedBudget ? '✅ ALL BUDGETS MET' : '⚠️ BUDGET EXCEEDED'}

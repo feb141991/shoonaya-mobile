@@ -57,5 +57,6 @@ test('E2E Release Journeys Harness', async (t) => {
     const markdown = formatReleaseJourneysReport(harness);
     assert.ok(markdown.includes('# End-to-End Release Journeys Verification Report'));
     assert.ok(markdown.includes('✅ ALL RELEASE JOURNEYS VERIFIED'));
+    assert.ok(markdown.includes('mocked Node harness; not a store-build or physical-device journey'));
   });
 });
