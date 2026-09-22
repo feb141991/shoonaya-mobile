@@ -27,17 +27,21 @@ import type { StartupPreferences } from './startup-scenes/types';
  * would otherwise leave an unhandled rejection), not a byproduct of the
  * extraction, and it is covered by its own dedicated test.
  *
- * NOT YET WIRED INTO app/_layout.tsx, and AUTH_COORDINATOR_WIRING_PENDING
- * (see bottom of this file) is not a runtime-read feature flag -- nothing
- * imports or checks it. It is a manual, greppable marker of this file's
- * status. app/_layout.tsx's own routeForSession remains the only one
- * actually running in the app. Per explicit instruction, wiring this in
- * is a separate, later step that needs its own review -- see the
- * pre-wiring checklist in __tests__/authCoordinator.test.ts and
- * __tests__/authCoordinator-integration.test.ts before that happens, and
- * keep app/_layout.tsx's inline implementation in place (not deleted)
- * through the first release build that ships the wired version, so an
- * immediate rollback is possible.
+ * WIRED INTO app/_layout.tsx behind USE_AUTH_COORDINATOR (see bottom of
+ * this file), a real runtime kill switch -- app/_layout.tsx actually
+ * imports and branches on it, defaulting to `false`. app/_layout.tsx's
+ * own inline routeForSession is kept completely intact (not deleted,
+ * not even touched) as the active path while the switch is off; a
+ * dispatchRouteForSession wrapper picks one implementation or the other
+ * at every call site that used to call routeForSession directly. Flip
+ * the switch to `true` for a build to exercise this implementation
+ * on-device -- see the pre-wiring checklist in
+ * __tests__/authCoordinator.test.ts and
+ * __tests__/authCoordinator-integration.test.ts for what has (and has
+ * not) been verified so far. Keep the inline implementation in place
+ * through the first release build that ships with the switch on, so an
+ * immediate rollback (flipping the switch back to `false`) stays
+ * possible without a code change.
  */
 
 export type AuthRouteSegments = {
@@ -338,16 +342,20 @@ export class AuthCoordinator {
   }
 }
 
-// Not a feature flag -- nothing imports or reads this constant, so it
-// cannot gate any runtime behavior. It is a manual, greppable checkpoint
-// marker: `true` means the extraction above exists but app/_layout.tsx
-// has not been switched over to it yet. Wiring app/_layout.tsx to call
-// AuthCoordinator (and removing its own duplicated routeForSession) is
-// what actually flips this from a "prepared" state to a "live" one; at
-// that point this constant should be deleted, not set to `false`, since
-// a boolean nothing reads would otherwise imply a real kill switch that
-// does not exist here. A real runtime kill switch (e.g. an EAS Update /
-// remote-config flag app/_layout.tsx actually checks before choosing
-// which implementation to call) is a legitimate way to wire this in --
-// see the pre-wiring checklist referenced in the module comment above.
-export const AUTH_COORDINATOR_WIRING_PENDING = true;
+// A real runtime kill switch: app/_layout.tsx imports this and branches
+// on it at every call site that used to call its inline routeForSession
+// directly (see dispatchRouteForSession there). `false` means the
+// original inline implementation runs, completely unchanged -- this is
+// the default, and is what ships until someone deliberately flips this
+// for a build. `true` means this file's AuthCoordinator runs instead.
+// There is no remote-config wiring behind this (no EAS Update flag, no
+// server-controlled toggle) -- flipping it requires a code change and a
+// new build, which is deliberate: auth-critical behavior should not be
+// switchable by a remote config push without a build going through
+// review. Do not delete app/_layout.tsx's inline routeForSession while
+// this is `false`, and do not flip this to `true` for a release build
+// before the on-device auth matrix in the pre-wiring checklist has
+// actually been run (see the module comment above) -- the existing test
+// suite proves the extraction is internally consistent, not that it has
+// been exercised against a real device.
+export const USE_AUTH_COORDINATOR = false;

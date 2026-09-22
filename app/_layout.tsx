@@ -87,6 +87,7 @@ import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity } from '@/lib/appIdentity';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
+import { AuthCoordinator, USE_AUTH_COORDINATOR, type BootstrapProfileResult, type OnboardingStatus } from '@/lib/authCoordinator';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -564,24 +565,145 @@ function RootLayout() {
     [applyStartupPreferences, offerNotificationPermission, router]
   );
 
+  // Stage 1 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md's reliability
+  // plan): lib/authCoordinator.ts's AuthCoordinator is a dependency-injected
+  // extraction of routeForSession above, built and reviewed behind
+  // USE_AUTH_COORDINATOR (see that file for why it defaults to `false` and
+  // what still needs on-device verification before it does not). Real deps
+  // wired to this component's actual functions/state -- lazily constructed
+  // once, mirroring app/(tabs)/index.tsx's HomeSummaryCoordinator pattern,
+  // so the closures below (router, applyStartupPreferences,
+  // offerNotificationPermission, setProfileResolutionFailure) are captured
+  // once against stable references rather than reconstructed every render.
+  const authCoordinatorRef = useRef<AuthCoordinator | null>(null);
+  if (!authCoordinatorRef.current) {
+    authCoordinatorRef.current = new AuthCoordinator({
+      setAppIdentity,
+      setApiAccessTokenFromSession,
+      redirect: (path) => router.replace(path),
+      isGuestMode,
+      setGuestMode,
+      prewarmGuestCaches: () => {
+        void getOrReadHomeCache({ kind: 'guest' });
+        void getOrReadProfileCache({ kind: 'guest' });
+      },
+      prewarmAuthenticatedCaches: (userId) => {
+        void getOrReadHomeCache({ kind: 'authenticated', userId });
+        void getOrReadProfileCache({ kind: 'authenticated', userId });
+      },
+      clearAllPrivateCachesForSignOut: () => {
+        void clearAllHomeCaches();
+        void clearAllMandaliCaches();
+        void clearAllSettingsCaches();
+        void clearAllNotificationsCaches();
+        void clearAllPathshalaCaches();
+        void clearJapaContextCache();
+        void clearAllTelemetry();
+        void clearAllSankalpaOutboxes();
+        void clearAllReactionOutboxes();
+        void clearAllOnboardingDrafts();
+        void clearAllHomeDiscoveryStates();
+        void clearAllProfileCaches();
+      },
+      clearAllPrivateCachesForSwitch: (previousUserId) => {
+        void clearAllHomeCaches();
+        void clearAllMandaliCaches();
+        void clearAllSettingsCaches();
+        void clearAllNotificationsCaches();
+        void clearAllPathshalaCaches();
+        void clearJapaContextCache();
+        void clearAllTelemetry();
+        void clearAllSankalpaOutboxes();
+        void clearAllReactionOutboxes();
+        void clearAllOnboardingDrafts();
+        void clearAllHomeDiscoveryStates();
+        void clearProfileCache({ kind: 'authenticated', userId: previousUserId });
+      },
+      unregisterPushToken: () => { void unregisterPushToken(); },
+      registerPushToken: (userId) => { void registerPushToken(userId); },
+      syncDeviceTimezone: (userId) => { void syncDeviceTimezone(userId); },
+      syncDeviceLocationIfPermitted: (userId) => { void syncDeviceLocationIfPermitted(userId); },
+      offerNotificationPermission: (userId) => { void offerNotificationPermission(userId); },
+      getStartupPreferences,
+      clearDeviceStartupPreferences,
+      applyStartupPreferences,
+      getOnboardingCache: async (userId) => {
+        const value = await AsyncStorage.getItem(`shoonaya:onboarding_completed:${userId}`).catch(() => null);
+        return value === 'true' || value === 'false' ? value : null;
+      },
+      setOnboardingCache: async (userId, value) => {
+        await AsyncStorage.setItem(`shoonaya:onboarding_completed:${userId}`, value).catch(() => {});
+      },
+      fetchOnboardingStatus: async (userId): Promise<OnboardingStatus> => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', userId)
+          .maybeSingle();
+        return data ?? null;
+      },
+      bootstrapProfile: async (): Promise<BootstrapProfileResult> => {
+        try {
+          const response = await apiFetch('/api/native/profile/bootstrap', {
+            method: 'POST',
+            timeoutMs: 5_000,
+          });
+          if (response.ok) {
+            const payload = await response.json() as { onboarding_completed?: boolean };
+            return {
+              ok: true,
+              status: response.status,
+              onboardingCompleted: typeof payload.onboarding_completed === 'boolean' ? payload.onboarding_completed : null,
+            };
+          }
+          console.warn('[auth-profile] native profile bootstrap unavailable', response.status);
+          return { ok: false, status: response.status, onboardingCompleted: null };
+        } catch (error) {
+          console.warn('[auth-profile] native profile bootstrap failed', error);
+          return { ok: false, status: 0, onboardingCompleted: null };
+        }
+      },
+      onProfileResolutionFailure: (userId) => setProfileResolutionFailure(userId ? { userId } : null),
+    });
+  }
+
+  // Single entry point for every call site that used to call routeForSession
+  // directly. USE_AUTH_COORDINATOR picks which implementation actually runs;
+  // both are always constructed/defined so flipping the switch is the only
+  // thing that changes.
+  const dispatchRouteForSession = useCallback(
+    async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
+      if (USE_AUTH_COORDINATOR) {
+        await authCoordinatorRef.current!.routeForSession(session, segmentsRef.current);
+      } else {
+        await routeForSession(session);
+      }
+    },
+    [routeForSession]
+  );
+
   // Explicit re-attempt from the profile-resolution failure screen.
   // routeForSession's own dedup (lastAuthRouteKeyRef) would otherwise skip
   // reprocessing the *same* user id, so this deliberately resets it before
   // calling back in -- the generation counter inside routeForSession still
   // protects against overlapping attempts (a rapid double-tap starts a new
   // generation and the stale one's isCurrentRoute() checks abort it, so no
-  // duplicate bootstrap outcome is ever applied).
+  // duplicate bootstrap outcome is ever applied). Resets both
+  // implementations' dedup state unconditionally -- only the one
+  // USE_AUTH_COORDINATOR actually selects matters, and resetting the
+  // inactive one is harmless since it is never read.
   const retryProfileResolution = useCallback(async () => {
     if (retryingProfileResolution) return;
     setRetryingProfileResolution(true);
     try {
       const { data } = await supabase.auth.getSession();
       lastAuthRouteKeyRef.current = undefined;
-      await routeForSession(data.session);
+      authCoordinatorRef.current?.resetRouteDedup();
+      await dispatchRouteForSession(data.session);
     } finally {
       setRetryingProfileResolution(false);
     }
-  }, [retryingProfileResolution, routeForSession]);
+  }, [retryingProfileResolution, dispatchRouteForSession]);
 
   const handleSignOutFromFailure = useCallback(async () => {
     try {
@@ -719,7 +841,7 @@ function RootLayout() {
         // instead of conflating it with routeForSession's broader scope.
         markAuthReady();
 
-        await routeForSession(session);
+        await dispatchRouteForSession(session);
 
         setAuthReady(true);
       } catch (e) {
@@ -757,7 +879,7 @@ function RootLayout() {
       void Promise.resolve().then(async () => {
         if (!mounted) return;
         try {
-          await routeForSession(session);
+          await dispatchRouteForSession(session);
         } catch (e) {
           console.error('Auth state routing error:', e);
         }
@@ -769,7 +891,7 @@ function RootLayout() {
       subscription.unsubscribe();
       linkingSubscription.remove();
     };
-  }, [fontsLoaded, fontError, routeForSession]);
+  }, [fontsLoaded, fontError, dispatchRouteForSession]);
 
   // Startup must never return null. If the scene disappears before auth/app
   // readiness, retain an opaque branded fallback instead of exposing the

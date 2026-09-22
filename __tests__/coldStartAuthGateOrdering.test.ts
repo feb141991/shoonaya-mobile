@@ -96,20 +96,30 @@ test('fix: calling markAuthReady as soon as the session is known (not after rout
 test('app/_layout.tsx calls markAuthReady before awaiting routeForSession in cold start, not after (F02 regression)', () => {
   const root = fs.readFileSync(path.join(process.cwd(), 'app/_layout.tsx'), 'utf8');
 
+  // Stage 1 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md's reliability
+  // plan) wired lib/authCoordinator.ts's AuthCoordinator in behind
+  // USE_AUTH_COORDINATOR: the cold-start call site now goes through a
+  // dispatchRouteForSession wrapper instead of calling routeForSession
+  // directly (see app/_layout.tsx). Both patterns below accept either
+  // name so this still guards the real invariant -- markAuthReady must
+  // fire before routing is awaited, decoupled from routing completion --
+  // regardless of which implementation dispatchRouteForSession selects.
+  const routeCallPattern = '(?:dispatchRouteForSession|routeForSession)\\(session\\);';
+
   // The buggy pattern this fix removes: markAuthReady() only reachable
-  // after `await routeForSession(session)` returns, with nothing calling
-  // it earlier in the same cold-start path.
+  // after the routing call returns, with nothing calling it earlier in
+  // the same cold-start path.
   assert.doesNotMatch(
     root,
-    /await routeForSession\(session\);\s*\n\s*setAuthReady\(true\);\s*\n\s*markAuthReady\(\);/,
-    'markAuthReady() must not be reachable only after routeForSession resolves -- that is the F02 deadlock ordering'
+    new RegExp(`await ${routeCallPattern}\\s*\\n\\s*setAuthReady\\(true\\);\\s*\\n\\s*markAuthReady\\(\\);`),
+    'markAuthReady() must not be reachable only after routing resolves -- that is the F02 deadlock ordering'
   );
 
   // The fix: markAuthReady() called on the session-resolution path before
-  // routeForSession is awaited.
+  // routing is awaited.
   assert.match(
     root,
-    /markAuthReady\(\);\s*\n\s*\n?\s*await routeForSession\(session\);/,
-    'markAuthReady() should fire as soon as the session is known, decoupled from routeForSession completion'
+    new RegExp(`markAuthReady\\(\\);\\s*\\n\\s*\\n?\\s*await ${routeCallPattern}`),
+    'markAuthReady() should fire as soon as the session is known, decoupled from routing completion'
   );
 });
