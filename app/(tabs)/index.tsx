@@ -1430,6 +1430,18 @@ function HomeContent() {
         // authoritative server verdict. A fresh cold start should still get
         // its own honest attempt rather than inheriting this session's
         // exhaustion.
+        //
+        // Home/calendar state audit fix (reviewed 2026-09-22, reliability
+        // plan item 4): the no-content branch used to `return prev`
+        // unchanged, silently leaving calendarStatus stuck at 'pending'
+        // forever -- directly contradicting this class's own doc comment
+        // ("the caller should locally treat the pill as 'unavailable'
+        // rather than leaving a skeleton rendered indefinitely"). Every
+        // attempt in the bounded retry sequence had already failed or come
+        // back still-pending by the time this fires, so there is nothing
+        // left to silently wait for; 'unavailable' is what actually
+        // renders the PanchangPill/SacredDaysCarousel's real
+        // error-plus-retry state instead of an indefinite skeleton.
         setState((prev) => {
           if (prev.panchang.calendarStatus !== 'pending') return prev;
           const hasCalendarContent = Boolean(
@@ -1437,9 +1449,10 @@ function HomeContent() {
             prev.panchang.upcomingObservances.length > 0 ||
             (prev.panchang.series ?? []).length > 0
           );
-          return hasCalendarContent
-            ? { ...prev, panchang: { ...prev.panchang, calendarStatus: 'ready' } }
-            : prev;
+          return {
+            ...prev,
+            panchang: { ...prev.panchang, calendarStatus: hasCalendarContent ? 'ready' : 'unavailable' },
+          };
         });
       },
     });
