@@ -1,0 +1,122 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { describe, it } from 'node:test';
+
+/**
+ * Home/calendar state audit (reviewed 2026-09-22, reliability plan item
+ * 4). Two related "calendarStatus: 'unavailable' never actually renders"
+ * bugs found by checking documented contracts against what the code
+ * actually did, both in app/(tabs)/index.tsx:
+ *
+ * 1. PanchangPill's own onRetryUnavailable prop was destructured, typed,
+ *    and wired at its call site -- but never once referenced inside the
+ *    component's render logic. Its doc comment explicitly names "the
+ *    compact 'unavailable' state" as the reason the prop exists; the
+ *    actual code just fell through to `return null` for every non-pending
+ *    status, silently hiding with no way to distinguish "nothing today"
+ *    from "couldn't check." Now renders a real retry chip.
+ *
+ * 2. PanchangRetryController's onExhausted callback -- fired once every
+ *    attempt in the bounded 2s/5s/10s retry sequence still reports
+ *    calendarStatus: 'pending' or fails outright -- is documented (see
+ *    the class's own doc comment in lib/homeCoordinator.ts) to mean "the
+ *    caller should locally treat the pill as 'unavailable' rather than
+ *    leaving a skeleton rendered indefinitely." index.tsx's actual
+ *    implementation only honored that when there was salvageable
+ *    calendar content to fall back to (transitioning to 'ready'); the
+ *    no-content branch returned `prev` unchanged, silently leaving
+ *    calendarStatus stuck at 'pending' forever -- a permanent skeleton
+ *    for an authenticated user whose calendar genuinely could not be
+ *    resolved (backend outage, sustained offline, etc.).
+ *
+ * Both bugs share the same shape: a doc comment correctly described the
+ * intended behavior: the code just did not implement it.
+ *
+ * Structural (source-text) test -- app/(tabs)/index.tsx imports
+ * react-native and cannot be loaded by this project's tsx --test runner
+ * (same constraint as this suite's other index.tsx/mandali.tsx tests).
+ * lib/homeCoordinator.ts's own PanchangRetryController tests (in
+ * __tests__/home-swr-and-sankalpa.test.ts) cover the class firing
+ * onExhausted correctly; this file covers what index.tsx's specific
+ * callback does with that signal, which the class's own tests -- using a
+ * fake onExhausted -- cannot see.
+ */
+
+const indexScreen = readFileSync(new URL('../app/(tabs)/index.tsx', import.meta.url), 'utf8');
+
+function extractOnExhausted(): string {
+  const start = indexScreen.indexOf('onExhausted: () => {');
+  assert.ok(start > -1, 'onExhausted callback not found');
+  const end = indexScreen.indexOf('},', start);
+  assert.ok(end > -1, 'onExhausted callback close not found');
+  return indexScreen.slice(start, end);
+}
+
+describe('Home PanchangPill: "unavailable" renders a compact retry chip, not a silent hide', () => {
+  function extractObservancePillHideLogic(): string {
+    const start = indexScreen.indexOf("if (kind === 'observance' && slides.length === 0) {");
+    assert.ok(start > -1, 'observance pill hide/shimmer/retry block not found');
+    const end = indexScreen.indexOf('const currentSlide =', start);
+    assert.ok(end > -1, 'end of observance pill block not found');
+    return indexScreen.slice(start, end);
+  }
+
+  it('onRetryUnavailable is actually used inside PanchangPill, not a dead prop', () => {
+    const start = indexScreen.indexOf('function PanchangPill({');
+    const end = indexScreen.indexOf('\nfunction ', start + 1);
+    const componentBody = indexScreen.slice(start, end === -1 ? undefined : end);
+    // The prop is destructured/typed at the top of every component;
+    // finding a THIRD occurrence proves it is referenced somewhere in the
+    // actual render logic below that, not just declared and ignored.
+    const occurrences = (componentBody.match(/onRetryUnavailable/g) ?? []).length;
+    assert.ok(occurrences >= 3, `expected onRetryUnavailable to be destructured, typed, AND used -- found only ${occurrences} occurrence(s)`);
+  });
+
+  it('calendarStatus "unavailable" renders a pressable retry chip wired to onRetryUnavailable, distinct from both the shimmer and the silent-hide fallback', () => {
+    const block = extractObservancePillHideLogic();
+    const unavailableBranchStart = block.indexOf("if (calendarStatus === 'unavailable') {");
+    assert.ok(unavailableBranchStart > -1, '"unavailable" branch not found');
+    const unavailableBranch = block.slice(unavailableBranchStart);
+    assert.match(unavailableBranch, /onPress=\{onRetryUnavailable\}/);
+    assert.doesNotMatch(unavailableBranch.slice(0, unavailableBranch.indexOf('return null;') + 1 || unavailableBranch.length), /ShimmerBlock/);
+  });
+
+  it('"ready" and "empty" still fall through to hidden (return null) -- only "unavailable" changed', () => {
+    const block = extractObservancePillHideLogic();
+    // Exactly one bare `return null;` should remain -- the shared
+    // fallthrough for 'ready' and 'empty' (guest). If 'unavailable' had
+    // its own separate `return null;` instead of the retry-chip branch,
+    // this fix would not actually be in place.
+    const bareReturnNullCount = (block.match(/^\s*return null;\s*$/gm) ?? []).length;
+    assert.equal(bareReturnNullCount, 1);
+  });
+});
+
+describe('Home PanchangRetryController exhaustion: no-content case must not leave a permanent skeleton', () => {
+  it('transitions to "unavailable" when there is no salvageable calendar content, not "prev" unchanged', () => {
+    const body = extractOnExhausted();
+    assert.match(
+      body,
+      /hasCalendarContent \? 'ready' : 'unavailable'/,
+      'the no-content branch must resolve to \'unavailable\', matching what PanchangRetryController\'s own doc comment documents as the contract'
+    );
+    assert.doesNotMatch(
+      body,
+      /hasCalendarContent[\s\S]{0,80}:\s*prev\s*;/,
+      'must not fall through to returning prev unchanged when there is no content -- that is the exact bug this test guards against'
+    );
+  });
+
+  it('still guards against overwriting a status that already resolved out of "pending" (e.g. a concurrent successful fetch)', () => {
+    const body = extractOnExhausted();
+    assert.match(body, /if \(prev\.panchang\.calendarStatus !== 'pending'\) return prev;/);
+  });
+
+  it('is never written to the on-disk cache -- exhaustion is a per-session judgment, not an authoritative server verdict', () => {
+    const start = indexScreen.indexOf('onExhausted: () => {');
+    const end = indexScreen.indexOf('},', start);
+    const withCommentAbove = indexScreen.slice(Math.max(0, start - 400), end);
+    assert.match(withCommentAbove, /Deliberately NOT written to cache/);
+    assert.doesNotMatch(extractOnExhausted(), /writeHomeCache/, 'onExhausted must not persist its own exhaustion verdict to cache');
+  });
+});

@@ -630,10 +630,16 @@ function PanchangPill({
 
   const calendarStatus = summary.calendarStatus ?? 'ready';
 
-  // Only 'pending' shows the loading shimmer below -- 'ready', 'unavailable',
-  // and 'empty' (guest mode; see buildGuestPayload) all fall through to
-  // `return null`, hiding the pill entirely rather than showing a skeleton
-  // for a state that was never actually loading.
+  // 'ready' (nothing today, genuinely checked) and 'empty' (guest mode --
+  // never checked at all, see buildGuestPayload) both fall through to
+  // `return null`: there is nothing wrong to report, so there is nothing
+  // to show. 'pending' shows the loading shimmer. 'unavailable' -- a real
+  // checked-and-failed error, not a timeout -- used to *also* fall through
+  // to `return null`, silently hiding with no way to tell "nothing today"
+  // apart from "couldn't check," contradicting onRetryUnavailable's own
+  // doc comment above (it names exactly this "compact 'unavailable' state"
+  // as the reason that prop exists). Fixed 2026-09-22 (reliability plan
+  // item 4): now renders a compact retry chip instead of silently hiding.
   if (kind === 'observance' && slides.length === 0) {
     if (calendarStatus === 'pending') {
       return (
@@ -658,6 +664,33 @@ function PanchangPill({
             <ShimmerBlock style={{ width: 96, height: 10, borderRadius: 4 }} />
           </View>
         </View>
+      );
+    }
+    if (calendarStatus === 'unavailable') {
+      return (
+        <PressableSurface
+          haptic="selection"
+          accessibilityLabel="Could not check today's observance. Tap to retry"
+          onPress={onRetryUnavailable}
+          style={{
+            borderRadius: RADII.pill,
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+            alignSelf: 'flex-start',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            backgroundColor: COLORS.homePwaPillBg,
+            minHeight: 32,
+            maxWidth: 264,
+          }}
+        >
+          <Feather name="cloud-off" size={12} color={COLORS.homePwaPillText} />
+          <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
+            Couldn&apos;t check · Retry
+          </Text>
+        </PressableSurface>
       );
     }
     return null;

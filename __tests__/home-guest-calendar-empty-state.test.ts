@@ -41,17 +41,24 @@ describe('Home guest calendarStatus: buildGuestPayload (app/(tabs)/index.tsx)', 
   });
 });
 
-describe('Home guest calendarStatus: PanchangPill hide-vs-shimmer logic (app/(tabs)/index.tsx)', () => {
-  it('only "pending" renders the loading shimmer -- "empty" (and "ready"/"unavailable") fall through to hidden', () => {
+describe('Home guest calendarStatus: PanchangPill hide-vs-shimmer-vs-retry logic (app/(tabs)/index.tsx)', () => {
+  // 'unavailable' gained its own compact retry-chip branch (reviewed
+  // 2026-09-22, reliability plan item 4 -- see
+  // __tests__/home-panchang-unavailable-state.test.ts for the dedicated
+  // regression coverage of that fix). Only 'ready' and 'empty' (guest --
+  // never checked at all) still fall through to hidden; this test's job
+  // is narrower than its old name suggested: confirming 'pending' is the
+  // only status that renders the loading shimmer specifically, not that
+  // every other status is treated identically to each other.
+  it('only "pending" renders the loading shimmer; "ready" and "empty" fall through to hidden', () => {
     const start = indexScreen.indexOf("if (kind === 'observance' && slides.length === 0) {");
     assert.ok(start > -1, 'PanchangPill hide-logic block not found');
     const end = indexScreen.indexOf('const currentSlide =', start);
     const block = indexScreen.slice(start, end);
 
-    // Exactly one status literal gates the shimmer branch.
-    const shimmerGates = block.match(/calendarStatus === '(\w+)'/g) ?? [];
-    assert.deepEqual(shimmerGates, ["calendarStatus === 'pending'"]);
-    assert.match(block, /return null;/, 'every non-pending status must fall through to hidden, not a permanent skeleton');
+    const statusGates = block.match(/calendarStatus === '(\w+)'/g) ?? [];
+    assert.deepEqual(statusGates, ["calendarStatus === 'pending'", "calendarStatus === 'unavailable'"]);
+    assert.match(block, /return null;/, '"ready" and "empty" must still fall through to hidden, not a permanent skeleton');
   });
 });
 
