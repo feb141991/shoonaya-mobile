@@ -28,14 +28,16 @@ import type { StartupPreferences } from './startup-scenes/types';
  * extraction, and it is covered by its own dedicated test.
  *
  * WIRED INTO app/_layout.tsx behind USE_AUTH_COORDINATOR (see bottom of
- * this file), a real runtime kill switch -- app/_layout.tsx actually
- * imports and branches on it, defaulting to `false`. app/_layout.tsx's
- * own inline routeForSession is kept completely intact (not deleted,
- * not even touched) as the active path while the switch is off; a
- * dispatchRouteForSession wrapper picks one implementation or the other
- * at every call site that used to call routeForSession directly. Flip
- * the switch to `true` for a build to exercise this implementation
- * on-device -- see the pre-wiring checklist in
+ * this file), a build-time release switch, not a remote/runtime kill
+ * switch -- there is no server-controlled toggle behind it, so changing
+ * it requires a new build going through review, which is deliberate for
+ * auth-critical code. app/_layout.tsx actually imports and branches on
+ * it, defaulting to `false`. app/_layout.tsx's own inline routeForSession
+ * is kept completely intact (not deleted, not even touched) as the
+ * active path while the switch is off; a dispatchRouteForSession wrapper
+ * picks one implementation or the other at every call site that used to
+ * call routeForSession directly. Flip the switch to `true` for a build to
+ * exercise this implementation on-device -- see the pre-wiring checklist in
  * __tests__/authCoordinator.test.ts and
  * __tests__/authCoordinator-integration.test.ts for what has (and has
  * not) been verified so far. Keep the inline implementation in place
@@ -342,9 +344,10 @@ export class AuthCoordinator {
   }
 }
 
-// A real runtime kill switch: app/_layout.tsx imports this and branches
-// on it at every call site that used to call its inline routeForSession
-// directly (see dispatchRouteForSession there). `false` means the
+// A real, build-time release switch -- not a remote/runtime kill switch:
+// app/_layout.tsx imports this and branches on it at every call site
+// that used to call its inline routeForSession directly (see
+// dispatchRouteForSession there). `false` means the
 // original inline implementation runs, completely unchanged -- this is
 // the default, and is what ships until someone deliberately flips this
 // for a build. `true` means this file's AuthCoordinator runs instead.
