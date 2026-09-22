@@ -2209,7 +2209,16 @@ export default function MandaliScreen() {
       if (next && !fullyLoadedCommentPostIds.has(next)) {
         const telemetryIdentity: TelemetryIdentity =
           appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
-        if (commentFetchInFlightRef.current.has(next)) {
+        // Captured before the set is touched: toggleComments always runs
+        // (and reaches this add()) before the mirroring useEffect below can
+        // fire, so this call site is always the primary fetch today -- but
+        // read from state rather than assumed, so this stays correct if
+        // that ordering ever changes. Only the primary fetch's duration
+        // feeds interaction_timing; recording the duplicate's timing too
+        // would double-count one user tap as two samples and inflate the
+        // p95 with a number that isn't a second, distinct interaction.
+        const isDuplicateFetch = commentFetchInFlightRef.current.has(next);
+        if (isDuplicateFetch) {
           recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
         }
         commentFetchInFlightRef.current.add(next);
@@ -2222,7 +2231,9 @@ export default function MandaliScreen() {
               return [...withoutThisPost, ...fullComments];
             });
             setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(next));
-            recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
+            if (!isDuplicateFetch) {
+              recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
+            }
           })
           .catch((error) => {
             console.warn('[MandaliScreen] fetchPostComments failed', error);
@@ -2240,7 +2251,12 @@ export default function MandaliScreen() {
     if (expandedPostId && !fullyLoadedCommentPostIds.has(expandedPostId)) {
       const telemetryIdentity: TelemetryIdentity =
         appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
-      if (commentFetchInFlightRef.current.has(expandedPostId)) {
+      // See the matching comment in toggleComments above: this call site is
+      // always the duplicate in practice, but that is read from state, not
+      // assumed, and only the primary fetch (isDuplicateFetch === false)
+      // contributes to interaction_timing.
+      const isDuplicateFetch = commentFetchInFlightRef.current.has(expandedPostId);
+      if (isDuplicateFetch) {
         recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
       }
       commentFetchInFlightRef.current.add(expandedPostId);
@@ -2253,7 +2269,9 @@ export default function MandaliScreen() {
             return [...withoutThisPost, ...fullComments];
           });
           setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(expandedPostId));
-          recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
+          if (!isDuplicateFetch) {
+            recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
+          }
         })
         .catch((error) => {
           console.warn('[MandaliScreen] fetchPostComments failed', error);

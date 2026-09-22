@@ -6,28 +6,38 @@ import type { StartupPreferences } from './startup-scenes/types';
 
 /**
  * Stage 1 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md's reliability
- * plan) -- a faithful, mechanical extraction of app/_layout.tsx's
- * `routeForSession`, the ~240-line function that decides, for every auth
- * state change (cold start, sign-in, sign-out, token refresh, account
- * switch), what the app's identity is, which private caches to clear,
- * which screen to route to, and whether onboarding/profile repair is
- * needed.
+ * plan) -- an extraction of app/_layout.tsx's `routeForSession`, the
+ * ~240-line function that decides, for every auth state change (cold
+ * start, sign-in, sign-out, token refresh, account switch), what the
+ * app's identity is, which private caches to clear, which screen to
+ * route to, and whether onboarding/profile repair is needed.
  *
- * This module changes nothing about that behavior -- every branch, every
- * ordering decision, every comment explaining a specific past bug (F01/F02
- * markers etc.) is preserved as-is, just with every side effect (network,
- * AsyncStorage, the global identity store, navigation, push/telemetry/
- * location sync) replaced by an injected dependency, the same pattern
- * HomeSummaryCoordinator (lib/homeCoordinator.ts) already uses. That is
- * what makes the 9-scenario test matrix in
+ * Every branch, every ordering decision, every comment explaining a
+ * specific past bug (F01/F02 markers etc.) is preserved as-is, and every
+ * side effect (network, AsyncStorage, the global identity store,
+ * navigation, push/telemetry/location sync) is replaced by an injected
+ * dependency, the same pattern HomeSummaryCoordinator (lib/homeCoordinator.ts)
+ * already uses -- that is what makes the test matrix in
  * __tests__/authCoordinator.test.ts possible without mocking React,
- * Supabase, or AsyncStorage.
+ * Supabase, or AsyncStorage. One place is NOT a pure extraction and is
+ * called out explicitly where it happens, in the `cached === 'true'`
+ * branch below: the background onboarding-status revalidation gained a
+ * .catch() the original inline .then() never had. That is a real,
+ * intentional reliability fix (an offline launch with a cached profile
+ * would otherwise leave an unhandled rejection), not a byproduct of the
+ * extraction, and it is covered by its own dedicated test.
  *
- * NOT YET WIRED INTO app/_layout.tsx. Per explicit instruction, this stays
- * behind AUTH_COORDINATOR_ENABLED (see bottom of this file) until it has
- * been reviewed -- app/_layout.tsx's own routeForSession remains the one
- * actually running in the app. Flipping the flag and removing the
- * duplicated logic from app/_layout.tsx is a separate, later step.
+ * NOT YET WIRED INTO app/_layout.tsx, and AUTH_COORDINATOR_WIRING_PENDING
+ * (see bottom of this file) is not a runtime-read feature flag -- nothing
+ * imports or checks it. It is a manual, greppable marker of this file's
+ * status. app/_layout.tsx's own routeForSession remains the only one
+ * actually running in the app. Per explicit instruction, wiring this in
+ * is a separate, later step that needs its own review -- see the
+ * pre-wiring checklist in __tests__/authCoordinator.test.ts and
+ * __tests__/authCoordinator-integration.test.ts before that happens, and
+ * keep app/_layout.tsx's inline implementation in place (not deleted)
+ * through the first release build that ships the wired version, so an
+ * immediate rollback is possible.
  */
 
 export type AuthRouteSegments = {
@@ -251,10 +261,19 @@ export class AuthCoordinator {
       // Background revalidation: keep cache in sync without gating initial
       // render. Deliberately swallows a failure (offline, etc.) here --
       // the cached-path render has already happened and must not be
-      // disturbed by a revalidation that couldn't complete; this .catch is
-      // a minimal correction spotted during extraction (the original inline
-      // .then() in app/_layout.tsx has no .catch and would otherwise leave
-      // an unhandled rejection on an offline launch with cached profile).
+      // disturbed by a revalidation that couldn't complete.
+      //
+      // INTENTIONAL RELIABILITY FIX, not a pure extraction: the original
+      // inline .then() in app/_layout.tsx has no .catch and leaves an
+      // unhandled promise rejection on an offline launch with a cached
+      // profile (the fetch rejects, nothing observes it). Adding .catch(() => {})
+      // here does not change any *observable* routing decision -- the
+      // cached-path render and redirect above have already happened either
+      // way, and the cache write on a successful revalidation is
+      // unaffected -- it only stops the rejection from going unhandled.
+      // Proven by __tests__/authCoordinator.test.ts's "offline launch with
+      // cached profile" test, which asserts both that routing/identity are
+      // unchanged AND that no unhandled rejection escapes.
       void d.fetchOnboardingStatus(session.user.id)
         .then((p) => {
           if (!isCurrentRoute()) return;
@@ -319,9 +338,16 @@ export class AuthCoordinator {
   }
 }
 
-// Stage 1 checkpoint flag. `false` until the AuthCoordinator extraction
-// above has been reviewed and app/_layout.tsx is deliberately switched
-// over to it (and its own duplicated routeForSession removed). No runtime
-// code currently reads this flag -- it exists so the flip is a single,
-// visible, greppable line change rather than a silent one.
-export const AUTH_COORDINATOR_ENABLED = false;
+// Not a feature flag -- nothing imports or reads this constant, so it
+// cannot gate any runtime behavior. It is a manual, greppable checkpoint
+// marker: `true` means the extraction above exists but app/_layout.tsx
+// has not been switched over to it yet. Wiring app/_layout.tsx to call
+// AuthCoordinator (and removing its own duplicated routeForSession) is
+// what actually flips this from a "prepared" state to a "live" one; at
+// that point this constant should be deleted, not set to `false`, since
+// a boolean nothing reads would otherwise imply a real kill switch that
+// does not exist here. A real runtime kill switch (e.g. an EAS Update /
+// remote-config flag app/_layout.tsx actually checks before choosing
+// which implementation to call) is a legitimate way to wire this in --
+// see the pre-wiring checklist referenced in the module comment above.
+export const AUTH_COORDINATOR_WIRING_PENDING = true;
