@@ -51,6 +51,8 @@ const COPY = {
     retry: 'Retry',
     sharingUnavailable: 'Your device cannot share calendar files.',
     exportFailed: 'The calendar could not be exported. Please try again.',
+    guestEmpty: 'Sign in to personalize your sacred days, festivals and vrats.',
+    signIn: 'Sign In',
   },
   hi: {
     today: 'आज',
@@ -63,6 +65,8 @@ const COPY = {
     retry: 'पुनः प्रयास',
     sharingUnavailable: 'आपका डिवाइस कैलेंडर फ़ाइल साझा नहीं कर सकता।',
     exportFailed: 'कैलेंडर निर्यात नहीं हो सका। कृपया फिर प्रयास करें।',
+    guestEmpty: 'अपने पवित्र दिनों, त्योहारों और व्रतों को निजीकृत करने के लिए साइन इन करें।',
+    signIn: 'साइन इन करें',
   },
   pa: {
     today: 'ਅੱਜ',
@@ -75,6 +79,8 @@ const COPY = {
     retry: 'ਮੁੜ ਕੋਸ਼ਿਸ਼',
     sharingUnavailable: 'ਤੁਹਾਡੀ ਡਿਵਾਈਸ ਕੈਲੰਡਰ ਫਾਈਲ ਸਾਂਝੀ ਨਹੀਂ ਕਰ ਸਕਦੀ।',
     exportFailed: 'ਕੈਲੰਡਰ ਨਿਰਯਾਤ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+    guestEmpty: 'ਆਪਣੇ ਪਵਿੱਤਰ ਦਿਨਾਂ, ਤਿਉਹਾਰਾਂ ਅਤੇ ਵਰਤਾਂ ਨੂੰ ਨਿੱਜੀ ਬਣਾਉਣ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।',
+    signIn: 'ਸਾਈਨ ਇਨ ਕਰੋ',
   },
 } as const;
 
@@ -89,15 +95,18 @@ export function SacredDaysCarousel({
   lang = 'en',
   spiritualDate,
   onRetryUnavailable,
+  onSignInPress,
 }: {
   observances: SacredDaysObservance[];
   series: ObservanceSeries[];
-  calendarStatus: 'ready' | 'pending' | 'unavailable';
+  calendarStatus: 'ready' | 'pending' | 'unavailable' | 'empty';
   theme: Theme;
   isDark: boolean;
   lang?: 'en' | 'hi' | 'pa';
   spiritualDate: string;
   onRetryUnavailable?: () => void;
+  // Present only for the 'empty' (guest) state -- opens the sign-in gate.
+  onSignInPress?: () => void;
 }) {
   const { width: screenWidth } = useWindowDimensions();
   const [exporting, setExporting] = useState(false);
@@ -244,6 +253,33 @@ export function SacredDaysCarousel({
               style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' }}
             >
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: accent }}>{copy.retry}</Text>
+            </PressableSurface>
+          ) : null}
+        </View>
+      ) : calendarStatus === 'empty' && !hasItems ? (
+        <View
+          style={{
+            minHeight: SACRED_DAYS_CARD_HEIGHT,
+            borderRadius: RADII.xl,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            backgroundColor: theme.card,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            gap: 8,
+          }}
+        >
+          <Feather name="calendar" size={20} color={theme.dim} />
+          <Text style={{ ...TYPE.caption, color: theme.dim, textAlign: 'center' }}>{copy.guestEmpty}</Text>
+          {onSignInPress ? (
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={copy.signIn}
+              onPress={onSignInPress}
+              style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: accent }}>{copy.signIn}</Text>
             </PressableSurface>
           ) : null}
         </View>

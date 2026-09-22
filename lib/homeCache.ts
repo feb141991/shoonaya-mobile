@@ -86,7 +86,7 @@ export type CachedHomeRenderModel = {
     // See HomeSummary['panchang']['calendarStatus'] in app/(tabs)/index.tsx
     // for the full contract. Optional so a cache entry written before this
     // field existed still parses; readers default it to 'ready'.
-    calendarStatus?: 'ready' | 'pending' | 'unavailable';
+    calendarStatus?: 'ready' | 'pending' | 'unavailable' | 'empty';
     // See HomeSummary['panchang']['calendarProfile']/['sampradaya'] --
     // carried through the cache so a cache-hit render still has these for
     // calendarIdentityKey until a fresh network response lands.
@@ -378,7 +378,9 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       })),
       series: Array.isArray(full.panchang?.series) ? full.panchang.series : [],
       storyCards: Array.isArray(full.panchang?.storyCards) ? full.panchang.storyCards : [],
-      calendarStatus: full.panchang?.calendarStatus === 'pending' || full.panchang?.calendarStatus === 'unavailable'
+      calendarStatus: full.panchang?.calendarStatus === 'pending'
+        || full.panchang?.calendarStatus === 'unavailable'
+        || full.panchang?.calendarStatus === 'empty'
         ? full.panchang.calendarStatus
         : 'ready',
       calendarProfile: typeof full.panchang?.calendarProfile === 'string' ? full.panchang.calendarProfile : undefined,
@@ -482,7 +484,15 @@ export function getHomeCacheSnapshot(
 ): HomeCacheSnapshot | null {
   const key = getHomeCacheKey(identity);
   const snapshot = memorySnapshotMap.get(key);
-  return snapshot ? prepareSnapshotForNow(snapshot, now) : null;
+  if (!snapshot) return null;
+  const prepared = prepareSnapshotForNow(snapshot, now);
+  // withDateSensitiveFieldsPending (inside prepareSnapshotForNow) has no
+  // identity awareness and can itself produce a fresh 'pending' on a
+  // spiritual-date rollover -- this is the synchronous first-frame read
+  // path (index.tsx's initialSnapshot), so without this a returning guest
+  // would see one frame of the generic loading skeleton even on an
+  // already-fixed cache entry, before the coordinator's effect corrects it.
+  return { ...prepared, payload: normalizeGuestPendingCalendar(identity, prepared.payload) };
 }
 
 /**
@@ -552,6 +562,26 @@ export function getOrReadHomeCache(
 }
 
 /**
+ * Guest mode never issues a network fetch to resolve `calendarStatus:
+ * 'pending'` (see HomeSummaryCoordinator.loadHome's guest branch, which
+ * always applies buildGuestPayload() and returns without fetching) --
+ * so a guest payload stuck at 'pending' can never self-correct. This
+ * converts it to the terminal 'empty' state (distinct from 'unavailable',
+ * which specifically means a fetch was attempted and failed) wherever a
+ * guest payload is read back, covering both an old cache entry written
+ * before this field's guest handling existed and a freshly stale-rollover-
+ * computed 'pending' from withDateSensitiveFieldsPending, which has no
+ * identity awareness of its own.
+ */
+function normalizeGuestPendingCalendar(
+  identity: CacheIdentity,
+  payload: CachedHomeRenderModel
+): CachedHomeRenderModel {
+  if (identity.kind !== 'guest' || payload.panchang.calendarStatus !== 'pending') return payload;
+  return { ...payload, panchang: { ...payload.panchang, calendarStatus: 'empty' } };
+}
+
+/**
  * Reads and validates cached home summary for the given identity.
  * Recomputes spiritual date freshness.
  */
@@ -605,7 +635,7 @@ export async function readHomeCache(
     }
 
     return {
-      payload: envelope.payload,
+      payload: normalizeGuestPendingCalendar(identity, envelope.payload),
       savedAt: envelope.savedAt ?? 0,
       // Envelopes written before this field existed fall back to savedAt --
       // the closest true value available, and errs toward "treat as not

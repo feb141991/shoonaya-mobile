@@ -265,10 +265,15 @@ type HomeSummary = {
     // empty). 'pending': the backend knows materialization for this
     // profile/location is incomplete -- show a neutral loading pill, never
     // a confirmed-empty state. 'unavailable': a real error, not a timeout --
-    // don't imply an imminent retry will help. Absent entirely on an old
-    // cached payload predating this field; defaulted to 'ready' below so a
-    // pre-existing cache never regresses into a permanent skeleton.
-    calendarStatus?: 'ready' | 'pending' | 'unavailable';
+    // don't imply an imminent retry will help. 'empty': guest mode only --
+    // no calendar fetch was ever attempted (guest issues zero authenticated
+    // network requests by design, see buildGuestPayload below), so this is
+    // neither "checked and found nothing" (ready) nor "checked and failed"
+    // (unavailable); renders guest-specific sign-in copy instead of either.
+    // Absent entirely on an old cached payload predating this field;
+    // defaulted to 'ready' below so a pre-existing cache never regresses
+    // into a permanent skeleton.
+    calendarStatus?: 'ready' | 'pending' | 'unavailable' | 'empty';
     // The resolved calendar_profile ('legacy-ujjain' when unset) and
     // sampradaya actually used to compute this response's observance data.
     // Absent on an old cached payload predating this field. Included in
@@ -625,6 +630,10 @@ function PanchangPill({
 
   const calendarStatus = summary.calendarStatus ?? 'ready';
 
+  // Only 'pending' shows the loading shimmer below -- 'ready', 'unavailable',
+  // and 'empty' (guest mode; see buildGuestPayload) all fall through to
+  // `return null`, hiding the pill entirely rather than showing a skeleton
+  // for a state that was never actually loading.
   if (kind === 'observance' && slides.length === 0) {
     if (calendarStatus === 'pending') {
       return (
@@ -766,6 +775,7 @@ function HomeContent() {
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [aiAuthGateVisible, setAiAuthGateVisible] = useState(false);
+  const [sacredDaysAuthGateVisible, setSacredDaysAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
   const [heroPickerVisible, setHeroPickerVisible] = useState(false);
@@ -834,7 +844,8 @@ function HomeContent() {
     heroPickerVisible ||
     greetingPickerVisible ||
     authGateVisible ||
-    aiAuthGateVisible;
+    aiAuthGateVisible ||
+    sacredDaysAuthGateVisible;
 
   const showHeroArtworkCue = isHeroArtworkCueEligible(discoveryState, {
     hasRenderedContent: isContentRendered,
@@ -1030,6 +1041,18 @@ function HomeContent() {
 
   const buildGuestPayload = useCallback((): HomeSummary => ({
     ...INITIAL_STATE,
+    // Guest mode never fetches real calendar data (HomeSummaryCoordinator's
+    // guest branch applies this template and returns without a network
+    // call) -- without this override, panchang would silently inherit
+    // INITIAL_STATE.panchang.calendarStatus: 'pending' and never resolve,
+    // leaving the Observance pill and Sacred Days stuck in their loading
+    // skeleton forever. 'empty' is the correct terminal state: distinct
+    // from 'ready' (checked, nothing today) and 'unavailable' (checked,
+    // failed) -- nothing was ever checked for a guest.
+    panchang: {
+      ...INITIAL_STATE.panchang,
+      calendarStatus: 'empty',
+    },
     profile: {
       name: 'Atithi',
       firstName: 'Atithi',
@@ -2000,6 +2023,7 @@ function HomeContent() {
             lang={state.profile.appLanguage}
             spiritualDate={state.date.iso}
             onRetryUnavailable={retryPanchang}
+            onSignInPress={() => setSacredDaysAuthGateVisible(true)}
           />
 
           <FestivalStoryStack cards={state.panchang.storyCards} theme={theme} isDark={isDark} />
@@ -2403,6 +2427,12 @@ function HomeContent() {
         onClose={() => setAiAuthGateVisible(false)}
         title="Talk to your AI Guide"
         message="Sign in to chat with Dharma Mitra and get personalized guidance."
+      />
+      <AuthGate
+        visible={sacredDaysAuthGateVisible}
+        onClose={() => setSacredDaysAuthGateVisible(false)}
+        title="See your Sacred Days"
+        message="Sign in to personalize your sacred days, festivals and vrats."
       />
       <MoodPulseSheet
         visible={moodPulseVisible}

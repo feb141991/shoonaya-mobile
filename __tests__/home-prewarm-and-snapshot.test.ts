@@ -279,4 +279,106 @@ describe('Home Prewarming, Snapshot Hydration & Identity Isolation', () => {
     assert.strictEqual(result, null, 'Corrupt storage must return null safely');
     assert.strictEqual(getHomeCacheSnapshot(identity), null, 'Memory snapshot must be null for corrupt entry');
   });
+
+  // Guest calendarStatus normalization (Home guest-path fix, reviewed
+  // 2026-09-22): buildGuestPayload sets 'empty', not 'pending', but an old
+  // cache entry written by a pre-fix app build -- or a stale-rollover
+  // recompute inside prepareSnapshotForNow, which has no identity
+  // awareness of its own -- can still produce 'pending' for a guest. Guest
+  // mode never issues a follow-up fetch to correct it (see
+  // HomeSummaryCoordinator.loadHome's guest branch), so without
+  // normalization it would stay stuck forever.
+  describe('Guest calendarStatus normalization (never leaves a stuck pending skeleton)', () => {
+    const guestIdentity: CacheIdentity = { kind: 'guest' };
+    const guestKey = 'shoonaya_home_cache_v1_guest';
+
+    function injectRawGuestEnvelope(calendarStatus: 'pending' | 'ready' | 'empty' | 'unavailable', spiritualDate: string) {
+      const envelope = {
+        schemaVersion: 2,
+        identity: { kind: 'guest' },
+        spiritualDate,
+        timezone: 'Asia/Kolkata',
+        savedAt: Date.now(),
+        calendarSavedAt: Date.now(),
+        payload: {
+          ...samplePayload,
+          panchang: { ...samplePayload.panchang, calendarStatus },
+        },
+      };
+      (globalThis as any).window.localStorage.setItem(guestKey, JSON.stringify(envelope));
+    }
+
+    it('readHomeCache / getOrReadHomeCache converts a guest cache entry stuck at "pending" (old, pre-fix build) into "empty"', async () => {
+      injectRawGuestEnvelope('pending', '2026-09-20');
+
+      const direct = await readHomeCache(guestIdentity, 'Asia/Kolkata');
+      assert.strictEqual(direct?.payload.panchang.calendarStatus, 'empty');
+
+      const viaGetOrRead = await getOrReadHomeCache(guestIdentity, 'Asia/Kolkata');
+      assert.strictEqual(viaGetOrRead?.payload.panchang.calendarStatus, 'empty');
+    });
+
+    it('does not touch an authenticated user cache entry stuck at "pending" -- normalization is guest-only', async () => {
+      const authIdentity: CacheIdentity = { kind: 'authenticated', userId: 'user-pending-auth' };
+      await writeHomeCache(
+        authIdentity,
+        { ...samplePayload, panchang: { ...samplePayload.panchang, calendarStatus: 'pending' as const } },
+        'Asia/Kolkata',
+        '2026-09-20'
+      );
+      // writeHomeCache's own sanitizer preserves 'pending' as-is for a
+      // real fetch that has not resolved yet -- this must stay 'pending'
+      // for an authenticated user, since (unlike guest) a follow-up fetch
+      // really is coming to resolve it.
+      const result = await readHomeCache(authIdentity, 'Asia/Kolkata');
+      assert.strictEqual(result?.payload.panchang.calendarStatus, 'pending');
+    });
+
+    it('getHomeCacheSnapshot (synchronous first-frame read) normalizes a guest entry whose spiritual date has rolled over, before the coordinator ever runs', async () => {
+      // Written "yesterday" relative to the mocked "now" (2026-09-20) set in
+      // beforeEach, with no observance/upcomingObservances entry that
+      // matches or survives past today -- prepareSnapshotForNow will detect
+      // this as stale and recompute via withDateSensitiveFieldsPending,
+      // which (having no identity awareness) takes its "genuinely nothing
+      // left for the future" branch and produces a fresh 'pending' for a
+      // guest with nothing to carry forward or promote.
+      const envelope = {
+        schemaVersion: 2,
+        identity: { kind: 'guest' },
+        spiritualDate: '2026-09-19',
+        timezone: 'Asia/Kolkata',
+        savedAt: Date.now(),
+        calendarSavedAt: Date.now(),
+        payload: {
+          ...samplePayload,
+          panchang: { ...samplePayload.panchang, observance: null, upcomingObservances: [], calendarStatus: 'empty' as const },
+        },
+      };
+      (globalThis as any).window.localStorage.setItem(guestKey, JSON.stringify(envelope));
+      await getOrReadHomeCache(guestIdentity, 'Asia/Kolkata'); // populate the in-memory snapshot map
+
+      const snapshot = getHomeCacheSnapshot(guestIdentity);
+      assert.strictEqual(snapshot?.dateSensitiveStale, true, 'sanity check: this scenario really is a stale rollover');
+      assert.strictEqual(
+        snapshot?.payload.panchang.calendarStatus,
+        'empty',
+        'the synchronous snapshot must never show "pending" for a guest, even mid-rollover'
+      );
+    });
+
+    it('writeHomeCache / sanitizeForHomeCache preserves "empty" through a round trip -- does not collapse it to "ready"', async () => {
+      await writeHomeCache(
+        guestIdentity,
+        { ...samplePayload, panchang: { ...samplePayload.panchang, calendarStatus: 'empty' as const } },
+        'Asia/Kolkata',
+        '2026-09-20'
+      );
+      const result = await readHomeCache(guestIdentity, 'Asia/Kolkata');
+      assert.strictEqual(
+        result?.payload.panchang.calendarStatus,
+        'empty',
+        'a round-tripped guest cache entry must keep showing the sign-in CTA, not silently fall back to the generic "no sacred days" copy'
+      );
+    });
+  });
 });

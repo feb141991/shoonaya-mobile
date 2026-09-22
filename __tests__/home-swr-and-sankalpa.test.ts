@@ -732,6 +732,45 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(attempt, 2, 'Retries exactly once, then stops -- never an infinite loop');
       assert.equal(errorStates[errorStates.length - 1], true, 'Second cancellation with no valid state falls back to the real error state');
     });
+
+    // Guest calendarStatus fix (reviewed 2026-09-22): buildGuestPayload sets
+    // panchang.calendarStatus: 'empty' -- the coordinator itself does no
+    // calendarStatus handling for guest, it just applies whatever
+    // buildGuestPayload returns, but this is the coordinator-level half of
+    // the review's requested regression coverage (no network request, no
+    // 'pending' status once Home resolves for a guest).
+    it('guest load: zero network requests, and the applied payload never carries calendarStatus "pending"', async () => {
+      let networkRequests = 0;
+      const appliedPayloads: any[] = [];
+      const loadingStates: boolean[] = [];
+      const guestIdentity: HomeAuthIdentity = { kind: 'guest' };
+
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => {
+          networkRequests++;
+          return new Response(JSON.stringify(sampleHomeSummary), { status: 200 });
+        },
+        onApplyPayload: (p) => appliedPayloads.push(p),
+        onSetLoading: (l) => loadingStates.push(l),
+        onSetError: () => {},
+        onRedirectToLogin: () => {},
+        buildGuestPayload: () => ({
+          ...guestPayloadTemplate,
+          panchang: { ...guestPayloadTemplate.panchang, calendarStatus: 'empty' as const },
+        }),
+      });
+
+      await coordinator.loadHome(guestIdentity);
+
+      assert.equal(networkRequests, 0, 'guest mode must never issue an authenticated network request');
+      assert.ok(appliedPayloads.length > 0, 'a guest payload was applied');
+      assert.ok(
+        appliedPayloads.every((p) => p.panchang.calendarStatus !== 'pending'),
+        'no applied payload may ever leave a guest showing the loading skeleton -- nothing will come along to resolve it'
+      );
+      assert.equal(appliedPayloads.at(-1).panchang.calendarStatus, 'empty');
+      assert.equal(loadingStates.at(-1), false, 'loading must resolve to false for guest, not hang');
+    });
   });
 
   describe('3. SankalpaCoordinator Production Invariants & Request Counting', () => {
