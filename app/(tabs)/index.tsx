@@ -49,6 +49,7 @@ import { HomeHeroGuide } from '@/components/home/HomeHeroGuide';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
+import { recordLoaderShown, type TelemetryIdentity } from '@/lib/telemetry';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
@@ -799,6 +800,31 @@ function HomeContent() {
       active = false;
     };
   }, [appIdentity]);
+
+  // Stage 0 baseline measurement: records how long the full-screen skeleton
+  // (the `if (loading) return <HomeSkeleton/>` gate below) was actually shown,
+  // and -- the thing this exists to prove or disprove -- whether `state`
+  // already held usable content (profile.firstName) at that moment. A true
+  // hadUsableData would mean the loader is hiding content that is already
+  // usable, which the Stage 7 invariant forbids.
+  const loaderShownAtRef = useRef<number | null>(null);
+  const loaderHadUsableDataRef = useRef(false);
+  useEffect(() => {
+    if (loading) {
+      loaderShownAtRef.current = Date.now();
+      loaderHadUsableDataRef.current = Boolean(state.profile.firstName);
+      return;
+    }
+    const shownAt = loaderShownAtRef.current;
+    if (shownAt === null) return;
+    loaderShownAtRef.current = null;
+    const telemetryIdentity: TelemetryIdentity =
+      appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+    recordLoaderShown(telemetryIdentity, 'home', {
+      hadUsableData: loaderHadUsableDataRef.current,
+      durationMs: Date.now() - shownAt,
+    });
+  }, [loading, appIdentity, state.profile.firstName]);
 
   const isContentRendered = !loading && !loadError && Boolean(state.profile.firstName);
 

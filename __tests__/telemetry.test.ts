@@ -23,6 +23,10 @@ import {
   recordRefreshFailure,
   recordMutationRetryOutcome,
   recordServerTiming,
+  recordDuplicateRequestAvoided,
+  recordDuplicateRequestDetected,
+  recordInteractionTiming,
+  recordLoaderShown,
   parseServerTimingHeader,
   getTelemetrySummary,
   clearTelemetry,
@@ -309,5 +313,89 @@ describe('Telemetry -- clear-generation barrier (F08, docs/PERFORMANCE_RESEARCH_
 
     const summary = await getTelemetrySummary(identity);
     assert.equal(summary.totalEvents, 0, 'a clear landing mid-flight must still win, not just a clear landing before the write starts at all');
+  });
+});
+
+describe('Telemetry -- Stage 0 reliability-plan additions (schema v2)', () => {
+  const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'stage0-user' };
+
+  beforeEach(async () => {
+    await clearTelemetry(identity);
+  });
+
+  it('distinguishes stale-reporting opens from opens that never reported staleness', async () => {
+    // Two routes: one upgraded to report stale/fresh, one not.
+    recordRouteOpen(identity, 'home', { cacheHit: true, stale: true, durationMs: 3 });
+    recordRouteOpen(identity, 'home', { cacheHit: true, stale: false, durationMs: 4 });
+    recordRouteOpen(identity, 'panchang', { cacheHit: true, durationMs: 5 }); // no `stale` at all
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const home = summary.routes.find((r) => r.route === 'home')!;
+    const panchang = summary.routes.find((r) => r.route === 'panchang')!;
+
+    assert.equal(home.staleReportingOpens, 2, 'both home opens explicitly reported a stale value');
+    assert.equal(home.staleOpens, 1, 'exactly one of the two was actually stale');
+    assert.equal(panchang.staleReportingOpens, 0, 'panchang never reported staleness -- must not be misread as "never stale"');
+    assert.equal(panchang.staleOpens, 0);
+  });
+
+  it('classifies refresh failures by reason and tracks whether cached data was retained', async () => {
+    recordRefreshFailure(identity, 'profile', { reason: 'unauthorized', hadCachedData: false });
+    recordRefreshFailure(identity, 'profile', { reason: 'timeout', hadCachedData: true });
+    recordRefreshFailure(identity, 'profile', { reason: 'timeout', hadCachedData: true });
+    recordRefreshFailure(identity, 'profile'); // unclassified call site
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const profile = summary.routes.find((r) => r.route === 'profile')!;
+
+    assert.equal(profile.refreshFailures, 4);
+    assert.equal(profile.failureReasons.unauthorized, 1);
+    assert.equal(profile.failureReasons.timeout, 2);
+    assert.equal(profile.failureReasons.unknown, 1, 'a call site with no reason must fall back to unknown, not be dropped or miscounted');
+    assert.equal(profile.failuresWithCachedData, 2, 'only the two timeout failures kept cached data visible');
+  });
+
+  it('separates avoided duplicates (dedup worked) from detected duplicates (a real un-deduplicated double-fire)', async () => {
+    recordDuplicateRequestAvoided(identity, 'home', 'focus');
+    recordDuplicateRequestAvoided(identity, 'home', 'foreground');
+    recordDuplicateRequestDetected(identity, 'mandali', 'state_effect');
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const home = summary.duplicateRequests.find((r) => r.route === 'home')!;
+    const mandali = summary.duplicateRequests.find((r) => r.route === 'mandali')!;
+
+    assert.equal(home.avoided, 2);
+    assert.equal(home.detected, 0);
+    assert.equal(mandali.avoided, 0);
+    assert.equal(mandali.detected, 1, 'a real double-fire (e.g. Mandali comment expansion) must count as detected, not avoided');
+  });
+
+  it('aggregates named interaction timings with avg/p95, independent of route_open', async () => {
+    recordInteractionTiming(identity, 'mandali_comment_expand', 100);
+    recordInteractionTiming(identity, 'mandali_comment_expand', 200);
+    recordInteractionTiming(identity, 'mandali_comment_expand', 900);
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const timing = summary.interactionTimings.find((t) => t.name === 'mandali_comment_expand')!;
+
+    assert.equal(timing.samples, 3);
+    assert.equal(timing.avgDurationMs, 400);
+    assert.equal(timing.p95DurationMs, 900);
+  });
+
+  it('flags loader exposure that happened while usable data already existed (the Stage 7 invariant this exists to measure)', async () => {
+    recordLoaderShown(identity, 'profile', { hadUsableData: false, durationMs: 50 }); // correct: nothing to show yet
+    recordLoaderShown(identity, 'profile', { hadUsableData: true, durationMs: 30 }); // a violation: blanked good content
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const profile = summary.loaderExposure.find((r) => r.route === 'profile')!;
+
+    assert.equal(profile.shown, 2);
+    assert.equal(profile.shownWithUsableData, 1, 'exactly one of the two exposures blanked already-usable content');
   });
 });

@@ -25,7 +25,16 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { type AppLanguage } from '@/lib/language-runtime';
 import { type ProfileSuggestion } from '@/lib/profile-suggestions';
-import { recordServerTiming, parseServerTimingHeader, recordRouteOpen } from '@/lib/telemetry';
+import {
+  recordServerTiming,
+  parseServerTimingHeader,
+  recordRouteOpen,
+  recordRefreshFailure,
+  recordLoaderShown,
+  type FailureReason,
+  type TelemetryIdentity,
+} from '@/lib/telemetry';
+import { isFetchCancelled } from '@/lib/fetch-error';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -658,6 +667,17 @@ export default function ProfileScreen() {
         if (!isCurrentEffect()) return;
         console.warn('[profile] loadProfile error', err);
         setLoadError(true);
+        const telemetryIdentity: TelemetryIdentity =
+          appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+        const message = err instanceof Error ? err.message : '';
+        const reason: FailureReason = isFetchCancelled(err)
+          ? 'timeout'
+          : message === 'Profile response owner did not match the active account'
+            ? 'owner_mismatch'
+            : message === 'Could not load progress summary'
+              ? 'server_error'
+              : 'network';
+        recordRefreshFailure(telemetryIdentity, 'profile', { reason, hadCachedData: Boolean(profile) });
       })
       .finally(() => {
         if (isCurrentEffect()) setLoading(false);
@@ -1031,6 +1051,35 @@ export default function ProfileScreen() {
       setReportLoading(false);
     }
   };
+
+  // Stage 0 baseline measurement: this blocking gate is `loading || !profile`,
+  // so hadUsableData only becomes true in the one case worth measuring --
+  // loading flips back to true while a previously-loaded `profile` is still
+  // in state, which would mean this screen is re-hiding content it already
+  // has. Code reading says that should never happen (setLoading(true) is
+  // always paired with setProfile(null) at every call site in this file);
+  // this records the real rate instead of trusting that reading.
+  const isProfileBlockingScreenShown = loading || !profile;
+  const profileLoaderShownAtRef = useRef<number | null>(null);
+  const profileLoaderHadUsableDataRef = useRef(false);
+  useEffect(() => {
+    if (isProfileBlockingScreenShown) {
+      if (profileLoaderShownAtRef.current === null) {
+        profileLoaderShownAtRef.current = Date.now();
+        profileLoaderHadUsableDataRef.current = loading && Boolean(profile);
+      }
+      return;
+    }
+    const shownAt = profileLoaderShownAtRef.current;
+    if (shownAt === null) return;
+    profileLoaderShownAtRef.current = null;
+    const telemetryIdentity: TelemetryIdentity =
+      appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+    recordLoaderShown(telemetryIdentity, 'profile', {
+      hadUsableData: profileLoaderHadUsableDataRef.current,
+      durationMs: Date.now() - shownAt,
+    });
+  }, [isProfileBlockingScreenShown, loading, profile, appIdentity]);
 
   if (loading || !profile) {
     return (

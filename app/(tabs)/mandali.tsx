@@ -48,7 +48,15 @@ import { resolveDisplayName } from '@/lib/displayName';
 import { setGuestMode } from '@/lib/guestSession';
 import { useAppIdentity, getAppIdentity } from '@/lib/appIdentity';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
-import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
+import {
+  recordRouteOpen,
+  recordRefreshFailure,
+  recordServerTiming,
+  parseServerTimingHeader,
+  recordDuplicateRequestDetected,
+  recordInteractionTiming,
+  type TelemetryIdentity,
+} from '@/lib/telemetry';
 import {
   queueReactionChange,
   resumePendingReactionChanges,
@@ -558,6 +566,12 @@ export default function MandaliScreen() {
   // the feed response, and expanding re-fetches the full thread once.
   const [fullyLoadedCommentPostIds, setFullyLoadedCommentPostIds] = useState<Set<string>>(new Set());
   const [loadingCommentsForPostId, setLoadingCommentsForPostId] = useState<string | null>(null);
+  // Stage 0 baseline measurement only -- toggleComments and the useEffect
+  // below both fetch under the identical guard condition, so a post that's
+  // expanded fires this fetch twice today. This ref lets both call sites
+  // detect (via recordDuplicateRequestDetected) when they land on a postId
+  // the other one is already fetching, without changing what either does.
+  const commentFetchInFlightRef = useRef<Set<string>>(new Set());
   const visiblePostIdsRef = useRef<Set<string>>(new Set());
   const feedListRef = useRef<FlashListRef<MandaliFeedItem>>(null);
   // Resolved as soon as loadMandali knows the user id, independent of
@@ -2193,6 +2207,13 @@ export default function MandaliScreen() {
       // loadingCommentsForPostId, not awaited here, so the expand itself
       // isn't blocked on the network.
       if (next && !fullyLoadedCommentPostIds.has(next)) {
+        const telemetryIdentity: TelemetryIdentity =
+          appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+        if (commentFetchInFlightRef.current.has(next)) {
+          recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
+        }
+        commentFetchInFlightRef.current.add(next);
+        const commentFetchStartedAt = Date.now();
         setLoadingCommentsForPostId(next);
         fetchPostComments(next, profile?.userId)
           .then((fullComments) => {
@@ -2201,20 +2222,29 @@ export default function MandaliScreen() {
               return [...withoutThisPost, ...fullComments];
             });
             setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(next));
+            recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
           })
           .catch((error) => {
             console.warn('[MandaliScreen] fetchPostComments failed', error);
           })
           .finally(() => {
+            commentFetchInFlightRef.current.delete(next);
             setLoadingCommentsForPostId((current) => (current === next ? null : current));
           });
       }
       return next;
     });
-  }, [fullyLoadedCommentPostIds, profile?.userId]);
+  }, [fullyLoadedCommentPostIds, profile?.userId, appIdentity]);
 
   useEffect(() => {
     if (expandedPostId && !fullyLoadedCommentPostIds.has(expandedPostId)) {
+      const telemetryIdentity: TelemetryIdentity =
+        appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+      if (commentFetchInFlightRef.current.has(expandedPostId)) {
+        recordDuplicateRequestDetected(telemetryIdentity, 'mandali', 'state_effect');
+      }
+      commentFetchInFlightRef.current.add(expandedPostId);
+      const commentFetchStartedAt = Date.now();
       setLoadingCommentsForPostId(expandedPostId);
       fetchPostComments(expandedPostId, profile?.userId)
         .then((fullComments) => {
@@ -2223,15 +2253,17 @@ export default function MandaliScreen() {
             return [...withoutThisPost, ...fullComments];
           });
           setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(expandedPostId));
+          recordInteractionTiming(telemetryIdentity, 'mandali_comment_expand', Date.now() - commentFetchStartedAt);
         })
         .catch((error) => {
           console.warn('[MandaliScreen] fetchPostComments failed', error);
         })
         .finally(() => {
+          commentFetchInFlightRef.current.delete(expandedPostId);
           setLoadingCommentsForPostId(null);
         });
     }
-  }, [expandedPostId, fullyLoadedCommentPostIds, profile?.userId]);
+  }, [expandedPostId, fullyLoadedCommentPostIds, profile?.userId, appIdentity]);
 
   const renderPost = useCallback((post: PostRow) => {
     return (

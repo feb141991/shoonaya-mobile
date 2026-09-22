@@ -42,7 +42,14 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const TELEMETRY_SCHEMA_VERSION = 1;
+// Stage 0 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md 10-stage reliability
+// plan): bumped 1 -> 2 to add refresh-failure classification, duplicate-request
+// detection, named interaction timings and full-screen-loader exposure --
+// purely additive event shapes (see below), but the version bump means any
+// telemetry recorded under schema 1 is discarded on next read rather than
+// misread under the new shape (readEnvelope already treats a schemaVersion
+// mismatch as "start fresh"). This is a clean baseline reset, not a bug.
+export const TELEMETRY_SCHEMA_VERSION = 2;
 const MAX_EVENTS = 500;
 
 export type TelemetryIdentity = { kind: 'guest' } | { kind: 'authenticated'; userId: string };
@@ -51,11 +58,80 @@ export type RouteName = 'home' | 'mandali' | 'settings' | 'notifications' | 'bha
 export type OutboxFeature = 'settings' | 'notifications' | 'japa' | 'mandali_posts' | 'mood' | 'sankalpa' | 'reactions';
 export type RetryOutcome = 'success' | 'retry' | 'permanent_failure';
 
+// Classifies why a route's refresh failed -- Stage 0 baseline for the 401 /
+// timeout / retry / profile-failure rates the reliability plan asks for.
+// 'unknown' is the honest default for call sites not yet upgraded to pass a
+// real reason, not a guess dressed up as one.
+export type FailureReason =
+  | 'unauthorized'       // 401
+  | 'timeout'
+  | 'network'            // fetch itself failed (offline, DNS, connection reset)
+  | 'server_error'       // 5xx
+  | 'owner_mismatch'      // response identity didn't match the requesting identity
+  | 'malformed_response'
+  | 'unknown';
+
+// Named client-side interactions worth timing independent of a route's own
+// open/refresh cycle -- starts with exactly the one the plan's Stage 3 is
+// about (Mandali comment expansion); add more here as later stages need them,
+// not preemptively.
+export type InteractionName = 'mandali_comment_expand';
+
+// Where a request-dedup opportunity (or, for Mandali comments today, an
+// actual un-deduplicated double-fire -- see recordDuplicateRequestDetected's
+// doc comment) originated from.
+export type RequestSource = 'mount' | 'focus' | 'foreground' | 'reconnect' | 'pull_refresh' | 'retry' | 'state_effect';
+
 export type TelemetryEvent =
-  | { type: 'route_open'; route: RouteName; cacheHit: boolean; durationMs: number; timestamp: number }
-  | { type: 'refresh_failure'; route: RouteName; timestamp: number }
+  | {
+      type: 'route_open';
+      route: RouteName;
+      cacheHit: boolean;
+      // Present only where the caller can actually tell the difference (Home
+      // today). Absent (not `false`) means "this call site doesn't yet
+      // distinguish fresh from stale" -- never collapsed into a false
+      // negative for routes that haven't been upgraded.
+      stale?: boolean;
+      durationMs: number;
+      timestamp: number;
+    }
+  | {
+      type: 'refresh_failure';
+      route: RouteName;
+      reason?: FailureReason;
+      // Whether the screen still had usable (possibly stale) content to show
+      // when this failure happened -- the exact distinction between "full-
+      // screen error" and "quiet degraded state" the reliability plan is
+      // about. Absent means not yet classified by this call site.
+      hadCachedData?: boolean;
+      timestamp: number;
+    }
   | { type: 'mutation_retry_outcome'; feature: OutboxFeature; outcome: RetryOutcome; attempts: number; timestamp: number }
-  | { type: 'server_timing'; route: RouteName; breakdown: Record<string, number>; timestamp: number };
+  | { type: 'server_timing'; route: RouteName; breakdown: Record<string, number>; timestamp: number }
+  | {
+      // A request that a dedup layer correctly collapsed into an existing
+      // in-flight call (good), OR -- for call sites that don't dedupe yet,
+      // like Mandali comment expansion -- a genuine second network call that
+      // fired for work already in flight (a real bug this event exists to
+      // measure honestly, not label as handled). `avoided: true` only when a
+      // dedup mechanism actually caught it before firing.
+      type: 'duplicate_request';
+      route: RouteName;
+      source: RequestSource;
+      avoided: boolean;
+      timestamp: number;
+    }
+  | { type: 'interaction_timing'; name: InteractionName; durationMs: number; timestamp: number }
+  | {
+      // How long a full-screen loader was actually shown, and -- the
+      // invariant Stage 7 is built around -- whether usable content already
+      // existed when it was shown anyway.
+      type: 'loader_shown';
+      route: RouteName;
+      hadUsableData: boolean;
+      durationMs: number;
+      timestamp: number;
+    };
 
 type TelemetryEnvelope = {
   schemaVersion: number;
@@ -162,13 +238,60 @@ async function clearKeyChained(key: string): Promise<void> {
 export function recordRouteOpen(
   identity: TelemetryIdentity,
   route: RouteName,
-  data: { cacheHit: boolean; durationMs: number }
+  data: { cacheHit: boolean; stale?: boolean; durationMs: number }
 ): void {
-  void appendEvent(identity, { type: 'route_open', route, cacheHit: data.cacheHit, durationMs: data.durationMs, timestamp: Date.now() });
+  void appendEvent(identity, {
+    type: 'route_open',
+    route,
+    cacheHit: data.cacheHit,
+    ...(data.stale !== undefined ? { stale: data.stale } : {}),
+    durationMs: data.durationMs,
+    timestamp: Date.now(),
+  });
 }
 
-export function recordRefreshFailure(identity: TelemetryIdentity, route: RouteName): void {
-  void appendEvent(identity, { type: 'refresh_failure', route, timestamp: Date.now() });
+export function recordRefreshFailure(
+  identity: TelemetryIdentity,
+  route: RouteName,
+  data?: { reason?: FailureReason; hadCachedData?: boolean }
+): void {
+  void appendEvent(identity, {
+    type: 'refresh_failure',
+    route,
+    ...(data?.reason !== undefined ? { reason: data.reason } : {}),
+    ...(data?.hadCachedData !== undefined ? { hadCachedData: data.hadCachedData } : {}),
+    timestamp: Date.now(),
+  });
+}
+
+/**
+ * Records a request that a dedup layer correctly collapsed into an
+ * already-in-flight call for the same resource -- `avoided: true`. Call
+ * this from the branch that REUSES an existing in-flight promise instead of
+ * starting a new fetch (e.g. lib/homeCoordinator.ts's `inFlightRequests`
+ * reuse path).
+ */
+export function recordDuplicateRequestAvoided(identity: TelemetryIdentity, route: RouteName, source: RequestSource): void {
+  void appendEvent(identity, { type: 'duplicate_request', route, source, avoided: true, timestamp: Date.now() });
+}
+
+/**
+ * Records a request that duplicated an already-in-flight one and was NOT
+ * caught by any dedup layer -- because, at call sites like Mandali comment
+ * expansion, none exists yet. `avoided: false`. This is what gives Stage 3
+ * (and any other future dedup fix) a real "how often does this actually
+ * happen today" baseline instead of an assumption.
+ */
+export function recordDuplicateRequestDetected(identity: TelemetryIdentity, route: RouteName, source: RequestSource): void {
+  void appendEvent(identity, { type: 'duplicate_request', route, source, avoided: false, timestamp: Date.now() });
+}
+
+export function recordInteractionTiming(identity: TelemetryIdentity, name: InteractionName, durationMs: number): void {
+  void appendEvent(identity, { type: 'interaction_timing', name, durationMs, timestamp: Date.now() });
+}
+
+export function recordLoaderShown(identity: TelemetryIdentity, route: RouteName, data: { hadUsableData: boolean; durationMs: number }): void {
+  void appendEvent(identity, { type: 'loader_shown', route, hadUsableData: data.hadUsableData, durationMs: data.durationMs, timestamp: Date.now() });
 }
 
 export function recordMutationRetryOutcome(
@@ -211,9 +334,23 @@ export type RouteSummary = {
   route: RouteName;
   opens: number;
   cacheHitRate: number;
+  // Of the cache hits counted above, how many were explicitly marked stale
+  // by a call site that distinguishes fresh from stale (see route_open's
+  // `stale` field). 0 for routes that haven't been upgraded to report it --
+  // read staleOpens against staleReportingOpens, not against `opens`, to
+  // avoid reading "0 stale" as "never stale" for an unupgraded route.
+  staleOpens: number;
+  staleReportingOpens: number;
   avgDurationMs: number;
   p95DurationMs: number;
   refreshFailures: number;
+  // Failures broken down by classified reason -- only call sites that pass
+  // `reason` to recordRefreshFailure contribute anything beyond 'unknown'.
+  failureReasons: Partial<Record<FailureReason, number>>;
+  // Of refreshFailures above, how many happened while the screen still had
+  // usable (possibly stale) content to show -- the full-screen-error-vs-
+  // quiet-degraded-state distinction the reliability plan is about.
+  failuresWithCachedData: number;
 };
 
 export type OutboxSummary = {
@@ -229,10 +366,37 @@ export type ServerTimingSummary = {
   sections: Array<{ name: string; avgDurationMs: number; p95DurationMs: number }>;
 };
 
+export type DuplicateRequestSummary = {
+  route: RouteName;
+  avoided: number; // a dedup layer caught it before firing a second network call
+  detected: number; // a second network call actually fired -- a real bug, not yet fixed
+};
+
+export type InteractionTimingSummary = {
+  name: InteractionName;
+  samples: number;
+  avgDurationMs: number;
+  p95DurationMs: number;
+};
+
+export type LoaderExposureSummary = {
+  route: RouteName;
+  shown: number;
+  // Per the Stage 7 invariant: a full-screen loader must never hide content
+  // that's already usable. This should be 0 for a correctly-behaving route;
+  // any non-zero count here is a direct, measured violation of that rule.
+  shownWithUsableData: number;
+  avgDurationMs: number;
+  p95DurationMs: number;
+};
+
 export type TelemetrySummary = {
   routes: RouteSummary[];
   outbox: OutboxSummary[];
   serverTimings: ServerTimingSummary[];
+  duplicateRequests: DuplicateRequestSummary[];
+  interactionTimings: InteractionTimingSummary[];
+  loaderExposure: LoaderExposureSummary[];
   totalEvents: number;
 };
 
@@ -251,20 +415,37 @@ function percentile(sorted: number[], p: number): number {
 export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<TelemetrySummary> {
   const envelope = await readEnvelope(identity);
 
-  const routeGroups = new Map<RouteName, { durations: number[]; hits: number; opens: number; failures: number }>();
+  const routeGroups = new Map<RouteName, {
+    durations: number[]; hits: number; opens: number; failures: number;
+    staleOpens: number; staleReportingOpens: number;
+    failureReasons: Partial<Record<FailureReason, number>>; failuresWithCachedData: number;
+  }>();
   const outboxGroups = new Map<OutboxFeature, OutboxSummary>();
   const serverTimingGroups = new Map<RouteName, { samples: number; sections: Map<string, number[]> }>();
+  const duplicateGroups = new Map<RouteName, { avoided: number; detected: number }>();
+  const interactionGroups = new Map<InteractionName, number[]>();
+  const loaderGroups = new Map<RouteName, { durations: number[]; shownWithUsableData: number }>();
+
+  const routeGroup = (route: RouteName) =>
+    routeGroups.get(route) ?? { durations: [], hits: 0, opens: 0, failures: 0, staleOpens: 0, staleReportingOpens: 0, failureReasons: {}, failuresWithCachedData: 0 };
 
   for (const event of envelope.events) {
     if (event.type === 'route_open') {
-      const group = routeGroups.get(event.route) ?? { durations: [], hits: 0, opens: 0, failures: 0 };
+      const group = routeGroup(event.route);
       group.durations.push(event.durationMs);
       group.opens += 1;
       if (event.cacheHit) group.hits += 1;
+      if (event.stale !== undefined) {
+        group.staleReportingOpens += 1;
+        if (event.stale) group.staleOpens += 1;
+      }
       routeGroups.set(event.route, group);
     } else if (event.type === 'refresh_failure') {
-      const group = routeGroups.get(event.route) ?? { durations: [], hits: 0, opens: 0, failures: 0 };
+      const group = routeGroup(event.route);
       group.failures += 1;
+      const reason = event.reason ?? 'unknown';
+      group.failureReasons[reason] = (group.failureReasons[reason] ?? 0) + 1;
+      if (event.hadCachedData) group.failuresWithCachedData += 1;
       routeGroups.set(event.route, group);
     } else if (event.type === 'server_timing') {
       const group = serverTimingGroups.get(event.route) ?? { samples: 0, sections: new Map() };
@@ -281,6 +462,20 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
       else if (event.outcome === 'retry') group.retry += 1;
       else group.permanentFailure += 1;
       outboxGroups.set(event.feature, group);
+    } else if (event.type === 'duplicate_request') {
+      const group = duplicateGroups.get(event.route) ?? { avoided: 0, detected: 0 };
+      if (event.avoided) group.avoided += 1;
+      else group.detected += 1;
+      duplicateGroups.set(event.route, group);
+    } else if (event.type === 'interaction_timing') {
+      const durations = interactionGroups.get(event.name) ?? [];
+      durations.push(event.durationMs);
+      interactionGroups.set(event.name, durations);
+    } else if (event.type === 'loader_shown') {
+      const group = loaderGroups.get(event.route) ?? { durations: [], shownWithUsableData: 0 };
+      group.durations.push(event.durationMs);
+      if (event.hadUsableData) group.shownWithUsableData += 1;
+      loaderGroups.set(event.route, group);
     }
   }
 
@@ -290,9 +485,13 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
       route,
       opens: group.opens,
       cacheHitRate: group.opens > 0 ? group.hits / group.opens : 0,
+      staleOpens: group.staleOpens,
+      staleReportingOpens: group.staleReportingOpens,
       avgDurationMs: sorted.length > 0 ? sorted.reduce((a, b) => a + b, 0) / sorted.length : 0,
       p95DurationMs: percentile(sorted, 95),
       refreshFailures: group.failures,
+      failureReasons: group.failureReasons,
+      failuresWithCachedData: group.failuresWithCachedData,
     };
   });
 
@@ -309,10 +508,40 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
     }),
   }));
 
+  const duplicateRequests: DuplicateRequestSummary[] = Array.from(duplicateGroups.entries()).map(([route, group]) => ({
+    route,
+    avoided: group.avoided,
+    detected: group.detected,
+  }));
+
+  const interactionTimings: InteractionTimingSummary[] = Array.from(interactionGroups.entries()).map(([name, durations]) => {
+    const sorted = [...durations].sort((a, b) => a - b);
+    return {
+      name,
+      samples: sorted.length,
+      avgDurationMs: sorted.length > 0 ? sorted.reduce((a, b) => a + b, 0) / sorted.length : 0,
+      p95DurationMs: percentile(sorted, 95),
+    };
+  });
+
+  const loaderExposure: LoaderExposureSummary[] = Array.from(loaderGroups.entries()).map(([route, group]) => {
+    const sorted = [...group.durations].sort((a, b) => a - b);
+    return {
+      route,
+      shown: sorted.length,
+      shownWithUsableData: group.shownWithUsableData,
+      avgDurationMs: sorted.length > 0 ? sorted.reduce((a, b) => a + b, 0) / sorted.length : 0,
+      p95DurationMs: percentile(sorted, 95),
+    };
+  });
+
   return {
     routes,
     outbox: Array.from(outboxGroups.values()),
     serverTimings,
+    duplicateRequests,
+    interactionTimings,
+    loaderExposure,
     totalEvents: envelope.events.length,
   };
 }

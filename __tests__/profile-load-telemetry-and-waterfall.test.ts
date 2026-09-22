@@ -10,7 +10,11 @@ describe('Profile loadProfile: route-open telemetry and kul waterfall (docs/PERF
   // at all -- confirmed by grepping for recordRouteOpen before this fix and
   // finding zero call sites in this file.
   it('records a route-open on both the cache-hit and network-resolved paths', () => {
-    assert.match(profile, /import \{ recordServerTiming, parseServerTimingHeader, recordRouteOpen \} from '@\/lib\/telemetry';/);
+    // Robust to import reformatting (Stage 0, docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md,
+    // added more telemetry symbols to this same import and wrapped it across
+    // lines) -- the invariant this guards is "recordRouteOpen is imported
+    // from @/lib/telemetry", not one specific line-wrapping of that import.
+    assert.match(profile, /import \{[\s\S]*?recordRouteOpen[\s\S]*?\} from '@\/lib\/telemetry';/);
     assert.match(profile, /profileRouteOpenRecordedForRef/);
 
     const occurrences = profile.match(/recordRouteOpen\(cacheIdentity, 'profile', \{ cacheHit: (true|false), durationMs: Date\.now\(\) - loadStartedAt \}\)/g) ?? [];

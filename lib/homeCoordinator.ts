@@ -2,7 +2,7 @@ import { readHomeCache, getOrReadHomeCache, writeHomeCache, clearHomeCache, with
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
-import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader, type TelemetryIdentity } from './telemetry';
+import { recordRouteOpen, recordRefreshFailure, recordServerTiming, recordDuplicateRequestAvoided, parseServerTimingHeader, type TelemetryIdentity } from './telemetry';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -257,7 +257,7 @@ export class HomeSummaryCoordinator {
         this.deps.onSetLoading(false);
         cacheApplied = true;
         if (!wasAlreadyValid) {
-          recordRouteOpen(telemetryIdentity, 'home', { cacheHit: true, durationMs: Date.now() - loadStartedAt });
+          recordRouteOpen(telemetryIdentity, 'home', { cacheHit: true, stale: cached.dateSensitiveStale, durationMs: Date.now() - loadStartedAt });
         }
       }
     }
@@ -286,6 +286,13 @@ export class HomeSummaryCoordinator {
 
     // 2. Fetch fresh network payload for authenticated user (deduplicated per identity)
     let inFlight = this.inFlightRequests.get(currentIdentityKey);
+    if (inFlight) {
+      // Stage 0 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md 10-stage
+      // reliability plan): this dedup already existed and already works --
+      // this just measures how often it actually fires, which the plan's
+      // baseline explicitly asks for ("duplicate request counts").
+      recordDuplicateRequestAvoided(telemetryIdentity, 'home', isManualRefresh ? 'pull_refresh' : wasAlreadyValid ? 'focus' : 'mount');
+    }
     if (!inFlight) {
       // Already implicitly false right after a manual refresh, since that
       // branch above resets lastCalendarLoadedAt to 0 -- no separate
@@ -336,6 +343,7 @@ export class HomeSummaryCoordinator {
       }
 
       if (result?.unauthorized) {
+        recordRefreshFailure(telemetryIdentity, 'home', { reason: 'unauthorized', hadCachedData: this.state.hasValidState });
         this.invalidateMemoryState(null);
         this.deps.onSetLoading(false);
         this.deps.onRedirectToLogin();
@@ -403,9 +411,17 @@ export class HomeSummaryCoordinator {
         if (isFetchCancelled(error) && retryCount === 0 && !this.state.hasValidState) {
           return this.loadHome(identity, isManualRefresh, retryCount + 1);
         }
+        const reason = isFetchCancelled(error) ? 'timeout' : 'network';
         if (!this.state.hasValidState) {
           this.deps.onSetError(true);
-          recordRefreshFailure(telemetryIdentity, 'home');
+          recordRefreshFailure(telemetryIdentity, 'home', { reason, hadCachedData: false });
+        } else {
+          // Stage 0: this is the "revalidation failed but we kept showing
+          // stale content" case -- onSetError is deliberately NOT called
+          // here (existing behavior, unchanged), so the screen stays quiet.
+          // Recording it is new: without this, there was no baseline number
+          // for how often a background refresh silently fails.
+          recordRefreshFailure(telemetryIdentity, 'home', { reason, hadCachedData: true });
         }
         this.deps.onSetLoading(false);
       }
