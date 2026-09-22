@@ -1130,7 +1130,7 @@ function HomeContent() {
       id: 'sri-krishna',
       name: 'Sri Krishna',
       tagline: 'Ancient wisdom. Daily practice.',
-      href: '/dharm-veer',
+      href: '/dharm-veer/sri-krishna',
     },
   }), []);
 
