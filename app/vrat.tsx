@@ -19,7 +19,6 @@ import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, resolveVratSlug, type VratData } from '@/lib/vrat-data';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode } from '@/lib/guestSession';
 import {
   claimPromptForSession,
   getPromptDismissedAt,
@@ -28,7 +27,8 @@ import {
 } from '@/lib/progressiveProfiling';
 import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
 import { isConfirmedVratOccurrence } from '@/lib/vrat-observation';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { readVratGeoCache, writeVratGeoCache, type VratCacheIdentity, type VratGeoState } from '@/lib/vratCache';
 import {
   parseServerTimingHeader,
   recordRefreshFailure,
@@ -40,18 +40,7 @@ type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
 const TRADITION_FILTERS: Tradition[] = ['all', 'hindu', 'sikh', 'buddhist', 'jain'];
 
-type ProfileGeoState = {
-  lat: number;
-  lon: number;
-  timezone: string;
-  tradition: string | null;
-  appLanguage: string | null;
-  meaningLanguage: string | null;
-  calendarProfile: string | null;
-  calendarScope: string | null;
-};
-
-const DEFAULT_GEO: ProfileGeoState = {
+const DEFAULT_GEO: VratGeoState = {
   lat: 23.1765,
   lon: 75.7885,
   timezone: 'Asia/Kolkata',
@@ -89,7 +78,7 @@ export default function VratScreen() {
   const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
-  const [geo, setGeo] = useState<ProfileGeoState>(DEFAULT_GEO);
+  const [geo, setGeo] = useState<VratGeoState>(DEFAULT_GEO);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedTradition, setSelectedTradition] = useState<Tradition>('all');
   const [upcomingVrats, setUpcomingVrats] = useState<UpcomingVrat[]>([]);
@@ -101,60 +90,75 @@ export default function VratScreen() {
   const routeOpenRecordedRef = useRef(false);
 
   // ── Load User Profile ───────────────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
+  // Auth-waterfall fix (reliability plan item 5) + cache-first paint
+  // (reliability plan item 6), done together since both touch this exact
+  // load: appIdentity replaces the independent guest-flag and session
+  // re-verification round trip, and a cache hit clears `loading`
+  // immediately so the full-screen ActivityIndicator is reserved for a
+  // genuine first-ever load with nothing cached yet.
+  const loadProfile = useCallback(async () => {
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
+    if (!isCurrent()) return;
 
-    async function loadProfile() {
-      try {
-        const guest = await isGuestMode();
-        if (guest) {
-          if (!cancelled) setLoading(false);
-          return;
-        }
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          if (!cancelled) setLoading(false);
-          return;
-        }
-
-        if (!cancelled) setUserId(session.user.id);
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('lat, lon, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        if (profile && !cancelled) {
-          setGeo({
-            lat: profile.lat ?? DEFAULT_GEO.lat,
-            lon: profile.lon ?? DEFAULT_GEO.lon,
-            timezone: profile.timezone ?? DEFAULT_GEO.timezone,
-            tradition: profile.tradition ?? DEFAULT_GEO.tradition,
-            appLanguage: profile.app_language ?? DEFAULT_GEO.appLanguage,
-            meaningLanguage: profile.meaning_language ?? DEFAULT_GEO.meaningLanguage,
-            calendarProfile: profile.calendar_profile ?? null,
-            calendarScope: profile.calendar_scope ?? null,
-          });
-
-          if (profile.tradition && ['hindu', 'sikh', 'buddhist', 'jain'].includes(profile.tradition)) {
-            setSelectedTradition(profile.tradition as Tradition);
-          }
-        }
-      } catch (err) {
-        console.error('[Vrat] Profile load error:', err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    if (appIdentity.kind !== 'authenticated') {
+      // Guest browses Vrat with DEFAULT_GEO's fallback location -- no
+      // network call needed, so no first-load blocking state applies.
+      setLoading(false);
+      return;
     }
 
-    loadProfile();
+    const userId = appIdentity.userId;
+    setUserId(userId);
+    const identity: VratCacheIdentity = { kind: 'authenticated', userId };
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const cached = await readVratGeoCache(identity);
+    if (!isCurrent()) return;
+    if (cached) {
+      setGeo(cached);
+      if (cached.tradition && ['hindu', 'sikh', 'buddhist', 'jain'].includes(cached.tradition)) {
+        setSelectedTradition(cached.tradition as Tradition);
+      }
+      setLoading(false);
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('lat, lon, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
+        .eq('id', userId)
+        .maybeSingle();
+      if (!isCurrent()) return;
+
+      if (profile) {
+        const nextGeo: VratGeoState = {
+          lat: profile.lat ?? DEFAULT_GEO.lat,
+          lon: profile.lon ?? DEFAULT_GEO.lon,
+          timezone: profile.timezone ?? DEFAULT_GEO.timezone,
+          tradition: profile.tradition ?? DEFAULT_GEO.tradition,
+          appLanguage: profile.app_language ?? DEFAULT_GEO.appLanguage,
+          meaningLanguage: profile.meaning_language ?? DEFAULT_GEO.meaningLanguage,
+          calendarProfile: profile.calendar_profile ?? null,
+          calendarScope: profile.calendar_scope ?? null,
+        };
+        setGeo(nextGeo);
+        if (nextGeo.tradition && ['hindu', 'sikh', 'buddhist', 'jain'].includes(nextGeo.tradition)) {
+          setSelectedTradition(nextGeo.tradition as Tradition);
+        }
+        void writeVratGeoCache(identity, nextGeo);
+      }
+    } catch (err) {
+      console.error('[Vrat] Profile load error:', err);
+    }
+  }, [appIdentity]);
+
+  useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
+    loadProfile().finally(() => {
+      if (isCurrent()) setLoading(false);
+    });
+  }, [appIdentity.kind, loadProfile]);
 
   // ── Progressive Profiling Prompt Evaluation ─────────────────────────────
   useEffect(() => {
