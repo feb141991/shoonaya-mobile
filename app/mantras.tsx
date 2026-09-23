@@ -12,6 +12,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 // ── Bhakti Phase 7 — native equivalent of the PWA's
 // src/app/(main)/mantras/MantrasClient.tsx. Route is a top-level /mantras
@@ -36,6 +37,7 @@ const AMBER = COLORS.brandGold;
 
 export default function MantrasScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -47,22 +49,23 @@ export default function MantrasScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('all');
 
   const load = useCallback(async () => {
+    // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
+    // already-centrally-resolved identity instead of independently
+    // re-verifying the session on every mount.
+    if (appIdentity.kind === 'loading') return;
     setLoading(true);
     setLoadError(false);
     try {
-      const [{ data: { user } }, mantrasRes] = await Promise.all([
-        supabase.auth.getUser(),
-        apiFetch('/api/bhakti/mantras'),
-      ]);
+      const mantrasRes = await apiFetch('/api/bhakti/mantras');
       if (!mantrasRes.ok) { setLoadError(true); return; }
       const json = await mantrasRes.json();
       setMantras(Array.isArray(json?.mantras) ? json.mantras : []);
 
-      if (user) {
+      if (appIdentity.kind === 'authenticated') {
         const { data: profile } = await supabase
           .from('profiles')
           .select('tradition, is_pro')
-          .eq('id', user.id)
+          .eq('id', appIdentity.userId)
           .single();
         setTradition(profile?.tradition ?? 'hindu');
         setIsPro(profile?.is_pro ?? false);
@@ -72,9 +75,12 @@ export default function MantrasScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [appIdentity]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
+    void load();
+  }, [load, appIdentity.kind]);
 
   const displayTradition = tradition.charAt(0).toUpperCase() + tradition.slice(1);
 

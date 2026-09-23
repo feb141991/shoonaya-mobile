@@ -30,7 +30,8 @@ import { classifyFailure, nextBackoffMs, HttpError } from '@/lib/retryPolicy';
 import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
 import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { setGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 // Native's notification inbox replaces the Home bell's former alert-only
 // behavior. Matches the PWA's notification panel UX
@@ -143,6 +144,7 @@ const NotificationListRow = memo(function NotificationListRow({ row, theme, onPr
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const isDark = useColorScheme() === 'dark';
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -305,9 +307,16 @@ export default function NotificationsScreen() {
   // badge reads (lib/notificationsCache.ts), so a mark-read/clear done
   // here is visible there without Home needing its own extra round trip.
   const load = useCallback(async (options: { skipCache?: boolean } = {}) => {
+    // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
+    // already-centrally-resolved identity instead of independently
+    // re-verifying the session/guest flag on every mount.
+    // userId/userIdRef stay as-is below -- they're read from setTimeout
+    // closures and other callbacks across re-renders that don't have their
+    // own appIdentity subscription, only populated from it here.
+    if (appIdentity.kind === 'loading') return;
     setLoadError(false);
 
-    if (await isGuestMode()) {
+    if (appIdentity.kind === 'guest') {
       // A notification inbox is inherently tied to an account — nothing
       // generic to show, so land on a "sign in to continue" empty state
       // instead of hitting Supabase and hard-redirecting to login.
@@ -315,20 +324,17 @@ export default function NotificationsScreen() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
       router.replace('/(auth)/login');
       return;
     }
 
-    setUserId(user.id);
-    userIdRef.current = user.id;
+    const uid = appIdentity.userId;
+    setUserId(uid);
+    userIdRef.current = uid;
 
     if (!options.skipCache) {
-      const cached = await readNotificationsCache(user.id);
+      const cached = await readNotificationsCache(uid);
       if (cached) {
         setNotifications(cached.notifications);
         setLoading(false);
@@ -344,12 +350,13 @@ export default function NotificationsScreen() {
       }
     }
 
-    const rows = await fetchNotifications(user.id);
+    const rows = await fetchNotifications(uid);
     setNotifications(rows);
-    await writeNotificationsCache(user.id, rows);
-  }, [router, attemptOperation]);
+    await writeNotificationsCache(uid, rows);
+  }, [router, attemptOperation, appIdentity]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     const startedAt = Date.now();
     routeOpenCacheHitRef.current = false;
     const run = async () => {
@@ -372,7 +379,7 @@ export default function NotificationsScreen() {
       }
     };
     void run();
-  }, [load]);
+  }, [load, appIdentity.kind]);
 
   // Resume on foreground -- per the agreed retry policy, retries happen
   // when the app is actually in front with network available, never via

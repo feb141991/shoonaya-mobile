@@ -24,7 +24,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { setGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
 import {
   malaSessionBeads,
   malaSessionCreatedAt,
@@ -159,6 +160,7 @@ function AnimatedColumn({ targetHeight, color, index, maxHeight = 56 }: { target
 
 export default function JapaInsightsScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const handleBack = useFallbackBackHandler('/(tabs)/japa', true);
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
@@ -171,17 +173,18 @@ export default function JapaInsightsScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
+    // already-centrally-resolved identity instead of independently
+    // re-verifying the session/guest flag on every mount.
+    if (appIdentity.kind === 'loading') return;
     setLoadError(false);
 
-    if (await isGuestMode()) {
+    if (appIdentity.kind === 'guest') {
       setIsGuest(true);
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
       router.replace('/(auth)/login');
       return;
     }
@@ -194,7 +197,7 @@ export default function JapaInsightsScreen() {
       .select(
         'id, user_id, mantra, chant_source, count, target_count, duration_seconds, notes, share_scope, completed_at, created_at, date, rounds, bead_count, mantra_id, duration_secs, mala_id, background_scene, tradition, practice_type, intention, completion_type, target_rounds, completed_rounds, completed_beads, mood_before, mood_after, ambient_id, spiritual_time_window, spiritual_date, timezone, haptics_enabled, source_route, panchang_context'
       )
-      .eq('user_id', user.id)
+      .eq('user_id', appIdentity.userId)
       .gte('created_at', fromDate.toISOString())
       .order('created_at', { ascending: false });
 
@@ -204,11 +207,12 @@ export default function JapaInsightsScreen() {
     }
 
     setSessions((data as MalaSessionRow[] | null) ?? []);
-  }, [router]);
+  }, [router, appIdentity]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     loadData().finally(() => setLoading(false));
-  }, [loadData]);
+  }, [loadData, appIdentity.kind]);
 
   const filtered = useMemo(() => {
     const opt = RANGE_OPTIONS.find((item) => item.key === range) ?? RANGE_OPTIONS[2];

@@ -27,7 +27,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/li
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 const GUEST_SHLOKAS: Record<string, SacredText> = {
@@ -119,6 +119,7 @@ function AmbientBackdrop({ isDark, brand }: { isDark: boolean; brand: string }) 
 
 export default function ShlokaScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const isDark = useColorScheme() === 'dark';
   const shareCardRef = useRef<View | null>(null);
 
@@ -159,8 +160,15 @@ export default function ShlokaScreen() {
   }, []);
 
   const load = useCallback(async () => {
+    // Auth-waterfall fix (reliability plan item 5): this used to
+    // independently re-check the guest flag and re-verify the session on
+    // every mount, purely to learn what app/_layout.tsx's AuthCoordinator
+    // already resolved before this screen was ever reachable. appIdentity
+    // reads that same centrally-resolved, already-current identity
+    // synchronously.
+    if (appIdentity.kind === 'loading') return;
     setLoadError(false);
-    const guest = await isGuestMode();
+    const guest = appIdentity.kind === 'guest';
     setIsGuest(guest);
 
     if (guest) {
@@ -178,21 +186,21 @@ export default function ShlokaScreen() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
+      // Defensive fallback, not the primary path -- AuthCoordinator
+      // already redirects away from this screen for an unauthenticated
+      // session before it would ever mount.
       router.replace('/(auth)/login');
       return;
     }
+    const userId = appIdentity.userId;
 
     const [summaryResponse, profileResult] = await Promise.all([
       apiFetch('/api/native/home-summary'),
       supabase
         .from('profiles')
         .select('timezone, shloka_streak, last_shloka_date, tradition, full_name, username')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single(),
     ]);
 
@@ -217,21 +225,27 @@ export default function ShlokaScreen() {
       source: json.sacredText.source ?? '',
     });
     setProfile({
-      userId: user.id,
+      userId,
       timezone: row?.timezone ?? 'UTC',
       shlokaStreak: row?.shloka_streak ?? 0,
       lastShlokaDate: row?.last_shloka_date ?? null,
       tradition: row?.tradition ?? null,
       userName: row?.full_name || row?.username || 'Seeker',
     });
-  }, [router]);
+  }, [router, appIdentity]);
 
   useEffect(() => {
+    // Guards against a brief false-empty flash: without this, the effect
+    // would run once while appIdentity is still 'loading' (load() returns
+    // immediately without setting any data), set loading back to false via
+    // .finally(), and only then re-run once identity actually resolves --
+    // showing an empty screen for one frame in between.
+    if (appIdentity.kind === 'loading') return;
     setLoading(true);
     load()
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
-  }, [load]);
+  }, [load, appIdentity.kind]);
 
   // Verse-card entrance, once per loaded verse. Skipped under reduced
   // motion (card just renders at its final position/opacity).

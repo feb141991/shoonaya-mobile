@@ -1,5 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { apiFetch, isFetchCancelled } from './api';
+import { getAppIdentity } from './appIdentity';
 import { attemptMoodCheckinWithRetry } from './moodCheckinRetry';
 import { recordMutationRetryOutcome } from './telemetry';
 
@@ -58,14 +59,15 @@ export async function fetchMoodStatus(): Promise<MoodStatus | null> {
 // on it (see the migration adding that column), so retrying with the same
 // id can never create a duplicate check-in row the way retrying blindly
 // used to risk.
-async function getTelemetryUserId(): Promise<string | null> {
-  try {
-    const { supabase } = await import('./supabase');
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id ?? null;
-  } catch {
-    return null;
-  }
+// Auth-waterfall fix (reliability plan item 5): this exists purely to
+// attribute a mutation-retry telemetry event to a user id -- it used to
+// independently re-verify the session over the network just to read the
+// id off an already-centrally-resolved identity. getAppIdentity() reads
+// the same in-memory store app/_layout.tsx's AuthCoordinator already
+// keeps current, synchronously.
+function getTelemetryUserId(): string | null {
+  const identity = getAppIdentity();
+  return identity.kind === 'authenticated' ? identity.userId : null;
 }
 
 export async function startMoodCheckin(
@@ -87,9 +89,8 @@ export async function startMoodCheckin(
   });
 
   return attemptMoodCheckinWithRetry(apiFetch, body, (outcome, attempts) => {
-    void getTelemetryUserId().then((uid) => {
-      if (uid) recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'mood', outcome, attempts);
-    });
+    const uid = getTelemetryUserId();
+    if (uid) recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'mood', outcome, attempts);
   });
 }
 

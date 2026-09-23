@@ -35,9 +35,9 @@ import {
   requestNotificationPermission,
 } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { setGuestMode } from '@/lib/guestSession';
+import { getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { clearAllHomeCaches } from '@/lib/homeCache';
-import { getAppIdentity } from '@/lib/appIdentity';
 import { replayHomeDiscovery } from '@/lib/homeDiscovery';
 import { resetFirstWeekGuideCue } from '@/lib/firstWeekGuideStorage';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
@@ -241,6 +241,7 @@ async function openLegalUrl(path: '/terms' | '/privacy' | '/sources') {
 
 export function SettingsDetailScreen({ section }: { section: SettingsSectionKey }) {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const { setLanguage } = useLanguage();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
@@ -379,7 +380,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   }
 
   const loadSettings = useCallback(async () => {
-    const guest = await isGuestMode();
+    // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
+    // already-centrally-resolved identity instead of independently
+    // re-verifying the session/guest flag on every mount.
+    if (appIdentity.kind === 'loading') return;
+    const guest = appIdentity.kind === 'guest';
     setIsGuest(guest);
 
     const [hero, size, greeting] = await Promise.all([
@@ -406,16 +411,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
       router.replace('/(auth)/login');
       return;
     }
 
-    const identity: SettingsCacheIdentity = { kind: 'authenticated', userId: user.id };
+    const identity: SettingsCacheIdentity = { kind: 'authenticated', userId: appIdentity.userId };
     identityRef.current = identity;
 
     const [profileRes, cached, localTheme] = await Promise.all([
@@ -424,7 +425,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         .select(
           'tradition, wants_festival_reminders, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
         )
-        .eq('id', user.id)
+        .eq('id', appIdentity.userId)
         .single(),
       readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
@@ -459,7 +460,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     // an explicit user Retry tap.
     const resumable = pending.find((op) => op.status === 'pending');
     if (resumable) void attemptPendingWrite(resumable);
-  }, [router, attemptPendingWrite, clearRetryTimer]);
+  }, [router, attemptPendingWrite, clearRetryTimer, appIdentity]);
 
   // Resume a pending write whenever the app returns to the foreground --
   // per the agreed retry policy, retries happen when foregrounded with
@@ -530,10 +531,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   }, []);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     runLoad();
     void loadDeletionStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appIdentity.kind, runLoad, loadDeletionStatus]);
 
   // Guest: local-only, no server round trip, no outbox -- settings.ts's
   // pendingOperations stays permanently empty for a guest identity.
@@ -623,12 +624,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     if (isGuest) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (session?.user.id) {
-      void registerPushToken(session.user.id);
+    if (appIdentity.kind === 'authenticated') {
+      void registerPushToken(appIdentity.userId);
     }
   };
 

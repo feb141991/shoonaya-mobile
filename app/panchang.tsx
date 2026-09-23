@@ -32,7 +32,7 @@ import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
-import { isGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
 import {
   claimPromptForSession,
   getPromptDismissedAt,
@@ -369,6 +369,7 @@ const iconBtnStyle = {
 
 export default function PanchangScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const handleBack = useFallbackBackHandler('/(tabs)', true);
   const [profileState, setProfileState] = useState<PanchangState>(INITIAL_STATE);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -421,7 +422,11 @@ export default function PanchangScreen() {
   const loadPanchangContext = useCallback(async (): Promise<
     { outcome: 'ready' | 'failed'; identity: TelemetryIdentity } | { outcome: 'redirected'; identity: null }
   > => {
-    const guest = await isGuestMode();
+    // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
+    // already-centrally-resolved identity instead of independently
+    // re-verifying the session/guest flag on every mount. The calling
+    // effect only invokes this once appIdentity.kind !== 'loading'.
+    const guest = appIdentity.kind === 'guest';
     // Reassigned to the real authenticated identity as soon as it's known,
     // so a thrown error further down attributes the failure correctly
     // instead of always falling back to guest.
@@ -447,20 +452,16 @@ export default function PanchangScreen() {
         return { outcome: 'ready', identity };
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (appIdentity.kind !== 'authenticated') {
         router.replace('/(auth)/login');
         return { outcome: 'redirected', identity: null };
       }
-      identity = { kind: 'authenticated', userId: user.id };
+      identity = { kind: 'authenticated', userId: appIdentity.userId };
 
       const { data: profile } = await supabase
         .from('profiles')
         .select('latitude, longitude, timezone, tradition, rashi, city, neighbourhood')
-        .eq('id', user.id)
+        .eq('id', appIdentity.userId)
         .single();
 
       const nextState: PanchangState = {
@@ -472,7 +473,7 @@ export default function PanchangScreen() {
         city: profile?.neighbourhood ?? profile?.city ?? '',
       };
       setProfileState(nextState);
-      setUserId(user.id);
+      setUserId(appIdentity.userId);
 
       const [festivalsResponse, viewedResponse] = await Promise.all([
         apiFetch(
@@ -500,9 +501,10 @@ export default function PanchangScreen() {
       // real authenticated user if the throw happened after auth.getUser().
       return { outcome: 'failed', identity };
     }
-  }, [router]);
+  }, [router, appIdentity]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     const startedAt = Date.now();
     void loadPanchangContext()
       .then(({ outcome, identity }) => {
@@ -514,7 +516,7 @@ export default function PanchangScreen() {
         }
       })
       .finally(() => setLoading(false));
-  }, [loadPanchangContext]);
+  }, [loadPanchangContext, appIdentity.kind]);
 
   const saveRashi = async (rashi: string) => {
     if (!userId || savingRashi) return;

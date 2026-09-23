@@ -20,7 +20,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
-import { isGuestMode } from '@/lib/guestSession';
+import { useAppIdentity } from '@/lib/appIdentity';
 import { getAshramaDuties, getAshramaMeta, type GenderContext, type LifeStage } from '@/lib/ashrama';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTraditionGreeting } from '@/lib/greetings';
@@ -166,6 +166,7 @@ function ProgressRing({ value, total, brand, track }: { value: number; total: nu
 
 export default function NityaKarmaHubScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const handleBack = useFallbackBackHandler('/(tabs)', true);
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
@@ -199,9 +200,17 @@ export default function NityaKarmaHubScreen() {
   }, []);
 
   const loadHubData = useCallback(async () => {
+    // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
+    // already-centrally-resolved identity app/_layout.tsx's AuthCoordinator
+    // maintains, instead of independently re-checking the guest flag and
+    // re-verifying the session on every focus. 'loading' is a defensive
+    // no-op in practice -- this screen is only reachable once the root
+    // layout's own readiness gate has already resolved identity -- not a
+    // state genuinely expected here.
+    if (appIdentity.kind === 'loading') return;
     setLoading(true);
     try {
-      const guest = await isGuestMode();
+      const guest = appIdentity.kind === 'guest';
       if (guest) {
         const greetingPick = await getGreetingPick();
         const guestGreeting = greetingPick || getTraditionGreeting('hindu', new Date().getDate());
@@ -221,11 +230,13 @@ export default function NityaKarmaHubScreen() {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (appIdentity.kind !== 'authenticated') {
+        // Defensive fallback -- AuthCoordinator already redirects away
+        // from this screen for an unauthenticated session.
         router.replace('/(auth)/login');
         return;
       }
+      const userId = appIdentity.userId;
 
       const [nityaResp, greetingPick, { data: profile }] = await Promise.all([
         apiFetch('/api/native/nitya-karma'),
@@ -233,7 +244,7 @@ export default function NityaKarmaHubScreen() {
         supabase
           .from('profiles')
           .select('life_stage, gender_context, tradition, timezone')
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle(),
       ]);
 
@@ -250,7 +261,7 @@ export default function NityaKarmaHubScreen() {
         currentStreak = payload.streak?.current ?? 0;
 
         const today = spiritualDate(payload.timezone ?? 'UTC');
-        const storageKey = `nitya_done_${user.id}_${today}`;
+        const storageKey = `nitya_done_${userId}_${today}`;
         const rawLocal = await AsyncStorage.getItem(storageKey);
         const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
         const mergedSteps = payload.steps?.map((step) => ({
@@ -278,7 +289,7 @@ export default function NityaKarmaHubScreen() {
         dutiesCount = duties.length;
 
         const today = spiritualDate(profile?.timezone ?? 'UTC');
-        const ashramaKey = `ashrama_checks_${user.id}_${today}`;
+        const ashramaKey = `ashrama_checks_${userId}_${today}`;
         const rawChecks = await AsyncStorage.getItem(ashramaKey);
         const checkedIds = new Set<string>(rawChecks ? JSON.parse(rawChecks) : []);
         completedDuties = duties.filter((duty) => checkedIds.has(duty.id)).length;
@@ -296,7 +307,7 @@ export default function NityaKarmaHubScreen() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, appIdentity]);
 
   useFocusEffect(
     useCallback(() => {
