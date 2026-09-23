@@ -93,10 +93,26 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
  * Pure helper determining whether notification reminders should be enabled in the profile.
  *
  * Rules:
- * - User choice 'enabled' AND OS permission granted => true (eligible for reminders & push token)
- * - User choice 'disabled' (e.g. tapped 'Not now' or denied) => false (even if OS permission was already granted)
- * - User choice 'unset' => false
- * - OS permission denied/revoked => false
+ * - User choice 'enabled' => true (in-app reminders enabled in profile)
+ * - User choice 'disabled' => false (explicit opt-out)
+ * - User choice 'unset' => false (conservative fail-closed default)
+ *
+ * Note: OS push permission is decoupled from profile in-app reminder preferences.
+ * Push token registration requires both user choice 'enabled' AND OS permission granted.
+ */
+export function computeContentNotificationOptIn(choice: NotificationChoice): boolean {
+  return choice === 'enabled';
+}
+
+export function computePushNotificationEligibility(
+  choice: NotificationChoice,
+  osPermissionGranted: boolean
+): boolean {
+  return choice === 'enabled' && osPermissionGranted;
+}
+
+/**
+ * Backward-compatible helper for callers that evaluate push eligibility.
  */
 export function computeFinalNotificationState(
   choice: NotificationChoice,
@@ -105,12 +121,14 @@ export function computeFinalNotificationState(
   return choice === 'enabled' && osPermissionGranted;
 }
 
-export function getNotificationPersistencePayload(permissionGranted: boolean) {
+export function getNotificationPersistencePayload(userWantsReminders: boolean) {
   return {
-    wants_festival_reminders: permissionGranted,
-    wants_nitya_reminders: permissionGranted,
-    wants_shloka_reminders: permissionGranted,
-    wants_community_notifications: permissionGranted,
+    wants_festival_reminders: userWantsReminders,
+    wants_vrat_reminders: userWantsReminders,
+    wants_tithi_reminders: false,
+    wants_nitya_reminders: userWantsReminders,
+    wants_shloka_reminders: userWantsReminders,
+    wants_community_notifications: userWantsReminders,
   };
 }
 

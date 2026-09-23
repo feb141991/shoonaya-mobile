@@ -36,7 +36,7 @@ import {
 } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
-import { getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, getAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { clearAllHomeCaches } from '@/lib/homeCache';
 import { replayHomeDiscovery } from '@/lib/homeDiscovery';
 import { resetFirstWeekGuideCue } from '@/lib/firstWeekGuideStorage';
@@ -77,6 +77,8 @@ const THEME_STORAGE_KEY = 'sangam_theme_preference';
 
 const INITIAL_SETTINGS: SettingsState = {
   wants_festival_reminders: true,
+  wants_vrat_reminders: true,
+  wants_tithi_reminders: false,
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,
   wants_community_notifications: true,
@@ -90,7 +92,9 @@ const INITIAL_SETTINGS: SettingsState = {
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; badge?: string }[] = [
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
-  { key: 'wants_festival_reminders', label: 'Festival reminders', subtitle: 'Vrat, tithi & observance alerts' },
+  { key: 'wants_festival_reminders', label: 'Sacred festivals', subtitle: 'Major and regional sacred festivals' },
+  { key: 'wants_vrat_reminders', label: 'Vrats & fasting', subtitle: 'Ekadashi, Pradosha, Purnima & fasting days' },
+  { key: 'wants_tithi_reminders', label: 'Tithi alerts', subtitle: 'Daily lunar phase transitions' },
   { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
   { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', disabled: true, badge: 'Coming soon' },
 ];
@@ -112,6 +116,8 @@ const THEME_OPTIONS: { key: ThemePref; label: string }[] = [
 function toSettingsState(value: Partial<SettingsState> | null | undefined): SettingsState {
   return {
     wants_festival_reminders: value?.wants_festival_reminders ?? INITIAL_SETTINGS.wants_festival_reminders,
+    wants_vrat_reminders: value?.wants_vrat_reminders ?? INITIAL_SETTINGS.wants_vrat_reminders,
+    wants_tithi_reminders: value?.wants_tithi_reminders ?? INITIAL_SETTINGS.wants_tithi_reminders,
     wants_shloka_reminders: value?.wants_shloka_reminders ?? INITIAL_SETTINGS.wants_shloka_reminders,
     wants_nitya_reminders: value?.wants_nitya_reminders ?? INITIAL_SETTINGS.wants_nitya_reminders,
     wants_community_notifications: value?.wants_community_notifications ?? INITIAL_SETTINGS.wants_community_notifications,
@@ -383,7 +389,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
     // already-centrally-resolved identity instead of independently
     // re-verifying the session/guest flag on every mount.
+    const lease = captureAppIdentity();
     if (appIdentity.kind === 'loading') return;
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     const guest = appIdentity.kind === 'guest';
     setIsGuest(guest);
 
@@ -392,6 +400,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       getHeroSize(),
       getGreetingPick(),
     ]);
+    if (!lease.isCurrent()) return;
     setHeroPickState(hero);
     setHeroSizeState(size);
     setGreetingPickState(greeting);
@@ -404,6 +413,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         readSettingsCache({ kind: 'guest' }),
         AsyncStorage.getItem(THEME_STORAGE_KEY),
       ]);
+      if (!lease.isCurrent()) return;
       setSettings(toSettingsState({ ...INITIAL_SETTINGS, ...cached?.settings }));
       if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
         setThemePref(localTheme);
@@ -423,13 +433,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       supabase
         .from('profiles')
         .select(
-          'tradition, wants_festival_reminders, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
+          'tradition, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
         )
         .eq('id', appIdentity.userId)
         .single(),
       readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
     ]);
+    if (!lease.isCurrent()) return;
 
     if (profileRes.error) throw profileRes.error;
 
@@ -448,6 +459,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       serverUpdatedAt: cached?.serverUpdatedAt ?? null,
       pendingOperations: pending,
     });
+    if (!lease.isCurrent()) return;
 
     if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
       setThemePref(localTheme);
@@ -482,37 +494,43 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   }, [attemptPendingWrite]);
 
   const runLoad = useCallback(() => {
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity) || appIdentity.kind === 'loading') return;
     setLoading(true);
     setLoadError(false);
     const startedAt = Date.now();
     loadSettings()
       .then(() => {
+        if (!lease.isCurrent()) return;
         // No cache-first paint here (unlike Home/Mandali's SWR): Settings
         // waits for the profile fetch + cache read together, so cacheHit
         // is always false -- this still measures real "how long until
         // Settings is usable" timing.
-        const identity = identityRef.current;
-        if (identity && identity.kind !== 'guest') {
-          recordRouteOpen(identity, 'settings', { cacheHit: false, durationMs: Date.now() - startedAt });
+        if (appIdentity.kind === 'authenticated') {
+          recordRouteOpen({ kind: 'authenticated', userId: appIdentity.userId }, 'settings', { cacheHit: false, durationMs: Date.now() - startedAt });
         }
       })
       .catch(() => {
+        if (!lease.isCurrent()) return;
         setLoadError(true);
-        const identity = identityRef.current;
-        if (identity && identity.kind !== 'guest') recordRefreshFailure(identity, 'settings');
+        if (appIdentity.kind === 'authenticated') recordRefreshFailure({ kind: 'authenticated', userId: appIdentity.userId }, 'settings');
       })
-      .finally(() => setLoading(false));
-  }, [loadSettings]);
+      .finally(() => { if (lease.isCurrent()) setLoading(false); });
+  }, [loadSettings, appIdentity]);
 
   // Best-effort: a failure here just leaves the Danger Zone in its default
   // "Delete account" state rather than blocking the rest of Settings from
   // loading (loadSettings/runLoad above already has its own retry UI for
   // the settings it's responsible for).
   const loadDeletionStatus = useCallback(async () => {
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity) || appIdentity.kind !== 'authenticated') return;
     try {
-      const response = await apiFetch('/api/user/delete/status');
+      const response = await apiFetch('/api/user/delete/status', { expectedUserId: appIdentity.userId });
+      if (!lease.isCurrent()) return;
       if (!response.ok) return;
       const data: unknown = await response.json();
+      if (!lease.isCurrent()) return;
       if (data && typeof data === 'object' && (data as { success?: boolean }).success) {
         const status = data as {
           isDeleting?: boolean;
@@ -528,7 +546,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     } catch {
       // Best-effort -- see comment above.
     }
-  }, []);
+  }, [appIdentity]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;

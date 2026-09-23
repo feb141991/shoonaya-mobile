@@ -34,6 +34,10 @@ export type SettingsCacheIdentity =
 
 export type SettingsFields = {
   wants_festival_reminders: boolean;
+  wants_vrat_reminders?: boolean;
+  wants_tithi_reminders?: boolean;
+  observance_reminder_lead_days?: number[];
+  observance_reminder_time?: string;
   wants_shloka_reminders: boolean;
   wants_nitya_reminders: boolean;
   wants_community_notifications: boolean;

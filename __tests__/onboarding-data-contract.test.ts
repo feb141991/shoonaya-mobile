@@ -8,6 +8,8 @@ import {
   getNotificationPersistencePayload,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
+  computeContentNotificationOptIn,
+  computePushNotificationEligibility,
   computeFinalNotificationState,
   type Step,
   type TraditionKey,
@@ -116,58 +118,74 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
     it('Allow + OS granted => preferences true, token registration eligible', () => {
       const choice: NotificationChoice = 'enabled';
       const osGranted = true;
-      const finalState = computeFinalNotificationState(choice, osGranted);
-      assert.equal(finalState, true);
+      const contentOptIn = computeContentNotificationOptIn(choice);
+      const pushEligible = computePushNotificationEligibility(choice, osGranted);
+      assert.equal(contentOptIn, true);
+      assert.equal(pushEligible, true);
 
-      const payload = getNotificationPersistencePayload(finalState);
+      const payload = getNotificationPersistencePayload(contentOptIn);
       assert.deepEqual(payload, {
         wants_festival_reminders: true,
+        wants_vrat_reminders: true,
+        wants_tithi_reminders: false,
         wants_nitya_reminders: true,
         wants_shloka_reminders: true,
         wants_community_notifications: true,
       });
     });
 
-    it('Allow + OS denied/revoked => preferences false', () => {
+    it('Allow + OS denied/revoked => in-app preferences true, token registration disabled', () => {
       const choice: NotificationChoice = 'enabled';
       const osGranted = false;
-      const finalState = computeFinalNotificationState(choice, osGranted);
-      assert.equal(finalState, false);
+      const contentOptIn = computeContentNotificationOptIn(choice);
+      const pushEligible = computePushNotificationEligibility(choice, osGranted);
+      assert.equal(contentOptIn, true, 'Devotee choice must preserve in-app reminders even when OS push denied');
+      assert.equal(pushEligible, false, 'Push token registration must be false when OS denied');
 
-      const payload = getNotificationPersistencePayload(finalState);
+      const payload = getNotificationPersistencePayload(contentOptIn);
       assert.deepEqual(payload, {
-        wants_festival_reminders: false,
-        wants_nitya_reminders: false,
-        wants_shloka_reminders: false,
-        wants_community_notifications: false,
+        wants_festival_reminders: true,
+        wants_vrat_reminders: true,
+        wants_tithi_reminders: false,
+        wants_nitya_reminders: true,
+        wants_shloka_reminders: true,
+        wants_community_notifications: true,
       });
     });
 
-    it('Not now + OS granted => preferences false', () => {
+    it('Not now + OS granted => preferences false, token registration disabled', () => {
       const choice: NotificationChoice = 'disabled';
       const osGranted = true;
-      const finalState = computeFinalNotificationState(choice, osGranted);
-      assert.equal(finalState, false, 'User explicit "Not now" must override already-granted OS permission');
+      const contentOptIn = computeContentNotificationOptIn(choice);
+      const pushEligible = computePushNotificationEligibility(choice, osGranted);
+      assert.equal(contentOptIn, false, 'User explicit "Not now" must override already-granted OS permission');
+      assert.equal(pushEligible, false);
 
-      const payload = getNotificationPersistencePayload(finalState);
+      const payload = getNotificationPersistencePayload(contentOptIn);
       assert.equal(payload.wants_festival_reminders, false);
+      assert.equal(payload.wants_vrat_reminders, false);
+      assert.equal(payload.wants_tithi_reminders, false);
       assert.equal(payload.wants_nitya_reminders, false);
       assert.equal(payload.wants_shloka_reminders, false);
       assert.equal(payload.wants_community_notifications, false);
     });
 
-    it('Not now + OS denied => preferences false', () => {
+    it('Not now + OS denied => preferences false, token registration disabled', () => {
       const choice: NotificationChoice = 'disabled';
       const osGranted = false;
-      const finalState = computeFinalNotificationState(choice, osGranted);
-      assert.equal(finalState, false);
+      const contentOptIn = computeContentNotificationOptIn(choice);
+      const pushEligible = computePushNotificationEligibility(choice, osGranted);
+      assert.equal(contentOptIn, false);
+      assert.equal(pushEligible, false);
     });
 
     it('Restored disabled choice + OS granted => preferences false', () => {
       const restoredChoice: NotificationChoice = 'disabled';
       const liveOsPermission = true;
-      const finalState = computeFinalNotificationState(restoredChoice, liveOsPermission);
-      assert.equal(finalState, false, 'Restored "disabled" choice must keep reminder preferences false');
+      const contentOptIn = computeContentNotificationOptIn(restoredChoice);
+      const pushEligible = computePushNotificationEligibility(restoredChoice, liveOsPermission);
+      assert.equal(contentOptIn, false, 'Restored "disabled" choice must keep reminder preferences false');
+      assert.equal(pushEligible, false);
     });
 
     it('Unset choice => preferences false', () => {

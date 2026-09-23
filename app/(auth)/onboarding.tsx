@@ -38,6 +38,8 @@ import {
   stepEyebrow,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
+  computeContentNotificationOptIn,
+  computePushNotificationEligibility,
   computeFinalNotificationState,
 } from '@/lib/onboarding-contract';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
@@ -657,9 +659,10 @@ export default function OnboardingScreen() {
       // to what could by then be a different (or no) signed-in account.
       const identityAtStart = getAppIdentity();
 
-      // Re-check live OS permission and compute final notification state
+      // Re-check live OS permission, decoupling in-app content opt-in from OS push permission
       const osPermissionGranted = await checkNotificationPermission();
-      const finalNotificationsEnabled = computeFinalNotificationState(notificationChoice, osPermissionGranted);
+      const contentNotificationsEnabled = computeContentNotificationOptIn(notificationChoice);
+      const pushEligible = computePushNotificationEligibility(notificationChoice, osPermissionGranted);
 
       const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
       const profilePayload = buildOnboardingProfilePayload({
@@ -675,7 +678,7 @@ export default function OnboardingScreen() {
         calendarProfile,
         calendarScope,
         goals,
-        notificationsEnabled: finalNotificationsEnabled,
+        notificationsEnabled: contentNotificationsEnabled,
         location: capturedLocation,
       });
 
@@ -711,7 +714,7 @@ export default function OnboardingScreen() {
         return;
       }
 
-      if (finalNotificationsEnabled) {
+      if (pushEligible) {
         void registerPushToken(user.id);
       }
 
