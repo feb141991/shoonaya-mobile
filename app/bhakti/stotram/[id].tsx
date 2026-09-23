@@ -11,6 +11,7 @@ import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getDevotionalTrackById } from '@/lib/devotional-audio';
+import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { supabase } from '@/lib/supabase';
 
@@ -45,6 +46,10 @@ type Stotram = {
   audioTrackId?: string;
   verses: StotramVerse[];
 };
+
+function isStotram(value: unknown): value is Stotram {
+  return !!value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string';
+}
 
 const DEITY_COLOR: Record<string, string> = {
   ganesha: '#e07b3a',
@@ -93,23 +98,38 @@ export default function StotramDetailScreen() {
       setLoading(false);
       return;
     }
-    setLoading(true);
     setLoadError(false);
+
+    // Cache-first paint (reliability plan item 6): a stotram's content is
+    // the same for every visitor, so a cache hit shows it instantly and
+    // clears `loading` immediately, reserving SacredLoader for a genuine
+    // first-ever load with nothing cached yet. A failed background
+    // reconcile below must not blow away content already painted from
+    // the cache.
+    const cacheKey = bhaktiCacheKeys.stotramDetail(id);
+    const cached = await readBhaktiContentCache(cacheKey, isStotram);
+    const hadCache = Boolean(cached);
+    if (cached) {
+      setStotram(cached);
+      setLoading(false);
+    }
+
     try {
       const response = await apiFetch(`/api/bhakti/stotram/${id}`);
       if (!response.ok) {
-        setLoadError(true);
+        if (!hadCache) setLoadError(true);
         return;
       }
       const json = await response.json();
       const loadedStotram = (json?.stotram ?? null) as Stotram | null;
-      setStotram(loadedStotram);
       if (!loadedStotram) {
-        setLoadError(true);
+        if (!hadCache) setLoadError(true);
         return;
       }
+      setStotram(loadedStotram);
+      void writeBhaktiContentCache(cacheKey, loadedStotram);
     } catch {
-      setLoadError(true);
+      if (!hadCache) setLoadError(true);
     } finally {
       setLoading(false);
     }

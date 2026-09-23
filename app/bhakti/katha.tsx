@@ -20,6 +20,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
+import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 
 // ── Bhakti Phase 4 — native equivalent of the PWA's
 // src/app/(main)/bhakti/katha/KathaClient.tsx. Every katha-card in the
@@ -77,6 +78,10 @@ function isViewKey(value: string | undefined): value is ViewKey {
   return !!value && value in VIEW_META;
 }
 
+function isKathaList(value: unknown): value is KathaListItem[] {
+  return Array.isArray(value);
+}
+
 function badgeLabel(k: KathaListItem): string {
   if (k.tags.includes('heroes')) return 'Hero Legend';
   if (k.tags.includes('panchatantra')) return 'Wisdom Tale';
@@ -104,15 +109,34 @@ export default function KathaListScreen() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
     setLoadError(false);
+
+    // Cache-first paint (reliability plan item 6): this view's kathas are
+    // the same content for every visitor, so a cache hit shows them
+    // instantly and clears `loading` immediately, reserving SacredLoader
+    // for a genuine first-ever load with nothing cached yet. A failed
+    // background reconcile below must not blow away content already
+    // painted from the cache.
+    const cacheKey = bhaktiCacheKeys.kathaList(view);
+    const cached = await readBhaktiContentCache(cacheKey, isKathaList);
+    const hadCache = Boolean(cached);
+    if (cached) {
+      setKathas(cached);
+      setLoading(false);
+    }
+
     try {
       const response = await apiFetch(`/api/bhakti/katha?view=${view}`);
-      if (!response.ok) { setLoadError(true); return; }
+      if (!response.ok) {
+        if (!hadCache) setLoadError(true);
+        return;
+      }
       const json = await response.json();
-      setKathas(Array.isArray(json?.kathas) ? json.kathas : []);
+      const kathas: KathaListItem[] = Array.isArray(json?.kathas) ? json.kathas : [];
+      setKathas(kathas);
+      void writeBhaktiContentCache(cacheKey, kathas);
     } catch {
-      setLoadError(true);
+      if (!hadCache) setLoadError(true);
     } finally {
       setLoading(false);
     }

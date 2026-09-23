@@ -12,6 +12,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
+import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 
 // New Reader Foundation imports
 import { ReaderShell } from '@/components/reader/ReaderShell';
@@ -40,6 +41,10 @@ type FullKatha = {
   portrait?: string;
   relatedJapaMantra?: string;
 };
+
+function isFullKatha(value: unknown): value is FullKatha {
+  return !!value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string';
+}
 
 const TRADITION_COLOR: Record<string, string> = TRADITION_ACCENT;
 
@@ -106,20 +111,38 @@ export default function KathaReaderScreen() {
 
   const load = useCallback(async () => {
     if (!id) { setLoadError(true); setLoading(false); return; }
-    setLoading(true);
     setLoadError(false);
+
+    // Cache-first paint (reliability plan item 6): a katha's content is
+    // the same for every visitor, so a cache hit shows it instantly and
+    // clears `loading` immediately, reserving SacredLoader for a genuine
+    // first-ever load with nothing cached yet. A failed background
+    // reconcile below must not blow away content already painted from
+    // the cache.
+    const cacheKey = bhaktiCacheKeys.kathaDetail(id);
+    const cached = await readBhaktiContentCache(cacheKey, isFullKatha);
+    const hadCache = Boolean(cached);
+    if (cached) {
+      setKatha(cached);
+      setLoading(false);
+    }
+
     try {
       const response = await apiFetch(`/api/bhakti/katha/${id}`);
-      if (!response.ok) { setLoadError(true); return; }
-      const json = await response.json();
-      const loadedKatha = (json?.katha ?? null) as FullKatha | null;
-      setKatha(loadedKatha);
-      if (!loadedKatha) {
-        setLoadError(true);
+      if (!response.ok) {
+        if (!hadCache) setLoadError(true);
         return;
       }
+      const json = await response.json();
+      const loadedKatha = (json?.katha ?? null) as FullKatha | null;
+      if (!loadedKatha) {
+        if (!hadCache) setLoadError(true);
+        return;
+      }
+      setKatha(loadedKatha);
+      void writeBhaktiContentCache(cacheKey, loadedKatha);
     } catch {
-      setLoadError(true);
+      if (!hadCache) setLoadError(true);
     } finally {
       setLoading(false);
     }

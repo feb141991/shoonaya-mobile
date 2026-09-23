@@ -12,6 +12,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, RADII, TYPE, themeColor } from '@/lib/constants';
 import { getAppIdentity } from '@/lib/appIdentity';
 import { recordRouteOpen, recordRefreshFailure, recordServerTiming, parseServerTimingHeader, type TelemetryIdentity } from '@/lib/telemetry';
+import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 
 // ── Bhakti Phase 5 — native equivalent of the PWA's
 // src/app/(main)/bhakti/browse/page.tsx "Sacred Library". Backs the hub's
@@ -38,6 +39,13 @@ type StotramListItem = {
 
 type DeityMeta = Record<string, { label: string; emoji: string; color: string }>;
 type MoodMeta = Record<string, { label: string; emoji: string; desc: string }>;
+
+type StotramListPayload = { stotrams: StotramListItem[]; deityMeta: DeityMeta; moodMeta: MoodMeta };
+function isStotramListPayload(value: unknown): value is StotramListPayload {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return Array.isArray(v.stotrams) && typeof v.deityMeta === 'object' && typeof v.moodMeta === 'object';
+}
 
 const TYPE_LABELS: Record<string, string> = {
   mantra: 'Mantra', stotram: 'Stotram', kirtan: 'Kirtan',
@@ -111,7 +119,6 @@ export default function BrowseScreen() {
   const [type, setType] = useState('all');
 
   const load = useCallback(async () => {
-    setLoading(true);
     setLoadError(false);
     // This is a public, unauthenticated endpoint (browsable by guests), so
     // identity here is only for scoping telemetry storage, never for the
@@ -123,22 +130,45 @@ export default function BrowseScreen() {
       : appIdentity.kind === 'guest' ? { kind: 'guest' }
       : null;
     const startedAt = Date.now();
+
+    // Cache-first paint (reliability plan item 6): the sacred library is
+    // the same content for every visitor, so a cache hit shows it
+    // instantly and clears `loading` immediately, reserving SacredLoader
+    // for a genuine first-ever load with nothing cached yet. A failed
+    // background reconcile below must not blow away content already
+    // painted from the cache -- only surface the error page when there
+    // was nothing to fall back to.
+    const cached = await readBhaktiContentCache(bhaktiCacheKeys.stotramList(), isStotramListPayload);
+    const hadCache = Boolean(cached);
+    if (cached) {
+      setAll(cached.stotrams);
+      setDeityMeta(cached.deityMeta);
+      setMoodMeta(cached.moodMeta);
+      setLoading(false);
+    }
+
     try {
       const response = await apiFetch('/api/bhakti/stotram?limit=200');
       const serverTiming = parseServerTimingHeader(response.headers.get('Server-Timing'));
       if (identity && serverTiming) recordServerTiming(identity, 'bhakti', serverTiming);
       if (!response.ok) {
-        setLoadError(true);
+        if (!hadCache) setLoadError(true);
         if (identity) recordRefreshFailure(identity, 'bhakti');
         return;
       }
       const json = await response.json();
-      setAll(Array.isArray(json?.stotrams) ? json.stotrams : []);
-      setDeityMeta(json?.deityMeta ?? {});
-      setMoodMeta(json?.moodMeta ?? {});
+      const payload: StotramListPayload = {
+        stotrams: Array.isArray(json?.stotrams) ? json.stotrams : [],
+        deityMeta: json?.deityMeta ?? {},
+        moodMeta: json?.moodMeta ?? {},
+      };
+      setAll(payload.stotrams);
+      setDeityMeta(payload.deityMeta);
+      setMoodMeta(payload.moodMeta);
+      void writeBhaktiContentCache(bhaktiCacheKeys.stotramList(), payload);
       if (identity) recordRouteOpen(identity, 'bhakti', { cacheHit: false, durationMs: Date.now() - startedAt });
     } catch {
-      setLoadError(true);
+      if (!hadCache) setLoadError(true);
       if (identity) recordRefreshFailure(identity, 'bhakti');
     } finally {
       setLoading(false);
