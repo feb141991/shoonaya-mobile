@@ -25,7 +25,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import {
   malaSessionBeads,
   malaSessionCreatedAt,
@@ -176,7 +176,9 @@ export default function JapaInsightsScreen() {
     // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
     // already-centrally-resolved identity instead of independently
     // re-verifying the session/guest flag on every mount.
+    const lease = captureAppIdentity();
     if (appIdentity.kind === 'loading') return;
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     setLoadError(false);
 
     if (appIdentity.kind === 'guest') {
@@ -200,6 +202,7 @@ export default function JapaInsightsScreen() {
       .eq('user_id', appIdentity.userId)
       .gte('created_at', fromDate.toISOString())
       .order('created_at', { ascending: false });
+    if (!lease.isCurrent()) return;
 
     if (error) {
       setLoadError(true);
@@ -211,7 +214,10 @@ export default function JapaInsightsScreen() {
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
-    loadData().finally(() => setLoading(false));
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
+    setLoading(true);
+    loadData().finally(() => { if (lease.isCurrent()) setLoading(false); });
   }, [loadData, appIdentity.kind]);
 
   const filtered = useMemo(() => {
@@ -345,7 +351,12 @@ export default function JapaInsightsScreen() {
           title="Couldn't load your insights"
           subtitle="Check your connection and try again."
           ctaLabel="Retry"
-          onCta={() => { setLoading(true); loadData().finally(() => setLoading(false)); }}
+          onCta={() => {
+            const lease = captureAppIdentity();
+            if (!isSameAppIdentity(lease.identity, appIdentity)) return;
+            setLoading(true);
+            loadData().finally(() => { if (lease.isCurrent()) setLoading(false); });
+          }}
         />
       </Screen>
     );

@@ -32,7 +32,8 @@ import { COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { getPanchangScreenSnapshot, writePanchangScreenSnapshot } from '@/lib/panchangScreenCache';
 import {
   claimPromptForSession,
   getPromptDismissedAt,
@@ -371,11 +372,22 @@ export default function PanchangScreen() {
   const router = useRouter();
   const appIdentity = useAppIdentity();
   const handleBack = useFallbackBackHandler('/(tabs)', true);
-  const [profileState, setProfileState] = useState<PanchangState>(INITIAL_STATE);
+  const cacheIdentity = appIdentity.kind === 'authenticated'
+    ? `user:${appIdentity.userId}`
+    : appIdentity.kind === 'guest'
+      ? 'guest'
+      : appIdentity.kind === 'loading'
+        ? null
+        : 'unauthenticated';
+  const initialSnapshot = cacheIdentity
+    ? getPanchangScreenSnapshot<UpcomingFestival, Tradition>(cacheIdentity)
+    : null;
+  const [profileState, setProfileState] = useState<PanchangState>(initialSnapshot?.profile ?? INITIAL_STATE);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [festivals, setFestivals] = useState<UpcomingFestival[]>([]);
+  const [festivals, setFestivals] = useState<UpcomingFestival[]>(initialSnapshot?.festivals ?? []);
+  const [panchangOwner, setPanchangOwner] = useState<string | null>(cacheIdentity);
   const [whyTodayFestival, setWhyTodayFestival] = useState<UpcomingFestival | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialSnapshot);
   const [viewedToday, setViewedToday] = useState(false);
   const [markingViewed, setMarkingViewed] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
@@ -426,6 +438,24 @@ export default function PanchangScreen() {
     // already-centrally-resolved identity instead of independently
     // re-verifying the session/guest flag on every mount. The calling
     // effect only invokes this once appIdentity.kind !== 'loading'.
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity) || appIdentity.kind === 'loading') {
+      return { outcome: 'redirected', identity: null };
+    }
+    const activeCacheIdentity = appIdentity.kind === 'authenticated'
+      ? `user:${appIdentity.userId}`
+      : appIdentity.kind === 'guest'
+        ? 'guest'
+        : null;
+    const cachedSnapshot = activeCacheIdentity
+      ? getPanchangScreenSnapshot<UpcomingFestival, Tradition>(activeCacheIdentity)
+      : null;
+    if (cachedSnapshot && activeCacheIdentity) {
+      setProfileState(cachedSnapshot.profile);
+      setFestivals(cachedSnapshot.festivals);
+      setPanchangOwner(activeCacheIdentity);
+      setLoading(false);
+    }
     const guest = appIdentity.kind === 'guest';
     // Reassigned to the real authenticated identity as soon as it's known,
     // so a thrown error further down attributes the failure correctly
@@ -444,11 +474,17 @@ export default function PanchangScreen() {
         const festivalsResponse = await apiFetch(
           `/api/calendar/upcoming?days=14&tradition=${INITIAL_STATE.tradition}&tz=${encodeURIComponent(INITIAL_STATE.timezone)}`
         );
+        if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
         const serverTiming = parseServerTimingHeader(festivalsResponse.headers.get('Server-Timing'));
         if (serverTiming) recordServerTiming(identity, 'panchang', serverTiming);
         if (!festivalsResponse.ok) return { outcome: 'failed', identity };
         const payload = (await festivalsResponse.json()) as { observances?: UpcomingFestival[] };
-        setFestivals(payload.observances ?? []);
+        if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
+        const nextFestivals = payload.observances ?? [];
+        setFestivals(nextFestivals);
+        setProfileState(INITIAL_STATE);
+        setPanchangOwner('guest');
+        writePanchangScreenSnapshot('guest', INITIAL_STATE, nextFestivals);
         return { outcome: 'ready', identity };
       }
 
@@ -463,6 +499,7 @@ export default function PanchangScreen() {
         .select('latitude, longitude, timezone, tradition, rashi, city, neighbourhood')
         .eq('id', appIdentity.userId)
         .single();
+      if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
 
       const nextState: PanchangState = {
         lat: profile?.latitude ?? INITIAL_STATE.lat,
@@ -473,24 +510,30 @@ export default function PanchangScreen() {
         city: profile?.neighbourhood ?? profile?.city ?? '',
       };
       setProfileState(nextState);
+      setPanchangOwner(`user:${appIdentity.userId}`);
       setUserId(appIdentity.userId);
 
       const [festivalsResponse, viewedResponse] = await Promise.all([
         apiFetch(
           `/api/calendar/upcoming?days=14&tradition=${nextState.tradition}&tz=${encodeURIComponent(nextState.timezone)}`
         ),
-        apiFetch('/api/native/panchang-viewed').catch(() => null),
+        apiFetch('/api/native/panchang-viewed', { expectedUserId: appIdentity.userId }).catch(() => null),
       ]);
+      if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
 
       const serverTiming = parseServerTimingHeader(festivalsResponse.headers.get('Server-Timing'));
       if (serverTiming) recordServerTiming(identity, 'panchang', serverTiming);
 
       if (!festivalsResponse.ok) return { outcome: 'failed', identity };
       const payload = (await festivalsResponse.json()) as { observances?: UpcomingFestival[] };
-      setFestivals(payload.observances ?? []);
+      if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
+      const nextFestivals = payload.observances ?? [];
+      setFestivals(nextFestivals);
+      writePanchangScreenSnapshot(`user:${appIdentity.userId}`, nextState, nextFestivals);
 
       if (viewedResponse?.ok) {
         const viewedPayload = (await viewedResponse.json()) as { viewedToday?: boolean };
+        if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
         setViewedToday(Boolean(viewedPayload.viewedToday));
       }
       return { outcome: 'ready', identity };
@@ -505,18 +548,35 @@ export default function PanchangScreen() {
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
+    const snapshot = cacheIdentity
+      ? getPanchangScreenSnapshot<UpcomingFestival, Tradition>(cacheIdentity)
+      : null;
+    setUserId(appIdentity.kind === 'authenticated' ? appIdentity.userId : null);
+    setIsGuest(appIdentity.kind === 'guest');
+    setViewedToday(false);
+    if (snapshot && cacheIdentity) {
+      setProfileState(snapshot.profile);
+      setFestivals(snapshot.festivals);
+      setPanchangOwner(cacheIdentity);
+      setLoading(false);
+    } else {
+      setPanchangOwner(cacheIdentity);
+      setLoading(true);
+    }
     const startedAt = Date.now();
     void loadPanchangContext()
       .then(({ outcome, identity }) => {
-        if (outcome === 'redirected') return;
+        if (!lease.isCurrent() || outcome === 'redirected') return;
         if (outcome === 'ready') {
           recordRouteOpen(identity, 'panchang', { cacheHit: false, durationMs: Date.now() - startedAt });
         } else {
           recordRefreshFailure(identity, 'panchang');
         }
       })
-      .finally(() => setLoading(false));
-  }, [loadPanchangContext, appIdentity.kind]);
+      .finally(() => { if (lease.isCurrent()) setLoading(false); });
+  }, [loadPanchangContext, appIdentity.kind, cacheIdentity]);
 
   const saveRashi = async (rashi: string) => {
     if (!userId || savingRashi) return;
@@ -607,7 +667,7 @@ export default function PanchangScreen() {
     }
   }, [dateLabel, panchang]);
 
-  if (loading) {
+  if (loading || panchangOwner !== cacheIdentity || appIdentity.kind === 'unauthenticated' || appIdentity.kind === 'loading') {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.darkBg }} edges={['top']}>
         <SacredLoader

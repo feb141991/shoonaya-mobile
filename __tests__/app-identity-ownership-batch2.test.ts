@@ -33,6 +33,23 @@ test('Shloka, Nitya Karma, Mantras, Panchang, Japa Insights, Notifications and S
     assert.doesNotMatch(src, /supabase\.auth\.getUser\(/, `${name} should not independently re-verify the session`);
   }
 
+  // Account-switch safety is part of the identity contract too: removing the
+  // getUser waterfall must not let a request started for account A paint over
+  // account B after its slower response returns.
+  for (const [name, src] of [
+    ['shloka', shloka],
+    ['nityaKarma', nityaKarma],
+    ['mantras', mantras],
+    ['panchang', panchang],
+    ['japaInsights', japaInsights],
+    ['notifications', notifications],
+    ['settingsDetail', settingsDetail],
+  ] as const) {
+    assert.match(src, /captureAppIdentity\(\)/, `${name} should lease async work to its starting identity`);
+    assert.match(src, /\.isCurrent\(\)/, `${name} should discard late results after an identity transition`);
+    assert.match(src, /isSameAppIdentity\(/, `${name} should reject a stale callback before it starts work`);
+  }
+
   // Panchang's loadPanchangContext preserves its TelemetryIdentity return
   // contract exactly -- callers (recordRouteOpen/recordRefreshFailure) rely
   // on it, so the migration must only change the identity *source*, not the
@@ -62,7 +79,6 @@ test('Shloka, Nitya Karma, Mantras, Panchang, Japa Insights, Notifications and S
 
   // lib/mood.ts's telemetry-attribution helper became synchronous, reading
   // the in-memory identity store instead of issuing a network call.
-  assert.match(mood, /function getTelemetryUserId\(\): string \| null \{/);
-  assert.doesNotMatch(mood, /async function getTelemetryUserId/);
-  assert.match(mood, /getAppIdentity\(\)/);
+  assert.match(mood, /captureAppIdentity\(\)/);
+  assert.match(mood, /telemetryIdentity\.isCurrent\(\)/);
 });

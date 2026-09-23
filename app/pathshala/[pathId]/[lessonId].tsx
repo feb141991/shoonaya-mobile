@@ -31,6 +31,12 @@ import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
+import {
+  getPathshalaDetailCacheSnapshot,
+  readPathshalaDetailCache,
+  writePathshalaDetailCache,
+  type PathshalaPathDetail,
+} from '@/lib/pathshalaCache';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -61,11 +67,7 @@ type Lesson = {
   entries: LessonEntry[];
 };
 
-type PathDetailResponse = {
-  path: PathshalaPath;
-  lessons: Lesson[];
-  locked: boolean;
-};
+type PathDetailResponse = PathshalaPathDetail;
 
 type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
 
@@ -114,10 +116,13 @@ export default function LessonReaderScreen() {
   }, [router, pathId]);
   const lessonId = Array.isArray(params.lessonId) ? params.lessonId[0] : params.lessonId;
   const lessonIndex = Number(lessonId ?? '0');
+  const cacheIdentity = appIdentity.kind === 'authenticated' ? appIdentity.userId : 'guest';
+  const initialDetail = pathId ? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) : null;
 
-  const [fetchState, setFetchState] = useState<FetchState>('loading');
-  const [path, setPath] = useState<PathshalaPath | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [fetchState, setFetchState] = useState<FetchState>(initialDetail ? (initialDetail.locked ? 'locked' : 'ready') : 'loading');
+  const [path, setPath] = useState<PathshalaPath | null>(initialDetail?.path ?? null);
+  const [lessons, setLessons] = useState<Lesson[]>(initialDetail?.lessons ?? []);
+  const [refreshFailed, setRefreshFailed] = useState(false);
   const [verseIndex, setVerseIndex] = useState(0);
   const lesson = lessons[lessonIndex];
   const totalVerses = lesson?.entries.length ?? 0;
@@ -243,11 +248,31 @@ export default function LessonReaderScreen() {
         setFetchState('not_found');
         return;
       }
+      if (appIdentity.kind === 'loading') return;
 
-      setFetchState('loading');
+      const { isCurrent } = captureAppIdentity();
+      const snapshot = getPathshalaDetailCacheSnapshot(cacheIdentity, pathId);
+      let networkWon = false;
+      if (snapshot) {
+        setPath(snapshot.path);
+        setLessons(snapshot.lessons);
+        setFetchState(snapshot.locked ? 'locked' : 'ready');
+      } else {
+        setFetchState((current) => current === 'ready' || current === 'locked' ? current : 'loading');
+        void readPathshalaDetailCache(cacheIdentity, pathId).then((cached) => {
+          if (!cached || !isCurrent() || networkWon) return;
+          setPath(cached.path);
+          setLessons(cached.lessons);
+          setFetchState(cached.locked ? 'locked' : 'ready');
+        });
+      }
+      setRefreshFailed(false);
 
       try {
-        const response = await apiFetch(`/api/pathshala/paths/${pathId}`);
+        const response = await apiFetch(`/api/pathshala/paths/${pathId}`, appIdentity.kind === 'authenticated'
+          ? { expectedUserId: appIdentity.userId }
+          : { expectedGuest: true });
+        if (!isCurrent()) return;
 
         if (response.status === 404) {
           setFetchState('not_found');
@@ -255,21 +280,32 @@ export default function LessonReaderScreen() {
         }
 
         if (!response.ok) {
-          setFetchState('error');
+          const cached = snapshot ?? await readPathshalaDetailCache(cacheIdentity, pathId);
+          if (!isCurrent()) return;
+          if (cached) setRefreshFailed(true);
+          else setFetchState('error');
           return;
         }
 
-        const data = (await response.json()) as PathDetailResponse;
+        const responseBody = (await response.json()) as Omit<PathDetailResponse, 'locked'> & { locked?: boolean };
+        if (!isCurrent()) return;
+        networkWon = true;
+        const data: PathDetailResponse = { ...responseBody, locked: responseBody.locked === true };
         setPath(data.path);
         setLessons(data.lessons);
         setFetchState(data.locked ? 'locked' : 'ready');
+        if (!data.locked) void writePathshalaDetailCache(cacheIdentity, pathId, data);
       } catch {
-        setFetchState('error');
+        if (!isCurrent()) return;
+        const cached = snapshot ?? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) ?? await readPathshalaDetailCache(cacheIdentity, pathId);
+        if (!isCurrent()) return;
+        if (cached) setRefreshFailed(true);
+        else setFetchState('error');
       }
     };
 
     void loadPath();
-  }, [pathId]);
+  }, [pathId, cacheIdentity, appIdentity]);
 
   // Account-switch protection: without a captured lease + expectedUserId, a
   // slow /api/pathshala/progress response for a previous account could land
@@ -571,7 +607,7 @@ export default function LessonReaderScreen() {
     void fetchPathshalaBridge(nextCompleted.length);
   }, [completedLessons, fetchPathshalaBridge, isGuest, lessonIndex, lessons.length, pathId, saving, userId]);
 
-  if (fetchState === 'loading' || loadingState) {
+  if ((!path || !lesson || !entry) && (fetchState === 'loading' || loadingState)) {
     return (
       <View style={{ flex: 1, backgroundColor: bg }}>
         <SacredLoader
@@ -692,6 +728,11 @@ export default function LessonReaderScreen() {
               gap: 18,
             }}
           >
+            {refreshFailed ? (
+              <Text accessibilityRole="alert" style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
+                Showing saved lesson content. Could not refresh just now.
+              </Text>
+            ) : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <BackButton
                 showLabel={false}

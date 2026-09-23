@@ -65,6 +65,7 @@ import { clearQuizCache } from '@/lib/quizCache';
 import { clearSevaCache } from '@/lib/sevaCache';
 import { clearVratGeoCache } from '@/lib/vratCache';
 import { clearMoodStatusCache } from '@/lib/moodStatusCache';
+import { clearPanchangScreenSnapshots } from '@/lib/panchangScreenCache';
 import { clearAllTelemetry, recordFirstUsefulFrame } from '@/lib/telemetry';
 import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
@@ -395,6 +396,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -441,6 +443,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -628,6 +631,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -646,6 +650,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();

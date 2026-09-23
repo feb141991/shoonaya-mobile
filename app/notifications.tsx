@@ -31,7 +31,7 @@ import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } fro
 import { resolveNativeRoute } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 
 // Native's notification inbox replaces the Home bell's former alert-only
 // behavior. Matches the PWA's notification panel UX
@@ -313,7 +313,9 @@ export default function NotificationsScreen() {
     // userId/userIdRef stay as-is below -- they're read from setTimeout
     // closures and other callbacks across re-renders that don't have their
     // own appIdentity subscription, only populated from it here.
+    const lease = captureAppIdentity();
     if (appIdentity.kind === 'loading') return;
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     setLoadError(false);
 
     if (appIdentity.kind === 'guest') {
@@ -335,6 +337,7 @@ export default function NotificationsScreen() {
 
     if (!options.skipCache) {
       const cached = await readNotificationsCache(uid);
+      if (!lease.isCurrent()) return;
       if (cached) {
         setNotifications(cached.notifications);
         setLoading(false);
@@ -346,36 +349,43 @@ export default function NotificationsScreen() {
         const resumable = cached.pendingOperations.filter((op) => op.status === 'pending');
         setPendingOperations(cached.pendingOperations);
         pendingOperationsRef.current = cached.pendingOperations;
-        resumable.forEach((op) => { void attemptOperation(op); });
+        resumable.forEach((op) => { if (lease.isCurrent()) void attemptOperation(op); });
       }
     }
 
     const rows = await fetchNotifications(uid);
+    if (!lease.isCurrent()) return;
     setNotifications(rows);
     await writeNotificationsCache(uid, rows);
   }, [router, attemptOperation, appIdentity]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
+    if (appIdentity.kind !== 'authenticated' || userIdRef.current !== appIdentity.userId) {
+      setLoading(true);
+    }
     const startedAt = Date.now();
     routeOpenCacheHitRef.current = false;
     const run = async () => {
       try {
         await load();
-        if (userIdRef.current) {
+        if (lease.isCurrent() && appIdentity.kind === 'authenticated') {
           recordRouteOpen(
-            { kind: 'authenticated', userId: userIdRef.current },
+            { kind: 'authenticated', userId: appIdentity.userId },
             'notifications',
             { cacheHit: routeOpenCacheHitRef.current, durationMs: Date.now() - startedAt }
           );
         }
       } catch {
+        if (!lease.isCurrent()) return;
         setLoadError(true);
-        if (userIdRef.current) {
-          recordRefreshFailure({ kind: 'authenticated', userId: userIdRef.current }, 'notifications');
+        if (appIdentity.kind === 'authenticated') {
+          recordRefreshFailure({ kind: 'authenticated', userId: appIdentity.userId }, 'notifications');
         }
       } finally {
-        setLoading(false);
+        if (lease.isCurrent()) setLoading(false);
       }
     };
     void run();
@@ -399,10 +409,11 @@ export default function NotificationsScreen() {
   // this isn't mounted globally.
   useEffect(() => {
     if (!userId) return undefined;
+    if (appIdentity.kind !== 'authenticated' || appIdentity.userId !== userId) return undefined;
     return subscribeToNotifications(userId, () => {
       void load({ skipCache: true });
     });
-  }, [userId, load]);
+  }, [userId, load, appIdentity]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

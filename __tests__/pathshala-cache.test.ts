@@ -18,8 +18,12 @@ if (typeof window === 'undefined' || !(window as any).localStorage) {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   clearAllPathshalaCaches,
+  getPathshalaDetailCacheSnapshot,
+  readPathshalaDetailCache,
+  writePathshalaDetailCache,
   readPathshalaCache,
   writePathshalaCache,
+  type PathshalaPathDetail,
   type PathshalaCachePayload,
 } from '@/lib/pathshalaCache';
 
@@ -33,6 +37,12 @@ const payload: PathshalaCachePayload = {
   sacredText: { label: 'Verse', icon: 'book', original: 'Text', transliteration: '', meaning: 'Meaning', source: 'Source' },
   spiritualDate: '2026-09-07',
   timezone: 'UTC',
+};
+
+const detail: PathshalaPathDetail = {
+  path: payload.paths[0]!,
+  lessons: [{ title: 'Lesson 1', entries: [{ id: 'verse-1', source: 'Gita 2.47', original: 'Text', meaning: 'Meaning' }] }],
+  locked: false,
 };
 
 describe('Pathshala cache', () => {
@@ -65,5 +75,23 @@ describe('Pathshala cache', () => {
     await clearAllPathshalaCaches();
     assert.equal(await readPathshalaCache('user-a'), null);
     assert.equal(await readPathshalaCache('user-b'), null);
+  });
+
+  it('detail cache hydrates synchronously after a read and remains account-scoped', async () => {
+    await writePathshalaDetailCache('user-a', 'path-1', detail);
+    assert.equal(getPathshalaDetailCacheSnapshot('user-b', 'path-1'), null);
+    await clearAllPathshalaCaches();
+    await AsyncStorage.setItem(
+      'shoonaya_pathshala_detail_v1_user-a_path-1',
+      JSON.stringify({ version: 1, detail })
+    );
+    assert.deepEqual(await readPathshalaDetailCache('user-a', 'path-1'), detail);
+    assert.deepEqual(getPathshalaDetailCacheSnapshot('user-a', 'path-1'), detail);
+  });
+
+  it('never persists an entitlement-locked path payload', async () => {
+    await writePathshalaDetailCache('user-a', 'path-1', { ...detail, locked: true });
+    assert.equal(getPathshalaDetailCacheSnapshot('user-a', 'path-1'), null);
+    assert.equal(await AsyncStorage.getItem('shoonaya_pathshala_detail_v1_user-a_path-1'), null);
   });
 });

@@ -10,7 +10,13 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { COLORS, FONTS, TYPE } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import type { PathshalaPath } from '@/lib/pathshala-types';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import {
+  getPathshalaDetailCacheSnapshot,
+  readPathshalaDetailCache,
+  writePathshalaDetailCache,
+  type PathshalaPathDetail,
+} from '@/lib/pathshalaCache';
 
 type LessonEntry = {
   id: string;
@@ -25,11 +31,7 @@ type Lesson = {
   entries: LessonEntry[];
 };
 
-type PathDetailResponse = {
-  path: PathshalaPath;
-  lessons: Lesson[];
-  locked: boolean;
-};
+type PathDetailResponse = PathshalaPathDetail;
 
 type EnrollmentPayload = {
   pathId: string;
@@ -55,10 +57,13 @@ export default function PathDetailScreen() {
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const params = useLocalSearchParams<{ pathId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
+  const cacheIdentity = appIdentity.kind === 'authenticated' ? appIdentity.userId : 'guest';
+  const initialDetail = pathId ? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) : null;
 
-  const [fetchState, setFetchState] = useState<FetchState>('loading');
-  const [path, setPath] = useState<PathshalaPath | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [fetchState, setFetchState] = useState<FetchState>(initialDetail ? (initialDetail.locked ? 'locked' : 'ready') : 'loading');
+  const [path, setPath] = useState<PathshalaPath | null>(initialDetail?.path ?? null);
+  const [lessons, setLessons] = useState<Lesson[]>(initialDetail?.lessons ?? []);
+  const [refreshFailed, setRefreshFailed] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [currentLesson, setCurrentLesson] = useState(0);
   const [isGuest, setIsGuest] = useState(false);
@@ -68,11 +73,31 @@ export default function PathDetailScreen() {
       setFetchState('not_found');
       return;
     }
+    if (appIdentity.kind === 'loading') return;
 
-    setFetchState((prev) => (prev === 'ready' || prev === 'locked' ? prev : 'loading'));
+    const { isCurrent } = captureAppIdentity();
+    const snapshot = getPathshalaDetailCacheSnapshot(cacheIdentity, pathId);
+    let networkWon = false;
+    if (snapshot) {
+      setPath(snapshot.path);
+      setLessons(snapshot.lessons);
+      setFetchState(snapshot.locked ? 'locked' : 'ready');
+    } else {
+      setFetchState((prev) => (prev === 'ready' || prev === 'locked' ? prev : 'loading'));
+      void readPathshalaDetailCache(cacheIdentity, pathId).then((cached) => {
+        if (!cached || !isCurrent() || networkWon) return;
+        setPath(cached.path);
+        setLessons(cached.lessons);
+        setFetchState(cached.locked ? 'locked' : 'ready');
+      });
+    }
+    setRefreshFailed(false);
 
     try {
-      const response = await apiFetch(`/api/pathshala/paths/${pathId}`);
+      const response = await apiFetch(`/api/pathshala/paths/${pathId}`, appIdentity.kind === 'authenticated'
+        ? { expectedUserId: appIdentity.userId }
+        : { expectedGuest: true });
+      if (!isCurrent()) return;
 
       if (response.status === 404) {
         setFetchState('not_found');
@@ -80,37 +105,55 @@ export default function PathDetailScreen() {
       }
 
       if (!response.ok) {
-        setFetchState('error');
+        const cached = snapshot ?? await readPathshalaDetailCache(cacheIdentity, pathId);
+        if (!isCurrent()) return;
+        if (cached) setRefreshFailed(true);
+        else setFetchState('error');
         return;
       }
 
-      const data = (await response.json()) as PathDetailResponse;
+      const responseBody = (await response.json()) as Omit<PathDetailResponse, 'locked'> & { locked?: boolean };
+      if (!isCurrent()) return;
+      networkWon = true;
+      const data: PathDetailResponse = { ...responseBody, locked: responseBody.locked === true };
       setPath(data.path);
       setLessons(data.lessons);
       setFetchState(data.locked ? 'locked' : 'ready');
+      if (!data.locked) void writePathshalaDetailCache(cacheIdentity, pathId, data);
     } catch {
-      setFetchState('error');
+      if (!isCurrent()) return;
+      const cached = snapshot ?? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) ?? await readPathshalaDetailCache(cacheIdentity, pathId);
+      if (!isCurrent()) return;
+      if (cached) setRefreshFailed(true);
+      else setFetchState('error');
     }
-  }, [pathId]);
+  }, [pathId, cacheIdentity, appIdentity]);
 
   const loadProgress = useCallback(async () => {
     if (!pathId || appIdentity.kind === 'loading') {
       return;
     }
 
+    const { isCurrent } = captureAppIdentity();
     if (appIdentity.kind === 'guest' || appIdentity.kind === 'unauthenticated') {
+      if (!isCurrent()) return;
       setIsGuest(true);
       setCompletedLessons([]);
       setCurrentLesson(0);
       return;
     }
 
+    if (!isCurrent()) return;
     setIsGuest(false);
+    setCompletedLessons([]);
+    setCurrentLesson(0);
 
     try {
-      const response = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`);
+      const response = await apiFetch(`/api/pathshala/progress?pathId=${encodeURIComponent(pathId)}`, { expectedUserId: appIdentity.userId });
+      if (!isCurrent()) return;
       if (response.ok) {
         const body = (await response.json()) as { enrollment: EnrollmentPayload | null };
+        if (!isCurrent()) return;
         if (body.enrollment) {
           setCompletedLessons(body.enrollment.completedLessons ?? []);
           setCurrentLesson(body.enrollment.currentLesson ?? 0);
@@ -121,6 +164,7 @@ export default function PathDetailScreen() {
       // fall through to defaults below
     }
 
+    if (!isCurrent()) return;
     setCompletedLessons([]);
     setCurrentLesson(0);
   }, [pathId, appIdentity]);
@@ -275,6 +319,11 @@ export default function PathDetailScreen() {
           );
         }}
       />
+      {refreshFailed ? (
+        <Text accessibilityRole="alert" style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim, marginTop: 8 }}>
+          Showing saved lessons. Could not refresh just now.
+        </Text>
+      ) : null}
     </Screen>
   );
 }

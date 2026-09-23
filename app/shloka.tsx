@@ -27,7 +27,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/li
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 const GUEST_SHLOKAS: Record<string, SacredText> = {
@@ -166,7 +166,9 @@ export default function ShlokaScreen() {
     // already resolved before this screen was ever reachable. appIdentity
     // reads that same centrally-resolved, already-current identity
     // synchronously.
+    const lease = captureAppIdentity();
     if (appIdentity.kind === 'loading') return;
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     setLoadError(false);
     const guest = appIdentity.kind === 'guest';
     setIsGuest(guest);
@@ -196,13 +198,14 @@ export default function ShlokaScreen() {
     const userId = appIdentity.userId;
 
     const [summaryResponse, profileResult] = await Promise.all([
-      apiFetch('/api/native/home-summary'),
+      apiFetch('/api/native/home-summary', { expectedUserId: userId }),
       supabase
         .from('profiles')
         .select('timezone, shloka_streak, last_shloka_date, tradition, full_name, username')
         .eq('id', userId)
         .single(),
     ]);
+    if (!lease.isCurrent()) return;
 
     if (!summaryResponse.ok) {
       setLoadError(true);
@@ -210,6 +213,7 @@ export default function ShlokaScreen() {
     }
 
     const json = (await summaryResponse.json()) as { sacredText?: Partial<SacredText> };
+    if (!lease.isCurrent()) return;
     if (!json.sacredText?.original) {
       setLoadError(true);
       return;
@@ -241,10 +245,12 @@ export default function ShlokaScreen() {
     // .finally(), and only then re-run once identity actually resolves --
     // showing an empty screen for one frame in between.
     if (appIdentity.kind === 'loading') return;
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     setLoading(true);
     load()
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false));
+      .catch(() => { if (lease.isCurrent()) setLoadError(true); })
+      .finally(() => { if (lease.isCurrent()) setLoading(false); });
   }, [load, appIdentity.kind]);
 
   // Verse-card entrance, once per loaded verse. Skipped under reduced
@@ -389,10 +395,12 @@ export default function ShlokaScreen() {
             <PressableSurface
               haptic="selection"
               onPress={() => {
+                const lease = captureAppIdentity();
+                if (!isSameAppIdentity(lease.identity, appIdentity)) return;
                 setLoading(true);
                 load()
-                  .catch(() => setLoadError(true))
-                  .finally(() => setLoading(false));
+                  .catch(() => { if (lease.isCurrent()) setLoadError(true); })
+                  .finally(() => { if (lease.isCurrent()) setLoading(false); });
               }}
               style={{ marginTop: 18, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 10, backgroundColor: brand }}
             >

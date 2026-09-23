@@ -20,7 +20,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { getAshramaDuties, getAshramaMeta, type GenderContext, type LifeStage } from '@/lib/ashrama';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTraditionGreeting } from '@/lib/greetings';
@@ -207,12 +207,14 @@ export default function NityaKarmaHubScreen() {
     // no-op in practice -- this screen is only reachable once the root
     // layout's own readiness gate has already resolved identity -- not a
     // state genuinely expected here.
-    if (appIdentity.kind === 'loading') return;
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity) || appIdentity.kind === 'loading') return;
     setLoading(true);
     try {
       const guest = appIdentity.kind === 'guest';
       if (guest) {
         const greetingPick = await getGreetingPick();
+        if (!lease.isCurrent()) return;
         const guestGreeting = greetingPick || getTraditionGreeting('hindu', new Date().getDate());
         setDincharyaStats({
           completed: 0,
@@ -239,7 +241,7 @@ export default function NityaKarmaHubScreen() {
       const userId = appIdentity.userId;
 
       const [nityaResp, greetingPick, { data: profile }] = await Promise.all([
-        apiFetch('/api/native/nitya-karma'),
+        apiFetch('/api/native/nitya-karma', { expectedUserId: userId }),
         getGreetingPick(),
         supabase
           .from('profiles')
@@ -247,6 +249,7 @@ export default function NityaKarmaHubScreen() {
           .eq('id', userId)
           .maybeSingle(),
       ]);
+      if (!lease.isCurrent()) return;
 
       const tradition = profile?.tradition ?? 'hindu';
       const greetingText = greetingPick || getTraditionGreeting(tradition, new Date().getDate());
@@ -257,12 +260,14 @@ export default function NityaKarmaHubScreen() {
 
       if (nityaResp && nityaResp.ok) {
         const payload = (await nityaResp.json()) as NativeNityaKarmaResponse;
+        if (!lease.isCurrent()) return;
         totalSteps = payload.total ?? 0;
         currentStreak = payload.streak?.current ?? 0;
 
         const today = spiritualDate(payload.timezone ?? 'UTC');
         const storageKey = `nitya_done_${userId}_${today}`;
         const rawLocal = await AsyncStorage.getItem(storageKey);
+        if (!lease.isCurrent()) return;
         const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
         const mergedSteps = payload.steps?.map((step) => ({
           ...step,
@@ -291,6 +296,7 @@ export default function NityaKarmaHubScreen() {
         const today = spiritualDate(profile?.timezone ?? 'UTC');
         const ashramaKey = `ashrama_checks_${userId}_${today}`;
         const rawChecks = await AsyncStorage.getItem(ashramaKey);
+        if (!lease.isCurrent()) return;
         const checkedIds = new Set<string>(rawChecks ? JSON.parse(rawChecks) : []);
         completedDuties = duties.filter((duty) => checkedIds.has(duty.id)).length;
       }
@@ -303,9 +309,9 @@ export default function NityaKarmaHubScreen() {
         completedDuties,
       });
     } catch (err) {
-      console.warn('Failed to load Nitya hub data:', err);
+      if (lease.isCurrent()) console.warn('Failed to load Nitya hub data:', err);
     } finally {
-      setLoading(false);
+      if (lease.isCurrent()) setLoading(false);
     }
   }, [router, appIdentity]);
 

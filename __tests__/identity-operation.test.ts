@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { captureAppIdentity, setAppIdentity } from '../lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, setAppIdentity } from '../lib/appIdentity';
 import { LoadGenerationGuard } from '../lib/routeOpenAttribution';
 
 test('an operation retains its original owner and expires on switching or signing out', () => {
@@ -30,6 +30,15 @@ test('same-account identity publication leaves current work valid', () => {
   const operation = captureAppIdentity();
   setAppIdentity({ kind: 'authenticated', userId: 'a' });
   assert.equal(operation.isCurrent(), true);
+});
+
+test('same-identity comparison rejects stale account closures but accepts guest and same-user snapshots', () => {
+  const accountA = { kind: 'authenticated', userId: 'a' } as const;
+  setAppIdentity(accountA);
+  assert.equal(isSameAppIdentity(captureAppIdentity().identity, accountA), true);
+  assert.equal(isSameAppIdentity(accountA, { kind: 'authenticated', userId: 'b' }), false);
+  assert.equal(isSameAppIdentity({ kind: 'guest' }, { kind: 'authenticated', userId: 'a' }), false);
+  assert.equal(isSameAppIdentity({ kind: 'guest' }, { kind: 'guest' }), true);
 });
 
 test('load guards reject both superseded requests and account changes', () => {

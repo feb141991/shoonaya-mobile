@@ -12,7 +12,13 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import {
+  bhaktiCacheKeys,
+  getBhaktiContentCacheSnapshot,
+  readBhaktiContentCache,
+  writeBhaktiContentCache,
+} from '@/lib/bhaktiContentCache';
 
 // ── Bhakti Phase 7 — native equivalent of the PWA's
 // src/app/(main)/mantras/MantrasClient.tsx. Route is a top-level /mantras
@@ -33,6 +39,19 @@ type Mantra = {
 
 type TabType = 'all' | 'tradition' | 'others';
 
+function isMantraList(value: unknown): value is Mantra[] {
+  return Array.isArray(value) && value.every((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const candidate = item as Record<string, unknown>;
+    return typeof candidate.id === 'string' &&
+      typeof candidate.tradition === 'string' &&
+      typeof candidate.nameEn === 'string' &&
+      typeof candidate.nameLocal === 'string' &&
+      Array.isArray(candidate.tags) && candidate.tags.every((tag) => typeof tag === 'string') &&
+      typeof candidate.isPremium === 'boolean';
+  });
+}
+
 const AMBER = COLORS.brandGold;
 
 export default function MantrasScreen() {
@@ -40,45 +59,123 @@ export default function MantrasScreen() {
   const appIdentity = useAppIdentity();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
+  const mantraCacheKey = bhaktiCacheKeys.mantraList();
+  const initialMantras = getBhaktiContentCacheSnapshot(mantraCacheKey, isMantraList);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialMantras);
   const [loadError, setLoadError] = useState(false);
-  const [mantras, setMantras] = useState<Mantra[]>([]);
-  const [tradition, setTradition] = useState('hindu');
-  const [isPro, setIsPro] = useState(false);
+  const [mantras, setMantras] = useState<Mantra[]>(initialMantras ?? []);
+  const [profileContext, setProfileContext] = useState<{ userId: string; tradition: string; isPro: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('all');
+
+  const currentUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
+  const currentProfile = currentUserId && profileContext?.userId === currentUserId ? profileContext : null;
+  const tradition = currentProfile?.tradition ?? 'hindu';
+  const isPro = currentProfile?.isPro ?? false;
 
   const load = useCallback(async () => {
     // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
     // already-centrally-resolved identity instead of independently
     // re-verifying the session on every mount.
+    const lease = captureAppIdentity();
     if (appIdentity.kind === 'loading') return;
-    setLoading(true);
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
+    const snapshot = getBhaktiContentCacheSnapshot(mantraCacheKey, isMantraList);
+    let hasContent = Boolean(snapshot);
+    let networkWon = false;
+    if (snapshot) {
+      setMantras(snapshot);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+    if (appIdentity.kind !== 'authenticated') setProfileContext(null);
     setLoadError(false);
-    try {
-      const mantrasRes = await apiFetch('/api/bhakti/mantras');
-      if (!mantrasRes.ok) { setLoadError(true); return; }
-      const json = await mantrasRes.json();
-      setMantras(Array.isArray(json?.mantras) ? json.mantras : []);
 
-      if (appIdentity.kind === 'authenticated') {
-        const { data: profile } = await supabase
+    const diskCachePromise = snapshot
+      ? Promise.resolve(snapshot)
+      : readBhaktiContentCache(mantraCacheKey, isMantraList);
+    if (!snapshot) {
+      void diskCachePromise.then((cached) => {
+        if (!cached || networkWon || !lease.isCurrent()) return;
+        hasContent = true;
+        setMantras(cached);
+        setLoading(false);
+      });
+    }
+
+    try {
+      const profilePromise = appIdentity.kind === 'authenticated'
+        ? supabase
           .from('profiles')
           .select('tradition, is_pro')
           .eq('id', appIdentity.userId)
-          .single();
-        setTradition(profile?.tradition ?? 'hindu');
-        setIsPro(profile?.is_pro ?? false);
+          .single()
+        : Promise.resolve({ data: null, error: null });
+      const [mantrasRes, profileResult] = await Promise.all([
+        apiFetch('/api/bhakti/mantras'),
+        profilePromise,
+      ]);
+      if (!lease.isCurrent()) return;
+      if (appIdentity.kind === 'authenticated') {
+        setProfileContext({
+          userId: appIdentity.userId,
+          tradition: profileResult.data?.tradition ?? 'hindu',
+          isPro: profileResult.data?.is_pro ?? false,
+        });
       }
+      if (!mantrasRes.ok) {
+        if (!hasContent) {
+          const cached = await diskCachePromise;
+          if (!lease.isCurrent()) return;
+          if (cached) {
+            hasContent = true;
+            setMantras(cached);
+          } else {
+            setLoadError(true);
+          }
+        }
+        return;
+      }
+      const json = await mantrasRes.json() as { mantras?: unknown };
+      if (!lease.isCurrent()) return;
+      if (!isMantraList(json?.mantras)) {
+        if (!hasContent) {
+          const cached = await diskCachePromise;
+          if (!lease.isCurrent()) return;
+          if (cached) {
+            hasContent = true;
+            setMantras(cached);
+          } else {
+            setLoadError(true);
+          }
+        }
+        return;
+      }
+      networkWon = true;
+      hasContent = true;
+      setMantras(json.mantras);
+      await writeBhaktiContentCache(mantraCacheKey, json.mantras);
     } catch {
-      setLoadError(true);
+      if (lease.isCurrent() && !hasContent) {
+        const cached = await diskCachePromise;
+        if (!lease.isCurrent()) return;
+        if (cached) {
+          hasContent = true;
+          setMantras(cached);
+        } else {
+          setLoadError(true);
+        }
+      }
     } finally {
-      setLoading(false);
+      if (lease.isCurrent()) setLoading(!hasContent);
     }
-  }, [appIdentity]);
+  }, [appIdentity, mantraCacheKey]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     void load();
   }, [load, appIdentity.kind]);
 
@@ -91,6 +188,10 @@ export default function MantrasScreen() {
   });
 
   const handleCardPress = (mantra: Mantra) => {
+    if (appIdentity.kind === 'authenticated' && !currentProfile) {
+      Alert.alert('Checking access', 'Please try again in a moment.');
+      return;
+    }
     if (mantra.isPremium && !isPro) {
       Alert.alert('Unlock with Zenith 🔒', 'This mantra is part of the premium collection.');
       return;

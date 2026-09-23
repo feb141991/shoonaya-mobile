@@ -97,7 +97,7 @@ function makeDeps(overrides: Partial<AuthCoordinatorDependencies> = {}): { deps:
   return { deps: base, rec };
 }
 
-describe('AuthCoordinator -- Stage 1 unit matrix (not wired into app/_layout.tsx; see authCoordinator-integration.test.ts for the pre-wiring checklist)', () => {
+describe('AuthCoordinator -- unit matrix for the implementation behind USE_AUTH_COORDINATOR (layout parity is checked separately)', () => {
   it('1. cold authenticated launch: identity set, caches prewarmed, no redirect needed from tabs', async () => {
     const { deps, rec } = makeDeps({
       fetchOnboardingStatus: async () => ({ onboarding_completed: true }),

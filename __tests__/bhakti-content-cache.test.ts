@@ -20,6 +20,7 @@ if (typeof window === 'undefined' || !(window as any).localStorage) {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   readBhaktiContentCache,
+  getBhaktiContentCacheSnapshot,
   writeBhaktiContentCache,
   clearAllBhaktiContentCaches,
   bhaktiCacheKeys,
@@ -43,6 +44,22 @@ describe('Bhakti content cache -- keying', () => {
     const bani = await readBhaktiContentCache(bhaktiCacheKeys.kathaList('bani'), isStringArray);
     assert.deepEqual(puranic, ['a', 'b']);
     assert.deepEqual(bani, ['c']);
+  });
+
+  it('publishes disk reads and writes as synchronous snapshots', async () => {
+    const key = bhaktiCacheKeys.mantraList();
+    await writeBhaktiContentCache(key, ['cached mantra']);
+    assert.deepEqual(getBhaktiContentCacheSnapshot(key, isStringArray), ['cached mantra']);
+
+    await clearAllBhaktiContentCaches();
+    await AsyncStorage.setItem(key, JSON.stringify({
+      schemaVersion: 1,
+      cachedAt: new Date().toISOString(),
+      data: ['disk mantra'],
+    }));
+    assert.equal(getBhaktiContentCacheSnapshot(key, isStringArray), null);
+    assert.deepEqual(await readBhaktiContentCache(key, isStringArray), ['disk mantra']);
+    assert.deepEqual(getBhaktiContentCacheSnapshot(key, isStringArray), ['disk mantra']);
   });
 
   it('stotram and katha detail caches for the same id do not collide', async () => {

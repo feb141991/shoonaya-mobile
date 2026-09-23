@@ -32,6 +32,12 @@ export function getAppIdentity(): AppIdentity {
   return currentIdentity;
 }
 
+export function isSameAppIdentity(left: AppIdentity, right: AppIdentity): boolean {
+  return left.kind === right.kind &&
+    (left.kind !== 'authenticated' ||
+      (right.kind === 'authenticated' && left.userId === right.userId));
+}
+
 /** A lease expires on any identity transition, including A → B → A. */
 export function captureAppIdentity() {
   const identity = currentIdentity;

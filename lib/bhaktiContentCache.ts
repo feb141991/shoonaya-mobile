@@ -11,6 +11,7 @@ import { createCacheStorageBarrier } from './cacheStorageBarrier';
 // every other cache in this codebase -- so there is no TTL to get wrong
 // either, and no sign-out clearing (this data was never private).
 const SCHEMA_VERSION = 1;
+const snapshots = new Map<string, unknown>();
 
 type Envelope<T> = { schemaVersion: number; cachedAt: string; data: T };
 
@@ -24,14 +25,28 @@ export async function readBhaktiContentCache<T>(
     const stored = await cacheStorage.read(key);
     if (!stored) return null;
     const cached = JSON.parse(stored.value) as Envelope<unknown>;
-    if (cached.schemaVersion !== SCHEMA_VERSION || !isValid(cached.data)) return null;
+    if (cached.schemaVersion !== SCHEMA_VERSION || !isValid(cached.data)) {
+      await stored.discard().catch(() => {});
+      return null;
+    }
+    snapshots.set(key, cached.data);
     return cached.data;
   } catch {
     return null;
   }
 }
 
+/** Fast in-process snapshot for synchronous first render on warm route returns. */
+export function getBhaktiContentCacheSnapshot<T>(
+  key: string,
+  isValid: (value: unknown) => value is T
+): T | null {
+  const snapshot = snapshots.get(key);
+  return snapshot !== undefined && isValid(snapshot) ? snapshot : null;
+}
+
 export async function writeBhaktiContentCache<T>(key: string, data: T): Promise<void> {
+  snapshots.set(key, data);
   const payload: Envelope<T> = {
     schemaVersion: SCHEMA_VERSION,
     cachedAt: new Date().toISOString(),
@@ -41,11 +56,13 @@ export async function writeBhaktiContentCache<T>(key: string, data: T): Promise<
 }
 
 export async function clearAllBhaktiContentCaches(): Promise<void> {
+  snapshots.clear();
   await cacheStorage.clearAll();
 }
 
 export const bhaktiCacheKeys = {
   stotramList: (): string => 'shoonaya.bhakti.content.stotram-list.v1',
+  mantraList: (): string => 'shoonaya.bhakti.content.mantra-list.v1',
   kathaList: (view: string): string => `shoonaya.bhakti.content.katha-list.v1.${view}`,
   stotramDetail: (id: string): string => `shoonaya.bhakti.content.stotram-detail.v1.${id}`,
   kathaDetail: (id: string): string => `shoonaya.bhakti.content.katha-detail.v1.${id}`,
