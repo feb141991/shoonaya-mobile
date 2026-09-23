@@ -65,7 +65,7 @@ import { clearQuizCache } from '@/lib/quizCache';
 import { clearSevaCache } from '@/lib/sevaCache';
 import { clearVratGeoCache } from '@/lib/vratCache';
 import { clearMoodStatusCache } from '@/lib/moodStatusCache';
-import { clearAllTelemetry } from '@/lib/telemetry';
+import { clearAllTelemetry, recordFirstUsefulFrame } from '@/lib/telemetry';
 import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
@@ -241,13 +241,27 @@ function RootLayout() {
       // used to report identically as "ready" with no way to tell them
       // apart in Observe metrics or the local receipt.
       markInteractive({ params: { viaEmergencyFallback: emergencyFallbackUsedRef.current } });
+      const elapsedMs = Date.now() - startupStartedAtRef.current;
       void AsyncStorage.setItem('shoonaya:startup:last-receipt', JSON.stringify({
         status: 'ready',
-        elapsedMs: Date.now() - startupStartedAtRef.current,
+        elapsedMs,
         route: segmentsRef.current.rootSegment ?? 'unknown',
         viaEmergencyFallback: emergencyFallbackUsedRef.current,
         recordedAt: new Date().toISOString(),
       })).catch(() => {});
+      // Reliability plan item 8: feeds the same cold-start timing into the
+      // aggregated telemetry pipeline (route timings, loader exposure,
+      // etc. already use), not just the local-only receipt above -- this
+      // is what actually reaches the admin percentile dashboard.
+      const telemetryIdentity = getAppIdentity();
+      if (telemetryIdentity.kind === 'guest') {
+        recordFirstUsefulFrame({ kind: 'guest' }, { elapsedMs, viaEmergencyFallback: emergencyFallbackUsedRef.current });
+      } else if (telemetryIdentity.kind === 'authenticated') {
+        recordFirstUsefulFrame(
+          { kind: 'authenticated', userId: telemetryIdentity.userId },
+          { elapsedMs, viaEmergencyFallback: emergencyFallbackUsedRef.current }
+        );
+      }
     }
   }, [readyToRender, isAppInteractive, markInteractive]);
 

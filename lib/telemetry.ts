@@ -49,7 +49,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // telemetry recorded under schema 1 is discarded on next read rather than
 // misread under the new shape (readEnvelope already treats a schemaVersion
 // mismatch as "start fresh"). This is a clean baseline reset, not a bug.
-export const TELEMETRY_SCHEMA_VERSION = 2;
+//
+// Reliability plan item 8 (release measurement): bumped 2 -> 3 to add
+// first_useful_frame -- cold-start-to-interactive timing was already being
+// computed in app/_layout.tsx (the `shoonaya:startup:last-receipt` local
+// diagnostic write) but was never fed into this module's aggregation/
+// upload pipeline, so it never reached the same admin percentile dashboard
+// every other route-level metric does. Same additive-shape, clean-reset
+// version bump as before.
+export const TELEMETRY_SCHEMA_VERSION = 3;
 const MAX_EVENTS = 500;
 
 export type TelemetryIdentity = { kind: 'guest' } | { kind: 'authenticated'; userId: string };
@@ -130,6 +138,19 @@ export type TelemetryEvent =
       route: RouteName;
       hadUsableData: boolean;
       durationMs: number;
+      timestamp: number;
+    }
+  | {
+      // Cold-start-to-interactive: elapsed time from JS init
+      // (startupStartedAtRef in app/_layout.tsx) to the moment
+      // resolveStartupSurface reports 'app' -- overlay gone AND the app
+      // ready, not just auth resolved. One event per cold start.
+      type: 'first_useful_frame';
+      elapsedMs: number;
+      // Distinguishes readiness reached normally from the 6-second
+      // emergency fail-safe forcing it open after a stalled session/
+      // profile resolution -- see F01/F02 in app/_layout.tsx.
+      viaEmergencyFallback: boolean;
       timestamp: number;
     };
 
@@ -294,6 +315,15 @@ export function recordLoaderShown(identity: TelemetryIdentity, route: RouteName,
   void appendEvent(identity, { type: 'loader_shown', route, hadUsableData: data.hadUsableData, durationMs: data.durationMs, timestamp: Date.now() });
 }
 
+export function recordFirstUsefulFrame(identity: TelemetryIdentity, data: { elapsedMs: number; viaEmergencyFallback: boolean }): void {
+  void appendEvent(identity, {
+    type: 'first_useful_frame',
+    elapsedMs: data.elapsedMs,
+    viaEmergencyFallback: data.viaEmergencyFallback,
+    timestamp: Date.now(),
+  });
+}
+
 export function recordMutationRetryOutcome(
   identity: TelemetryIdentity,
   feature: OutboxFeature,
@@ -390,6 +420,15 @@ export type LoaderExposureSummary = {
   p95DurationMs: number;
 };
 
+export type FirstUsefulFrameSummary = {
+  samples: number;
+  avgMs: number;
+  p50Ms: number;
+  p75Ms: number;
+  p95Ms: number;
+  emergencyFallbackCount: number;
+};
+
 export type TelemetrySummary = {
   routes: RouteSummary[];
   outbox: OutboxSummary[];
@@ -397,6 +436,7 @@ export type TelemetrySummary = {
   duplicateRequests: DuplicateRequestSummary[];
   interactionTimings: InteractionTimingSummary[];
   loaderExposure: LoaderExposureSummary[];
+  firstUsefulFrame: FirstUsefulFrameSummary | null;
   totalEvents: number;
 };
 
@@ -425,6 +465,7 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
   const duplicateGroups = new Map<RouteName, { avoided: number; detected: number }>();
   const interactionGroups = new Map<InteractionName, number[]>();
   const loaderGroups = new Map<RouteName, { durations: number[]; shownWithUsableData: number }>();
+  const firstUsefulFrame: { durations: number[]; emergencyFallbackCount: number } = { durations: [], emergencyFallbackCount: 0 };
 
   const routeGroup = (route: RouteName) =>
     routeGroups.get(route) ?? { durations: [], hits: 0, opens: 0, failures: 0, staleOpens: 0, staleReportingOpens: 0, failureReasons: {}, failuresWithCachedData: 0 };
@@ -476,6 +517,9 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
       group.durations.push(event.durationMs);
       if (event.hadUsableData) group.shownWithUsableData += 1;
       loaderGroups.set(event.route, group);
+    } else if (event.type === 'first_useful_frame') {
+      firstUsefulFrame.durations.push(event.elapsedMs);
+      if (event.viaEmergencyFallback) firstUsefulFrame.emergencyFallbackCount += 1;
     }
   }
 
@@ -535,6 +579,19 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
     };
   });
 
+  const firstUsefulFrameSorted = [...firstUsefulFrame.durations].sort((a, b) => a - b);
+  const firstUsefulFrameSummary: FirstUsefulFrameSummary | null =
+    firstUsefulFrameSorted.length > 0
+      ? {
+          samples: firstUsefulFrameSorted.length,
+          avgMs: firstUsefulFrameSorted.reduce((a, b) => a + b, 0) / firstUsefulFrameSorted.length,
+          p50Ms: percentile(firstUsefulFrameSorted, 50),
+          p75Ms: percentile(firstUsefulFrameSorted, 75),
+          p95Ms: percentile(firstUsefulFrameSorted, 95),
+          emergencyFallbackCount: firstUsefulFrame.emergencyFallbackCount,
+        }
+      : null;
+
   return {
     routes,
     outbox: Array.from(outboxGroups.values()),
@@ -542,6 +599,7 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
     duplicateRequests,
     interactionTimings,
     loaderExposure,
+    firstUsefulFrame: firstUsefulFrameSummary,
     totalEvents: envelope.events.length,
   };
 }

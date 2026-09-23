@@ -27,6 +27,7 @@ import {
   recordDuplicateRequestDetected,
   recordInteractionTiming,
   recordLoaderShown,
+  recordFirstUsefulFrame,
   parseServerTimingHeader,
   getTelemetrySummary,
   clearTelemetry,
@@ -397,5 +398,47 @@ describe('Telemetry -- Stage 0 reliability-plan additions (schema v2)', () => {
 
     assert.equal(profile.shown, 2);
     assert.equal(profile.shownWithUsableData, 1, 'exactly one of the two exposures blanked already-usable content');
+  });
+});
+
+describe('Telemetry -- first_useful_frame (reliability plan item 8, schema v3)', () => {
+  const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'item8-user' };
+
+  beforeEach(async () => {
+    await clearTelemetry(identity);
+  });
+
+  it('is null when no cold start has been recorded yet, not zeroed defaults', async () => {
+    const summary = await getTelemetrySummary(identity);
+    assert.equal(summary.firstUsefulFrame, null, 'absence must be distinguishable from a genuine 0ms/0-sample reading');
+  });
+
+  it('aggregates cold-start timing with avg/p50/p75/p95 and counts emergency-fallback readiness separately', async () => {
+    recordFirstUsefulFrame(identity, { elapsedMs: 400, viaEmergencyFallback: false });
+    recordFirstUsefulFrame(identity, { elapsedMs: 600, viaEmergencyFallback: false });
+    recordFirstUsefulFrame(identity, { elapsedMs: 6000, viaEmergencyFallback: true }); // the F01/F02 escape hatch firing
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    const fuf = summary.firstUsefulFrame!;
+
+    assert.equal(fuf.samples, 3);
+    assert.equal(fuf.avgMs, (400 + 600 + 6000) / 3);
+    assert.equal(fuf.p50Ms, 600);
+    assert.equal(fuf.p95Ms, 6000);
+    assert.equal(
+      fuf.emergencyFallbackCount, 1,
+      'exactly one of the three cold starts reached readiness via the forced fallback, not normally'
+    );
+  });
+
+  it('is isolated per identity, same as every other event type', async () => {
+    const other: TelemetryIdentity = { kind: 'authenticated', userId: 'item8-other-user' };
+    await clearTelemetry(other);
+    recordFirstUsefulFrame(identity, { elapsedMs: 500, viaEmergencyFallback: false });
+    await flush();
+
+    const otherSummary = await getTelemetrySummary(other);
+    assert.equal(otherSummary.firstUsefulFrame, null, 'a different identity must never see this identity\'s cold-start data');
   });
 });
