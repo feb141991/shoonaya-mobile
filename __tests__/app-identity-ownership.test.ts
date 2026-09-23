@@ -27,6 +27,9 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
   const login = fs.readFileSync(path.join(process.cwd(), 'app/(auth)/login.tsx'), 'utf8');
   const languageContext = fs.readFileSync(path.join(process.cwd(), 'lib/i18n/LanguageContext.tsx'), 'utf8');
   const sacredCalendarSheet = fs.readFileSync(path.join(process.cwd(), 'components/home/SacredCalendarSheet.tsx'), 'utf8');
+  const nityaKarma = fs.readFileSync(path.join(process.cwd(), 'app/nitya-dincharya.tsx'), 'utf8');
+  const quiz = fs.readFileSync(path.join(process.cwd(), 'app/quiz.tsx'), 'utf8');
+  const seva = fs.readFileSync(path.join(process.cwd(), 'app/seva.tsx'), 'utf8');
 
   assert.match(root, /supabase\.auth\.onAuthStateChange/);
   assert.match(root, /authRouteGenerationRef/);
@@ -87,4 +90,23 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
 
   assert.doesNotMatch(sacredCalendarSheet, /supabase\.auth\.onAuthStateChange/);
   assert.match(sacredCalendarSheet, /useAppIdentity\(\)/);
+
+  // Read-only screen initialization consumes the root-published identity
+  // instead of serially checking guest storage and calling getUser. Seva's
+  // write handler intentionally retains getUser as its send-time owner check.
+  assert.match(nityaKarma, /useAppIdentity\(\)/);
+  assert.doesNotMatch(nityaKarma, /isGuestMode\(|supabase\.auth\.getUser\(/);
+  assert.match(nityaKarma, /expectedUserId: userId/);
+
+  assert.match(quiz, /useAppIdentity\(\)/);
+  assert.doesNotMatch(quiz, /isGuestMode\(|supabase\.auth\.getUser\(/);
+  assert.match(quiz, /expectedUserId: userId/);
+
+  assert.match(seva, /useAppIdentity\(\)/);
+  assert.doesNotMatch(seva, /isGuestMode\(/);
+  const sevaLoadStart = seva.indexOf('const loadState = useCallback(async () => {');
+  const sevaLoadEnd = seva.indexOf('}, [appIdentity, router]);', sevaLoadStart);
+  assert.ok(sevaLoadStart > -1 && sevaLoadEnd > sevaLoadStart, 'Seva loadState callback not found');
+  assert.doesNotMatch(seva.slice(sevaLoadStart, sevaLoadEnd), /supabase\.auth\.getUser\(/);
+  assert.match(seva, /expectedUserId: userId|\.eq\('user_id', userId\)/);
 });

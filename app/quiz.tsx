@@ -23,7 +23,7 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
-import { isGuestMode } from '@/lib/guestSession';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
@@ -81,6 +81,7 @@ const DEFAULT_STATE: QuizState = {
 
 export default function QuizScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
@@ -107,7 +108,10 @@ export default function QuizScreen() {
   const spiritualToday = useMemo(() => spiritualDate(state.timezone), [state.timezone]);
 
   const loadQuiz = useCallback(async () => {
-    const guest = await isGuestMode();
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
+    const guest = appIdentity.kind === 'guest';
+    if (!isCurrent()) return;
     setIsGuest(guest);
 
     if (guest) {
@@ -115,8 +119,10 @@ export default function QuizScreen() {
       const timezone = 'UTC';
       const userName = 'Atithi Seeker';
       const today = spiritualDate(timezone);
-      const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`);
+      const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`, { expectedGuest: true });
+      if (!isCurrent()) return;
       const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
+      if (!isCurrent()) return;
 
       setState({
         timezone,
@@ -128,20 +134,18 @@ export default function QuizScreen() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
       router.replace('/(auth)/login');
       return;
     }
+    const userId = appIdentity.userId;
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('tradition, timezone, full_name, username')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle();
+    if (!isCurrent()) return;
 
     const tradition = (profile?.tradition ?? 'hindu') as Tradition;
     const timezone = profile?.timezone ?? 'UTC';
@@ -149,16 +153,18 @@ export default function QuizScreen() {
     const today = spiritualDate(timezone);
 
     const [quizResponse, savedResponse] = await Promise.all([
-      apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`),
+      apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`, { expectedUserId: userId }),
       supabase
         .from('quiz_responses')
         .select('chosen_index, correct_index, is_correct, explanation, question, date')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('date', today)
         .maybeSingle(),
     ]);
+    if (!isCurrent()) return;
 
     const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
+    if (!isCurrent()) return;
     const responseData = savedResponse.data
       ? ({
           chosen_index: savedResponse.data.chosen_index,
@@ -179,18 +185,20 @@ export default function QuizScreen() {
     });
     setSelectedAnswer(responseData?.chosen_index ?? null);
     setSaveData(null);
-  }, [router]);
+  }, [appIdentity, router]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
     setLoading(true);
     loadQuiz()
       .catch(() => {
-        Alert.alert("Could not load today's quiz");
+        if (isCurrent()) Alert.alert("Could not load today's quiz");
       })
       .finally(() => {
-        setLoading(false);
+        if (isCurrent()) setLoading(false);
       });
-  }, [loadQuiz]);
+  }, [appIdentity.kind, loadQuiz]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

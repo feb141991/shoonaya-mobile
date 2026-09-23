@@ -27,7 +27,7 @@ import { COLORS, FONTS } from '@/lib/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
-import { isGuestMode } from '@/lib/guestSession';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { AuthGate } from '@/components/ui/AuthGate';
 
 // Native Nitya Karma — the first native destination for Home's "Nitya Karma"
@@ -73,6 +73,7 @@ const EMPTY_STATE: NitySummary = {
 
 export default function NityaKarmaScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const isDark = useColorScheme() === 'dark';
   const [state, setState] = useState<NitySummary>(EMPTY_STATE);
   const [loading, setLoading] = useState(true);
@@ -97,13 +98,17 @@ export default function NityaKarmaScreen() {
 
   const loadNitya = useCallback(async () => {
     setLoadError(false);
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
 
-    const guest = await isGuestMode();
+    const guest = appIdentity.kind === 'guest';
+    if (!isCurrent()) return;
     setIsGuest(guest);
 
     if (guest) {
       const tradition = 'hindu';
       const userName = 'Atithi Seeker';
+      if (!isCurrent()) return;
       setLocalKey(null);
       setState({
         greeting: 'Suprabhat 🌅',
@@ -125,29 +130,32 @@ export default function NityaKarmaScreen() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
       router.replace('/(auth)/login');
       return;
     }
+    const userId = appIdentity.userId;
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('timezone, tradition, full_name, username')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle();
+    if (!isCurrent()) return;
 
     const tradition = profile?.tradition ?? 'hindu';
     const userName = profile?.full_name || profile?.username || 'Seeker';
 
     const today = spiritualDate(profile?.timezone ?? 'UTC');
-    const storageKey = `nitya_done_${user.id}_${today}`;
+    const storageKey = `nitya_done_${userId}_${today}`;
     setLocalKey(storageKey);
 
     const rawLocal = await AsyncStorage.getItem(storageKey);
+    if (!isCurrent()) return;
     const localDoneIds = new Set<string>(rawLocal ? JSON.parse(rawLocal) : []);
 
-    const response = await apiFetch('/api/native/nitya-karma');
+    const response = await apiFetch('/api/native/nitya-karma', { expectedUserId: userId });
+    if (!isCurrent()) return;
 
     if (response.status === 401) {
       router.replace('/(auth)/login');
@@ -159,6 +167,7 @@ export default function NityaKarmaScreen() {
     }
 
     const payload = (await response.json()) as NitySummary;
+    if (!isCurrent()) return;
     const mergedSteps = payload.steps.map(step => ({
       ...step,
       done: step.done || localDoneIds.has(step.id),
@@ -174,21 +183,23 @@ export default function NityaKarmaScreen() {
       tradition,
       userName,
     });
-  }, [router]);
+  }, [appIdentity, router]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
     const run = async () => {
       setLoading(true);
       try {
         await loadNitya();
       } catch {
-        setLoadError(true);
+        if (isCurrent()) setLoadError(true);
       } finally {
-        setLoading(false);
+        if (isCurrent()) setLoading(false);
       }
     };
     void run();
-  }, [loadNitya]);
+  }, [appIdentity.kind, loadNitya]);
 
   const markStep = useCallback(
     async (step: NityaStep) => {

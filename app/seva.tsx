@@ -22,7 +22,7 @@ import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
-import { isGuestMode } from '@/lib/guestSession';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
 import { getTraditionAccent, type TraditionKey } from '@/lib/traditions';
 
@@ -84,6 +84,7 @@ function monthRange() {
 
 export default function SevaScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const handleBack = useFallbackBackHandler('/(tabs)', true);
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
@@ -98,45 +99,49 @@ export default function SevaScreen() {
   const [authGateVisible, setAuthGateVisible] = useState(false);
 
   const loadState = useCallback(async () => {
-    const guest = await isGuestMode();
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
+    const guest = appIdentity.kind === 'guest';
+    if (!isCurrent()) return;
     setIsGuest(guest);
 
     if (guest) {
+      if (!isCurrent()) return;
       setTradition('hindu');
       setMonthlyCount(null);
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (appIdentity.kind !== 'authenticated') {
       router.replace('/(auth)/login');
       return;
     }
+    const userId = appIdentity.userId;
 
     const { startIso, endIso } = monthRange();
     const [{ data: profileRow }, { count }] = await Promise.all([
-      supabase.from('profiles').select('tradition').eq('id', user.id).single(),
+      supabase.from('profiles').select('tradition').eq('id', userId).single(),
       supabase
         .from('seva_log')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .gte('logged_at', startIso)
         .lt('logged_at', endIso),
     ]);
+    if (!isCurrent()) return;
 
     setTradition(isTraditionKey(profileRow?.tradition) ? profileRow.tradition : 'hindu');
     setMonthlyCount(count ?? 0);
-  }, [router]);
+  }, [appIdentity, router]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
+    const { isCurrent } = captureAppIdentity();
     setLoading(true);
     loadState()
-      .catch(() => Alert.alert('Could not load Seva'))
-      .finally(() => setLoading(false));
-  }, [loadState]);
+      .catch(() => { if (isCurrent()) Alert.alert('Could not load Seva'); })
+      .finally(() => { if (isCurrent()) setLoading(false); });
+  }, [appIdentity.kind, loadState]);
 
   const accent = getTraditionAccent(tradition);
   const orgs = SEVA_ORGS[tradition];
