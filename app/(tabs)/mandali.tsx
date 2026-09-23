@@ -1880,8 +1880,20 @@ export default function MandaliScreen() {
 
   const deletePost = useCallback(async (post: PostRow) => {
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', post.id);
+      // .select('id') is load-bearing, not decorative: without it Supabase
+      // returns { data: null, error: null } for a delete RLS silently
+      // excluded (0 rows matched "Authors can delete own posts") the exact
+      // same shape as a genuine success. Without checking the returned
+      // rows, that looked like a successful delete here -- the post
+      // vanished from local state -- and then reappeared on the next
+      // fetch/refresh once the (never-actually-deleted) row came back,
+      // which is exactly what "delete doesn't work" looks like to a user.
+      const { data, error } = await supabase.from('posts').delete().eq('id', post.id).select('id');
       if (error) throw error;
+      if (!data || data.length === 0) {
+        Alert.alert('Could not delete post', 'This post could not be deleted. Please try again.');
+        return;
+      }
       setPosts((current) => current.filter((p) => p.id !== post.id));
       setBlendedPosts((current) => current.filter((p) => p.id !== post.id));
     } catch {
