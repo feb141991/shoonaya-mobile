@@ -361,4 +361,19 @@ export class AuthCoordinator {
 // actually been run (see the module comment above) -- the existing test
 // suite proves the extraction is internally consistent, not that it has
 // been exercised against a real device.
+//
+// On-device validation (2026-09-23, iPhone 17 Pro Max simulator, real
+// Supabase SDK/AsyncStorage/navigation, switch flipped to `true` for the
+// duration of this test then reverted): cold start with an existing
+// persisted session -- AuthCoordinator resolved identity, routed to
+// /(tabs), Home rendered real data (Sacred Days, practices, verse) with
+// no crash and no misroute. This closes the one gap the unit/integration
+// suite explicitly could not (see authCoordinator-integration.test.ts's
+// own comment on why). NOT yet covered on-device: token-refresh timing,
+// profile bootstrap 401/503, missing-profile repair, and account
+// switching -- each needs either a second real account or a mocked
+// backend, neither available in this pass. Guest-mode cold start was
+// deliberately skipped rather than signing out of the one persisted
+// session on this simulator, which cannot be recreated without
+// credentials.
 export const USE_AUTH_COORDINATOR = false;
