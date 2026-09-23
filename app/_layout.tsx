@@ -64,6 +64,7 @@ import { clearJapaContextCache } from '@/lib/japaContextCache';
 import { clearQuizCache } from '@/lib/quizCache';
 import { clearSevaCache } from '@/lib/sevaCache';
 import { clearVratGeoCache } from '@/lib/vratCache';
+import { clearMoodStatusCache } from '@/lib/moodStatusCache';
 import { clearAllTelemetry } from '@/lib/telemetry';
 import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
@@ -379,6 +380,7 @@ function RootLayout() {
         void clearQuizCache();
         void clearSevaCache();
         void clearVratGeoCache();
+        void clearMoodStatusCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -424,6 +426,7 @@ function RootLayout() {
         void clearQuizCache();
         void clearSevaCache();
         void clearVratGeoCache();
+        void clearMoodStatusCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -610,6 +613,7 @@ function RootLayout() {
         void clearQuizCache();
         void clearSevaCache();
         void clearVratGeoCache();
+        void clearMoodStatusCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -627,6 +631,7 @@ function RootLayout() {
         void clearQuizCache();
         void clearSevaCache();
         void clearVratGeoCache();
+        void clearMoodStatusCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();

@@ -38,6 +38,8 @@ import {
   type Recommendation,
   type MoodStatus
 } from '@/lib/mood';
+import { readMoodStatusCache, writeMoodStatusCache, type MoodStatusCacheIdentity } from '@/lib/moodStatusCache';
+import { useAppIdentity } from '@/lib/appIdentity';
 
 const TIME_OPTIONS = [
   { key: 'short',  label: 'Just 5 minutes',       desc: 'A quick, focused practice',     emoji: '⚡' },
@@ -108,6 +110,7 @@ const FEATURED_ITEMS = [
 
 export default function MoodScreen() {
   const router = useRouter();
+  const appIdentity = useAppIdentity();
   const handleExit = useFallbackBackHandler('/(tabs)', false);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -183,32 +186,52 @@ export default function MoodScreen() {
     return () => loop.stop();
   }, [reducedMotion, shimmer]);
 
+  const applyMoodStatus = useCallback((status: MoodStatus) => {
+    setMoodStatus(status);
+    if (status.hasCompletedToday) {
+      setStep(4);
+    } else if (status.openSession && status.openSession.before_mood) {
+      const m = MOODS.find(x => x.key === status.openSession!.before_mood);
+      if (m) {
+        setSelectedMood(m);
+        setCheckinId(status.openSession.id);
+        setStep(2);
+      }
+    }
+  }, [MOODS]);
+
   const loadStatus = useCallback(async () => {
-    setLoading(true);
+    if (appIdentity.kind === 'loading') return;
     setInitError(false);
+    const identity: MoodStatusCacheIdentity =
+      appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+
+    // Cache-first paint (reliability plan item 6): a cache hit shows
+    // today's already-known status instantly and clears `loading`
+    // immediately, reserving SacredLoader for a genuine first-ever load
+    // with nothing cached yet. A failed background reconcile below must
+    // not blow away content already painted from the cache.
+    const cached = await readMoodStatusCache(identity);
+    const hadCache = Boolean(cached);
+    if (cached) {
+      applyMoodStatus(cached);
+      setLoading(false);
+    }
+
     const status = await fetchMoodStatus();
     if (status) {
-      setMoodStatus(status);
-      if (status.hasCompletedToday) {
-        setStep(4);
-      } else if (status.openSession && status.openSession.before_mood) {
-        const m = MOODS.find(x => x.key === status.openSession!.before_mood);
-        if (m) {
-          setSelectedMood(m);
-          setCheckinId(status.openSession.id);
-          setStep(2);
-        }
-      }
-    } else {
+      applyMoodStatus(status);
+      void writeMoodStatusCache(identity, status);
+    } else if (!hadCache) {
       setInitError(true);
     }
     setLoading(false);
-  }, [MOODS]);
+  }, [appIdentity, applyMoodStatus]);
 
   useEffect(() => {
+    if (appIdentity.kind === 'loading') return;
     loadStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appIdentity.kind, loadStatus]);
 
   const startOver = useCallback(() => {
     setStep(1);
