@@ -25,8 +25,15 @@ import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { AuthGate } from '@/components/ui/AuthGate';
-
-type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
+import {
+  readQuizCache,
+  writeQuizCache,
+  type DailyQuiz,
+  type QuizCacheIdentity,
+  type QuizState,
+  type Tradition,
+  type TodayQuizResponse,
+} from '@/lib/quizCache';
 
 const TRADITION_EMOJI: Record<Tradition, string> = {
   hindu: '🕉️',
@@ -35,40 +42,11 @@ const TRADITION_EMOJI: Record<Tradition, string> = {
   jain: '🤲',
 };
 
-type DailyQuiz = {
-  question: string;
-  options: string[];
-  answerIndex: number;
-  explanation?: string | null;
-  fact?: string | null;
-  source?: string | null;
-  tradition: string;
-  date: string;
-  daily_quiz_id?: string | null;
-};
-
-type TodayResponse = {
-  chosen_index: number;
-  correct_index: number;
-  is_correct: boolean;
-  explanation: string | null;
-  question: string;
-  date: string;
-};
-
 type QuizSaveData = {
   success: boolean;
   karma_earned: number;
   streak: number;
   streak_milestone?: string | null;
-};
-
-type QuizState = {
-  quiz: DailyQuiz | null;
-  todayResponse: TodayResponse | null;
-  tradition: Tradition;
-  timezone: string;
-  userName: string;
 };
 
 const DEFAULT_STATE: QuizState = {
@@ -115,22 +93,38 @@ export default function QuizScreen() {
     setIsGuest(guest);
 
     if (guest) {
+      const identity: QuizCacheIdentity = { kind: 'guest' };
       const tradition: Tradition = 'hindu';
       const timezone = 'UTC';
       const userName = 'Atithi Seeker';
       const today = spiritualDate(timezone);
+
+      // Cache-first paint (reliability plan item 6): a cache hit shows
+      // yesterday's -- well, today's -- known-good quiz instantly and
+      // clears `loading` immediately, so SacredLoader is reserved for a
+      // genuine first-ever load with nothing cached yet. The fetch below
+      // still runs to reconcile it in the background.
+      const cached = await readQuizCache(identity);
+      if (!isCurrent()) return;
+      if (cached) {
+        setState(cached);
+        setLoading(false);
+      }
+
       const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`, { expectedGuest: true });
       if (!isCurrent()) return;
       const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
       if (!isCurrent()) return;
 
-      setState({
+      const nextState: QuizState = {
         timezone,
         userName,
         tradition,
         quiz: quizData,
         todayResponse: null,
-      });
+      };
+      setState(nextState);
+      if (quizData) void writeQuizCache(identity, nextState);
       return;
     }
 
@@ -139,6 +133,15 @@ export default function QuizScreen() {
       return;
     }
     const userId = appIdentity.userId;
+    const identity: QuizCacheIdentity = { kind: 'authenticated', userId };
+
+    const cached = await readQuizCache(identity);
+    if (!isCurrent()) return;
+    if (cached) {
+      setState(cached);
+      setSelectedAnswer(cached.todayResponse?.chosen_index ?? null);
+      setLoading(false);
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -173,24 +176,25 @@ export default function QuizScreen() {
           explanation: savedResponse.data.explanation,
           question: savedResponse.data.question,
           date: savedResponse.data.date,
-        } satisfies TodayResponse)
+        } satisfies TodayQuizResponse)
       : null;
 
-    setState({
+    const nextState: QuizState = {
       quiz: quizData,
       todayResponse: responseData,
       tradition,
       timezone,
       userName,
-    });
+    };
+    setState(nextState);
     setSelectedAnswer(responseData?.chosen_index ?? null);
     setSaveData(null);
+    if (quizData) void writeQuizCache(identity, nextState);
   }, [appIdentity, router]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
     const { isCurrent } = captureAppIdentity();
-    setLoading(true);
     loadQuiz()
       .catch(() => {
         if (isCurrent()) Alert.alert("Could not load today's quiz");
@@ -253,17 +257,21 @@ export default function QuizScreen() {
       if (index === activeQuiz.answerIndex && data.karma_earned > 0) {
         setShowConfetti(true);
       }
-      setState((current) => ({
-        ...current,
-        todayResponse: {
-          chosen_index: index,
-          correct_index: activeQuiz.answerIndex,
-          is_correct: index === activeQuiz.answerIndex,
-          explanation: activeQuiz.explanation ?? null,
-          question: activeQuiz.question,
-          date: spiritualToday,
-        },
-      }));
+      const todayResponse: TodayQuizResponse = {
+        chosen_index: index,
+        correct_index: activeQuiz.answerIndex,
+        is_correct: index === activeQuiz.answerIndex,
+        explanation: activeQuiz.explanation ?? null,
+        question: activeQuiz.question,
+        date: spiritualToday,
+      };
+      setState((current) => {
+        const next = { ...current, todayResponse };
+        if (appIdentity.kind === 'authenticated') {
+          void writeQuizCache({ kind: 'authenticated', userId: appIdentity.userId }, next);
+        }
+        return next;
+      });
     } catch {
       Alert.alert('Could not save your answer');
       setSelectedAnswer(null);

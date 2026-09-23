@@ -25,6 +25,7 @@ import { FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
 import { getTraditionAccent, type TraditionKey } from '@/lib/traditions';
+import { readSevaCache, writeSevaCache, type SevaCacheIdentity } from '@/lib/sevaCache';
 
 // Ported from the PWA's tradition-filtered seva hub
 // (src/app/(main)/seva/SevaClient.tsx) -- same orgs, same per-tradition
@@ -106,9 +107,12 @@ export default function SevaScreen() {
     setIsGuest(guest);
 
     if (guest) {
+      // Guest has nothing to fetch -- no network call, so there is no
+      // genuine first-load blocking state to show here at all.
       if (!isCurrent()) return;
       setTradition('hindu');
       setMonthlyCount(null);
+      setLoading(false);
       return;
     }
 
@@ -117,6 +121,20 @@ export default function SevaScreen() {
       return;
     }
     const userId = appIdentity.userId;
+    const identity: SevaCacheIdentity = { kind: 'authenticated', userId };
+
+    // Cache-first paint (reliability plan item 6): a cache hit shows the
+    // last-known tradition/monthly count instantly and clears `loading`
+    // immediately, so SacredLoader is reserved for a genuine first-ever
+    // load with nothing cached yet -- the queries below still run in the
+    // background to reconcile it.
+    const cached = await readSevaCache(identity);
+    if (!isCurrent()) return;
+    if (cached) {
+      setTradition(isTraditionKey(cached.tradition) ? cached.tradition : 'hindu');
+      setMonthlyCount(cached.monthlyCount);
+      setLoading(false);
+    }
 
     const { startIso, endIso } = monthRange();
     const [{ data: profileRow }, { count }] = await Promise.all([
@@ -130,14 +148,16 @@ export default function SevaScreen() {
     ]);
     if (!isCurrent()) return;
 
-    setTradition(isTraditionKey(profileRow?.tradition) ? profileRow.tradition : 'hindu');
-    setMonthlyCount(count ?? 0);
+    const nextTradition = isTraditionKey(profileRow?.tradition) ? profileRow.tradition : 'hindu';
+    const nextCount = count ?? 0;
+    setTradition(nextTradition);
+    setMonthlyCount(nextCount);
+    void writeSevaCache(identity, { tradition: nextTradition, monthlyCount: nextCount });
   }, [appIdentity, router]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
     const { isCurrent } = captureAppIdentity();
-    setLoading(true);
     loadState()
       .catch(() => { if (isCurrent()) Alert.alert('Could not load Seva'); })
       .finally(() => { if (isCurrent()) setLoading(false); });
@@ -172,7 +192,13 @@ export default function SevaScreen() {
       });
 
       if (error) throw error;
-      setMonthlyCount((current) => (current ?? 0) + 1);
+      setMonthlyCount((current) => {
+        const next = (current ?? 0) + 1;
+        if (appIdentity.kind === 'authenticated') {
+          void writeSevaCache({ kind: 'authenticated', userId: appIdentity.userId }, { tradition, monthlyCount: next });
+        }
+        return next;
+      });
       setNote('');
       setSevaType('Annadaan');
       Alert.alert('Seva logged', 'Thank you for your seva today.');
@@ -181,7 +207,7 @@ export default function SevaScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [isGuest, submitting, note, sevaType, router]);
+  }, [isGuest, submitting, note, sevaType, router, appIdentity, tradition]);
 
   if (loading) {
     return (

@@ -61,6 +61,8 @@ import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
 import { clearAllPathshalaCaches } from '@/lib/pathshalaCache';
 import { clearJapaContextCache } from '@/lib/japaContextCache';
+import { clearQuizCache } from '@/lib/quizCache';
+import { clearSevaCache } from '@/lib/sevaCache';
 import { clearAllTelemetry } from '@/lib/telemetry';
 import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
@@ -373,6 +375,8 @@ function RootLayout() {
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
         void clearJapaContextCache();
+        void clearQuizCache();
+        void clearSevaCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -415,6 +419,8 @@ function RootLayout() {
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
         void clearJapaContextCache();
+        void clearQuizCache();
+        void clearSevaCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -598,6 +604,8 @@ function RootLayout() {
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
         void clearJapaContextCache();
+        void clearQuizCache();
+        void clearSevaCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
@@ -612,6 +620,8 @@ function RootLayout() {
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
         void clearJapaContextCache();
+        void clearQuizCache();
+        void clearSevaCache();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
         void clearAllReactionOutboxes();
