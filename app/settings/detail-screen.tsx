@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   Text,
+  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
@@ -79,6 +80,8 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_festival_reminders: true,
   wants_vrat_reminders: true,
   wants_tithi_reminders: false,
+  observance_reminder_lead_days: [1, 7],
+  observance_reminder_time: '08:00',
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,
   wants_community_notifications: true,
@@ -118,6 +121,8 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     wants_festival_reminders: value?.wants_festival_reminders ?? INITIAL_SETTINGS.wants_festival_reminders,
     wants_vrat_reminders: value?.wants_vrat_reminders ?? INITIAL_SETTINGS.wants_vrat_reminders,
     wants_tithi_reminders: value?.wants_tithi_reminders ?? INITIAL_SETTINGS.wants_tithi_reminders,
+    observance_reminder_lead_days: value?.observance_reminder_lead_days ?? INITIAL_SETTINGS.observance_reminder_lead_days,
+    observance_reminder_time: value?.observance_reminder_time ?? INITIAL_SETTINGS.observance_reminder_time,
     wants_shloka_reminders: value?.wants_shloka_reminders ?? INITIAL_SETTINGS.wants_shloka_reminders,
     wants_nitya_reminders: value?.wants_nitya_reminders ?? INITIAL_SETTINGS.wants_nitya_reminders,
     wants_community_notifications: value?.wants_community_notifications ?? INITIAL_SETTINGS.wants_community_notifications,
@@ -265,6 +270,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     purgeAfter: string | null;
   } | null>(null);
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
+  const [reminderTimeDraft, setReminderTimeDraft] = useState(INITIAL_SETTINGS.observance_reminder_time ?? '08:00');
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
   const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
@@ -280,6 +286,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   // drains another account's outbox (see resumePendingWrite below).
   const identityRef = useRef<SettingsCacheIdentity | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setReminderTimeDraft(settings.observance_reminder_time ?? '08:00');
+  }, [settings.observance_reminder_time]);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current) {
@@ -429,11 +439,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     const identity: SettingsCacheIdentity = { kind: 'authenticated', userId: appIdentity.userId };
     identityRef.current = identity;
 
-    const [profileRes, cached, localTheme] = await Promise.all([
+  const [profileRes, cached, localTheme] = await Promise.all([
       supabase
         .from('profiles')
         .select(
-          'tradition, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
+          'tradition, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
         )
         .eq('id', appIdentity.userId)
         .single(),
@@ -891,6 +901,57 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   />
                 </View>
               ))}
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.label, color: theme.text }}>Observance reminder days</Text>
+                <Text style={{ ...TYPE.caption, color: theme.dim }}>Choose when to be reminded before a festival or vrat. No selected days means no observance reminders.</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {[{ day: 0, label: 'Day of' }, { day: 1, label: '1 day before' }, { day: 7, label: '7 days before' }].map((option) => {
+                    const selected = (settings.observance_reminder_lead_days ?? [1, 7]).includes(option.day);
+                    return (
+                      <PressableSurface
+                        key={option.day}
+                        haptic="selection"
+                        accessibilityRole="button"
+                        accessibilityLabel={`${option.label}${selected ? ', selected' : ''}`}
+                        onPress={() => {
+                          const current = settings.observance_reminder_lead_days ?? [1, 7];
+                          const nextDays = selected
+                            ? current.filter((day) => day !== option.day)
+                            : [...current, option.day].sort((a, b) => a - b);
+                          void persistSettings({ ...settings, observance_reminder_lead_days: nextDays });
+                        }}
+                        style={{ minHeight: MIN_TOUCH_TARGET, borderRadius: RADII.lg, borderWidth: 1, borderColor: selected ? theme.brand : theme.border, backgroundColor: selected ? theme.brandSoft : theme.card, paddingHorizontal: 14, justifyContent: 'center' }}
+                      >
+                        <Text style={{ ...TYPE.caption, color: selected ? theme.brand : theme.text }}>{option.label}</Text>
+                      </PressableSurface>
+                    );
+                  })}
+                </View>
+              </View>
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.label, color: theme.text }}>Reminder time</Text>
+                <Text style={{ ...TYPE.caption, color: theme.dim }}>Uses your profile timezone. Enter 24-hour time, for example 08:00.</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <TextInput
+                    accessibilityLabel="Observance reminder time"
+                    value={reminderTimeDraft}
+                    onChangeText={setReminderTimeDraft}
+                    keyboardType="numbers-and-punctuation"
+                    maxLength={5}
+                    placeholder="08:00"
+                    placeholderTextColor={theme.dim}
+                    style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
+                  />
+                  <Button
+                    label="Save time"
+                    variant="secondary"
+                    disabled={!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(reminderTimeDraft) || reminderTimeDraft === settings.observance_reminder_time}
+                    onPress={() => { void persistSettings({ ...settings, observance_reminder_time: reminderTimeDraft }); }}
+                  />
+                </View>
+              </View>
             </SettingsSection> : null}
 
             {/* ── Language / preferences ──────────────────────────────── */}
