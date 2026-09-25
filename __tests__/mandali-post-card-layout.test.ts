@@ -87,8 +87,24 @@ describe('Mandali post card layout & timestamp formatting', () => {
     assert.equal(normalize('  Pranam 🙏  '), 'Pranam 🙏');
   });
 
-  it('prevents PressableSurface from forcing flex: 1 when minHeight: 0 is specified', () => {
+  it('never forces flex: 1 on PressableSurface unless the caller actually asked for it', () => {
+    // Strengthened after an external review + real Android device
+    // screenshots found the exact same defect class this test originally
+    // guarded against, but recurring: the old fix here only suppressed the
+    // forced flex:1 when a caller passed the literal `minHeight: 0` --
+    // ANY other minHeight (or none at all) still got an unrequested
+    // flex:1, which is exactly what stretched app/dharm-veer/[id].tsx's
+    // "Ask Dharma Mitra" button and app/(tabs)/profile.tsx's "Invite"
+    // button into large, mostly-empty blocks on Android. Fixed at the
+    // root: the inner content wrapper's flex is now always exactly
+    // whatever the caller's own style specifies, full stop -- no
+    // minHeight-based special case to get half-right a second time.
     const pressableSurface = readFileSync(new URL('../components/ui/PressableSurface.tsx', import.meta.url), 'utf8');
-    assert.match(pressableSurface, /flex:\s*flattenedStyle\.minHeight\s*===\s*0\s*\?\s*flattenedStyle\.flex\s*:\s*1/);
+    assert.match(pressableSurface, /flex:\s*flattenedStyle\.flex,/);
+    assert.doesNotMatch(
+      pressableSurface,
+      /flex:\s*flattenedStyle\.minHeight\s*===\s*0/,
+      'must not reintroduce a minHeight-conditional special case -- the flex value must always come from the caller, unconditionally',
+    );
   });
 });

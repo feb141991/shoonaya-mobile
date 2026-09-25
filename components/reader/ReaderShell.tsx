@@ -16,6 +16,7 @@ import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { ReaderIntro } from '@/components/reader/ReaderIntro';
 import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 
 type ReaderLanguage<Code extends string> = {
   code: Code;
@@ -466,7 +467,14 @@ export function ReaderShell<LanguageCode extends string = string>({
           {
             paddingHorizontal: 16,
             paddingTop: 24,
-            paddingBottom: insets.bottom + (bottomBar ? 120 : 32),
+            // 32 was less than half of NAV_BAR_CLEARANCE (106 -- the
+            // globally-mounted CollapsibleBottomNav's own reserved band,
+            // see lib/nav-bar.ts). Confirmed on a real Android device
+            // (where insets.bottom is commonly 0, unlike iOS's reliable
+            // home-indicator inset): the last button on a reader screen
+            // with no bottomBar rendered underneath the floating nav,
+            // effectively hidden. bottomBar's own 120 already clears it.
+            paddingBottom: insets.bottom + (bottomBar ? 120 : NAV_BAR_CLEARANCE),
           },
           contentContainerStyle,
         ]}
