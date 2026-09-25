@@ -40,12 +40,14 @@ export type SettingsFields = {
   observance_reminder_time?: string;
   wants_shloka_reminders: boolean;
   wants_nitya_reminders: boolean;
+  wants_sankalpa_midpoint_reminders: boolean;
   wants_community_notifications: boolean;
   wants_family_notifications: boolean;
   app_language: AppLanguage;
   transliteration_language: AppLanguage;
   meaning_language: AppLanguage;
   consent_religious_data: boolean;
+  consent_activity_personalization: boolean;
 };
 
 /**

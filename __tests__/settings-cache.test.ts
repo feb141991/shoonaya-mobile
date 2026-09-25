@@ -36,12 +36,14 @@ const sampleSettings: SettingsFields = {
   wants_festival_reminders: true,
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,
+  wants_sankalpa_midpoint_reminders: false,
   wants_community_notifications: true,
   wants_family_notifications: true,
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
   consent_religious_data: false,
+  consent_activity_personalization: false,
 };
 
 function envelope(overrides: Partial<SettingsCacheEnvelope> = {}): SettingsCacheEnvelope {

@@ -84,17 +84,20 @@ const INITIAL_SETTINGS: SettingsState = {
   observance_reminder_time: '08:00',
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,
+  wants_sankalpa_midpoint_reminders: false,
   wants_community_notifications: true,
   wants_family_notifications: true,
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
   consent_religious_data: false,
+  consent_activity_personalization: false,
 };
 
-const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; badge?: string }[] = [
+const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
+  { key: 'wants_sankalpa_midpoint_reminders', label: 'Sankalpa midpoint', subtitle: 'One gentle reminder halfway through an active vow', requiresAccount: true },
   { key: 'wants_festival_reminders', label: 'Sacred festivals', subtitle: 'Major and regional sacred festivals' },
   { key: 'wants_vrat_reminders', label: 'Vrats & fasting', subtitle: 'Ekadashi, Pradosha, Purnima & fasting days' },
   { key: 'wants_tithi_reminders', label: 'Tithi alerts', subtitle: 'Daily lunar phase transitions' },
@@ -125,12 +128,14 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     observance_reminder_time: value?.observance_reminder_time ?? INITIAL_SETTINGS.observance_reminder_time,
     wants_shloka_reminders: value?.wants_shloka_reminders ?? INITIAL_SETTINGS.wants_shloka_reminders,
     wants_nitya_reminders: value?.wants_nitya_reminders ?? INITIAL_SETTINGS.wants_nitya_reminders,
+    wants_sankalpa_midpoint_reminders: value?.wants_sankalpa_midpoint_reminders ?? INITIAL_SETTINGS.wants_sankalpa_midpoint_reminders,
     wants_community_notifications: value?.wants_community_notifications ?? INITIAL_SETTINGS.wants_community_notifications,
     wants_family_notifications: value?.wants_family_notifications ?? INITIAL_SETTINGS.wants_family_notifications,
     app_language: value?.app_language ?? INITIAL_SETTINGS.app_language,
     transliteration_language: value?.transliteration_language ?? INITIAL_SETTINGS.transliteration_language,
     meaning_language: value?.meaning_language ?? INITIAL_SETTINGS.meaning_language,
     consent_religious_data: value?.consent_religious_data ?? INITIAL_SETTINGS.consent_religious_data,
+    consent_activity_personalization: value?.consent_activity_personalization ?? INITIAL_SETTINGS.consent_activity_personalization,
   };
 }
 
@@ -183,7 +188,16 @@ function ToggleRow({
         </View>
         {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text> : null}
       </View>
-      <Switch value={value} onValueChange={onChange} disabled={disabled} trackColor={{ true: theme.brand }} />
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+        trackColor={{ true: theme.brand }}
+        accessibilityRole="switch"
+        accessibilityLabel={label}
+        accessibilityHint={subtitle}
+        accessibilityState={{ checked: value, disabled: !!disabled }}
+      />
     </View>
   );
 }
@@ -443,7 +457,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       supabase
         .from('profiles')
         .select(
-          'tradition, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data'
+          'tradition, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
         )
         .eq('id', appIdentity.userId)
         .single(),
@@ -869,12 +883,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   ) : null}
                   <ToggleRow
                     label={item.label}
-                    subtitle={item.subtitle}
+                    subtitle={item.requiresAccount && isGuest
+                      ? `${item.subtitle} (sign in to enable)`
+                      : item.subtitle}
                     value={settings[item.key] as boolean}
-                    disabled={item.disabled}
+                    disabled={item.disabled || (item.requiresAccount === true && isGuest)}
                     badge={item.badge}
                     onChange={(value) => {
-                      if (item.disabled) return;
+                      if (item.disabled || (item.requiresAccount === true && isGuest)) return;
                       // Turning a reminder ON is exactly the "contextual"
                       // moment to (re-)ask for OS push permission — mirrors
                       // the web app's own contextual push-permission
@@ -1171,6 +1187,17 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 subtitle="Uses your spiritual preference data to tailor recommendations."
                 value={settings.consent_religious_data}
                 onChange={(value) => { void persistSettings({ ...settings, consent_religious_data: value }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <ToggleRow
+                label="Practice activity personalization"
+                subtitle={isGuest
+                  ? 'Sign in to save this choice to your account.'
+                  : 'Allow recent practice activity to reorder Mood and Sankalpa suggestions. Turn this off any time.'}
+                value={settings.consent_activity_personalization}
+                disabled={isGuest}
+                onChange={(value) => { void persistSettings({ ...settings, consent_activity_personalization: value }); }}
                 theme={theme}
               />
               {!isGuest ? (
