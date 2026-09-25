@@ -12,6 +12,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { useFocusEffect } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useReducedMotion } from '@/components/ui/Motion';
@@ -85,6 +86,7 @@ const COPY = {
 } as const;
 
 const CARD_GAP = 12;
+const AUTO_ADVANCE_INTERVAL_MS = 5500;
 
 export function SacredDaysCarousel({
   observances,
@@ -135,6 +137,24 @@ export function SacredDaysCarousel({
     setActiveIndex((current) => (items.length === 0 ? 0 : Math.min(current, items.length - 1)));
   }, [items.length]);
 
+  // Restarts the auto-advance countdown below -- bumped on every index change,
+  // whether caused by auto-advance itself, a dot press, or a manual swipe, so
+  // the user always gets a full dwell time on whatever card is showing.
+  const [autoAdvanceTick, setAutoAdvanceTick] = useState(0);
+  const isDraggingRef = useRef(false);
+  const activeIndexRef = useRef(activeIndex);
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
+
+  const [isFocused, setIsFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
+
   const scrollTo = useCallback(
     (index: number) => {
       if (items.length === 0) return;
@@ -144,17 +164,37 @@ export function SacredDaysCarousel({
         animated: !reducedMotion,
       });
       setActiveIndex(boundedIndex);
+      setAutoAdvanceTick((tick) => tick + 1);
     },
     [cardWidth, items.length, reducedMotion],
   );
 
+  const handleScrollBeginDrag = useCallback(() => {
+    isDraggingRef.current = true;
+  }, []);
+
   const handleMomentumEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      isDraggingRef.current = false;
       const index = Math.round(event.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP));
       setActiveIndex(Math.max(0, Math.min(index, items.length - 1)));
+      setAutoAdvanceTick((tick) => tick + 1);
     },
     [cardWidth, items.length],
   );
+
+  // Auto-advance like a slideshow: pauses while the user is dragging, while
+  // the Home tab isn't focused, and entirely under Reduce Motion.
+  useEffect(() => {
+    if (reducedMotion || !isFocused || items.length <= 1) return;
+
+    const timer = setTimeout(() => {
+      if (isDraggingRef.current) return;
+      scrollTo((activeIndexRef.current + 1) % items.length);
+    }, AUTO_ADVANCE_INTERVAL_MS);
+
+    return () => clearTimeout(timer);
+  }, [autoAdvanceTick, reducedMotion, isFocused, items.length, scrollTo]);
 
   const exportCalendar = useCallback(async () => {
     if (exporting) return;
@@ -330,6 +370,7 @@ export function SacredDaysCarousel({
             snapToAlignment="start"
             decelerationRate="fast"
             disableIntervalMomentum
+            onScrollBeginDrag={handleScrollBeginDrag}
             onMomentumScrollEnd={handleMomentumEnd}
             getItemLayout={(_, index) => ({
               length: cardWidth + CARD_GAP,
