@@ -37,6 +37,7 @@ import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/Me
 import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
+import { PostReactorsSheet } from '@/components/mandali/PostReactorsSheet';
 import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
 import { FestivalQuizMandaliStat } from '@/components/mandali/FestivalQuizMandaliStat';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
@@ -210,6 +211,7 @@ type MandaliPostCardProps = {
   onRemoveReaction: (postId: string) => void;
   onRetryReaction: (postId: string) => void;
   reactionFailed: boolean;
+  onViewReactors: (postId: string) => void;
   onViewProfile: (userId: string) => void;
   onEditComment: (commentId: string, body: string) => void;
   onDeleteComment: (commentId: string) => void;
@@ -244,6 +246,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onRemoveReaction,
   onRetryReaction,
   reactionFailed,
+  onViewReactors,
   onViewProfile,
   onEditComment,
   onDeleteComment,
@@ -453,6 +456,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
           count={post.upvotes}
           onSelect={(reaction) => onSelectReaction(post.id, reaction)}
           onRemove={() => onRemoveReaction(post.id)}
+          onViewReactors={() => onViewReactors(post.id)}
           failed={reactionFailed}
           onRetry={() => onRetryReaction(post.id)}
           dim={theme.dim}
@@ -556,6 +560,7 @@ export default function MandaliScreen() {
   const [pendingRequests, setPendingRequests] = useState<ConnectionRequestRow[]>([]);
   const [requestsSheetVisible, setRequestsSheetVisible] = useState(false);
   const [postOptionsPost, setPostOptionsPost] = useState<PostRow | null>(null);
+  const [reactorsPostId, setReactorsPostId] = useState<string | null>(null);
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [composerKeyboardVisible, setComposerKeyboardVisible] = useState(false);
@@ -1238,6 +1243,13 @@ export default function MandaliScreen() {
     const userId = typeof row?.user_id === 'string' ? row.user_id : null;
     if (!postId || !userId || userId === profile?.userId) return;
     if (!visiblePostIdsRef.current.has(postId)) return;
+    // setPostReaction() upserts onConflict: 'post_id,user_id' (lib/mandali.ts),
+    // so someone switching their reaction (pranam -> bhakti) fires an UPDATE,
+    // not a DELETE+INSERT pair. The total post.upvotes count is unaffected by
+    // a switch -- only INSERT (a genuinely new reaction) and DELETE (a removed
+    // one) change it. Treating UPDATE as +1 (the previous behavior) inflated
+    // the count by one for every other viewer each time someone switched.
+    if (payload.eventType === 'UPDATE') return;
     patchPostUpvotes(postId, payload.eventType === 'DELETE' ? -1 : 1);
   }, [patchPostUpvotes, profile?.userId]);
 
@@ -2361,6 +2373,7 @@ export default function MandaliScreen() {
         onRemoveReaction={handleRemoveReaction}
         onRetryReaction={handleRetryReaction}
         reactionFailed={failedReactionTargets.has(`post:${post.id}`)}
+        onViewReactors={setReactorsPostId}
         onViewProfile={handleViewProfile}
         onEditComment={handleEditComment}
         onDeleteComment={handleDeleteComment}
@@ -2374,7 +2387,7 @@ export default function MandaliScreen() {
         onReportComment={handleReportComment}
       />
     );
-  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, retryLoadComments, rsvpsByPost, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, retryLoadComments, rsvpsByPost, setReactorsPostId, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>
@@ -2887,6 +2900,14 @@ export default function MandaliScreen() {
         onClose={() => setRequestsSheetVisible(false)}
         onAccept={handleAcceptRequest}
         onReject={handleRejectRequest}
+      />
+
+      <PostReactorsSheet
+        visible={!!reactorsPostId}
+        postId={reactorsPostId}
+        currentUserId={profile?.userId}
+        onClose={() => setReactorsPostId(null)}
+        onViewProfile={handleViewProfile}
       />
     </Screen>
   );

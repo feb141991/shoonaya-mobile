@@ -14,6 +14,8 @@ type PostReactionButtonProps = {
   count: number;
   onSelect: (reaction: ReactionType) => void;
   onRemove: () => void;
+  /** Opens the "Who reacted" sheet -- same interaction as CommentReactionButton's onViewReactors. */
+  onViewReactors: () => void;
   dim: string;
   cardBg: string;
   border: string;
@@ -29,7 +31,7 @@ type PostReactionButtonProps = {
 // removes it; tapping a different one switches. No literal "dislike" --
 // deliberately a devotional set (pranam/love/insightful), not a general
 // social reaction bar.
-export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, cardBg, border, scrimColor, failed, onRetry }: PostReactionButtonProps) {
+export function PostReactionButton({ reaction, count, onSelect, onRemove, onViewReactors, dim, cardBg, border, scrimColor, failed, onRetry }: PostReactionButtonProps) {
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
@@ -66,25 +68,39 @@ export function PostReactionButton({ reaction, count, onSelect, onRemove, dim, c
           trigger sits in a row alongside the Comment button. A row's
           non-flex children size to content, so PressableSurface's internal
           flex:1 content wrapper collapses to zero without an explicit
-          minWidth here to give it a resolvable box to fill. */}
-      <View ref={triggerRef} collapsable={false} style={{ minWidth: 34 }}>
+          minWidth here to give it a resolvable box to fill.
+
+          Two separate tap targets, matching CommentReactionButton exactly:
+          the emoji opens the picker, the count opens the "Who reacted"
+          sheet -- previously this was one combined target with no way to
+          see who else reacted, only your own emoji (or a generic smile
+          icon if you hadn't reacted), which made every other seeker's
+          choice invisible. */}
+      <View ref={triggerRef} collapsable={false} style={{ minWidth: 34, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
         <PressableSurface
           haptic="selection"
           accessibilityLabel={failed ? 'Reaction could not sync -- tap to retry' : active ? `Remove ${active.label} reaction` : 'React to this post'}
           onPress={failed ? onRetry : openPicker}
-          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 5 }}
+          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}
         >
           {active ? (
             <Text style={{ fontSize: 14, opacity: failed ? 0.5 : 1 }}>{active.emoji}</Text>
           ) : (
             <Feather name="smile" size={13} color={dim} />
           )}
-          {count > 0 ? (
+        </PressableSurface>
+        {count > 0 ? (
+          <PressableSurface
+            haptic="selection"
+            accessibilityLabel={failed ? 'Retry syncing this reaction' : `View all ${count} reactions`}
+            onPress={failed ? onRetry : onViewReactors}
+            style={{ minHeight: 0 }}
+          >
             <Text style={{ color: active ? active.color : dim, fontFamily: FONTS.sansSemiBold, fontSize: 11.5 }}>
               {count}
             </Text>
-          ) : null}
-        </PressableSurface>
+          </PressableSurface>
+        ) : null}
       </View>
 
       <Modal transparent visible={open} animationType="none" onRequestClose={closePicker}>

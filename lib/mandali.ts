@@ -161,6 +161,8 @@ export type CommentReactor = {
   } | null;
 };
 
+export type PostReactor = CommentReactor;
+
 export type RsvpRow = {
   id: string;
   post_id: string;
@@ -543,6 +545,56 @@ export async function fetchCommentReactors(commentId: string, currentUserId?: st
     return {
       userId: row.user_id,
       reactionType: (row.reaction_type ?? 'love') as ReactionType,
+      createdAt: row.created_at,
+      profile: p
+        ? {
+            id: p.id,
+            fullName: p.username ?? 'A fellow seeker',
+            username: p.username ?? null,
+            avatarUrl: p.avatar_url ?? null,
+          }
+        : null,
+    };
+  });
+
+  if (safetyState) {
+    return rows.filter((r) => !safetyState.excludedAuthorIds.has(r.userId));
+  }
+  return rows;
+}
+
+// Post-level equivalent of fetchCommentReactors above -- same shape, same
+// safety-state filtering, same public_profiles projection. post_upvotes'
+// SELECT policy is `true` (any authenticated user can read all rows),
+// identical to comment_upvotes, so no backend change was needed for reads;
+// the only related backend gap found and fixed separately was a missing
+// UPDATE policy blocking reaction *switches* (see the 20260926090000
+// migration), unrelated to this read path.
+export async function fetchPostReactors(postId: string, currentUserId?: string): Promise<PostReactor[]> {
+  const { data, error } = await supabase
+    .from('post_upvotes')
+    .select('user_id, reaction_type, created_at')
+    .eq('post_id', postId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+
+  const rawRows = (data ?? []) as Array<{ user_id: string; reaction_type?: string; created_at: string }>;
+  if (rawRows.length === 0) return [];
+
+  const userIds = Array.from(new Set(rawRows.map((r) => r.user_id)));
+
+  const [{ data: profileRows }, safetyState] = await Promise.all([
+    supabase.from('public_profiles').select('id, username, avatar_url').in('id', userIds),
+    currentUserId ? fetchSafetyState(currentUserId).catch(() => null) : Promise.resolve(null),
+  ]);
+
+  const profileMap = new Map((profileRows ?? []).map((p: any) => [p.id, p]));
+
+  const rows: PostReactor[] = rawRows.map((row) => {
+    const p = profileMap.get(row.user_id);
+    return {
+      userId: row.user_id,
+      reactionType: (row.reaction_type ?? 'pranam') as ReactionType,
       createdAt: row.created_at,
       profile: p
         ? {
