@@ -28,6 +28,9 @@ import {
   recordInteractionTiming,
   recordLoaderShown,
   recordFirstUsefulFrame,
+  recordAuthDiagnostic,
+  readPendingAuthDiagnostics,
+  removeUploadedAuthDiagnostics,
   parseServerTimingHeader,
   getTelemetrySummary,
   clearTelemetry,
@@ -440,5 +443,36 @@ describe('Telemetry -- first_useful_frame (reliability plan item 8, schema v3)',
 
     const otherSummary = await getTelemetrySummary(other);
     assert.equal(otherSummary.firstUsefulFrame, null, 'a different identity must never see this identity\'s cold-start data');
+  });
+});
+
+describe('Telemetry -- anonymous auth diagnostic outbox', () => {
+  beforeEach(async () => {
+    await AsyncStorage.removeItem('shoonaya_auth_diag_v1_pending');
+  });
+
+  it('keeps bounded auth outcomes device-scoped and acknowledges by request ID', async () => {
+    const event = {
+      requestId: 'a1b2c3d4-e5f6-4789-8123-456789abcdef',
+      retryRequestId: null,
+      route: 'register_token',
+      authCode: 'AUTH_UNAVAILABLE',
+      initialStatus: 503,
+      finalStatus: 503,
+      authReadyWaitMs: 120,
+      hadAccessToken: true,
+      refreshAttempted: false,
+      refreshSucceeded: false,
+      durationMs: 4300,
+      timestamp: Date.now(),
+    } as const;
+    recordAuthDiagnostic(event);
+    await flush();
+
+    assert.deepEqual(await readPendingAuthDiagnostics(), [event]);
+    await clearAllTelemetry();
+    assert.deepEqual(await readPendingAuthDiagnostics(), [event], 'performance telemetry clearing must not erase auth diagnostics');
+    await removeUploadedAuthDiagnostics([event.requestId]);
+    assert.deepEqual(await readPendingAuthDiagnostics(), []);
   });
 });

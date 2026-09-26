@@ -11,13 +11,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { apiFetch } from '@/lib/api';
+import { API_BASE } from '@/lib/constants';
 import { APP_VERSION } from '@/lib/appVersion';
 import { captureAppIdentity } from '@/lib/appIdentity';
-import { getTelemetrySummary, TELEMETRY_SCHEMA_VERSION, type TelemetryIdentity } from '@/lib/telemetry';
+import { getTelemetrySummary, TELEMETRY_SCHEMA_VERSION, readPendingAuthDiagnostics, removeUploadedAuthDiagnostics, type TelemetryIdentity } from '@/lib/telemetry';
 import { isTelemetryUploadThrottled, decideTelemetryUploadAfterSummary } from '@/lib/telemetryUploadPolicy';
 
 const LAST_UPLOAD_KEY = 'shoonaya_telemetry_v1_last_upload';
 const UPLOAD_THROTTLE_MS = 60 * 60 * 1000;
+const AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY = 'shoonaya_auth_diag_v1_last_upload';
+let authDiagnosticUpload: Promise<void> | null = null;
 
 /**
  * Best-effort background beacon: sends the current aggregated summary to
@@ -67,5 +70,52 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
     }
   } catch (error) {
     console.warn('[Telemetry] upload failed', error);
+  }
+}
+
+/**
+ * Anonymous, idempotent outbox for auth failures. It deliberately bypasses
+ * apiFetch/auth readiness: this endpoint exists to persist events explaining
+ * auth readiness and server auth failures. The payload contains no identity,
+ * access token, request body, or user content.
+ */
+export function maybeUploadAuthDiagnostics(): Promise<void> {
+  if (authDiagnosticUpload) return authDiagnosticUpload;
+  authDiagnosticUpload = uploadAuthDiagnostics().finally(() => { authDiagnosticUpload = null; });
+  return authDiagnosticUpload;
+}
+
+async function uploadAuthDiagnostics(): Promise<void> {
+  try {
+    const lastUploadRaw = await AsyncStorage.getItem(AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY);
+    const lastUpload = lastUploadRaw ? Number(lastUploadRaw) : 0;
+    if (Number.isFinite(lastUpload) && Date.now() - lastUpload < 2 * 60 * 1000) return;
+    const events = await readPendingAuthDiagnostics();
+    if (!events.length) return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE}/api/native/auth-diagnostics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appVersion: APP_VERSION,
+          platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null,
+          events,
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (response.status !== 202) return;
+    await removeUploadedAuthDiagnostics(events.map((event) => event.requestId));
+    await AsyncStorage.setItem(AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));
+  } catch {
+    // Keep the queue for a later foreground/background attempt. Diagnostics
+    // must never block startup, navigation, or the user's current request.
   }
 }

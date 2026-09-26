@@ -90,6 +90,28 @@ export type InteractionName = 'mandali_comment_expand';
 // doc comment) originated from.
 export type RequestSource = 'mount' | 'focus' | 'foreground' | 'reconnect' | 'pull_refresh' | 'retry' | 'state_effect';
 
+export const AUTH_DIAGNOSTIC_ROUTES = [
+  'native_home_summary', 'sankalpa', 'register_token', 'festival_quiz_seasons',
+  'ai_chat_usage', 'native_home_live', 'dharm_veer_submit', 'other',
+] as const;
+export type AuthDiagnosticRoute = (typeof AUTH_DIAGNOSTIC_ROUTES)[number];
+export type AuthDiagnosticCode = 'AUTH_REQUIRED' | 'AUTH_UNAVAILABLE' | 'unknown';
+
+export type AuthDiagnosticRecord = {
+  requestId: string;
+  retryRequestId: string | null;
+  route: AuthDiagnosticRoute;
+  authCode: AuthDiagnosticCode;
+  initialStatus: number;
+  finalStatus: number;
+  authReadyWaitMs: number;
+  hadAccessToken: boolean;
+  refreshAttempted: boolean;
+  refreshSucceeded: boolean;
+  durationMs: number;
+  timestamp: number;
+};
+
 export type TelemetryEvent =
   | {
       type: 'route_open';
@@ -322,6 +344,69 @@ export function recordFirstUsefulFrame(identity: TelemetryIdentity, data: { elap
     viaEmergencyFallback: data.viaEmergencyFallback,
     timestamp: Date.now(),
   });
+}
+
+const AUTH_DIAGNOSTICS_KEY = 'shoonaya_auth_diag_v1_pending';
+const AUTH_DIAGNOSTICS_MAX = 50;
+let authDiagnosticWrite = Promise.resolve();
+
+/**
+ * Auth transport diagnostics are device-scoped, anonymous and uploaded via
+ * their own idempotent endpoint. Keep them outside the identity-partitioned
+ * performance envelope so sign-in/account changes cannot relabel old events.
+ */
+export function recordAuthDiagnostic(data: AuthDiagnosticRecord): void {
+  const operation = authDiagnosticWrite.then(async () => {
+    const raw = await AsyncStorage.getItem(AUTH_DIAGNOSTICS_KEY);
+    let previous: AuthDiagnosticRecord[] = [];
+    try {
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) previous = parsed.filter(isAuthDiagnosticRecord);
+    } catch { /* recover from a corrupt diagnostic queue */ }
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const retained = previous.filter((event) => event.timestamp >= cutoff && event.requestId !== data.requestId);
+    retained.push(data);
+    await AsyncStorage.setItem(AUTH_DIAGNOSTICS_KEY, JSON.stringify(retained.slice(-AUTH_DIAGNOSTICS_MAX)));
+  });
+  authDiagnosticWrite = operation.catch(() => undefined);
+}
+
+function isAuthDiagnosticRecord(value: unknown): value is AuthDiagnosticRecord {
+  if (!value || typeof value !== 'object') return false;
+  const event = value as Partial<AuthDiagnosticRecord>;
+  return typeof event.requestId === 'string' && (event.retryRequestId === null || typeof event.retryRequestId === 'string') && typeof event.route === 'string' &&
+    typeof event.authCode === 'string' && typeof event.initialStatus === 'number' &&
+    typeof event.finalStatus === 'number' && typeof event.authReadyWaitMs === 'number' &&
+    typeof event.hadAccessToken === 'boolean' && typeof event.refreshAttempted === 'boolean' &&
+    typeof event.refreshSucceeded === 'boolean' && typeof event.durationMs === 'number' &&
+    typeof event.timestamp === 'number';
+}
+
+export async function readPendingAuthDiagnostics(): Promise<AuthDiagnosticRecord[]> {
+  await authDiagnosticWrite;
+  const raw = await AsyncStorage.getItem(AUTH_DIAGNOSTICS_KEY);
+  try {
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return parsed.filter(isAuthDiagnosticRecord).filter((event) => event.timestamp >= cutoff).slice(-AUTH_DIAGNOSTICS_MAX);
+  } catch { return []; }
+}
+
+export async function removeUploadedAuthDiagnostics(requestIds: string[]): Promise<void> {
+  if (!requestIds.length) return;
+  const uploaded = new Set(requestIds);
+  const operation = authDiagnosticWrite.then(async () => {
+    const raw = await AsyncStorage.getItem(AUTH_DIAGNOSTICS_KEY);
+    let events: AuthDiagnosticRecord[] = [];
+    try {
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) events = parsed.filter(isAuthDiagnosticRecord);
+    } catch { /* clear invalid persisted data while completing acknowledgement */ }
+    await AsyncStorage.setItem(AUTH_DIAGNOSTICS_KEY, JSON.stringify(events.filter((event) => !uploaded.has(event.requestId))));
+  });
+  authDiagnosticWrite = operation.catch(() => undefined);
+  await authDiagnosticWrite;
 }
 
 export function recordMutationRetryOutcome(

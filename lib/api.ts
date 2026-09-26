@@ -1,4 +1,5 @@
 import { API_BASE } from '@/lib/constants';
+import * as Crypto from 'expo-crypto';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { isFetchCancelled } from './fetch-error';
@@ -6,6 +7,7 @@ import { DEFAULT_API_TIMEOUT_MS } from './api-policy';
 import { waitForAuthReady } from './authReadyGate';
 import { sessionHasUsableAccessToken } from './api-auth-policy';
 import { createSingleFlight } from './async-single-flight';
+import { recordAuthDiagnostic, type AuthDiagnosticCode, type AuthDiagnosticRoute } from './telemetry';
 
 export { isFetchCancelled };
 
@@ -30,6 +32,64 @@ export type ApiFetchOptions = RequestInit & {
 let cachedAccessToken: string | null | undefined;
 let cachedSession: Session | null = null;
 const refreshSingleFlight = createSingleFlight<Session | null>();
+
+function authDiagnosticRoute(path: string): AuthDiagnosticRoute {
+  const pathname = path.split(/[?#]/, 1)[0].replace(/\/$/, '');
+  const routes: Record<string, AuthDiagnosticRoute> = {
+    '/api/native/home-summary': 'native_home_summary',
+    '/api/sankalpa': 'sankalpa',
+    '/api/notifications/register-token': 'register_token',
+    '/api/native/festival-quiz-seasons': 'festival_quiz_seasons',
+    '/api/ai/chat/usage': 'ai_chat_usage',
+    '/api/native/home-live': 'native_home_live',
+    '/api/dharm-veer/submit': 'dharm_veer_submit',
+  };
+  return routes[pathname] ?? 'other';
+}
+
+function recordAuthOutcome(input: {
+  path: string;
+  requestId: string;
+  initialStatus: number;
+  finalStatus: number;
+  authReadyWaitMs: number;
+  hadAccessToken: boolean;
+  refreshAttempted: boolean;
+  refreshSucceeded: boolean;
+  durationMs: number;
+  response?: Response;
+  finalResponse?: Response;
+}) {
+  const route = authDiagnosticRoute(input.path);
+  if (route === 'other') return;
+  const base = {
+    requestId: input.response?.headers.get('x-request-id') ?? input.requestId,
+    retryRequestId: input.response && input.finalResponse && input.response !== input.finalResponse
+      ? input.finalResponse.headers.get('x-request-id')
+      : null,
+    route,
+    initialStatus: input.initialStatus,
+    finalStatus: input.finalStatus,
+    authReadyWaitMs: input.authReadyWaitMs,
+    hadAccessToken: input.hadAccessToken,
+    refreshAttempted: input.refreshAttempted,
+    refreshSucceeded: input.refreshSucceeded,
+    durationMs: input.durationMs,
+    timestamp: Date.now(),
+  };
+  const save = (authCode: AuthDiagnosticCode) => recordAuthDiagnostic({ ...base, authCode });
+  if (!input.response) {
+    if (input.initialStatus === 0) save('unknown');
+    return;
+  }
+  void input.response.clone().json().then((body: unknown) => {
+    const code = body && typeof body === 'object' && 'code' in body ? body.code : null;
+    if (code === 'AUTH_REQUIRED' || code === 'AUTH_UNAVAILABLE') save(code);
+    else if (input.initialStatus === 401 || input.initialStatus === 503) save('unknown');
+  }).catch(() => {
+    if (input.initialStatus === 401 || input.initialStatus === 503) save('unknown');
+  });
+}
 
 export function setApiAccessTokenFromSession(session: Session | null) {
   cachedSession = session;
@@ -74,6 +134,14 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const requestId = Crypto.randomUUID();
+  const requestStartedAt = Date.now();
+  let authReadyWaitMs = 0;
+  let hadAccessToken = false;
+  let initialAuthResponse: Response | undefined;
+  let refreshAttempted = false;
+  let refreshSucceeded = false;
+  let requestSent = false;
   const controller = new AbortController();
   const callerSignal = fetchOptions.signal;
   const forwardAbort = () => controller.abort(callerSignal?.reason);
@@ -120,9 +188,11 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
       accessToken = null;
     }
     const requestHeaders = new Headers(headers);
+    requestHeaders.set('X-Request-ID', requestId);
     if (accessToken) requestHeaders.set('Authorization', `Bearer ${accessToken}`);
     else requestHeaders.delete('Authorization');
 
+    requestSent = true;
     return fetch(`${API_BASE}${normalizedPath}`, {
       ...fetchOptions,
       headers: requestHeaders,
@@ -133,15 +203,28 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   try {
     // The deadline covers the startup auth gate, session lookup/refresh,
     // owner verification and transport instead of starting only at fetch().
+    const authGateStartedAt = Date.now();
     await abortable(waitForAuthReady());
+    authReadyWaitMs = Date.now() - authGateStartedAt;
     const accessToken = await abortable(getApiAccessToken());
-    const response = await requestWithToken(accessToken);
+    hadAccessToken = Boolean(accessToken);
+    let response = await requestWithToken(accessToken);
+    if (response.status === 401 || response.status === 503) initialAuthResponse = response;
 
     // React Native pauses Supabase's refresh timer while backgrounded. A
     // request can therefore carry an expired cached JWT even though the user
     // is still signed in. A 401 is safe to retry because the route did not
     // execute its protected handler. Restrict retries to replayable bodies.
     if (response.status !== 401 || !accessToken || !canReplayBody(fetchOptions.body)) {
+      if (initialAuthResponse) {
+        recordAuthOutcome({
+          path: normalizedPath, requestId, initialStatus: initialAuthResponse.status,
+          finalStatus: response.status, authReadyWaitMs, hadAccessToken,
+          refreshAttempted, refreshSucceeded, durationMs: Date.now() - requestStartedAt,
+          response: initialAuthResponse,
+          finalResponse: response,
+        });
+      }
       return response;
     }
 
@@ -152,10 +235,40 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
       && cachedAccessToken !== accessToken
       ? cachedAccessToken
       : null;
+    refreshAttempted = true;
     const refreshedToken = alreadyRotatedToken ?? (await abortable(refreshApiSession()))?.access_token ?? null;
-    if (!refreshedToken || refreshedToken === accessToken) return response;
+    refreshSucceeded = Boolean(refreshedToken && refreshedToken !== accessToken);
+    if (!refreshedToken || refreshedToken === accessToken) {
+      recordAuthOutcome({
+        path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? response.status,
+        finalStatus: response.status, authReadyWaitMs, hadAccessToken,
+        refreshAttempted, refreshSucceeded, durationMs: Date.now() - requestStartedAt,
+        response: initialAuthResponse ?? response,
+        finalResponse: response,
+      });
+      return response;
+    }
 
-    return requestWithToken(refreshedToken);
+    response = await requestWithToken(refreshedToken);
+    recordAuthOutcome({
+      path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? 401,
+      finalStatus: response.status, authReadyWaitMs, hadAccessToken,
+      refreshAttempted, refreshSucceeded, durationMs: Date.now() - requestStartedAt,
+      response: initialAuthResponse,
+      finalResponse: response,
+    });
+    return response;
+  } catch (error) {
+    if (initialAuthResponse || !requestSent) {
+      recordAuthOutcome({
+        path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? 0,
+        finalStatus: 0, authReadyWaitMs, hadAccessToken, refreshAttempted,
+        refreshSucceeded, durationMs: Date.now() - requestStartedAt,
+        response: initialAuthResponse,
+        finalResponse: initialAuthResponse,
+      });
+    }
+    throw error;
   } finally {
     clearTimeout(timeout);
     callerSignal?.removeEventListener('abort', forwardAbort);

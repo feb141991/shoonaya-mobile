@@ -67,7 +67,7 @@ import { clearVratGeoCache } from '@/lib/vratCache';
 import { clearMoodStatusCache } from '@/lib/moodStatusCache';
 import { clearPanchangScreenSnapshots } from '@/lib/panchangScreenCache';
 import { clearAllTelemetry, recordFirstUsefulFrame } from '@/lib/telemetry';
-import { maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
+import { maybeUploadAuthDiagnostics, maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
@@ -782,8 +782,12 @@ function RootLayout() {
   // Self-throttled to once per hour per install inside maybeUploadTelemetrySummary,
   // so this can fire on every background transition without spamming the backend.
   useEffect(() => {
+    // Flush any prior anonymous auth-failure events once on launch and again
+    // when backgrounding; this path has no auth gate and never blocks UI.
+    void maybeUploadAuthDiagnostics();
     const subscription = AppState.addEventListener('change', (state) => {
       if (state !== 'background') return;
+      void maybeUploadAuthDiagnostics();
       const identity = getAppIdentity();
       if (identity.kind === 'guest') {
         void maybeUploadTelemetrySummary({ kind: 'guest' });
