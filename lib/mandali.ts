@@ -151,6 +151,8 @@ export type CommentRow = {
   pendingStatus?: 'sending' | 'failed';
   /** Local-only: the id a retry must reuse so a since-succeeded first attempt is never duplicated. */
   clientOperationId?: string;
+  /** Local snapshot used to avoid adding the same comment twice after feed refresh. */
+  baseCommentCount?: number;
 };
 
 export type CommentReactor = {
@@ -408,7 +410,10 @@ export async function createMandaliComment(payload: { postId: string; userId: st
   const requestBody = JSON.stringify({ postId: payload.postId, body: payload.body, parentId: payload.parentId, clientOperationId });
   // Same idempotency guarantee as createMandaliPost above -- a retried
   // create is safe to resend verbatim.
-  const response = await attemptMandaliComposeWithRetry(apiFetch, '/api/mandali/comments', requestBody, (outcome, attempts) =>
+  const response = await attemptMandaliComposeWithRetry((path, options) => apiFetch(path, {
+    ...options,
+    expectedUserId: payload.userId,
+  }), '/api/mandali/comments', requestBody, (outcome, attempts) =>
     recordMutationRetryOutcome({ kind: 'authenticated', userId: payload.userId }, 'mandali_posts', outcome, attempts)
   );
   if (!response || !response.ok) throw new Error('Could not create comment');

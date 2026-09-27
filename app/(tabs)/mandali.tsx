@@ -49,8 +49,17 @@ import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
 import { resolveDisplayName } from '@/lib/displayName';
 import { setGuestMode } from '@/lib/guestSession';
-import { useAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import { useAppIdentity, getAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
+import {
+  confirmPendingMandaliComment,
+  mergePendingMandaliComments,
+  readPendingMandaliComments,
+  removePendingMandaliComment,
+  renderPendingMandaliComment,
+  savePendingMandaliComment,
+  type PendingMandaliComment,
+} from '@/lib/mandaliPendingComments';
 import {
   recordRouteOpen,
   recordRefreshFailure,
@@ -768,7 +777,13 @@ function MandaliScreen() {
     // instantly (if anything), then keep going into the network fetch
     // below regardless -- this is a bridge to the fresh response, not a
     // substitute for it, same pattern as Home's homeCoordinator.
-    const cached = shouldHydrateFromCache ? await readMandaliCache(cacheIdentity) : null;
+    const [cached, persistedPending] = shouldHydrateFromCache
+      ? await Promise.all([readMandaliCache(cacheIdentity), readPendingMandaliComments(userId).catch((error) => {
+        console.warn('[MandaliScreen] Pending comment journal unavailable', error);
+        return [] as PendingMandaliComment[];
+      })])
+      : [null, [] as PendingMandaliComment[]];
+    const pendingFromDisk = persistedPending.map(renderPendingMandaliComment);
     if (!isCurrentLoad()) return { cacheHit: false, readyAt };
     if (cached) {
       cacheHit = true;
@@ -788,7 +803,7 @@ function MandaliScreen() {
       });
       setPosts(cached.payload.posts);
       setBlendedPosts(cached.payload.blendedPosts);
-      setComments(cached.payload.comments);
+      setComments(mergePendingMandaliComments(cached.payload.comments ?? [], pendingFromDisk));
       setRsvps(cached.payload.rsvps);
       setMembers(cached.payload.members);
       setNextCursor(cached.payload.nextCursor);
@@ -933,7 +948,8 @@ function MandaliScreen() {
     // Seed `comments` from each post's 2-comment preview; expanding a post
     // fetches its full thread separately (see toggleComments).
     const previewComments = allPosts.flatMap((post) => post.commentPreview ?? []);
-    setComments(previewComments);
+    setComments((current) => mergePendingMandaliComments(previewComments,
+      [...current.filter((comment) => comment.pendingStatus), ...pendingFromDisk]));
     if (!cacheHit) readyAt = Date.now();
 
     const allCommentIds = previewComments.map((comment) => comment.id);
@@ -1084,8 +1100,9 @@ function MandaliScreen() {
   // already-visible realtime event, not a blocking load -- the user can
   // still get the full, correct thread by collapsing and re-expanding.
   const patchNewComment = useCallback(async (postId: string, commentId: string) => {
+    const lease = captureAppIdentity();
     const normalized = await fetchSingleComment(postId, commentId, profile?.userId);
-    if (!normalized) return;
+    if (!normalized || !lease.isCurrent()) return;
     setComments((current) => (current.some((c) => c.id === normalized.id) ? current : [...current, normalized]));
   }, [profile?.userId]);
 
@@ -1469,26 +1486,36 @@ function MandaliScreen() {
     postId: string,
     body: string,
     parentId: string | null,
-    clientOperationId: string
+    clientOperationId: string,
+    baseCommentCount: number
   ) => {
-    if (!profile) return;
+    const lease = captureAppIdentity();
+    if (!profile || lease.identity.kind !== 'authenticated' ||
+      lease.identity.userId !== profile.userId) return;
     setCommenting(postId);
     let newId: string | null = null;
     try {
       newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId, clientOperationId });
     } catch {
-      setComments((current) => current.map((c) => (c.id === localId ? { ...c, pendingStatus: 'failed' } : c)));
+      if (lease.isCurrent()) {
+        setComments((current) => current.map((c) => (c.id === localId ? { ...c, pendingStatus: 'failed' } : c)));
+      }
       return;
     } finally {
-      setCommenting(null);
+      if (lease.isCurrent()) setCommenting(null);
     }
-    if (!newId) return;
+    if (!newId || !lease.isCurrent()) return;
 
-    setPosts((current) => current.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
-    setBlendedPosts((current) => current.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
-    setComments((current) => current.map((c) =>
-      c.id === localId ? { ...c, id: newId!, pendingStatus: undefined, clientOperationId: undefined } : c
-    ));
+    setPosts((current) => current.map((p) => (p.id === postId ? {
+      ...p, comment_count: Math.max(p.comment_count, baseCommentCount + 1),
+    } : p)));
+    setBlendedPosts((current) => current.map((p) => (p.id === postId ? {
+      ...p, comment_count: Math.max(p.comment_count, baseCommentCount + 1),
+    } : p)));
+    setComments((current) => confirmPendingMandaliComment(current, localId, newId!));
+    void removePendingMandaliComment({ userId: profile.userId, clientOperationId }).catch((error) => {
+      console.warn('[MandaliScreen] Could not clear acknowledged comment journal', error);
+    });
 
     // Refresh full thread in the background to replace with server-hydrated row.
     // A background refresh failure must never revert the comment to "failed" --
@@ -1500,33 +1527,28 @@ function MandaliScreen() {
 
   const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null): Promise<boolean> => {
     if (!profile) return false;
+    const lease = captureAppIdentity();
+    if (lease.identity.kind !== 'authenticated' || lease.identity.userId !== profile.userId) return false;
     const clientOperationId = Crypto.randomUUID();
     const localId = `pending-${clientOperationId}`;
-    const optimisticComment: CommentRow = {
-      id: localId,
-      post_id: postId,
-      author_id: profile.userId,
-      body,
-      parent_id: parentId ?? null,
-      created_at: new Date().toISOString(),
-      updated_at: null,
-      deleted_at: null,
-      upvotes: 0,
-      is_highlighted: false,
-      profiles: {
-        full_name: profile.displayName || 'You',
-        username: profile.displayName || 'You',
-        avatar_url: null,
-      },
-      pendingStatus: 'sending',
-      clientOperationId,
+    const record: PendingMandaliComment = {
+      userId: profile.userId, localId, postId, body,
+      parentId: parentId ?? null, clientOperationId,
+      createdAt: new Date().toISOString(),
+      displayName: profile.displayName || 'You',
+      baseCommentCount: [...posts, ...blendedPosts].find((post) => post.id === postId)?.comment_count ?? 0,
     };
-    // Shown immediately, before the network call -- the composer clears
-    // right away and the message's own bubble carries its sending/failed
-    // state from here on, instead of a one-shot Alert on failure that lost
-    // the compose-time context once dismissed.
+    // Persist the operation ID before clearing the draft or sending a request.
+    // A killed app can then offer a retry with the same server idempotency key.
+    try {
+      await savePendingMandaliComment(record);
+    } catch {
+      return false;
+    }
+    if (!lease.isCurrent()) return false;
+    const optimisticComment: CommentRow = { ...renderPendingMandaliComment(record), pendingStatus: 'sending' };
     setComments((current) => [...current, optimisticComment]);
-    void sendPendingComment(localId, postId, body, parentId ?? null, clientOperationId);
+    void sendPendingComment(localId, postId, body, parentId ?? null, clientOperationId, record.baseCommentCount);
     return true;
   }, [profile, sendPendingComment]);
 
@@ -1534,12 +1556,17 @@ function MandaliScreen() {
     const pending = comments.find((c) => c.id === localId);
     if (!pending || pending.pendingStatus !== 'failed' || !pending.clientOperationId) return;
     setComments((current) => current.map((c) => (c.id === localId ? { ...c, pendingStatus: 'sending' } : c)));
-    void sendPendingComment(localId, pending.post_id, pending.body, pending.parent_id, pending.clientOperationId);
+    void sendPendingComment(localId, pending.post_id, pending.body, pending.parent_id,
+      pending.clientOperationId, pending.baseCommentCount ?? 0);
   }, [comments, sendPendingComment]);
 
   const handleDismissFailedComment = useCallback((localId: string) => {
-    setComments((current) => current.filter((c) => c.id !== localId));
-  }, []);
+    const pending = comments.find((comment) => comment.id === localId);
+    if (!pending?.clientOperationId || !profile) return;
+    void removePendingMandaliComment({ userId: profile.userId, clientOperationId: pending.clientOperationId })
+      .then(() => setComments((current) => current.filter((c) => c.id !== localId)))
+      .catch((error) => console.warn('[MandaliScreen] Could not discard pending comment', error));
+  }, [comments, profile]);
 
   const handleSelectCommentReaction = useCallback(async (commentId: string, reaction: ReactionType) => {
     if (!profile) return;
@@ -2220,20 +2247,25 @@ function MandaliScreen() {
     }
 
     setLoadingCommentsForPostId(postId);
+    const lease = captureAppIdentity();
 
     request
       .then((page) => {
+        if (!lease.isCurrent()) return;
         setComments((currentComments) => {
           const withoutThisPost = currentComments.filter((c) => c.post_id !== postId);
-          return [...withoutThisPost, ...page.comments];
+          return mergePendingMandaliComments([...withoutThisPost, ...page.comments],
+            currentComments.filter((comment) => comment.post_id === postId && comment.pendingStatus));
         });
         setFullyLoadedCommentPostIds((currentSet) => new Set(currentSet).add(postId));
       })
       .catch((error) => {
+        if (!lease.isCurrent()) return;
         console.warn('[MandaliScreen] fetchPostComments failed', error);
         setCommentLoadFailedPostIds((current) => new Set(current).add(postId));
       })
       .finally(() => {
+        if (!lease.isCurrent()) return;
         // Guards against an older, already-superseded request's finally
         // callback deleting a newer request's map entry (only reachable
         // if a retry started a fresh request for the same postId while

@@ -24,7 +24,7 @@ describe('Dharma Mitra chat sheet does not fetch while closed', () => {
   it('guards the async profile write with the identity lease, not just the loading flag', () => {
     assert.match(useAiChat, /import \{ captureAppIdentity \} from '@\/lib\/appIdentity';/);
     // Two checks: after auth.getUser() resolves, and after the profile row fetch resolves.
-    const leaseChecks = useAiChat.match(/if \(!lease\.isCurrent\(\)\) return;/g) ?? [];
+    const leaseChecks = useAiChat.match(/if \(!lease\.isCurrent\(\) \|\| !isActive\(\)\) return;/g) ?? [];
     assert.ok(leaseChecks.length >= 2, `expected at least 2 lease.isCurrent() guards, found ${leaseChecks.length}`);
   });
 

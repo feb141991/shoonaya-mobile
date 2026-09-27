@@ -1,8 +1,9 @@
 /** In-flight GET sharing only: no settled response cache, no write replay. */
 export function getRequestKey(scope: string, path: string, options: RequestInit & { timeoutMs?: number; dedupe?: boolean }): string | null {
   if ((options.method ?? 'GET').toUpperCase() !== 'GET' || options.body != null || options.dedupe === false) return null;
+  if (/\/(export|download|stream)(?:\/|[?#]|$)/i.test(path)) return null;
   const headers = Array.from(new Headers(options.headers).entries()).sort(([a], [b]) => a.localeCompare(b));
-  if (headers.some(([key, value]) => key === 'accept' && /event-stream|octet-stream/i.test(value))) return null;
+  if (headers.some(([key, value]) => (key === 'accept' && /event-stream|octet-stream|audio|video|image/i.test(value)) || key === 'range')) return null;
   // Unknown/platform-specific options must not be silently collapsed.
   const known = new Set(['method', 'body', 'headers', 'signal', 'timeoutMs', 'dedupe', 'expectedUserId', 'expectedGuest',
     'cache', 'credentials', 'integrity', 'keepalive', 'mode', 'redirect', 'referrer', 'referrerPolicy', 'priority']);
@@ -17,7 +18,7 @@ function abortError(signal: AbortSignal): unknown {
 }
 
 export function createGetRequestSingleFlight() {
-  type Flight = { promise: Promise<Response>; controller: AbortController; subscribers: number; settled: boolean };
+  type Flight = { promise: Promise<Response>; controller: AbortController; subscribers: number; settled: boolean; originalDelivered: boolean };
   const flights = new Map<string, Flight>();
   return {
     run(key: string, send: (signal: AbortSignal) => Promise<Response>, signal?: AbortSignal | null): Promise<Response> {
@@ -25,7 +26,7 @@ export function createGetRequestSingleFlight() {
       let flight = flights.get(key);
       if (!flight) {
         const controller = new AbortController();
-        flight = { promise: undefined as unknown as Promise<Response>, controller, subscribers: 0, settled: false };
+        flight = { promise: undefined as unknown as Promise<Response>, controller, subscribers: 0, settled: false, originalDelivered: false };
         const current = flight;
         // Register before invoking transport, including synchronous throws.
         flights.set(key, current);
@@ -53,8 +54,13 @@ export function createGetRequestSingleFlight() {
         signal?.addEventListener('abort', onAbort, { once: true });
         current.promise.then((response) => {
           if (!finish()) return;
-          // Each caller owns its readable body. Never return the shared body.
-          try { resolve(response.clone()); } catch (error) { reject(error); }
+          // Keep one branch of the body in use. Cloning every subscriber
+          // leaves the original unconsumed and can buffer large responses.
+          try {
+            const own = current.originalDelivered ? response.clone() : response;
+            current.originalDelivered = true;
+            resolve(own);
+          } catch (error) { reject(error); }
         }, (error) => { if (finish()) reject(error); });
       });
     },

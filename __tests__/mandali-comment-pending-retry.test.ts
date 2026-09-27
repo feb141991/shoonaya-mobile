@@ -20,8 +20,9 @@ describe('Mandali comment send shows pending/failed state and retries safely', (
   });
 
   it('shows the comment optimistically with a sending status before the network call resolves', () => {
-    assert.match(mandaliScreen, /pendingStatus: 'sending',/);
-    // The optimistic insert happens before sendPendingComment is invoked, not after.
+    assert.match(mandaliScreen, /await savePendingMandaliComment\(record\)/);
+    assert.match(mandaliScreen, /renderPendingMandaliComment\(record\), pendingStatus: 'sending'/);
+    // The durable operation is written before clearing the draft and sending.
     assert.match(mandaliScreen, /setComments\(\(current\) => \[\.\.\.current, optimisticComment\]\);\s*\n\s*void sendPendingComment\(/);
   });
 
@@ -38,11 +39,12 @@ describe('Mandali comment send shows pending/failed state and retries safely', (
   });
 
   it('a successful send clears pendingStatus and swaps in the real server id', () => {
-    assert.match(mandaliScreen, /c\.id === localId \? \{ \.\.\.c, id: newId!, pendingStatus: undefined, clientOperationId: undefined \} : c/);
+    assert.match(mandaliScreen, /confirmPendingMandaliComment\(current, localId, newId!\)/);
   });
 
-  it('dismissing a failed comment removes it locally without ever having created anything server-side', () => {
-    assert.match(mandaliScreen, /const handleDismissFailedComment = useCallback\(\(localId: string\) => \{\s*\n\s*setComments\(\(current\) => current\.filter\(\(c\) => c\.id !== localId\)\);/);
+  it('dismissing a failed comment clears its saved retry operation and local bubble', () => {
+    assert.match(mandaliScreen, /removePendingMandaliComment\(\{ userId: profile\.userId, clientOperationId: pending\.clientOperationId \}\)/);
+    assert.match(mandaliScreen, /setComments\(\(current\) => current\.filter\(\(c\) => c\.id !== localId\)\)/);
   });
 
   it('PostComments renders distinct sending/failed rows with Retry and Delete, gated ahead of the normal action row', () => {

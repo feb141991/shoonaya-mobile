@@ -404,8 +404,10 @@ export function PostComments({
   onReportComment?: (commentId: string) => void;
 }) {
   const [draft, setDraft] = useState('');
+  const [draftError, setDraftError] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [replyDraftError, setReplyDraftError] = useState(false);
   const [activeReactorsCommentId, setActiveReactorsCommentId] = useState<string | null>(null);
 
   const isPostAuthor = Boolean(postAuthorId && userId && postAuthorId === userId);
@@ -433,7 +435,8 @@ export function PostComments({
     const trimmed = draft.trim();
     if (!trimmed || posting) return;
     const succeeded = await onSubmit(trimmed);
-    if (succeeded) setDraft('');
+    if (succeeded) { setDraft(''); setDraftError(false); }
+    else setDraftError(true);
   };
 
   const submitReply = async (parentId: string) => {
@@ -443,6 +446,9 @@ export function PostComments({
     if (succeeded) {
       setReplyDraft('');
       setReplyTo(null);
+      setReplyDraftError(false);
+    } else {
+      setReplyDraftError(true);
     }
   };
 
@@ -477,7 +483,7 @@ export function PostComments({
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 1 }}>
         <TextInput
           value={draft}
-          onChangeText={setDraft}
+          onChangeText={(value) => { setDraft(value); setDraftError(false); }}
           placeholder="Write a comment…"
           placeholderTextColor={dim}
           multiline
@@ -522,6 +528,11 @@ export function PostComments({
           )}
         </PressableSurface>
       </View>
+      {draftError ? (
+        <Text accessibilityRole="alert" style={{ fontFamily: FONTS.sans, fontSize: 11, color: COLORS.danger }}>
+          Couldn&apos;t save this comment. Your draft is here; try again.
+        </Text>
+      ) : null}
 
       {rootComments.length > 0 ? (
         <ScrollView
@@ -609,7 +620,7 @@ export function PostComments({
                   <View style={{ marginLeft: 29, flexDirection: 'row', alignItems: 'flex-end', gap: 7 }}>
                     <TextInput
                       value={replyDraft}
-                      onChangeText={setReplyDraft}
+                      onChangeText={(value) => { setReplyDraft(value); setReplyDraftError(false); }}
                       placeholder={`Reply to ${comment.profiles?.full_name ?? comment.profiles?.username ?? 'this comment'}…`}
                       placeholderTextColor={dim}
                       autoFocus
@@ -637,6 +648,7 @@ export function PostComments({
                       onPress={() => {
                         setReplyTo(null);
                         setReplyDraft('');
+                        setReplyDraftError(false);
                       }}
                       style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
                     >
@@ -664,6 +676,11 @@ export function PostComments({
                       )}
                     </PressableSurface>
                   </View>
+                ) : null}
+                {isReplying && replyDraftError ? (
+                  <Text accessibilityRole="alert" style={{ marginLeft: 29, fontFamily: FONTS.sans, fontSize: 11, color: COLORS.danger }}>
+                    Couldn&apos;t save this reply. Your draft is here; try again.
+                  </Text>
                 ) : null}
               </View>
             );

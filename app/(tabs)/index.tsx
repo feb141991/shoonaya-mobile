@@ -2499,6 +2499,7 @@ function HomeContent() {
         }}
       />
       <DharmaMitraChatSheet
+        key={appIdentity.kind === 'authenticated' ? appIdentity.userId : appIdentity.kind}
         visible={chatSheetVisible}
         origin={chatOrigin}
         onClose={handleCloseChatSheet}

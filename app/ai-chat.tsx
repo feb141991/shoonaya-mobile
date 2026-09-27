@@ -27,6 +27,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
+import { useAppIdentity } from '@/lib/appIdentity';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
@@ -393,7 +394,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   );
 });
 
-export default function AiChatScreen() {
+export default function AiChatRoute() {
+  const identity = useAppIdentity();
+  const key = identity.kind === 'authenticated' ? identity.userId : identity.kind;
+  return <AiChatScreen key={key} />;
+}
+
+function AiChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { initialMessage, tradition: traditionParam } = useLocalSearchParams<{ initialMessage?: string; tradition?: string }>();

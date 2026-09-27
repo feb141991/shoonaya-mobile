@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { apiFetch } from '@/lib/api';
@@ -58,6 +58,8 @@ type UseAiChatOptions = {
 
 export function useAiChat(options: UseAiChatOptions = {}) {
   const { initialPrompt, onUnauthenticated, errorMessage = DEFAULT_ERROR_MESSAGE, visible = true } = options;
+  const onUnauthenticatedRef = useRef(onUnauthenticated);
+  onUnauthenticatedRef.current = onUnauthenticated;
 
   const [initialSent, setInitialSent] = useState(false);
   const [profile, setProfile] = useState<ProfileContext | null>(null);
@@ -79,12 +81,14 @@ export function useAiChat(options: UseAiChatOptions = {}) {
   // reads (/api/ai/chat/usage) — replaces a previously hardcoded, incorrect
   // "5/200" label that didn't reflect the actual tiered (seva-score-aware)
   // daily limit the backend enforces.
-  const refreshUsage = useCallback(async () => {
+  const refreshUsage = useCallback(async (lease?: ReturnType<typeof captureAppIdentity>, isActive: () => boolean = () => true) => {
     try {
-      const response = await apiFetch('/api/ai/chat/usage');
+      const response = await apiFetch('/api/ai/chat/usage', {
+        expectedUserId: lease?.identity.kind === 'authenticated' ? lease.identity.userId : undefined,
+      });
       if (!response.ok) return;
       const data = (await response.json()) as { used?: number; limit?: number; isPro?: boolean };
-      if (typeof data.used === 'number' && typeof data.limit === 'number') {
+      if (isActive() && (!lease || lease.isCurrent()) && typeof data.used === 'number' && typeof data.limit === 'number') {
         setUsageLabel(`${data.used} / ${data.limit} today`);
       }
     } catch {
@@ -92,14 +96,14 @@ export function useAiChat(options: UseAiChatOptions = {}) {
     }
   }, []);
 
-  const loadProfile = useCallback(async (lease: ReturnType<typeof captureAppIdentity>) => {
+  const loadProfile = useCallback(async (lease: ReturnType<typeof captureAppIdentity>, isActive: () => boolean) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!lease.isCurrent()) return;
+    if (!lease.isCurrent() || !isActive()) return;
 
     if (!user) {
-      onUnauthenticated?.();
+      onUnauthenticatedRef.current?.();
       return;
     }
 
@@ -108,7 +112,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       .select('tradition, sampradaya, city, country, seeking, app_language, meaning_language, transliteration_language, is_pro')
       .eq('id', user.id)
       .single();
-    if (!lease.isCurrent()) return;
+    if (!lease.isCurrent() || !isActive()) return;
 
     setProfile({
       userId: user.id,
@@ -122,7 +126,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       transliterationLanguage: data?.transliteration_language ?? 'en',
       isPro: data?.is_pro ?? false,
     });
-  }, [onUnauthenticated]);
+  }, []);
 
   useEffect(() => {
     // A closed overlay sheet keeps this hook mounted so its conversation
@@ -133,12 +137,15 @@ export function useAiChat(options: UseAiChatOptions = {}) {
     // account switch) while this specific fetch is in flight.
     if (!visible) return;
     const lease = captureAppIdentity();
-    loadProfile(lease)
+    let active = true;
+    const isActive = () => active;
+    loadProfile(lease, isActive)
       .catch(() => {})
       .finally(() => {
-        if (lease.isCurrent()) setLoadingProfile(false);
+        if (active && lease.isCurrent()) setLoadingProfile(false);
       });
-    void refreshUsage();
+    void refreshUsage(lease, isActive);
+    return () => { active = false; };
   }, [visible, loadProfile, refreshUsage]);
 
   const appendModelChunk = (id: string, chunk: string) => {
@@ -155,6 +162,8 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       if (!content || streaming || !profile) {
         return;
       }
+      const lease = captureAppIdentity();
+      if (lease.identity.kind !== 'authenticated' || lease.identity.userId !== profile.userId) return;
 
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
@@ -176,6 +185,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       try {
         const response = await apiFetch('/api/ai/chat', {
           method: 'POST',
+          expectedUserId: profile.userId,
           timeoutMs: AI_CHAT_TIMEOUT_MS,
           body: JSON.stringify({
             message: content,
@@ -196,6 +206,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
 
         if (response.status === 429) {
           const limitData = (await response.json()) as { used?: number; limit?: number };
+          if (!lease.isCurrent()) return;
           setUsageLabel(`Daily limit reached · ${limitData.used ?? DAILY_LIMITS.free}/${limitData.limit ?? DAILY_LIMITS.free}`);
           setMessages((current) => current.filter((message) => message.id !== modelMessageId));
           return;
@@ -219,6 +230,10 @@ export function useAiChat(options: UseAiChatOptions = {}) {
 
         while (true) {
           const { done, value } = await reader.read();
+          if (!lease.isCurrent()) {
+            void reader.cancel();
+            return;
+          }
           if (done) {
             break;
           }
@@ -229,8 +244,9 @@ export function useAiChat(options: UseAiChatOptions = {}) {
           }
         }
 
-        void refreshUsage();
+        if (lease.isCurrent()) void refreshUsage(lease);
       } catch (error) {
+        if (!lease.isCurrent()) return;
         const detail = error instanceof Error && SAFE_CHAT_ERRORS.has(error.message)
           ? error.message
           : errorMessage;
@@ -240,7 +256,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
           )
         );
       } finally {
-        setStreaming(false);
+        if (lease.isCurrent()) setStreaming(false);
       }
     },
     [input, messages, profile, streaming, refreshUsage, activeLanguage, errorMessage]

@@ -10,6 +10,7 @@
  * cold start always resumes from page 1, never mid-pagination.
  */
 import { createCacheStorageBarrier } from './cacheStorageBarrier';
+import { clearAllPendingMandaliComments, clearPendingMandaliCommentsForUser } from './mandaliPendingComments';
 import type { CommentRow, MemberRow, PostRow, RsvpRow } from './mandali';
 
 export const MANDALI_CACHE_SCHEMA_VERSION = 1;
@@ -122,6 +123,7 @@ export async function clearMandaliCache(identity?: MandaliCacheIdentity): Promis
   try {
     if (identity) {
       await cacheStorage.removeItem(getMandaliCacheKey(identity));
+      if (identity.kind === 'authenticated') await clearPendingMandaliCommentsForUser(identity.userId);
     } else {
       await clearAllMandaliCaches();
     }
@@ -132,7 +134,7 @@ export async function clearMandaliCache(identity?: MandaliCacheIdentity): Promis
 
 export async function clearAllMandaliCaches(): Promise<void> {
   try {
-    await cacheStorage.clearAll();
+    await Promise.all([cacheStorage.clearAll(), clearAllPendingMandaliComments()]);
   } catch (error) {
     console.warn('[MandaliCache] clearAll failed', error);
   }
