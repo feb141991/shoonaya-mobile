@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
+import { captureAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import type { AppLanguage } from '@/lib/language-runtime';
@@ -48,10 +49,15 @@ type UseAiChatOptions = {
   // shouldn't be forced into a full navigation.
   onUnauthenticated?: () => void;
   errorMessage?: string;
+  // An overlay caller (DharmaMitraChatSheet) keeps this hook mounted while
+  // closed so conversation state survives close/reopen -- visible gates the
+  // auth/profile/usage fetch itself so a closed sheet does no network work.
+  // Defaults to true for callers that are a dedicated, always-visible screen.
+  visible?: boolean;
 };
 
 export function useAiChat(options: UseAiChatOptions = {}) {
-  const { initialPrompt, onUnauthenticated, errorMessage = DEFAULT_ERROR_MESSAGE } = options;
+  const { initialPrompt, onUnauthenticated, errorMessage = DEFAULT_ERROR_MESSAGE, visible = true } = options;
 
   const [initialSent, setInitialSent] = useState(false);
   const [profile, setProfile] = useState<ProfileContext | null>(null);
@@ -86,10 +92,11 @@ export function useAiChat(options: UseAiChatOptions = {}) {
     }
   }, []);
 
-  const loadProfile = useCallback(async () => {
+  const loadProfile = useCallback(async (lease: ReturnType<typeof captureAppIdentity>) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    if (!lease.isCurrent()) return;
 
     if (!user) {
       onUnauthenticated?.();
@@ -101,6 +108,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       .select('tradition, sampradaya, city, country, seeking, app_language, meaning_language, transliteration_language, is_pro')
       .eq('id', user.id)
       .single();
+    if (!lease.isCurrent()) return;
 
     setProfile({
       userId: user.id,
@@ -117,11 +125,21 @@ export function useAiChat(options: UseAiChatOptions = {}) {
   }, [onUnauthenticated]);
 
   useEffect(() => {
-    loadProfile()
+    // A closed overlay sheet keeps this hook mounted so its conversation
+    // state survives reopen, so the fetch itself -- not just its result --
+    // must be gated on visibility, or every unrelated re-render of an
+    // always-mounted caller re-runs auth/profile/usage lookups in the
+    // background. The lease guards against the identity changing (sign out,
+    // account switch) while this specific fetch is in flight.
+    if (!visible) return;
+    const lease = captureAppIdentity();
+    loadProfile(lease)
       .catch(() => {})
-      .finally(() => setLoadingProfile(false));
+      .finally(() => {
+        if (lease.isCurrent()) setLoadingProfile(false);
+      });
     void refreshUsage();
-  }, [loadProfile, refreshUsage]);
+  }, [visible, loadProfile, refreshUsage]);
 
   const appendModelChunk = (id: string, chunk: string) => {
     setMessages((current) =>

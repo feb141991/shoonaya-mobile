@@ -811,6 +811,11 @@ function HomeContent() {
   const [sacredDaysAuthGateVisible, setSacredDaysAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
+  // Stable identity: DharmaMitraChatSheet stays mounted (to preserve chat
+  // state across close/reopen) and feeds this into useAiChat's effect deps,
+  // so a fresh closure here would retrigger that effect on every unrelated
+  // Home render, not just on an actual close.
+  const handleCloseChatSheet = useCallback(() => setChatSheetVisible(false), []);
   const [heroPickerVisible, setHeroPickerVisible] = useState(false);
   const [heroOverride, setHeroOverride] = useState<HeroPick | null>(null);
   const { width: heroViewportWidth, fontScale: heroFontScale } = useWindowDimensions();
@@ -2496,7 +2501,7 @@ function HomeContent() {
       <DharmaMitraChatSheet
         visible={chatSheetVisible}
         origin={chatOrigin}
-        onClose={() => setChatSheetVisible(false)}
+        onClose={handleCloseChatSheet}
         tradition={state.profile.tradition}
       />
       <HeroBackdropPicker

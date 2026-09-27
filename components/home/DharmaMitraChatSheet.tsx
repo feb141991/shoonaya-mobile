@@ -396,7 +396,7 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
     setLanguage,
     sendMessage,
     clearMessages,
-  } = useAiChat({ onUnauthenticated: onClose });
+  } = useAiChat({ onUnauthenticated: onClose, visible });
 
   const greeting = getTraditionGreeting(tradition);
   const prompts = getTraditionPrompts(tradition);

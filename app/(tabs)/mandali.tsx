@@ -20,6 +20,7 @@ import { FlashList, type FlashListRef, type ListRenderItemInfo } from '@shopify/
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, useFocusEffect, useIsFocused } from 'expo-router';
 import { Image } from 'expo-image';
+import * as Crypto from 'expo-crypto';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -220,6 +221,8 @@ type MandaliPostCardProps = {
   onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
   onRemoveCommentReaction: (commentId: string) => void;
   onRetryCommentReaction: (commentId: string) => void;
+  onRetryComment: (commentId: string) => void;
+  onDismissFailedComment: (commentId: string) => void;
   myCommentReactions: Record<string, ReactionType>;
   failedCommentReactionIds: Set<string>;
   onVotePoll?: (pollId: string, optionId: string) => Promise<boolean | void>;
@@ -255,6 +258,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onSelectCommentReaction,
   onRemoveCommentReaction,
   onRetryCommentReaction,
+  onRetryComment,
+  onDismissFailedComment,
   myCommentReactions,
   failedCommentReactionIds,
   onVotePoll,
@@ -499,6 +504,8 @@ const MandaliPostCard = memo(function MandaliPostCard({
         onSelectCommentReaction={onSelectCommentReaction}
         onRemoveCommentReaction={onRemoveCommentReaction}
         onRetryCommentReaction={onRetryCommentReaction}
+        onRetryComment={onRetryComment}
+        onDismissFailedComment={onDismissFailedComment}
         myCommentReactions={myCommentReactions}
         failedCommentReactionIds={failedCommentReactionIds}
         onViewProfile={onViewProfile}
@@ -1451,52 +1458,88 @@ function MandaliScreen() {
     await refreshFailedReactionTargets(profile.userId);
   }, [profile, performReactionAction, refreshFailedReactionTargets]);
 
-  const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null): Promise<boolean> => {
-    if (!profile) return false;
+  // Sends (or resends) one pending comment bubble already sitting in
+  // `comments` state, keyed by its own local id. clientOperationId is
+  // ALWAYS the one already on that row -- a retry must reuse it, never mint
+  // a fresh one, or an ambiguous prior timeout (request actually reached
+  // the server, response lost) becomes a genuine duplicate comment instead
+  // of resolving to the same idempotency key server-side.
+  const sendPendingComment = useCallback(async (
+    localId: string,
+    postId: string,
+    body: string,
+    parentId: string | null,
+    clientOperationId: string
+  ) => {
+    if (!profile) return;
     setCommenting(postId);
     let newId: string | null = null;
     try {
-      newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId: parentId ?? null });
+      newId = await createMandaliComment({ postId, userId: profile.userId, body, parentId, clientOperationId });
     } catch {
-      Alert.alert('Could not post comment', 'Check your connection and try again.');
-      return false;
+      setComments((current) => current.map((c) => (c.id === localId ? { ...c, pendingStatus: 'failed' } : c)));
+      return;
     } finally {
       setCommenting(null);
     }
+    if (!newId) return;
 
-    // Optimistically update post comment count
     setPosts((current) => current.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
     setBlendedPosts((current) => current.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
+    setComments((current) => current.map((c) =>
+      c.id === localId ? { ...c, id: newId!, pendingStatus: undefined, clientOperationId: undefined } : c
+    ));
 
-    if (newId) {
-      const optimisticComment: CommentRow = {
-        id: newId,
-        post_id: postId,
-        author_id: profile.userId,
-        body,
-        parent_id: parentId ?? null,
-        created_at: new Date().toISOString(),
-        updated_at: null,
-        deleted_at: null,
-        upvotes: 0,
-        is_highlighted: false,
-        profiles: {
-          full_name: profile.displayName || 'You',
-          username: profile.displayName || 'You',
-          avatar_url: null,
-        },
-      };
-      setComments((current) => (current.some((c) => c.id === newId) ? current : [...current, optimisticComment]));
+    // Refresh full thread in the background to replace with server-hydrated row.
+    // A background refresh failure must never revert the comment to "failed" --
+    // it already exists server-side at this point.
+    void patchNewComment(postId, newId).catch((err) => {
+      console.warn('[MandaliScreen] Background patchNewComment failed', err);
+    });
+  }, [profile, patchNewComment]);
 
-      // Refresh full thread in the background to replace with server-hydrated row.
-      // A background refresh failure must never trigger a false "Could not post comment" alert.
-      void patchNewComment(postId, newId).catch((err) => {
-        console.warn('[MandaliScreen] Background patchNewComment failed', err);
-      });
-    }
-
+  const submitComment = useCallback(async (postId: string, body: string, parentId?: string | null): Promise<boolean> => {
+    if (!profile) return false;
+    const clientOperationId = Crypto.randomUUID();
+    const localId = `pending-${clientOperationId}`;
+    const optimisticComment: CommentRow = {
+      id: localId,
+      post_id: postId,
+      author_id: profile.userId,
+      body,
+      parent_id: parentId ?? null,
+      created_at: new Date().toISOString(),
+      updated_at: null,
+      deleted_at: null,
+      upvotes: 0,
+      is_highlighted: false,
+      profiles: {
+        full_name: profile.displayName || 'You',
+        username: profile.displayName || 'You',
+        avatar_url: null,
+      },
+      pendingStatus: 'sending',
+      clientOperationId,
+    };
+    // Shown immediately, before the network call -- the composer clears
+    // right away and the message's own bubble carries its sending/failed
+    // state from here on, instead of a one-shot Alert on failure that lost
+    // the compose-time context once dismissed.
+    setComments((current) => [...current, optimisticComment]);
+    void sendPendingComment(localId, postId, body, parentId ?? null, clientOperationId);
     return true;
-  }, [patchNewComment, profile]);
+  }, [profile, sendPendingComment]);
+
+  const handleRetryComment = useCallback((localId: string) => {
+    const pending = comments.find((c) => c.id === localId);
+    if (!pending || pending.pendingStatus !== 'failed' || !pending.clientOperationId) return;
+    setComments((current) => current.map((c) => (c.id === localId ? { ...c, pendingStatus: 'sending' } : c)));
+    void sendPendingComment(localId, pending.post_id, pending.body, pending.parent_id, pending.clientOperationId);
+  }, [comments, sendPendingComment]);
+
+  const handleDismissFailedComment = useCallback((localId: string) => {
+    setComments((current) => current.filter((c) => c.id !== localId));
+  }, []);
 
   const handleSelectCommentReaction = useCallback(async (commentId: string, reaction: ReactionType) => {
     if (!profile) return;
@@ -2233,6 +2276,8 @@ function MandaliScreen() {
         onSelectCommentReaction={handleSelectCommentReaction}
         onRemoveCommentReaction={handleRemoveCommentReaction}
         onRetryCommentReaction={handleRetryCommentReaction}
+        onRetryComment={handleRetryComment}
+        onDismissFailedComment={handleDismissFailedComment}
         myCommentReactions={myCommentReactions}
         failedCommentReactionIds={failedCommentReactionIds}
         onVotePoll={handleVotePoll}
@@ -2240,7 +2285,7 @@ function MandaliScreen() {
         onReportComment={handleReportComment}
       />
     );
-  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, retryLoadComments, rsvpsByPost, setReactorsPostId, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleDismissFailedComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, retryLoadComments, rsvpsByPost, setReactorsPostId, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>

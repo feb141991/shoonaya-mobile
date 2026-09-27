@@ -41,6 +41,8 @@ function CommentItem({
   onRemoveReaction,
   onViewReactors,
   onRetryReaction,
+  onRetryComment,
+  onDismissFailedComment,
   myReaction,
   reactionFailed,
   text,
@@ -67,6 +69,8 @@ function CommentItem({
   onRemoveReaction: (commentId: string) => void;
   onViewReactors: (commentId: string) => void;
   onRetryReaction: (commentId: string) => void;
+  onRetryComment: (commentId: string) => void;
+  onDismissFailedComment: (commentId: string) => void;
   myReaction: ReactionType | null;
   reactionFailed: boolean;
   text: string;
@@ -232,7 +236,33 @@ function CommentItem({
           </Text>
         )}
 
-        {!isDeleted ? (
+        {comment.pendingStatus === 'sending' ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <ActivityIndicator size="small" color={dim} />
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim }}>Sending…</Text>
+          </View>
+        ) : comment.pendingStatus === 'failed' ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 }}>
+            <Feather name="cloud-off" size={12} color={COLORS.danger} />
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim }}>Not sent</Text>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Retry sending this comment"
+              onPress={() => onRetryComment(comment.id)}
+              style={{ minHeight: 0 }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: brand }}>Retry</Text>
+            </PressableSurface>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Discard this comment"
+              onPress={() => onDismissFailedComment(comment.id)}
+              style={{ minHeight: 0 }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: dim }}>Delete</Text>
+            </PressableSurface>
+          </View>
+        ) : !isDeleted ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 }}>
             <CommentReactionButton
               reaction={myReaction}
@@ -322,6 +352,8 @@ export function PostComments({
   onSelectCommentReaction,
   onRemoveCommentReaction,
   onRetryCommentReaction,
+  onRetryComment,
+  onDismissFailedComment,
   myCommentReactions,
   failedCommentReactionIds,
   onViewProfile,
@@ -354,6 +386,9 @@ export function PostComments({
   onSelectCommentReaction: (commentId: string, reaction: ReactionType) => void;
   onRemoveCommentReaction: (commentId: string) => void;
   onRetryCommentReaction: (commentId: string) => void;
+  /** A failed send is kept in `comments` (pendingStatus: 'failed') rather than dropped, so it needs its own retry (reusing the same clientOperationId) and discard actions. */
+  onRetryComment: (commentId: string) => void;
+  onDismissFailedComment: (commentId: string) => void;
   myCommentReactions: Record<string, ReactionType>;
   /** Comment ids whose last reaction change failed to sync and is waiting for a retry. */
   failedCommentReactionIds: Set<string>;
@@ -515,6 +550,8 @@ export function PostComments({
                   onRemoveReaction={onRemoveCommentReaction}
                   onViewReactors={(id) => setActiveReactorsCommentId(id)}
                   onRetryReaction={onRetryCommentReaction}
+                  onRetryComment={onRetryComment}
+                  onDismissFailedComment={onDismissFailedComment}
                   myReaction={myCommentReactions[comment.id] ?? null}
                   reactionFailed={failedCommentReactionIds.has(comment.id)}
                   text={text}
@@ -546,6 +583,8 @@ export function PostComments({
                         onRemoveReaction={onRemoveCommentReaction}
                         onViewReactors={(id) => setActiveReactorsCommentId(id)}
                         onRetryReaction={onRetryCommentReaction}
+                        onRetryComment={onRetryComment}
+                        onDismissFailedComment={onDismissFailedComment}
                         myReaction={myCommentReactions[reply.id] ?? null}
                         reactionFailed={failedCommentReactionIds.has(reply.id)}
                         text={text}

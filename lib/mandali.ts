@@ -147,6 +147,10 @@ export type CommentRow = {
   highlighted_by?: string | null;
   myReaction?: ReactionType | null;
   profiles?: { full_name: string; username: string; avatar_url: string | null } | null;
+  /** Local-only: unset for every real, server-confirmed comment. */
+  pendingStatus?: 'sending' | 'failed';
+  /** Local-only: the id a retry must reuse so a since-succeeded first attempt is never duplicated. */
+  clientOperationId?: string;
 };
 
 export type CommentReactor = {
@@ -394,8 +398,13 @@ export async function updateMandaliPost(payload: {
 // Returns the new row's id so the caller can patch it into local state
 // directly (a single targeted re-fetch with the profile join) instead of
 // reloading the entire screen for one new comment.
-export async function createMandaliComment(payload: { postId: string; userId: string; body: string; parentId?: string | null }): Promise<string> {
-  const clientOperationId = Crypto.randomUUID();
+export async function createMandaliComment(payload: { postId: string; userId: string; body: string; parentId?: string | null; clientOperationId?: string }): Promise<string> {
+  // Caller-supplied for a manual retry of a previously failed attempt, so
+  // that retry reuses the ORIGINAL operation id -- if the first attempt
+  // actually reached the server and the client only lost the response
+  // (an ambiguous timeout), resending under a fresh id would create a
+  // genuine duplicate comment instead of hitting the same idempotency key.
+  const clientOperationId = payload.clientOperationId ?? Crypto.randomUUID();
   const requestBody = JSON.stringify({ postId: payload.postId, body: payload.body, parentId: payload.parentId, clientOperationId });
   // Same idempotency guarantee as createMandaliPost above -- a retried
   // create is safe to resend verbatim.
