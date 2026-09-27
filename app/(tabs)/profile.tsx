@@ -41,7 +41,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
-import { API_BASE, COLORS, FONTS, OFFICIAL_EMAIL, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, OFFICIAL_EMAIL, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -177,12 +177,12 @@ const INITIAL_EDIT: EditState = {
   appLanguage: 'en',
 };
 
-const TRADITION_META: Record<Tradition, { label: string; emoji: string }> = {
-  hindu: { label: 'Hindu', emoji: '🪷' },
-  sikh: { label: 'Sikh', emoji: '☬' },
-  buddhist: { label: 'Buddhist', emoji: '☸️' },
-  jain: { label: 'Jain', emoji: '🤲' },
-  none: { label: 'Universal / Exploring', emoji: '✨' },
+const TRADITION_META: Record<Tradition, { label: string; emoji: string; symbol: string }> = {
+  hindu: { label: 'Hindu', emoji: '🪷', symbol: '🕉️' },
+  sikh: { label: 'Sikh', emoji: '☬', symbol: '☬' },
+  buddhist: { label: 'Buddhist', emoji: '☸️', symbol: '☸️' },
+  jain: { label: 'Jain', emoji: '🤲', symbol: '🤲' },
+  none: { label: 'Universal / Exploring', emoji: '✨', symbol: '✨' },
 };
 
 const LIFE_STAGE_LABELS: Record<string, string> = {
@@ -1260,6 +1260,28 @@ export default function ProfileScreen() {
                 <Feather name="camera" size={20} color={COLORS.ink} />
               )}
             </PressableSurface>
+          </View>
+
+          {/* Tradition Identifier Pill */}
+          <View
+            accessibilityLabel={`Spiritual tradition: ${traditionMeta.label}`}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: RADII.pill,
+              backgroundColor: theme.accent,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              marginTop: -6,
+            }}
+          >
+            <Text style={{ fontSize: 13 }}>{traditionMeta.symbol}</Text>
+            <Text style={{ ...TYPE.chip, color: theme.brand }}>
+              {traditionMeta.label}
+            </Text>
           </View>
 
           <View style={{ alignItems: 'center', gap: 8 }}>

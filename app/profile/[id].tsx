@@ -17,7 +17,7 @@ import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { blockUser, isUserBlocked, reportMandaliMember, unblockUser } from '@/lib/mandali';
 
-type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain';
+type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'none';
 
 type PublicProfile = {
   id: string;
@@ -50,11 +50,12 @@ type PublicProfile = {
   } | null;
 };
 
-const TRADITION_META: Record<Tradition, { label: string; emoji: string }> = {
-  hindu: { label: 'Hindu', emoji: '🪷' },
-  sikh: { label: 'Sikh', emoji: '☬' },
-  buddhist: { label: 'Buddhist', emoji: '☸️' },
-  jain: { label: 'Jain', emoji: '🤲' },
+const TRADITION_META: Record<Tradition, { label: string; emoji: string; symbol: string }> = {
+  hindu: { label: 'Hindu', emoji: '🪷', symbol: '🕉️' },
+  sikh: { label: 'Sikh', emoji: '☬', symbol: '☬' },
+  buddhist: { label: 'Buddhist', emoji: '☸️', symbol: '☸️' },
+  jain: { label: 'Jain', emoji: '🤲', symbol: '🤲' },
+  none: { label: 'Universal / Exploring', emoji: '✨', symbol: '✨' },
 };
 
 const LIFE_STAGE_LABELS: Record<string, { label: string; sub: string }> = {
@@ -65,7 +66,7 @@ const LIFE_STAGE_LABELS: Record<string, { label: string; sub: string }> = {
 };
 
 function isTradition(value: string | null): value is Tradition {
-  return value === 'hindu' || value === 'sikh' || value === 'buddhist' || value === 'jain';
+  return value === 'hindu' || value === 'sikh' || value === 'buddhist' || value === 'jain' || value === 'none';
 }
 
 function getSpiritualLevel(sevaScore: number) {
@@ -445,6 +446,30 @@ export default function MemberProfileScreen() {
               )}
             </View>
           </View>
+
+          {/* Tradition Identifier Pill */}
+          {traditionMeta ? (
+            <View
+              accessibilityLabel={`Spiritual tradition: ${traditionMeta.label}`}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 5,
+                borderRadius: RADII.pill,
+                backgroundColor: theme.accent,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                marginTop: -4,
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>{traditionMeta.symbol}</Text>
+              <Text style={{ ...TYPE.chip, color: theme.brand }}>
+                {traditionMeta.label}
+              </Text>
+            </View>
+          ) : null}
 
           {/* Equipped Sacred Relic Seal */}
           {profile.relic ? (
