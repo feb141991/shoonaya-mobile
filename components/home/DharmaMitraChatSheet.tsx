@@ -293,7 +293,7 @@ const ScrollChatMessageBubble = memo(function ScrollChatMessageBubble({
                         letterSpacing: 3,
                       }}
                     >
-                      — ॐ —
+                      — {traditionSymbol} —
                     </Text>
                   </View>
                 )}
