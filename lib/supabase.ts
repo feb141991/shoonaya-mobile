@@ -2,7 +2,10 @@ import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import { canRetryTransientTransportFailure } from '@/lib/api-auth-policy';
+import { createSecureAuthStorage } from '@/lib/secureAuthStorage';
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const EXPO_PUBLIC_SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -10,6 +13,22 @@ const EXPO_PUBLIC_SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 if (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY) {
   console.warn('Supabase environment variables are not configured for Shoonaya mobile.');
 }
+
+const secureOptions: SecureStore.SecureStoreOptions = {
+  keychainService: 'com.shoonaya.auth.v1',
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
+  requireAuthentication: false,
+};
+const authStorage = createSecureAuthStorage({
+  legacy: AsyncStorage,
+  secure: {
+    getItem: (key) => SecureStore.getItemAsync(key, secureOptions),
+    setItem: (key, value) => SecureStore.setItemAsync(key, value, secureOptions),
+    removeItem: (key) => SecureStore.deleteItemAsync(key, secureOptions),
+  },
+  randomId: () => Crypto.randomUUID(),
+  onDeferredCleanup: () => console.warn('[auth-storage] Secure migration or cleanup deferred; no credential values logged.'),
+});
 
 /**
  * Resilient fetch wrapper for Supabase client.
@@ -47,7 +66,7 @@ export const supabase = createClient(
   EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key',
   {
     auth: {
-      storage: AsyncStorage,
+      storage: authStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,

@@ -30,7 +30,7 @@ describe('Mandali realtime subscription and connection-request polling pause whe
 
   it('refreshes once on returning to focus after being blurred, not on the first mount', () => {
     assert.match(mandali, /const hasBeenBlurredRef = useRef\(false\);/);
-    assert.match(mandali, /if \(hasBeenBlurredRef\.current\)\s*\{\s*\n\s*void loadMandali\(\);/);
+    assert.match(mandali, /if \(hasBeenBlurredRef\.current\)\s*\{\s*\n\s*void loadMandali\(\)\.catch\(\(\) => \{\}\);/);
     assert.match(mandali, /hasBeenBlurredRef\.current = true;/);
   });
 });

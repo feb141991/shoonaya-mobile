@@ -42,7 +42,7 @@ export function isSameAppIdentity(left: AppIdentity, right: AppIdentity): boolea
 export function captureAppIdentity() {
   const identity = currentIdentity;
   const revision = identityRevision;
-  return { identity, isCurrent: () => revision === identityRevision };
+  return { identity, revision, isCurrent: () => revision === identityRevision };
 }
 
 function subscribe(listener: () => void): () => void {

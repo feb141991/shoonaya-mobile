@@ -23,6 +23,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -76,7 +77,6 @@ import {
   fetchNearbySeekers,
   fetchPendingConnectionRequests,
   fetchPostComments,
-  fetchSafetyState,
   fetchSingleComment,
   leaveMandali,
   removeCommentReaction,
@@ -186,7 +186,9 @@ type MandaliTheme = {
   text: string;
   dim: string;
   brand: string;
+  brandStrong: string;
   brandSoft: string;
+  mandaliPrompt: string;
   shadow: string;
 };
 
@@ -276,7 +278,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
     <Card
       tone="auto"
       style={{
-        backgroundColor: post.mandali_prompt_id ? theme.brandSoft : theme.card,
+        backgroundColor: post.mandali_prompt_id ? theme.mandaliPrompt : theme.card,
         borderColor: theme.premiumBorder,
         borderLeftWidth: post.mandali_prompt_id ? 3 : 1,
         borderLeftColor: post.mandali_prompt_id ? theme.brand : theme.premiumBorder,
@@ -325,9 +327,10 @@ const MandaliPostCard = memo(function MandaliPostCard({
                   {post.profiles?.full_name ?? post.profiles?.username ?? 'Seeker'}
                 </Text>
               </PressableSurface>
-              {post.profiles?.is_official === true ? (
+              {post.profiles?.is_official === true || Boolean(post.mandali_prompt_id) ? (
                 // Official identity is derived server-side from the configured
-                // system author id. Cached pre-contract posts simply omit it.
+                // system author id. Prompt ids are service-role-only, so they
+                // also let old cached prompt rows keep their Official badge.
                 <View
                   style={{
                     flexDirection: 'row',
@@ -335,15 +338,15 @@ const MandaliPostCard = memo(function MandaliPostCard({
                     gap: 3,
                     borderRadius: 999,
                     borderWidth: 1,
-                    borderColor: theme.premiumBorder,
-                    backgroundColor: theme.surface,
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
+                    borderColor: theme.brand,
+                    backgroundColor: theme.mandaliPrompt,
+                    paddingHorizontal: 7,
+                    paddingVertical: 3,
                     flexShrink: 0,
                   }}
                 >
-                  <Feather name="check-circle" size={8} color={theme.brand} />
-                  <Text style={{ color: theme.brand, ...TYPE.section, fontSize: 8 }}>Official</Text>
+                  <Feather name="check-circle" size={9} color={theme.brandStrong} />
+                  <Text style={{ color: theme.brandStrong, ...TYPE.section, fontSize: 9 }}>Official</Text>
                 </View>
               ) : null}
               <Text style={{ color: theme.dim, fontSize: 9, opacity: 0.5, flexShrink: 0 }}>•</Text>
@@ -523,7 +526,13 @@ const MandaliPostCard = memo(function MandaliPostCard({
 // extends the realtime channel (posts/post_upvotes/post_comments/
 // event_rsvps/profiles) so the whole screen — including comment threads —
 // updates live without the user pulling to refresh.
-export default function MandaliScreen() {
+export default function MandaliRoute() {
+  const identity = useAppIdentity();
+  const key = identity.kind === 'authenticated' ? identity.userId : identity.kind;
+  return <ErrorBoundary key={key} fallbackTitle="Could not display Mandali"><MandaliScreen /></ErrorBoundary>;
+}
+
+function MandaliScreen() {
   const router = useRouter();
   const appIdentity = useAppIdentity();
   const insets = useSafeAreaInsets();
@@ -537,6 +546,7 @@ export default function MandaliScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [feedLoadFailed, setFeedLoadFailed] = useState(false);
   const [posting, setPosting] = useState(false);
   const [commenting, setCommenting] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileContext | null>(null);
@@ -627,7 +637,9 @@ export default function MandaliScreen() {
       text: isDark ? COLORS.creamBg : COLORS.ink,
       dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
+      brandStrong: isDark ? COLORS.brandPrimaryStrongDark : COLORS.brandPrimaryStrongLight,
       brandSoft: isDark ? COLORS.homeSoftDark : COLORS.brandSoftLight,
+      mandaliPrompt: isDark ? COLORS.mandaliPromptDark : COLORS.mandaliPromptLight,
       shadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
     }),
     [isDark]
@@ -671,6 +683,7 @@ export default function MandaliScreen() {
   }, []);
 
   const resetMandaliIdentityState = useCallback(() => {
+    setFeedLoadFailed(false);
     setProfile(null);
     setPosts([]);
     setBlendedPosts([]);
@@ -808,189 +821,29 @@ export default function MandaliScreen() {
     // viewer reaction + comment preview in one response) -- opt-in via
     // ?limit, see /api/mandali/feed's route handler. First page only here;
     // loadMorePosts below fetches subsequent pages with ?cursor.
-    let feed: FeedPayload | null = null;
+    let feed: FeedPayload;
     try {
       const feedResponse = await apiFetch('/api/mandali/feed?limit=20', { expectedUserId: userId });
       if (!isCurrentLoad()) return { cacheHit, readyAt };
       const feedServerTiming = parseServerTimingHeader(feedResponse.headers.get('Server-Timing'));
-      if (feedServerTiming) {
-        recordServerTiming({ kind: 'authenticated', userId }, 'mandali', feedServerTiming);
-      }
-      if (feedResponse.ok) {
-        feed = (await feedResponse.json()) as FeedPayload;
-      } else {
-        console.warn(`[MandaliScreen] /api/mandali/feed returned ${feedResponse.status}, attempting direct Supabase fallback`);
-      }
-    } catch (feedErr) {
-      console.warn('[MandaliScreen] /api/mandali/feed fetch failed, attempting direct Supabase fallback:', feedErr);
-    }
-
-    if (!isCurrentLoad()) return { cacheHit, readyAt };
-    if (!feed) {
-      // Mirrors the real /api/mandali/feed route's use of getUserSafetyState +
-      // filterAuthoredItems/filterProfileRows (backend's src/lib/user-safety.ts)
-      // -- without this, a blocked/muted member's posts and comments (and their
-      // own row in the member list) would leak straight through this fallback,
-      // since it reads posts/profiles directly with no server-side filtering.
-      // F12 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md): a failed
-      // fetchSafetyState previously resolved to an EMPTY exclusion set here
-      // and the code below proceeded to fetch and render posts/comments/
-      // members anyway -- exactly the leak the comment above warns against,
-      // just triggered by the safety lookup itself failing instead of being
-      // skipped. safetyStateAvailable gates all content fetching below so a
-      // failed safety check means "show nothing from this fallback," never
-      // "show everything unfiltered."
-      let safetyStateAvailable = true;
-      const [{ data: myProfile }, safetyState] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, full_name, username, mandali_id, city, country, latitude, longitude, mandalis(name)')
-          .eq('id', userId)
-          .maybeSingle(),
-        fetchSafetyState(userId).catch((safetyErr) => {
-          console.warn('[MandaliScreen] fetchSafetyState failed, fallback feed will show no posts or members rather than unfiltered ones:', safetyErr);
-          safetyStateAvailable = false;
-          return { excludedAuthorIds: new Set<string>(), hiddenContentKeys: new Set<string>() };
-        }),
-      ]);
+      if (feedServerTiming) recordServerTiming({ kind: 'authenticated', userId }, 'mandali', feedServerTiming);
+      if (!feedResponse.ok) throw new Error(`Mandali feed unavailable (${feedResponse.status})`);
+      feed = await feedResponse.json() as FeedPayload;
       if (!isCurrentLoad()) return { cacheHit, readyAt };
-
-      const mandaliId = safetyStateAvailable ? (myProfile?.mandali_id ?? null) : null;
-      let fetchedPosts: PostRow[] = [];
-      let fetchedMembers: Array<{ id: string; username: string; avatar_url: string | null; seva_score: number }> = [];
-
-      if (mandaliId) {
-        const { data: rawPosts, error: rawPostsErr } = await supabase
-          .from('posts')
-          .select('id, author_id, mandali_id, content, type, event_date, event_location, upvotes, comment_count, created_at')
-          .eq('mandali_id', mandaliId)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (rawPostsErr) {
-          console.warn('[MandaliScreen] Direct posts query error:', rawPostsErr);
-        }
-
-        const visiblePosts = (rawPosts ?? []).filter((p) =>
-          !safetyState.excludedAuthorIds.has(p.author_id) &&
-          !safetyState.hiddenContentKeys.has(`mandali_post:${p.id}`)
-        );
-
-        if (visiblePosts.length > 0) {
-          const rawPosts = visiblePosts;
-          const authorIds = Array.from(new Set(rawPosts.map((p) => p.author_id)));
-          const { data: authors } = await supabase
-            .from('public_profiles')
-            .select('id, username, avatar_url, seva_score')
-            .in('id', authorIds);
-
-          const authorMap = new Map((authors ?? []).map((a) => [a.id, a]));
-
-          const postIds = rawPosts.map((p) => p.id);
-          const { data: myUpvotes } = await supabase
-            .from('post_upvotes')
-            .select('post_id, reaction_type')
-            .eq('user_id', userId)
-            .in('post_id', postIds);
-
-          const upvoteMap = new Map((myUpvotes ?? []).map((u) => [u.post_id, (u.reaction_type ?? 'love') as ReactionType]));
-
-          const { data: rawComments } = await supabase
-            .from('post_comments')
-            .select('id, post_id, author_id, body, created_at, upvotes')
-            .in('post_id', postIds)
-            .order('created_at', { ascending: false })
-            .limit(40);
-
-          const visibleComments = (rawComments ?? []).filter((c) =>
-            !safetyState.excludedAuthorIds.has(c.author_id) &&
-            !safetyState.hiddenContentKeys.has(`mandali_comment:${c.id}`)
-          );
-
-          const commentAuthorIds = Array.from(new Set(visibleComments.map((c) => c.author_id)));
-          const { data: commentAuthors } = commentAuthorIds.length > 0
-            ? await supabase.from('public_profiles').select('id, username, avatar_url').in('id', commentAuthorIds)
-            : { data: [] };
-          const commentAuthorMap = new Map((commentAuthors ?? []).map((a) => [a.id, a]));
-
-          const commentsByPost = new Map<string, CommentRow[]>();
-          for (const c of visibleComments) {
-            const auth = commentAuthorMap.get(c.author_id);
-            const row: CommentRow = {
-              id: c.id,
-              post_id: c.post_id,
-              author_id: c.author_id,
-              body: c.body,
-              parent_id: null,
-              created_at: c.created_at,
-              updated_at: null,
-              deleted_at: null,
-              upvotes: c.upvotes ?? 0,
-              profiles: auth ? { full_name: auth.username, username: auth.username, avatar_url: auth.avatar_url } : null,
-            };
-            const list = commentsByPost.get(c.post_id) ?? [];
-            if (list.length < 2) list.push(row);
-            commentsByPost.set(c.post_id, list);
-          }
-
-          fetchedPosts = rawPosts.map((p) => {
-            const auth = authorMap.get(p.author_id);
-            return {
-              id: p.id,
-              created_at: p.created_at,
-              author_id: p.author_id,
-              mandali_id: p.mandali_id,
-              content: p.content,
-              type: p.type,
-              upvotes: p.upvotes ?? 0,
-              comment_count: p.comment_count ?? 0,
-              event_date: p.event_date,
-              event_location: p.event_location,
-              profiles: auth ? {
-                full_name: auth.username,
-                username: auth.username,
-                avatar_url: auth.avatar_url,
-                sampradaya: null,
-                spiritual_level: null,
-              } : null,
-              viewerReaction: upvoteMap.get(p.id) ?? null,
-              commentPreview: commentsByPost.get(p.id) ?? [],
-            };
-          });
-        }
-
-        const { data: memberRows } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('mandali_id', mandaliId);
-        if (memberRows && memberRows.length > 0) {
-          const { data: pubMembers } = await supabase
-            .from('public_profiles')
-            .select('id, username, avatar_url, seva_score')
-            .in('id', memberRows.map((m) => m.id));
-          fetchedMembers = (pubMembers ?? [])
-            .filter((m) => !safetyState.excludedAuthorIds.has(m.id))
-            .map((m) => ({
-              id: m.id,
-              username: m.username,
-              avatar_url: m.avatar_url,
-              seva_score: m.seva_score ?? 0,
-            }));
-        }
+      if (feed.profile?.id !== userId || !Array.isArray(feed.posts) ||
+          !Array.isArray(feed.members) || !Array.isArray(feed.blendedPosts) || !Array.isArray(feed.rsvps)) {
+        throw new Error('Invalid Mandali feed response');
       }
-
-      feed = {
-        schemaVersion: 1,
-        profile: myProfile as any,
-        posts: fetchedPosts,
-        rsvps: [],
-        members: fetchedMembers,
-        blendedPosts: [],
-        nextCursor: null,
-      };
+      setFeedLoadFailed(false);
+    } catch (error) {
+      // The API owns safety filtering and official/prompt metadata. Keep the
+      // last valid feed on failure; never fan out into a partial direct-DB copy.
+      if (isCurrentLoad()) {
+        setFeedLoadFailed(true);
+        setLoading(false);
+      }
+      throw error;
     }
-    if (!isCurrentLoad()) return { cacheHit, readyAt };
-    if (feed.profile?.id && feed.profile.id !== userId) return { cacheHit, readyAt };
     const profileRow = feed.profile;
     const mandaliRelation = Array.isArray(profileRow?.mandalis) ? profileRow.mandalis[0] : profileRow?.mandalis;
     const context: ProfileContext = {
@@ -1190,7 +1043,7 @@ export default function MandaliScreen() {
     if (realtimeReloadTimerRef.current) clearTimeout(realtimeReloadTimerRef.current);
     realtimeReloadTimerRef.current = setTimeout(() => {
       realtimeReloadTimerRef.current = null;
-      void loadMandali();
+      void loadMandali().catch(() => {});
     }, 450);
   }, [loadMandali]);
 
@@ -1422,7 +1275,7 @@ export default function MandaliScreen() {
   useFocusEffect(
     useCallback(() => {
       if (hasBeenBlurredRef.current) {
-        void loadMandali();
+        void loadMandali().catch(() => {});
       }
       return () => {
         hasBeenBlurredRef.current = true;
@@ -2689,6 +2542,12 @@ export default function MandaliScreen() {
         />
       </Screen>
     );
+  }
+
+  if (!profile && feedLoadFailed) {
+    return <Screen><EmptyState icon="cloud-off" title="Mandali is temporarily unavailable"
+      subtitle="Please try again in a moment." ctaLabel={refreshing ? 'Retrying…' : 'Retry'}
+      onCta={() => { if (!refreshing) void onRefresh(); }} /></Screen>;
   }
 
   if (isGuest) {

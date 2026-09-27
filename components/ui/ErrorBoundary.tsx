@@ -1,7 +1,7 @@
 import { Component, type PropsWithChildren, type ReactNode } from 'react';
 import { Pressable, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, themeColor } from '@/lib/constants';
 
 type ErrorBoundaryState = {
   hasError: boolean;
@@ -40,12 +40,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return this.props.children;
     }
 
-    return <ErrorFallback onRetry={this.reset} />;
+    return <ErrorFallback onRetry={this.reset} title={this.props.fallbackTitle} subtitle={this.props.fallbackSubtitle} />;
   }
 }
 
 // Functional fallback — reads theme from context
-function ErrorFallback({ onRetry }: { onRetry: () => void }) {
+function ErrorFallback({ onRetry, title, subtitle }: { onRetry: () => void; title?: string; subtitle?: string }) {
+  const theme = themeColor(useColorScheme() === 'dark');
   return (
     <View
       style={{
@@ -54,7 +55,7 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
         justifyContent: 'center',
         padding: 32,
         gap: 14,
-        backgroundColor: COLORS.creamBg,
+        backgroundColor: theme.bg,
       }}
     >
       <View
@@ -62,9 +63,9 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
           width: 68,
           height: 68,
           borderRadius: 34,
-          backgroundColor: COLORS.cardBgLight,
+          backgroundColor: theme.card,
           borderWidth: 1,
-          borderColor: COLORS.borderLight,
+          borderColor: theme.border,
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -76,26 +77,28 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
         style={{
           fontFamily: FONTS.serifBold,
           fontSize: 22,
-          color: COLORS.ink,
+          color: theme.text,
           textAlign: 'center',
         }}
       >
-        Something went wrong
+        {title ?? 'Something went wrong'}
       </Text>
 
       <Text
         style={{
           fontFamily: FONTS.sans,
           fontSize: 14,
-          color: COLORS.textDimLight,
+          color: theme.dim,
           textAlign: 'center',
           lineHeight: 21,
         }}
       >
-        An error occurred loading this section. Your progress is safe.
+        {subtitle ?? 'An error occurred loading this section. Your progress is safe.'}
       </Text>
 
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Try again"
         onPress={onRetry}
         style={{
           marginTop: 8,
@@ -105,7 +108,7 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
           paddingVertical: 14,
         }}
       >
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.text }}>
           Try again 🙏
         </Text>
       </Pressable>

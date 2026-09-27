@@ -1,3 +1,5 @@
+import { captureAppIdentity } from './appIdentity';
+import { createGetRequestSingleFlight, getRequestKey } from './getRequestSingleFlight';
 import { API_BASE } from '@/lib/constants';
 import * as Crypto from 'expo-crypto';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +16,8 @@ export { isFetchCancelled };
 export type ApiFetchOptions = RequestInit & {
   /** Override the default request deadline for legitimately long-running APIs. */
   timeoutMs?: number;
+  /** Disable sharing for streaming or deliberately independent GET reads. */
+  dedupe?: boolean;
   /** Bind durable private writes to their original owner, including 401 replay. */
   expectedUserId?: string;
   /**
@@ -121,7 +125,34 @@ function canReplayBody(body: BodyInit | null | undefined): boolean {
   return body == null || typeof body === 'string' || body instanceof URLSearchParams;
 }
 
+const getRequests = createGetRequestSingleFlight();
+
 export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
+  const lease = captureAppIdentity();
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const { dedupe: _dedupe, ...requestOptions } = options;
+  const isGet = (options.method ?? 'GET').toUpperCase() === 'GET';
+  // Known-identity reads must not be sent or replayed under a later account.
+  const guardedOptions = isGet && lease.identity.kind === 'authenticated'
+    ? { ...requestOptions, expectedUserId: requestOptions.expectedUserId ?? lease.identity.userId }
+    : requestOptions;
+  const checkOwner = () => {
+    if (lease.identity.kind !== 'loading' && !lease.isCurrent()) {
+      throw Object.assign(new Error('Request identity changed'), { name: 'AbortError' });
+    }
+  };
+  const send = async (signal?: AbortSignal | null) => {
+    const response = await performApiFetch(normalizedPath, { ...guardedOptions, signal }, isGet ? checkOwner : undefined);
+    if (isGet) checkOwner();
+    return response;
+  };
+  // Do not share pre-identity bootstrap requests with post-restore consumers.
+  const key = lease.identity.kind === 'loading' ? null
+    : getRequestKey(String(lease.revision), normalizedPath, options);
+  return key ? getRequests.run(key, send, options.signal) : send(options.signal);
+}
+
+async function performApiFetch(path: string, options: ApiFetchOptions = {}, checkOwner?: () => void) {
   // Cold start: every screen mounts before app/_layout.tsx has finished
   // determining whether a session exists, so an unguarded call here can
   // race Supabase's session restore and fire without a token. Resolves
@@ -172,6 +203,7 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   };
 
   const requestWithToken = async (accessToken: string | null) => {
+    checkOwner?.();
     if (expectedUserId) {
       const { data: { session }, error } = await abortable(supabase.auth.getSession());
       if (error) throw error;
@@ -187,6 +219,8 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
       }
       accessToken = null;
     }
+    checkOwner?.();
+    if (controller.signal.aborted) throw controller.signal.reason;
     const requestHeaders = new Headers(headers);
     requestHeaders.set('X-Request-ID', requestId);
     if (accessToken) requestHeaders.set('Authorization', `Bearer ${accessToken}`);
