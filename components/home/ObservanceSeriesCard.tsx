@@ -147,7 +147,7 @@ export function ObservanceSeriesCard({
             </View>
           </View>
 
-          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3, lineHeight: 15 }} numberOfLines={2}>
+          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3, lineHeight: 15 }} numberOfLines={1}>
             {description ?? statusLine}
           </Text>
 

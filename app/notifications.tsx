@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, AppState, FlatList, RefreshControl, Text, use
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BackButton } from '@/components/ui/BackButton';
@@ -64,6 +65,7 @@ type NotificationTheme = {
   card: string;
   border: string;
   text: string;
+  bodyText: string;
   dim: string;
   iconWell: string;
   unreadBg: string;
@@ -77,6 +79,8 @@ type NotificationListRowProps = {
 };
 
 const NotificationListRow = memo(function NotificationListRow({ row, theme, onPress }: NotificationListRowProps) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <PressableSurface
       haptic="none"
@@ -114,9 +118,9 @@ const NotificationListRow = memo(function NotificationListRow({ row, theme, onPr
               flex: 1,
               color: theme.text,
               fontFamily: row.read ? FONTS.sansMedium : FONTS.sansSemiBold,
-              fontSize: 14,
+              fontSize: 14.5,
+              lineHeight: 20,
             }}
-            numberOfLines={2}
           >
             {row.title}
           </Text>
@@ -127,8 +131,15 @@ const NotificationListRow = memo(function NotificationListRow({ row, theme, onPr
 
         {row.body ? (
           <Text
-            style={{ marginTop: 3, color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}
-            numberOfLines={2}
+            style={{
+              marginTop: 4,
+              color: theme.bodyText,
+              fontFamily: FONTS.sans,
+              fontSize: 13,
+              lineHeight: 19,
+            }}
+            numberOfLines={expanded ? undefined : 4}
+            onPress={() => setExpanded((prev) => !prev)}
           >
             {row.body}
           </Text>
@@ -145,6 +156,7 @@ const NotificationListRow = memo(function NotificationListRow({ row, theme, onPr
 export default function NotificationsScreen() {
   const router = useRouter();
   const appIdentity = useAppIdentity();
+  const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -293,9 +305,10 @@ export default function NotificationsScreen() {
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
-      dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+      bodyText: isDark ? '#E2DDD5' : '#3E2A1F',
+      dim: isDark ? COLORS.textDimDark : '#6E5D52',
       iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
-      unreadBg: COLORS.selectionWellSelected,
+      unreadBg: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.16)',
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]
@@ -678,7 +691,12 @@ export default function NotificationsScreen() {
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 36, gap: 16 }}
+        contentContainerStyle={{
+          paddingTop: Math.max(insets.top + 10, 54),
+          paddingHorizontal: 20,
+          paddingBottom: Math.max(insets.bottom + 20, 36),
+          gap: 16,
+        }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.brand} />}
         showsVerticalScrollIndicator={false}
         initialNumToRender={12}
