@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -11,6 +11,8 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
 
 export type PathshalaCompletionModalProps = {
   visible: boolean;
@@ -59,6 +61,32 @@ export function PathshalaCompletionModal({
   const theme = themeColor(isDark);
   const glyph = TRADITION_GLYPHS[tradition] ?? TRADITION_GLYPHS.default;
   const isPathDone = !hasNextLesson || lessonNumber >= totalLessons;
+
+  // Same rendered-image-card approach as app/vrat/[slug].tsx and
+  // app/shloka.tsx -- a completed milestone reads as an achievement to
+  // celebrate, not reading-content to excerpt, so this uses
+  // ShoonayaShareCard rather than a plain-text Share.share() call.
+  const shareCardRef = useRef<View | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      // pathTitle can contain spaces/non-ASCII (e.g. a Sanskrit path name) --
+      // strip to a safe filename rather than passing it through raw.
+      const safePathSlug = pathTitle.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'path';
+      await shareCapturedShoonayaCard(shareCardRef, {
+        fileName: `shoonaya-pathshala-${safePathSlug}-lesson-${lessonNumber}.png`,
+        dialogTitle: isPathDone ? `Share ${pathTitle} completion` : `Share Lesson ${lessonNumber}`,
+        fallbackMessage: `${isPathDone ? 'Completed' : `Lesson ${lessonNumber} of`} ${pathTitle} on Shoonaya`,
+      });
+    } catch {
+      // sharing cancelled or failed silently
+    } finally {
+      setSharing(false);
+    }
+  };
 
   return (
     <Modal
@@ -145,6 +173,24 @@ export function PathshalaCompletionModal({
             )}
           </View>
 
+          {/* Share this milestone -- same icon+text link pattern as the
+              festival-quiz reflection share (app/festival-quiz/[definitionKey].tsx). */}
+          <PressableSurface
+            haptic="selection"
+            onPress={handleShare}
+            disabled={sharing}
+            style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 }}
+          >
+            {sharing ? (
+              <ActivityIndicator size="small" color={theme.brand} />
+            ) : (
+              <Feather name="share-2" size={13} color={theme.brand} />
+            )}
+            <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+              {isPathDone ? 'Share this milestone' : 'Share this lesson'}
+            </Text>
+          </PressableSurface>
+
           {/* Action Buttons */}
           <View style={styles.actionContainer}>
             {hasNextLesson ? (
@@ -181,6 +227,24 @@ export function PathshalaCompletionModal({
               </Text>
             </PressableSurface>
           </View>
+        </View>
+      </View>
+
+      {/* Off-screen, rasterized by shareCapturedShoonayaCard via
+          react-native-view-shot -- same pattern as app/vrat/[slug].tsx. */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: -10000, top: 0, width: 360, height: 640 }}>
+        <View collapsable={false}>
+          <ShoonayaShareCard
+            ref={shareCardRef}
+            data={{
+              tradition,
+              headlineValue: lessonNumber,
+              title: isPathDone ? 'Path Completed!' : lessonTitle,
+              subtitle: pathTitle,
+              caption: isPathDone ? undefined : `Lesson ${lessonNumber} of ${totalLessons}`,
+              date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            }}
+          />
         </View>
       </View>
     </Modal>
