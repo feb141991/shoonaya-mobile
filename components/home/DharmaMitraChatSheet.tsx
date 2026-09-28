@@ -5,7 +5,7 @@ import {
   Animated,
   Easing,
   FlatList,
-  KeyboardAvoidingView,
+  Keyboard,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -383,6 +383,22 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
   const isNearBottomRef = useRef(true);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // KeyboardAvoidingView cannot work here: this whole sheet is a
+  // position:absolute overlay (ScrollUnrollPanel) with an animated, fixed
+  // `height` computed before the keyboard opens -- there's no properly
+  // laid-out screen for it to measure against, on either platform. Tracking
+  // the real keyboard height and folding it into the composer's own bottom
+  // padding is the only thing that actually keeps the composer above the
+  // keyboard inside a box that never resizes on its own.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (event) => setKeyboardHeight(event.endCoordinates?.height ?? 0));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const {
     messages,
@@ -535,12 +551,8 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
 
   return (
     <ScrollUnrollPanel visible={visible} origin={origin} onClose={onClose}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
-      >
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}>
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 + keyboardHeight }}>
           {/* Sacred ambient background glow */}
           <View
             pointerEvents="none"
@@ -856,7 +868,7 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </ScrollUnrollPanel>
   );
 }
