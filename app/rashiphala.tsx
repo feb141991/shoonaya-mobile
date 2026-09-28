@@ -40,9 +40,11 @@ type RashiHoroscope = {
   beejaMantra: string;
   gocharSummary: string;
   moonTransit: string;
-  transitHighlights: Array<{ title: string; detail: string; tone: 'support' | 'discipline' | 'neutral' }>;
+  transitHighlights: Array<{ title: string; detail: string; tone: 'support' | 'discipline' | 'neutral'; structure?: string[] }>;
   sadhanaPlan: Array<{ label: string; action: string }>;
   accuracyNote: string;
+  dashaContext?: { planet: string; endDate: string; note: string } | null;
+  dashaContextStatus?: 'not_requested' | 'available' | 'unavailable';
 };
 
 type LifeGuidanceItem = {
@@ -339,13 +341,35 @@ export default function RashiphalaScreen() {
                 const tone = toneStyle(item.tone);
                 return (
                   <View key={`${item.title}-${idx}`} style={{ backgroundColor: tone.bg, borderColor: tone.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
-                    <Text style={{ color: tone.color, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <Text style={{ color: tone.color, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
+                      {item.structure?.map((tag) => (
+                        <Text key={tag} style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase' }}>{tag}</Text>
+                      ))}
+                    </View>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{item.detail}</Text>
                   </View>
                 );
               })}
             </View>
           </Card>
+
+          {/* Your Dasha Chapter -- only present when signed in, viewing your
+              own saved sign, and an active Dasha was found. dashaContextStatus
+              is intentionally not surfaced here (see backend plan) -- a
+              guest or a signed-in user without a matching profile simply
+              doesn't see this card, no messaging needed. */}
+          {data.dashaContext ? (
+            <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="clock" size={18} color={theme.brand} />
+              </View>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Your Current Chapter</Text>
+                <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{data.dashaContext.note}</Text>
+              </View>
+            </Card>
+          ) : null}
 
           {/* Life Guidance Areas */}
           <View style={{ gap: 12 }}>
