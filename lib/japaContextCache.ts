@@ -11,6 +11,9 @@ export type JapaContext = {
   spiritualDate: string;
   japaDone: boolean;
   streak: number;
+  // Null while reading a pre-migration cached/server payload. The prompt
+  // stays hidden until the canonical profile preference is known.
+  japaReminderEnabled: boolean | null;
   lifetime: {
     totalBeads: number;
     totalRounds: number;
@@ -49,6 +52,7 @@ export function normalizeJapaContext(value: unknown): JapaContext | null {
     spiritualDate: row.spiritualDate,
     japaDone: row.japaDone,
     streak: row.streak,
+    japaReminderEnabled: typeof row.japaReminderEnabled === 'boolean' ? row.japaReminderEnabled : null,
     lifetime: {
       totalBeads: lifetime.totalBeads,
       totalRounds: lifetime.totalRounds,

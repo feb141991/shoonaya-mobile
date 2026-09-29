@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, type Href } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +31,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { seededRandom, BackgroundParticle, type ParticleMotion } from '@/components/ui/BackgroundParticles';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
+import { ContextualJapaReminderPrompt } from '@/components/japa/ContextualJapaReminderPrompt';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
@@ -779,6 +780,8 @@ export default function JapaScreen() {
   const userIdRef = useRef<string | null>(null);
   const contextLoadGenerationRef = useRef(0);
   const lastPersistedDurationRef = useRef(0);
+  const reminderSettingsReturnRef = useRef(false);
+  const [japaReminderEnabled, setJapaReminderEnabled] = useState<boolean | null>(null);
 
   // Exit-confirm sheet — PWA's StopPracticeSheet. Triggered only by the X
   // (close) button on the practice screen, matching JapaClient.tsx exactly
@@ -972,6 +975,7 @@ export default function JapaScreen() {
     setJapaAlreadyDoneToday(context.japaDone);
     setStreak(context.streak);
     setLifetime(context.lifetime);
+    setJapaReminderEnabled(context.japaReminderEnabled);
   }, []);
 
   // Drives the "N rounds waiting to sync" / "N rounds couldn't be saved"
@@ -1006,7 +1010,7 @@ export default function JapaScreen() {
   const syncFailedItems = syncQueueItems.filter((item) => item.status === 'failed');
   const syncFailedCount = syncFailedItems.length;
 
-  const loadContext = useCallback(async () => {
+  const loadContext = useCallback(async (options: { background?: boolean } = {}) => {
     let cacheApplied = false;
     const loadGeneration = ++contextLoadGenerationRef.current;
     const identityAtStart = getAppIdentity();
@@ -1042,6 +1046,7 @@ export default function JapaScreen() {
         setActiveSymbolId(null);
         setJapaAlreadyDoneToday(false);
         setStreak(0);
+        setJapaReminderEnabled(null);
         const guestLifetime = await AsyncStorage.getItem(JAPA_GUEST_LIFETIME_KEY);
         if (!isCurrentLoad()) return;
         if (guestLifetime) {
@@ -1071,12 +1076,13 @@ export default function JapaScreen() {
         setActiveSymbolId(null);
         setJapaAlreadyDoneToday(false);
         setStreak(0);
+        setJapaReminderEnabled(null);
         setLifetime(EMPTY_LIFETIME);
         return;
       }
 
       setIsGuest(false);
-      setLoading(true);
+      if (!options.background) setLoading(true);
       const userId = identity.userId;
       userIdRef.current = userId;
 
@@ -1166,6 +1172,7 @@ export default function JapaScreen() {
         setTradition('hindu');
         setJapaAlreadyDoneToday(false);
         setStreak(0);
+        setJapaReminderEnabled(null);
       }
     } finally {
       if (isCurrentLoad()) setLoading(false);
@@ -1174,6 +1181,7 @@ export default function JapaScreen() {
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
+    setJapaReminderEnabled(null);
     routeOpenStartedAtRef.current = Date.now();
     routeOpenRecordedRef.current = false;
     void loadContext();
@@ -1181,6 +1189,16 @@ export default function JapaScreen() {
       contextLoadGenerationRef.current += 1;
     };
   }, [appIdentity, loadContext]);
+
+  // Refresh the single existing Japa context only after the user explicitly
+  // visited notification settings from the contextual card. This avoids an
+  // extra query on ordinary Japa tab returns while allowing the card to
+  // reflect the saved preference immediately on return.
+  useFocusEffect(useCallback(() => {
+    if (!reminderSettingsReturnRef.current) return;
+    reminderSettingsReturnRef.current = false;
+    void loadContext({ background: true });
+  }, [loadContext]));
 
   useEffect(() => {
     if (syncReviewVisible && syncFailedCount === 0) setSyncReviewVisible(false);
@@ -2013,6 +2031,14 @@ export default function JapaScreen() {
                 <Text style={{ fontFamily: FONTS.serif, fontSize: 34, lineHeight: 40, color: text, marginTop: 2 }}>
                   Choose your practice
                 </Text>
+
+                {appIdentity.kind === 'authenticated' ? (
+                  <ContextualJapaReminderPrompt
+                    userId={appIdentity.userId}
+                    reminderEnabled={japaReminderEnabled}
+                    onConfigureReminder={() => { reminderSettingsReturnRef.current = true; }}
+                  />
+                ) : null}
 
                 {japaAlreadyDoneToday ? (
                   <LinearGradient
