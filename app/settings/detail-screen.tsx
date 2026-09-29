@@ -77,6 +77,8 @@ type SettingsState = SettingsFields;
 const THEME_STORAGE_KEY = 'sangam_theme_preference';
 
 const INITIAL_SETTINGS: SettingsState = {
+  japa_reminder_enabled: false,
+  japa_reminder_time: '07:00',
   wants_festival_reminders: true,
   wants_vrat_reminders: true,
   wants_tithi_reminders: false,
@@ -95,6 +97,7 @@ const INITIAL_SETTINGS: SettingsState = {
 };
 
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
+  { key: 'japa_reminder_enabled', label: 'Japa practice reminder', subtitle: 'A gentle daily reminder at your chosen time', requiresAccount: true },
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
   { key: 'wants_sankalpa_midpoint_reminders', label: 'Sankalpa midpoint', subtitle: 'One gentle reminder halfway through an active vow', requiresAccount: true },
@@ -121,6 +124,8 @@ const THEME_OPTIONS: { key: ThemePref; label: string }[] = [
 
 function toSettingsState(value: Partial<SettingsState> | null | undefined): SettingsState {
   return {
+    japa_reminder_enabled: value?.japa_reminder_enabled ?? INITIAL_SETTINGS.japa_reminder_enabled,
+    japa_reminder_time: value?.japa_reminder_time ?? INITIAL_SETTINGS.japa_reminder_time,
     wants_festival_reminders: value?.wants_festival_reminders ?? INITIAL_SETTINGS.wants_festival_reminders,
     wants_vrat_reminders: value?.wants_vrat_reminders ?? INITIAL_SETTINGS.wants_vrat_reminders,
     wants_tithi_reminders: value?.wants_tithi_reminders ?? INITIAL_SETTINGS.wants_tithi_reminders,
@@ -284,6 +289,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     purgeAfter: string | null;
   } | null>(null);
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
+  const [japaReminderTimeDraft, setJapaReminderTimeDraft] = useState(INITIAL_SETTINGS.japa_reminder_time);
   const [reminderTimeDraft, setReminderTimeDraft] = useState(INITIAL_SETTINGS.observance_reminder_time ?? '08:00');
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
@@ -304,6 +310,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   useEffect(() => {
     setReminderTimeDraft(settings.observance_reminder_time ?? '08:00');
   }, [settings.observance_reminder_time]);
+
+  useEffect(() => {
+    setJapaReminderTimeDraft(settings.japa_reminder_time);
+  }, [settings.japa_reminder_time]);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current) {
@@ -457,7 +467,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       supabase
         .from('profiles')
         .select(
-          'tradition, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
+          'tradition, japa_reminder_enabled, japa_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
         )
         .eq('id', appIdentity.userId)
         .single(),
@@ -915,6 +925,30 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     }}
                     theme={theme}
                   />
+                  {item.key === 'japa_reminder_enabled' && !isGuest && settings.japa_reminder_enabled ? (
+                    <View style={{ gap: 10, marginTop: 12, marginBottom: 14 }}>
+                      <Text style={{ ...TYPE.label, color: theme.text }}>Japa reminder time</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>Uses your profile timezone. Choose when you would like a daily nudge to practise.</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <TextInput
+                          accessibilityLabel="Japa reminder time"
+                          value={japaReminderTimeDraft}
+                          onChangeText={setJapaReminderTimeDraft}
+                          keyboardType="numbers-and-punctuation"
+                          maxLength={5}
+                          placeholder="07:00"
+                          placeholderTextColor={theme.dim}
+                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
+                        />
+                        <Button
+                          label="Save time"
+                          variant="secondary"
+                          disabled={!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(japaReminderTimeDraft) || japaReminderTimeDraft === settings.japa_reminder_time}
+                          onPress={() => { void persistSettings({ ...settings, japa_reminder_time: japaReminderTimeDraft }); }}
+                        />
+                      </View>
+                    </View>
+                  ) : null}
                 </View>
               ))}
               <View style={{ height: 1, backgroundColor: theme.borderSoft }} />

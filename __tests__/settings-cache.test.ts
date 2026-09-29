@@ -33,6 +33,8 @@ import {
 } from '../lib/settingsCache';
 
 const sampleSettings: SettingsFields = {
+  japa_reminder_enabled: false,
+  japa_reminder_time: '07:00',
   wants_festival_reminders: true,
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,
@@ -85,6 +87,15 @@ describe('Settings cache -- identity isolation', () => {
     const user = await readSettingsCache({ kind: 'authenticated', userId: 'user-C' });
     assert.equal(guest?.settings.app_language, 'pa');
     assert.equal(user?.settings.app_language, 'hi');
+  });
+
+  it('persists the Japa reminder choice and local time in the identity-scoped cache', async () => {
+    const japaSettings = { ...sampleSettings, japa_reminder_enabled: true, japa_reminder_time: '06:45' };
+    await writeSettingsCache(envelope({ settings: japaSettings }));
+
+    const cached = await readSettingsCache({ kind: 'authenticated', userId: 'user-A' });
+    assert.equal(cached?.settings.japa_reminder_enabled, true);
+    assert.equal(cached?.settings.japa_reminder_time, '06:45');
   });
 
   it('the legacy unscoped global key is purged, never read as a cache hit', async () => {

@@ -33,6 +33,8 @@ export type SettingsCacheIdentity =
   | { kind: 'guest' };
 
 export type SettingsFields = {
+  japa_reminder_enabled: boolean;
+  japa_reminder_time: string;
   wants_festival_reminders: boolean;
   wants_vrat_reminders?: boolean;
   wants_tithi_reminders?: boolean;
