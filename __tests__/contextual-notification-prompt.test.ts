@@ -20,17 +20,33 @@ import {
   claimContextualReminderPrompt,
   clearContextualReminderPromptClaimsForTests,
   contextualReminderPromptStorageKey,
-  resolveJapaReminderPromptAction,
+  resolveContextualReminderPromptAction,
+  resolveObservanceReminderPreference,
+  isSankalpaReminderPromptEligible,
 } from '../lib/contextualNotificationPrompt';
 
 test('Japa prompt is gated by both the saved preference and OS permission state', () => {
-  assert.equal(resolveJapaReminderPromptAction(null, 'denied'), null);
-  assert.equal(resolveJapaReminderPromptAction(false, null), null);
-  assert.equal(resolveJapaReminderPromptAction(false, 'granted'), 'configure');
-  assert.equal(resolveJapaReminderPromptAction(true, 'undetermined'), 'allow');
-  assert.equal(resolveJapaReminderPromptAction(true, 'denied'), 'open_settings');
-  assert.equal(resolveJapaReminderPromptAction(true, 'granted'), null);
-  assert.equal(resolveJapaReminderPromptAction(true, 'unavailable'), null);
+  assert.equal(resolveContextualReminderPromptAction(null, 'denied'), null);
+  assert.equal(resolveContextualReminderPromptAction(false, null), null);
+  assert.equal(resolveContextualReminderPromptAction(false, 'granted'), 'configure');
+  assert.equal(resolveContextualReminderPromptAction(true, 'undetermined'), 'allow');
+  assert.equal(resolveContextualReminderPromptAction(true, 'denied'), 'open_settings');
+  assert.equal(resolveContextualReminderPromptAction(true, 'granted'), null);
+  assert.equal(resolveContextualReminderPromptAction(true, 'unavailable'), null);
+});
+
+test('observance prompts follow the exact visible occurrence category', () => {
+  const preferences = { festival: false, vrat: true };
+  assert.equal(resolveObservanceReminderPreference('festival', preferences), false);
+  assert.equal(resolveObservanceReminderPreference('vrat', preferences), true);
+  assert.equal(resolveObservanceReminderPreference('panchang', preferences), null);
+});
+
+test('Sankalpa midpoint nudge only appears before midpoint and before today is honoured', () => {
+  assert.equal(isSankalpaReminderPromptEligible(1, 21, false), true);
+  assert.equal(isSankalpaReminderPromptEligible(11, 21, false), false);
+  assert.equal(isSankalpaReminderPromptEligible(2, 21, true), false);
+  assert.equal(isSankalpaReminderPromptEligible(0, 21, false), false);
 });
 
 test('contextual reminder prompt keys isolate both user and feature', () => {

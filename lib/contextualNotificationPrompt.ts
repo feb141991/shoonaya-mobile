@@ -11,6 +11,28 @@ const claimedUsers = new Set<string>();
 export type ContextualReminderFeature = 'japa' | 'observance' | 'sankalpa';
 export type ContextualReminderAction = 'configure' | 'allow' | 'open_settings';
 
+export function resolveObservanceReminderPreference(
+  routeKind: string,
+  preferences: { festival: boolean | null; vrat: boolean | null },
+): boolean | null {
+  if (routeKind === 'vrat') return preferences.vrat;
+  if (routeKind === 'festival') return preferences.festival;
+  return null;
+}
+
+export function isSankalpaReminderPromptEligible(
+  day: number,
+  targetDays: number,
+  checkedInToday: boolean,
+): boolean {
+  return Number.isFinite(day)
+    && Number.isFinite(targetDays)
+    && day >= 1
+    && targetDays >= 1
+    && day < Math.ceil(targetDays / 2)
+    && !checkedInToday;
+}
+
 export function contextualReminderPromptStorageKey(
   userId: string,
   feature: ContextualReminderFeature,
@@ -61,7 +83,7 @@ export async function claimContextualReminderPrompt(
   }
 }
 
-export function resolveJapaReminderPromptAction(
+export function resolveContextualReminderPromptAction(
   reminderEnabled: boolean | null,
   permission: NotificationPermissionState | null,
 ): ContextualReminderAction | null {

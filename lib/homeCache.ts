@@ -50,6 +50,9 @@ export type CachedHomeRenderModel = {
     karmaPoints: number;
     relicImageUrl: string | null;
     avatarUrl: string | null;
+    wantsFestivalReminders?: boolean | null;
+    wantsVratReminders?: boolean | null;
+    wantsTithiReminders?: boolean | null;
   };
   hero: {
     imageUrl: string;
@@ -340,6 +343,9 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       karmaPoints: full.profile?.karmaPoints ?? 0,
       relicImageUrl: full.profile?.relicImageUrl ?? null,
       avatarUrl: full.profile?.avatarUrl ?? null,
+      wantsFestivalReminders: typeof full.profile?.wantsFestivalReminders === 'boolean' ? full.profile.wantsFestivalReminders : null,
+      wantsVratReminders: typeof full.profile?.wantsVratReminders === 'boolean' ? full.profile.wantsVratReminders : null,
+      wantsTithiReminders: typeof full.profile?.wantsTithiReminders === 'boolean' ? full.profile.wantsTithiReminders : null,
     },
     hero: {
       imageUrl: full.hero?.imageUrl ?? '',

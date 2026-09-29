@@ -54,6 +54,9 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       karmaPoints: 120,
       relicImageUrl: null,
       avatarUrl: null,
+      wantsFestivalReminders: false,
+      wantsVratReminders: true,
+      wantsTithiReminders: false,
     },
     hero: {
       imageUrl: '/assets/images/heroes/all/default.webp',
@@ -970,6 +973,9 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(sanitized.profile.firstName, 'Prince');
       assert.equal(sanitized.profile.tradition, 'hindu');
       assert.equal(sanitized.profile.karmaPoints, 120);
+      assert.equal(sanitized.profile.wantsFestivalReminders, false);
+      assert.equal(sanitized.profile.wantsVratReminders, true);
+      assert.equal(sanitized.profile.wantsTithiReminders, false);
 
       // Unrendered location strings omitted
       assert.equal((sanitized.profile as any).city, undefined);

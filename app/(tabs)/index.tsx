@@ -35,6 +35,8 @@ import { FestivalQuizBanner } from '@/components/home/FestivalQuizBanner';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SacredDaysCarousel } from '@/components/home/SacredDaysCarousel';
+import { ContextualReminderPrompt } from '@/components/notifications/ContextualReminderPrompt';
+import { resolveObservanceReminderPreference } from '@/lib/contextualNotificationPrompt';
 import { FestivalStoryStack } from '@/components/home/FestivalStoryStack';
 import type { HomeObservanceStoryCard } from '@/lib/observance-story-contract.generated';
 import { getHomeMoodPillStyle, HOME_MOOD_PILL_TEXT_STYLE } from '@/lib/homeHeroPills';
@@ -224,6 +226,9 @@ type HomeSummary = {
     karmaPoints: number;
     relicImageUrl: string | null;
     avatarUrl: string | null;
+    wantsFestivalReminders?: boolean | null;
+    wantsVratReminders?: boolean | null;
+    wantsTithiReminders?: boolean | null;
   };
   hero: {
     imageUrl: string;
@@ -364,6 +369,9 @@ const INITIAL_STATE: HomeSummary = {
     karmaPoints: 0,
     relicImageUrl: null,
     avatarUrl: null,
+    wantsFestivalReminders: null,
+    wantsVratReminders: null,
+    wantsTithiReminders: null,
   },
   hero: {
     imageUrl: '/assets/images/heroes/all/default.webp',
@@ -2076,6 +2084,29 @@ function HomeContent() {
             onRetryUnavailable={retryPanchang}
             onSignInPress={() => setSacredDaysAuthGateVisible(true)}
           />
+
+          {appIdentity.kind === 'authenticated' && state.panchang.calendarStatus === 'ready' ? (() => {
+            const eligibleEntries = sacredDayObservances.filter((item) => item.routeKind === 'festival' || item.routeKind === 'vrat');
+            const entry = eligibleEntries.find((item) => resolveObservanceReminderPreference(item.routeKind, {
+              vrat: state.profile.wantsVratReminders ?? null,
+              festival: state.profile.wantsFestivalReminders ?? null,
+            }) === false) ?? eligibleEntries[0];
+            if (!entry) return null;
+            const reminderEnabled = resolveObservanceReminderPreference(entry.routeKind, {
+              vrat: state.profile.wantsVratReminders ?? null,
+              festival: state.profile.wantsFestivalReminders ?? null,
+            });
+            return (
+              <ContextualReminderPrompt
+                userId={appIdentity.userId}
+                feature="observance"
+                reminderEnabled={reminderEnabled}
+                title={`Remember ${entry.name}`}
+                body="Choose the sacred-day reminders you want, with timing that follows your local day."
+                settingsTitle="Manage sacred-day reminders"
+              />
+            );
+          })() : null}
 
           <FestivalStoryStack cards={state.panchang.storyCards} theme={theme} isDark={isDark} />
 

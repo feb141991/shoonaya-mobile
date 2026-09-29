@@ -38,6 +38,8 @@ import { ICON_WELL, iconWellColor } from '@/lib/icons';
 import { SankalpaCompletionCeremony } from '@/components/home/SankalpaCompletionCeremony';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { isGuestMode, setGuestMode } from '@/lib/guestSession';
+import { ContextualReminderPrompt } from '@/components/notifications/ContextualReminderPrompt';
+import { isSankalpaReminderPromptEligible } from '@/lib/contextualNotificationPrompt';
 
 const TARGET_DAY_OPTIONS = [11, 21, 40, 108] as const;
 const TEXT_MIN = 10;
@@ -282,6 +284,7 @@ export default function SankalpaScreen() {
   const [loadError, setLoadError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [sankalpa, setSankalpa] = useState<SankalpaRow | null>(null);
+  const [sankalpaReminderEnabled, setSankalpaReminderEnabled] = useState<boolean | null>(null);
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkins, setCheckins] = useState<string[]>([]);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -452,8 +455,14 @@ export default function SankalpaScreen() {
     }
     if (!response.ok) throw new Error('Could not load Sankalpa');
 
-    const payload = (await response.json()) as { sankalpa: SankalpaRow | null };
+    const payload = (await response.json()) as {
+      sankalpa: SankalpaRow | null;
+      wantsSankalpaMidpointReminders?: boolean | null;
+    };
     setSankalpa(payload.sankalpa);
+    setSankalpaReminderEnabled(typeof payload.wantsSankalpaMidpointReminders === 'boolean'
+      ? payload.wantsSankalpaMidpointReminders
+      : null);
     setCheckedInToday(false);
     setCheckins([]);
     setCheckinFailed(false);
@@ -819,6 +828,16 @@ export default function SankalpaScreen() {
 
         {sankalpa ? (
           <>
+            {userIdRef.current && isSankalpaReminderPromptEligible(day, targetDaysValue, checkedInToday) ? (
+              <ContextualReminderPrompt
+                userId={userIdRef.current}
+                feature="sankalpa"
+                reminderEnabled={sankalpaReminderEnabled}
+                title="Stay connected to your Sankalpa"
+                body="Choose whether you’d like one gentle reminder halfway through this vow."
+                settingsTitle="Manage Sankalpa reminders"
+              />
+            ) : null}
             <Card
               tone="auto"
               elevated

@@ -17,15 +17,26 @@ import type { NotificationPermissionState } from '@/lib/notificationPermissionSt
 import {
   claimContextualReminderPrompt,
   resolveContextualReminderPromptAction,
+  type ContextualReminderFeature,
 } from '@/lib/contextualNotificationPrompt';
 
 type Props = {
   userId: string;
+  feature: Exclude<ContextualReminderFeature, 'japa'>;
   reminderEnabled: boolean | null;
-  onConfigureReminder: () => void;
+  title: string;
+  body: string;
+  settingsTitle: string;
 };
 
-export function ContextualJapaReminderPrompt({ userId, reminderEnabled, onConfigureReminder }: Props) {
+export function ContextualReminderPrompt({
+  userId,
+  feature,
+  reminderEnabled,
+  title,
+  body,
+  settingsTitle,
+}: Props) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
@@ -53,45 +64,30 @@ export function ContextualJapaReminderPrompt({ userId, reminderEnabled, onConfig
   }, [refreshPermission]);
 
   const action = resolveContextualReminderPromptAction(reminderEnabled, permission);
-  const eligible = action !== null;
-
   useEffect(() => {
     let active = true;
-    if (!eligible) {
+    if (!action) {
       setVisible(false);
       return () => { active = false; };
     }
-    void claimContextualReminderPrompt(userId, 'japa').then((claimed) => {
+    void claimContextualReminderPrompt(userId, feature).then((claimed) => {
       if (active && claimed) setVisible(true);
     });
     return () => { active = false; };
-  }, [eligible, userId]);
+  }, [action, feature, userId]);
 
   if (!visible || !action) return null;
 
-  const copy = action === 'configure'
-    ? {
-        title: 'Keep your Japa practice close',
-        body: 'Choose a time for a gentle daily reminder. You can change or switch it off whenever you like.',
-        cta: 'Set a reminder',
-      }
+  const cta = action === 'configure'
+    ? settingsTitle
     : action === 'open_settings'
-      ? {
-          title: 'Your Japa reminder is paused',
-          body: 'Notifications are blocked by your device. Turn them back on in device settings to receive the reminder you chose.',
-          cta: 'Open device settings',
-        }
-      : {
-          title: 'Your Japa reminder is ready',
-          body: 'Allow notifications on this device to receive the daily reminder you chose.',
-          cta: 'Allow notifications',
-        };
+      ? 'Open device settings'
+      : 'Allow notifications';
 
-  const handleAction = async () => {
+  const handlePress = async () => {
     if (busy) return;
     if (action === 'configure') {
       setVisible(false);
-      onConfigureReminder();
       router.push('/settings/notifications');
       return;
     }
@@ -104,9 +100,9 @@ export function ContextualJapaReminderPrompt({ userId, reminderEnabled, onConfig
     try {
       const granted = await requestNotificationPermission();
       if (granted) await registerPushToken(userId);
-      const nextPermission = await getNotificationPermissionState();
-      setPermission(nextPermission);
-      if (nextPermission === 'granted') setVisible(false);
+      const next = await getNotificationPermissionState();
+      setPermission(next);
+      if (next === 'granted') setVisible(false);
     } finally {
       setBusy(false);
     }
@@ -115,43 +111,33 @@ export function ContextualJapaReminderPrompt({ userId, reminderEnabled, onConfig
   return (
     <Card
       tone="auto"
-      accessibilityLabel="Japa reminder suggestion"
-      style={{
-        backgroundColor: theme.cardSoft,
-        borderColor: theme.premiumBorder,
-        padding: 14,
-        gap: 10,
-      }}
+      accessibilityLabel={`${feature} reminder suggestion`}
+      style={{ backgroundColor: theme.cardSoft, borderColor: theme.premiumBorder, padding: 14, gap: 10 }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
         <View style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
           <Feather name="bell" size={18} color={theme.brand} />
         </View>
         <View style={{ flex: 1, gap: 3, paddingTop: 2 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }}>{copy.title}</Text>
-          <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.body}</Text>
+          <Text style={{ ...TYPE.label, color: theme.text }}>{action === 'configure' ? title : action === 'open_settings' ? 'Notifications are paused on this device' : title}</Text>
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>
+            {action === 'configure'
+              ? body
+              : action === 'open_settings'
+                ? 'Your reminder choice is saved in Shoonaya. Re-enable notifications in device settings to receive it.'
+                : 'Allow notifications on this device to receive the reminder you chose.'}
+          </Text>
         </View>
         <PressableSurface
           haptic="none"
-          accessibilityLabel="Dismiss Japa reminder suggestion"
+          accessibilityLabel={`Dismiss ${feature} reminder suggestion`}
           onPress={() => setVisible(false)}
           style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', marginTop: -6, marginRight: -6 }}
         >
           <Feather name="x" size={17} color={theme.dim} />
         </PressableSurface>
       </View>
-      <Button
-        label={copy.cta}
-        size="sm"
-        loading={busy}
-        onPress={() => { void handleAction(); }}
-        style={{ alignSelf: 'flex-start' }}
-      />
-      {action === 'open_settings' ? (
-        <Text style={{ ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }}>
-          Shoonaya only sends the reminders you enable in Settings.
-        </Text>
-      ) : null}
+      <Button label={cta} size="sm" loading={busy} onPress={() => { void handlePress(); }} style={{ alignSelf: 'flex-start' }} />
     </Card>
   );
 }
