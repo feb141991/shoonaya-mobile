@@ -185,6 +185,13 @@ const SCENE_BACKDROP_IMAGES: Record<JapaSceneId, number> = {
   cosmos: require('../../assets/japa/scenes/cosmos.webp'),
 };
 
+function getMantraScriptFont(text?: string | null): string {
+  if (!text) return FONTS.serifBold;
+  // Use authentic Mukta font for Devanagari script so upper matras (ी, े, ै, ं, etc.) have proper ascender metrics
+  if (/[\u0900-\u097F]/.test(text)) return FONTS.devanagariBold;
+  return FONTS.serifBold;
+}
+
 function TargetRoundSelector({
   value,
   onChange,
@@ -2081,7 +2088,17 @@ export default function JapaScreen() {
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: theme.brand }}>
                     Selected mantra
                   </Text>
-                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 38, lineHeight: 46, color: theme.brand, marginTop: 10 }}>
+                  <Text
+                    style={{
+                      fontFamily: getMantraScriptFont(mantra.devanagari),
+                      fontSize: 36,
+                      lineHeight: 52,
+                      paddingTop: 8,
+                      paddingBottom: 2,
+                      color: theme.brand,
+                      marginTop: 4,
+                    }}
+                  >
                     {mantra.devanagari}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 15, color: text, marginTop: 4 }}>
@@ -2636,7 +2653,18 @@ export default function JapaScreen() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22, color: theme.brand }}>{item.devanagari}</Text>
+                      <Text
+                        style={{
+                          fontFamily: getMantraScriptFont(item.devanagari),
+                          fontSize: 22,
+                          lineHeight: 32,
+                          paddingTop: 4,
+                          paddingBottom: 2,
+                          color: theme.brand,
+                        }}
+                      >
+                        {item.devanagari}
+                      </Text>
                       {selected ? (
                         <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}>
                           <Feather name="check" size={12} color={isDark ? COLORS.darkBg : COLORS.creamBg} />
