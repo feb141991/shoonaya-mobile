@@ -186,3 +186,22 @@ test('SacredDaysCarousel empty state displays minimal customer-facing copy witho
   assert.doesNotMatch(carouselSource, /समीक्षा की प्रतीक्षा/);
   assert.doesNotMatch(carouselSource, /ਸਮੀਖਿਆ ਦੀ ਉਡੀਕ/);
 });
+
+test('SacredDaysCard and ObservanceSeriesCard maintain robust Yoga layout without text node collapse', () => {
+  const root = join(__dirname, '..');
+  const cardSource = readFileSync(join(root, 'components/home/SacredDaysCard.tsx'), 'utf8');
+  const seriesCardSource = readFileSync(join(root, 'components/home/ObservanceSeriesCard.tsx'), 'utf8');
+
+  // Title must be wrapped in a flex: 1, minWidth: 0 container rather than putting flex: 1 on Text
+  assert.match(cardSource, /<View style=\{\{\s*flex:\s*1,\s*minWidth:\s*0\s*\}\}>\s*<Text style=\{\{\s*\.\.\.TYPE\.label/);
+  assert.doesNotMatch(cardSource, /<Text style=\{\{\s*\.\.\.TYPE\.label[^}]*flex:\s*1/);
+
+  // Badge pill must be protected from shrinking with flexShrink: 0
+  assert.match(cardSource, /flexShrink:\s*0,\s*paddingHorizontal:\s*8/);
+  assert.match(seriesCardSource, /flexShrink:\s*0,\s*paddingHorizontal:\s*8/);
+
+  // Row container inside PressableSurface must use height: '100%' without conflicting flex: 1
+  assert.match(cardSource, /style=\{\{\s*height:\s*'100%',\s*flexDirection:\s*'row'/);
+  assert.match(seriesCardSource, /style=\{\{\s*height:\s*'100%',\s*flexDirection:\s*'row'/);
+});
+

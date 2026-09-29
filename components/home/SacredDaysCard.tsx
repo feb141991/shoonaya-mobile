@@ -95,7 +95,7 @@ export function SacredDaysCard({
     >
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
 
-      <View style={{ flex: 1, height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
+      <View style={{ height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, gap: 12 }}>
         <View
           style={{
             width: 42,
@@ -106,18 +106,22 @@ export function SacredDaysCard({
             backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
             borderWidth: 1,
             borderColor: cardBorderColor,
+            flexShrink: 0,
           }}
         >
           <SacredIcon name={iconName} fallbackGlyph="sun" size={21} color={accent} />
         </View>
 
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <Text style={{ ...TYPE.label, color: cardTextColor, flex: 1 }} numberOfLines={1}>
-              {displayName}
-            </Text>
+        <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{ ...TYPE.label, color: cardTextColor }} numberOfLines={1}>
+                {displayName}
+              </Text>
+            </View>
             <View
               style={{
+                flexShrink: 0,
                 paddingHorizontal: 8,
                 paddingVertical: 3,
                 borderRadius: RADII.pill,
@@ -132,11 +136,11 @@ export function SacredDaysCard({
             </View>
           </View>
 
-          <Text style={{ ...TYPE.caption, color: cardDimColor, marginTop: 3, lineHeight: 15 }} numberOfLines={2}>
+          <Text style={{ ...TYPE.caption, color: cardDimColor, marginTop: 2, lineHeight: 15 }} numberOfLines={2}>
             {displayDescription ?? entry.monthLabel ?? entry.label}
           </Text>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
             <Text style={{ ...TYPE.chip, color: accent }}>{copy.learnMore}</Text>
             <Feather name="arrow-right" size={13} color={accent} />
           </View>
