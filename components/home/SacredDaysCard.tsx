@@ -5,7 +5,7 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
-import { COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getNativeSeriesCardCopy } from '@/lib/observance-series-card-helpers';
 import { resolveSeriesChildHref } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
@@ -31,8 +31,9 @@ const ROUTE_ICON: Partial<Record<string, SacredIconName>> = {
   festival: 'panchang',
 };
 
-function daysBadgeLabel(daysLeft: number, lang: 'en' | 'hi' | 'pa'): string {
+function daysBadgeLabel(daysLeft: number | undefined | null, lang: 'en' | 'hi' | 'pa'): string {
   const copy = getNativeSeriesCardCopy(lang);
+  if (typeof daysLeft !== 'number' || Number.isNaN(daysLeft)) return copy.today;
   if (daysLeft === 0) return copy.today;
   if (daysLeft === 1) return copy.tomorrow;
   return copy.inDays(daysLeft);
@@ -51,12 +52,19 @@ export function SacredDaysCard({
 }) {
   const router = useRouter();
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  // Falls back to the canonical themeColor() mapping rather than
+  // re-deriving isDark ? COLORS.X : COLORS.Y inline, so this can never
+  // drift out of sync with that single source of truth.
+  const cardTextColor = theme?.text ?? themeColor(isDark).text;
+  const cardDimColor = theme?.dim ?? themeColor(isDark).dim;
+  const cardBorderColor = theme?.premiumBorder ?? themeColor(isDark).premiumBorder;
   const iconName = ROUTE_ICON[entry.routeKind] ?? 'panchang';
   const isToday = entry.daysLeft === 0;
   const copy = getNativeSeriesCardCopy(lang);
-  const displayName = lang === 'en'
+  const rawDisplayName = lang === 'en'
     ? entry.name
     : pickSacredDayLocalizedText(entry.name, entry.nameLocal, entry.namePa, lang) ?? entry.name;
+  const displayName = rawDisplayName || entry.label || 'Sacred Day';
   const displayDescription = lang === 'en'
     ? entry.description
     : pickSacredDayLocalizedText(entry.description, entry.descriptionLocal, entry.descriptionPa, lang) ?? entry.description;
@@ -87,7 +95,7 @@ export function SacredDaysCard({
     >
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
 
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
+      <View style={{ flex: 1, height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
         <View
           style={{
             width: 42,
@@ -97,7 +105,7 @@ export function SacredDaysCard({
             justifyContent: 'center',
             backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
             borderWidth: 1,
-            borderColor: theme.premiumBorder,
+            borderColor: cardBorderColor,
           }}
         >
           <SacredIcon name={iconName} fallbackGlyph="sun" size={21} color={accent} />
@@ -105,7 +113,7 @@ export function SacredDaysCard({
 
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <Text style={{ ...TYPE.label, color: theme.text, flex: 1 }} numberOfLines={1}>
+            <Text style={{ ...TYPE.label, color: cardTextColor, flex: 1 }} numberOfLines={1}>
               {displayName}
             </Text>
             <View
@@ -115,16 +123,16 @@ export function SacredDaysCard({
                 borderRadius: RADII.pill,
                 backgroundColor: isToday ? accent : 'transparent',
                 borderWidth: isToday ? 0 : 1,
-                borderColor: theme.premiumBorder,
+                borderColor: cardBorderColor,
               }}
             >
-              <Text style={{ ...TYPE.chip, color: isToday ? ctaTextColor : theme.dim }}>
+              <Text style={{ ...TYPE.chip, color: isToday ? ctaTextColor : cardDimColor }}>
                 {daysBadgeLabel(entry.daysLeft, lang)}
               </Text>
             </View>
           </View>
 
-          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3, lineHeight: 15 }} numberOfLines={2}>
+          <Text style={{ ...TYPE.caption, color: cardDimColor, marginTop: 3, lineHeight: 15 }} numberOfLines={2}>
             {displayDescription ?? entry.monthLabel ?? entry.label}
           </Text>
 

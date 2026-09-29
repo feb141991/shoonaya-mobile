@@ -85,6 +85,7 @@ export function PressableSurface({
             // Now the inner wrapper's flex is simply whatever the caller
             // asked for -- undefined (natural content size) if they didn't.
             flex: flattenedStyle.flex,
+            height: flattenedStyle.height !== undefined ? '100%' : undefined,
             opacity: disabled ? 0.55 : isPressed ? 0.88 : 1,
             transform: [{ scale: isPressed && !reduceMotion ? 0.985 : 1 }],
           },

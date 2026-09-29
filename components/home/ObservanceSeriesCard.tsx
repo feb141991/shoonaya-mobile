@@ -5,7 +5,7 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon, type SacredIconName } from '@/components/ui/SacredIcon';
-import { COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import type { ObservanceSeries, ObservanceSeriesChild } from '@/lib/observance-series-contract.generated';
 import {
   getNativeSeriesCardChildren,
@@ -27,8 +27,9 @@ type Theme = {
   brand: string;
 };
 
-function daysBadgeLabel(daysLeft: number, lang: 'en' | 'hi' | 'pa'): string {
+function daysBadgeLabel(daysLeft: number | undefined | null, lang: 'en' | 'hi' | 'pa'): string {
   const copy = getNativeSeriesCardCopy(lang);
+  if (typeof daysLeft !== 'number' || Number.isNaN(daysLeft)) return copy.today;
   if (daysLeft === 0) return copy.today;
   if (daysLeft === 1) return copy.tomorrow;
   return copy.inDays(daysLeft);
@@ -52,6 +53,12 @@ export function ObservanceSeriesCard({
   const router = useRouter();
   const targetChildren = getNativeSeriesCardChildren(series);
   const accent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  // Falls back to the canonical themeColor() mapping rather than
+  // re-deriving isDark ? COLORS.X : COLORS.Y inline, so this can never
+  // drift out of sync with that single source of truth.
+  const cardTextColor = theme?.text ?? themeColor(isDark).text;
+  const cardDimColor = theme?.dim ?? themeColor(isDark).dim;
+  const cardBorderColor = theme?.premiumBorder ?? themeColor(isDark).premiumBorder;
   const copy = getNativeSeriesCardCopy(lang);
   const context = { calendarProfile: series.profile.calendar, tradition: series.tradition };
   const seriesName = getSafeNativeSeriesName(series, lang, context);
@@ -109,7 +116,7 @@ export function ObservanceSeriesCard({
       }}
     >
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
+      <View style={{ flex: 1, height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
         <View
           style={{
             width: 42,
@@ -119,7 +126,7 @@ export function ObservanceSeriesCard({
             justifyContent: 'center',
             backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight,
             borderWidth: 1,
-            borderColor: theme.premiumBorder,
+            borderColor: cardBorderColor,
           }}
         >
           <SacredIcon name={iconName} fallbackGlyph="sun" size={21} color={accent} />
@@ -129,7 +136,7 @@ export function ObservanceSeriesCard({
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={{ ...TYPE.chip, color: accent }} numberOfLines={1}>{seriesName}</Text>
-              <Text style={{ ...TYPE.label, color: theme.text, marginTop: 2 }} numberOfLines={1}>{title}</Text>
+              <Text style={{ ...TYPE.label, color: cardTextColor, marginTop: 2 }} numberOfLines={1}>{title}</Text>
             </View>
             <View
               style={{
@@ -138,16 +145,16 @@ export function ObservanceSeriesCard({
                 borderRadius: RADII.pill,
                 backgroundColor: isToday ? accent : 'transparent',
                 borderWidth: isToday ? 0 : 1,
-                borderColor: theme.premiumBorder,
+                borderColor: cardBorderColor,
               }}
             >
-              <Text style={{ ...TYPE.chip, color: isToday ? badgeTextColor : theme.dim }}>
+              <Text style={{ ...TYPE.chip, color: isToday ? badgeTextColor : cardDimColor }}>
                 {daysBadgeLabel(daysLeft, lang)}
               </Text>
             </View>
           </View>
 
-          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 3, lineHeight: 15 }} numberOfLines={1}>
+          <Text style={{ ...TYPE.caption, color: cardDimColor, marginTop: 3, lineHeight: 15 }} numberOfLines={1}>
             {description ?? statusLine}
           </Text>
 
