@@ -92,6 +92,26 @@ export function buildSacredDaysDeck({
     const children = getNativeSeriesCardChildren(candidate);
     if (children.length === 0) continue;
 
+    const seriesKeys = [
+      candidate.seriesKey,
+      candidate.definitionKey,
+    ].filter((k): k is string => Boolean(k)).map((k) => k.trim().toLocaleLowerCase());
+
+    for (const key of seriesKeys) {
+      representedSeriesSlugs.add(key);
+      const rootKey = key.split(':')[0];
+      if (rootKey) representedSeriesSlugs.add(rootKey);
+    }
+
+    for (const candidateChild of candidate.children) {
+      if (candidateChild.slug) {
+        representedSeriesSlugs.add(candidateChild.slug.trim().toLocaleLowerCase());
+      }
+      if (candidateChild.routeSlug) {
+        representedSeriesSlugs.add(candidateChild.routeSlug.trim().toLocaleLowerCase());
+      }
+    }
+
     for (const child of children) {
       const targetDate = child.civilDate ?? candidate.startDate;
       const daysLeft = targetDate
@@ -101,6 +121,9 @@ export function buildSacredDaysDeck({
 
       if (child.slug) {
         representedSeriesSlugs.add(child.slug.trim().toLocaleLowerCase());
+      }
+      if (child.routeSlug) {
+        representedSeriesSlugs.add(child.routeSlug.trim().toLocaleLowerCase());
       }
       seriesItems.push({
         type: 'series',
@@ -116,7 +139,16 @@ export function buildSacredDaysDeck({
   const observanceItems: SacredDaysDeckItem[] = [];
   for (const entry of observances) {
     if (entry.daysLeft < 0 || entry.daysLeft > windowDays) continue;
-    if (entry.routeSlug && representedSeriesSlugs.has(entry.routeSlug.trim().toLocaleLowerCase())) continue;
+    const entryRouteSlug = entry.routeSlug?.trim().toLocaleLowerCase();
+    const entryHref = entry.href?.trim().toLocaleLowerCase();
+    const entryName = entry.name?.trim().toLocaleLowerCase();
+
+    const isRepresented = Boolean(
+      (entryRouteSlug && representedSeriesSlugs.has(entryRouteSlug)) ||
+      (entryHref && [...representedSeriesSlugs].some((s) => s && s.length > 2 && entryHref.includes(s))) ||
+      (entryName && representedSeriesSlugs.has(entryName.replaceAll(' ', '-')))
+    );
+    if (isRepresented) continue;
 
     const identity = `${normalizedEntryIdentity(entry)}:${entry.daysLeft}`;
     if (seenObservances.has(identity)) continue;

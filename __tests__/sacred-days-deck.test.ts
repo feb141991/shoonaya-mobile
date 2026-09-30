@@ -74,6 +74,60 @@ test('buildSacredDaysDeck creates one deterministic, bounded Home deck', async (
     assert.deepEqual(items.map((item) => item.daysLeft), [0]);
   });
 
+  await t.test('deduplicates Pitru Paksha day 4 when standalone observance uses series route_slug', () => {
+    const pitruSeries: ObservanceSeries = {
+      seriesKey: 'pitru-paksha:hindu:2026',
+      definitionKey: 'pitru-paksha',
+      mode: 'daily_journey',
+      name: 'Pitru Paksha',
+      tradition: 'hindu',
+      profile: { calendar: 'legacy-ujjain', tradition: 'hindu' },
+      location: { label: 'Local', lat: 23.17, lon: 75.78, tz: 'Asia/Kolkata' },
+      status: 'active',
+      startDate: '2026-09-27',
+      endDate: '2026-10-10',
+      currentCivilDate: '2026-09-30',
+      activeChildOccurrenceIds: ['occ-pitru-4'],
+      currentDay: 4,
+      totalDays: 14,
+      children: [{
+        occurrenceId: 'occ-pitru-4',
+        slug: 'pitru-paksha-day-4',
+        civilDate: '2026-09-30',
+        sequence: 4,
+        title: 'Chaturthi Shraddha',
+        routeKind: 'vrat',
+        routeSlug: 'pitru-paksha',
+        status: 'resolved',
+        diagnostics: [],
+        sourceRefs: [],
+      }],
+      diagnostics: [],
+      sourceRefs: [],
+      versions: {},
+    };
+
+    const standaloneDay4: SacredDaysObservance = {
+      name: 'Pitru Paksha Day 4',
+      daysLeft: 0,
+      routeKind: 'vrat',
+      routeSlug: 'pitru-paksha',
+      href: '/vrat/pitru-paksha',
+      label: 'Today is Pitru Paksha Day 4',
+    };
+
+    const items = buildSacredDaysDeck({
+      observances: [standaloneDay4],
+      series: [pitruSeries],
+      spiritualDate: '2026-09-30',
+      windowDays: 0,
+    });
+
+    assert.equal(items.length, 1);
+    assert.equal(items[0]?.type, 'series');
+    assert.equal(items[0]?.key, 'series-pitru-paksha:hindu:2026-occ-pitru-4');
+  });
+
   await t.test('orders same-day series before standalone items with deterministic ties', () => {
     const items = buildSacredDaysDeck({
       observances: [observance('Zeta Vrat', 0), observance('Alpha Vrat', 0)],
@@ -128,7 +182,7 @@ test('Sacred Days Home integration does not add a calendar data request', () => 
   const homeSource = readFileSync(join(root, 'app/(tabs)/index.tsx'), 'utf8');
   const carouselSource = readFileSync(join(root, 'components/home/SacredDaysCarousel.tsx'), 'utf8');
 
-  assert.equal((homeSource.match(/<SacredDaysCarousel\b/g) ?? []).length, 1);
+  assert.equal((homeSource.match(/<SacredDaysCarousel\b/g) ?? []).length, 2);
   assert.equal((homeSource.match(/<SacredDaysCard\b/g) ?? []).length, 0);
   assert.doesNotMatch(carouselSource, /api\/native\/home-summary|api\/calendar\/upcoming/);
   assert.match(carouselSource, /api\/calendar\/export/);
