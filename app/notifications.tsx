@@ -91,63 +91,68 @@ const NotificationListRow = memo(function NotificationListRow({ row, theme, onPr
       style={{
         borderRadius: 18,
         padding: 14,
-        flexDirection: 'row',
-        gap: 12,
         backgroundColor: row.read ? theme.card : theme.unreadBg,
         borderWidth: 1,
         borderColor: theme.border,
       }}
     >
-      <View
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 16,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: theme.iconWell,
-        }}
-      >
-        <Text style={{ fontSize: 20 }}>{row.emoji ?? '🔔'}</Text>
-      </View>
-
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text
-            style={{
-              flex: 1,
-              color: theme.text,
-              fontFamily: row.read ? FONTS.sansMedium : FONTS.sansSemiBold,
-              fontSize: 14.5,
-              lineHeight: 20,
-            }}
-          >
-            {row.title}
-          </Text>
-          {!row.read ? (
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.brand }} />
-          ) : null}
+      {/* Put the row inside the stretched surface content wrapper, as in
+          Vrat cards. An outer row shrink-wraps that wrapper and collapses
+          the flexing text column to zero width. */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            flexShrink: 0,
+            borderRadius: 16,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: theme.iconWell,
+          }}
+        >
+          <Text style={{ fontSize: 20 }}>{row.emoji ?? '🔔'}</Text>
         </View>
 
-        {row.body ? (
-          <Text
-            style={{
-              marginTop: 4,
-              color: theme.bodyText,
-              fontFamily: FONTS.sans,
-              fontSize: 13,
-              lineHeight: 19,
-            }}
-            numberOfLines={expanded ? undefined : 4}
-            onPress={() => setExpanded((prev) => !prev)}
-          >
-            {row.body}
-          </Text>
-        ) : null}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text
+                style={{
+                  color: theme.text,
+                  fontFamily: row.read ? FONTS.sansMedium : FONTS.sansSemiBold,
+                  fontSize: 14.5,
+                  lineHeight: 20,
+                }}
+              >
+                {row.title}
+              </Text>
+            </View>
+            {!row.read ? (
+              <View style={{ width: 8, height: 8, flexShrink: 0, borderRadius: 4, backgroundColor: theme.brand }} />
+            ) : null}
+          </View>
 
-        <Text style={{ marginTop: 6, color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
-          {formatNotificationDate(row.created_at)}
-        </Text>
+          {row.body ? (
+            <Text
+              style={{
+                marginTop: 4,
+                color: theme.bodyText,
+                fontFamily: FONTS.sans,
+                fontSize: 13,
+                lineHeight: 19,
+              }}
+              numberOfLines={expanded ? undefined : 4}
+              onPress={() => setExpanded((prev) => !prev)}
+            >
+              {row.body}
+            </Text>
+          ) : null}
+
+          <Text style={{ marginTop: 6, color: theme.dim, fontFamily: FONTS.sans, fontSize: 11 }}>
+            {formatNotificationDate(row.created_at)}
+          </Text>
+        </View>
       </View>
     </PressableSurface>
   );
