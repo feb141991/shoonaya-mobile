@@ -144,7 +144,7 @@ export function formatSeriesDayLabel(
 
   if (rawTitle.toLowerCase().includes('visarjan') || rawTitle.includes('विसर्जन') || rawTitle.includes('ਵਿਸਰਜਨ')) {
     specific = isHi ? 'विसर्जन' : isPa ? 'ਵਿਸਰਜਨ' : 'Visarjan';
-  } else if (specific.toLowerCase().includes('chaturthi') || specific.includes('चतुर्थी') || specific.includes('ਚੌਥ')) {
+  } else if ((specific.toLowerCase().includes('chaturthi') || specific.includes('चतुर्थी') || specific.includes('ਚੌਥ')) && !rawTitle.toLowerCase().includes('shraddha') && !rawTitle.includes('श्राद्ध') && !rawTitle.includes('ਸਰਾਧ')) {
     specific = isHi ? 'गणेश चतुर्थी' : isPa ? 'ਗਣੇਸ਼ ਚੌਥ' : 'Chaturthi';
   } else if (specific.toLowerCase().includes('dussehra') || specific.toLowerCase().includes('vijayadashami') || specific.includes('दशहरा') || specific.includes('विजयादशमी')) {
     specific = isHi ? 'विजयादशमी' : isPa ? 'ਦੁਸਹਿਰਾ' : 'Dussehra';
