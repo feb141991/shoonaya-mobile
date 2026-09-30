@@ -326,12 +326,69 @@ export default function FestivalDetailScreen() {
     ? liveTranslation.rituals
     : (festival ? resolveListContent(festival.rituals) : seriesChildRituals);
 
+  const isPitruSlug = slug.startsWith('pitru-paksha-') || slug === 'mahalaya-amavasya';
+
+  const pitruDos = resolvedLang === 'pa'
+    ? [
+        'ਦੁਪਹਿਰ ਵੇਲੇ (ਕੁਤੁਪ ਜਾਂ ਰੋਹਿਣ ਮੁਹੂਰਤ) ਦੱਖਣ ਵੱਲ ਮੁੱਖ ਕਰਕੇ ਸ਼ਰਧਾ ਨਾਲ ਤਰਪਣ ਕਰੋ',
+        'ਸਾਫ ਕੱਪੜੇ ਅਤੇ ਹੱਥ ਵਿੱਚ ਕੁਸ਼ਾ ਧਾਰਨ ਕਰਕੇ ਪਿਤਰਾਂ ਨੂੰ ਯਾਦ ਕਰੋ',
+        'ਭੋਜਨ ਤੋਂ ਪਹਿਲਾਂ ਗਊ, ਕਾਂ, ਕੁੱਤੇ ਅਤੇ ਕੀੜੀਆਂ ਨੂੰ ਪੰਚਬਲੀ ਦਾ ਅੰਨ ਅਰਪਣ ਕਰੋ',
+        'ਲੋੜਵੰਦਾਂ ਜਾਂ ਬ੍ਰਾਹਮਣ ਨੂੰ ਸਾਤਵਿਕ ਅੰਨ, ਬਸਤਰ ਅਤੇ ਦਾਨ ਦਿਓ',
+      ]
+    : resolvedLang === 'hi'
+      ? [
+          'अपराह्न काल (कुतुप या रोहिण मुहूर्त) में दक्षिण दिशा की ओर मुख कर तर्पण करें',
+          'श्वेत अथवा सात्विक वस्त्र और अनामिका में कुश की पवित्री धारण करें',
+          'भोजन से पूर्व पंचबलि (गाय, कौवा, कुत्ता, देव व चींटियों) का भाग अवश्य निकालें',
+          'ब्राह्मण अथवा जरूरतमंदों को श्रद्धापूर्वक अन्नदान व दक्षिणा दें',
+        ]
+      : [
+          'Perform Tarpan in the afternoon during Kutup or Rohina Muhurta facing South',
+          'Wear clean white or light-coloured attire with Kusha grass Pavitri on the ring finger',
+          'Offer Panchabali (food portions to cow, crow, dog, gods, and ants) before eating',
+          'Offer Anna Daan (satvik meal) and dakshina to Brahmins or the needy with deep reverence',
+        ];
+
+  const pitruDonts = resolvedLang === 'pa'
+    ? [
+        'ਸਵੇਰੇ, ਸ਼ਾਮ ਜਾਂ ਰਾਤ ਵੇਲੇ ਸਰਾਧ ਕਰਮ ਨਾ ਕਰੋ; ਸਿਰਫ ਦੁਪਹਿਰ ਵੇਲੇ ਕਰੋ',
+        'ਲੋਹੇ ਦੇ ਭਾਂਡਿਆਂ ਦੀ ਵਰਤੋਂ ਤੋਂ ਬਚੋ; ਤਾਂਬਾ, ਪਿੱਤਲ ਜਾਂ ਚਾਂਦੀ ਵਰਤੋ',
+        'ਲਸਣ, ਪਿਆਜ਼, ਮਸਰਾਂ ਦੀ ਦਾਲ ਜਾਂ ਤਾਮਸਿਕ ਭੋਜਨ ਨਾ ਖਾਓ',
+        'ਸਰਾਧ ਦੇ ਦਿਨ ਕ੍ਰੋਧ, ਲੜਾਈ-ਝਗੜੇ ਅਤੇ ਸ਼ੁਭ ਕਾਰਜਾਂ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ',
+      ]
+    : resolvedLang === 'hi'
+      ? [
+          'प्रातःकाल, सांध्यकाल अथवा रात्रि में श्राद्ध व तर्पण कदापि न करें',
+          'श्राद्ध कर्म में लोहे के बर्तनों का प्रयोग न करें; तांबा, पीतल अथवा चांदी उत्तम है',
+          'प्याज, लहसुन, मसूर की दाल अथवा तामसिक अन्न का सेवन न करें',
+          'श्राद्ध के दिन क्रोध, कलह, बाल-नाखून काटना व मांगलिक उत्सव वर्जित हैं',
+        ]
+      : [
+          'Do not perform Pitru Shraddha rites during dawn, dusk, or nighttime',
+          'Do not use iron utensils for Shraddha cooking or water offerings; prefer copper, brass, or silver',
+          'Do not consume or serve tamasic food containing onion, garlic, or masoor dal',
+          'Avoid anger, disputes, cutting hair/nails, or celebrating auspicious occasions on Shraddha day',
+        ];
+
+  const pitruPujaItems = resolvedLang === 'pa'
+    ? ['ਪਵਿੱਤਰ ਜਲ / ਗੰਗਾ ਜਲ', 'ਕਾਲੇ ਤਿਲ (ਕਾਲਾ ਤਿਲ)', 'ਕੁਸ਼ਾ ਘਾਹ ਤੇ ਪਵਿਤਰੀ', 'ਜੌਂ ਅਤੇ ਚੌਲ (ਅਕਸ਼ਤ)', 'ਗਾਂ ਦਾ ਦੁੱਧ, ਦਹੀਂ, ਘਿਓ ਤੇ ਸ਼ਹਿਦ', 'ਚਿੱਟੇ ਫੁੱਲ ਅਤੇ ਚੰਦਨ']
+    : resolvedLang === 'hi'
+      ? ['शुद्ध जल (गंगाजल अथवा स्वच्छ जल)', 'काले तिल (काला तिल)', 'कुशा एवं कुशा पवित्री', 'जौ (यव) एवं अक्षत', 'गाय का कच्चा दूध, दही, घी व शहद', 'सफेद पुष्प एवं श्वेत चंदन']
+      : ['Pure Water (Ganga Jal or well water)', 'Black Sesame Seeds (Kala Til)', 'Kusha Grass and Kusha Pavitri', 'Barley (Jau) and Akshat (unbroken rice)', 'Cow Milk, Curd, Ghee, and Honey', 'White Flowers and White Sandalwood Paste (Chandan)'];
+
+  const pitruMantraSanskrit = 'ॐ देवताभ्यः पितृभ्यश्च महायोगिभ्य एव च। नमः स्वाहायै स्वधायै नित्यमेव नमो नमः॥';
+  const pitruMantraTranslation = resolvedLang === 'pa'
+    ? 'ਸਾਰੇ ਦੇਵਤਿਆਂ, ਪਿਤਰਾਂ ਅਤੇ ਮਹਾਂਯੋਗੀਆਂ ਨੂੰ ਪ੍ਰਣਾਮ। ਸਵਾਹਾ ਅਤੇ ਸਵਧਾ ਨੂੰ ਸਦਾ ਨਮਸਕਾਰ।'
+    : resolvedLang === 'hi'
+      ? 'समस्त देवताओं, पितरों और महायोगियों को बारंबार नमस्कार। स्वाहा और स्वधा स्वरूपिणी शक्तियों को नित्य नमन।'
+      : 'Salutations to the revered deities, ancestors, and great yogis. Forever reverence to Svaha and Svadha.';
+
   const canonicalDos = festival ? resolveListContent(festival.dos) : [];
-  const dos = canonicalDos.length > 0 ? canonicalDos : (liveTranslation?.personalPractice ? [liveTranslation.personalPractice] : []);
-  const donts = festival ? resolveListContent(festival.donts) : [];
-  const pujaItems = festival ? resolveListContent(festival.pujaItems) : [];
-  const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || '';
-  const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : '');
+  const dos = canonicalDos.length > 0 ? canonicalDos : (liveTranslation?.personalPractice ? [liveTranslation.personalPractice] : (isPitruSlug ? pitruDos : []));
+  const donts = (festival && resolveListContent(festival.donts).length > 0) ? resolveListContent(festival.donts) : (isPitruSlug ? pitruDonts : []);
+  const pujaItems = (festival && resolveListContent(festival.pujaItems).length > 0) ? resolveListContent(festival.pujaItems) : (isPitruSlug ? pitruPujaItems : []);
+  const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || (isPitruSlug ? pitruMantraSanskrit : '');
+  const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : (isPitruSlug ? pitruMantraTranslation : ''));
 
   const traditionKey = festival?.tradition || liveStory?.tradition || seriesContext?.tradition || '';
   const traditionLabel =

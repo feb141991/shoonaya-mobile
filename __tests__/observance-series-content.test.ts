@@ -183,6 +183,6 @@ test('approved Pitru editorial is scoped, requires human review and uses honest 
   assert.equal(isEditorialFieldDisplayable({...group.name,reviewRef:undefined},context),false);
   assert.equal(isEditorialFieldDisplayable(group.name,{tradition:'buddhist',calendarProfile:'legacy-ujjain'}),false);
   assert.equal(isEditorialFieldDisplayable(group.name,{tradition:'hindu',calendarProfile:'north_indian_purnimanta'}),false);
-  assert.equal(resolveLocalizedText(group.name,'hi',context),'Pitru Paksha');
+  assert.equal(resolveLocalizedText(group.name,'hi',context),'पितृ पक्ष');
   for(const child of group.children) assert.equal(isEditorialFieldDisplayable(child.canonicalTitle,context),true);
 });
