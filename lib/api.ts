@@ -245,6 +245,13 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     let response = await requestWithToken(accessToken);
     if (response.status === 401 || response.status === 503) initialAuthResponse = response;
 
+    // 503 indicates a transient dependency timeout or serverless cold start.
+    // Safe to retry once after a short delay for replayable bodies (including all GET reads).
+    if (response.status === 503 && canReplayBody(fetchOptions.body)) {
+      await abortable(new Promise((resolve) => setTimeout(resolve, 500)));
+      response = await requestWithToken(accessToken);
+    }
+
     // React Native pauses Supabase's refresh timer while backgrounded. A
     // request can therefore carry an expired cached JWT even though the user
     // is still signed in. A 401 is safe to retry because the route did not
