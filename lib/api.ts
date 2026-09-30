@@ -9,6 +9,7 @@ import { DEFAULT_API_TIMEOUT_MS } from './api-policy';
 import { waitForAuthReady } from './authReadyGate';
 import { sessionHasUsableAccessToken } from './api-auth-policy';
 import { createSingleFlight } from './async-single-flight';
+import { retryTransientReadOnce } from './api-503-retry';
 import { recordAuthDiagnostic, type AuthDiagnosticCode, type AuthDiagnosticRoute } from './telemetry';
 
 export { isFetchCancelled };
@@ -245,12 +246,15 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     let response = await requestWithToken(accessToken);
     if (response.status === 401 || response.status === 503) initialAuthResponse = response;
 
-    // 503 indicates a transient dependency timeout or serverless cold start.
-    // Safe to retry once after a short delay for replayable bodies (including all GET reads).
-    if (response.status === 503 && canReplayBody(fetchOptions.body)) {
-      await abortable(new Promise((resolve) => setTimeout(resolve, 500)));
-      response = await requestWithToken(accessToken);
-    }
+    // Retry only a bodyless GET: a 503 from a write route may follow a partial
+    // side effect, and replayable bytes alone do not make repeating it safe.
+    response = await retryTransientReadOnce(
+      response,
+      () => requestWithToken(accessToken),
+      fetchOptions.method,
+      fetchOptions.body,
+      () => abortable(new Promise<void>((resolve) => setTimeout(resolve, 500))),
+    );
 
     // React Native pauses Supabase's refresh timer while backgrounded. A
     // request can therefore carry an expired cached JWT even though the user

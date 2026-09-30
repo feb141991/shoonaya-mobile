@@ -150,9 +150,7 @@ test('telemetryUpload.ts passes expectedGuest through for the guest send path (s
   assert.match(uploadSource, /expectedGuest: true/);
 });
 
-test('apiFetch defines transient 503 recovery for replayable requests (source regression)', () => {
+test('apiFetch delegates 503 recovery to the safe-read retry policy (source regression)', () => {
   const apiSource = readFileSync(new URL('../lib/api.ts', import.meta.url), 'utf8');
-  assert.match(apiSource, /if \(response\.status === 503 && canReplayBody\(fetchOptions\.body\)\)/);
-  assert.match(apiSource, /await requestWithToken\(accessToken\);/);
+  assert.match(apiSource, /retryTransientReadOnce\(\s*response,\s*\(\) => requestWithToken\(accessToken\)/);
 });
-
