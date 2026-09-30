@@ -77,7 +77,13 @@ export function resolveLocalizedText(
   context?: EditorialApplicabilityContext,
 ): string {
   if (!field) return '';
-  if ('value' in field && !isEditorialFieldDisplayable(field, context)) return '';
+  const effectiveContext: EditorialApplicabilityContext = {
+    calendarProfile: context?.calendarProfile || 'legacy-ujjain',
+    tradition: context?.tradition || 'hindu',
+    region: context?.region,
+    sampradaya: context?.sampradaya,
+  };
+  if ('value' in field && !isEditorialFieldDisplayable(field, effectiveContext)) return '';
   const obj = 'value' in field ? field.value : field;
   if (!obj) return '';
   const translationStatus = 'value' in field ? field.translationStatus : undefined;
@@ -96,7 +102,13 @@ export function resolveLocalizedList(
   context?: EditorialApplicabilityContext,
 ): string[] {
   if (!field) return [];
-  if ('value' in field && !isEditorialFieldDisplayable(field, context)) return [];
+  const effectiveContext: EditorialApplicabilityContext = {
+    calendarProfile: context?.calendarProfile || 'legacy-ujjain',
+    tradition: context?.tradition || 'hindu',
+    region: context?.region,
+    sampradaya: context?.sampradaya,
+  };
+  if ('value' in field && !isEditorialFieldDisplayable(field, effectiveContext)) return [];
   const obj = 'value' in field ? field.value : field;
   if (!obj) return [];
   const translationStatus = 'value' in field ? field.translationStatus : undefined;
@@ -169,6 +181,8 @@ const SERIES_GROUP_ALIASES: Record<string, string> = {
   'chhath-puja': 'chhath-puja-four-days',
   'paryushana-parva': 'paryushana-parva',
   'paryushana': 'paryushana-parva',
+  'pitru-paksha': 'pitru-paksha',
+  'pitrupaksha': 'pitru-paksha',
 };
 
 /**
