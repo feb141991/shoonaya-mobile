@@ -171,3 +171,18 @@ test('Native Observance Series Content — Sourced Provenance & Snapshot Integri
   });
 
 });
+
+test('approved Pitru editorial is scoped, requires human review and uses honest language fallback', () => {
+  const group = getSeriesGroupContent('pitru-paksha');
+  assert.ok(group);
+  assert.equal(group.children.length,14);
+  assert.equal(group.name.status,'reviewed_editorial');
+  assert.equal(group.name.reviewRef,'founder:pitru-paksha-2026-20260930');
+  const context={tradition:'hindu',calendarProfile:'legacy-ujjain'};
+  assert.equal(isEditorialFieldDisplayable(group.name,context),true);
+  assert.equal(isEditorialFieldDisplayable({...group.name,reviewRef:undefined},context),false);
+  assert.equal(isEditorialFieldDisplayable(group.name,{tradition:'buddhist',calendarProfile:'legacy-ujjain'}),false);
+  assert.equal(isEditorialFieldDisplayable(group.name,{tradition:'hindu',calendarProfile:'north_indian_purnimanta'}),false);
+  assert.equal(resolveLocalizedText(group.name,'hi',context),'Pitru Paksha');
+  for(const child of group.children) assert.equal(isEditorialFieldDisplayable(child.canonicalTitle,context),true);
+});

@@ -10,6 +10,7 @@
 export type EditorialStatus =
   | 'source_backed'
   | 'council_reviewed_editorial'
+  | 'reviewed_editorial'
   | 'pending_source'
   | 'withheld';
 
@@ -23,6 +24,10 @@ export interface Applicability {
 
 export interface ObservanceSeriesSourceRef {
   sourceName: string;
+  publisher?: string | null;
+  region?: string | null;
+  scholarNotes?: string | null;
+  url?: string | null;
   pageOrSection?: string;
   tier: number;
   confidence?: 'high' | 'medium' | 'low' | string;
@@ -34,7 +39,7 @@ export interface LocalizedEditorialField<T> {
   status: EditorialStatus;
   sourceRefs: ObservanceSeriesSourceRef[];
   applicability: Applicability;
-  /** Required when status is council_reviewed_editorial. */
+  /** Required for council_reviewed_editorial and reviewed_editorial; records the actual human reviewer. */
   reviewRef?: string;
   translationStatus?: {
     en: 'source' | 'reviewed_translation' | 'pending';
@@ -65,7 +70,7 @@ export interface SourcedObservanceSeriesContentSnapshot {
 }
 
 export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentSnapshot = {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "series": [
     {
       "definitionKey": "sharad-navratri",
@@ -5090,13 +5095,31 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
         "value": {
           "en": "Pitru Paksha"
         },
-        "status": "pending_source",
-        "sourceRefs": [],
+        "status": "reviewed_editorial",
+        "sourceRefs": [
+          {
+            "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+            "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+            "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+            "tier": 3,
+            "region": "London",
+            "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+            "usagePermitted": "academic_citation",
+            "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+          }
+        ],
         "applicability": {
           "traditions": [
             "hindu"
           ],
+          "calendarProfiles": [
+            "legacy-ujjain"
+          ],
           "universal": false
+        },
+        "reviewRef": "founder:pitru-paksha-2026-20260930",
+        "translationStatus": {
+          "en": "source"
         }
       },
       "tradition": "hindu",
@@ -5108,26 +5131,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 1"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5138,26 +5197,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 2"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
-              "en": "Offer water, sesame, or a quiet prayer in honour of those who came before you."
+              "en": "Remember your ancestors with gratitude, following the customs of your family and tradition."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5168,26 +5263,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 3"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5198,26 +5329,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 4"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5228,26 +5395,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 5"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
-              "en": "Offer water, sesame, or a quiet prayer in honour of those who came before you."
+              "en": "Remember your ancestors with gratitude, following the customs of your family and tradition."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5258,26 +5461,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 6"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5288,26 +5527,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 7"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5318,26 +5593,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 8"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
-              "en": "Offer water, sesame, or a quiet prayer in honour of those who came before you."
+              "en": "Remember your ancestors with gratitude, following the customs of your family and tradition."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5348,26 +5659,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 9"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5378,26 +5725,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 10"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5408,26 +5791,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 11"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
-              "en": "Offer water, sesame, or a quiet prayer in honour of those who came before you."
+              "en": "Remember your ancestors with gratitude, following the customs of your family and tradition."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5438,26 +5857,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 12"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5468,26 +5923,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Pitru Paksha Day 13"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
               "en": "A sacred time to remember your ancestors with gratitude and prayer."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         },
@@ -5498,26 +5989,62 @@ export const OBSERVANCE_SERIES_CONTENT_SNAPSHOT: SourcedObservanceSeriesContentS
             "value": {
               "en": "Mahalaya Amavasya"
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           },
           "significance": {
             "value": {
-              "en": "The most auspicious day of Pitru Paksha -- offer tarpan and Pinda daan to all ancestors today."
+              "en": "Mahalaya Amavasya concludes this remembrance journey. Honour your ancestors according to your family and tradition."
             },
-            "status": "pending_source",
-            "sourceRefs": [],
+            "status": "reviewed_editorial",
+            "sourceRefs": [
+              {
+                "sourceName": "Thanjavur Panchangam 2026–2027 (London edition)",
+                "publisher": "Thanjavur Panchangam; hosted by Uttaradi Math",
+                "pageOrSection": "Ashvina: Paksha masa, September 27 to October 10",
+                "tier": 3,
+                "region": "London",
+                "scholarNotes": "Independent civil-journey range corroboration only; not authority for Ujjain ritual times or universal location dates.",
+                "usagePermitted": "academic_citation",
+                "url": "https://cdn.umath.in/panchanga-2026-2027/pdf/london_2026_2027.pdf"
+              }
+            ],
             "applicability": {
               "traditions": [
                 "hindu"
               ],
+              "calendarProfiles": [
+                "legacy-ujjain"
+              ],
               "universal": false
+            },
+            "reviewRef": "founder:pitru-paksha-2026-20260930",
+            "translationStatus": {
+              "en": "source"
             }
           }
         }

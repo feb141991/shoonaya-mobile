@@ -15,8 +15,11 @@ import {
   getSeriesChildContent,
   getSeriesGroupContent,
   formatSeriesDayLabel,
+  resolveLocalizedText,
+  resolveLocalizedList,
   type SupportedLanguage,
 } from '@/lib/observance-series-content';
+import type { LocalizedEditorialField } from '@/lib/observance-series-content.generated';
 import {
   resolveFestivalText,
   resolveFestivalList,
@@ -278,10 +281,12 @@ export default function FestivalDetailScreen() {
 
   const liveTranslation = liveStory?.translations?.[resolvedLang] ?? liveStory?.translations?.['en'];
 
-  const getSeriesChildValue = (field: any) => {
-    if (!field || field.status === 'pending_source' || field.status === 'withheld') return '';
-    return (resolvedLang === 'hi' ? field.value?.hi : field.value?.en) || field.value?.en || '';
+  const editorialContext = {
+    tradition: occurrence?.tradition ?? liveStory?.tradition,
+    calendarProfile: occurrence?.profile.calendar,
   };
+  const getSeriesChildValue = (field?: LocalizedEditorialField<{ en: string; hi?: string; pa?: string }>) =>
+    resolveLocalizedText(field, resolvedLang as SupportedLanguage, editorialContext);
 
   const name =
     liveTranslation?.title ||
@@ -314,12 +319,8 @@ export default function FestivalDetailScreen() {
     return [];
   };
 
-  const seriesChildRituals = (() => {
-    const field = seriesChild?.rituals;
-    if (!field || field.status === 'pending_source' || field.status === 'withheld') return [];
-    const list = (resolvedLang === 'hi' ? field.value?.hi : field.value?.en) || field.value?.en || [];
-    return Array.isArray(list) ? list : [];
-  })();
+  const seriesChildRituals = resolveLocalizedList(seriesChild?.rituals,
+    resolvedLang as SupportedLanguage, editorialContext);
 
   const rituals = (liveTranslation?.rituals && liveTranslation.rituals.length > 0)
     ? liveTranslation.rituals
