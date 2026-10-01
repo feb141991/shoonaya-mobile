@@ -31,6 +31,9 @@ import {
   recordAuthDiagnostic,
   readPendingAuthDiagnostics,
   removeUploadedAuthDiagnostics,
+  recordApiRequestDiagnostic,
+  readPendingApiRequestDiagnostics,
+  removeUploadedApiRequestDiagnostics,
   parseServerTimingHeader,
   getTelemetrySummary,
   clearTelemetry,
@@ -474,5 +477,47 @@ describe('Telemetry -- anonymous auth diagnostic outbox', () => {
     assert.deepEqual(await readPendingAuthDiagnostics(), [event], 'performance telemetry clearing must not erase auth diagnostics');
     await removeUploadedAuthDiagnostics([event.requestId]);
     assert.deepEqual(await readPendingAuthDiagnostics(), []);
+  });
+});
+
+describe('Telemetry -- anonymous API diagnostic outbox', () => {
+  const event = (index = 1) => ({
+    clientEventId: `a1b2c3d4-e5f6-4789-8123-${String(index).padStart(12, '0')}`,
+    endpoint: '/api/calendar/upcoming',
+    method: 'GET' as const,
+    outcome: 'http_failure' as const,
+    firstStatus: 503,
+    finalStatus: 503,
+    attemptCount: 2,
+    durationMs: 4_500,
+    serverRequestId: 'b1b2c3d4-e5f6-4789-8123-456789abcdef',
+    retryServerRequestId: null,
+    timestamp: Date.now(),
+  });
+
+  beforeEach(async () => {
+    await AsyncStorage.removeItem('shoonaya_api_diag_v1_pending');
+  });
+
+  it('persists privacy-safe failures across identity cache clearing and acknowledges uploaded events', async () => {
+    const failure = event();
+    recordApiRequestDiagnostic(failure);
+    await flush();
+
+    assert.deepEqual(await readPendingApiRequestDiagnostics(), [failure]);
+    await clearAllTelemetry();
+    assert.deepEqual(await readPendingApiRequestDiagnostics(), [failure], 'identity cache clearing must not erase anonymous API diagnostics');
+    await removeUploadedApiRequestDiagnostics([failure.clientEventId]);
+    assert.deepEqual(await readPendingApiRequestDiagnostics(), []);
+  });
+
+  it('keeps only the newest 100 well-formed records', async () => {
+    for (let index = 1; index <= 105; index += 1) recordApiRequestDiagnostic(event(index));
+    await flush();
+
+    const pending = await readPendingApiRequestDiagnostics();
+    assert.equal(pending.length, 100);
+    assert.equal(pending[0].clientEventId, event(6).clientEventId);
+    assert.equal(pending.at(-1)?.clientEventId, event(105).clientEventId);
   });
 });
