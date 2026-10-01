@@ -16,6 +16,8 @@ import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from
 
 // New Reader Foundation imports
 import { ReaderShell } from '@/components/reader/ReaderShell';
+import { PanchatantraStorybookView } from '@/components/reader/PanchatantraStorybookView';
+import { enhanceWithExpandedPanchatantra } from '@/lib/panchatantraExpanded';
 import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
@@ -123,7 +125,7 @@ export default function KathaReaderScreen() {
     const cached = await readBhaktiContentCache(cacheKey, isFullKatha);
     const hadCache = Boolean(cached);
     if (cached) {
-      setKatha(cached);
+      setKatha(enhanceWithExpandedPanchatantra(cached));
       setLoading(false);
     }
 
@@ -139,8 +141,9 @@ export default function KathaReaderScreen() {
         if (!hadCache) setLoadError(true);
         return;
       }
-      setKatha(loadedKatha);
-      void writeBhaktiContentCache(cacheKey, loadedKatha);
+      const enhanced = enhanceWithExpandedPanchatantra(loadedKatha);
+      setKatha(enhanced);
+      void writeBhaktiContentCache(cacheKey, enhanced);
     } catch {
       if (!hadCache) setLoadError(true);
     } finally {
@@ -284,48 +287,73 @@ export default function KathaReaderScreen() {
       isCopied={state.isCopied}
       onShare={() => handlers.share(textToShare)}
     >
-      <View style={{ gap: 8, marginBottom: 24 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: accent, borderWidth: 1, borderColor: `${accent}30`, backgroundColor: `${accent}10`, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 }}>
-            {badge}
-          </Text>
-          <Text style={{ ...TYPE.micro, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-            {katha.durationMin} min · {OCCASION_LABEL[katha.occasion] ?? katha.occasion}
-          </Text>
-        </View>
-        <Text style={{ ...TYPE.hero, fontSize: 28, color: theme.text }}>{titleToShow}</Text>
-      </View>
-
-      <View style={{ gap: 16 }}>
-        {bodyToShow.map((para, idx) => (
-          <Text key={idx} style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight, opacity: 0.9 }}>
-            {para}
-          </Text>
-        ))}
-      </View>
-
-      {/* Phal / blessing */}
-      <View style={{ marginTop: 24 }}>
-        <PressableSurface haptic="selection" onPress={() => setShowPhal((s) => !s)} style={{ borderRadius: RADII.lg }}>
-          <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: `${accent}28`, backgroundColor: `${accent}0c`, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${accent}18`, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="star" size={16} color={accent} />
+      {isPanchatantra ? (
+        <PanchatantraStorybookView
+          katha={katha}
+          activeLanguage={activeLang === 'hi' ? 'hi' : 'en'}
+          onLanguageChange={(l) => setReaderLanguage(l)}
+          fontSize={fs}
+          onTTS={() => handlers.toggleTTS(textToCopy, {
+            quality: 'pandit',
+            language: activeLang === 'hi' ? 'hi-IN' : 'en-IN',
+            speed: 0.86,
+            rate: ttsRate,
+            pipelineTags: {
+              content_type: 'katha',
+              audio_mode: 'story',
+              delivery_intent: 'live_user',
+            },
+          })}
+          isSpeaking={state.isSpeaking}
+          isTTSGenerating={state.isGeneratingTTS}
+          onComplete={() => void markDone()}
+        />
+      ) : (
+        <>
+          <View style={{ gap: 8, marginBottom: 24 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: accent, borderWidth: 1, borderColor: `${accent}30`, backgroundColor: `${accent}10`, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 }}>
+                {badge}
+              </Text>
+              <Text style={{ ...TYPE.micro, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+                {katha.durationMin} min · {OCCASION_LABEL[katha.occasion] ?? katha.occasion}
+              </Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...TYPE.chip, letterSpacing: 1, textTransform: 'uppercase', color: accent }}>Fruit of the Katha</Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>Tap to reveal the blessing</Text>
-            </View>
-            <Feather name={showPhal ? 'chevron-up' : 'chevron-down'} size={16} color={accent} />
+            <Text style={{ ...TYPE.hero, fontSize: 28, color: theme.text }}>{titleToShow}</Text>
           </View>
-        </PressableSurface>
 
-        {showPhal && (
-          <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: `${accent}22`, backgroundColor: `${accent}08`, padding: 16, marginTop: 8 }}>
-            <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: accent, marginBottom: 8 }}>Phal Shruti</Text>
-            <Text style={{ ...TYPE.body, color: theme.dim, lineHeight: 24 }}>{phalToShow}</Text>
+          <View style={{ gap: 16 }}>
+            {bodyToShow.map((para, idx) => (
+              <Text key={idx} style={{ color: theme.text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight, opacity: 0.9 }}>
+                {para}
+              </Text>
+            ))}
           </View>
-        )}
-      </View>
+
+          {/* Phal / blessing */}
+          <View style={{ marginTop: 24 }}>
+            <PressableSurface haptic="selection" onPress={() => setShowPhal((s) => !s)} style={{ borderRadius: RADII.lg }}>
+              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: `${accent}28`, backgroundColor: `${accent}0c`, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${accent}18`, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="star" size={16} color={accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...TYPE.chip, letterSpacing: 1, textTransform: 'uppercase', color: accent }}>Fruit of the Katha</Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>Tap to reveal the blessing</Text>
+                </View>
+                <Feather name={showPhal ? 'chevron-up' : 'chevron-down'} size={16} color={accent} />
+              </View>
+            </PressableSurface>
+
+            {showPhal && (
+              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: `${accent}22`, backgroundColor: `${accent}08`, padding: 16, marginTop: 8 }}>
+                <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: accent, marginBottom: 8 }}>Phal Shruti</Text>
+                <Text style={{ ...TYPE.body, color: theme.dim, lineHeight: 24 }}>{phalToShow}</Text>
+              </View>
+            )}
+          </View>
+        </>
+      )}
 
       {/* Continue practice */}
       <View style={{ gap: 10, marginTop: 24 }}>
@@ -360,31 +388,33 @@ export default function KathaReaderScreen() {
         </PressableSurface>
       </View>
 
-      {/* Like & Done */}
-      <View style={{ alignItems: 'center', marginTop: 32, gap: 16 }}>
-        <PressableSurface haptic="selection" onPress={() => setLiked((l) => !l)} style={{ borderRadius: 999 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              paddingHorizontal: 18,
-              paddingVertical: 10,
-              borderRadius: 999,
-              borderWidth: 1,
-              borderColor: liked ? `${LIKE_ACCENT}50` : theme.border,
-              backgroundColor: liked ? `${LIKE_ACCENT}18` : theme.card,
-            }}
-          >
-            <Feather name="heart" size={14} color={liked ? LIKE_ACCENT : theme.dim} />
-            <Text style={{ ...TYPE.caption, color: liked ? LIKE_ACCENT : theme.dim, fontWeight: '600' }}>
-              {liked ? 'Jai Shri Hari' : 'Appreciate this Katha'}
-            </Text>
-          </View>
-        </PressableSurface>
+      {/* Like & Done (for non-storybook stories; storybook has in-card Done button) */}
+      {!isPanchatantra ? (
+        <View style={{ alignItems: 'center', marginTop: 32, gap: 16 }}>
+          <PressableSurface haptic="selection" onPress={() => setLiked((l) => !l)} style={{ borderRadius: 999 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingHorizontal: 18,
+                paddingVertical: 10,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: liked ? `${LIKE_ACCENT}50` : theme.border,
+                backgroundColor: liked ? `${LIKE_ACCENT}18` : theme.card,
+              }}
+            >
+              <Feather name="heart" size={14} color={liked ? LIKE_ACCENT : theme.dim} />
+              <Text style={{ ...TYPE.caption, color: liked ? LIKE_ACCENT : theme.dim, fontWeight: '600' }}>
+                {liked ? 'Jai Shri Hari' : 'Appreciate this Katha'}
+              </Text>
+            </View>
+          </PressableSurface>
 
-        <Button style={{ minWidth: 200 }} label={marking ? 'Marking…' : 'Done'} onPress={() => void markDone()} disabled={marking} />
-      </View>
+          <Button style={{ minWidth: 200 }} label={marking ? 'Marking…' : 'Done'} onPress={() => void markDone()} disabled={marking} />
+        </View>
+      ) : null}
     </ReaderShell>
   );
 }

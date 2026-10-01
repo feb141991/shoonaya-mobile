@@ -114,6 +114,7 @@ test('buildSacredDaysDeck creates one deterministic, bounded Home deck', async (
       routeSlug: 'pitru-paksha',
       href: '/vrat/pitru-paksha',
       label: 'Today is Pitru Paksha Day 4',
+      emoji: null,
     };
 
     const items = buildSacredDaysDeck({
