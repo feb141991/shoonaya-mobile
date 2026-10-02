@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   getExpandedPanchatantraStory,
   enhanceWithExpandedPanchatantra,
+  createOfflinePanchatantraKatha,
 } from '../lib/panchatantraExpanded';
 import {
   getPanchatantraArtworkSource,
@@ -55,6 +56,15 @@ test('Panchatantra Expanded Content Integration', async (t) => {
     assert.equal(result.body.length, 2);
     assert.equal(result.durationMin, 4);
   });
+
+  await t.test('creates offline fallback katha for zero-network support', () => {
+    const offline = createOfflinePanchatantraKatha('panchatantra-moon-lake-rabbits');
+    assert.ok(offline, 'Offline katha should be created');
+    assert.equal(offline?.title, 'Moon Lake Rabbits');
+    assert.equal(offline?.body.length, 6);
+    assert.equal(offline?.bodyHi?.length, 6);
+    assert.equal(offline?.portrait, '🌕');
+  });
 });
 
 test('Panchatantra Artwork Resolution', async (t) => {
@@ -65,12 +75,15 @@ test('Panchatantra Artwork Resolution', async (t) => {
     assert.equal(hasPanchatantraArtwork('panchatantra-lion-and-rabbit'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-crows-and-cobra'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-mice-and-elephants'), true);
+    assert.equal(hasPanchatantraArtwork('panchatantra-moon-lake-rabbits'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-four-friends'), true);
 
     const source = getPanchatantraArtworkSource('panchatantra-camel-bell');
     assert.ok(source, 'Artwork source should resolve');
     const sourceGond = getPanchatantraArtworkSource('panchatantra-mice-and-elephants');
     assert.ok(sourceGond, 'Gond artwork source should resolve');
+    const sourceMoonLake = getPanchatantraArtworkSource('panchatantra-moon-lake-rabbits');
+    assert.ok(sourceMoonLake, 'Moon lake artwork source should resolve');
   });
 
   await t.test('returns null gracefully for stories without local artwork', () => {

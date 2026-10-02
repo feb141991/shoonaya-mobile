@@ -50,3 +50,31 @@ export function enhanceWithExpandedPanchatantra<T extends { id: string; body: st
     durationMin: expanded.durationMin || katha.durationMin || 5,
   };
 }
+
+/**
+ * Creates an offline standalone FullKatha from the expanded snapshot if available.
+ * Guarantees zero-network offline rendering for Panchatantra stories.
+ */
+export function createOfflinePanchatantraKatha(id: string) {
+  const expanded = getExpandedPanchatantraStory(id);
+  if (!expanded) return null;
+
+  const rawName = id.replace(/^panchatantra-/, '');
+  const titleWords = rawName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1));
+  const defaultTitle = titleWords.join(' ');
+
+  return {
+    id: expanded.id,
+    tradition: 'hindu',
+    occasion: 'general',
+    title: defaultTitle,
+    preview: expanded.body[0]?.slice(0, 150) ?? '',
+    body: expanded.body,
+    bodyHi: expanded.bodyHi,
+    phal: 'Wisdom from the Panchatantra.',
+    durationMin: expanded.durationMin || 5,
+    tags: ['panchatantra', 'wisdom', 'ethics'],
+    portrait: expanded.portrait,
+  };
+}
+

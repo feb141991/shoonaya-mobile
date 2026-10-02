@@ -21,7 +21,7 @@ if (typeof require !== 'undefined' && require.extensions) {
 const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-camel-bell': require('@/assets/panchatantra/camel-bell.jpg'),
   'panchatantra-clever-hare-and-elephant': require('@/assets/panchatantra/clever-hare-and-elephant.jpg'),
-  'panchatantra-moon-lake-rabbits': require('@/assets/panchatantra/clever-hare-and-elephant.jpg'),
+  'panchatantra-moon-lake-rabbits': require('@/assets/panchatantra/moon-lake-rabbits.jpg'),
   'panchatantra-blue-jackal': require('@/assets/panchatantra/blue-jackal.jpg'),
   'panchatantra-lion-and-rabbit': require('@/assets/panchatantra/lion-and-rabbit.jpg'),
   'panchatantra-crows-and-cobra': require('@/assets/panchatantra/crows-and-cobra.jpg'),
