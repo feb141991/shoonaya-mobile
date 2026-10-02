@@ -268,6 +268,53 @@ function RootLayout() {
     }
   }, [readyToRender, isAppInteractive, markInteractive]);
 
+  // ── Startup Account Restoration Check (30-day cool-off) ───────────────
+  const deletionPromptShownRef = useRef(false);
+  useEffect(() => {
+    if (!isAppInteractive || deletionPromptShownRef.current) return;
+    const identity = getAppIdentity();
+    if (identity.kind !== 'authenticated') return;
+
+    deletionPromptShownRef.current = true;
+    void apiFetch('/api/user/delete/status', { expectedUserId: identity.userId })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json().catch(() => null)) as {
+          success?: boolean;
+          isDeleting?: boolean;
+          daysRemaining?: number | null;
+          purgeAfter?: string | null;
+        } | null;
+
+        if (data?.success && data.isDeleting) {
+          const days =
+            data.daysRemaining ??
+            (data.purgeAfter
+              ? Math.max(0, Math.ceil((new Date(data.purgeAfter).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+              : null);
+          const daysText = days !== null ? `${days} days` : 'soon';
+          Alert.alert(
+            'Account Deletion Scheduled',
+            `Your account is scheduled for permanent deletion in ${daysText}. All notifications are silenced. Would you like to restore your account now?`,
+            [
+              { text: 'Keep Deletion Scheduled', style: 'cancel' },
+              {
+                text: 'Restore My Account',
+                style: 'default',
+                onPress: () => {
+                  void apiFetch('/api/user/delete/cancel', { method: 'POST' }).then(() => {
+                    void registerPushToken(identity.userId, { force: true, reason: 'settings' });
+                    Alert.alert('Account Restored', 'Welcome back 🙏 Your account and sacred practice history are completely safe.');
+                  });
+                },
+              },
+            ]
+          );
+        }
+      })
+      .catch(() => {});
+  }, [isAppInteractive]);
+
   // Leaves a privacy-safe local receipt when startup remains unresolved. This
   // performs no network work and never gates rendering; it exists solely to
   // distinguish an auth/app readiness stall from a native process crash.

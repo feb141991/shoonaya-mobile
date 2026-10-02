@@ -127,4 +127,60 @@ describe('Account Deletion Contract & Cool-off Flow', () => {
     // Non-notification settings are preserved
     assert.equal(nextState.theme_preference, 'system');
   });
+
+  it('parses GET /api/user/delete/preview payload without fabricating relics count', () => {
+    const parsePreview = (json: unknown) => {
+      if (!json || typeof json !== 'object') return null;
+      const data = json as {
+        success?: boolean;
+        userName?: string;
+        tradition?: string;
+        streak?: number;
+        karmaPoints?: number;
+        sevaScore?: number;
+        relicsCount?: number;
+        journalCount?: number;
+        activeSankalpas?: number;
+        isPro?: boolean;
+        ownedKuls?: Array<{ id: string; name: string }>;
+        ownedMandalis?: Array<{ id: string; name: string }>;
+      };
+      if (!data.success) return null;
+      return {
+        userName: data.userName || 'Seeker',
+        tradition: data.tradition || 'hindu',
+        streak: data.streak ?? 0,
+        karmaPoints: data.karmaPoints ?? 0,
+        sevaScore: data.sevaScore ?? 0,
+        relicsCount: data.relicsCount ?? 0,
+        journalCount: data.journalCount ?? 0,
+        activeSankalpas: data.activeSankalpas ?? 0,
+        isPro: Boolean(data.isPro),
+        ownedKuls: data.ownedKuls ?? [],
+        ownedMandalis: data.ownedMandalis ?? [],
+      };
+    };
+
+    const preview = parsePreview({
+      success: true,
+      userName: 'Arjun',
+      tradition: 'hindu',
+      streak: 42,
+      karmaPoints: 1200,
+      sevaScore: 350,
+      relicsCount: 4,
+      journalCount: 15,
+      activeSankalpas: 2,
+      isPro: true,
+      ownedKuls: [{ id: 'kul-1', name: 'Saraswati Kul' }],
+      ownedMandalis: [],
+    });
+
+    assert.notEqual(preview, null);
+    assert.equal(preview?.userName, 'Arjun');
+    assert.equal(preview?.relicsCount, 4); // Exact server metric, not streak/7
+    assert.equal(preview?.isPro, true);
+    assert.equal(preview?.ownedKuls.length, 1);
+    assert.equal(preview?.ownedKuls[0].name, 'Saraswati Kul');
+  });
 });

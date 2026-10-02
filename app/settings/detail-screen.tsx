@@ -35,6 +35,7 @@ import {
   registerPushToken,
   requestNotificationPermission,
   signOutWithPushCleanup,
+  unregisterPushToken,
   getPushRegistrationStatus,
   subscribePushRegistrationStatus,
 } from '@/lib/notifications';
@@ -780,10 +781,51 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const openDeletionSheet = async () => {
     if (appIdentity.kind !== 'authenticated') return;
     try {
+      const res = await apiFetch('/api/user/delete/preview', { expectedUserId: appIdentity.userId });
+      if (res.ok) {
+        const preview = (await res.json().catch(() => null)) as {
+          success?: boolean;
+          userName?: string;
+          tradition?: string;
+          streak?: number;
+          karmaPoints?: number;
+          sevaScore?: number;
+          relicsCount?: number;
+          journalCount?: number;
+          activeSankalpas?: number;
+          isPro?: boolean;
+          ownedKuls?: Array<{ id: string; name: string }>;
+          ownedMandalis?: Array<{ id: string; name: string }>;
+        } | null;
+
+        if (preview?.success) {
+          setDeletionSnapshot({
+            userName: preview.userName || 'Seeker',
+            tradition: preview.tradition || profileTradition || 'hindu',
+            streak: preview.streak ?? 0,
+            karmaPoints: preview.karmaPoints ?? 0,
+            sevaScore: preview.sevaScore ?? 0,
+            relicsCount: preview.relicsCount ?? 0,
+            journalCount: preview.journalCount ?? 0,
+            activeSankalpas: preview.activeSankalpas ?? 0,
+            isPro: Boolean(preview.isPro),
+            ownedKuls: preview.ownedKuls ?? [],
+            ownedMandalis: preview.ownedMandalis ?? [],
+            lang: language,
+          });
+          setDeletionSheetVisible(true);
+          return;
+        }
+      }
+    } catch {
+      // Fallback to client query if network fails
+    }
+
+    try {
       const [profileRes, sadhanaRes, journalRes] = await Promise.all([
         supabase
           .from('profiles')
-          .select('full_name, username, tradition, karma_points, seva_score, shloka_streak')
+          .select('full_name, username, tradition, karma_points, seva_score, shloka_streak, is_pro')
           .eq('id', appIdentity.userId)
           .maybeSingle(),
         supabase
@@ -813,13 +855,16 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         streak,
         karmaPoints: karma,
         sevaScore: seva,
-        relicsCount: streak > 0 ? Math.min(12, Math.floor(streak / 7) + 1) : 0,
+        relicsCount: 0, // In offline fallback, do NOT fabricate (Rule 3)
         journalCount,
+        isPro: Boolean(prof?.is_pro),
+        lang: language,
       });
     } catch {
       setDeletionSnapshot((prev) => ({
         ...prev,
         tradition: profileTradition || 'hindu',
+        lang: language,
       }));
     }
     setDeletionSheetVisible(true);
@@ -844,6 +889,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         deletionRequestedAt: typeof data?.deletionRequestedAt === 'string' ? data.deletionRequestedAt : new Date().toISOString(),
         purgeAfter: typeof data?.purgeAfter === 'string' ? data.purgeAfter : null,
       });
+
+      // Immediately unregister device push token and clear local home caches
+      await unregisterPushToken({ beforeSignOut: false }).catch(() => {});
+      await clearAllHomeCaches().catch(() => {});
+
       Alert.alert(
         'Deletion Scheduled (30-Day Cool-off)',
         'All notifications have been silenced immediately. Your sacred practice history is held safely in cool-off for 30 days. You can cancel anytime before then from your Profile or this screen.'
@@ -881,6 +931,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       const response = await apiFetch('/api/user/delete/cancel', { method: 'POST' });
       if (!response.ok) throw new Error(`Request failed (status ${response.status})`);
       setDeletionStatus({ isDeleting: false, deletionRequestedAt: null, purgeAfter: null });
+
+      // Re-register push token on cancel
+      if (appIdentity.kind === 'authenticated') {
+        void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
+      }
+
       Alert.alert('Deletion cancelled', 'Welcome back — your account is safe.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not cancel deletion. Check your connection and try again.';
