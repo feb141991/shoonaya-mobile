@@ -33,7 +33,9 @@ describe('Dharma Mitra chat sheet composer stays above the keyboard', () => {
     assert.match(effect!, /hide\.remove\(\);/);
   });
 
-  it("folds keyboardHeight into the composer area's own bottom padding", () => {
-    assert.match(chatSheet, /paddingBottom: 10 \+ keyboardHeight/);
+  it("folds keyboard overlap into the composer area's own bottom padding, accounting for panel bottom clearance", () => {
+    assert.match(chatSheet, /const panelBottomOffset = insets\.bottom \+ PANEL_MARGIN \+ NAV_BAR_CLEARANCE;/);
+    assert.match(chatSheet, /const keyboardOverlap = Math\.max\(0, keyboardHeight - panelBottomOffset\);/);
+    assert.match(chatSheet, /paddingBottom: 10 \+ keyboardOverlap/);
   });
 });

@@ -21,14 +21,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { ScrollUnrollPanel } from '@/components/home/ScrollUnrollPanel';
+import { ScrollUnrollPanel, PANEL_MARGIN } from '@/components/home/ScrollUnrollPanel';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 
 function TypingDots({ color }: { color: string }) {
   const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -383,13 +386,21 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
   const isNearBottomRef = useRef(true);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
   // KeyboardAvoidingView cannot work here: this whole sheet is a
   // position:absolute overlay (ScrollUnrollPanel) with an animated, fixed
   // `height` computed before the keyboard opens -- there's no properly
   // laid-out screen for it to measure against, on either platform. Tracking
   // the real keyboard height and folding it into the composer's own bottom
-  // padding is the only thing that actually keeps the composer above the
-  // keyboard inside a box that never resizes on its own.
+  // padding keeps the composer above the keyboard inside a box that never
+  // resizes on its own.
+  //
+  // Crucially, ScrollUnrollPanel's bottom edge is already positioned at:
+  //   height - insets.bottom - PANEL_MARGIN - NAV_BAR_CLEARANCE.
+  // The keyboard only intrudes into the panel by the distance it extends
+  // past that bottom clearance. Shifting by raw `keyboardHeight` pushed the
+  // composer ~156px too far into the content area, squishing suggestions
+  // and leaving an empty void between keyboard and input.
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', (event) => setKeyboardHeight(event.endCoordinates?.height ?? 0));
@@ -399,6 +410,9 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
       hide.remove();
     };
   }, []);
+
+  const panelBottomOffset = insets.bottom + PANEL_MARGIN + NAV_BAR_CLEARANCE;
+  const keyboardOverlap = Math.max(0, keyboardHeight - panelBottomOffset);
 
   const {
     messages,
@@ -552,7 +566,7 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
   return (
     <ScrollUnrollPanel visible={visible} origin={origin} onClose={onClose}>
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 + keyboardHeight }}>
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 + keyboardOverlap }}>
           {/* Sacred ambient background glow */}
           <View
             pointerEvents="none"
@@ -722,6 +736,7 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
               contentContainerStyle={{ gap: 10, paddingBottom: 12 }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             >
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 20 }}>
                 Ask me anything — dharmic wisdom, spiritual practice, life questions.

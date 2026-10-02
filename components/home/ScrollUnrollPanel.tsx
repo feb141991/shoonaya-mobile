@@ -25,7 +25,7 @@ import { useReducedMotion } from '@/components/ui/Motion';
 // Modal API, since Modal can't be driven by this custom reveal transform.
 
 const ANCHOR_SIZE = 74;
-const PANEL_MARGIN = 16;
+export const PANEL_MARGIN = 16;
 const BASE_DIAMETER = 40;
 const CAP_HEIGHT = 16;
 const CAP_OVERHANG = 14;
