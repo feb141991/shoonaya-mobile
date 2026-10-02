@@ -13,6 +13,7 @@ import {
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
+import { signOutWithPushCleanup } from '@/lib/notifications';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
@@ -59,6 +60,7 @@ import { clearAllHomeCaches } from '@/lib/homeCache';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
 import { AuthGate } from '@/components/ui/AuthGate';
+import { AccountDeletionBanner } from '@/components/profile/AccountDeletionBanner';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import {
@@ -399,6 +401,12 @@ export default function ProfileScreen() {
   const [locationSyncing, setLocationSyncing] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<any[] | null>(null);
+  const [deletionStatus, setDeletionStatus] = useState<{
+    isDeleting: boolean;
+    deletionRequestedAt: string | null;
+    purgeAfter: string | null;
+    daysRemaining: number | null;
+  } | null>(null);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -657,7 +665,42 @@ export default function ProfileScreen() {
         progress: payload.progress,
       },
     });
+    // Check if account deletion is pending in cool-off
+    if (appIdentity.kind === 'authenticated') {
+      void apiFetch('/api/user/delete/status', { expectedUserId: appIdentity.userId })
+        .then(async (res) => {
+          if (!res.ok) return;
+          const json = await res.json().catch(() => null) as {
+            success?: boolean;
+            isDeleting?: boolean;
+            deletionRequestedAt?: string | null;
+            purgeAfter?: string | null;
+            daysRemaining?: number | null;
+          } | null;
+          if (json?.success) {
+            setDeletionStatus(json.isDeleting ? {
+              isDeleting: true,
+              deletionRequestedAt: json.deletionRequestedAt ?? null,
+              purgeAfter: json.purgeAfter ?? null,
+              daysRemaining: typeof json.daysRemaining === 'number' ? json.daysRemaining : null,
+            } : null);
+          }
+        })
+        .catch(() => {});
+    }
   }, [appIdentity, router]);
+
+  const handleCancelDeletion = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/user/delete/cancel', { method: 'POST' });
+      if (!res.ok) throw new Error('Cancellation failed');
+      setDeletionStatus(null);
+      Alert.alert('Deletion Cancelled', 'Welcome back 🙏 Your account and sacred practice are completely safe.');
+    } catch (err) {
+      Alert.alert('Could not cancel deletion', err instanceof Error ? err.message : 'Please check your connection and try again.');
+      throw err;
+    }
+  }, []);
 
   useEffect(() => {
     const effectIdentityKey = profileIdentityKey(appIdentity);
@@ -743,7 +786,7 @@ export default function ProfileScreen() {
       await clearAllHomeCaches();
       await clearAllProfileCaches();
       await clearAllOnboardingDrafts();
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
     } finally {
       setSigningOut(false);
     }
@@ -1376,6 +1419,14 @@ export default function ProfileScreen() {
             </View>
           </View>
         </LinearGradient>
+
+        {deletionStatus?.isDeleting && (
+          <AccountDeletionBanner
+            purgeAfter={deletionStatus.purgeAfter}
+            daysRemaining={deletionStatus.daysRemaining}
+            onCancelDeletion={handleCancelDeletion}
+          />
+        )}
 
         {isGuest ? (
           <Card

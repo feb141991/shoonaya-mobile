@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -34,6 +34,9 @@ import {
   openNotificationSettings,
   registerPushToken,
   requestNotificationPermission,
+  signOutWithPushCleanup,
+  getPushRegistrationStatus,
+  subscribePushRegistrationStatus,
 } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
@@ -65,6 +68,7 @@ import {
   type HeroPick,
   type HeroSize,
 } from '@/lib/heroPreference';
+import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
 import { getGreetingPick } from '@/lib/greetingPreference';
 
 type ThemePref = 'light' | 'dark' | 'system';
@@ -112,6 +116,36 @@ const LANGUAGE_LABELS: Record<AppLanguage, string> = {
   en: 'English',
   hi: 'Hindi',
   pa: 'Punjabi',
+};
+
+const PUSH_STATUS_COPY: Record<AppLanguage, {
+  device: string; checking: string; permissionOff: string; registered: string;
+  unavailable: string; failed: string; openSettings: string; checkSetup: string;
+}> = {
+  en: {
+    device: 'This device', checking: 'Checking notification setup…',
+    permissionOff: 'Notifications are off in your phone settings.',
+    registered: 'Registered for your enabled reminders. Your phone settings also control alerts.',
+    unavailable: 'Push notifications are unavailable in this app environment.',
+    failed: 'Could not register this device. Check your connection and try again.',
+    openSettings: 'Open phone settings', checkSetup: 'Check notification setup',
+  },
+  hi: {
+    device: 'यह डिवाइस', checking: 'सूचना सेटअप जाँचा जा रहा है…',
+    permissionOff: 'आपके फ़ोन की सेटिंग में सूचनाएँ बंद हैं।',
+    registered: 'आपके चुने रिमाइंडर के लिए यह डिवाइस पंजीकृत है। अलर्ट पर फ़ोन की सेटिंग भी लागू होती है।',
+    unavailable: 'इस ऐप परिवेश में पुश सूचनाएँ उपलब्ध नहीं हैं।',
+    failed: 'यह डिवाइस पंजीकृत नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
+    openSettings: 'फ़ोन की सेटिंग खोलें', checkSetup: 'सूचना सेटअप जाँचें',
+  },
+  pa: {
+    device: 'ਇਹ ਡਿਵਾਈਸ', checking: 'ਸੂਚਨਾ ਸੈਟਅੱਪ ਦੀ ਜਾਂਚ ਹੋ ਰਹੀ ਹੈ…',
+    permissionOff: 'ਤੁਹਾਡੇ ਫ਼ੋਨ ਦੀਆਂ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਸੂਚਨਾਵਾਂ ਬੰਦ ਹਨ।',
+    registered: 'ਤੁਹਾਡੇ ਚੁਣੇ ਰੀਮਾਈਂਡਰਾਂ ਲਈ ਇਹ ਡਿਵਾਈਸ ਰਜਿਸਟਰ ਹੈ। ਚੇਤਾਵਨੀਆਂ ਲਈ ਫ਼ੋਨ ਸੈਟਿੰਗਾਂ ਵੀ ਲਾਗੂ ਹੁੰਦੀਆਂ ਹਨ।',
+    unavailable: 'ਇਸ ਐਪ ਮਾਹੌਲ ਵਿੱਚ ਪੁਸ਼ ਸੂਚਨਾਵਾਂ ਉਪਲਬਧ ਨਹੀਂ ਹਨ।',
+    failed: 'ਇਹ ਡਿਵਾਈਸ ਰਜਿਸਟਰ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਨੈਕਸ਼ਨ ਜਾਂਚ ਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+    openSettings: 'ਫ਼ੋਨ ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ', checkSetup: 'ਸੂਚਨਾ ਸੈਟਅੱਪ ਜਾਂਚੋ',
+  },
 };
 
 const LANGUAGES = SUPPORTED_APP_LANGUAGES.map((key) => ({ key, label: LANGUAGE_LABELS[key] }));
@@ -272,7 +306,8 @@ async function openLegalUrl(path: '/terms' | '/privacy' | '/sources') {
 export function SettingsDetailScreen({ section }: { section: SettingsSectionKey }) {
   const router = useRouter();
   const appIdentity = useAppIdentity();
-  const { setLanguage } = useLanguage();
+  const { setLanguage, language } = useLanguage();
+  const pushStatusCopy = PUSH_STATUS_COPY[language];
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -288,6 +323,16 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     deletionRequestedAt: string | null;
     purgeAfter: string | null;
   } | null>(null);
+  const [deletionSheetVisible, setDeletionSheetVisible] = useState(false);
+  const [deletionSnapshot, setDeletionSnapshot] = useState<DeletionJourneySnapshot>({
+    userName: '',
+    tradition: 'hindu',
+    streak: 0,
+    karmaPoints: 0,
+    sevaScore: 0,
+    relicsCount: 0,
+    journalCount: 0,
+  });
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [japaReminderTimeDraft, setJapaReminderTimeDraft] = useState(INITIAL_SETTINGS.japa_reminder_time);
   const [reminderTimeDraft, setReminderTimeDraft] = useState(INITIAL_SETTINGS.observance_reminder_time ?? '08:00');
@@ -552,6 +597,21 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       .finally(() => { if (lease.isCurrent()) setLoading(false); });
   }, [loadSettings, appIdentity]);
 
+  const pushStatus = useSyncExternalStore(subscribePushRegistrationStatus, getPushRegistrationStatus, getPushRegistrationStatus);
+  useFocusEffect(useCallback(() => {
+    if (section !== 'notifications' || appIdentity.kind !== 'authenticated') return;
+    void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
+    let backgrounded = AppState.currentState === 'background';
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'background') backgrounded = true;
+      if (state === 'active' && backgrounded) {
+        backgrounded = false;
+        void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
+      }
+    });
+    return () => subscription.remove();
+  }, [section, appIdentity]));
+
   // Best-effort: a failure here just leaves the Danger Zone in its default
   // "Delete account" state rather than blocking the rest of Settings from
   // loading (loadSettings/runLoad above already has its own retry UI for
@@ -677,7 +737,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (isGuest) return;
 
     if (appIdentity.kind === 'authenticated') {
-      void registerPushToken(appIdentity.userId);
+      void registerPushToken(appIdentity.userId, { force: true, reason: 'permission' });
     }
   };
 
@@ -717,10 +777,61 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   // old immediate-hard-delete route (POST /api/user/delete) is no longer
   // called from any user-facing UI; see that route's own comment in the
   // web repo.
-  const confirmDeletionRequest = async () => {
+  const openDeletionSheet = async () => {
+    if (appIdentity.kind !== 'authenticated') return;
+    try {
+      const [profileRes, sadhanaRes, journalRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('full_name, username, tradition, karma_points, seva_score, shloka_streak')
+          .eq('id', appIdentity.userId)
+          .maybeSingle(),
+        supabase
+          .from('daily_sadhana')
+          .select('streak_count')
+          .eq('user_id', appIdentity.userId)
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('journal_entries')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', appIdentity.userId),
+      ]);
+
+      const prof = profileRes.data;
+      const streak = sadhanaRes.data?.streak_count ?? prof?.shloka_streak ?? 0;
+      const karma = prof?.karma_points ?? 0;
+      const seva = prof?.seva_score ?? 0;
+      const tradition = prof?.tradition ?? profileTradition ?? 'hindu';
+      const name = prof?.full_name || prof?.username || 'Seeker';
+      const journalCount = journalRes.count ?? 0;
+
+      setDeletionSnapshot({
+        userName: name,
+        tradition,
+        streak,
+        karmaPoints: karma,
+        sevaScore: seva,
+        relicsCount: streak > 0 ? Math.min(12, Math.floor(streak / 7) + 1) : 0,
+        journalCount,
+      });
+    } catch {
+      setDeletionSnapshot((prev) => ({
+        ...prev,
+        tradition: profileTradition || 'hindu',
+      }));
+    }
+    setDeletionSheetVisible(true);
+  };
+
+  const confirmDeletionRequest = async (payload?: { reason?: string; otherReason?: string }) => {
     setDeleting(true);
     try {
-      const response = await apiFetch('/api/user/delete/request', { method: 'POST' });
+      const response = await apiFetch('/api/user/delete/request', {
+        method: 'POST',
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
       const json: unknown = await response.json().catch(() => null);
       const data = json && typeof json === 'object' ? (json as Record<string, unknown>) : null;
       const success = data?.success === true;
@@ -730,16 +841,38 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       }
       setDeletionStatus({
         isDeleting: true,
-        deletionRequestedAt: typeof data?.deletionRequestedAt === 'string' ? data.deletionRequestedAt : null,
+        deletionRequestedAt: typeof data?.deletionRequestedAt === 'string' ? data.deletionRequestedAt : new Date().toISOString(),
         purgeAfter: typeof data?.purgeAfter === 'string' ? data.purgeAfter : null,
       });
-      Alert.alert('Deletion scheduled', 'You can cancel anytime in the next 30 days from this screen.');
+      Alert.alert(
+        'Deletion Scheduled (30-Day Cool-off)',
+        'All notifications have been silenced immediately. Your sacred practice history is held safely in cool-off for 30 days. You can cancel anytime before then from your Profile or this screen.'
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not schedule deletion. Check your connection and try again.';
       Alert.alert('Could not schedule deletion', message);
+      throw error;
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handlePauseNotificationsInstead = async () => {
+    const mutedSettings: Partial<SettingsState> = {
+      japa_reminder_enabled: false,
+      wants_festival_reminders: false,
+      wants_vrat_reminders: false,
+      wants_tithi_reminders: false,
+      wants_shloka_reminders: false,
+      wants_nitya_reminders: false,
+      wants_community_notifications: false,
+      wants_family_notifications: false,
+    };
+    await persistSettings({ ...settings, ...mutedSettings });
+    Alert.alert(
+      'Notifications Muted',
+      'All daily reminders have been muted. Your streaks, journal reflections, and relics remain completely safe.'
+    );
   };
 
   const handleCancelDeletion = async () => {
@@ -757,17 +890,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     }
   };
 
-  const handleDeletePress = () => {
-    Alert.alert(
-      'Delete account?',
-      'This starts a 30-day cancellable cool-off — practice history, streaks, relics, and Kul membership included. Your account is only permanently deleted after 30 days, and you can cancel anytime before then by signing back in and tapping Cancel deletion request here.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Schedule deletion', style: 'destructive', onPress: () => { void confirmDeletionRequest(); } },
-      ]
-    );
-  };
-
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
@@ -775,7 +897,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       await clearAllHomeCaches();
       await clearAllSettingsCaches();
       await clearAllOnboardingDrafts();
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
     } finally {
       setSigningOut(false);
     }
@@ -886,6 +1008,26 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
             {/* ── Notifications ───────────────────────────────────────── */}
             {section === 'notifications' ? <SettingsSection label="Notifications" theme={theme}>
+              {appIdentity.kind === 'authenticated' ? (
+                <View style={{ gap: 8, paddingBottom: 16 }}>
+                  <Text style={{ ...TYPE.label, color: theme.text }}>{pushStatusCopy.device}</Text>
+                  <Text accessibilityLiveRegion="polite" style={{ ...TYPE.caption, color: theme.dim }}>
+                    {pushStatus.userId !== appIdentity.userId || pushStatus.status === 'idle' || pushStatus.status === 'syncing'
+                      ? pushStatusCopy.checking
+                      : pushStatus.status === 'permission_denied' ? pushStatusCopy.permissionOff
+                      : pushStatus.status === 'registered' || pushStatus.status === 'fresh' ? pushStatusCopy.registered
+                      : pushStatus.status === 'unavailable' ? pushStatusCopy.unavailable
+                      : pushStatusCopy.failed}
+                  </Text>
+                  <Button label={pushStatus.status === 'permission_denied' ? pushStatusCopy.openSettings : pushStatusCopy.checkSetup}
+                    variant="secondary" disabled={pushStatus.status === 'syncing'}
+                    onPress={() => {
+                      if (pushStatus.status === 'permission_denied') { void openNotificationSettings(); return; }
+                      void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
+                    }} />
+                  <View style={{ height: 1, backgroundColor: theme.borderSoft, marginTop: 8 }} />
+                </View>
+              ) : null}
               {NOTIFICATION_TOGGLES.map((item, index) => (
                 <View key={item.key}>
                   {index > 0 ? (
@@ -1282,13 +1424,13 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
                         <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
                         <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
-                          Deleting starts a 30-day cancellable cool-off. Your account and data are permanently removed after 30 days unless you cancel first.
+                          Deleting starts a 30-day cancellable cool-off. All notifications stop immediately, and data is permanently removed after 30 days unless you cancel first.
                         </Text>
                       </View>
                       <DangerButton
                         label="Delete account"
                         loading={deleting}
-                        onPress={handleDeletePress}
+                        onPress={() => { void openDeletionSheet(); }}
                         isDark={isDark}
                       />
                     </>
@@ -1360,6 +1502,15 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         onClose={() => setGreetingPickerVisible(false)}
         tradition={profileTradition}
         onPickChange={(pick) => setGreetingPickState(pick)}
+      />
+
+      <AccountDeletionSheet
+        visible={deletionSheetVisible}
+        snapshot={deletionSnapshot}
+        onClose={() => setDeletionSheetVisible(false)}
+        onConfirmDeletion={confirmDeletionRequest}
+        onPauseNotificationsInstead={handlePauseNotificationsInstead}
+        onExportData={handleDownloadData}
       />
     </Screen>
   );
