@@ -20,22 +20,31 @@ describe('Dharma Mitra chat sheet composer stays above the keyboard', () => {
     assert.doesNotMatch(chatSheet, /^\s*KeyboardAvoidingView,\s*$/m);
   });
 
-  it('tracks real keyboard show/hide events into a height value', () => {
+  it('tracks real keyboard events into a height value, using frame events on iOS', () => {
     assert.match(chatSheet, /const \[keyboardHeight, setKeyboardHeight\] = useState\(0\);/);
+    assert.match(chatSheet, /Keyboard\.addListener\('keyboardWillChangeFrame'/);
+    assert.match(chatSheet, /getVisibleKeyboardHeight\(Dimensions\.get\('window'\)\.height, event\.endCoordinates\)/);
     assert.match(chatSheet, /Keyboard\.addListener\('keyboardDidShow', \(event\) => setKeyboardHeight\(event\.endCoordinates\?\.height \?\? 0\)\)/);
-    assert.match(chatSheet, /Keyboard\.addListener\('keyboardDidHide', \(\) => setKeyboardHeight\(0\)\)/);
+    assert.match(chatSheet, /Keyboard\.addListener\(Platform\.OS === 'ios' \? 'keyboardWillHide' : 'keyboardDidHide', \(\) => setKeyboardHeight\(0\)\)/);
   });
 
   it('removes both keyboard listeners on unmount', () => {
-    const effect = chatSheet.match(/useEffect\(\(\) => \{\s*const show = Keyboard\.addListener[\s\S]*?\}, \[\]\);/)?.[0];
+    const effect = chatSheet.match(/useEffect\(\(\) => \{\s*const show = Platform\.OS[\s\S]*?\}, \[\]\);/)?.[0];
     assert.ok(effect, 'keyboard-tracking effect should exist');
     assert.match(effect!, /show\.remove\(\);/);
     assert.match(effect!, /hide\.remove\(\);/);
   });
 
-  it("folds keyboard overlap into the composer area's own bottom padding, accounting for panel bottom clearance", () => {
-    assert.match(chatSheet, /const panelBottomOffset = insets\.bottom \+ PANEL_MARGIN \+ NAV_BAR_CLEARANCE;/);
-    assert.match(chatSheet, /const keyboardOverlap = Math\.max\(0, keyboardHeight - panelBottomOffset\);/);
+  it("pads the composer area by the shared keyboard overlap, not a locally re-derived formula", () => {
+    assert.match(chatSheet, /const keyboardOverlap = getKeyboardOverlap\(keyboardHeight, insets\.bottom\);/);
     assert.match(chatSheet, /paddingBottom: 10 \+ keyboardOverlap/);
+    assert.doesNotMatch(chatSheet, /NAV_BAR_CLEARANCE/);
+    assert.doesNotMatch(chatSheet, /paddingBottom: 10 \+ keyboardHeight/);
+  });
+
+  it('lays the panel out from the same helper the sheet measures against', () => {
+    const panel = readFileSync(new URL('../components/home/ScrollUnrollPanel.tsx', import.meta.url), 'utf8');
+    assert.match(panel, /getPanelBottomOffset\(insets\.bottom\)/);
+    assert.doesNotMatch(panel, /const PANEL_MARGIN = /);
   });
 });

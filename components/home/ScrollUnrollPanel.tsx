@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, SHADOWS, themeColor } from '@/lib/constants';
-import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { PANEL_MARGIN, getPanelBottomOffset } from '@/lib/panelKeyboard';
 import { useReducedMotion } from '@/components/ui/Motion';
 
 // A near-fullscreen overlay that unrolls from a point on screen (the
@@ -25,7 +25,6 @@ import { useReducedMotion } from '@/components/ui/Motion';
 // Modal API, since Modal can't be driven by this custom reveal transform.
 
 const ANCHOR_SIZE = 74;
-export const PANEL_MARGIN = 16;
 const BASE_DIAMETER = 40;
 const CAP_HEIGHT = 16;
 const CAP_OVERHANG = 14;
@@ -101,9 +100,10 @@ export function ScrollUnrollPanel({ visible, origin, onClose, children }: Scroll
     // never lands under CollapsibleBottomNav's floating band (that bar is
     // mounted above this screen's own stacking context, so no zIndex here
     // can win against it — the only fix is to not overlap it at all).
-    const panelHeight = height - insets.top - insets.bottom - PANEL_MARGIN * 2 - NAV_BAR_CLEARANCE;
+    const panelBottomOffset = getPanelBottomOffset(insets.bottom);
+    const panelHeight = height - insets.top - PANEL_MARGIN - panelBottomOffset;
     const minTop = insets.top + PANEL_MARGIN;
-    const maxBottomEdge = height - insets.bottom - PANEL_MARGIN - NAV_BAR_CLEARANCE;
+    const maxBottomEdge = height - panelBottomOffset;
 
     const spaceBelow = height - origin.y;
     const spaceAbove = origin.y + ANCHOR_SIZE;

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Dimensions,
   Easing,
   FlatList,
   Keyboard,
@@ -24,14 +25,14 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { ScrollUnrollPanel, PANEL_MARGIN } from '@/components/home/ScrollUnrollPanel';
+import { ScrollUnrollPanel } from '@/components/home/ScrollUnrollPanel';
 import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { getKeyboardOverlap, getVisibleKeyboardHeight } from '@/lib/panelKeyboard';
 
 function TypingDots({ color }: { color: string }) {
   const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -395,24 +396,31 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
   // padding keeps the composer above the keyboard inside a box that never
   // resizes on its own.
   //
-  // Crucially, ScrollUnrollPanel's bottom edge is already positioned at:
-  //   height - insets.bottom - PANEL_MARGIN - NAV_BAR_CLEARANCE.
-  // The keyboard only intrudes into the panel by the distance it extends
-  // past that bottom clearance. Shifting by raw `keyboardHeight` pushed the
-  // composer ~156px too far into the content area, squishing suggestions
-  // and leaving an empty void between keyboard and input.
+  // The panel's bottom edge already stops above the nav-bar clearance
+  // (getPanelBottomOffset), so the keyboard only intrudes by the distance it
+  // extends past that. Padding by the raw keyboard height pushed the composer
+  // ~156px too far up, squishing the suggestions and leaving a gap above the
+  // keyboard.
+  //
+  // iOS reports frames while the keyboard is still moving
+  // (keyboardWillChangeFrame), so the composer is never left behind the
+  // keyboard waiting for keyboardDidShow, and the height also follows
+  // changes while the keyboard stays open (switching to an emoji or Indic
+  // keyboard). Android only emits the Did* events.
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', (event) => setKeyboardHeight(event.endCoordinates?.height ?? 0));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
+    const show = Platform.OS === 'ios'
+      ? Keyboard.addListener('keyboardWillChangeFrame', (event) =>
+          setKeyboardHeight(getVisibleKeyboardHeight(Dimensions.get('window').height, event.endCoordinates)))
+      : Keyboard.addListener('keyboardDidShow', (event) => setKeyboardHeight(event.endCoordinates?.height ?? 0));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboardHeight(0));
     return () => {
       show.remove();
       hide.remove();
     };
   }, []);
 
-  const panelBottomOffset = insets.bottom + PANEL_MARGIN + NAV_BAR_CLEARANCE;
-  const keyboardOverlap = Math.max(0, keyboardHeight - panelBottomOffset);
+  const keyboardOverlap = getKeyboardOverlap(keyboardHeight, insets.bottom);
 
   const {
     messages,
