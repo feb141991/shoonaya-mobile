@@ -7,22 +7,25 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } f
 import { MOODS_CONFIG, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { startMoodCheckin } from '@/lib/mood';
-import { getMoodSpiritualDate, setMoodPulseDismissedDate } from '@/lib/moodPulsePreference';
+import { dismissMoodCheckin, startMoodCheckin } from '@/lib/mood';
+import { setMoodPulseDismissedDate } from '@/lib/moodPulsePreference';
 import { resolveNativeRoute } from '@/lib/routes';
 
 type MoodPulseSheetProps = {
   visible: boolean;
   firstName?: string;
+  userId: string;
+  spiritualDate: string;
   onClose: () => void;
   onLogged: (mood: string) => void;
+  onDismissed: () => void;
 };
 
 // Native port of the PWA's auto-popping MoodPulse (src/components/mood/
 // MoodPulse.tsx) -- Home decides WHEN to show this (once per spiritual day,
-// gated by lib/moodPulsePreference.ts's AsyncStorage flag, see the effect in
-// app/(tabs)/index.tsx), this component owns the picker UI and the actual
-// /api/mood/checkin calls once a mood is picked.
+// after an authoritative server status check, with account-scoped local
+// dismissal as an offline fallback; see the effect in app/(tabs)/index.tsx).
+// This component owns the picker UI and the /api/mood/checkin calls.
 //
 // Presented as a centered dialog (RN Modal + fade, backdrop scrim, fully
 // rounded card) matching the PWA's actual layout (fixed inset-0 flex
@@ -30,10 +33,10 @@ type MoodPulseSheetProps = {
 // usual bottom-sheet idiom -- explicit PWA-parity request, not the
 // bottom-sheet alternative this component started out as.
 //
-// Unlike the PWA's completed-state branch, native always keeps the full mood
-// picker visible. Backend mood history and per-device dismissal state can
-// legitimately differ, but they must not produce different picker layouts.
-export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPulseSheetProps) {
+// Once shown, native keeps the full mood picker visible. Server status and
+// local dismissal decide whether the sheet opens, not which picker layout it
+// uses.
+export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onClose, onLogged, onDismissed }: MoodPulseSheetProps) {
   const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
@@ -42,6 +45,7 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pickedMood, setPickedMood] = useState<MoodConfig | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const contentAnim = useRef(new Animated.Value(0)).current;
   const confirmAnim = useRef(new Animated.Value(0)).current;
 
@@ -55,6 +59,7 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
     if (!visible) return;
     setPickedMood(null);
     setSaving(false);
+    setSaveError(null);
     contentAnim.setValue(reducedMotion ? 1 : 0);
     if (!reducedMotion) {
       Animated.timing(contentAnim, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
@@ -72,15 +77,24 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
   }, [pickedMood, reducedMotion, confirmAnim]);
 
   const handleDismiss = () => {
-    void setMoodPulseDismissedDate(getMoodSpiritualDate());
+    if (userId) {
+      void setMoodPulseDismissedDate(userId, spiritualDate);
+      void dismissMoodCheckin();
+      onDismissed();
+    }
     onClose();
   };
 
   const handleDone = async () => {
     if (!pickedMood || saving) return;
     setSaving(true);
-    await startMoodCheckin(pickedMood.key, undefined, undefined, undefined, true);
-    await setMoodPulseDismissedDate(getMoodSpiritualDate());
+    setSaveError(null);
+    const checkinId = await startMoodCheckin(pickedMood.key, undefined, undefined, undefined, true);
+    if (!checkinId) {
+      setSaveError('Could not save your mood. Check your connection and try again.');
+      setSaving(false);
+      return;
+    }
     setSaving(false);
     onLogged(pickedMood.key);
     onClose();
@@ -89,7 +103,14 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
   const handleExplore = async () => {
     if (!pickedMood || saving) return;
     setSaving(true);
-    await startMoodCheckin(pickedMood.key);
+    setSaveError(null);
+    const checkinId = await startMoodCheckin(pickedMood.key);
+    if (!checkinId) {
+      setSaveError('Could not save your mood. Check your connection and try again.');
+      setSaving(false);
+      return;
+    }
+    onLogged(pickedMood.key);
     setSaving(false);
     onClose();
     router.push(resolveNativeRoute('/mood', '/(tabs)'));
@@ -175,7 +196,10 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
                           haptic="selection"
                           accessibilityLabel={`I feel ${mood.label}`}
                           accessibilityState={{ selected: isSelected }}
-                          onPress={() => setPickedMood(mood)}
+                          onPress={() => {
+                            setPickedMood(mood);
+                            setSaveError(null);
+                          }}
                           pressedStyle={{ transform: [{ scale: 0.97 }] }}
                           style={{
                             flexDirection: 'row',
@@ -221,6 +245,12 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
                   })}
                 </View>
 
+                {saveError ? (
+                  <Text accessibilityRole="alert" style={{ ...TYPE.caption, color: COLORS.danger, marginTop: SPACING.sm }}>
+                    {saveError}
+                  </Text>
+                ) : null}
+
                 {pickedMood ? (
                   <Animated.View
                     style={{
@@ -238,7 +268,7 @@ export function MoodPulseSheet({ visible, firstName, onClose, onLogged }: MoodPu
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <MoodGlyph mood={pickedMood.key} color={pickedMood.colour} size={16} />
                       <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: pickedMood.colour }} numberOfLines={1}>
-                        {pickedMood.label} saved
+                        {pickedMood.label} selected
                       </Text>
                     </View>
                     {saving ? (

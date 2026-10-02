@@ -18,18 +18,27 @@ import { isFetchCancelled } from './fetch-error';
 
 export const MOOD_RETRY_STAGES = 2;
 
-export type MoodCheckinFetch = (path: string, options: { method: string; body: string }) => Promise<Response>;
+export type MoodCheckinRequestOptions = {
+  expectedUserId?: string;
+  expectedGuest?: boolean;
+};
+
+export type MoodCheckinFetch = (
+  path: string,
+  options: { method: string; body: string } & MoodCheckinRequestOptions
+) => Promise<Response>;
 export type RetryOutcomeLabel = 'success' | 'retry' | 'permanent_failure';
 
 export async function attemptMoodCheckinWithRetry(
   fetchImpl: MoodCheckinFetch,
   body: string,
   onOutcome: (outcome: RetryOutcomeLabel, attempts: number) => void = () => {},
-  delay: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+  delay: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  requestOptions: MoodCheckinRequestOptions = {},
 ): Promise<string | null> {
   for (let attempt = 0; attempt <= MOOD_RETRY_STAGES; attempt++) {
     try {
-      const res = await fetchImpl('/api/mood/checkin', { method: 'POST', body });
+      const res = await fetchImpl('/api/mood/checkin', { method: 'POST', body, ...requestOptions });
       if (res.ok) {
         const data = await res.json();
         onOutcome('success', attempt);

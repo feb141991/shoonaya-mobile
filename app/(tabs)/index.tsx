@@ -72,7 +72,8 @@ import {
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
 import { buildCalendarIdentityKey } from '@/lib/calendarIdentityKey';
 import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
-import { getMoodPulseDismissedDate, getMoodSpiritualDate } from '@/lib/moodPulsePreference';
+import { getMoodPulseDismissedDate, getMoodSpiritualDate, getMoodTimeZone } from '@/lib/moodPulsePreference';
+import { isMoodStatusOwnedBy, shouldShowMoodPulse } from '@/lib/moodPulsePolicy';
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { useAppIdentity } from '@/lib/appIdentity';
@@ -330,6 +331,8 @@ type HomeSummary = {
 type HomeLiveMoodStatus = {
   hasLoggedMoodToday: boolean;
   lastMood: string | null;
+  hasDismissedToday: boolean;
+  spiritualDate: string;
 };
 
 type HomeLiveResponse = {
@@ -346,7 +349,11 @@ type HomeLiveResponse = {
 // individual calls' own best-effort behavior.
 async function fetchHomeLive(): Promise<HomeLiveResponse> {
   try {
-    const response = await apiFetch('/api/native/home-live?fields=unreadNotifications,moodStatus');
+    const params = new URLSearchParams({
+      fields: 'unreadNotifications,moodStatus',
+      timezone: getMoodTimeZone(),
+    });
+    const response = await apiFetch(`/api/native/home-live?${params.toString()}`);
     if (!response.ok) return {};
     return (await response.json()) as HomeLiveResponse;
   } catch {
@@ -788,6 +795,7 @@ function HomeContent() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const appIdentity = useAppIdentity();
+  const moodPulseUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
   const initialSnapshot = useMemo(() => {
     if (appIdentity.kind === 'authenticated' || appIdentity.kind === 'guest') {
       return getHomeCacheSnapshot(appIdentity);
@@ -812,6 +820,8 @@ function HomeContent() {
   const [practicesOpen, setPracticesOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [moodStatus, setMoodStatus] = useState<HomeLiveMoodStatus | null>(null);
+  const [moodStatusOwnerId, setMoodStatusOwnerId] = useState<string | null>(null);
+  const [moodStatusVerified, setMoodStatusVerified] = useState(false);
   const [moodPulseVisible, setMoodPulseVisible] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [authGateVisible, setAuthGateVisible] = useState(false);
@@ -819,6 +829,10 @@ function HomeContent() {
   const [sacredDaysAuthGateVisible, setSacredDaysAuthGateVisible] = useState(false);
   const [chatSheetVisible, setChatSheetVisible] = useState(false);
   const [chatOrigin, setChatOrigin] = useState({ x: 0, y: 0 });
+  const moodStatusForCurrentUser = isMoodStatusOwnedBy(moodStatusOwnerId, moodPulseUserId) &&
+    moodStatus?.spiritualDate === getMoodSpiritualDate()
+    ? moodStatus
+    : null;
   // Stable identity: DharmaMitraChatSheet stays mounted (to preserve chat
   // state across close/reopen) and feeds this into useAiChat's effect deps,
   // so a fresh closure here would retrigger that effect on every unrelated
@@ -1330,8 +1344,11 @@ function HomeContent() {
         if (active) {
           setUnreadNotifications(0);
           setMoodStatus(null);
+          setMoodStatusOwnerId(null);
+          setMoodStatusVerified(false);
         }
       } else {
+        setMoodStatusVerified(false);
         // Instant badge paint from the shared inbox cache (also read/
         // written by app/notifications.tsx) before the network call below
         // resolves -- "badge reuse": Home doesn't own a separate source of
@@ -1343,7 +1360,11 @@ function HomeContent() {
         void fetchHomeLive().then((live) => {
           if (!active) return;
           if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
-          if (live.moodStatus) setMoodStatus(live.moodStatus);
+          if (live.moodStatus) {
+            setMoodStatus(live.moodStatus);
+            setMoodStatusOwnerId(appIdentity.userId);
+            setMoodStatusVerified(true);
+          }
         });
         unsubscribe = subscribeToMyNotifications(() => {
           if (!active) return;
@@ -1377,20 +1398,35 @@ function HomeContent() {
   );
 
   // Native port of the PWA's auto-popping mood check-in (MoodPulse.tsx):
-  // once per spiritual day, the first time Home has real mood status to
-  // show, pop the sheet open unprompted rather than waiting for a tap on
+  // once per spiritual day, after Home has a fresh authoritative mood status,
+  // pop the sheet open unprompted rather than waiting for a tap on
   // the passive MoodCheckin card below. Delayed by 4.5s so the seeker can
   // first absorb the sacred greeting, hero artwork, and daily panchang
   // without an immediate popup intrusion. Re-checks the AsyncStorage
-  // dismissed-date on every fire (not just once) so it stays correctly
-  // closed after Done/dismiss even though those actions replace
-  // `moodStatus` with a new object and re-trigger this effect -- same
-  // re-entrancy the PWA's own effect relies on.
+  // account-scoped local dismissal on every fire. The server's logged and
+  // dismissed flags are the primary gate; local storage covers offline X taps.
   useEffect(() => {
-    if (isGuest || !moodStatus) return;
+    if (!moodPulseUserId || isGuest || !isMoodStatusOwnedBy(moodStatusOwnerId, moodPulseUserId)) {
+      setMoodPulseVisible(false);
+      if (moodPulseTimerRef.current) {
+        clearTimeout(moodPulseTimerRef.current);
+        moodPulseTimerRef.current = null;
+      }
+      return;
+    }
+    if (!moodStatusVerified || !moodStatusForCurrentUser) return;
+    const today = getMoodSpiritualDate();
+    if (!shouldShowMoodPulse(moodStatusForCurrentUser, today, null)) {
+      setMoodPulseVisible(false);
+      if (moodPulseTimerRef.current) {
+        clearTimeout(moodPulseTimerRef.current);
+        moodPulseTimerRef.current = null;
+      }
+      return;
+    }
     let cancelled = false;
-    getMoodPulseDismissedDate().then((dismissedOn) => {
-      if (!cancelled && dismissedOn !== getMoodSpiritualDate()) {
+    getMoodPulseDismissedDate(moodPulseUserId).then((dismissedOn) => {
+      if (!cancelled && shouldShowMoodPulse(moodStatusForCurrentUser, today, dismissedOn)) {
         if (moodPulseTimerRef.current) {
           clearTimeout(moodPulseTimerRef.current);
         }
@@ -1408,7 +1444,7 @@ function HomeContent() {
         moodPulseTimerRef.current = null;
       }
     };
-  }, [moodStatus, isGuest]);
+  }, [moodPulseUserId, moodStatusForCurrentUser, moodStatusOwnerId, moodStatusVerified, isGuest]);
 
   const loadHome = useCallback(async (isManualRefresh = false) => {
     if (appIdentity.kind === 'loading') return;
@@ -1431,11 +1467,19 @@ function HomeContent() {
     if (appIdentity.kind === 'authenticated') {
       void fetchHomeLive().then((live) => {
         if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
-        if (live.moodStatus) setMoodStatus(live.moodStatus);
+        if (live.moodStatus) {
+          setMoodStatus(live.moodStatus);
+          if (appIdentity.kind === 'authenticated') setMoodStatusOwnerId(appIdentity.userId);
+          setMoodStatusVerified(true);
+        } else {
+          setMoodStatusVerified(false);
+        }
       });
     } else {
       setUnreadNotifications(0);
       setMoodStatus(null);
+      setMoodStatusOwnerId(null);
+      setMoodStatusVerified(false);
     }
   }, [appIdentity.kind, loadHome]);
 
@@ -1849,10 +1893,10 @@ function HomeContent() {
               hitSlop={8}
               style={({ pressed }) => getHomeMoodPillStyle(pressed, isDark)}
             >
-              {moodStatus?.hasLoggedMoodToday && moodStatus.lastMood ? (
+              {moodStatusForCurrentUser?.hasLoggedMoodToday && moodStatusForCurrentUser.lastMood ? (
                 <>
                   <MoodGlyph
-                    mood={moodStatus.lastMood}
+                    mood={moodStatusForCurrentUser.lastMood}
                     color={COLORS.homePwaPillText}
                     size={14}
                   />
@@ -1860,7 +1904,7 @@ function HomeContent() {
                     numberOfLines={1}
                     style={HOME_MOOD_PILL_TEXT_STYLE}
                   >
-                    Feeling {findMoodConfig(isDark, moodStatus.lastMood)?.label || 'Good'}
+                    Feeling {findMoodConfig(isDark, moodStatusForCurrentUser.lastMood)?.label || 'Good'}
                   </Text>
                 </>
               ) : (
@@ -2517,10 +2561,29 @@ function HomeContent() {
         message="Sign in to personalize your sacred days, festivals and vrats."
       />
       <MoodPulseSheet
-        visible={moodPulseVisible}
+        key={moodPulseUserId ?? 'guest'}
+        visible={moodPulseVisible && isMoodStatusOwnedBy(moodStatusOwnerId, moodPulseUserId)}
         firstName={state.profile.firstName}
+        userId={moodPulseUserId ?? ''}
+        spiritualDate={moodStatusForCurrentUser?.spiritualDate ?? getMoodSpiritualDate()}
         onClose={() => setMoodPulseVisible(false)}
-        onLogged={(mood) => setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood })}
+        onLogged={(mood) => {
+          const spiritualDate = getMoodSpiritualDate();
+          if (moodPulseUserId) setMoodStatusOwnerId(moodPulseUserId);
+          setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood, hasDismissedToday: false, spiritualDate });
+          setMoodStatusVerified(true);
+        }}
+        onDismissed={() => {
+          const spiritualDate = getMoodSpiritualDate();
+          if (moodPulseUserId) setMoodStatusOwnerId(moodPulseUserId);
+          setMoodStatus((current) => ({
+            hasLoggedMoodToday: current?.hasLoggedMoodToday ?? false,
+            lastMood: current?.lastMood ?? null,
+            hasDismissedToday: true,
+            spiritualDate,
+          }));
+          setMoodStatusVerified(true);
+        }}
       />
       <FloatingDharmaScroll
         heroHeight={heroHeight}

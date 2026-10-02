@@ -39,7 +39,8 @@ import {
   type MoodStatus
 } from '@/lib/mood';
 import { readMoodStatusCache, writeMoodStatusCache, type MoodStatusCacheIdentity } from '@/lib/moodStatusCache';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { getMoodSpiritualDate } from '@/lib/moodPulsePreference';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 
 const TIME_OPTIONS = [
   { key: 'short',  label: 'Just 5 minutes',       desc: 'A quick, focused practice',     emoji: '⚡' },
@@ -111,6 +112,8 @@ const FEATURED_ITEMS = [
 export default function MoodScreen() {
   const router = useRouter();
   const appIdentity = useAppIdentity();
+  const moodIdentityKey = appIdentity.kind === 'authenticated' ? `user:${appIdentity.userId}` : appIdentity.kind;
+  const lastMoodIdentityKeyRef = useRef(moodIdentityKey);
   const handleExit = useFallbackBackHandler('/(tabs)', false);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -188,7 +191,7 @@ export default function MoodScreen() {
 
   const applyMoodStatus = useCallback((status: MoodStatus) => {
     setMoodStatus(status);
-    if (status.hasCompletedToday) {
+    if (status.hasCompletedToday || (status.hasLoggedMoodToday && !status.openSession)) {
       setStep(4);
     } else if (status.openSession && status.openSession.before_mood) {
       const m = MOODS.find(x => x.key === status.openSession!.before_mood);
@@ -201,10 +204,13 @@ export default function MoodScreen() {
   }, [MOODS]);
 
   const loadStatus = useCallback(async () => {
-    if (appIdentity.kind === 'loading') return;
+    const identityLease = captureAppIdentity();
+    if (identityLease.identity.kind === 'loading') return;
     setInitError(false);
     const identity: MoodStatusCacheIdentity =
-      appIdentity.kind === 'authenticated' ? { kind: 'authenticated', userId: appIdentity.userId } : { kind: 'guest' };
+      identityLease.identity.kind === 'authenticated'
+        ? { kind: 'authenticated', userId: identityLease.identity.userId }
+        : { kind: 'guest' };
 
     // Cache-first paint (reliability plan item 6): a cache hit shows
     // today's already-known status instantly and clears `loading`
@@ -212,13 +218,17 @@ export default function MoodScreen() {
     // with nothing cached yet. A failed background reconcile below must
     // not blow away content already painted from the cache.
     const cached = await readMoodStatusCache(identity);
+    if (!identityLease.isCurrent()) return;
     const hadCache = Boolean(cached);
     if (cached) {
       applyMoodStatus(cached);
       setLoading(false);
     }
 
-    const status = await fetchMoodStatus();
+    const status = await fetchMoodStatus(
+      identityLease.identity.kind === 'authenticated' ? identityLease.identity.userId : undefined
+    );
+    if (!identityLease.isCurrent()) return;
     if (status) {
       applyMoodStatus(status);
       void writeMoodStatusCache(identity, status);
@@ -230,8 +240,26 @@ export default function MoodScreen() {
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
+    if (lastMoodIdentityKeyRef.current !== moodIdentityKey) {
+      lastMoodIdentityKeyRef.current = moodIdentityKey;
+      setMoodStatus(null);
+      setStep(1);
+      setSelectedMood(null);
+      setSelectedTime(null);
+      setCheckinId(null);
+      setRecommendations([]);
+      setRecommendationError(null);
+      setFetchingRecs(false);
+      setActionClicked(false);
+      setShowReturn(false);
+      setAfterMood(null);
+      setReturnRecs([]);
+      setReturnRecsLoading(false);
+      setInitError(false);
+      setLoading(true);
+    }
     loadStatus();
-  }, [appIdentity.kind, loadStatus]);
+  }, [appIdentity.kind, moodIdentityKey, loadStatus]);
 
   const startOver = useCallback(() => {
     setStep(1);
@@ -247,9 +275,11 @@ export default function MoodScreen() {
   }, []);
 
   const handleMoodSelect = async (mood: MoodConfig) => {
+    const identityLease = captureAppIdentity();
     setSelectedMood(mood);
     setLoading(true);
     const id = await startMoodCheckin(mood.key);
+    if (!identityLease.isCurrent()) return;
     if (id) {
       setCheckinId(id);
       setStep(2);
@@ -264,11 +294,14 @@ export default function MoodScreen() {
   };
 
   const handleTimeSelect = async (timeKey: string) => {
+    if (!selectedMood || !checkinId) return;
+    const identityLease = captureAppIdentity();
     setSelectedTime(timeKey);
     setStep(3);
     setFetchingRecs(true);
     setRecommendationError(null);
     const recs = await fetchRecommendations(selectedMood!.key, timeKey, checkinId!);
+    if (!identityLease.isCurrent()) return;
     if (recs.length === 0) {
       setRecommendationError('Recommendations could not be loaded. Please try again.');
     }
@@ -278,11 +311,13 @@ export default function MoodScreen() {
 
   const handleMoodOnly = async () => {
     if (!selectedMood) return;
+    const identityLease = captureAppIdentity();
     setLoading(true);
     try {
       let id = checkinId;
       if (!id) {
         id = await startMoodCheckin(selectedMood.key);
+        if (!identityLease.isCurrent()) return;
         if (id) setCheckinId(id);
       }
 
@@ -292,6 +327,7 @@ export default function MoodScreen() {
       }
 
       const saved = await completeMoodSession(id, 'mood_only');
+      if (!identityLease.isCurrent()) return;
       if (!saved) {
         Alert.alert('Could not save mood', 'Check your connection and try again.');
         return;
@@ -304,10 +340,11 @@ export default function MoodScreen() {
         lastCompletedMood: selectedMood.key,
         hasLoggedMoodToday: true,
         lastMood: selectedMood.key,
+        spiritualDate: getMoodSpiritualDate(),
       });
       setStep(4);
     } finally {
-      setLoading(false);
+      if (identityLease.isCurrent()) setLoading(false);
     }
   };
 
@@ -333,21 +370,36 @@ export default function MoodScreen() {
       return;
     }
 
+    const identityLease = captureAppIdentity();
     setLoading(true);
     if (checkinId) {
-      await completeMoodSession(checkinId);
+      const saved = await completeMoodSession(checkinId);
+      if (!identityLease.isCurrent()) return;
+      if (!saved) {
+        Alert.alert('Could not finish check-in', 'Your reflection could not be saved. Check your connection and try again.');
+        setLoading(false);
+        return;
+      }
     }
+    if (!identityLease.isCurrent()) return;
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)');
   };
 
   const handleAfterMoodPick = async (mood: MoodConfig) => {
+    const identityLease = captureAppIdentity();
     setAfterMood(mood);
     if (checkinId) {
-      completeMoodSession(checkinId, undefined, mood.key).catch(() => {});
+      const saved = await completeMoodSession(checkinId, undefined, mood.key);
+      if (!identityLease.isCurrent()) return;
+      if (!saved) {
+        Alert.alert('Could not save reflection', 'Check your connection and try again.');
+        return;
+      }
     }
     setReturnRecsLoading(true);
     const recs = await fetchRecommendations(mood.key);
+    if (!identityLease.isCurrent()) return;
     setReturnRecs(recs.slice(0, 3));
     setReturnRecsLoading(false);
   };

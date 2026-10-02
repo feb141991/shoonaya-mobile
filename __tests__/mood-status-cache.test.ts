@@ -19,6 +19,7 @@ if (typeof window === 'undefined' || !(window as any).localStorage) {
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { readMoodStatusCache, writeMoodStatusCache, clearMoodStatusCache } from '../lib/moodStatusCache';
+import { getMoodSpiritualDate, getMoodTimeZone } from '../lib/moodPulsePreference';
 import type { MoodStatus } from '../lib/mood';
 
 function status(overrides: Partial<MoodStatus> = {}): MoodStatus {
@@ -29,6 +30,7 @@ function status(overrides: Partial<MoodStatus> = {}): MoodStatus {
     lastCompletedMood: null,
     hasLoggedMoodToday: false,
     lastMood: null,
+    spiritualDate: getMoodSpiritualDate(),
     ...overrides,
   };
 }
@@ -59,19 +61,20 @@ describe('Mood status cache -- date scoping', () => {
     await clearMoodStatusCache();
   });
 
-  it('rejects a status cached on a prior local calendar day', async () => {
+  it('rejects a status cached on a prior spiritual day', async () => {
     await AsyncStorage.setItem(
       'shoonaya.mood.status.v1',
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         identity: { kind: 'guest' },
-        localDateKey: 'Mon Jan 01 2001',
+        spiritualDate: '2001-01-01',
+        timeZone: getMoodTimeZone(),
         cachedAt: new Date().toISOString(),
-        status: status({ hasCompletedToday: true }),
+        status: status({ hasCompletedToday: true, spiritualDate: '2001-01-01' }),
       })
     );
     const result = await readMoodStatusCache({ kind: 'guest' });
-    assert.equal(result, null, 'Yesterday\'s "already checked in" must never paint as today\'s');
+    assert.equal(result, null, 'A prior spiritual day must never paint as today\'s');
   });
 
   it('accepts a status cached today', async () => {
@@ -96,7 +99,7 @@ describe('Mood status cache -- fails safe', () => {
   it('a stale schema version is treated as a miss', async () => {
     await AsyncStorage.setItem(
       'shoonaya.mood.status.v1',
-      JSON.stringify({ schemaVersion: 99, identity: { kind: 'guest' }, localDateKey: new Date().toDateString(), cachedAt: new Date().toISOString(), status: status() })
+      JSON.stringify({ schemaVersion: 99, identity: { kind: 'guest' }, spiritualDate: getMoodSpiritualDate(), timeZone: getMoodTimeZone(), cachedAt: new Date().toISOString(), status: status() })
     );
     const result = await readMoodStatusCache({ kind: 'guest' });
     assert.equal(result, null);

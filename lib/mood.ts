@@ -3,6 +3,7 @@ import { apiFetch, isFetchCancelled } from './api';
 import { captureAppIdentity } from './appIdentity';
 import { attemptMoodCheckinWithRetry } from './moodCheckinRetry';
 import { recordMutationRetryOutcome } from './telemetry';
+import { getMoodSpiritualDate, getMoodTimeZone, setMoodPulseDismissedDate } from './moodPulsePreference';
 
 export interface MoodStatus {
   hasCompletedToday: boolean;
@@ -16,6 +17,7 @@ export interface MoodStatus {
   lastCompletedMood: string | null;
   hasLoggedMoodToday: boolean;
   lastMood: string | null;
+  spiritualDate: string;
 }
 
 export interface Recommendation {
@@ -35,30 +37,29 @@ type RecommendationsResponse =
       recommendations?: Recommendation[];
     };
 
-export async function fetchMoodStatus(): Promise<MoodStatus | null> {
+export async function fetchMoodStatus(expectedUserId?: string): Promise<MoodStatus | null> {
+  const identityLease = captureAppIdentity();
+  const ownerId = expectedUserId ?? (
+    identityLease.identity.kind === 'authenticated' ? identityLease.identity.userId : undefined
+  );
   try {
-    const res = await apiFetch('/api/mood/checkin');
+    const params = new URLSearchParams({ timezone: getMoodTimeZone() });
+    const res = await apiFetch(`/api/mood/checkin?${params.toString()}`, { expectedUserId: ownerId });
     if (!res.ok) return null;
-    return await res.json();
+    const status = await res.json() as MoodStatus;
+    return identityLease.isCurrent() ? status : null;
   } catch (err) {
     if (!isFetchCancelled(err)) console.error('Failed to fetch mood status', err);
     return null;
   }
 }
 
-// Not a persisted/durable outbox: unlike Settings and Notifications,
-// mood check-in has two genuinely different call shapes at its two call
-// sites -- app/mood.tsx's wizard needs the checkin_id back synchronously
-// to advance its own step (the user is actively waiting), while
-// MoodPulseSheet.tsx already discards the return value entirely (fire-
-// and-forget). A queue-and-resume-later outbox fits neither well: the
-// first needs a real answer now, and the second has no UI left to surface
-// a later "it finally synced" state to once the sheet is closed. What
-// both benefit from equally is a bounded, safe retry (lib/moodCheckinRetry.ts)
-// -- safe now that the backend accepts a client_operation_id and dedupes
-// on it (see the migration adding that column), so retrying with the same
-// id can never create a duplicate check-in row the way retrying blindly
-// used to risk.
+// Mood check-ins need an immediate result at both call sites: the Mood
+// screen advances only after a saved row exists, and MoodPulse keeps its
+// sheet open with a retryable error if saving fails. A durable outbox would
+// report success before either screen could know whether its action was
+// persisted. The bounded retry is safe because the backend deduplicates the
+// stable client_operation_id, so transient retries cannot create duplicates.
 export async function startMoodCheckin(
   mood: string,
   time?: string,
@@ -77,11 +78,42 @@ export async function startMoodCheckin(
     source_surface: 'native-app',
     client_operation_id: clientOperationId,
   });
+  const requestOptions = telemetryIdentity.identity.kind === 'authenticated'
+    ? { expectedUserId: telemetryIdentity.identity.userId }
+    : {};
 
-  return attemptMoodCheckinWithRetry(apiFetch, body, (outcome, attempts) => {
+  const checkinId = await attemptMoodCheckinWithRetry(apiFetch, body, (outcome, attempts) => {
     if (!telemetryIdentity.isCurrent() || telemetryIdentity.identity.kind !== 'authenticated') return;
     recordMutationRetryOutcome(telemetryIdentity.identity, 'mood', outcome, attempts);
+  }, undefined, requestOptions);
+
+  if (checkinId && telemetryIdentity.isCurrent() && telemetryIdentity.identity.kind === 'authenticated') {
+    await setMoodPulseDismissedDate(telemetryIdentity.identity.userId, getMoodSpiritualDate());
+  }
+  return checkinId;
+}
+
+export async function dismissMoodCheckin(): Promise<boolean> {
+  const telemetryIdentity = captureAppIdentity();
+  const clientOperationId = Crypto.randomUUID();
+  const body = JSON.stringify({
+    dismissed: true,
+    source_surface: 'native-app',
+    client_operation_id: clientOperationId,
   });
+  const requestOptions = telemetryIdentity.identity.kind === 'authenticated'
+    ? { expectedUserId: telemetryIdentity.identity.userId }
+    : {};
+
+  const checkinId = await attemptMoodCheckinWithRetry(apiFetch, body, (outcome, attempts) => {
+    if (!telemetryIdentity.isCurrent() || telemetryIdentity.identity.kind !== 'authenticated') return;
+    recordMutationRetryOutcome(telemetryIdentity.identity, 'mood', outcome, attempts);
+  }, undefined, requestOptions);
+
+  if (checkinId && telemetryIdentity.isCurrent() && telemetryIdentity.identity.kind === 'authenticated') {
+    await setMoodPulseDismissedDate(telemetryIdentity.identity.userId, getMoodSpiritualDate());
+  }
+  return Boolean(checkinId);
 }
 
 export async function fetchRecommendations(
@@ -89,6 +121,10 @@ export async function fetchRecommendations(
   time?: string,
   checkinId?: string
 ): Promise<Recommendation[]> {
+  const identityLease = captureAppIdentity();
+  const expectedUserId = identityLease.identity.kind === 'authenticated'
+    ? identityLease.identity.userId
+    : undefined;
   try {
     const params = new URLSearchParams();
     params.set('mood', mood);
@@ -96,9 +132,10 @@ export async function fetchRecommendations(
     if (checkinId) params.set('checkin_id', checkinId);
     params.set('full', 'true');
 
-    const res = await apiFetch(`/api/mood/recommendations?${params.toString()}`);
+    const res = await apiFetch(`/api/mood/recommendations?${params.toString()}`, { expectedUserId });
     if (!res.ok) return [];
     const data = (await res.json()) as RecommendationsResponse;
+    if (!identityLease.isCurrent()) return [];
     if (Array.isArray(data)) return data;
     return Array.isArray(data.recommendations) ? data.recommendations : [];
   } catch (err) {
@@ -112,12 +149,17 @@ export async function trackDiscoverAction(
   action: 'click' | 'skip',
   itemType: string
 ): Promise<boolean> {
+  const identityLease = captureAppIdentity();
+  const expectedUserId = identityLease.identity.kind === 'authenticated'
+    ? identityLease.identity.userId
+    : undefined;
   try {
     const res = await apiFetch('/api/mood/discover-track', {
       method: 'POST',
       body: JSON.stringify({ checkinId, action, itemType }),
+      expectedUserId,
     });
-    return res.ok;
+    return identityLease.isCurrent() && res.ok;
   } catch (err) {
     if (!isFetchCancelled(err)) console.error('Failed to track discover action', err);
     return false;
@@ -130,6 +172,10 @@ export async function completeMoodSession(
   afterMood?: string,
   reflectionNote?: string
 ): Promise<boolean> {
+  const identityLease = captureAppIdentity();
+  const expectedUserId = identityLease.identity.kind === 'authenticated'
+    ? identityLease.identity.userId
+    : undefined;
   try {
     const res = await apiFetch('/api/mood/complete', {
       method: 'POST',
@@ -139,8 +185,9 @@ export async function completeMoodSession(
         after_mood: afterMood,
         reflection_note: reflectionNote,
       }),
+      expectedUserId,
     });
-    return res.ok;
+    return identityLease.isCurrent() && res.ok;
   } catch (err) {
     if (!isFetchCancelled(err)) console.error('Failed to complete mood session', err);
     return false;

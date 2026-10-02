@@ -1,24 +1,19 @@
 import { createCacheStorageBarrier } from './cacheStorageBarrier';
 import type { MoodStatus } from './mood';
+import { getMoodSpiritualDate, getMoodTimeZone } from './moodPulsePreference';
 
-// Reliability plan item 6: lets app/mood.tsx paint today's already-known
-// check-in status instantly on revisit instead of always blocking on
-// SacredLoader while /api/mood/checkin resolves -- same shape as
-// lib/quizCache.ts. MoodStatus carries no date/timezone field of its own
-// (hasCompletedToday etc. are computed server-side against "today"), so
-// freshness is checked against the device's local calendar day instead of
-// a spiritual date -- more conservative than the server's actual
-// spiritual-day boundary in most timezones, which errs toward treating a
-// stale entry as a miss rather than risking a stale "already checked in"
-// painting over a new day.
+// Reliability plan item 6: paints today's already-known check-in status
+// instantly, scoped to account, device timezone, and the same 4 a.m.
+// spiritual day used by the status endpoint.
 const MOOD_STATUS_CACHE_KEY = 'shoonaya.mood.status.v1';
 
 export type MoodStatusCacheIdentity = { kind: 'guest' } | { kind: 'authenticated'; userId: string };
 
 type CachedMoodStatus = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   identity: MoodStatusCacheIdentity;
-  localDateKey: string;
+  spiritualDate: string;
+  timeZone: string;
   cachedAt: string;
   status: MoodStatus;
 };
@@ -30,24 +25,19 @@ function identityMatches(a: MoodStatusCacheIdentity, b: MoodStatusCacheIdentity)
   return a.kind === 'authenticated' && b.kind === 'authenticated' ? a.userId === b.userId : true;
 }
 
-function localDateKey(): string {
-  return new Date().toDateString();
-}
-
 export async function readMoodStatusCache(identity: MoodStatusCacheIdentity): Promise<MoodStatus | null> {
   try {
     const stored = await cacheStorage.read(MOOD_STATUS_CACHE_KEY);
     if (!stored) return null;
     const cached = JSON.parse(stored.value) as CachedMoodStatus;
-    if (cached.schemaVersion !== 1 || !identityMatches(cached.identity, identity)) return null;
+    if (cached.schemaVersion !== 2 || !identityMatches(cached.identity, identity)) return null;
 
-    // A cache entry from a prior local calendar day must never paint as
-    // if it were today's status -- "already checked in" or "not yet"
-    // both flip meaning across a day boundary.
-    if (cached.localDateKey !== localDateKey()) return null;
+    // A cache entry from a prior spiritual day or timezone must never paint
+    // as if it were current -- the completion gate changes at that boundary.
+    if (cached.spiritualDate !== getMoodSpiritualDate() || cached.timeZone !== getMoodTimeZone()) return null;
 
     const status = cached.status;
-    if (!status || typeof status.hasCompletedToday !== 'boolean') return null;
+    if (!status || typeof status.hasCompletedToday !== 'boolean' || status.spiritualDate !== cached.spiritualDate) return null;
 
     return status;
   } catch {
@@ -57,9 +47,10 @@ export async function readMoodStatusCache(identity: MoodStatusCacheIdentity): Pr
 
 export async function writeMoodStatusCache(identity: MoodStatusCacheIdentity, status: MoodStatus): Promise<void> {
   const payload: CachedMoodStatus = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     identity,
-    localDateKey: localDateKey(),
+    spiritualDate: status.spiritualDate,
+    timeZone: getMoodTimeZone(),
     cachedAt: new Date().toISOString(),
     status,
   };

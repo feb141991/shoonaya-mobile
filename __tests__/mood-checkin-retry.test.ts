@@ -39,6 +39,25 @@ describe('Mood check-in retry', () => {
     assert.equal(calls, 2, 'Should retry exactly once after the transient failure');
   });
 
+  it('preserves the expected account owner on the request', async () => {
+    const requestOptions: Array<{ expectedUserId?: string }> = [];
+    const fetchImpl: MoodCheckinFetch = async (_path, options) => {
+      requestOptions.push(options);
+      return jsonResponse(200, { checkin_id: 'owned-checkin' });
+    };
+
+    const id = await attemptMoodCheckinWithRetry(
+      fetchImpl,
+      '{}',
+      () => {},
+      noDelay,
+      { expectedUserId: 'user-a' },
+    );
+
+    assert.equal(id, 'owned-checkin');
+    assert.deepEqual(requestOptions, [{ method: 'POST', body: '{}', expectedUserId: 'user-a' }]);
+  });
+
   it('does not retry a permanent 4xx failure', async () => {
     let calls = 0;
     const fetchImpl: MoodCheckinFetch = async () => {
