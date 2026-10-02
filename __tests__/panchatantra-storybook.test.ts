@@ -57,10 +57,16 @@ test('Panchatantra Expanded Content Integration', async (t) => {
     assert.equal(result.durationMin, 4);
   });
 
+  await t.test('never fabricates a title or moral for an unknown story', () => {
+    assert.equal(createOfflinePanchatantraKatha('panchatantra-not-a-real-story'), null);
+  });
+
   await t.test('creates offline fallback katha for zero-network support', () => {
     const offline = createOfflinePanchatantraKatha('panchatantra-moon-lake-rabbits');
     assert.ok(offline, 'Offline katha should be created');
-    assert.equal(offline?.title, 'Moon Lake Rabbits');
+    assert.equal(offline?.title, 'The Rabbits and the Moon Lake');
+    assert.equal(offline?.titleHi, 'खरगोश और चंद्र सरोवर');
+    assert.ok(offline?.phal && offline.phal !== 'Wisdom from the Panchatantra.', 'moral must be the real one, not a placeholder');
     assert.equal(offline?.body.length, 6);
     assert.equal(offline?.bodyHi?.length, 6);
     assert.equal(offline?.portrait, '🌕');

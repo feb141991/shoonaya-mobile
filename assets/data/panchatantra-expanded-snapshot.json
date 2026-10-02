@@ -1,6 +1,10 @@
 [
   {
     "id": "panchatantra-lion-and-rabbit",
+    "title": "The Lion and the Clever Rabbit",
+    "titleHi": "सिंह और चतुर खरगोश",
+    "phal": "Wisdom can defeat force when the mind remains calm. The story teaches that panic strengthens danger, while observation and strategy can protect the whole community.",
+    "phalHi": "शांत बुद्धि बल से बड़ी होती है। संकट में घबराने के बजाय समझ, धैर्य और युक्ति से काम लेना चाहिए।",
     "portrait": "🐇",
     "durationMin": 5,
     "body": [
@@ -22,6 +26,10 @@
   },
   {
     "id": "panchatantra-monkey-and-crocodile",
+    "title": "The Monkey and the Crocodile",
+    "titleHi": "बंदर और मगरमच्छ",
+    "phal": "Generosity needs discernment. The story teaches kindness, but also the importance of recognising betrayal and protecting oneself without hatred.",
+    "phalHi": "उदारता के साथ विवेक भी आवश्यक है। मित्रता विश्वास पर टिकती है; छल करने वाले से सावधान रहना चाहिए।",
     "portrait": "🐊",
     "durationMin": 5,
     "body": [
@@ -43,6 +51,10 @@
   },
   {
     "id": "panchatantra-blue-jackal",
+    "title": "The Blue Jackal",
+    "titleHi": "नीला सियार",
+    "phal": "False identity cannot survive for long. The story teaches humility, authenticity, and the danger of gaining respect through deception.",
+    "phalHi": "झूठी पहचान अधिक समय तक नहीं टिकती। सम्मान छल से नहीं, सत्य और विनम्रता से मिलना चाहिए।",
     "portrait": "🐺",
     "durationMin": 5,
     "body": [
@@ -64,6 +76,10 @@
   },
   {
     "id": "panchatantra-brahmin-and-crooks",
+    "title": "The Brahmin and the Three Crooks",
+    "titleHi": "ब्राह्मण और तीन ठग",
+    "phal": "Repeated falsehood can disturb weak conviction. The story teaches that one must examine facts directly and not surrender judgment merely because many voices repeat the same claim.",
+    "phalHi": "बार-बार बोला गया झूठ भी कमजोर विश्वास को हिला सकता है। सत्य को स्वयं देखकर परखना चाहिए।",
     "portrait": "🐐",
     "durationMin": 5,
     "body": [
@@ -85,6 +101,10 @@
   },
   {
     "id": "panchatantra-crows-and-cobra",
+    "title": "The Crows and the Cobra",
+    "titleHi": "कौए और साँप",
+    "phal": "When direct force is impossible, wise strategy protects life. The story teaches measured action, patience, and using the right help instead of reacting blindly.",
+    "phalHi": "जब सीधा बल काम न करे, तो युक्ति और सही सहायता से संकट दूर किया जा सकता है।",
     "portrait": "🐍",
     "durationMin": 5,
     "body": [
@@ -106,6 +126,10 @@
   },
   {
     "id": "panchatantra-talkative-tortoise",
+    "title": "The Talkative Tortoise",
+    "titleHi": "बोलने वाला कछुआ",
+    "phal": "Not every insult deserves an answer. The story teaches restraint in speech and the power of silence when safety, dignity, or purpose depends on it.",
+    "phalHi": "हर अपमान का उत्तर देना आवश्यक नहीं। कई बार मौन ही रक्षा और बुद्धिमत्ता है।",
     "portrait": "🐢",
     "durationMin": 5,
     "body": [
@@ -127,6 +151,10 @@
   },
   {
     "id": "panchatantra-mongoose-and-child",
+    "title": "The Loyal Mongoose",
+    "titleHi": "निष्ठावान नेवला",
+    "phal": "Hasty judgment can destroy what loyalty has protected. The story teaches verification before action, especially when fear or anger is strong.",
+    "phalHi": "जल्दबाज़ी में किया गया निर्णय बड़ा अनर्थ कर सकता है। भय या क्रोध में काम करने से पहले सत्य अवश्य जाँचना चाहिए।",
     "portrait": "🦦",
     "durationMin": 5,
     "body": [
@@ -148,6 +176,10 @@
   },
   {
     "id": "panchatantra-foolish-friend-monkey",
+    "title": "The Foolish Friend",
+    "titleHi": "मूर्ख मित्र",
+    "phal": "Choose companions for wisdom as well as affection. Good intention cannot replace good judgment.",
+    "phalHi": "मित्रता में प्रेम के साथ विवेक भी आवश्यक है। केवल नीयत अच्छी होना पर्याप्त नहीं।",
     "portrait": "🐒",
     "durationMin": 5,
     "body": [
@@ -169,6 +201,10 @@
   },
   {
     "id": "panchatantra-two-fish-and-frog",
+    "title": "The Two Fish and the Frog",
+    "titleHi": "दो मछलियाँ और मेंढक",
+    "phal": "Timely action is better than clever excuses. Wisdom means moving before the crisis closes every path.",
+    "phalHi": "समय पर किया गया काम सबसे बड़ी बुद्धिमानी है। संकट आने के बाद चतुराई भी कम पड़ सकती है।",
     "portrait": "🐟",
     "durationMin": 5,
     "body": [
@@ -190,6 +226,10 @@
   },
   {
     "id": "panchatantra-bird-with-two-heads",
+    "title": "The Bird with Two Heads",
+    "titleHi": "दो सिर वाला पक्षी",
+    "phal": "Family, community, and nation share one body. Harm done in resentment returns to everyone.",
+    "phalHi": "परिवार और समाज एक शरीर की तरह हैं। ईर्ष्या से किया गया नुकसान सबको चोट पहुँचाता है।",
     "portrait": "🦢",
     "durationMin": 5,
     "body": [
@@ -211,6 +251,10 @@
   },
   {
     "id": "panchatantra-crane-and-crab",
+    "title": "The Crane and the Crab",
+    "titleHi": "बगुला और केकड़ा",
+    "phal": "Do not accept help that cannot be verified. A calm mind checks both the promise and the path.",
+    "phalHi": "भय में किया गया अंधा विश्वास खतरनाक है। सहायता स्वीकार करने से पहले सत्य जाँचें।",
     "portrait": "🦀",
     "durationMin": 5,
     "body": [
@@ -232,6 +276,10 @@
   },
   {
     "id": "panchatantra-merchant-and-iron-balance",
+    "title": "The Merchant and the Iron Balance",
+    "titleHi": "व्यापारी और लोहे का तराजू",
+    "phal": "Dishonesty often exposes itself when mirrored back. Justice needs intelligence, not uncontrolled anger.",
+    "phalHi": "झूठ को कभी-कभी उसी के तर्क से दिखाना पड़ता है। न्याय के लिए बुद्धि चाहिए, क्रोध नहीं।",
     "portrait": "⚖️",
     "durationMin": 5,
     "body": [
@@ -253,6 +301,10 @@
   },
   {
     "id": "panchatantra-lion-mouse-and-cat",
+    "title": "The Lion, the Mouse, and the Cat",
+    "titleHi": "सिंह, चूहा और बिल्ली",
+    "phal": "Do not forget those who protect you after the problem disappears. Gratitude must outlive usefulness.",
+    "phalHi": "संकट दूर होने के बाद मदद करने वाले को भूलना कृतघ्नता है। उपकार को याद रखना चाहिए।",
     "portrait": "🐱",
     "durationMin": 5,
     "body": [
@@ -274,6 +326,10 @@
   },
   {
     "id": "panchatantra-jackal-and-drum",
+    "title": "The Jackal and the Drum",
+    "titleHi": "सियार और ढोल",
+    "phal": "Investigate fear before surrendering to it. Noise is not always danger.",
+    "phalHi": "डर को जाँचें। हर ऊँची आवाज़ वास्तविक संकट नहीं होती।",
     "portrait": "🥁",
     "durationMin": 5,
     "body": [
@@ -295,6 +351,10 @@
   },
   {
     "id": "panchatantra-dove-king-and-net",
+    "title": "The Dove King and the Net",
+    "titleHi": "कबूतर राजा और जाल",
+    "phal": "A united group can lift what defeats each person alone. Panic separates; rhythm saves.",
+    "phalHi": "एकता से वह भार भी उठ जाता है जो अकेले असंभव लगता है।",
     "portrait": "🕊️",
     "durationMin": 5,
     "body": [
@@ -316,6 +376,10 @@
   },
   {
     "id": "panchatantra-mice-and-elephants",
+    "title": "The Mice and the Elephants",
+    "titleHi": "चूहे और हाथी",
+    "phal": "Respect the small. A life protected today may protect you tomorrow.",
+    "phalHi": "छोटे को भी सम्मान दें। आज जिसे बचाएँगे, कल वही आपका सहारा बन सकता है।",
     "portrait": "🐘",
     "durationMin": 5,
     "body": [
@@ -337,6 +401,10 @@
   },
   {
     "id": "panchatantra-fox-and-grapes",
+    "title": "The Jackal and the Sour Grapes",
+    "titleHi": "सियार और खट्टे अंगूर",
+    "phal": "Do not insult what you failed to reach. Honest effort teaches more than defensive pride.",
+    "phalHi": "जिसे पा न सकें, उसे तुच्छ कहना अहंकार है। असफलता को ईमानदारी से स्वीकारना सीख है।",
     "portrait": "🍇",
     "durationMin": 5,
     "body": [
@@ -358,6 +426,10 @@
   },
   {
     "id": "panchatantra-ass-in-tiger-skin",
+    "title": "The Ass in the Tiger Skin",
+    "titleHi": "बाघ की खाल में गधा",
+    "phal": "Outer disguise cannot replace inner growth. Character eventually speaks.",
+    "phalHi": "बाहरी रूप भीतर की प्रकृति को अधिक समय तक नहीं छिपा सकता।",
     "portrait": "🐅",
     "durationMin": 5,
     "body": [
@@ -379,6 +451,10 @@
   },
   {
     "id": "panchatantra-greedy-jackal",
+    "title": "The Greedy Jackal",
+    "titleHi": "लालची सियार",
+    "phal": "Greed makes abundance unsafe. Contentment protects what desire wastes.",
+    "phalHi": "लालच बहुत कुछ होते हुए भी विनाश ला सकता है। संतोष रक्षा करता है।",
     "portrait": "🏹",
     "durationMin": 5,
     "body": [
@@ -400,6 +476,10 @@
   },
   {
     "id": "panchatantra-heron-and-fish",
+    "title": "The Heron Who Spoke of Renunciation",
+    "titleHi": "वैराग्य बोलने वाला बगुला",
+    "phal": "Do not trust spiritual language without truthful action. Dharma is proved by conduct.",
+    "phalHi": "धर्म की बातें तभी सच्ची हैं जब आचरण भी सच्चा हो।",
     "portrait": "🪶",
     "durationMin": 5,
     "body": [
@@ -421,6 +501,10 @@
   },
   {
     "id": "panchatantra-sparrow-and-elephant",
+    "title": "The Sparrow and the Elephant",
+    "titleHi": "गौरैया और हाथी",
+    "phal": "The weak are not helpless when they organise with wisdom. Skill, timing, and friendship balance strength.",
+    "phalHi": "छोटे भी संगठित होकर बड़े अन्याय का सामना कर सकते हैं।",
     "portrait": "🐦",
     "durationMin": 5,
     "body": [
@@ -442,6 +526,10 @@
   },
   {
     "id": "panchatantra-king-and-minister",
+    "title": "The King and the Wise Minister",
+    "titleHi": "राजा और बुद्धिमान मंत्री",
+    "phal": "Leadership needs truth more than praise. Wise counsel may feel sharp because it cuts away error.",
+    "phalHi": "नेतृत्व को प्रशंसा से अधिक सत्य की आवश्यकता होती है।",
     "portrait": "👑",
     "durationMin": 5,
     "body": [
@@ -463,6 +551,10 @@
   },
   {
     "id": "panchatantra-owl-and-crows",
+    "title": "The Owls and the Crows",
+    "titleHi": "उल्लू और कौए",
+    "phal": "Know the nature of the problem before acting. Timing and intelligence can defeat repeated loss.",
+    "phalHi": "किसी भी समस्या पर काम करने से पहले उसकी प्रकृति समझें। समय और बुद्धि से विजय मिलती है।",
     "portrait": "🦉",
     "durationMin": 5,
     "body": [
@@ -484,6 +576,10 @@
   },
   {
     "id": "panchatantra-moon-lake-rabbits",
+    "title": "The Rabbits and the Moon Lake",
+    "titleHi": "खरगोश और चंद्र सरोवर",
+    "phal": "When direct power is absent, symbolic intelligence can protect the vulnerable.",
+    "phalHi": "सीधा बल न हो तो प्रतीक, भाषा और बुद्धि से भी रक्षा की जा सकती है।",
     "portrait": "🌕",
     "durationMin": 5,
     "body": [
@@ -505,6 +601,10 @@
   },
   {
     "id": "panchatantra-golden-dropping-bird",
+    "title": "The Bird with Golden Droppings",
+    "titleHi": "सोने की बीट वाला पक्षी",
+    "phal": "Rejecting evidence without inquiry is also foolishness. Test before you dismiss.",
+    "phalHi": "बिना जाँच के अस्वीकार करना भी मूर्खता है। प्रमाण को परखें।",
     "portrait": "🦚",
     "durationMin": 5,
     "body": [
@@ -526,6 +626,10 @@
   },
   {
     "id": "panchatantra-weaver-as-vishnu",
+    "title": "The Weaver Who Pretended to Be Vishnu",
+    "titleHi": "विष्णु बनने वाला जुलाहा",
+    "phal": "False elevation creates real responsibility. Do not pretend to be what you are unwilling to become.",
+    "phalHi": "झूठी ऊँचाई सच्ची जिम्मेदारी बन जाती है। जो बनना न चाहें, उसका ढोंग न करें।",
     "portrait": "🪡",
     "durationMin": 5,
     "body": [
@@ -547,6 +651,10 @@
   },
   {
     "id": "panchatantra-four-friends",
+    "title": "The Four Friends",
+    "titleHi": "चार मित्र",
+    "phal": "A good circle does not require everyone to be the same. Different strengths, joined by trust, create resilience.",
+    "phalHi": "सच्ची मित्रता में सबका समान होना जरूरी नहीं। अलग-अलग गुण मिलकर शक्ति बनते हैं।",
     "portrait": "🤝",
     "durationMin": 5,
     "body": [
@@ -568,6 +676,10 @@
   },
   {
     "id": "panchatantra-cat-as-judge",
+    "title": "The Cat as Judge",
+    "titleHi": "न्यायाधीश बिल्ली",
+    "phal": "Do not take disputes to someone who benefits from both sides losing.",
+    "phalHi": "जिसे दोनों पक्षों के नष्ट होने में लाभ हो, उसे न्यायाधीश न बनाएं।",
     "portrait": "😼",
     "durationMin": 5,
     "body": [
@@ -589,6 +701,10 @@
   },
   {
     "id": "panchatantra-donkey-and-jackal",
+    "title": "The Donkey and the Jackal",
+    "titleHi": "गधा और सियार",
+    "phal": "There is a time and place for expression. Joy needs discretion.",
+    "phalHi": "हर अभिव्यक्ति का समय और स्थान होता है। आनंद में भी विवेक रखें।",
     "portrait": "🥒",
     "durationMin": 5,
     "body": [
@@ -610,6 +726,10 @@
   },
   {
     "id": "panchatantra-snake-and-frogs",
+    "title": "The Snake Who Carried Frogs",
+    "titleHi": "मेंढकों को ढोने वाला साँप",
+    "phal": "Leaders must not trade their people's safety for personal comfort.",
+    "phalHi": "नेता को अपने सुख के लिए प्रजा की सुरक्षा से समझौता नहीं करना चाहिए।",
     "portrait": "🐍",
     "durationMin": 5,
     "body": [
@@ -631,6 +751,10 @@
   },
   {
     "id": "panchatantra-camel-bell",
+    "title": "The Camel with the Bell",
+    "titleHi": "घंटी वाला ऊँट",
+    "phal": "What makes us noticeable should not make us careless. Distinction without discipline invites risk.",
+    "phalHi": "विशेष दिखना अच्छा है, पर सावधानी छोड़ना खतरनाक है।",
     "portrait": "🔔",
     "durationMin": 5,
     "body": [
@@ -652,6 +776,10 @@
   },
   {
     "id": "panchatantra-potter-as-warrior",
+    "title": "The Potter Mistaken for a Warrior",
+    "titleHi": "योद्धा समझा गया कुम्हार",
+    "phal": "Reputation without capacity becomes a burden. Be honest before expectation becomes danger.",
+    "phalHi": "योग्यता बिना प्रतिष्ठा बोझ बन जाती है। अपेक्षा बढ़ने से पहले सच बोलें।",
     "portrait": "🏺",
     "durationMin": 5,
     "body": [
@@ -673,6 +801,10 @@
   },
   {
     "id": "panchatantra-greedy-brahmin-dream",
+    "title": "The Brahmin Who Built Castles in the Air",
+    "titleHi": "हवा में महल बनाने वाला ब्राह्मण",
+    "phal": "Planning is useful; fantasy without action destroys what is already in hand.",
+    "phalHi": "योजना ठीक है, पर कर्महीन कल्पना वर्तमान साधन भी नष्ट कर देती है।",
     "portrait": "🥣",
     "durationMin": 5,
     "body": [
@@ -694,6 +826,10 @@
   },
   {
     "id": "panchatantra-clever-hare-and-elephant",
+    "title": "The Hare Who Protected the Lake",
+    "titleHi": "झील बचाने वाला खरगोश",
+    "phal": "Communication matters. The right words, spoken calmly, can turn power away from harm.",
+    "phalHi": "सही भाषा और शांत साहस से बड़ी शक्ति को भी अहिंसा की ओर मोड़ा जा सकता है।",
     "portrait": "🐇",
     "durationMin": 5,
     "body": [
@@ -715,6 +851,10 @@
   },
   {
     "id": "panchatantra-dharmabuddhi-papabuddhi",
+    "title": "Dharmabuddhi and Papabuddhi",
+    "titleHi": "धर्मबुद्धि और पापबुद्धि",
+    "phal": "Truth may be delayed, but elaborate lies create more doors through which truth can enter.",
+    "phalHi": "सत्य देर से आए, पर जटिल झूठ स्वयं अपने रास्ते खोल देता है।",
     "portrait": "🌳",
     "durationMin": 5,
     "body": [
@@ -736,6 +876,10 @@
   },
   {
     "id": "panchatantra-sage-and-mouse",
+    "title": "The Sage and the Mouse",
+    "titleHi": "ऋषि और चूहा",
+    "phal": "Transformation must happen inside, not only in status or strength.",
+    "phalHi": "सच्चा परिवर्तन भीतर होता है, केवल रूप या शक्ति बदलने से नहीं।",
     "portrait": "🐁",
     "durationMin": 5,
     "body": [
@@ -757,6 +901,10 @@
   },
   {
     "id": "panchatantra-lion-and-bull",
+    "title": "The Lion and the Bull",
+    "titleHi": "सिंह और बैल",
+    "phal": "Do not let third voices replace direct conversation with those you trust.",
+    "phalHi": "विश्वास वाले संबंधों में तीसरे की बात से पहले सीधा संवाद करें।",
     "portrait": "🐂",
     "durationMin": 5,
     "body": [
@@ -778,6 +926,10 @@
   },
   {
     "id": "panchatantra-monk-and-jackal",
+    "title": "The Monk and the Jackal",
+    "titleHi": "साधु और सियार",
+    "phal": "Kindness is noble, but transformation belongs to the receiver. Watch actions, not promises.",
+    "phalHi": "करुणा श्रेष्ठ है, पर परिवर्तन पाने वाले के अभ्यास पर निर्भर है। वचन नहीं, कर्म देखें।",
     "portrait": "🧘",
     "durationMin": 5,
     "body": [
@@ -799,6 +951,10 @@
   },
   {
     "id": "panchatantra-lion-makers",
+    "title": "The Scholars Who Made a Lion",
+    "titleHi": "सिंह बनाने वाले विद्वान",
+    "phal": "Skill must be governed by consequence. Before asking whether we can, ask whether we should.",
+    "phalHi": "कौशल को परिणाम-बुद्धि चाहिए। \"कर सकते हैं\" से पहले \"करना चाहिए\" पूछें।",
     "portrait": "🦁",
     "durationMin": 5,
     "body": [
@@ -820,6 +976,10 @@
   },
   {
     "id": "panchatantra-hunter-and-pigeons",
+    "title": "The Hunter and the Pigeons",
+    "titleHi": "शिकारी और कबूतर",
+    "phal": "Compassion can awaken conscience where punishment only hardens fear.",
+    "phalHi": "करुणा कई बार वह हृदय खोल देती है जिसे दंड नहीं खोल पाता।",
     "portrait": "🕊️",
     "durationMin": 5,
     "body": [
@@ -841,6 +1001,10 @@
   },
   {
     "id": "panchatantra-raven-and-swan",
+    "title": "The Raven and the Swan",
+    "titleHi": "कौआ और हंस",
+    "phal": "Steady discipline outlasts flashy performance.",
+    "phalHi": "दिखावा थोड़ी देर चमकता है; स्थिर अभ्यास दूर तक ले जाता है।",
     "portrait": "🦢",
     "durationMin": 5,
     "body": [
@@ -862,6 +1026,10 @@
   },
   {
     "id": "panchatantra-three-fish",
+    "title": "The Three Fish",
+    "titleHi": "तीन मछलियाँ",
+    "phal": "Prepare early when possible; adapt quickly when needed; never worship denial.",
+    "phalHi": "संभव हो तो पहले तैयारी करें, आवश्यकता हो तो तुरंत उपाय करें, पर संकट से आँख न मूँदें।",
     "portrait": "🐟",
     "durationMin": 5,
     "body": [
@@ -883,6 +1051,10 @@
   },
   {
     "id": "panchatantra-golds-gloom",
+    "title": "Gold's Gloom",
+    "titleHi": "सोने की उदासी",
+    "phal": "Borrowed confidence — built on wealth, status, or possessions — vanishes the moment they are taken away. Only inner steadiness cannot be dug up and carried off.",
+    "phalHi": "धन, पद या संपत्ति पर टिका उधार का आत्मविश्वास उनके छिनते ही मिट जाता है। केवल भीतर की स्थिरता ही ऐसी है जिसे कोई छीन नहीं सकता।",
     "portrait": "💰",
     "durationMin": 5,
     "body": [
@@ -904,6 +1076,10 @@
   },
   {
     "id": "panchatantra-mother-shandilees-bargain",
+    "title": "Mother Shandilee's Bargain",
+    "titleHi": "माँ शांडिली का सौदा",
+    "phal": "When a deal looks unusually easy or one-sided in your favor, pause and ask why — shrewd people rarely give something for nothing.",
+    "phalHi": "जब कोई सौदा असामान्य रूप से आसान या आपके पक्ष में झुका लगे, रुककर कारण पूछें — चतुर लोग बिना वजह कुछ नहीं देते।",
     "portrait": "🌾",
     "durationMin": 5,
     "body": [
@@ -925,6 +1101,10 @@
   },
   {
     "id": "panchatantra-self-defeating-forethought",
+    "title": "Self-Defeating Forethought",
+    "titleHi": "आत्मघाती दूरदर्शिता",
+    "phal": "Careful planning driven by greed is still greed — and it can be more dangerous than simple need, because caution disguises the risk until it is too late.",
+    "phalHi": "लालच से प्रेरित सावधान योजना भी लालच ही है — और यह साधारण आवश्यकता से भी अधिक खतरनाक हो सकती है, क्योंकि सावधानी खतरे को तब तक छिपाए रखती है जब तक बहुत देर न हो जाए।",
     "portrait": "🏹",
     "durationMin": 5,
     "body": [
@@ -946,6 +1126,10 @@
   },
   {
     "id": "panchatantra-mister-duly",
+    "title": "Mister Duly",
+    "titleHi": "श्री यथोचित",
+    "phal": "What is truly meant for you arrives in its own time and cannot be lost; what isn't yours cannot be kept, however tightly you hold it.",
+    "phalHi": "जो सचमुच आपके लिए नियत है, वह अपने समय पर आता है और खोया नहीं जा सकता; जो आपका नहीं, वह कसकर पकड़ने पर भी नहीं टिकता।",
     "portrait": "📜",
     "durationMin": 5,
     "body": [
@@ -967,6 +1151,10 @@
   },
   {
     "id": "panchatantra-soft-the-weaver",
+    "title": "Soft the Weaver",
+    "titleHi": "कोमल जुलाहा",
+    "phal": "Wealth you cannot enjoy or share is no wealth at all. The freedom to give generously matters more than the size of what you hold.",
+    "phalHi": "जिस धन का न उपभोग हो सके, न दान — वह धन नहीं। जो कुछ आपके पास है उसे उदारता से देने की स्वतंत्रता उसके आकार से अधिक मायने रखती है।",
     "portrait": "🧵",
     "durationMin": 5,
     "body": [
@@ -988,6 +1176,10 @@
   },
   {
     "id": "panchatantra-hang-ball-and-greedy",
+    "title": "Hang-Ball and Greedy",
+    "titleHi": "लटकन और लालची",
+    "phal": "Do not abandon a modest, reliable good in pursuit of an uncertain windfall that may never come. Patience misapplied to an empty hope becomes years wasted.",
+    "phalHi": "किसी अनिश्चित बड़े लाभ की आशा में एक छोटा पर विश्वसनीय साधन न छोड़ें। खाली आशा पर लगाया गया धैर्य अंततः बर्बाद हुए वर्ष बनकर रह जाता है।",
     "portrait": "🐂",
     "durationMin": 5,
     "body": [
@@ -1009,6 +1201,10 @@
   },
   {
     "id": "panchatantra-spots-captivity",
+    "title": "Spot's Captivity",
+    "titleHi": "चित्रा का बंधन",
+    "phal": "No comfort or luxury can replace belonging to one's own kind and one's own freedom — the heart remembers what it was born for, however well it is cared for elsewhere.",
+    "phalHi": "कोई भी सुख-सुविधा अपनों के साथ रहने और अपनी स्वतंत्रता का स्थान नहीं ले सकती — हृदय वही याद रखता है जिसके लिए वह जन्मा था, चाहे कहीं और कितनी भी देखभाल क्यों न हो।",
     "portrait": "🦌",
     "durationMin": 5,
     "body": [
@@ -1030,6 +1226,10 @@
   },
   {
     "id": "panchatantra-four-treasure-seekers",
+    "title": "The Four Treasure-Seekers",
+    "titleHi": "चार खज़ाना खोजी",
+    "phal": "Knowing when you have enough is itself a form of wisdom. Chasing \"just a little more\" without limit can turn a fortune into a curse.",
+    "phalHi": "यह जानना कि कब पर्याप्त है, स्वयं में एक बुद्धिमत्ता है। बिना सीमा के \"थोड़ा और\" की चाह भाग्य को श्राप में बदल सकती है।",
     "portrait": "💎",
     "durationMin": 5,
     "body": [
@@ -1051,6 +1251,10 @@
   },
   {
     "id": "panchatantra-hundred-wit-thousand-wit-single-wit",
+    "title": "Hundred-Wit, Thousand-Wit, and Single-Wit",
+    "titleHi": "शतबुद्धि, सहस्रबुद्धि और एकबुद्धि",
+    "phal": "A single decision acted on in time outlasts a thousand clever plans never used. Cleverness that only delays action is no wisdom at all.",
+    "phalHi": "समय पर लिया गया एक निर्णय, कभी इस्तेमाल न हुई हज़ार तरकीबों से बेहतर होता है। चतुराई जो केवल कार्य को टालती रहे, वह बुद्धिमत्ता नहीं।",
     "portrait": "🐸",
     "durationMin": 5,
     "body": [
@@ -1072,6 +1276,10 @@
   },
   {
     "id": "panchatantra-musical-donkey",
+    "title": "The Musical Donkey",
+    "titleHi": "संगीतमय गधा",
+    "phal": "Good advice ignored out of pride or vanity comes back to cost far more than the moment of restraint would have.",
+    "phalHi": "अभिमान या घमंड में अनसुनी की गई अच्छी सलाह, संयम के उस क्षण से कहीं अधिक कीमत वसूल करती है।",
     "portrait": "🎶",
     "durationMin": 5,
     "body": [
@@ -1093,6 +1301,10 @@
   },
   {
     "id": "panchatantra-slow-the-weaver",
+    "title": "Slow the Weaver",
+    "titleHi": "धीमा जुलाहा",
+    "phal": "A wish is only as wise as the thought given to how the world will actually receive it — modesty of ambition is not the same as wisdom of judgment.",
+    "phalHi": "कोई इच्छा तभी बुद्धिमानी भरी होती है जब यह भी सोचा जाए कि दुनिया उसे वास्तव में कैसे लेगी — इच्छा की विनम्रता ही निर्णय की बुद्धिमत्ता नहीं है।",
     "portrait": "🪓",
     "durationMin": 5,
     "body": [
@@ -1114,6 +1326,10 @@
   },
   {
     "id": "panchatantra-unforgiving-monkey",
+    "title": "The Unforgiving Monkey",
+    "titleHi": "अक्षमाशील बंदर",
+    "phal": "Timely warnings deserve to be heeded before disaster, not mourned after. Injustice ignored does not vanish — it tends to return to its source.",
+    "phalHi": "समय पर दी गई चेतावनी विपत्ति के बाद पछतावे में नहीं, पहले ही सुननी चाहिए। अनदेखा किया गया अन्याय मिटता नहीं — वह अपने स्रोत की ओर लौट आता है।",
     "portrait": "🐒",
     "durationMin": 5,
     "body": [
@@ -1135,6 +1351,10 @@
   },
   {
     "id": "panchatantra-credulous-fiend",
+    "title": "The Credulous Fiend",
+    "titleHi": "भोला भूत",
+    "phal": "Fear built on rumor and assumption, never checked against reality, can make even the mighty flee from nothing at all.",
+    "phalHi": "अफ़वाह और अनुमान पर बना भय, जिसे कभी सच से परखा न जाए, शक्तिशाली को भी बिना किसी बात के भगा सकता है।",
     "portrait": "👻",
     "durationMin": 5,
     "body": [
@@ -1156,6 +1376,10 @@
   },
   {
     "id": "panchatantra-three-breasted-princess",
+    "title": "The Three-Breasted Princess",
+    "titleHi": "त्रिस्तनी राजकुमारी",
+    "phal": "Schemes meant to harm rarely unfold as their plotters expect — outcomes have a way of correcting themselves in ways no one can fully control.",
+    "phalHi": "नुकसान पहुँचाने के लिए रची गई साज़िशें शायद ही वैसे सामने आती हैं जैसा साज़िशकर्ता सोचते हैं — परिणाम अक्सर ऐसे ढंग से सुधर जाते हैं जिसे कोई पूरी तरह नियंत्रित नहीं कर सकता।",
     "portrait": "👸",
     "durationMin": 5,
     "body": [
@@ -1177,6 +1401,10 @@
   },
   {
     "id": "panchatantra-fiend-who-washed-his-feet",
+    "title": "The Fiend Who Washed His Feet",
+    "titleHi": "पैर धोने वाला भूत",
+    "phal": "Careful observation can turn even a captor's own rules and habits into the very opening needed to escape.",
+    "phalHi": "सावधानीपूर्वक अवलोकन, पकड़ने वाले के अपने ही नियमों और आदतों को भी बच निकलने का रास्ता बना सकता है।",
     "portrait": "👣",
     "durationMin": 5,
     "body": [
@@ -1198,6 +1426,10 @@
   },
   {
     "id": "panchatantra-handsome-and-theodore",
+    "title": "Handsome and Theodore",
+    "titleHi": "सुंदर और थियोडोर",
+    "phal": "A dangerous ally invited in for revenge is rarely one you can fully control -- the danger you unleash to settle one score has a way of turning on you once there is nothing left for it to feed on.",
+    "phalHi": "बदले के लिए बुलाया गया खतरनाक साथी शायद ही पूरी तरह नियंत्रण में रहता है -- जो खतरा एक हिसाब चुकाने के लिए छोड़ा जाता है, अंततः खुद पर ही पलट सकता है जब उसके लिए और कुछ न बचे।",
     "portrait": "🐍",
     "durationMin": 5,
     "body": [
@@ -1219,6 +1451,10 @@
   },
   {
     "id": "panchatantra-flop-ear-and-dusty",
+    "title": "Flop-Ear and Dusty",
+    "titleHi": "फ्लॉप-ईयर और डस्टी",
+    "phal": "A genuine, unmet need -- for companionship, belonging, or comfort -- can make the same false promise convincing more than once. Recognizing that need in yourself is the real defense against those who would exploit it.",
+    "phalHi": "साथ, अपनापन या सुख की एक सच्ची, अधूरी चाहत वही झूठा वादा एक से अधिक बार विश्वसनीय बना सकती है। अपने भीतर उस चाहत को पहचानना ही उसका शोषण करने वालों से असली बचाव है।",
     "portrait": "🫏",
     "durationMin": 5,
     "body": [
@@ -1240,6 +1476,10 @@
   },
   {
     "id": "panchatantra-jackal-who-killed-no-elephants",
+    "title": "The Jackal Who Killed No Elephants",
+    "titleHi": "सियार जिसने हाथी नहीं मारा",
+    "phal": "Knowing your own nature and limits is wisdom, not weakness. Wounded pride can push you to prove a point that costs far more than the mockery that provoked it.",
+    "phalHi": "अपने स्वभाव और सीमाओं को जानना बुद्धिमत्ता है, कमज़ोरी नहीं। घायल अभिमान आपको ऐसी बात साबित करने पर मजबूर कर सकता है जिसकी कीमत उस मज़ाक से कहीं अधिक हो जो उसे उकसाता है।",
     "portrait": "🐾",
     "durationMin": 5,
     "body": [
@@ -1261,6 +1501,10 @@
   },
   {
     "id": "panchatantra-ungrateful-wife",
+    "title": "The Ungrateful Wife",
+    "titleHi": "कृतघ्न पत्नी",
+    "phal": "Sacrifice given out of love does not obligate gratitude in return. A person's true character, once freed from crisis or dependence, tends to reveal itself exactly as it always was.",
+    "phalHi": "प्रेम से किया गया त्याग बदले में कृतज्ञता का बंधन नहीं बनाता। संकट या निर्भरता से मुक्त होते ही व्यक्ति का असली चरित्र ठीक वैसा ही उजागर होता है जैसा वह हमेशा से था।",
     "portrait": "💔",
     "durationMin": 5,
     "body": [
@@ -1282,6 +1526,10 @@
   },
   {
     "id": "panchatantra-king-joy-and-secretary-splendour",
+    "title": "King Joy and Secretary Splendour",
+    "titleHi": "राजा जॉय और सचिव स्प्लेंडर",
+    "phal": "No amount of learning, rank, or power fully shields anyone from doing foolish things for love -- it is a very human vulnerability, shared equally by scholars and kings.",
+    "phalHi": "कोई भी विद्या, पद या सत्ता किसी को प्रेम के लिए किए गए मूर्खतापूर्ण कामों से पूरी तरह नहीं बचाती -- यह एक बहुत ही मानवीय कमज़ोरी है, जो विद्वानों और राजाओं में समान रूप से पाई जाती है।",
     "portrait": "👑",
     "durationMin": 5,
     "body": [
@@ -1303,6 +1551,10 @@
   },
   {
     "id": "panchatantra-farmers-wife",
+    "title": "The Farmer's Wife",
+    "titleHi": "किसान की पत्नी",
+    "phal": "A plan built on someone else's greed for you rarely ends the way you hoped. And judging another's folly does not exempt you from your own -- the same carelessness can cost you exactly as much.",
+    "phalHi": "दूसरे के आपके प्रति लालच पर बनी योजना शायद ही वैसे समाप्त होती है जैसी आशा की गई थी। और दूसरे की मूर्खता पर हँसना आपको अपनी मूर्खता से मुक्त नहीं करता -- वही असावधानी आपको उतनी ही कीमत चुका सकती है।",
     "portrait": "🌾",
     "durationMin": 5,
     "body": [
@@ -1324,6 +1576,10 @@
   },
   {
     "id": "panchatantra-pert-hen-sparrow",
+    "title": "The Pert Hen-Sparrow",
+    "titleHi": "ढीठ चिड़िया",
+    "phal": "Even well-meant advice, offered after it has clearly been refused, can cost the giver more than staying silent would have. Knowing when to stop is its own form of wisdom.",
+    "phalHi": "भली सलाह भी, स्पष्ट रूप से ठुकराए जाने के बाद दी जाए, तो देने वाले को चुप रहने से कहीं अधिक कीमत चुकानी पड़ सकती है। कब रुकना है यह जानना भी एक प्रकार की बुद्धिमत्ता है।",
     "portrait": "🐦",
     "durationMin": 5,
     "body": [
@@ -1345,6 +1601,10 @@
   },
   {
     "id": "panchatantra-how-supersmart-ate-the-elephant",
+    "title": "How Supersmart Ate the Elephant",
+    "titleHi": "सुपरस्मार्ट ने हाथी कैसे खाया",
+    "phal": "Reading who truly stands in front of you -- their rank, their fear, their needs -- matters more than any single clever trick repeated the same way for everyone.",
+    "phalHi": "सामने खड़े व्यक्ति को सही ढंग से पहचानना -- उसका पद, उसका भय, उसकी ज़रूरतें -- किसी एक चालाकी को सबके लिए एक जैसे दोहराने से कहीं अधिक मायने रखता है।",
     "portrait": "🐘",
     "durationMin": 5,
     "body": [
@@ -1366,6 +1626,10 @@
   },
   {
     "id": "panchatantra-dog-who-went-abroad",
+    "title": "The Dog Who Went Abroad",
+    "titleHi": "विदेश गया कुत्ता",
+    "phal": "Abundance without belonging is its own kind of poverty. A place with less to offer, where you are still welcomed as one of its own, can matter more than a place of plenty where you are always treated as an outsider.",
+    "phalHi": "अपनेपन के बिना प्रचुरता भी एक प्रकार की दरिद्रता है। कम देने वाली जगह, जहाँ आपको अपना माना जाए, उस प्रचुर जगह से अधिक मायने रख सकती है जहाँ आपको हमेशा बाहरी समझा जाए।",
     "portrait": "🐕",
     "durationMin": 5,
     "body": [
@@ -1387,6 +1651,10 @@
   },
   {
     "id": "panchatantra-how-birds-picked-a-king",
+    "title": "How the Birds Picked a King",
+    "titleHi": "पक्षियों ने राजा कैसे चुना",
+    "phal": "Choose leaders by testing them against the specific dangers they must face, not by appearance of dignity. Even correct criticism, delivered without care for the other person's dignity, plants a grudge that outlasts the argument.",
+    "phalHi": "नेता को उनकी गरिमामय छवि से नहीं, बल्कि उन विशिष्ट खतरों के विरुद्ध परखकर चुनें जिनका उन्हें सामना करना है। सही आलोचना भी, दूसरे की गरिमा की परवाह किए बिना दी जाए, तो तर्क से अधिक समय तक टिकने वाली रंजिश बो देती है।",
     "portrait": "🦉",
     "durationMin": 5,
     "body": [
@@ -1408,6 +1676,10 @@
   },
   {
     "id": "panchatantra-snake-and-the-ants",
+    "title": "The Snake and the Ants",
+    "titleHi": "साँप और चींटियाँ",
+    "phal": "Never underestimate the power of many small forces acting together — what is trivial alone can be unstoppable combined, and pride that dismisses this is a dangerous blindness.",
+    "phalHi": "साथ मिलकर काम करने वाली कई छोटी शक्तियों को कभी कम मत आँकें -- जो अकेले तुच्छ है, वह मिलकर अजेय हो सकता है, और इसे नज़रअंदाज़ करने वाला अभिमान एक खतरनाक अंधापन है।",
     "portrait": "🐜",
     "durationMin": 5,
     "body": [
@@ -1429,6 +1701,10 @@
   },
   {
     "id": "panchatantra-snake-who-paid-cash",
+    "title": "The Snake Who Paid Cash",
+    "titleHi": "नकद चुकाने वाला साँप",
+    "phal": "Greed can turn a peaceful, mutually respectful arrangement into tragedy overnight. And some wounds, even when a relationship continues afterward, leave a scar that patient time alone can soften, never fully erase.",
+    "phalHi": "लालच एक शांतिपूर्ण, परस्पर आदरपूर्ण व्यवस्था को रातोंरात त्रासदी में बदल सकता है। और कुछ घाव, रिश्ता आगे चलने पर भी, ऐसा निशान छोड़ते हैं जिसे केवल धैर्यपूर्ण समय हल्का कर सकता है, पूरी तरह मिटा नहीं सकता।",
     "portrait": "🐍",
     "durationMin": 5,
     "body": [
@@ -1450,6 +1726,10 @@
   },
   {
     "id": "panchatantra-unsocial-swans",
+    "title": "The Unsocial Swans",
+    "titleHi": "असामाजिक हंस",
+    "phal": "Refusing basic hospitality to someone in need, even to protect what you have earned, can cost you everything you were trying to protect.",
+    "phalHi": "ज़रूरतमंद को बुनियादी आतिथ्य से इनकार करना, चाहे अपनी अर्जित चीज़ों की रक्षा के लिए ही क्यों न हो, आपको वह सब गँवा सकता है जिसकी आप रक्षा कर रहे थे।",
     "portrait": "🦢",
     "durationMin": 5,
     "body": [
@@ -1471,6 +1751,10 @@
   },
   {
     "id": "panchatantra-self-sacrificing-dove",
+    "title": "The Self-Sacrificing Dove",
+    "titleHi": "आत्म-त्यागी कबूतर",
+    "phal": "True hospitality asks what it can give, not what it can safely afford. Witnessing genuine self-sacrifice can transform even a hardened heart more completely than any punishment could.",
+    "phalHi": "सच्चा आतिथ्य यह नहीं पूछता कि सुरक्षित रूप से क्या दिया जा सकता है, बल्कि यह कि क्या दिया जाना चाहिए। सच्चे आत्म-त्याग को देखना किसी भी दंड से कहीं अधिक पूरी तरह एक कठोर हृदय को भी बदल सकता है।",
     "portrait": "🕊️",
     "durationMin": 5,
     "body": [
@@ -1492,6 +1776,10 @@
   },
   {
     "id": "panchatantra-old-man-with-young-wife",
+    "title": "The Old Man with the Young Wife",
+    "titleHi": "बूढ़ा और उसकी युवा पत्नी",
+    "phal": "Recognizing fear for what it is, rather than mistaking it for affection, is its own kind of self-honesty -- and a gentle sense of humor about a hard truth can soften what might otherwise be pure sorrow.",
+    "phalHi": "भय को भय के रूप में पहचानना, उसे प्रेम न समझना, अपने आप में एक प्रकार की आत्म-ईमानदारी है -- और एक कठोर सच के प्रति हल्का हास्यबोध उसे नरम कर सकता है जो अन्यथा शुद्ध शोक होता।",
     "portrait": "👴",
     "durationMin": 5,
     "body": [
@@ -1513,6 +1801,10 @@
   },
   {
     "id": "panchatantra-brahman-thief-and-ghost",
+    "title": "The Brahman, the Thief, and the Ghost",
+    "titleHi": "ब्राह्मण, चोर और भूत",
+    "phal": "Discord among those who mean you harm can become your own unexpected protection — enemies who cannot cooperate often expose themselves before they can act.",
+    "phalHi": "आपको हानि पहुँचाने का इरादा रखने वालों के बीच का मतभेद आपकी अपनी अप्रत्याशित सुरक्षा बन सकता है -- सहयोग न कर पाने वाले शत्रु अक्सर कार्य करने से पहले ही खुद को उजागर कर देते हैं।",
     "portrait": "👻",
     "durationMin": 5,
     "body": [
@@ -1534,6 +1826,10 @@
   },
   {
     "id": "panchatantra-snake-in-princes-belly",
+    "title": "The Snake in the Prince's Belly",
+    "titleHi": "राजकुमार के पेट में साँप",
+    "phal": "Honesty, even when it is punished in the moment, has a way of proving its worth over time. And a chance overheard truth, listened to carefully, can heal what deliberate searching never found.",
+    "phalHi": "सच्चाई, भले ही तात्कालिक रूप से दंडित हो, समय के साथ अपनी कीमत साबित करती है। और संयोग से सुना गया सच, ध्यान से सुना जाए, तो वह ठीक कर सकता है जो जानबूझकर खोज कभी नहीं ढूँढ पाई।",
     "portrait": "👸",
     "durationMin": 5,
     "body": [
@@ -1555,6 +1851,10 @@
   },
   {
     "id": "panchatantra-gullible-carpenter",
+    "title": "The Gullible Carpenter",
+    "titleHi": "भोला बढ़ई",
+    "phal": "A person determined to believe something can be talked out of the very truth standing in front of them. Willful blindness is often more comfortable than the truth it refuses to see.",
+    "phalHi": "कोई बात मानने पर तुला व्यक्ति उस सच से भी हटाया जा सकता है जो उसके सामने खड़ा है। जानबूझकर किया गया अंधापन अक्सर उस सच से अधिक सुविधाजनक होता है जिसे वह देखने से इनकार करता है।",
     "portrait": "🪚",
     "durationMin": 5,
     "body": [
@@ -1576,6 +1876,10 @@
   },
   {
     "id": "panchatantra-mouse-maid-made-mouse",
+    "title": "Mouse-Maid Made Mouse",
+    "titleHi": "चूहिया जो चूहिया ही रही",
+    "phal": "True belonging comes from recognizing your own nature, not from being offered the grandest or most powerful match available. What genuinely fits us is often simpler than what impresses others.",
+    "phalHi": "सच्चा अपनापन अपने स्वभाव को पहचानने से आता है, उपलब्ध सबसे भव्य या शक्तिशाली विकल्प से नहीं। जो हमें वास्तव में सूट करता है, वह अक्सर उससे सरल होता है जो दूसरों को प्रभावित करता है।",
     "portrait": "🐭",
     "durationMin": 5,
     "body": [
@@ -1597,6 +1901,10 @@
   },
   {
     "id": "panchatantra-cave-that-talked",
+    "title": "The Cave That Talked",
+    "titleHi": "बोलती गुफा",
+    "phal": "Imitating something you don't understand often reveals more than silence would. Genuine observation, not mimicry, is what lets you see danger before it sees you.",
+    "phalHi": "जिस चीज़ को आप नहीं समझते उसकी नकल करना अक्सर चुप्पी से कहीं अधिक उजागर कर देता है। सच्चा अवलोकन, नकल नहीं, वह है जो आपको खतरा देखने से पहले उसे पहचानने देता है।",
     "portrait": "🦁",
     "durationMin": 5,
     "body": [
@@ -1618,6 +1926,10 @@
   },
   {
     "id": "panchatantra-butter-blinded-brahman",
+    "title": "The Butter-Blinded Brahman",
+    "titleHi": "घी में अंधा ब्राह्मण",
+    "phal": "Patient, careful observation can outlast even a well-constructed deception. A lie built on someone else's trust eventually meets the moment that trust runs out.",
+    "phalHi": "धैर्यपूर्ण, सावधान अवलोकन एक अच्छी तरह गढ़े गए छल से भी अधिक टिक सकता है। किसी और के भरोसे पर बना झूठ अंततः उस क्षण से मिलता है जब वह भरोसा समाप्त हो जाता है।",
     "portrait": "🧈",
     "durationMin": 5,
     "body": [
@@ -1639,6 +1951,10 @@
   },
   {
     "id": "panchatantra-wedge-pulling-monkey",
+    "title": "The Wedge-Pulling Monkey",
+    "titleHi": "कील खींचने वाला बंदर",
+    "phal": "Never meddle with things whose purpose you do not understand. What looks playful on the surface may be holding real tension in place, and disturbing it without knowledge can cause real harm.",
+    "phalHi": "उन चीज़ों में हस्तक्षेप न करें जिनका उद्देश्य आप नहीं समझते। जो ऊपर से खेल जैसा लगता है वह वास्तविक तनाव थामे हो सकता है, और बिना समझे उसे छेड़ना वास्तविक नुकसान पहुँचा सकता है।",
     "portrait": "🐒",
     "durationMin": 5,
     "body": [
@@ -1660,6 +1976,10 @@
   },
   {
     "id": "panchatantra-merchant-strong-tooth",
+    "title": "Merchant Strong-Tooth",
+    "titleHi": "व्यापारी दृढ़-दंत",
+    "phal": "Do not trust a drowsy or careless mutterer over a proven record of loyal service. What sounds like a confession may be nothing more than an invented grudge.",
+    "phalHi": "एक नींद में डूबे या लापरवाह बड़बड़ाने वाले पर एक सिद्ध वफादार सेवा रिकॉर्ड से अधिक भरोसा न करें। जो स्वीकारोक्ति जैसा लगता है वह एक गढ़ी गई रंजिश से अधिक कुछ नहीं हो सकता।",
     "portrait": "⚖️",
     "durationMin": 5,
     "body": [
@@ -1681,6 +2001,10 @@
   },
   {
     "id": "panchatantra-godly-and-june",
+    "title": "Godly and June",
+    "titleHi": "गॉडली और जून",
+    "phal": "The most dangerous betrayals often come not from strangers who threaten openly, but from those who invest months in appearing trustworthy specifically to exploit one unguarded moment.",
+    "phalHi": "सबसे खतरनाक विश्वासघात अक्सर खुलेआम धमकी देने वाले अजनबियों से नहीं, बल्कि उनसे आते हैं जो विश्वसनीय दिखने में महीनों निवेश करते हैं, ताकि एक असावधान क्षण का पूरा फायदा उठा सकें।",
     "portrait": "🧘",
     "durationMin": 5,
     "body": [
@@ -1702,6 +2026,10 @@
   },
   {
     "id": "panchatantra-jackal-at-ram-fight",
+    "title": "The Jackal at the Ram-Fight",
+    "titleHi": "मेढ़ों की लड़ाई में सियार",
+    "phal": "A dangerous gamble that worked once was often saved by luck, not skill. Repeating it out of greed, without appreciating that difference, invites the disaster luck postponed the first time.",
+    "phalHi": "एक खतरनाक जुआ जो एक बार काम कर गया वह अक्सर किस्मत से बचा था, कौशल से नहीं। लालच में इसे दोहराना, इस अंतर को समझे बिना, उस आपदा को आमंत्रित करता है जिसे किस्मत ने पहली बार टाल दिया था।",
     "portrait": "🐏",
     "durationMin": 5,
     "body": [
@@ -1723,6 +2051,10 @@
   },
   {
     "id": "panchatantra-weavers-wife",
+    "title": "The Weaver's Wife",
+    "titleHi": "जुलाहे की पत्नी",
+    "phal": "Loyalty asked at the wrong moment can carry a devastating hidden price. And a convincing performance of innocence is not the same as innocence itself -- an outside witness often sees what those closest to the deception cannot.",
+    "phalHi": "गलत क्षण में माँगी गई वफादारी एक विनाशकारी छिपी कीमत ले सकती है। और निर्दोषता का विश्वसनीय प्रदर्शन निर्दोषता के समान नहीं है -- एक बाहरी गवाह अक्सर वह देख लेता है जो छल के सबसे करीब के लोग नहीं देख पाते।",
     "portrait": "🧵",
     "durationMin": 5,
     "body": [
@@ -1744,6 +2076,10 @@
   },
   {
     "id": "panchatantra-ungrateful-man",
+    "title": "The Ungrateful Man",
+    "titleHi": "कृतघ्न मनुष्य",
+    "phal": "Compassion is worth extending even when others warn against it -- but so is remembering that not everyone rescued will return the kindness, and gratitude often comes from where you least expect it.",
+    "phalHi": "करुणा बढ़ाने योग्य है भले ही दूसरे इसके खिलाफ चेतावनी दें -- पर यह याद रखना भी उतना ही ज़रूरी है कि हर बचाया गया व्यक्ति दया नहीं लौटाएगा, और कृतज्ञता अक्सर वहाँ से आती है जहाँ आप सबसे कम उम्मीद करते हैं।",
     "portrait": "🐯",
     "durationMin": 5,
     "body": [
@@ -1765,6 +2101,10 @@
   },
   {
     "id": "panchatantra-leap-and-creep",
+    "title": "Leap and Creep",
+    "titleHi": "फुदकू और रेंगू",
+    "phal": "A guest's impatience or carelessness can destroy a hard-won, shared safety — and the harm often falls hardest on those who had nothing to do with the original mistake.",
+    "phalHi": "एक अतिथि की अधीरता या लापरवाही एक कठिनाई से अर्जित, साझा सुरक्षा को नष्ट कर सकती है -- और नुकसान अक्सर उन पर सबसे भारी पड़ता है जिनका मूल गलती से कोई लेना-देना नहीं था।",
     "portrait": "🛏️",
     "durationMin": 5,
     "body": [
@@ -1786,6 +2126,10 @@
   },
   {
     "id": "panchatantra-passion-and-owl",
+    "title": "Passion and the Owl",
+    "titleHi": "हंस राजा पैशन और उल्लू",
+    "phal": "Friendships built across very different worlds need full understanding of each other's risks — what is safe for one friend may leave the other exposed in ways neither anticipated.",
+    "phalHi": "बहुत अलग दुनियाओं में बनी मित्रता को एक-दूसरे के खतरों की पूरी समझ चाहिए -- जो एक मित्र के लिए सुरक्षित है वह दूसरे को ऐसे तरीकों से उजागर छोड़ सकता है जिसकी किसी ने कल्पना नहीं की थी।",
     "portrait": "🪶",
     "durationMin": 5,
     "body": [
@@ -1807,6 +2151,10 @@
   },
   {
     "id": "panchatantra-uglys-trust-abused",
+    "title": "Ugly's Trust Abused",
+    "titleHi": "अग्ली का भरोसा तोड़ा गया",
+    "phal": "Manipulation dressed as honor is the most dangerous kind: it never technically breaks a promise, yet stages an elaborate ritual to make betrayal look like something the victim chose freely.",
+    "phalHi": "सम्मान के रूप में सजी हेरफेर सबसे खतरनाक प्रकार की होती है -- यह तकनीकी रूप से कभी कोई वादा नहीं तोड़ती, फिर भी विश्वासघात को कुछ ऐसा दिखाने के लिए एक विस्तृत अनुष्ठान रचती है जिसे पीड़ित ने स्वतंत्र रूप से चुना।",
     "portrait": "🐪",
     "durationMin": 5,
     "body": [
@@ -1828,6 +2176,10 @@
   },
   {
     "id": "panchatantra-lion-and-the-carpenter",
+    "title": "The Lion and the Carpenter",
+    "titleHi": "शेर और बढ़ई",
+    "phal": "Trust in one friend does not automatically extend to whoever that friend brings along. You can honor a friendship while still trusting your instincts about the company it keeps.",
+    "phalHi": "एक मित्र पर भरोसा स्वचालित रूप से उस मित्र के साथ आने वाले किसी पर भी लागू नहीं होता। आप एक मित्रता का सम्मान कर सकते हैं जबकि उसकी संगति के बारे में अपनी सहज बुद्धि पर भरोसा भी बनाए रख सकते हैं।",
     "portrait": "🪵",
     "durationMin": 5,
     "body": [
@@ -1849,6 +2201,10 @@
   },
   {
     "id": "panchatantra-plover-who-fought-the-ocean",
+    "title": "The Plover Who Fought the Ocean",
+    "titleHi": "सागर से लड़ने वाला टिटहरी पक्षी",
+    "phal": "Even the mightiest force can be humbled when a wronged party refuses to accept defeat quietly and finds allies willing to stand together.",
+    "phalHi": "सबसे शक्तिशाली बल भी विनम्र किया जा सकता है जब एक अन्याय सहा गया पक्ष चुपचाप हार स्वीकार करने से इनकार करता है और साथ खड़े होने को तैयार सहयोगी पाता है।",
     "portrait": "🌊",
     "durationMin": 5,
     "body": [
@@ -1870,6 +2226,10 @@
   },
   {
     "id": "panchatantra-shrewd-old-gander",
+    "title": "The Shrewd Old Gander",
+    "titleHi": "चतुर बूढ़ा हंस",
+    "phal": "Heed the warnings of those with more experience before disaster strikes. And when disaster strikes despite ignored warnings, that same wisdom can still provide an unconventional way out.",
+    "phalHi": "आपदा आने से पहले अधिक अनुभव वालों की चेतावनियों पर ध्यान दें। और जब नज़रअंदाज़ की गई चेतावनियों के बावजूद आपदा आ ही जाए, तो वही बुद्धिमत्ता अभी भी एक अपरंपरागत रास्ता दे सकती है।",
     "portrait": "🪿",
     "durationMin": 5,
     "body": [
@@ -1891,6 +2251,10 @@
   },
   {
     "id": "panchatantra-lion-and-the-ram",
+    "title": "The Lion and the Ram",
+    "titleHi": "शेर और मेढ़ा",
+    "phal": "An intimidating appearance protects you only until it is tested against your everyday, unguarded behavior. True strength is revealed in what you actually need and do.",
+    "phalHi": "एक डरावनी उपस्थिति आपकी रक्षा तभी तक करती है जब तक इसे आपके रोज़मर्रा, असावधान व्यवहार के विरुद्ध परखा न जाए। असली शक्ति इस बात में झलकती है कि आपको वास्तव में क्या चाहिए और आप क्या करते हैं।",
     "portrait": "🦁",
     "durationMin": 5,
     "body": [
@@ -1912,6 +2276,10 @@
   },
   {
     "id": "panchatantra-smart-the-jackal",
+    "title": "Smart, the Jackal",
+    "titleHi": "चतुर सियार",
+    "phal": "Calculated flattery, misdirection, and invented fear can secure outcomes without ever fighting openly for them — which is exactly why they deserve to be recognized and guarded against.",
+    "phalHi": "गणना की गई चापलूसी, गुमराही, और गढ़ा गया डर बिना कभी खुलेआम लड़े परिणाम हासिल कर सकते हैं -- यही कारण है कि इन्हें पहचानना और इनसे सावधान रहना ज़रूरी है।",
     "portrait": "🦊",
     "durationMin": 5,
     "body": [
@@ -1933,6 +2301,10 @@
   },
   {
     "id": "panchatantra-monk-who-left-his-body-behind",
+    "title": "The Monk Who Left His Body Behind",
+    "titleHi": "शरीर छोड़ जाने वाला साधु",
+    "phal": "Extraordinary claims deserve a direct test, not blind devotion. A leader's total absorption in one flattering voice is itself a warning sign worth a trusted counselor's scrutiny.",
+    "phalHi": "असाधारण दावे अंध भक्ति नहीं, एक सीधी परीक्षा के हकदार हैं। एक नेता का किसी एक चापलूस आवाज़ में पूर्ण डूब जाना खुद एक चेतावनी संकेत है जो एक भरोसेमंद सलाहकार की जाँच के योग्य है।",
     "portrait": "🔥",
     "durationMin": 5,
     "body": [
@@ -1954,6 +2326,10 @@
   },
   {
     "id": "panchatantra-girl-who-married-a-snake",
+    "title": "The Girl Who Married a Snake",
+    "titleHi": "साँप से विवाह करने वाली लड़की",
+    "phal": "A promise given in marriage carries weight beyond first appearances, and a devoted heart often discovers that another's true form was never what it seemed at the surface.",
+    "phalHi": "विवाह में दिया गया वादा पहली नज़र से परे महत्व रखता है, और एक समर्पित हृदय अक्सर पाता है कि किसी और का असली रूप कभी वैसा नहीं था जैसा सतह पर लगता था।",
     "portrait": "🐍",
     "durationMin": 5,
     "body": [
@@ -1975,6 +2351,10 @@
   },
   {
     "id": "panchatantra-poor-blossom",
+    "title": "Poor Blossom",
+    "titleHi": "बेचारा ब्लॉसम",
+    "phal": "Some fated outcomes cannot be undone even by the best-intentioned appeals — a truth the story asks us to accept with clear eyes rather than false hope.",
+    "phalHi": "कुछ नियत परिणाम सबसे नेकनीयत अपीलों से भी पूर्ववत नहीं किए जा सकते -- एक सत्य जिसे यह कथा हमें झूठी आशा के बजाय स्पष्ट आँखों से स्वीकार करने को कहती है।",
     "portrait": "🦜",
     "durationMin": 5,
     "body": [
@@ -1996,6 +2376,10 @@
   },
   {
     "id": "panchatantra-unteachable-monkey",
+    "title": "The Unteachable Monkey",
+    "titleHi": "न सीखने वाला बंदर",
+    "phal": "Well-meaning correction cannot help someone who has already decided, out of stubbornness or comfort, not to hear it. Know when persistence stops helping and starts provoking.",
+    "phalHi": "नेकनीयत सुधार उस व्यक्ति की मदद नहीं कर सकता जिसने ज़िद या आराम के कारण पहले ही उसे न सुनने का फैसला कर लिया है। जानें कि दृढ़ता कब मदद करना बंद कर उकसाना शुरू कर देती है।",
     "portrait": "🪨",
     "durationMin": 5,
     "body": [
@@ -2017,6 +2401,10 @@
   },
   {
     "id": "panchatantra-remedy-worse-than-disease",
+    "title": "A Remedy Worse Than the Disease",
+    "titleHi": "बीमारी से बुरा इलाज",
+    "phal": "A solution that solves the stated problem may still be constructed by someone who benefits from a larger disaster following right behind it. Consider who truly gains before accepting advice.",
+    "phalHi": "एक समाधान जो बताई गई समस्या हल करता है, फिर भी किसी ऐसे व्यक्ति द्वारा रचा जा सकता है जो उसके पीछे आने वाली एक बड़ी आपदा से लाभान्वित होता है। सलाह स्वीकार करने से पहले विचार करें कि वास्तव में किसे फायदा है।",
     "portrait": "🦩",
     "durationMin": 5,
     "body": [
@@ -2038,6 +2426,10 @@
   },
   {
     "id": "panchatantra-results-of-education",
+    "title": "The Results of Education",
+    "titleHi": "शिक्षा के परिणाम",
+    "phal": "The company and environment surrounding a young creature, far more than its origin, shapes what kind of creature it becomes. Choose surroundings with as much care as you choose actions.",
+    "phalHi": "एक युवा प्राणी के आसपास की संगति और वातावरण, उसकी उत्पत्ति से कहीं अधिक, यह आकार देते हैं कि वह किस तरह का प्राणी बनेगा। परिवेश को उतनी ही सावधानी से चुनें जितनी सावधानी से आप कार्यों को चुनते हैं।",
     "portrait": "✨",
     "durationMin": 5,
     "body": [
