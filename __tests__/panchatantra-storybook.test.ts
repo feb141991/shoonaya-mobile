@@ -129,3 +129,18 @@ test('Panchatantra Full 98-Story Catalog Snapshot Integrity', async (t) => {
     assert.equal(storyB5?.bodyHi.length, 6);
   });
 });
+
+test('Panchatantra detail screen error handling', async (t) => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const src = fs.readFileSync(path.join(process.cwd(), 'app/bhakti/katha/[id].tsx'), 'utf8');
+
+  await t.test('content painted from the bundled snapshot is protected like a cache hit', () => {
+    const offlineBlock = src.slice(src.indexOf('createOfflinePanchatantraKatha(id)'));
+    assert.match(offlineBlock.slice(0, 260), /hadCache = true/, 'painting offline content must set hadCache');
+  });
+
+  await t.test('a Panchatantra story with neither cache nor snapshot still gets the error state', () => {
+    assert.doesNotMatch(src, /startsWith\('panchatantra-'\)\) setLoadError/, 'no Panchatantra exemption on setLoadError');
+  });
+});

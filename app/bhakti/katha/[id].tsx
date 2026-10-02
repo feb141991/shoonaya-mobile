@@ -123,7 +123,9 @@ export default function KathaReaderScreen() {
     // the cache.
     const cacheKey = bhaktiCacheKeys.kathaDetail(id);
     const cached = await readBhaktiContentCache(cacheKey, isFullKatha);
-    const hadCache = Boolean(cached);
+    // Also set when the bundled Panchatantra snapshot paints content below, so a
+    // failed refresh never replaces already-painted content with an error page.
+    let hadCache = Boolean(cached);
     if (cached) {
       setKatha(enhanceWithExpandedPanchatantra(cached));
       setLoading(false);
@@ -132,26 +134,27 @@ export default function KathaReaderScreen() {
       if (offlineInitial) {
         setKatha(offlineInitial);
         setLoading(false);
+        hadCache = true;
       }
     }
 
     try {
       const response = await apiFetch(`/api/bhakti/katha/${id}`);
       if (!response.ok) {
-        if (!hadCache && !id.startsWith('panchatantra-')) setLoadError(true);
+        if (!hadCache) setLoadError(true);
         return;
       }
       const json = await response.json();
       const loadedKatha = (json?.katha ?? null) as FullKatha | null;
       if (!loadedKatha) {
-        if (!hadCache && !id.startsWith('panchatantra-')) setLoadError(true);
+        if (!hadCache) setLoadError(true);
         return;
       }
       const enhanced = enhanceWithExpandedPanchatantra(loadedKatha);
       setKatha(enhanced);
       void writeBhaktiContentCache(cacheKey, enhanced);
     } catch {
-      if (!hadCache && !id.startsWith('panchatantra-')) setLoadError(true);
+      if (!hadCache) setLoadError(true);
     } finally {
       setLoading(false);
     }
