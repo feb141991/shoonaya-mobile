@@ -36,35 +36,29 @@ describe('Home guest calendarStatus: buildGuestPayload (app/(tabs)/index.tsx)', 
     );
   });
 
-  it('the calendarStatus type contract includes "empty" alongside ready/pending/unavailable', () => {
-    assert.match(indexScreen, /calendarStatus\?:\s*'ready' \| 'pending' \| 'unavailable' \| 'empty';/);
+  it('the calendarStatus type contract includes guest, stale and degraded states', () => {
+    assert.match(indexScreen, /calendarStatus\?:\s*'ready' \| 'pending' \| 'unavailable' \| 'empty' \| 'stale' \| 'degraded';/);
   });
 });
 
 describe('Home guest calendarStatus: PanchangPill hide-vs-shimmer-vs-retry logic (app/(tabs)/index.tsx)', () => {
-  // 'unavailable' gained its own compact retry-chip branch (reviewed
-  // 2026-09-22, reliability plan item 4 -- see
-  // __tests__/home-panchang-unavailable-state.test.ts for the dedicated
-  // regression coverage of that fix). Only 'ready' and 'empty' (guest --
-  // never checked at all) still fall through to hidden; this test's job
-  // is narrower than its old name suggested: confirming 'pending' is the
-  // only status that renders the loading shimmer specifically, not that
-  // every other status is treated identically to each other.
-  it('only "pending" renders the loading shimmer; "ready" and "empty" fall through to hidden', () => {
+  // Only 'ready' and 'empty' fall through to hidden. A missing/stale
+  // calendar now has explicit retry or saved-data UI.
+  it('keeps pending as the only shimmer state and shows retry for unavailable, stale and degraded', () => {
     const start = indexScreen.indexOf("if (kind === 'observance' && slides.length === 0) {");
     assert.ok(start > -1, 'PanchangPill hide-logic block not found');
     const end = indexScreen.indexOf('const currentSlide =', start);
     const block = indexScreen.slice(start, end);
 
-    const statusGates = block.match(/calendarStatus === '(\w+)'/g) ?? [];
-    assert.deepEqual(statusGates, ["calendarStatus === 'pending'", "calendarStatus === 'unavailable'"]);
+    assert.match(block, /calendarStatus === 'pending'/);
+    assert.match(block, /calendarStatus === 'unavailable' \|\| calendarStatus === 'stale' \|\| calendarStatus === 'degraded'/);
     assert.match(block, /return null;/, '"ready" and "empty" must still fall through to hidden, not a permanent skeleton');
   });
 });
 
 describe('Home guest calendarStatus: SacredDaysCarousel empty-state rendering', () => {
   it('accepts "empty" in its calendarStatus prop type', () => {
-    assert.match(sacredDaysCarousel, /calendarStatus:\s*'ready' \| 'pending' \| 'unavailable' \| 'empty';/);
+    assert.match(sacredDaysCarousel, /calendarStatus:\s*'ready' \| 'pending' \| 'unavailable' \| 'empty' \| 'stale' \| 'degraded';/);
   });
 
   it('the "empty" branch renders guest sign-in copy and a sign-in CTA, not the ShimmerBlock skeleton', () => {
@@ -96,7 +90,9 @@ describe('Home guest calendarStatus: SacredDaysCarousel empty-state rendering', 
 
 describe('Home guest calendarStatus: index.tsx wires SacredDaysCarousel to a dedicated sign-in gate', () => {
   it('passes onSignInPress to SacredDaysCarousel and renders a matching AuthGate', () => {
-    const carouselStart = indexScreen.indexOf('<SacredDaysCarousel');
+    // The first occurrence is the network-error fallback; the normal Home
+    // occurrence owns the guest sign-in gate.
+    const carouselStart = indexScreen.lastIndexOf('<SacredDaysCarousel');
     const carouselEnd = indexScreen.indexOf('/>', carouselStart);
     const carouselBlock = indexScreen.slice(carouselStart, carouselEnd);
     assert.match(carouselBlock, /onSignInPress=\{\(\) => setSacredDaysAuthGateVisible\(true\)\}/);

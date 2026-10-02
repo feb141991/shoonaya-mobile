@@ -74,7 +74,7 @@ describe('Home PanchangPill: "unavailable" renders a compact retry chip, not a s
 
   it('calendarStatus "unavailable" renders a pressable retry chip wired to onRetryUnavailable, distinct from both the shimmer and the silent-hide fallback', () => {
     const block = extractObservancePillHideLogic();
-    const unavailableBranchStart = block.indexOf("if (calendarStatus === 'unavailable') {");
+    const unavailableBranchStart = block.indexOf("if (calendarStatus === 'unavailable' || calendarStatus === 'stale' || calendarStatus === 'degraded') {");
     assert.ok(unavailableBranchStart > -1, '"unavailable" branch not found');
     const unavailableBranch = block.slice(unavailableBranchStart);
     assert.match(unavailableBranch, /onPress=\{onRetryUnavailable\}/);
@@ -97,8 +97,8 @@ describe('Home PanchangRetryController exhaustion: no-content case must not leav
     const body = extractOnExhausted();
     assert.match(
       body,
-      /hasCalendarContent \? 'ready' : 'unavailable'/,
-      'the no-content branch must resolve to \'unavailable\', matching what PanchangRetryController\'s own doc comment documents as the contract'
+      /calendarStatus: hasCalendarContent \? 'stale' : 'unavailable'/,
+      'known-good dates should remain visible as stale after refresh exhaustion; without dates the state must resolve to retryable unavailable'
     );
     assert.doesNotMatch(
       body,

@@ -75,7 +75,7 @@ test('Shloka, Nitya Karma, Mantras, Panchang, Japa Insights, Notifications and S
   // Settings additionally replaces a getSession() call inside the push-token
   // registration path with the same shared identity.
   assert.doesNotMatch(settingsDetail, /supabase\.auth\.getSession\(\)/);
-  assert.match(settingsDetail, /registerPushToken\(appIdentity\.userId\)/);
+  assert.match(settingsDetail, /registerPushToken\(appIdentity\.userId, \{ force: true, reason: 'permission' \}\)/);
 
   // lib/mood.ts's telemetry-attribution helper became synchronous, reading
   // the in-memory identity store instead of issuing a network call.

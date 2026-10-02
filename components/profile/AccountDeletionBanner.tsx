@@ -30,6 +30,13 @@ export function AccountDeletionBanner({
       })
     : null;
 
+  const effectiveDaysRemaining =
+    typeof daysRemaining === 'number'
+      ? daysRemaining
+      : purgeAfter
+        ? Math.max(0, Math.ceil((new Date(purgeAfter).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : null;
+
   const handleCancel = async () => {
     if (cancelling) return;
     setCancelling(true);
@@ -79,7 +86,7 @@ export function AccountDeletionBanner({
           <Feather name="calendar" size={13} color={theme.brand} />
           <Text style={{ ...TYPE.caption, color: theme.text, fontFamily: FONTS.sansMedium }}>
             Permanent purge on <Text style={{ color: COLORS.danger }}>{formattedDate}</Text>
-            {daysRemaining !== null ? ` (${daysRemaining} days left)` : ''}
+            {effectiveDaysRemaining !== null ? ` (${effectiveDaysRemaining} days left)` : ''}
           </Text>
         </View>
       )}

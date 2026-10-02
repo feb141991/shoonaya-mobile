@@ -6,6 +6,8 @@ import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { canRetryTransientTransportFailure } from '@/lib/api-auth-policy';
 import { createSecureAuthStorage } from '@/lib/secureAuthStorage';
+import { classifyApiDiagnostic, normalizeApiDiagnosticMethod, normalizeSupabaseEndpoint } from '@/lib/apiDiagnosticPolicy';
+import { recordApiRequestDiagnostic } from '@/lib/telemetry';
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const EXPO_PUBLIC_SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -38,9 +40,61 @@ const authStorage = createSecureAuthStorage({
 const resilientFetch: typeof fetch = async (input, init) => {
   const maxRetries = 2;
   const mayRetry = canRetryTransientTransportFailure(init?.method);
+  const startedAt = Date.now();
+  const endpoint = normalizeSupabaseEndpoint(input, EXPO_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co');
+  const requestMethod = normalizeApiDiagnosticMethod(
+    init?.method ?? (typeof Request !== 'undefined' && input instanceof Request ? input.method : undefined),
+  );
+  const requestSignal = init?.signal ?? (typeof Request !== 'undefined' && input instanceof Request ? input.signal : null);
+  const statuses: number[] = [];
+  let attemptCount = 0;
+  let hadRetryableFailure = false;
+
+  const saveDiagnostic = (response: Response | null, terminalError?: 'network_failure' | 'timeout' | 'client_failure' | 'cancelled') => {
+    try {
+      if (!endpoint) return;
+      const durationMs = Math.max(0, Date.now() - startedAt);
+      const outcome = classifyApiDiagnostic({
+        statuses,
+        finalStatus: response?.status ?? null,
+        durationMs,
+        hadRetryableFailure,
+        terminalError,
+      });
+      if (!outcome) return;
+
+      const firstRequestId = statuses.length > 0 ? requestIds[0] ?? null : null;
+      const lastRequestId = statuses.length > 0 ? requestIds.at(-1) ?? null : null;
+      const isUuid = (value: string | null): value is string => Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+      const serverRequestId = isUuid(firstRequestId) ? firstRequestId : null;
+      const latestRequestId = isUuid(lastRequestId) ? lastRequestId : null;
+      recordApiRequestDiagnostic({
+        clientEventId: Crypto.randomUUID(),
+        endpoint,
+        method: requestMethod,
+        outcome,
+        firstStatus: statuses[0] ?? null,
+        finalStatus: response?.status ?? null,
+        attemptCount,
+        durationMs: Math.min(durationMs, 180_000),
+        serverRequestId,
+        retryServerRequestId: latestRequestId && latestRequestId !== serverRequestId ? latestRequestId : null,
+        timestamp: Date.now(),
+      });
+    } catch {
+      // Observability must never alter the request's network result.
+    }
+  };
+  const requestIds: Array<string | null> = [];
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await fetch(input, init);
+      attemptCount += 1;
+      const response = await fetch(input, init);
+      statuses.push(response.status);
+      requestIds.push(response.headers.get('x-request-id'));
+      saveDiagnostic(response);
+      return response;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       const isTransient =
@@ -52,9 +106,14 @@ const resilientFetch: typeof fetch = async (input, init) => {
       // server. Replaying POST/PATCH/PUT/DELETE here can duplicate a write.
       // Durable mutation retries belong to the feature's idempotent outbox.
       if (mayRetry && attempt < maxRetries && isTransient) {
+        hadRetryableFailure = true;
         await new Promise((res) => setTimeout(res, 250 * (attempt + 1)));
         continue;
       }
+      if (requestSignal?.aborted) saveDiagnostic(null, 'cancelled');
+      else if (err instanceof Error && err.name === 'AbortError') saveDiagnostic(null, 'timeout');
+      else if (isTransient) saveDiagnostic(null, 'network_failure');
+      else saveDiagnostic(null, 'client_failure');
       throw err;
     }
   }

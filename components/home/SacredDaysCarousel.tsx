@@ -49,6 +49,8 @@ const COPY = {
     export: 'Sacred Calendar',
     exportBusy: 'Preparing',
     unavailable: 'Sacred days could not be refreshed.',
+    stale: 'Showing saved sacred dates while we refresh the calendar.',
+    degraded: 'Showing verified dates while we confirm full calendar coverage.',
     retry: 'Retry',
     sharingUnavailable: 'Your device cannot share calendar files.',
     exportFailed: 'The calendar could not be exported. Please try again.',
@@ -63,6 +65,8 @@ const COPY = {
     export: 'पवित्र कैलेंडर',
     exportBusy: 'तैयार हो रहा है',
     unavailable: 'पवित्र दिनों की जानकारी रीफ़्रेश नहीं हो सकी।',
+    stale: 'कैलेंडर रीफ़्रेश हो रहा है; सुरक्षित पवित्र तिथियाँ दिखाई जा रही हैं।',
+    degraded: 'सत्यापित तिथियाँ दिखाई जा रही हैं; पूरे कैलेंडर की पुष्टि जारी है।',
     retry: 'पुनः प्रयास',
     sharingUnavailable: 'आपका डिवाइस कैलेंडर फ़ाइल साझा नहीं कर सकता।',
     exportFailed: 'कैलेंडर निर्यात नहीं हो सका। कृपया फिर प्रयास करें।',
@@ -77,6 +81,8 @@ const COPY = {
     export: 'ਪਵਿੱਤਰ ਕੈਲੰਡਰ',
     exportBusy: 'ਤਿਆਰ ਹੋ ਰਿਹਾ ਹੈ',
     unavailable: 'ਪਵਿੱਤਰ ਦਿਨਾਂ ਦੀ ਜਾਣਕਾਰੀ ਤਾਜ਼ਾ ਨਹੀਂ ਹੋ ਸਕੀ।',
+    stale: 'ਕੈਲੰਡਰ ਤਾਜ਼ਾ ਹੋ ਰਿਹਾ ਹੈ; ਸੰਭਾਲੀਆਂ ਪਵਿੱਤਰ ਤਾਰੀਖਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ।',
+    degraded: 'ਪ੍ਰਮਾਣਿਤ ਤਾਰੀਖਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ; ਪੂਰੇ ਕੈਲੰਡਰ ਦੀ ਪੁਸ਼ਟੀ ਜਾਰੀ ਹੈ।',
     retry: 'ਮੁੜ ਕੋਸ਼ਿਸ਼',
     sharingUnavailable: 'ਤੁਹਾਡੀ ਡਿਵਾਈਸ ਕੈਲੰਡਰ ਫਾਈਲ ਸਾਂਝੀ ਨਹੀਂ ਕਰ ਸਕਦੀ।',
     exportFailed: 'ਕੈਲੰਡਰ ਨਿਰਯਾਤ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
@@ -101,7 +107,7 @@ export function SacredDaysCarousel({
 }: {
   observances: SacredDaysObservance[];
   series: ObservanceSeries[];
-  calendarStatus: 'ready' | 'pending' | 'unavailable' | 'empty';
+  calendarStatus: 'ready' | 'pending' | 'unavailable' | 'empty' | 'stale' | 'degraded';
   theme: Theme;
   isDark: boolean;
   lang?: 'en' | 'hi' | 'pa';
@@ -241,7 +247,7 @@ export function SacredDaysCarousel({
           <Text style={{ ...TYPE.section, color: accent }} numberOfLines={1}>
             {copy.title}
           </Text>
-          {calendarStatus === 'ready' && items.length > 0 ? (
+          {(calendarStatus === 'ready' || calendarStatus === 'stale' || calendarStatus === 'degraded') && items.length > 0 ? (
             <View style={{ minWidth: 24, paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADII.pill, backgroundColor: isDark ? COLORS.brandSoftDark : COLORS.brandSoftLight }}>
               <Text style={{ ...TYPE.chip, color: accent, textAlign: 'center' }}>{items.length}</Text>
             </View>
@@ -323,6 +329,33 @@ export function SacredDaysCarousel({
             </PressableSurface>
           ) : null}
         </View>
+      ) : calendarStatus === 'stale' && !hasItems ? (
+        <View
+          style={{
+            minHeight: SACRED_DAYS_CARD_HEIGHT,
+            borderRadius: RADII.xl,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            backgroundColor: theme.card,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            gap: 8,
+          }}
+        >
+          <Feather name="refresh-cw" size={20} color={theme.dim} />
+          <Text style={{ ...TYPE.caption, color: theme.dim, textAlign: 'center' }}>{copy.stale}</Text>
+          {onRetryUnavailable ? (
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel={copy.retry}
+              onPress={onRetryUnavailable}
+              style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: accent }}>{copy.retry}</Text>
+            </PressableSurface>
+          ) : null}
+        </View>
       ) : !hasItems ? (
         <View
           style={{
@@ -379,6 +412,24 @@ export function SacredDaysCarousel({
             })}
             contentContainerStyle={{ paddingHorizontal: 4 }}
           />
+
+          {calendarStatus === 'stale' || calendarStatus === 'degraded' ? (
+            <View style={{ minHeight: MIN_TOUCH_TARGET, marginTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Text accessibilityLiveRegion="polite" style={{ ...TYPE.caption, color: theme.dim, flexShrink: 1, textAlign: 'center' }}>
+                {calendarStatus === 'stale' ? copy.stale : copy.degraded}
+              </Text>
+              {onRetryUnavailable ? (
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityLabel={copy.retry}
+                  onPress={onRetryUnavailable}
+                  style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: accent }}>{copy.retry}</Text>
+                </PressableSurface>
+              ) : null}
+            </View>
+          ) : null}
 
           {items.length > 1 ? (
             <View

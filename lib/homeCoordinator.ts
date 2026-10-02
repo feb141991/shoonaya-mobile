@@ -1,8 +1,9 @@
-import { readHomeCache, getOrReadHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsPending, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
+import { readHomeCache, getOrReadHomeCache, writeHomeCache, clearHomeCache, withDateSensitiveFieldsPending, HOME_CALENDAR_FRESHNESS_MS, type CacheIdentity, type CachedHomeRenderModel } from './homeCache';
 import { safeTimezone, spiritualDate } from './spiritualDate';
 import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
 import { recordRouteOpen, recordRefreshFailure, recordServerTiming, recordDuplicateRequestAvoided, parseServerTimingHeader, type TelemetryIdentity } from './telemetry';
+import { fetchHomeCalendarFallback, type HomeCalendarFallback } from './homeCalendarFallback';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -50,7 +51,7 @@ export function getIdentityKey(identity: HomeAuthIdentity): string | null {
 
 export type HomeFetchApi = (
   path: string,
-  options?: RequestInit & { timeoutMs?: number }
+  options?: RequestInit & { timeoutMs?: number; expectedUserId?: string }
 ) => Promise<Response>;
 
 export const HOME_SUMMARY_TIMEOUT_MS = 30_000;
@@ -64,11 +65,13 @@ export const HOME_FOCUS_STALE_MS = 5 * 60 * 1000;
 // intraday. A day-rollover within this window is already handled correctly
 // from cache alone by withDateSensitiveFieldsPending (homeCache.ts), so
 // there's no separate "force refetch on rollover" rule here.
-export const CALENDAR_FRESHNESS_MS = 12 * 60 * 60 * 1000;
+export const CALENDAR_FRESHNESS_MS = HOME_CALENDAR_FRESHNESS_MS;
 
 export type HomeLoaderDependencies = {
   fetchApi: HomeFetchApi;
   onApplyPayload: (payload: any) => void;
+  /** Applies calendar-only recovery when the full Home summary is unavailable. */
+  onApplyCalendarFallback?: (fallback: HomeCalendarFallback) => void;
   onSetLoading: (loading: boolean) => void;
   onSetError: (error: boolean) => void;
   onRedirectToLogin: () => void;
@@ -120,6 +123,11 @@ export class HomeSummaryCoordinator {
 
   public setHeroUrl(url: string | null) {
     this.state.currentHeroUrl = url;
+  }
+
+  /** A degraded fallback is useful for rendering, but is not a full feed freshness mark. */
+  public markCalendarNeedsRefresh() {
+    this.state.lastCalendarLoadedAt = 0;
   }
 
   public invalidateMemoryState(newIdentityKey: string | null = null) {
@@ -251,7 +259,9 @@ export class HomeSummaryCoordinator {
         // A spiritual-day rollover always requires a full Calendar response.
         // Even a recently saved envelope belongs to the previous day; using
         // its timestamp would incorrectly select ?skipCalendar=true.
-        this.state.lastCalendarLoadedAt = cached.dateSensitiveStale
+        this.state.lastCalendarLoadedAt = cached.dateSensitiveStale ||
+          cached.payload.panchang.calendarStatus === 'stale' ||
+          cached.payload.panchang.calendarStatus === 'degraded'
           ? 0
           : cached.calendarSavedAt;
         this.deps.onSetLoading(false);
@@ -363,12 +373,96 @@ export class HomeSummaryCoordinator {
         // still degrades safely instead of crashing -- it just means one
         // extra real fetch next time, same as any other cache miss.
         let calendarSavedAt = Date.now();
+        let cachedCalendar: Awaited<ReturnType<typeof getOrReadHomeCache>> = null;
+        const responseCalendarNeedsRecovery =
+          !payload.panchang ||
+          payload.panchang.calendarStatus === 'unavailable' ||
+          payload.panchang.calendarStatus === 'pending' ||
+          payload.panchang.calendarStatus === 'stale';
+        if (responseCalendarNeedsRecovery) {
+          cachedCalendar = await getOrReadHomeCache(cacheIdentity, timezone).catch(() => null);
+        }
+
         if (!payload.panchang) {
-          const cachedCalendar = await getOrReadHomeCache(cacheIdentity, timezone);
           if (cachedCalendar) {
-            payload.panchang = cachedCalendar.payload.panchang;
-            payload.hero = cachedCalendar.payload.hero;
+            const cachedPayload = cachedCalendar.dateSensitiveStale
+              ? withDateSensitiveFieldsPending(cachedCalendar.payload, cachedCalendar.expectedSpiritualDate)
+              : cachedCalendar.payload;
+            payload.panchang = cachedPayload.panchang;
+            payload.hero = cachedPayload.hero;
             calendarSavedAt = cachedCalendar.calendarSavedAt;
+          }
+          payload.panchang ??= {
+            href: '/panchang',
+            tithiLabel: "Today's Panchang",
+            festivalLabel: null,
+            vratLabel: null,
+            viewedToday: false,
+            observance: null,
+            upcomingObservances: [],
+            series: [],
+            storyCards: [],
+            calendarStatus: 'unavailable',
+            calendarProfile: 'legacy-ujjain',
+            sampradaya: null,
+          };
+        }
+
+        const calendarStatus = payload.panchang?.calendarStatus;
+        const calendarNeedsRecovery =
+          identity.kind === 'authenticated' &&
+          (calendarStatus === 'unavailable' || calendarStatus === 'pending' || calendarStatus === 'stale' || !payload.panchang);
+        if (calendarNeedsRecovery) {
+          // home-summary can return successfully while its calendar subsection
+          // times out or fails. First keep the last known-good, identity-scoped
+          // calendar available as a safety net. Then try the independent
+          // published-occurrence route, which bypasses home-summary's
+          // materialization/composition path. Never replace a failure with an
+          // empty array and never promote unresolved/review-queue dates.
+          const cachedPayload = cachedCalendar
+            ? cachedCalendar.dateSensitiveStale
+              ? withDateSensitiveFieldsPending(cachedCalendar.payload, cachedCalendar.expectedSpiritualDate)
+              : cachedCalendar.payload
+            : null;
+          const cachedPanchang = cachedPayload?.panchang;
+          const hasCachedCalendarContent = Boolean(
+            cachedPanchang?.observance ||
+            (cachedPanchang?.upcomingObservances?.length ?? 0) > 0 ||
+            (cachedPanchang?.series?.length ?? 0) > 0
+          );
+
+          if (hasCachedCalendarContent && cachedPanchang && payload.panchang) {
+            payload.panchang = {
+              ...payload.panchang,
+              observance: cachedPanchang.observance,
+              upcomingObservances: cachedPanchang.upcomingObservances,
+              series: cachedPanchang.series ?? [],
+              storyCards: cachedPanchang.storyCards ?? [],
+              calendarStatus: 'stale',
+            };
+            calendarSavedAt = cachedCalendar!.calendarSavedAt;
+          }
+
+          if (payload.panchang) {
+            const fallback = await fetchHomeCalendarFallback({
+              fetchApi: this.deps.fetchApi,
+              expectedUserId: identity.userId,
+              tradition: payload.profile?.tradition === 'neutral' ? undefined : payload.profile?.tradition,
+              calendarProfile: payload.panchang.calendarProfile,
+              timezone: safeTimezone(payload.date?.timezone || timezone),
+              spiritualDate: payload.date?.iso || spiritualDate(timezone),
+              language: payload.profile?.appLanguage === 'hi' || payload.profile?.appLanguage === 'pa'
+                ? payload.profile.appLanguage
+                : 'en',
+            });
+            if (requestGen !== this.state.requestGen || this.state.lastIdentityKey !== currentIdentityKey) return;
+            if (fallback) {
+              payload.panchang = { ...payload.panchang, ...fallback };
+              // The direct read contains verified occurrences but has no
+              // materialisation-completeness signal; do not let it mark the
+              // full Home calendar fresh and suppress the next full read.
+              calendarSavedAt = 0;
+            }
           }
         }
 
@@ -412,6 +506,55 @@ export class HomeSummaryCoordinator {
           return this.loadHome(identity, isManualRefresh, retryCount + 1);
         }
         const reason = isFetchCancelled(error) ? 'timeout' : 'network';
+
+        // The full Home endpoint can fail independently of the canonical
+        // published-occurrence route. On a cold install there may be no
+        // cached calendar to keep visible, so make one bounded, identity-
+        // guarded calendar-only attempt before showing the Home error state.
+        // With no cached profile contract, omit tradition/profile overrides;
+        // the backend then resolves the authenticated user's own settings.
+        if (identity.kind === 'authenticated' && this.deps.onApplyCalendarFallback) {
+          const cached = await getOrReadHomeCache(cacheIdentity, timezone).catch(() => null);
+          if (requestGen !== this.state.requestGen || this.state.lastIdentityKey !== currentIdentityKey) return;
+          const cachedPayload = cached
+            ? cached.dateSensitiveStale
+              ? withDateSensitiveFieldsPending(cached.payload, cached.expectedSpiritualDate)
+              : cached.payload
+            : null;
+          const fallback = await fetchHomeCalendarFallback({
+            fetchApi: this.deps.fetchApi,
+            expectedUserId: identity.userId,
+            tradition: cachedPayload?.profile?.tradition,
+            calendarProfile: cachedPayload?.panchang?.calendarProfile,
+            timezone: safeTimezone(cachedPayload?.date?.timezone || timezone),
+            spiritualDate: cachedPayload?.date?.iso || spiritualDate(timezone),
+            language: cachedPayload?.profile?.appLanguage === 'hi' || cachedPayload?.profile?.appLanguage === 'pa'
+              ? cachedPayload.profile.appLanguage
+              : 'en',
+          });
+          if (requestGen !== this.state.requestGen || this.state.lastIdentityKey !== currentIdentityKey) return;
+          if (fallback) {
+            this.deps.onApplyCalendarFallback(fallback);
+            this.deps.onSetSectionsPending?.(false);
+            // A cached Home model is complete enough to recover in place. On
+            // a true first-install failure, keep the normal error shell for
+            // profile/practice data; the caller can still render this
+            // calendar-only result inside that shell without pretending the
+            // rest of Home loaded.
+            if (this.state.hasValidState) {
+              recordRefreshFailure(telemetryIdentity, 'home', {
+                reason,
+                hadCachedData: Boolean(cachedPayload),
+              });
+              this.state.lastLoadedAt = Date.now();
+              this.state.lastCalendarLoadedAt = 0;
+              this.deps.onSetLoading(false);
+              this.deps.onSetError(false);
+              return;
+            }
+          }
+        }
+
         if (!this.state.hasValidState) {
           this.deps.onSetError(true);
           recordRefreshFailure(telemetryIdentity, 'home', { reason, hadCachedData: false });
@@ -429,10 +572,12 @@ export class HomeSummaryCoordinator {
   }
 }
 
-export type PanchangCalendarStatus = 'ready' | 'pending' | 'unavailable';
+export type PanchangCalendarStatus = 'ready' | 'pending' | 'unavailable' | 'stale' | 'degraded' | 'empty';
 
 export type PanchangRetryDependencies = {
   fetchApi: HomeFetchApi;
+  /** Independent canonical read used after all Home calendar retries fail. */
+  fetchCalendarFallback?: () => Promise<HomeCalendarFallback | null>;
   // Merges (never replaces) the retry response's `panchang` object into
   // current Home state -- the caller's merge must be scoped to the
   // `panchang` key alone. A wholesale state replace here could stomp
@@ -442,8 +587,8 @@ export type PanchangRetryDependencies = {
   onMergePanchang: (panchang: Record<string, unknown>) => void;
   // Called once, only after every attempt in the sequence still reports
   // `calendarStatus: 'pending'` (or fails outright) -- the caller should
-  // locally treat the pill as 'unavailable' rather than leaving a skeleton
-  // rendered indefinitely.
+  // locally stop the skeleton. It preserves any visible data as stale and
+  // shows an unavailable state only when there is no known-good content.
   onExhausted: () => void;
   // Defaults to [2000, 5000, 10000]ms (roughly 2s/5s/10s after the
   // skeleton first appears). Overridable so tests don't have to wait out
@@ -492,6 +637,14 @@ export class PanchangRetryController {
 
     const isCurrentEpisode = () => !this.cancelled && this.episodeId === episodeId;
 
+    const tryCalendarFallback = async (): Promise<boolean> => {
+      if (!this.deps.fetchCalendarFallback) return false;
+      const fallback = await this.deps.fetchCalendarFallback();
+      if (!fallback || !isCurrentEpisode()) return false;
+      this.deps.onMergePanchang(fallback as unknown as Record<string, unknown>);
+      return true;
+    };
+
     const runAttempt = (index: number) => {
       if (!isCurrentEpisode() || index >= delays.length) return;
       const isLastAttempt = index === delays.length - 1;
@@ -503,7 +656,9 @@ export class PanchangRetryController {
             const response = await this.deps.fetchApi('/api/native/home-summary', { timeoutMs: 10_000 });
             if (!isCurrentEpisode()) return;
             if (!response.ok) {
-              if (isLastAttempt) this.deps.onExhausted();
+              if (isLastAttempt) {
+                if (!(await tryCalendarFallback())) this.deps.onExhausted();
+              }
               else runAttempt(index + 1);
               return;
             }
@@ -513,13 +668,19 @@ export class PanchangRetryController {
               this.deps.onMergePanchang(payload.panchang);
             }
             if (payload?.panchang?.calendarStatus === 'pending') {
-              if (isLastAttempt) this.deps.onExhausted();
+              if (isLastAttempt) {
+                if (!(await tryCalendarFallback())) this.deps.onExhausted();
+              }
               else runAttempt(index + 1);
+            } else if (payload?.panchang?.calendarStatus === 'unavailable') {
+              await tryCalendarFallback();
             }
             // Otherwise resolved (ready or unavailable) -- stop, no next attempt.
           } catch {
             if (!isCurrentEpisode()) return;
-            if (isLastAttempt) this.deps.onExhausted();
+            if (isLastAttempt) {
+              if (!(await tryCalendarFallback())) this.deps.onExhausted();
+            }
             else runAttempt(index + 1);
           }
         })();

@@ -35,6 +35,7 @@ import { FestivalQuizBanner } from '@/components/home/FestivalQuizBanner';
 import { BrahmaMuhurtaPrompt } from '@/components/home/BrahmaMuhurtaPrompt';
 import { FirstWeekGuide } from '@/components/home/FirstWeekGuide';
 import { SacredDaysCarousel } from '@/components/home/SacredDaysCarousel';
+import { fetchHomeCalendarFallback, type HomeCalendarFallback } from '@/lib/homeCalendarFallback';
 import { ContextualReminderPrompt } from '@/components/notifications/ContextualReminderPrompt';
 import { resolveObservanceReminderPreference } from '@/lib/contextualNotificationPrompt';
 import { FestivalStoryStack } from '@/components/home/FestivalStoryStack';
@@ -279,7 +280,7 @@ type HomeSummary = {
     // Absent entirely on an old cached payload predating this field;
     // defaulted to 'ready' below so a pre-existing cache never regresses
     // into a permanent skeleton.
-    calendarStatus?: 'ready' | 'pending' | 'unavailable' | 'empty';
+    calendarStatus?: 'ready' | 'pending' | 'unavailable' | 'empty' | 'stale' | 'degraded';
     // The resolved calendar_profile ('legacy-ujjain' when unset) and
     // sampradaya actually used to compute this response's observance data.
     // Absent on an old cached payload predating this field. Included in
@@ -646,15 +647,10 @@ function PanchangPill({
   const calendarStatus = summary.calendarStatus ?? 'ready';
 
   // 'ready' (nothing today, genuinely checked) and 'empty' (guest mode --
-  // never checked at all, see buildGuestPayload) both fall through to
-  // `return null`: there is nothing wrong to report, so there is nothing
-  // to show. 'pending' shows the loading shimmer. 'unavailable' -- a real
-  // checked-and-failed error, not a timeout -- used to *also* fall through
-  // to `return null`, silently hiding with no way to tell "nothing today"
-  // apart from "couldn't check," contradicting onRetryUnavailable's own
-  // doc comment above (it names exactly this "compact 'unavailable' state"
-  // as the reason that prop exists). Fixed 2026-09-22 (reliability plan
-  // item 4): now renders a compact retry chip instead of silently hiding.
+  // never checked at all) fall through to `return null`. 'pending' shows a
+  // shimmer. 'unavailable', 'stale' and 'degraded' remain visible/retryable when there
+  // is no verified item to show; when an item exists, preserve and display
+  // the item rather than replacing it with an error chip.
   if (kind === 'observance' && slides.length === 0) {
     if (calendarStatus === 'pending') {
       return (
@@ -681,11 +677,11 @@ function PanchangPill({
         </View>
       );
     }
-    if (calendarStatus === 'unavailable') {
+    if (calendarStatus === 'unavailable' || calendarStatus === 'stale' || calendarStatus === 'degraded') {
       return (
         <PressableSurface
           haptic="selection"
-          accessibilityLabel="Could not check today's observance. Tap to retry"
+          accessibilityLabel={calendarStatus === 'stale' ? 'Refresh saved observance dates' : calendarStatus === 'degraded' ? 'Refresh calendar coverage' : "Could not check today's observance. Tap to retry"}
           onPress={onRetryUnavailable}
           style={{
             borderRadius: RADII.pill,
@@ -701,9 +697,9 @@ function PanchangPill({
             maxWidth: 264,
           }}
         >
-          <Feather name="cloud-off" size={12} color={COLORS.homePwaPillText} />
+          <Feather name={calendarStatus === 'unavailable' ? 'cloud-off' : 'refresh-cw'} size={12} color={COLORS.homePwaPillText} />
           <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
-            Couldn&apos;t check · Retry
+            {calendarStatus === 'stale' ? 'Saved date · Refresh' : calendarStatus === 'degraded' ? 'Verified dates · Check coverage' : 'Couldn&apos;t check · Retry'}
           </Text>
         </PressableSurface>
       );
@@ -808,6 +804,8 @@ function HomeContent() {
   const [state, setState] = useState<HomeSummary>(() =>
     initialSnapshot ? buildHomeStateFromPayload(initialSnapshot.payload) : INITIAL_STATE
   );
+  const homeStateRef = useRef(state);
+  homeStateRef.current = state;
   const [loadError, setLoadError] = useState(false);
   // True right after a stale-spiritual-date cache hit is applied -- Panchang/
   // vrat and practice-completion status in `state` have been reset to a
@@ -1099,6 +1097,13 @@ function HomeContent() {
     hasValidStateRef.current = true;
   }, []);
 
+  const applyCalendarFallback = useCallback((fallback: HomeCalendarFallback) => {
+    setState((prev) => ({
+      ...prev,
+      panchang: { ...prev.panchang, ...fallback },
+    }));
+  }, []);
+
   const buildGuestPayload = useCallback((): HomeSummary => ({
     ...INITIAL_STATE,
     // Guest mode never fetches real calendar data (HomeSummaryCoordinator's
@@ -1211,6 +1216,7 @@ function HomeContent() {
       {
         fetchApi: apiFetch,
         onApplyPayload: (payload) => applyPayload(payload),
+        onApplyCalendarFallback: applyCalendarFallback,
         onSetLoading: (loading) => setLoading(loading),
         onSetError: (error) => setLoadError(error),
         onSetSectionsPending: (pending) => setSectionsPending(pending),
@@ -1227,7 +1233,9 @@ function HomeContent() {
         ? {
             hasValidState: true,
             lastLoadedAt: initialSnapshot.savedAt,
-            lastCalendarLoadedAt: initialSnapshot.dateSensitiveStale
+            lastCalendarLoadedAt: initialSnapshot.dateSensitiveStale ||
+              initialSnapshot.payload.panchang.calendarStatus === 'stale' ||
+              initialSnapshot.payload.panchang.calendarStatus === 'degraded'
               ? 0
               : initialSnapshot.calendarSavedAt,
             lastIdentityKey: getIdentityKey(
@@ -1495,9 +1503,51 @@ function HomeContent() {
   if (!panchangRetryRef.current) {
     panchangRetryRef.current = new PanchangRetryController({
       fetchApi: apiFetch,
+      fetchCalendarFallback: async () => {
+        const identity = currentIdentityRef.current;
+        if (identity.kind !== 'authenticated') return null;
+        const current = homeStateRef.current;
+        const tradition = current.profile.tradition === 'neutral' ? undefined : current.profile.tradition;
+        const calendarProfile = current.panchang.calendarProfile;
+        return fetchHomeCalendarFallback({
+          fetchApi: apiFetch,
+          expectedUserId: identity.userId,
+          tradition,
+          calendarProfile,
+          timezone: safeTimezone(current.date.timezone),
+          spiritualDate: current.date.iso,
+          language: current.profile.appLanguage === 'hi' || current.profile.appLanguage === 'pa'
+            ? current.profile.appLanguage
+            : 'en',
+        });
+      },
       onMergePanchang: (panchang) => {
+        if (panchang.calendarStatus === 'degraded') {
+          coordinatorRef.current?.markCalendarNeedsRefresh();
+        }
         setState((prev) => {
-          const next = { ...prev, panchang: { ...prev.panchang, ...panchang } };
+          const incomingStatus = panchang.calendarStatus;
+          const hasCurrentCalendar = Boolean(
+            prev.panchang.observance ||
+            prev.panchang.upcomingObservances.length > 0 ||
+            (prev.panchang.series ?? []).length > 0
+          );
+          const hasIncomingCalendar = Boolean(
+            panchang.observance ||
+            (Array.isArray(panchang.upcomingObservances) && panchang.upcomingObservances.length > 0) ||
+            (Array.isArray(panchang.series) && panchang.series.length > 0)
+          );
+          const keepCurrentVerifiedCalendar = hasCurrentCalendar && !hasIncomingCalendar &&
+            (incomingStatus === 'pending' || incomingStatus === 'unavailable');
+          const nextPanchang = { ...prev.panchang, ...panchang };
+          if (keepCurrentVerifiedCalendar) {
+            nextPanchang.observance = prev.panchang.observance;
+            nextPanchang.upcomingObservances = prev.panchang.upcomingObservances;
+            nextPanchang.series = prev.panchang.series;
+            nextPanchang.storyCards = prev.panchang.storyCards;
+            nextPanchang.calendarStatus = prev.panchang.calendarStatus === 'degraded' ? 'degraded' : 'stale';
+          }
+          const next = { ...prev, panchang: nextPanchang };
           // Persist the resolved panchang into the on-disk cache too, not
           // just React state -- otherwise a successful in-session retry
           // still leaves the cached payload saying `pending`, and the next
@@ -1509,7 +1559,10 @@ function HomeContent() {
               ? { kind: 'guest' }
               : { kind: 'authenticated', userId: identity.userId };
             const canonicalTimezone = safeTimezone(next.date.timezone);
-            void writeHomeCache(cacheIdentity, next, canonicalTimezone, spiritualDate(canonicalTimezone));
+            const calendarSavedAt = next.panchang.calendarStatus === 'degraded' || next.panchang.calendarStatus === 'stale'
+              ? 0
+              : undefined;
+            void writeHomeCache(cacheIdentity, next, canonicalTimezone, spiritualDate(canonicalTimezone), calendarSavedAt);
           }
           return next;
         });
@@ -1525,13 +1578,15 @@ function HomeContent() {
         // plan item 4): the no-content branch used to `return prev`
         // unchanged, silently leaving calendarStatus stuck at 'pending'
         // forever -- directly contradicting this class's own doc comment
-        // ("the caller should locally treat the pill as 'unavailable'
-        // rather than leaving a skeleton rendered indefinitely"). Every
+        // (the caller should stop the skeleton rather than leave it
+        // indefinitely). Every
         // attempt in the bounded retry sequence had already failed or come
         // back still-pending by the time this fires, so there is nothing
         // left to silently wait for; 'unavailable' is what actually
         // renders the PanchangPill/SacredDaysCarousel's real
-        // error-plus-retry state instead of an indefinite skeleton.
+        // retryable state instead of an indefinite skeleton. If any
+        // previously verified events remain, retain them and disclose that
+        // their completeness is being refreshed.
         setState((prev) => {
           if (prev.panchang.calendarStatus !== 'pending') return prev;
           const hasCalendarContent = Boolean(
@@ -1541,7 +1596,10 @@ function HomeContent() {
           );
           return {
             ...prev,
-            panchang: { ...prev.panchang, calendarStatus: hasCalendarContent ? 'ready' : 'unavailable' },
+            panchang: {
+              ...prev.panchang,
+              calendarStatus: hasCalendarContent ? 'stale' : 'unavailable',
+            },
           };
         });
       },
@@ -1594,7 +1652,7 @@ function HomeContent() {
   // bounded 2s/5s/10s episode, not a different retry mechanism.
   const retryPanchang = useCallback(() => {
     setState((prev) =>
-      prev.panchang.calendarStatus === 'unavailable'
+      prev.panchang.calendarStatus === 'unavailable' || prev.panchang.calendarStatus === 'stale' || prev.panchang.calendarStatus === 'degraded'
         ? { ...prev, panchang: { ...prev.panchang, calendarStatus: 'pending' } }
         : prev
     );
@@ -1619,19 +1677,49 @@ function HomeContent() {
   }
 
   if (loadError) {
+    const recoveredObservances = [
+      ...(state.panchang.observance ? [state.panchang.observance] : []),
+      ...(state.panchang.upcomingObservances ?? []),
+    ];
+    const hasRecoveredCalendar = state.panchang.calendarStatus === 'degraded' && recoveredObservances.length > 0;
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <View style={{ flex: 1, justifyContent: 'center' }}>
-          <EmptyState
-            icon="wifi-off"
-            title="Could not load home"
-            subtitle="Check your connection and try again."
-            ctaLabel="Retry"
-            onCta={() => {
-              void onRefresh();
-            }}
-          />
-        </View>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingVertical: 24 }}>
+          <View style={{ minHeight: 280, justifyContent: 'center' }}>
+            <EmptyState
+              icon="wifi-off"
+              title="Could not load home"
+              subtitle={hasRecoveredCalendar
+                ? 'Your verified sacred dates are available below. Check your connection to reload the rest of Home.'
+                : 'Check your connection and try again.'}
+              ctaLabel="Retry"
+              onCta={() => {
+                void onRefresh();
+              }}
+            />
+          </View>
+          {hasRecoveredCalendar ? (
+            <View style={{ gap: 14, paddingBottom: 24 }}>
+              <PanchangPill
+                panchang={panchang}
+                summary={state.panchang}
+                theme={theme}
+                kind="observance"
+                onRetryUnavailable={retryPanchang}
+              />
+              <SacredDaysCarousel
+                observances={recoveredObservances}
+                series={state.panchang.series ?? []}
+                calendarStatus="degraded"
+                theme={theme}
+                isDark={isDark}
+                lang={state.profile.appLanguage === 'hi' || state.profile.appLanguage === 'pa' ? state.profile.appLanguage : 'en'}
+                spiritualDate={state.date.iso}
+                onRetryUnavailable={retryPanchang}
+              />
+            </View>
+          ) : null}
+        </ScrollView>
       </SafeAreaView>
     );
   }

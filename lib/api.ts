@@ -10,7 +10,8 @@ import { waitForAuthReady } from './authReadyGate';
 import { sessionHasUsableAccessToken } from './api-auth-policy';
 import { createSingleFlight } from './async-single-flight';
 import { retryTransientReadOnce } from './api-503-retry';
-import { recordAuthDiagnostic, type AuthDiagnosticCode, type AuthDiagnosticRoute } from './telemetry';
+import { classifyApiDiagnostic, normalizeApiDiagnosticMethod, normalizeApiEndpoint } from './apiDiagnosticPolicy';
+import { recordApiRequestDiagnostic, recordAuthDiagnostic, type AuthDiagnosticCode, type AuthDiagnosticRoute } from './telemetry';
 
 export { isFetchCancelled };
 
@@ -168,12 +169,17 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const requestId = Crypto.randomUUID();
   const requestStartedAt = Date.now();
+  const requestMethod = normalizeApiDiagnosticMethod(fetchOptions.method);
   let authReadyWaitMs = 0;
   let hadAccessToken = false;
   let initialAuthResponse: Response | undefined;
   let refreshAttempted = false;
   let refreshSucceeded = false;
   let requestSent = false;
+  let attemptCount = 0;
+  let finalResponse: Response | null = null;
+  let terminalError: 'network_failure' | 'timeout' | 'client_failure' | 'owner_mismatch' | 'cancelled' | undefined;
+  const responseHistory: Response[] = [];
   const controller = new AbortController();
   const callerSignal = fetchOptions.signal;
   const forwardAbort = () => controller.abort(callerSignal?.reason);
@@ -228,11 +234,15 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     else requestHeaders.delete('Authorization');
 
     requestSent = true;
-    return fetch(`${API_BASE}${normalizedPath}`, {
+    attemptCount += 1;
+    const response = await fetch(`${API_BASE}${normalizedPath}`, {
       ...fetchOptions,
       headers: requestHeaders,
       signal: controller.signal,
     });
+    responseHistory.push(response);
+    finalResponse = response;
+    return response;
   };
 
   try {
@@ -255,6 +265,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
       fetchOptions.body,
       () => abortable(new Promise<void>((resolve) => setTimeout(resolve, 500))),
     );
+    finalResponse = response;
 
     // React Native pauses Supabase's refresh timer while backgrounded. A
     // request can therefore carry an expired cached JWT even though the user
@@ -295,6 +306,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     }
 
     response = await requestWithToken(refreshedToken);
+    finalResponse = response;
     recordAuthOutcome({
       path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? 401,
       finalStatus: response.status, authReadyWaitMs, hadAccessToken,
@@ -304,6 +316,13 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     });
     return response;
   } catch (error) {
+    if (!terminalError) {
+      if (callerSignal?.aborted) terminalError = 'cancelled';
+      else if (controller.signal.aborted) terminalError = 'timeout';
+      else if (error instanceof TypeError) terminalError = 'network_failure';
+      else if (error instanceof Error && /owner|identity changed/i.test(error.message)) terminalError = 'owner_mismatch';
+      else terminalError = 'client_failure';
+    }
     if (initialAuthResponse || !requestSent) {
       recordAuthOutcome({
         path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? 0,
@@ -315,6 +334,37 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     }
     throw error;
   } finally {
+    try {
+      const durationMs = Math.max(0, Date.now() - requestStartedAt);
+      const outcome = classifyApiDiagnostic({
+        statuses: responseHistory.map((response) => response.status),
+        finalStatus: finalResponse?.status ?? null,
+        durationMs,
+        terminalError,
+      });
+      if (outcome) {
+        const firstServerRequestId = responseHistory[0]?.headers.get('x-request-id') ?? null;
+        const lastServerRequestId = responseHistory.at(-1)?.headers.get('x-request-id') ?? null;
+        const isUuid = (value: string | null): value is string => Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+        const serverRequestId = isUuid(firstServerRequestId) ? firstServerRequestId : null;
+        const latestRequestId = isUuid(lastServerRequestId) ? lastServerRequestId : null;
+        recordApiRequestDiagnostic({
+          clientEventId: Crypto.randomUUID(),
+          endpoint: normalizeApiEndpoint(normalizedPath),
+          method: requestMethod,
+          outcome,
+          firstStatus: responseHistory[0]?.status ?? null,
+          finalStatus: finalResponse?.status ?? null,
+          attemptCount,
+          durationMs: Math.min(durationMs, 180_000),
+          serverRequestId,
+          retryServerRequestId: latestRequestId && latestRequestId !== serverRequestId ? latestRequestId : null,
+          timestamp: Date.now(),
+        });
+      }
+    } catch {
+      // Diagnostics are best-effort and never change the request's result.
+    }
     clearTimeout(timeout);
     callerSignal?.removeEventListener('abort', forwardAbort);
   }

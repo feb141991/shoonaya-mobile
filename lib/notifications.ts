@@ -1,11 +1,20 @@
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import type { NotificationPermissionsStatus } from 'expo-notifications';
 import type { Href, useRouter } from 'expo-router';
 
 import { apiFetch } from '@/lib/api';
 import { API_BASE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { classifyApiDiagnostic, normalizeApiEndpoint } from '@/lib/apiDiagnosticPolicy';
+import { recordApiRequestDiagnostic } from '@/lib/telemetry';
+import { captureAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import {
+  PushRegistrationCoordinator, PUSH_REGISTRATION_HEARTBEAT_MS, PUSH_REGISTRATION_LEASE_MS, PUSH_RECOVERY_DELAYS_MS,
+  type NativePushToken, type PushBinding, type PushRegistrationOptions,
+} from '@/lib/pushRegistrationCoordinator';
 import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
 import {
   normalizeNotificationPermissionState,
@@ -90,15 +99,58 @@ Notifications?.setNotificationHandler({
   }),
 });
 
-// Cached in-memory so a sign-out (which nulls the Supabase session before
-// this module gets a chance to react) can still authenticate one last
-// DELETE call using the access token captured at registration time, rather
-// than needing a currently-valid session. JWT signature/expiry checks don't
-// care that the client has locally signed out — this call happens
-// milliseconds after sign-out, well inside the token's validity window.
-let cachedToken: string | null = null;
-let cachedAccessToken: string | null = null;
+// Only emergency session-loss cleanup uses this credential. Explicit logout
+// removes the binding with the current session BEFORE destroying credentials.
+let cleanupCredential: { userId: string; accessToken: string } | null = null;
 let notificationChannelReady: Promise<void> | null = null;
+let systemSettingsOpened = false;
+let foreground = true;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryRevision: number | null = null;
+let retryCount = 0;
+const diagnosticTimes = new Map<string, number>();
+const CLEANUP_BINDING_KEY = 'shoonaya.push.cleanup_binding.v1';
+const PUSH_FAILURE_QUEUE_KEY = 'shoonaya.push.failure_queue.v1';
+const PUSH_FAILURE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+let cleanupStorageWork: Promise<void> = Promise.resolve();
+let failureQueueWork: Promise<void> = Promise.resolve();
+
+// Disk records are cleanup evidence only. Never hydrate a "fresh" lease from
+// disk: every authenticated cold start must reconcile with the server.
+function persistCleanupBinding(binding: PushBinding, isCurrent: () => boolean) {
+  cleanupStorageWork = cleanupStorageWork.catch(() => {}).then(async () => {
+    if (isCurrent()) await SecureStore.setItemAsync(CLEANUP_BINDING_KEY, JSON.stringify(binding));
+  });
+  void cleanupStorageWork.catch(() => {});
+}
+
+async function readCleanupBinding(userId: string | undefined): Promise<PushBinding | null> {
+  if (!userId) return null;
+  try {
+    await cleanupStorageWork.catch(() => {});
+    const raw = await SecureStore.getItemAsync(CLEANUP_BINDING_KEY);
+    if (!raw) return null;
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== 'object') return null;
+    const b = value as Record<string, unknown>;
+    if (b.userId !== userId || b.projectId !== getExpoProjectId() || typeof b.token !== 'string'
+      || !/^(?:ExponentPushToken|ExpoPushToken)\[[A-Za-z0-9_-]+\]$/.test(b.token)
+      || (b.bindingVersion !== null && !validBindingVersion(b.bindingVersion))) return null;
+    return { userId, projectId: getExpoProjectId(), token: b.token, bindingVersion: b.bindingVersion,
+      revision: -1, acknowledgedAt: 0 };
+  } catch { return null; }
+}
+
+async function clearCleanupBinding(userId: string) {
+  cleanupStorageWork = cleanupStorageWork.catch(() => {}).then(async () => {
+    const raw = await SecureStore.getItemAsync(CLEANUP_BINDING_KEY);
+    if (raw) {
+      const value: unknown = JSON.parse(raw);
+      if (value && typeof value === 'object' && 'userId' in value && value.userId === userId) await SecureStore.deleteItemAsync(CLEANUP_BINDING_KEY);
+    }
+  });
+  await cleanupStorageWork.catch(() => {});
+}
 
 function logPushWarning(label: string, error: unknown) {
   if (__DEV__) {
@@ -117,18 +169,85 @@ function logPushWarning(label: string, error: unknown) {
  * Never throws, never awaited by callers -- must not add latency or a new
  * failure mode to the already-failing path it's reporting on.
  */
-function reportPushRegistrationFailure(stage: string, error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
+function reportPushRegistrationFailure(userId: string, stage: string, error: unknown) {
+  const lease = captureAppIdentity();
+  if (lease.identity.kind !== 'authenticated' || lease.identity.userId !== userId) return;
+  const message = sanitizePushFailure(error);
+  const key = `${lease.revision}:${stage}:${message.slice(0, 200)}`;
+  const last = diagnosticTimes.get(key);
+  if (last != null && Date.now() >= last && Date.now() - last < 60 * 60 * 1000) return;
+  if (diagnosticTimes.size >= 20) diagnosticTimes.clear();
+  diagnosticTimes.set(key, Date.now());
   void apiFetch('/api/notifications/register-token', {
     method: 'POST',
+    expectedUserId: userId,
+    timeoutMs: 5_000,
     body: JSON.stringify({
       platform: Platform.OS,
       failureStage: stage,
       failureReason: message.slice(0, 200),
     }),
+  }).then((response) => {
+    if (!response.ok) enqueuePushFailure(userId, stage, message);
   }).catch(() => {
-    // best-effort telemetry; a failure here must never cascade
+    enqueuePushFailure(userId, stage, message);
   });
+}
+
+function sanitizePushFailure(error: unknown): string {
+  return (error instanceof Error ? error.message : String(error))
+    .replace(/(?:Exponent|Expo)PushToken\[[^\]]*\]/g, '[push-token]')
+    .replace(/\bBearer\s+\S+/gi, 'Bearer [redacted]')
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[credential]')
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[email]')
+    .slice(0, 200);
+}
+
+type QueuedPushFailure = { userId: string; stage: string; reason: string; occurredAt: number };
+
+function enqueuePushFailure(userId: string, stage: string, reason: string) {
+  failureQueueWork = failureQueueWork.catch(() => {}).then(async () => {
+    try {
+      const raw = await SecureStore.getItemAsync(PUSH_FAILURE_QUEUE_KEY);
+      const value: unknown = raw ? JSON.parse(raw) : [];
+      const prior = Array.isArray(value) ? value.filter((item): item is QueuedPushFailure =>
+        item && typeof item === 'object' && typeof item.userId === 'string' && typeof item.stage === 'string'
+        && typeof item.reason === 'string' && typeof item.occurredAt === 'number'
+        && item.occurredAt >= Date.now() - PUSH_FAILURE_RETENTION_MS) : [];
+      const next = [...prior, { userId, stage, reason: sanitizePushFailure(reason), occurredAt: Date.now() }].slice(-10);
+      await SecureStore.setItemAsync(PUSH_FAILURE_QUEUE_KEY, JSON.stringify(next));
+    } catch { /* Local evidence is best-effort and must not block recovery. */ }
+  });
+  void failureQueueWork.catch(() => {});
+}
+
+async function flushPushFailures(userId: string) {
+  failureQueueWork = failureQueueWork.catch(() => {}).then(async () => {
+    try {
+      const raw = await SecureStore.getItemAsync(PUSH_FAILURE_QUEUE_KEY);
+      if (!raw) return;
+      const value: unknown = JSON.parse(raw);
+      if (!Array.isArray(value)) return;
+      const queued = value.filter((item): item is QueuedPushFailure => item && typeof item === 'object'
+        && item.userId === userId && typeof item.stage === 'string' && typeof item.reason === 'string'
+        && typeof item.occurredAt === 'number');
+      const retained = value.filter((item) => !item || typeof item !== 'object' || !('userId' in item) || item.userId !== userId);
+      const lease = captureAppIdentity();
+      if (lease.identity.kind !== 'authenticated' || lease.identity.userId !== userId) return;
+      if (queued.length) {
+        const response = await apiFetch('/api/notifications/register-token', {
+          method: 'POST', expectedUserId: userId, timeoutMs: 5_000,
+          body: JSON.stringify({ platform: Platform.OS, failureEvents: queued.map((event) => ({
+            stage: event.stage,
+            reason: `occurred_at:${new Date(event.occurredAt).toISOString()} | ${event.reason}`,
+          })) }),
+        });
+        if (!lease.isCurrent() || !response.ok) return;
+      }
+      if (lease.isCurrent()) await SecureStore.setItemAsync(PUSH_FAILURE_QUEUE_KEY, JSON.stringify(retained));
+    } catch { /* Keep bounded encrypted evidence for a later foreground pass. */ }
+  });
+  await failureQueueWork.catch(() => {});
 }
 
 /**
@@ -143,13 +262,16 @@ function ensureAndroidNotificationChannel(): Promise<void> {
       name: 'Default',
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250, 250, 250],
-    }).then(() => undefined).catch(() => undefined);
+    }).then(() => undefined).catch((error) => {
+      notificationChannelReady = null;
+      throw error;
+    });
   }
   return notificationChannelReady;
 }
 
 export function initPushNotifications() {
-  void ensureAndroidNotificationChannel();
+  void ensureAndroidNotificationChannel().catch((error) => logPushWarning('Notification channel setup failed:', error));
 }
 
 const DEFAULT_EAS_PROJECT_ID = 'aceb15a9-aa70-4db9-b785-961309a12e3f';
@@ -175,6 +297,7 @@ export async function getNotificationPermissionState(): Promise<NotificationPerm
 }
 
 export async function openNotificationSettings(): Promise<void> {
+  systemSettingsOpened = true;
   await Linking.openSettings();
 }
 
@@ -221,104 +344,243 @@ export async function checkNotificationPermission(): Promise<boolean> {
   }
 }
 
-/**
- * If permission is already granted, fetch this device's Expo push token and
- * register it against the signed-in user. This function deliberately never
- * opens the OS permission prompt; UI actions own that decision. Cheap/idempotent
- * to call repeatedly — skips the network round-trip entirely if the token
- * hasn't changed since the last successful registration this session, so
- * calling it on every auth-state change (the same pattern OneSignal's
- * registerUserId used) doesn't spam the backend.
- */
-export async function registerPushToken(userId: string) {
-  if (!Notifications || !userId) return;
-  // Let expo-notifications determine device support. Constants.isDevice was
-  // removed from expo-constants; testing its absence silently skipped every
-  // physical iPhone as well. Unsupported runtimes are reported by the catch below.
-
-  let stage = 'ensure_android_channel';
+/** Bound SDK acquisition: offline native/provider work must not freeze recovery forever. */
+async function withDeadline<T>(operation: Promise<T>, durationMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    await ensureAndroidNotificationChannel();
-
-    stage = 'check_permission';
-    const existing = await Notifications.getPermissionsAsync();
-    if (!hasNotificationPermission(existing)) {
-      // This branch had zero diagnostic coverage -- every other early
-      // return/failure in this function reports, but this one just bailed
-      // silently. If the OS permission check disagrees with what Settings
-      // shows the user, this was previously invisible anywhere.
-      reportPushRegistrationFailure(stage, new Error(
-        `permission not granted: ${JSON.stringify(existing)}`
-      ));
-      return;
-    }
-
-    stage = 'resolve_project_id';
-    const projectId = getExpoProjectId();
-    if (!projectId) {
-      console.warn('registerPushToken: missing EAS projectId — cannot fetch Expo push token');
-      reportPushRegistrationFailure(stage, new Error('missing EAS projectId'));
-      return;
-    }
-
-    stage = 'fetch_expo_push_token';
-    const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
-    if (!expoPushToken || expoPushToken === cachedToken) return;
-
-    stage = 'post_register_token';
-    const response = await apiFetch('/api/notifications/register-token', {
-      method: 'POST',
-      body: JSON.stringify({ token: expoPushToken, platform: Platform.OS }),
-    });
-
-    if (response.ok) {
-      cachedToken = expoPushToken;
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      cachedAccessToken = session?.access_token ?? null;
-    } else {
-      console.warn('registerPushToken: server rejected token registration', response.status);
-      reportPushRegistrationFailure(stage, new Error(`server rejected: ${response.status}`));
-    }
-  } catch (error) {
-    // Token registration is best-effort. iOS simulator/dev builds can throw
-    // ERR_NOTIFICATIONS_KEYCHAIN_ACCESS while reading Expo's persisted server
-    // registration; surfacing that as console.error blocks the app behind
-    // LogBox even though auth and normal navigation can continue.
-    logPushWarning('registerPushToken skipped:', error);
-    reportPushRegistrationFailure(stage, error);
-  }
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Push token acquisition timed out')), durationMs); }),
+    ]);
+  } finally { if (timer) clearTimeout(timer); }
 }
 
-/**
- * Unbind this device's token on sign-out. Scoped to this one device's
- * token, not "delete every token this user ever registered" — signing out
- * on one device shouldn't kill push on their other devices. Best-effort:
- * if this fails (offline, request lost), nothing is permanently broken —
- * the token row just gets correctly reassigned the next time *any* user
- * registers on this device, since upsert_push_token is keyed on the token
- * itself, not the user.
- */
-export async function unregisterPushToken() {
-  const token = cachedToken;
-  const accessToken = cachedAccessToken;
-  cachedToken = null;
-  cachedAccessToken = null;
+function validBindingVersion(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
 
-  if (!token || !accessToken) return;
-
+async function deleteWithCredential(binding: Pick<PushBinding, 'token' | 'bindingVersion'>, accessToken: string) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_000);
+  const startedAt = Date.now();
+  let response: Response | null = null;
+  const recordOutcome = (terminalError?: 'network_failure' | 'timeout' | 'client_failure') => {
+    try {
+      const durationMs = Math.max(0, Date.now() - startedAt);
+      const outcome = classifyApiDiagnostic({
+        statuses: response ? [response.status] : [],
+        finalStatus: response?.status ?? null,
+        durationMs,
+        terminalError,
+      });
+      if (!outcome) return;
+      const requestId = response?.headers.get('x-request-id') ?? null;
+      const serverRequestId = requestId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)
+        ? requestId
+        : null;
+      recordApiRequestDiagnostic({
+        clientEventId: Crypto.randomUUID(),
+        endpoint: normalizeApiEndpoint('/api/notifications/register-token'),
+        method: 'DELETE',
+        outcome,
+        firstStatus: response?.status ?? null,
+        finalStatus: response?.status ?? null,
+        attemptCount: 1,
+        durationMs: Math.min(durationMs, 180_000),
+        serverRequestId,
+        retryServerRequestId: null,
+        timestamp: Date.now(),
+      });
+    } catch {
+      // Cleanup outcome recording must never change the sign-out path.
+    }
+  };
   try {
-    await fetch(`${API_BASE}/api/notifications/register-token`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ token }),
+    response = await fetch(`${API_BASE}/api/notifications/register-token`, {
+      method: 'DELETE', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ token: binding.token, bindingVersion: binding.bindingVersion }),
     });
-  } catch {
-    // best-effort, see doc comment above
+    recordOutcome();
+    if (!response.ok) throw new Error(`Push cleanup rejected: ${response.status}`);
+  } catch (error) {
+    if (!response) {
+      if (controller.signal.aborted) recordOutcome('timeout');
+      else if (error instanceof TypeError) recordOutcome('network_failure');
+      else recordOutcome('client_failure');
+    }
+    throw error;
+  } finally { clearTimeout(timer); }
+}
+
+const pushRegistration = new PushRegistrationCoordinator({
+  captureIdentity: captureAppIdentity,
+  now: () => Date.now(),
+  projectId: getExpoProjectId,
+  permission: async () => {
+    if (!Notifications) return 'unavailable';
+    return withDeadline((async () => {
+      await ensureAndroidNotificationChannel();
+      return normalizeNotificationPermissionState(await Notifications.getPermissionsAsync());
+    })(), 10_000);
+  },
+  token: async (projectId, devicePushToken) => {
+    if (!Notifications) throw new Error('Native push module unavailable');
+    const result = await withDeadline(Notifications.getExpoPushTokenAsync({
+      projectId, ...(devicePushToken ? { devicePushToken } : {}),
+    }), 10_000);
+    return result.data;
+  },
+  post: async (token, userId, reason) => {
+    const lease = captureAppIdentity();
+    const { data: { session }, error } = await withDeadline(supabase.auth.getSession(), 8_000);
+    if (error) throw error;
+    if (!lease.isCurrent() || session?.user.id !== userId) throw Object.assign(new Error('Push registration owner changed'), { retryable: false });
+    const accessToken = session.access_token;
+    const response = await apiFetch('/api/notifications/register-token', {
+      method: 'POST', expectedUserId: userId, timeoutMs: 8_000,
+      body: JSON.stringify({ token, platform: Platform.OS, registrationReason: reason }),
+    });
+    if (!response.ok) throw Object.assign(new Error(`Push registration rejected: ${response.status}`), {
+      retryable: response.status >= 500 || response.status === 408 || response.status === 429,
+    });
+    const body: unknown = await response.json();
+    if (!body || typeof body !== 'object' || !('registered' in body) || body.registered !== true) {
+      throw new Error('Invalid push registration acknowledgement');
+    }
+    const version = ('bindingVersion' in body ? body.bindingVersion : null) ?? null;
+    if (version != null && !validBindingVersion(version)) throw new Error('Invalid push binding version');
+    // Older backend acknowledgements remain compatible; their cleanup is not
+    // version-safe. Do not use an unversioned stale response to remove a binding.
+    if (lease.isCurrent()) cleanupCredential = { userId, accessToken };
+    return {
+      bindingVersion: version,
+      ...(version ? { discard: () => deleteWithCredential({ token, bindingVersion: version }, accessToken) } : {}),
+    };
+  },
+  failure: reportPushRegistrationFailure,
+});
+
+export const subscribePushRegistrationStatus = pushRegistration.subscribe;
+export const getPushRegistrationStatus = pushRegistration.getSnapshot;
+
+function clearPushRetry() {
+  if (retryTimer) clearTimeout(retryTimer);
+  retryTimer = null;
+}
+
+/** Success acknowledgements expire; token equality alone never suppresses recovery. */
+export async function registerPushToken(userId: string, options: PushRegistrationOptions = {}) {
+  const lease = captureAppIdentity();
+  if (lease.identity.kind !== 'authenticated' || lease.identity.userId !== userId) return { status: 'superseded' as const };
+  if (retryRevision !== lease.revision || options.reason === 'settings' || options.reason === 'foreground' || options.reason === 'rotation') {
+    clearPushRetry(); retryRevision = lease.revision; retryCount = 0;
+  }
+  const result = await pushRegistration.register(userId, options);
+  if (!lease.isCurrent()) return result;
+  const acknowledged = pushRegistration.getBinding();
+  if (result.status === 'registered' && acknowledged?.userId === userId) {
+    persistCleanupBinding(acknowledged, lease.isCurrent);
+    void flushPushFailures(userId);
+  }
+  if (result.status !== 'failed' || !result.retryable) { clearPushRetry(); retryCount = 0; }
+  else if (foreground && !retryTimer && retryCount < PUSH_RECOVERY_DELAYS_MS.length) {
+    const delay = PUSH_RECOVERY_DELAYS_MS[retryCount++] * (0.9 + Math.random() * 0.2);
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+      if (foreground && lease.isCurrent()) void registerPushToken(userId, { force: true, reason: 'retry' });
+    }, delay);
+  }
+  return result;
+}
+
+/** Root-owned lifecycle; no additional auth listener and no permission prompts. */
+export function startPushRegistrationRecovery(): () => void {
+  let returnedFromBackground = AppState.currentState === 'background';
+  foreground = AppState.currentState === 'active';
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  let lastNativeToken: string | null = null;
+  const reconcile = (options: PushRegistrationOptions) => {
+    const identity = getAppIdentity();
+    if (identity.kind === 'authenticated') void registerPushToken(identity.userId, options);
+  };
+  const startHeartbeat = () => {
+    if (heartbeat) clearInterval(heartbeat);
+    if (foreground) heartbeat = setInterval(() => reconcile({ reason: 'heartbeat' }), PUSH_REGISTRATION_HEARTBEAT_MS);
+  };
+  startHeartbeat();
+  const appStateSubscription = AppState.addEventListener('change', (state) => {
+    if (state === 'background') returnedFromBackground = true;
+    foreground = state === 'active';
+    if (!foreground) {
+      clearPushRetry();
+      if (heartbeat) clearInterval(heartbeat);
+      heartbeat = null;
+      return;
+    }
+    startHeartbeat();
+    if (systemSettingsOpened) {
+      systemSettingsOpened = false;
+      reconcile({ force: true, reason: 'permission' });
+    } else if (returnedFromBackground) reconcile({ reason: 'foreground' });
+    returnedFromBackground = false;
+  });
+  const tokenSubscription = Notifications?.addPushTokenListener((nativeToken) => {
+    if ((nativeToken.type !== 'ios' && nativeToken.type !== 'android') || typeof nativeToken.data !== 'string') return;
+    const changed = lastNativeToken != null && lastNativeToken !== nativeToken.data;
+    lastNativeToken = nativeToken.data;
+    // The first SDK event during acquisition establishes the baseline. A real
+    // later rotation passes its native token through, avoiding recursive acquisition.
+    if (changed) {
+      reconcile({ force: true, reason: 'rotation', devicePushToken: nativeToken as NativePushToken });
+    }
+  });
+  return () => {
+    appStateSubscription.remove(); tokenSubscription?.remove();
+    if (heartbeat) clearInterval(heartbeat);
+    clearPushRetry();
+  };
+}
+
+/** Explicit logout uses current credentials; emergency session loss is best-effort. */
+export async function unregisterPushToken(options: { beforeSignOut?: boolean } = {}) {
+  clearPushRetry();
+  const identity = getAppIdentity();
+  const owner = identity.kind === 'authenticated' ? identity.userId : pushRegistration.getBinding()?.userId;
+  const stored = await readCleanupBinding(owner);
+  try {
+    await pushRegistration.unregister(async (binding) => {
+      if (options.beforeSignOut) {
+        const response = await apiFetch('/api/notifications/register-token', {
+          method: 'DELETE', expectedUserId: binding.userId, timeoutMs: 5_000,
+          body: JSON.stringify({ token: binding.token, bindingVersion: binding.bindingVersion }),
+        });
+        if (!response.ok) throw new Error(`Push cleanup rejected: ${response.status}`);
+      } else if (cleanupCredential?.userId === binding.userId) {
+        await deleteWithCredential(binding, cleanupCredential.accessToken);
+      } else {
+        throw new Error('No current credential for emergency push cleanup');
+      }
+      await clearCleanupBinding(binding.userId);
+    }, owner, stored);
+  } catch (error) {
+    logPushWarning('Push cleanup failed:', error);
+    if (owner) reportPushRegistrationFailure(owner, 'remove_registration', error);
+  }
+  finally { if (cleanupCredential?.userId === owner) cleanupCredential = null; }
+}
+
+export async function signOutWithPushCleanup() {
+  await unregisterPushToken({ beforeSignOut: true });
+  try {
+    const result = await supabase.auth.signOut();
+    if (result.error) throw result.error;
+    return result;
+  } catch (error) {
+    pushRegistration.resume();
+    const identity = getAppIdentity();
+    if (identity.kind === 'authenticated') void registerPushToken(identity.userId, { force: true, reason: 'auth' });
+    throw error;
   }
 }
 

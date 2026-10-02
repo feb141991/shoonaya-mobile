@@ -80,6 +80,8 @@ import {
   registerPushToken,
   requestNotificationPermission,
   unregisterPushToken,
+  signOutWithPushCleanup,
+  startPushRegistrationRecovery,
 } from '@/lib/notifications';
 import {
   claimNotificationPermissionPrompt,
@@ -89,7 +91,7 @@ import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
-import { setAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
 import { AuthCoordinator, USE_AUTH_COORDINATOR, type BootstrapProfileResult, type OnboardingStatus } from '@/lib/authCoordinator';
@@ -472,16 +474,9 @@ function RootLayout() {
       await setGuestMode(false);
       if (!isCurrentRoute()) return;
 
-      // (Re-)register this device's push token against the signed-in user
-      // on every authenticated session, not just once at the end of
-      // onboarding — covers any *returning* user: sign back in after
-      // logout, reinstall, second device, token refresh bringing a fresh
-      // session object. This listener already re-runs on every auth state
-      // change, so it's the single correct place for this, rather than
-      // duplicating the call at every sign-in entry point (Google/Apple in
-      // login.tsx). Cheap/idempotent to call repeatedly — registerPushToken()
-      // skips the network round-trip if
-      // the token hasn't changed since the last successful registration.
+      // Reconcile after session routing. Root identity and foreground
+      // lifecycle effects independently own cold-start and resume checks;
+      // this is an additional same-session recovery point.
       void registerPushToken(session.user.id);
 
       // Keep profiles.timezone honest — see lib/timezoneSync.ts for why this
@@ -746,7 +741,7 @@ function RootLayout() {
 
   const handleSignOutFromFailure = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
     } catch (error) {
       console.error('[auth-profile] sign-out from failure screen failed', error);
     }
@@ -813,6 +808,14 @@ function RootLayout() {
   }, [readyToRender]);
 
   // ── Handle Push Notifications ────────────────────────────────────────
+  const pushIdentity = useAppIdentity();
+  useEffect(() => startPushRegistrationRecovery(), []);
+  useEffect(() => {
+    if (pushIdentity.kind === 'authenticated') {
+      void registerPushToken(pushIdentity.userId, { reason: 'auth' });
+    }
+  }, [pushIdentity]);
+
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
 

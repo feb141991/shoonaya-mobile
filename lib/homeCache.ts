@@ -5,6 +5,7 @@ import { safeTimezone, spiritualDate } from './spiritualDate';
 import { clearAllHomeDiscoveryStates } from './homeDiscovery';
 
 export const HOME_CACHE_SCHEMA_VERSION = 2;
+export const HOME_CALENDAR_FRESHNESS_MS = 12 * 60 * 60 * 1000;
 
 export type CacheIdentity =
   | { kind: 'authenticated'; userId: string }
@@ -89,7 +90,7 @@ export type CachedHomeRenderModel = {
     // See HomeSummary['panchang']['calendarStatus'] in app/(tabs)/index.tsx
     // for the full contract. Optional so a cache entry written before this
     // field existed still parses; readers default it to 'ready'.
-    calendarStatus?: 'ready' | 'pending' | 'unavailable' | 'empty';
+    calendarStatus?: 'ready' | 'pending' | 'unavailable' | 'empty' | 'stale' | 'degraded';
     // See HomeSummary['panchang']['calendarProfile']/['sampradaya'] --
     // carried through the cache so a cache-hit render still has these for
     // calendarIdentityKey until a fresh network response lands.
@@ -387,6 +388,8 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
       calendarStatus: full.panchang?.calendarStatus === 'pending'
         || full.panchang?.calendarStatus === 'unavailable'
         || full.panchang?.calendarStatus === 'empty'
+        || full.panchang?.calendarStatus === 'stale'
+        || full.panchang?.calendarStatus === 'degraded'
         ? full.panchang.calendarStatus
         : 'ready',
       calendarProfile: typeof full.panchang?.calendarProfile === 'string' ? full.panchang.calendarProfile : undefined,
@@ -468,14 +471,28 @@ function prepareSnapshotForNow(snapshot: HomeCacheSnapshot, now: Date): HomeCach
   const expectedSpiritualDate = spiritualDate(snapshot.timezone, now);
   const dateSensitiveStale =
     !snapshot.spiritualDate || snapshot.spiritualDate !== expectedSpiritualDate;
+  const calendarCacheExpired = snapshot.calendarSavedAt > 0 &&
+    now.getTime() - snapshot.calendarSavedAt >= HOME_CALENDAR_FRESHNESS_MS;
+  let preparedPayload = dateSensitiveStale
+    ? withDateSensitiveFieldsPending(snapshot.payload, expectedSpiritualDate)
+    : snapshot.payload;
+  const hasSavedCalendarContent = Boolean(
+    preparedPayload.panchang.observance ||
+    preparedPayload.panchang.upcomingObservances.length > 0 ||
+    (preparedPayload.panchang.series ?? []).length > 0
+  );
+  if ((dateSensitiveStale || calendarCacheExpired) && hasSavedCalendarContent) {
+    preparedPayload = {
+      ...preparedPayload,
+      panchang: { ...preparedPayload.panchang, calendarStatus: 'stale' },
+    };
+  }
 
   return {
     ...snapshot,
     expectedSpiritualDate,
     dateSensitiveStale,
-    payload: dateSensitiveStale
-      ? withDateSensitiveFieldsPending(snapshot.payload, expectedSpiritualDate)
-      : snapshot.payload,
+    payload: preparedPayload,
   };
 }
 

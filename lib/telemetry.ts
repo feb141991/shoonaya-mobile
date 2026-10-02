@@ -41,6 +41,7 @@
  * carry no identifier at all.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ApiRequestDiagnostic } from './apiDiagnosticPolicy';
 
 // Stage 0 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md 10-stage reliability
 // plan): bumped 1 -> 2 to add refresh-failure classification, duplicate-request
@@ -349,6 +350,80 @@ export function recordFirstUsefulFrame(identity: TelemetryIdentity, data: { elap
 const AUTH_DIAGNOSTICS_KEY = 'shoonaya_auth_diag_v1_pending';
 const AUTH_DIAGNOSTICS_MAX = 50;
 let authDiagnosticWrite = Promise.resolve();
+
+const API_DIAGNOSTICS_KEY = 'shoonaya_api_diag_v1_pending';
+const API_DIAGNOSTICS_MAX = 100;
+let apiDiagnosticWrite = Promise.resolve();
+
+/**
+ * Device-scoped, anonymous diagnostics for failed, recovered, or slow API
+ * requests. This intentionally stores only an allowlisted route shape,
+ * status codes, duration, retry count, and server request IDs -- never URL
+ * query values, bodies, headers, tokens, or exception messages.
+ */
+export function recordApiRequestDiagnostic(data: ApiRequestDiagnostic): void {
+  const operation = apiDiagnosticWrite.then(async () => {
+    const raw = await AsyncStorage.getItem(API_DIAGNOSTICS_KEY);
+    let previous: ApiRequestDiagnostic[] = [];
+    try {
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) previous = parsed.filter(isApiRequestDiagnosticRecord);
+    } catch { /* recover from a corrupt diagnostic queue */ }
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const retained = previous.filter((event) => event.timestamp >= cutoff && event.clientEventId !== data.clientEventId);
+    retained.push(data);
+    await AsyncStorage.setItem(API_DIAGNOSTICS_KEY, JSON.stringify(retained.slice(-API_DIAGNOSTICS_MAX)));
+  });
+  apiDiagnosticWrite = operation.catch(() => undefined);
+}
+
+export async function readPendingApiRequestDiagnostics(): Promise<ApiRequestDiagnostic[]> {
+  await apiDiagnosticWrite;
+  const raw = await AsyncStorage.getItem(API_DIAGNOSTICS_KEY);
+  try {
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return parsed.filter(isApiRequestDiagnosticRecord).filter((event) => event.timestamp >= cutoff).slice(-API_DIAGNOSTICS_MAX);
+  } catch { return []; }
+}
+
+export async function removeUploadedApiRequestDiagnostics(clientEventIds: string[]): Promise<void> {
+  if (!clientEventIds.length) return;
+  const uploaded = new Set(clientEventIds);
+  const operation = apiDiagnosticWrite.then(async () => {
+    const raw = await AsyncStorage.getItem(API_DIAGNOSTICS_KEY);
+    let events: ApiRequestDiagnostic[] = [];
+    try {
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) events = parsed.filter(isApiRequestDiagnosticRecord);
+    } catch { /* clear invalid persisted data while acknowledging a batch */ }
+    await AsyncStorage.setItem(API_DIAGNOSTICS_KEY, JSON.stringify(events.filter((event) => !uploaded.has(event.clientEventId))));
+  });
+  apiDiagnosticWrite = operation.catch(() => undefined);
+  await apiDiagnosticWrite;
+}
+
+function isApiRequestDiagnosticRecord(value: unknown): value is ApiRequestDiagnostic {
+  if (!value || typeof value !== 'object') return false;
+  const event = value as Partial<ApiRequestDiagnostic>;
+  const isUuid = (candidate: unknown): candidate is string => typeof candidate === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate);
+  const isStatus = (candidate: unknown): candidate is number | null => candidate === null
+    || (typeof candidate === 'number' && Number.isInteger(candidate) && candidate >= 100 && candidate <= 599);
+  return typeof event.clientEventId === 'string'
+    && isUuid(event.clientEventId)
+    && typeof event.endpoint === 'string' && /^\/(api|supabase)\/[a-z0-9/_:-]{1,115}$/.test(event.endpoint)
+    && (event.method === 'GET' || event.method === 'POST' || event.method === 'PUT' || event.method === 'PATCH' || event.method === 'DELETE' || event.method === 'OTHER')
+    && (event.outcome === 'http_failure' || event.outcome === 'network_failure' || event.outcome === 'timeout' || event.outcome === 'client_failure' || event.outcome === 'owner_mismatch' || event.outcome === 'retry_recovered' || event.outcome === 'auth_recovered' || event.outcome === 'slow_success')
+    && isStatus(event.firstStatus)
+    && isStatus(event.finalStatus)
+    && typeof event.attemptCount === 'number' && Number.isInteger(event.attemptCount) && event.attemptCount >= 0 && event.attemptCount <= 4
+    && typeof event.durationMs === 'number' && Number.isInteger(event.durationMs) && event.durationMs >= 0 && event.durationMs <= 180_000
+    && (event.serverRequestId === null || isUuid(event.serverRequestId))
+    && (event.retryServerRequestId === null || isUuid(event.retryServerRequestId))
+    && typeof event.timestamp === 'number' && Number.isFinite(event.timestamp) && event.timestamp >= 0;
+}
 
 /**
  * Auth transport diagnostics are device-scoped, anonymous and uploaded via
