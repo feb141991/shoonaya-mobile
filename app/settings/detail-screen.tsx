@@ -71,6 +71,7 @@ import {
 } from '@/lib/heroPreference';
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
+import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
 
 type ThemePref = 'light' | 'dark' | 'system';
@@ -313,6 +314,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const appIdentity = useAppIdentity();
   const { setLanguage, language } = useLanguage();
   const pushStatusCopy = PUSH_STATUS_COPY[language];
+  const deletionCopy = accountDeletionCopy(language);
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -849,13 +851,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       await unregisterPushToken({ beforeSignOut: false }).catch(() => {});
       await clearAllHomeCaches().catch(() => {});
 
-      Alert.alert(
-        'Deletion Scheduled (30-Day Cool-off)',
-        'All notifications have been silenced immediately. Your sacred practice history is held safely in cool-off for 30 days. You can cancel anytime before then from your Profile or this screen.'
-      );
+      Alert.alert(deletionCopy.scheduledTitle, deletionCopy.scheduledBody);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not schedule deletion. Check your connection and try again.';
-      Alert.alert('Could not schedule deletion', message);
+      const message = error instanceof Error ? error.message : deletionCopy.checkConnection;
+      Alert.alert(deletionCopy.scheduleFailedTitle, message);
       throw error;
     } finally {
       setDeleting(false);
@@ -874,10 +873,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       wants_family_notifications: false,
     };
     await persistSettings({ ...settings, ...mutedSettings });
-    Alert.alert(
-      'Notifications Muted',
-      'All daily reminders have been muted. Your streaks, journal reflections, and relics remain completely safe.'
-    );
+    Alert.alert(deletionCopy.remindersOffTitle, deletionCopy.remindersOffBody);
   };
 
   const handleCancelDeletion = async () => {
@@ -887,10 +883,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       // Confirms the response, re-registers push and updates Profile too.
       await accountDeletion.cancel(appIdentity.userId);
 
-      Alert.alert('Deletion cancelled', 'Welcome back — your account is safe.');
+      Alert.alert(deletionCopy.cancelledTitle, deletionCopy.cancelledBody);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not cancel deletion. Check your connection and try again.';
-      Alert.alert('Could not cancel deletion', message);
+      const message = error instanceof Error ? error.message : deletionCopy.checkConnection;
+      Alert.alert(deletionCopy.cancelFailedTitle, message);
     } finally {
       setCancelingDeletion(false);
     }
@@ -1433,7 +1429,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
                         <Feather name="alert-triangle" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
                         <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>
-                          Deleting starts a 30-day cancellable cool-off. All notifications stop immediately, and data is permanently removed after 30 days unless you cancel first.
+                          {deletionCopy.dangerZoneNote}
                         </Text>
                       </View>
                       <DangerButton

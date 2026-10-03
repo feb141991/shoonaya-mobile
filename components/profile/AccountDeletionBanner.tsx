@@ -5,6 +5,8 @@ import * as Haptics from 'expo-haptics';
 
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 
 type AccountDeletionBannerProps = {
   purgeAfter: string | null;
@@ -19,11 +21,13 @@ export function AccountDeletionBanner({
 }: AccountDeletionBannerProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
+  const { language } = useLanguage();
+  const copy = accountDeletionCopy(language);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const formattedDate = purgeAfter
-    ? new Date(purgeAfter).toLocaleDateString(undefined, {
+    ? new Date(purgeAfter).toLocaleDateString(language === 'en' ? undefined : `${language}-IN`, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -45,7 +49,7 @@ export function AccountDeletionBanner({
       await onCancelDeletion();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not cancel deletion.');
+      setError(err instanceof Error ? err.message : copy.cancelFailed);
     } finally {
       setCancelling(false);
     }
@@ -56,7 +60,7 @@ export function AccountDeletionBanner({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? 'rgba(220, 38, 38, 0.12)' : 'rgba(220, 38, 38, 0.08)',
+          backgroundColor: COLORS.dangerBg,
           borderColor: COLORS.dangerBorder,
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
         },
@@ -66,17 +70,17 @@ export function AccountDeletionBanner({
         <View
           style={[
             styles.iconWell,
-            { backgroundColor: isDark ? 'rgba(220, 38, 38, 0.20)' : 'rgba(220, 38, 38, 0.14)' },
+            { backgroundColor: COLORS.dangerBg },
           ]}
         >
           <Feather name="clock" size={16} color={COLORS.danger} />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={{ ...TYPE.label, color: COLORS.danger, fontFamily: FONTS.sansSemiBold }}>
-            Account Deletion Scheduled
+            {copy.bannerTitle}
           </Text>
           <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 18 }}>
-            All notifications are silenced and your profile is unlisted. Your practice history is safely preserved in cool-off.
+            {copy.bannerBody}
           </Text>
         </View>
       </View>
@@ -85,8 +89,8 @@ export function AccountDeletionBanner({
         <View style={[styles.timelineBox, { backgroundColor: theme.card, borderColor: theme.borderSoft }]}>
           <Feather name="calendar" size={13} color={theme.brand} />
           <Text style={{ ...TYPE.caption, color: theme.text, fontFamily: FONTS.sansMedium }}>
-            Permanent purge on <Text style={{ color: COLORS.danger }}>{formattedDate}</Text>
-            {effectiveDaysRemaining !== null ? ` (${effectiveDaysRemaining} days left)` : ''}
+            {copy.bannerPurgeOn(formattedDate)}
+            {effectiveDaysRemaining !== null ? copy.bannerDaysLeft(effectiveDaysRemaining) : ''}
           </Text>
         </View>
       )}
@@ -99,6 +103,9 @@ export function AccountDeletionBanner({
         haptic="selection"
         disabled={cancelling}
         onPress={handleCancel}
+        accessibilityRole="button"
+        accessibilityLabel={copy.bannerCancel}
+        accessibilityState={{ busy: cancelling, disabled: cancelling }}
         style={[
           styles.cancelButton,
           {
@@ -114,7 +121,7 @@ export function AccountDeletionBanner({
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Feather name="shield" size={14} color={COLORS.success} />
             <Text style={{ ...TYPE.label, color: theme.text, fontFamily: FONTS.sansMedium }}>
-              Cancel Deletion & Restore Account
+              {copy.bannerCancel}
             </Text>
           </View>
         )}

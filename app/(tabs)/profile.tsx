@@ -62,6 +62,8 @@ import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { AccountDeletionBanner } from '@/components/profile/AccountDeletionBanner';
 import { accountDeletion, useAccountDeletionStatus } from '@/lib/accountDeletion';
+import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import {
@@ -390,6 +392,7 @@ export default function ProfileScreen() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<any[] | null>(null);
   const deletionStatus = useAccountDeletionStatus();
+  const { language: deletionLanguage } = useLanguage();
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -644,12 +647,13 @@ export default function ProfileScreen() {
     if (appIdentity.kind !== 'authenticated') return;
     try {
       await accountDeletion.cancel(appIdentity.userId);
-      Alert.alert('Deletion Cancelled', 'Welcome back 🙏 Your account and sacred practice are completely safe.');
+      Alert.alert(accountDeletionCopy(deletionLanguage).cancelledTitle, accountDeletionCopy(deletionLanguage).cancelledBody);
     } catch (err) {
-      Alert.alert('Could not cancel deletion', err instanceof Error ? err.message : 'Please check your connection and try again.');
+      const copy = accountDeletionCopy(deletionLanguage);
+      Alert.alert(copy.cancelFailedTitle, err instanceof Error ? err.message : copy.checkConnection);
       throw err;
     }
-  }, [appIdentity]);
+  }, [appIdentity, deletionLanguage]);
 
   useEffect(() => {
     const effectIdentityKey = profileIdentityKey(appIdentity);

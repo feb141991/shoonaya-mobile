@@ -93,6 +93,7 @@ import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { accountDeletion } from '@/lib/accountDeletion';
+import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
 import { AuthCoordinator, USE_AUTH_COORDINATOR, type BootstrapProfileResult, type OnboardingStatus } from '@/lib/authCoordinator';
@@ -275,6 +276,9 @@ function RootLayout() {
   // too, push is re-registered, and failure is reported instead of "Restored".
   const deletionIdentity = useAppIdentity();
   const deletionPromptedUserRef = useRef<string | null>(null);
+  // Root sits outside LanguageProvider; startup prefs carry the app language.
+  const deletionLanguageRef = useRef(startupPrefs.language);
+  deletionLanguageRef.current = startupPrefs.language;
   useEffect(() => {
     if (!isAppInteractive || deletionIdentity.kind !== 'authenticated') return;
     const userId = deletionIdentity.userId;
@@ -287,22 +291,22 @@ function RootLayout() {
 
     void accountDeletion.refresh(userId).then((status) => {
       if (!status?.isDeleting || !stillSignedIn()) return;
-      const daysText = status.daysRemaining !== null ? `${status.daysRemaining} days` : 'soon';
+      const copy = accountDeletionCopy(deletionLanguageRef.current);
       Alert.alert(
-        'Account Deletion Scheduled',
-        `Your account is scheduled for permanent deletion in ${daysText}. Notifications are off until then. Would you like to restore your account now?`,
+        copy.restoreTitle,
+        copy.restoreBody(status.daysRemaining),
         [
-          { text: 'Keep Deletion Scheduled', style: 'cancel' },
+          { text: copy.restoreKeep, style: 'cancel' },
           {
-            text: 'Restore My Account',
+            text: copy.restoreAction,
             style: 'default',
             onPress: () => {
               accountDeletion.cancel(userId).then(
-                () => { Alert.alert('Account Restored', 'Welcome back 🙏 Your account and sacred practice history are completely safe.'); },
+                () => { Alert.alert(copy.restoredTitle, copy.restoredBody); },
                 (error: unknown) => {
                   Alert.alert(
-                    'Could not restore your account',
-                    `${error instanceof Error ? error.message : 'Check your connection and try again.'} You can also cancel from Settings or your Profile.`,
+                    copy.restoreFailedTitle,
+                    `${error instanceof Error ? error.message : copy.checkConnection} ${copy.restoreFailedHint}`,
                   );
                 },
               );

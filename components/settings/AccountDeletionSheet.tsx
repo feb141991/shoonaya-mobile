@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
+import { accountDeletionCopy, deletionReasonLabel } from '@/lib/accountDeletionCopy';
 import { Button } from '@/components/ui/Button';
 
 // Exit-feedback reasons come from GET /api/user/delete/preview (backend
@@ -76,6 +77,7 @@ export function AccountDeletionSheet({
 }: AccountDeletionSheetProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
+  const copy = accountDeletionCopy(snapshot.lang);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedReason, setSelectedReason] = useState<string>('');
@@ -126,7 +128,7 @@ export function AccountDeletionSheet({
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not pause notifications.');
+      setErrorMessage(err instanceof Error ? err.message : copy.pauseFailed);
     } finally {
       setPausing(false);
     }
@@ -144,17 +146,17 @@ export function AccountDeletionSheet({
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not schedule deletion. Please try again.');
+      setErrorMessage(err instanceof Error ? err.message : copy.scheduleFailed);
     } finally {
       setSubmitting(false);
     }
   };
 
   const stats = [
-    { label: 'Streak', value: `${snapshot.streak}d` },
-    { label: 'Karma', value: snapshot.karmaPoints.toLocaleString() },
-    { label: 'Seva', value: snapshot.sevaScore.toLocaleString() },
-    { label: 'Relics', value: `${snapshot.relicsCount}` },
+    { label: copy.stats.streak, value: copy.streakValue(snapshot.streak) },
+    { label: copy.stats.karma, value: snapshot.karmaPoints.toLocaleString() },
+    { label: copy.stats.seva, value: snapshot.sevaScore.toLocaleString() },
+    { label: copy.stats.relics, value: `${snapshot.relicsCount}` },
   ];
 
   return (
@@ -166,7 +168,7 @@ export function AccountDeletionSheet({
             { backgroundColor: COLORS.celebrationScrim, opacity: anim },
           ]}
         >
-          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel="Dismiss" />
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel={copy.dismiss} />
         </Animated.View>
 
         <Animated.View
@@ -189,7 +191,7 @@ export function AccountDeletionSheet({
             <View style={{ flex: 1, gap: 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ ...TYPE.chip, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1.2 }}>
-                  Account Deletion & Cool-off
+                  {copy.headerTag}
                 </Text>
               </View>
               {/* Step indicator dots */}
@@ -217,7 +219,7 @@ export function AccountDeletionSheet({
               hitSlop={12}
               style={[styles.closeButton, { backgroundColor: theme.cardSoft }]}
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={copy.close}
             >
               <Feather name="x" size={16} color={theme.dim} />
             </Pressable>
@@ -244,10 +246,10 @@ export function AccountDeletionSheet({
                     <Text style={{ fontSize: 26, lineHeight: 30 }}>{getTraditionSymbol(snapshot.tradition)}</Text>
                   </View>
                   <Text style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>
-                    {snapshot.userName ? `Before you go, ${snapshot.userName}` : 'Before you go'}
+                    {copy.step1Title(snapshot.userName)}
                   </Text>
                   <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>
-                    Your spiritual journey holds practice history, earned relics, and sacred reflections.
+                    {copy.step1Body}
                   </Text>
                 </View>
 
@@ -255,7 +257,7 @@ export function AccountDeletionSheet({
                   <View style={[styles.infoBanner, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
                     <Feather name="wifi-off" size={16} color={theme.dim} style={{ marginTop: 1 }} />
                     <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1, lineHeight: 18 }}>
-                      We couldn't load your practice summary right now. Your streaks, karma, relics and journal are all part of your account and would be removed after the 30-day grace period.
+                      {copy.summaryUnavailable}
                     </Text>
                   </View>
                 )}
@@ -282,17 +284,25 @@ export function AccountDeletionSheet({
                   <View style={[styles.infoBanner, { backgroundColor: COLORS.dangerBg, borderColor: COLORS.dangerBorder }]}>
                     <Feather name="book-open" size={16} color={COLORS.danger} style={{ marginTop: 1 }} />
                     <Text style={{ ...TYPE.caption, color: COLORS.danger, flex: 1, lineHeight: 18 }}>
-                      You have {snapshot.journalCount} sacred journal {snapshot.journalCount === 1 ? 'reflection' : 'reflections'}. After the 30-day grace period, these will be permanently purged.
+                      {copy.journalWarning(snapshot.journalCount)}
                     </Text>
                   </View>
                 )}
 
-                {/* Kul leadership warning */}
+                {/* Kul creator note -- Kul has no leadership hand-over yet. */}
                 {snapshot.ownedKuls && snapshot.ownedKuls.length > 0 && (
-                  <View style={[styles.infoBanner, { backgroundColor: 'rgba(234, 179, 8, 0.12)', borderColor: 'rgba(234, 179, 8, 0.35)' }]}>
-                    <Feather name="shield" size={16} color={COLORS.brandGold} style={{ marginTop: 1 }} />
+                  <View
+                    style={[
+                      styles.infoBanner,
+                      {
+                        backgroundColor: isDark ? COLORS.warningBgDark : COLORS.warningBgLight,
+                        borderColor: isDark ? COLORS.warningBorderDark : COLORS.warningBorderLight,
+                      },
+                    ]}
+                  >
+                    <Feather name="users" size={16} color={isDark ? COLORS.warningDark : COLORS.warningLight} style={{ marginTop: 1 }} />
                     <Text style={{ ...TYPE.caption, color: theme.text, flex: 1, lineHeight: 18 }}>
-                      You lead <Text style={{ fontFamily: FONTS.sansSemiBold }}>{snapshot.ownedKuls[0].name}</Text>. Please transfer family leadership before permanent deletion.
+                      {copy.kulCreated(snapshot.ownedKuls.map((kul) => kul.name).join(', '))}
                     </Text>
                   </View>
                 )}
@@ -302,62 +312,63 @@ export function AccountDeletionSheet({
                   <PressableSurface
                     haptic="selection"
                     onPress={onExportData}
+                    accessibilityRole="button"
                     style={[styles.exportRow, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}
                   >
                     <Feather name="download" size={15} color={theme.brand} />
                     <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansMedium, flex: 1 }}>
-                      Download my sacred practice data (.json) first
+                      {copy.exportData}
                     </Text>
                     <Feather name="chevron-right" size={14} color={theme.dim} />
                   </PressableSurface>
                 )}
 
                 <View style={{ gap: 10, marginTop: 4 }}>
-                  <Button label="Keep My Account" variant="primary" onPress={onClose} />
-                  <Button label="Continue to Next Step" variant="ghost" onPress={() => handleNextStep(2)} />
+                  <Button label={copy.keepAccount} variant="primary" onPress={onClose} />
+                  <Button label={copy.continueNext} variant="ghost" onPress={() => handleNextStep(2)} />
                 </View>
               </View>
             )}
 
-            {/* STEP 2: Immediate Changes vs. 30-Day Cool-off */}
+            {/* STEP 2: What changes today vs. after 30 days */}
             {step === 2 && (
               <View style={{ gap: 14 }}>
                 <View style={{ gap: 4 }}>
-                  <Text style={{ ...TYPE.cardHeading, color: theme.text }}>What happens next?</Text>
-                  <Text style={{ ...TYPE.body, color: theme.dim }}>
-                    Here is what changes immediately today versus after 30 days:
-                  </Text>
+                  <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.step2Title}</Text>
+                  <Text style={{ ...TYPE.body, color: theme.dim }}>{copy.step2Intro}</Text>
                 </View>
 
-                {/* Immediate card */}
                 <View style={[styles.detailBox, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <Feather name="bell-off" size={15} color={theme.brand} />
-                    <Text style={{ ...TYPE.label, color: theme.text }}>Immediate Silence (Today)</Text>
+                    <Text style={{ ...TYPE.label, color: theme.text }}>{copy.todayTitle}</Text>
                   </View>
                   <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 18 }}>
-                    • <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>All notifications stop 100%</Text>: Japa, Nitya Karma, fastings, and festivals will no longer alert you.{'\n'}
-                    • <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>Profile unlisted</Text>: Your profile is hidden from Mandali discovery and community leaderboards.{'\n'}
-                    • <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>Practice frozen</Text>: Streaks and karma are safely held in cold storage without penalties.
+                    {copy.todayBullets.map((bullet, index) => (
+                      <Text key={bullet.lead}>
+                        {index > 0 ? '\n' : ''}• <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>{bullet.lead}</Text>: {bullet.text}
+                      </Text>
+                    ))}
                   </Text>
                 </View>
 
-                {/* 30-Day Safety Net card */}
                 <View style={[styles.detailBox, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <Feather name="shield" size={15} color={COLORS.success} />
-                    <Text style={{ ...TYPE.label, color: theme.text }}>30-Day Safe Grace Period</Text>
+                    <Text style={{ ...TYPE.label, color: theme.text }}>{copy.graceTitle}</Text>
                   </View>
                   <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 18 }}>
-                    • Your records are <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>retained securely for 30 days</Text>.{'\n'}
-                    • Changed your mind? Sign back in anytime and tap <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>"Cancel deletion"</Text> on your Profile to restore everything in 1 tap.{'\n'}
-                    • Only after 30 days are your credentials and personal records permanently purged.
+                    {copy.graceBullets.map((bullet, index) => (
+                      <Text key={bullet.lead}>
+                        {index > 0 ? '\n' : ''}• <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>{bullet.lead}</Text>: {bullet.text}
+                      </Text>
+                    ))}
                   </Text>
                 </View>
 
                 <View style={{ gap: 10, marginTop: 4 }}>
-                  <Button label="Keep My Account" variant="primary" onPress={onClose} />
-                  <Button label="Continue" variant="secondary" onPress={() => handleNextStep(3)} />
+                  <Button label={copy.keepAccount} variant="primary" onPress={onClose} />
+                  <Button label={copy.continue} variant="secondary" onPress={() => handleNextStep(3)} />
                 </View>
               </View>
             )}
@@ -366,10 +377,8 @@ export function AccountDeletionSheet({
             {step === 3 && (
               <View style={{ gap: 14 }}>
                 <View style={{ gap: 4 }}>
-                  <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Consider a quieter step</Text>
-                  <Text style={{ ...TYPE.body, color: theme.dim }}>
-                    If notification fatigue or a busy season is the issue, you don't need to delete your journey:
-                  </Text>
+                  <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.step3Title}</Text>
+                  <Text style={{ ...TYPE.body, color: theme.dim }}>{copy.step3Intro}</Text>
                 </View>
 
                 {onPauseNotificationsInstead && (
@@ -377,18 +386,17 @@ export function AccountDeletionSheet({
                     haptic="selection"
                     onPress={handlePauseNotifications}
                     disabled={pausing}
+                    accessibilityRole="button"
                     style={[
                       styles.pauseCard,
                       { backgroundColor: theme.brandSoft, borderColor: theme.brand },
                     ]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <Feather name="pause-circle" size={20} color={theme.brand} />
+                      <Feather name="bell-off" size={20} color={theme.brand} />
                       <View style={{ flex: 1 }}>
-                        <Text style={{ ...TYPE.label, color: theme.text }}>Mute all notifications for 30 days</Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
-                          Gives you complete peace without losing your streaks, journal, or relics.
-                        </Text>
+                        <Text style={{ ...TYPE.label, color: theme.text }}>{copy.pauseTitle}</Text>
+                        <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{copy.pauseBody}</Text>
                       </View>
                       {pausing && <ActivityIndicator size="small" color={theme.brand} />}
                     </View>
@@ -397,7 +405,7 @@ export function AccountDeletionSheet({
 
                 {reasons.length > 0 && (
                 <View style={{ gap: 8, marginTop: 4 }}>
-                  <Text style={{ ...TYPE.label, color: theme.text }}>Why are you leaving? (Optional)</Text>
+                  <Text style={{ ...TYPE.label, color: theme.text }}>{copy.reasonsTitle}</Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                     {reasons.map((reason) => {
                       const selected = selectedReason === reason.id;
@@ -417,7 +425,7 @@ export function AccountDeletionSheet({
                           ]}
                         >
                           <Text style={{ ...TYPE.caption, color: selected ? theme.brandStrong : theme.text }}>
-                            {reason.label}
+                            {deletionReasonLabel(copy, reason.id, reason.label)}
                           </Text>
                         </PressableSurface>
                       );
@@ -427,9 +435,10 @@ export function AccountDeletionSheet({
                     <TextInput
                       value={otherReason}
                       onChangeText={setOtherReason}
-                      placeholder="Tell us what we can improve..."
+                      placeholder={copy.otherPlaceholder}
                       placeholderTextColor={theme.dim}
                       maxLength={120}
+                      accessibilityLabel={copy.otherPlaceholder}
                       style={[
                         styles.otherInput,
                         { backgroundColor: theme.cardSoft, borderColor: theme.border, color: theme.text },
@@ -440,8 +449,8 @@ export function AccountDeletionSheet({
                 )}
 
                 <View style={{ gap: 10, marginTop: 4 }}>
-                  <Button label="I'll Stay" variant="primary" onPress={onClose} />
-                  <Button label="Proceed to Final Confirmation" variant="ghost" onPress={() => handleNextStep(4)} />
+                  <Button label={copy.stay} variant="primary" onPress={onClose} />
+                  <Button label={copy.proceedFinal} variant="ghost" onPress={() => handleNextStep(4)} />
                 </View>
               </View>
             )}
@@ -450,9 +459,9 @@ export function AccountDeletionSheet({
             {step === 4 && (
               <View style={{ gap: 14 }}>
                 <View style={{ gap: 4 }}>
-                  <Text style={{ ...TYPE.cardHeading, color: COLORS.danger }}>Confirm Account Deletion</Text>
+                  <Text style={{ ...TYPE.cardHeading, color: COLORS.danger }}>{copy.step4Title}</Text>
                   <Text style={{ ...TYPE.body, color: theme.dim }}>
-                    To confirm scheduling your 30-day cool-off, please type <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>DELETE</Text> below:
+                    {copy.step4Before}<Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>DELETE</Text>{copy.step4After}
                   </Text>
                 </View>
 
@@ -463,6 +472,7 @@ export function AccountDeletionSheet({
                   autoCorrect={false}
                   placeholder="DELETE"
                   placeholderTextColor={theme.dim}
+                  accessibilityLabel={`${copy.step4Before}DELETE${copy.step4After}`}
                   style={[
                     styles.confirmInput,
                     {
@@ -475,9 +485,7 @@ export function AccountDeletionSheet({
 
                 <View style={[styles.infoBanner, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
                   <Feather name="clock" size={15} color={theme.brand} style={{ marginTop: 2 }} />
-                  <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1, lineHeight: 18 }}>
-                    Your account enters a 30-day cool-off. You can cancel anytime before then by signing in and tapping Cancel on your Profile.
-                  </Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1, lineHeight: 18 }}>{copy.finalNote}</Text>
                 </View>
 
                 <View style={{ gap: 10, marginTop: 6 }}>
@@ -485,6 +493,9 @@ export function AccountDeletionSheet({
                     haptic="none"
                     disabled={confirmInput.trim().toUpperCase() !== 'DELETE' || submitting}
                     onPress={handleFinalSubmit}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: confirmInput.trim().toUpperCase() !== 'DELETE' || submitting, busy: submitting }}
+                    accessibilityLabel={copy.scheduleButton}
                     style={[
                       styles.destructiveButton,
                       {
@@ -496,11 +507,11 @@ export function AccountDeletionSheet({
                     {submitting ? (
                       <ActivityIndicator color={COLORS.onMediaWhite} size="small" />
                     ) : (
-                      <Text style={{ ...TYPE.label, fontSize: 14.5, color: COLORS.onMediaWhite }}>Schedule Account Deletion</Text>
+                      <Text style={{ ...TYPE.label, fontSize: 14.5, color: COLORS.onMediaWhite }}>{copy.scheduleButton}</Text>
                     )}
                   </PressableSurface>
 
-                  <Button label="Never Mind, Keep Account" variant="ghost" onPress={onClose} />
+                  <Button label={copy.neverMind} variant="ghost" onPress={onClose} />
                 </View>
               </View>
             )}
