@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { signOutWithPushCleanup } from '@/lib/notifications';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -1472,6 +1472,33 @@ export default function ProfileScreen() {
             </PressableSurface>
           </Card>
         ) : null}
+
+        <PressableSurface
+          accessibilityLabel={profile.kul_id ? `Open ${profile.kul_name || 'family KUL'}` : 'Create or join a family KUL'}
+          onPress={() => router.push('/kul' as Href)}
+          haptic="selection"
+          style={{
+            minHeight: 82,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: theme.premiumBorder,
+            backgroundColor: theme.card,
+            paddingHorizontal: 16,
+            paddingVertical: 13,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+            <Feather name="home" size={22} color={theme.brand} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{profile.kul_name || 'Family KUL'}</Text>
+            <Text style={{ ...TYPE.caption, color: theme.dim }}>{profile.kul_id ? 'Open your private family circle' : 'Create or join a family circle'}</Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={theme.dim} />
+        </PressableSurface>
 
         <View style={{ gap: 10, paddingHorizontal: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>

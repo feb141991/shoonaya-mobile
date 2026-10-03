@@ -70,7 +70,7 @@ release blocker.
 | Tirtha `(tabs)/tirtha.tsx` | `/tirtha-map` | **Home (newly added, commit `4e05619`)** | `/api/tirtha/place`, `/api/tirtha/save`, `/api/tirtha/checkin` + direct Supabase reads + Overpass API | 🟢 green for primary save/check-in writes — still needs AVD map smoke |
 | Sankalpa `sankalpa.tsx` | `/sadhana` (partial) | Home | `/api/sankalpa`, `/api/sankalpa/checkin`, `/api/sankalpa/complete` | 🟢 green for primary create/check-in/complete |
 | AI Chat `ai-chat.tsx` | `/ai-chat` | Home | Pramana API | 🟢 green — not re-verified this session |
-| Kul | `/kul` | — | — | ⚪ web-only / deferred — no native file; product plan wants it as a primary tab but it isn't built yet |
+| KUL family hub `kul.tsx` | `/kul` | Home Family KUL card, Profile | Bearer-authenticated `/api/native/kul...` routes; RLS-scoped reads/writes; bounded snapshot | 🟡 implemented in source; migration and device flows still require verification |
 | Discover / Sadhana journal | `/discover`, `/sadhana` | — | — | ⚪ web-only / deferred — no native file |
 | Scoreboard, Messages, Seva, Founding, Sthapaka | corresponding routes | — | payments/moderation/unbuilt | ⚪ web-only / deferred |
 | Bhakti "Explore" 10 cards (Puranic Tales, Mantras, Sattvic Mode, etc.) | various `/bhakti/...` | Bhakti (shown as "coming soon") | — | ⚪ web-only / deferred — no native file backs any of them |
