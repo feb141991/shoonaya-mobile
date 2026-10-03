@@ -2472,6 +2472,35 @@ function HomeContent() {
             </View>
           </View>
 
+          <PressableSurface
+            accessibilityLabel="Open family KUL"
+            onPress={() => navigate('/kul' as Href)}
+            haptic="selection"
+            style={{
+              minHeight: 82,
+              marginTop: 4,
+              marginBottom: 8,
+              paddingHorizontal: 16,
+              paddingVertical: 13,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.card,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: theme.soft, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="home" size={22} color={theme.brand} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Family KUL</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>Your family circle, practice, and shared dates</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.dim} />
+          </PressableSurface>
+
           {/* Closing footer — same line profile.tsx already uses, so the
               scroll ends on a deliberate stop instead of trailing into
               empty space above the nav-bar clearance padding. */}
