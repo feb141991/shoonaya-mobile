@@ -159,25 +159,17 @@ export function CollapsibleBottomNav() {
         renderIcon: (color, size) => <SacredIcon name="japa" fallbackGlyph="heart" color={color} size={size} />,
       },
       {
-        key: 'bhakti',
-        href: '/(tabs)/bhakti',
-        label: 'Bhakti',
-        match: (p) =>
-          matchesAny(p, [
-            '/bhakti',
-            '/(tabs)/bhakti',
-            '/shloka',
-            '/quiz',
-            '/vrat',
-            '/panchang',
-            '/dharm-veer',
-            '/nitya-karma',
-            '/nitya-dincharya',
-            '/nitya-plans',
-            '/nitya-ashrama',
-          ]),
+        // Family KUL holds the raised centre slot. Bhakti moved off the bar to
+        // a Home tile; its screens (/bhakti, /shloka, /quiz, /vrat, /panchang,
+        // /dharm-veer, /nitya-*) match no tab and fall back to Home below,
+        // which is where they are now entered from.
+        // No clay-art SacredIcon exists for KUL yet, so it uses Feather.
+        key: 'kul',
+        href: '/kul' as Href,
+        label: 'KUL',
+        match: (p) => matchesAny(p, ['/kul']),
         isCenter: true,
-        renderIcon: (color, size) => <SacredIcon name="bhakti" fallbackGlyph="star" color={color} size={size} />,
+        renderIcon: (color, size) => <Feather name="users" color={color} size={size} />,
       },
       {
         key: 'pathshala',

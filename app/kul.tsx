@@ -587,7 +587,7 @@ export default function KulScreen() {
 
   if (identity.kind === "loading" || (loading && !snapshot && currentUserId)) {
     return (
-      <Screen header={{ title: "Family KUL", onBack: () => router.back() }}>
+      <Screen header={{ title: "Family KUL" }}>
         <SacredLoader
           title="Opening your family circle"
           subtitle="Bringing your family space together…"
@@ -598,7 +598,7 @@ export default function KulScreen() {
 
   return (
     <Screen
-      header={{ title: "Family KUL", onBack: () => router.back() }}
+      header={{ title: "Family KUL" }}
       style={{ paddingHorizontal: 16 }}
     >
       <ScrollView

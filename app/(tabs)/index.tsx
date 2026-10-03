@@ -2586,7 +2586,11 @@ function HomeContent() {
             <View style={{ flexDirection: 'row', gap: 6 }}>
               {([
                 { label: 'Live Darshan', href: '/live-darshan',    sacredId: 'live-darshan' as SacredIconName, fallbackGlyph: 'radio' as const, accent: COLORS.tileBlue },
-                { label: 'Mandali',      href: '/(tabs)/mandali',  sacredId: 'mandali' as SacredIconName,      fallbackGlyph: 'users' as const, accent: COLORS.tilePurple },
+                // Bhakti left the bottom bar when KUL took its centre slot; this
+                // tile is now its entry point. It takes the Mandali tile's place
+                // because Mandali is still a bottom-nav tab, and a fifth 70pt
+                // tile does not fit a 375pt-wide row.
+                { label: 'Bhakti',       href: '/(tabs)/bhakti',   sacredId: 'bhakti' as SacredIconName,       fallbackGlyph: 'star' as const,  accent: COLORS.tileGold },
                 // Tirtha (app/(tabs)/tirtha.tsx) is a real, complete screen —
                 // nearby-temple map, save/check-in, passport — that was a
                 // hidden tab (href: null in _layout.tsx) with no entry point
