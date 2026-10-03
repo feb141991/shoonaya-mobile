@@ -17,6 +17,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { subscribeNavScroll } from '@/lib/navScrollBus';
+import { subscribeBottomNavHidden, setBottomNavHidden } from '@/lib/nav-bar';
 
 // Custom-rendered bottom nav replacing Expo Router's built-in tab bar
 // (hidden via tabBarStyle:{display:'none'} in app/(tabs)/_layout.tsx).
@@ -65,10 +66,15 @@ export function CollapsibleBottomNav() {
 
   const [collapsed, setCollapsed] = useState(!HOME_PATHS.has(pathname));
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isNavHidden, setIsNavHidden] = useState(false);
   const collapseProgress = useRef(new Animated.Value(HOME_PATHS.has(pathname) ? 0 : 1)).current;
   const lastYRef = useRef(0);
   const lastToggleAtRef = useRef(0);
   const readyRef = useRef(false);
+
+  useEffect(() => {
+    return subscribeBottomNavHidden(setIsNavHidden);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -91,6 +97,9 @@ export function CollapsibleBottomNav() {
     readyRef.current = false;
     lastYRef.current = 0;
     setCollapsed(!HOME_PATHS.has(pathname));
+    if (!matchesAny(pathname, ['/japa'])) {
+      setBottomNavHidden(false);
+    }
     const timer = setTimeout(() => {
       readyRef.current = true;
     }, 350);
@@ -227,6 +236,10 @@ export function CollapsibleBottomNav() {
     inputRange: [0, 0.6, 1],
     outputRange: [0, 0, 1],
   });
+
+  if (isNavHidden) {
+    return null;
+  }
 
   return (
     <Animated.View

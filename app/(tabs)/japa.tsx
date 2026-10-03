@@ -47,7 +47,7 @@ import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } fr
 import { recordMutationRetryOutcome, recordRefreshFailure, recordRouteOpen, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
-import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { NAV_BAR_CLEARANCE, setBottomNavHidden } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -921,10 +921,16 @@ export default function JapaScreen() {
   const activeSound = useMemo(() => getJapaSoundById(selectedSoundId), [selectedSoundId]);
 
   // Ambient sound lifecycle — plays seamless loop during active practice,
-  // pauses when stop sheet opens, and unloads on exit or screen blur.
+  // pauses when stop sheet opens or session completes, and unloads on exit or screen blur.
   useEffect(() => {
     const soundTarget = activeSound.audioSource ?? activeSound.audioUrl;
-    if (screen !== 'practice' || showStopSheet || selectedSoundId === 'off' || !soundTarget) {
+    if (
+      screen !== 'practice' ||
+      showStopSheet ||
+      completionVisible ||
+      selectedSoundId === 'off' ||
+      !soundTarget
+    ) {
       void audio.stop();
       return;
     }
@@ -934,7 +940,20 @@ export default function JapaScreen() {
     return () => {
       void audio.stop();
     };
-  }, [screen, showStopSheet, selectedSoundId, activeSound.audioSource, activeSound.audioUrl, audio]);
+  }, [screen, showStopSheet, completionVisible, selectedSoundId, activeSound.audioSource, activeSound.audioUrl, audio]);
+
+  // Hide global bottom navigation during active bead-counting practice so the
+  // sacred ritual is immersive and bottom sound controls are never covered.
+  useEffect(() => {
+    if (screen === 'practice') {
+      setBottomNavHidden(true);
+    } else {
+      setBottomNavHidden(false);
+    }
+    return () => {
+      setBottomNavHidden(false);
+    };
+  }, [screen]);
 
   useEffect(() => {
     if (mantraIndex >= mantraOptions.length) setMantraIndex(0);
@@ -1195,10 +1214,18 @@ export default function JapaScreen() {
   // extra query on ordinary Japa tab returns while allowing the card to
   // reflect the saved preference immediately on return.
   useFocusEffect(useCallback(() => {
-    if (!reminderSettingsReturnRef.current) return;
-    reminderSettingsReturnRef.current = false;
-    void loadContext({ background: true });
-  }, [loadContext]));
+    if (screen === 'practice') {
+      setBottomNavHidden(true);
+    }
+    if (reminderSettingsReturnRef.current) {
+      reminderSettingsReturnRef.current = false;
+      void loadContext({ background: true });
+    }
+    return () => {
+      setBottomNavHidden(false);
+      void audio.stop();
+    };
+  }, [screen, loadContext, audio]));
 
   useEffect(() => {
     if (syncReviewVisible && syncFailedCount === 0) setSyncReviewVisible(false);
@@ -2220,8 +2247,8 @@ export default function JapaScreen() {
                   <PressableSurface
                     haptic="selection"
                     accessibilityRole="button"
-                    accessibilityLabel="View recent Japa sessions"
-                    onPress={() => router.push('/japa-insights' as Href)}
+                    accessibilityLabel={`Ambient sound. Current sound is ${selectedSoundId !== 'off' ? activeSound.label : 'Off'}`}
+                    onPress={() => setSoundSheetOpen(true)}
                     style={{
                       flex: 1,
                       minHeight: 84,
@@ -2246,18 +2273,61 @@ export default function JapaScreen() {
                         backgroundColor: theme.brandSoft,
                       }}
                     >
-                      <Feather name="clock" size={16} color={theme.brand} />
+                      <Feather name={selectedSoundId !== 'off' ? 'music' : 'volume-x'} size={16} color={theme.brand} />
                     </View>
                     <View style={{ minWidth: 0 }}>
                       <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }} numberOfLines={1}>
-                        Recent sessions
+                        Ambient sound
                       </Text>
                       <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim, marginTop: 2 }} numberOfLines={1}>
-                        Beads and rounds
+                        {selectedSoundId !== 'off' ? activeSound.label : 'Sound: Off'}
                       </Text>
                     </View>
                   </PressableSurface>
                 </View>
+
+                <PressableSurface
+                  haptic="selection"
+                  accessibilityRole="button"
+                  accessibilityLabel="View recent Japa sessions"
+                  onPress={() => router.push('/japa-insights' as Href)}
+                  style={{
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: cardBg,
+                    boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: theme.brandSoft,
+                      }}
+                    >
+                      <Feather name="clock" size={16} color={theme.brand} />
+                    </View>
+                    <View>
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: text }}>
+                        Recent sessions
+                      </Text>
+                      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: dim, marginTop: 2 }}>
+                        Beads and rounds history
+                      </Text>
+                    </View>
+                  </View>
+                  <Feather name="chevron-right" size={16} color={dim} />
+                </PressableSurface>
 
                 {/* Your Path + Lifetime Japa */}
                 <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -3029,22 +3099,23 @@ export default function JapaScreen() {
               haptic="selection"
               accessibilityLabel={`Sacred ambient sound: ${activeSound.label}`}
               onPress={() => setSoundSheetOpen(true)}
-              hitSlop={8}
+              hitSlop={12}
               style={{
                 position: 'absolute',
-                bottom: Math.max(18, insets.bottom + 12),
+                bottom: Math.max(26, insets.bottom + 16),
                 alignSelf: 'center',
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 7,
-                paddingHorizontal: 14,
-                paddingVertical: 9,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
                 minHeight: MIN_TOUCH_TARGET,
                 borderRadius: 999,
-                backgroundColor: isDark ? 'rgba(8,6,4,0.64)' : 'rgba(255,253,248,0.84)',
+                backgroundColor: isDark ? 'rgba(8,6,4,0.72)' : 'rgba(255,253,248,0.92)',
                 borderWidth: 1,
                 borderColor: selectedSoundId !== 'off' ? theme.brand : `${theme.brand}35`,
                 boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
+                zIndex: 40,
               }}
             >
               <Feather
@@ -3365,6 +3436,41 @@ export default function JapaScreen() {
                     );
                   })}
                 </View>
+              </View>
+
+              <View style={{ gap: 10 }}>
+                <Text style={{ ...TYPE.section, color: theme.brand }}>Sacred Sound</Text>
+                <PressableSurface
+                  haptic="selection"
+                  onPress={() => {
+                    setCustomizeOpen(false);
+                    setSoundSheetOpen(true);
+                  }}
+                  style={{
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: cardBg,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Feather name={selectedSoundId !== 'off' ? 'music' : 'volume-x'} size={18} color={theme.brand} />
+                    <View>
+                      <Text style={{ ...TYPE.label, color: text }}>
+                        {selectedSoundId !== 'off' ? activeSound.label : 'Sound: Off'}
+                      </Text>
+                      <Text style={{ ...TYPE.caption, color: dim }}>
+                        {selectedSoundId !== 'off' ? activeSound.subtitle : 'No background ambient drone'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Feather name="chevron-right" size={16} color={dim} />
+                </PressableSurface>
               </View>
             </ScrollView>
             <PressableSurface

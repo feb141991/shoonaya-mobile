@@ -12,3 +12,21 @@ export const NAV_BAR_CLEARANCE = 78 + 12 + 16;
 
 // Canonical baseline hero height from central HERO_SIZE_CONFIG in lib/heroPreference.ts.
 export const HERO_MIN_HEIGHT = HERO_SIZE_CONFIG.standard.height;
+
+type NavHiddenListener = (hidden: boolean) => void;
+const navHiddenListeners = new Set<NavHiddenListener>();
+let currentNavHidden = false;
+
+export function setBottomNavHidden(hidden: boolean) {
+  currentNavHidden = hidden;
+  navHiddenListeners.forEach((listener) => listener(hidden));
+}
+
+export function subscribeBottomNavHidden(listener: NavHiddenListener): () => void {
+  navHiddenListeners.add(listener);
+  listener(currentNavHidden);
+  return () => {
+    navHiddenListeners.delete(listener);
+  };
+}
+

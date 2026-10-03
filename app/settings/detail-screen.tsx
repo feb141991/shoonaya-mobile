@@ -87,7 +87,7 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_festival_reminders: true,
   wants_vrat_reminders: true,
   wants_tithi_reminders: false,
-  observance_reminder_lead_days: [1, 7],
+  observance_reminder_lead_days: [0, 1],
   observance_reminder_time: '08:00',
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,
@@ -1154,8 +1154,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 <Text style={{ ...TYPE.label, color: theme.text }}>Observance reminder days</Text>
                 <Text style={{ ...TYPE.caption, color: theme.dim }}>Choose when to be reminded before a festival or vrat. No selected days means no observance reminders.</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {[{ day: 0, label: 'Day of' }, { day: 1, label: '1 day before' }, { day: 7, label: '7 days before' }].map((option) => {
-                    const selected = (settings.observance_reminder_lead_days ?? [1, 7]).includes(option.day);
+                  {[{ day: 0, label: 'Day of' }, { day: 1, label: '1 day before' }].map((option) => {
+                    const selected = (settings.observance_reminder_lead_days ?? [0, 1]).includes(option.day);
                     return (
                       <PressableSurface
                         key={option.day}
@@ -1163,7 +1163,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                         accessibilityRole="button"
                         accessibilityLabel={`${option.label}${selected ? ', selected' : ''}`}
                         onPress={() => {
-                          const current = settings.observance_reminder_lead_days ?? [1, 7];
+                          const current = settings.observance_reminder_lead_days ?? [0, 1];
                           const nextDays = selected
                             ? current.filter((day) => day !== option.day)
                             : [...current, option.day].sort((a, b) => a - b);
