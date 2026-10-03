@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 
@@ -23,9 +23,7 @@ import {
 // ── Bhakti Phase 7 — native equivalent of the PWA's
 // src/app/(main)/mantras/MantrasClient.tsx. Route is a top-level /mantras
 // (not nested under /bhakti) to match the PWA's own route shape.
-// Premium mantras aren't hidden — tapping one shows a paywall nudge, same
-// as PWA's toast, via a plain Alert since the app doesn't have a shared
-// toast component yet.
+// The full mantra catalog is available to every user.
 
 type Mantra = {
   id: string;
@@ -34,7 +32,6 @@ type Mantra = {
   nameEn: string;
   nameLocal: string;
   tags: string[];
-  isPremium: boolean;
 };
 
 type TabType = 'all' | 'tradition' | 'others';
@@ -47,8 +44,7 @@ function isMantraList(value: unknown): value is Mantra[] {
       typeof candidate.tradition === 'string' &&
       typeof candidate.nameEn === 'string' &&
       typeof candidate.nameLocal === 'string' &&
-      Array.isArray(candidate.tags) && candidate.tags.every((tag) => typeof tag === 'string') &&
-      typeof candidate.isPremium === 'boolean';
+      Array.isArray(candidate.tags) && candidate.tags.every((tag) => typeof tag === 'string');
   });
 }
 
@@ -65,13 +61,12 @@ export default function MantrasScreen() {
   const [loading, setLoading] = useState(!initialMantras);
   const [loadError, setLoadError] = useState(false);
   const [mantras, setMantras] = useState<Mantra[]>(initialMantras ?? []);
-  const [profileContext, setProfileContext] = useState<{ userId: string; tradition: string; isPro: boolean } | null>(null);
+  const [profileContext, setProfileContext] = useState<{ userId: string; tradition: string } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('all');
 
   const currentUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
   const currentProfile = currentUserId && profileContext?.userId === currentUserId ? profileContext : null;
   const tradition = currentProfile?.tradition ?? 'hindu';
-  const isPro = currentProfile?.isPro ?? false;
 
   const load = useCallback(async () => {
     // Auth-waterfall fix (reliability plan item 5): appIdentity reads the
@@ -108,7 +103,7 @@ export default function MantrasScreen() {
       const profilePromise = appIdentity.kind === 'authenticated'
         ? supabase
           .from('profiles')
-          .select('tradition, is_pro')
+          .select('tradition')
           .eq('id', appIdentity.userId)
           .single()
         : Promise.resolve({ data: null, error: null });
@@ -121,7 +116,6 @@ export default function MantrasScreen() {
         setProfileContext({
           userId: appIdentity.userId,
           tradition: profileResult.data?.tradition ?? 'hindu',
-          isPro: profileResult.data?.is_pro ?? false,
         });
       }
       if (!mantrasRes.ok) {
@@ -188,14 +182,6 @@ export default function MantrasScreen() {
   });
 
   const handleCardPress = (mantra: Mantra) => {
-    if (appIdentity.kind === 'authenticated' && !currentProfile) {
-      Alert.alert('Checking access', 'Please try again in a moment.');
-      return;
-    }
-    if (mantra.isPremium && !isPro) {
-      Alert.alert('Unlock with Zenith 🔒', 'This mantra is part of the premium collection.');
-      return;
-    }
     // PWA deep-links straight into a specific mala session
     // (`/bhakti/mala?mantraId=X`). Native's Japa Mala flow has its own
     // curated JAPA_MANTRAS set (lib/traditions.ts) with its own id space —
@@ -273,10 +259,9 @@ export default function MantrasScreen() {
         renderItem={({ item: row, index: rowIndex }) => (
           <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginTop: rowIndex === 0 ? 16 : 12 }}>
             {row.map((mantra) => {
-              const isLocked = mantra.isPremium && !isPro;
               return (
                 <PressableSurface key={mantra.id} haptic="selection" onPress={() => handleCardPress(mantra)} style={{ flex: 1 }}>
-                  <Card tone="auto" style={{ gap: 10, borderColor: theme.premiumBorder, opacity: isLocked ? 0.7 : 1 }}>
+                  <Card tone="auto" style={{ gap: 10, borderColor: theme.premiumBorder }}>
                     <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{mantra.nameEn}</Text>
                     <Text style={{ ...TYPE.caption, color: AMBER }}>{mantra.nameLocal}</Text>
                     {mantra.deity ? (
@@ -293,7 +278,7 @@ export default function MantrasScreen() {
                       ))}
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Feather name={isLocked ? 'lock' : 'chevron-right'} size={16} color={isLocked ? AMBER : theme.dim} />
+                      <Feather name="chevron-right" size={16} color={theme.dim} />
                     </View>
                   </Card>
                 </PressableSurface>

@@ -42,7 +42,7 @@ type EnrollmentPayload = {
   enrolledAt: string;
 };
 
-type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
+type FetchState = 'loading' | 'ready' | 'not_found' | 'error';
 
 export default function PathDetailScreen() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function PathDetailScreen() {
   const cacheIdentity = appIdentity.kind === 'authenticated' ? appIdentity.userId : 'guest';
   const initialDetail = pathId ? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) : null;
 
-  const [fetchState, setFetchState] = useState<FetchState>(initialDetail ? (initialDetail.locked ? 'locked' : 'ready') : 'loading');
+  const [fetchState, setFetchState] = useState<FetchState>(initialDetail ? 'ready' : 'loading');
   const [path, setPath] = useState<PathshalaPath | null>(initialDetail?.path ?? null);
   const [lessons, setLessons] = useState<Lesson[]>(initialDetail?.lessons ?? []);
   const [refreshFailed, setRefreshFailed] = useState(false);
@@ -81,14 +81,14 @@ export default function PathDetailScreen() {
     if (snapshot) {
       setPath(snapshot.path);
       setLessons(snapshot.lessons);
-      setFetchState(snapshot.locked ? 'locked' : 'ready');
+      setFetchState('ready');
     } else {
-      setFetchState((prev) => (prev === 'ready' || prev === 'locked' ? prev : 'loading'));
+      setFetchState((prev) => (prev === 'ready' ? prev : 'loading'));
       void readPathshalaDetailCache(cacheIdentity, pathId).then((cached) => {
         if (!cached || !isCurrent() || networkWon) return;
         setPath(cached.path);
         setLessons(cached.lessons);
-        setFetchState(cached.locked ? 'locked' : 'ready');
+        setFetchState('ready');
       });
     }
     setRefreshFailed(false);
@@ -112,14 +112,13 @@ export default function PathDetailScreen() {
         return;
       }
 
-      const responseBody = (await response.json()) as Omit<PathDetailResponse, 'locked'> & { locked?: boolean };
+      const responseBody = (await response.json()) as PathDetailResponse;
       if (!isCurrent()) return;
       networkWon = true;
-      const data: PathDetailResponse = { ...responseBody, locked: responseBody.locked === true };
-      setPath(data.path);
-      setLessons(data.lessons);
-      setFetchState(data.locked ? 'locked' : 'ready');
-      if (!data.locked) void writePathshalaDetailCache(cacheIdentity, pathId, data);
+      setPath(responseBody.path);
+      setLessons(responseBody.lessons);
+      setFetchState('ready');
+      void writePathshalaDetailCache(cacheIdentity, pathId, responseBody);
     } catch {
       if (!isCurrent()) return;
       const cached = snapshot ?? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) ?? await readPathshalaDetailCache(cacheIdentity, pathId);
@@ -220,24 +219,6 @@ export default function PathDetailScreen() {
         <PressableSurface onPress={() => { void loadPath(); }} style={{ marginTop: 16, alignSelf: 'flex-start' }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: brand }}>Try again</Text>
         </PressableSurface>
-      </Screen>
-    );
-  }
-
-  if (fetchState === 'locked') {
-    return (
-      <Screen style={{ backgroundColor: bg }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-          <BackButton showLabel={false} iconSize={22} iconColor={text} fallbackHref="/(tabs)/pathshala" handleHardwareBack />
-          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 26, color: text }}>{path.title}</Text>
-        </View>
-        <View style={{ alignItems: 'center', marginTop: 40, gap: 12, paddingHorizontal: 24 }}>
-          <Feather name="lock" size={32} color={brand} />
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 16, color: text }}>Pro required</Text>
-          <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
-            Upgrade to Shoonaya Pro to unlock this path.
-          </Text>
-        </View>
       </Screen>
     );
   }

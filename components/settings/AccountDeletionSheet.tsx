@@ -40,7 +40,6 @@ export type DeletionJourneySnapshot = {
   relicsCount: number;
   journalCount: number;
   activeSankalpas?: number;
-  isPro?: boolean;
   ownedKuls?: Array<{ id: string; name: string }>;
   ownedMandalis?: Array<{ id: string; name: string }>;
   lang?: 'en' | 'hi' | 'pa';
@@ -341,14 +340,6 @@ export function AccountDeletionSheet({
                     • Your records are <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>retained securely for 30 days</Text>.{'\n'}
                     • Changed your mind? Sign back in anytime and tap <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>"Cancel deletion"</Text> on your Profile to restore everything in 1 tap.{'\n'}
                     • Only after 30 days are your credentials and personal records permanently purged.
-                  </Text>
-                </View>
-
-                {/* Store Subscriptions Disclosure (Apple Requirement) */}
-                <View style={[styles.infoBanner, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
-                  <Feather name="info" size={15} color={theme.brand} style={{ marginTop: 1 }} />
-                  <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1, lineHeight: 18 }}>
-                    <Text style={{ fontFamily: FONTS.sansMedium, color: theme.text }}>Store Subscriptions Notice</Text>: Deleting your Shoonaya account does not cancel auto-renewing App Store or Google Play subscriptions. Manage or cancel subscriptions in your device store settings.
                   </Text>
                 </View>
 

@@ -793,7 +793,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           relicsCount?: number;
           journalCount?: number;
           activeSankalpas?: number;
-          isPro?: boolean;
           ownedKuls?: Array<{ id: string; name: string }>;
           ownedMandalis?: Array<{ id: string; name: string }>;
         } | null;
@@ -808,7 +807,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
             relicsCount: preview.relicsCount ?? 0,
             journalCount: preview.journalCount ?? 0,
             activeSankalpas: preview.activeSankalpas ?? 0,
-            isPro: Boolean(preview.isPro),
             ownedKuls: preview.ownedKuls ?? [],
             ownedMandalis: preview.ownedMandalis ?? [],
             lang: language,
@@ -825,7 +823,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       const [profileRes, sadhanaRes, journalRes] = await Promise.all([
         supabase
           .from('profiles')
-          .select('full_name, username, tradition, karma_points, seva_score, shloka_streak, is_pro')
+          .select('full_name, username, tradition, karma_points, seva_score, shloka_streak')
           .eq('id', appIdentity.userId)
           .maybeSingle(),
         supabase
@@ -857,7 +855,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         sevaScore: seva,
         relicsCount: 0, // In offline fallback, do NOT fabricate (Rule 3)
         journalCount,
-        isPro: Boolean(prof?.is_pro),
         lang: language,
       });
     } catch {

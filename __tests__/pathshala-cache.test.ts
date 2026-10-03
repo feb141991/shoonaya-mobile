@@ -30,7 +30,7 @@ import {
 const payload: PathshalaCachePayload = {
   paths: [{
     id: 'path-1', title: 'Path', description: 'Description', difficulty: 'beginner',
-    proRequired: false, tradition: 'hindu', total_lessons: 3, duration_days: 3,
+    tradition: 'hindu', total_lessons: 3, duration_days: 3,
   }],
   enrollments: [{ path_id: 'path-1', current_lesson: 1, completed_lessons: [0], status: 'active' }],
   tradition: 'hindu',
@@ -42,7 +42,6 @@ const payload: PathshalaCachePayload = {
 const detail: PathshalaPathDetail = {
   path: payload.paths[0]!,
   lessons: [{ title: 'Lesson 1', entries: [{ id: 'verse-1', source: 'Gita 2.47', original: 'Text', meaning: 'Meaning' }] }],
-  locked: false,
 };
 
 describe('Pathshala cache', () => {
@@ -89,9 +88,9 @@ describe('Pathshala cache', () => {
     assert.deepEqual(getPathshalaDetailCacheSnapshot('user-a', 'path-1'), detail);
   });
 
-  it('never persists an entitlement-locked path payload', async () => {
-    await writePathshalaDetailCache('user-a', 'path-1', { ...detail, locked: true });
-    assert.equal(getPathshalaDetailCacheSnapshot('user-a', 'path-1'), null);
-    assert.equal(await AsyncStorage.getItem('shoonaya_pathshala_detail_v1_user-a_path-1'), null);
+  it('persists path lessons for the user without a paid-access flag', async () => {
+    await writePathshalaDetailCache('user-a', 'path-1', detail);
+    assert.deepEqual(getPathshalaDetailCacheSnapshot('user-a', 'path-1'), detail);
+    assert.ok(await AsyncStorage.getItem('shoonaya_pathshala_detail_v1_user-a_path-1'));
   });
 });

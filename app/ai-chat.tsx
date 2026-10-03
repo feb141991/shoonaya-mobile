@@ -25,7 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { BackButton } from '@/components/ui/BackButton';
 import { SacredIcon } from '@/components/ui/SacredIcon';
-import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
+import { useAiChat, DAILY_AI_MESSAGE_LIMIT, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
@@ -658,7 +658,7 @@ function AiChatScreen() {
                 numberOfLines={1}
                 style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, marginTop: 1 }}
               >
-                {usageLabel ?? (greeting || `Wisdom Guide · ${DAILY_LIMITS.free}/day`)}
+                {usageLabel ?? (greeting || `Wisdom Guide · ${DAILY_AI_MESSAGE_LIMIT}/day`)}
               </Text>
             </View>
           </View>

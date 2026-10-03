@@ -3,13 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 
-test('Mantras uses a public-content snapshot while keeping entitlement data identity-scoped and live', () => {
+test('Mantras uses public content snapshots and loads only the profile context it needs', () => {
   const src = fs.readFileSync(path.join(process.cwd(), 'app/mantras.tsx'), 'utf8');
   assert.match(src, /getBhaktiContentCacheSnapshot\(mantraCacheKey, isMantraList\)/);
   assert.match(src, /readBhaktiContentCache\(mantraCacheKey, isMantraList\)/);
   assert.match(src, /writeBhaktiContentCache\(mantraCacheKey, json\.mantras\)/);
   assert.match(src, /profileContext\?\.userId === currentUserId/);
-  assert.match(src, /select\('tradition, is_pro'\)/);
+  assert.match(src, /select\('tradition'\)/);
+  assert.doesNotMatch(src, /is_pro|entitlement|upgrade_required|paywall/i);
   assert.doesNotMatch(src, /writeBhaktiContentCache\([^\n]*isPro/);
 });
 

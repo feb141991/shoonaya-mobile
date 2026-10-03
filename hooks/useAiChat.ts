@@ -26,13 +26,9 @@ export type ProfileContext = {
   appLanguage: string | null;
   meaningLanguage: string | null;
   transliterationLanguage: string | null;
-  isPro: boolean;
 };
 
-export const DAILY_LIMITS = {
-  free: 20,
-  pro: 20,
-} as const;
+export const DAILY_AI_MESSAGE_LIMIT = 20;
 
 const DEFAULT_ERROR_MESSAGE = 'Could not reach Dharma Mitra right now.';
 const SAFE_CHAT_ERRORS = new Set([
@@ -87,7 +83,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
         expectedUserId: lease?.identity.kind === 'authenticated' ? lease.identity.userId : undefined,
       });
       if (!response.ok) return;
-      const data = (await response.json()) as { used?: number; limit?: number; isPro?: boolean };
+      const data = (await response.json()) as { used?: number; limit?: number };
       if (isActive() && (!lease || lease.isCurrent()) && typeof data.used === 'number' && typeof data.limit === 'number') {
         setUsageLabel(`${data.used} / ${data.limit} today`);
       }
@@ -109,7 +105,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
 
     const { data } = await supabase
       .from('profiles')
-      .select('tradition, sampradaya, city, country, seeking, app_language, meaning_language, transliteration_language, is_pro')
+      .select('tradition, sampradaya, city, country, seeking, app_language, meaning_language, transliteration_language')
       .eq('id', user.id)
       .single();
     if (!lease.isCurrent() || !isActive()) return;
@@ -124,7 +120,6 @@ export function useAiChat(options: UseAiChatOptions = {}) {
       appLanguage: data?.app_language ?? 'en',
       meaningLanguage: data?.meaning_language ?? 'en',
       transliterationLanguage: data?.transliteration_language ?? 'en',
-      isPro: data?.is_pro ?? false,
     });
   }, []);
 
@@ -207,7 +202,7 @@ export function useAiChat(options: UseAiChatOptions = {}) {
         if (response.status === 429) {
           const limitData = (await response.json()) as { used?: number; limit?: number };
           if (!lease.isCurrent()) return;
-          setUsageLabel(`Daily limit reached · ${limitData.used ?? DAILY_LIMITS.free}/${limitData.limit ?? DAILY_LIMITS.free}`);
+          setUsageLabel(`Daily limit reached · ${limitData.used ?? DAILY_AI_MESSAGE_LIMIT}/${limitData.limit ?? DAILY_AI_MESSAGE_LIMIT}`);
           setMessages((current) => current.filter((message) => message.id !== modelMessageId));
           return;
         }

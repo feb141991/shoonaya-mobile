@@ -69,7 +69,7 @@ type Lesson = {
 
 type PathDetailResponse = PathshalaPathDetail;
 
-type FetchState = 'loading' | 'ready' | 'not_found' | 'locked' | 'error';
+type FetchState = 'loading' | 'ready' | 'not_found' | 'error';
 
 // Structured explanation shape returned by POST /api/pathshala/explain —
 // mirrors the PWA's contract exactly (src/app/api/pathshala/explain/route.ts).
@@ -82,7 +82,7 @@ type ExplainResult = {
   related_text: string;
 };
 
-type ExplainStatus = 'idle' | 'loading' | 'ready' | 'upgrade_required' | 'error';
+type ExplainStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 const FONT_SIZE_KEY = 'shoonaya.pathshala.fontSize';
 
@@ -119,7 +119,7 @@ export default function LessonReaderScreen() {
   const cacheIdentity = appIdentity.kind === 'authenticated' ? appIdentity.userId : 'guest';
   const initialDetail = pathId ? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) : null;
 
-  const [fetchState, setFetchState] = useState<FetchState>(initialDetail ? (initialDetail.locked ? 'locked' : 'ready') : 'loading');
+  const [fetchState, setFetchState] = useState<FetchState>(initialDetail ? 'ready' : 'loading');
   const [path, setPath] = useState<PathshalaPath | null>(initialDetail?.path ?? null);
   const [lessons, setLessons] = useState<Lesson[]>(initialDetail?.lessons ?? []);
   const [refreshFailed, setRefreshFailed] = useState(false);
@@ -256,14 +256,14 @@ export default function LessonReaderScreen() {
       if (snapshot) {
         setPath(snapshot.path);
         setLessons(snapshot.lessons);
-        setFetchState(snapshot.locked ? 'locked' : 'ready');
+        setFetchState('ready');
       } else {
-        setFetchState((current) => current === 'ready' || current === 'locked' ? current : 'loading');
+        setFetchState((current) => current === 'ready' ? current : 'loading');
         void readPathshalaDetailCache(cacheIdentity, pathId).then((cached) => {
           if (!cached || !isCurrent() || networkWon) return;
           setPath(cached.path);
           setLessons(cached.lessons);
-          setFetchState(cached.locked ? 'locked' : 'ready');
+          setFetchState('ready');
         });
       }
       setRefreshFailed(false);
@@ -287,14 +287,13 @@ export default function LessonReaderScreen() {
           return;
         }
 
-        const responseBody = (await response.json()) as Omit<PathDetailResponse, 'locked'> & { locked?: boolean };
+        const responseBody = (await response.json()) as PathDetailResponse;
         if (!isCurrent()) return;
         networkWon = true;
-        const data: PathDetailResponse = { ...responseBody, locked: responseBody.locked === true };
-        setPath(data.path);
-        setLessons(data.lessons);
-        setFetchState(data.locked ? 'locked' : 'ready');
-        if (!data.locked) void writePathshalaDetailCache(cacheIdentity, pathId, data);
+        setPath(responseBody.path);
+        setLessons(responseBody.lessons);
+        setFetchState('ready');
+        void writePathshalaDetailCache(cacheIdentity, pathId, responseBody);
       } catch {
         if (!isCurrent()) return;
         const cached = snapshot ?? getPathshalaDetailCacheSnapshot(cacheIdentity, pathId) ?? await readPathshalaDetailCache(cacheIdentity, pathId);
@@ -403,12 +402,6 @@ export default function LessonReaderScreen() {
           language,
         }),
       });
-
-      if (response.status === 403) {
-        // Zenith/Pro gate — matches the PWA's upgrade_required contract.
-        setExplainStatus('upgrade_required');
-        return;
-      }
 
       if (!response.ok) {
         setExplainStatus('error');
@@ -616,32 +609,6 @@ export default function LessonReaderScreen() {
           subtitle="Illuminating verse wisdom and deep contemplation..."
           showBack={true}
         />
-      </View>
-    );
-  }
-
-  if (fetchState === 'locked') {
-    return (
-      <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <Feather name="lock" size={40} color={brand} />
-        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 18, color: text, marginTop: 16, textAlign: 'center' }}>
-          Pro required
-        </Text>
-        <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, marginTop: 8, textAlign: 'center' }}>
-          Upgrade to Shoonaya Pro to unlock this path.
-        </Text>
-        <PressableSurface
-          onPress={returnToPathshala}
-          style={{
-            marginTop: 20,
-            borderRadius: 18,
-            backgroundColor: brand,
-            paddingHorizontal: 24,
-            paddingVertical: 14,
-          }}
-        >
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.ink }}>Go back</Text>
-        </PressableSurface>
       </View>
     );
   }
@@ -1141,16 +1108,7 @@ export default function LessonReaderScreen() {
 
               {explainExpanded ? (
                 <View style={{ padding: 18, gap: 16, borderTopWidth: 1, borderColor: border }}>
-                  {explainStatus === 'upgrade_required' ? (
-                    <View style={{ gap: 8, paddingVertical: 8 }}>
-                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
-                        ✨ Zenith Wisdom
-                      </Text>
-                      <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, lineHeight: 20 }}>
-                        Upgrade to Zenith to unlock deep tradition commentary, word-by-word meaning, and daily application.
-                      </Text>
-                    </View>
-                  ) : explainStatus === 'error' ? (
+                  {explainStatus === 'error' ? (
                     <View style={{ gap: 10, paddingVertical: 8 }}>
                       <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim }}>
                         Could not retrieve verse wisdom right now.
@@ -1461,15 +1419,6 @@ export default function LessonReaderScreen() {
                 <ActivityIndicator color={brand} />
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: dim, marginTop: 12 }}>
                   Dharma Mitra is reflecting on this verse…
-                </Text>
-              </View>
-            ) : explainStatus === 'upgrade_required' ? (
-              <View style={{ paddingVertical: 24, gap: 8 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: text }}>
-                  Zenith feature
-                </Text>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 14, color: dim, lineHeight: 20 }}>
-                  Upgrade to Zenith to unlock AI verse explanations — word-by-word meaning, commentary, and daily application.
                 </Text>
               </View>
             ) : explainStatus === 'error' ? (

@@ -89,8 +89,6 @@ type ProfileData = {
   app_language: AppLanguage;
   active_symbol_id: string | null;
   seva_score: number;
-  is_pro: boolean;
-  subscription_status: 'free' | 'pro' | 'kul_pro' | 'grace' | 'expired';
   kul_id: string | null;
   kul_name: string | null;
 };
@@ -118,8 +116,6 @@ type ProgressSummary = {
     appLanguage: AppLanguage;
     activeSymbolId: string | null;
     sevaScore: number;
-    isPro: boolean;
-    subscriptionStatus: ProfileData['subscription_status'];
   };
   coreProfile?: {
     isComplete: boolean;
@@ -239,8 +235,6 @@ function buildProfileFromCache(cached: CachedProfileRenderModel): {
 } {
   const profile: ProfileData = {
     ...cached.profile,
-    is_pro: false,
-    subscription_status: 'free',
   };
   const summary: ProgressSummary = {
     profile: {
@@ -257,8 +251,6 @@ function buildProfileFromCache(cached: CachedProfileRenderModel): {
       appLanguage: cached.profile.app_language,
       activeSymbolId: cached.profile.active_symbol_id,
       sevaScore: cached.profile.seva_score,
-      isPro: false,
-      subscriptionStatus: 'free',
     },
     completion: {
       pct: cached.summary.completion.pct,
@@ -306,8 +298,6 @@ const GUEST_PROFILE_DATA: ProfileData = {
   app_language: 'en',
   active_symbol_id: null,
   seva_score: 0,
-  is_pro: false,
-  subscription_status: 'free',
   kul_id: null,
   kul_name: null,
 };
@@ -327,8 +317,6 @@ const GUEST_SUMMARY_DATA: ProgressSummary = {
     appLanguage: 'en',
     activeSymbolId: null,
     sevaScore: 0,
-    isPro: false,
-    subscriptionStatus: 'free',
   },
   completion: {
     pct: 0,
@@ -395,7 +383,6 @@ export default function ProfileScreen() {
   const [summary, setSummary] = useState<ProgressSummary | null>(initialCache?.summary ?? null);
   const [editState, setEditState] = useState<EditState>(initialCache?.editState ?? INITIAL_EDIT);
   const [email, setEmail] = useState(appIdentity.kind === 'authenticated' ? appIdentity.email ?? '' : '');
-  const [entitlementsVerified, setEntitlementsVerified] = useState(appIdentity.kind === 'guest');
   const [isGuest, setIsGuest] = useState(appIdentity.kind === 'guest');
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [locationSyncing, setLocationSyncing] = useState(false);
@@ -437,7 +424,6 @@ export default function ProfileScreen() {
         setSummary(GUEST_SUMMARY_DATA);
         setEditState(GUEST_EDIT_STATE);
         setEmail('');
-        setEntitlementsVerified(true);
         setLoading(false);
       } else if (appIdentity.kind === 'authenticated') {
         const snapshot = getProfileCacheSnapshot(appIdentity);
@@ -447,14 +433,12 @@ export default function ProfileScreen() {
           setSummary(hydrated.summary);
           setEditState(hydrated.editState);
           setEmail(appIdentity.email ?? '');
-          setEntitlementsVerified(false);
           setLoading(false);
         } else {
           setProfile(null);
           setSummary(null);
           setEditState(INITIAL_EDIT);
           setEmail(appIdentity.email ?? '');
-          setEntitlementsVerified(false);
           setLoading(true);
         }
       } else {
@@ -462,7 +446,6 @@ export default function ProfileScreen() {
         setSummary(null);
         setEditState(INITIAL_EDIT);
         setEmail('');
-        setEntitlementsVerified(false);
         setLoading(true);
       }
     }
@@ -484,7 +467,6 @@ export default function ProfileScreen() {
       setSummary(GUEST_SUMMARY_DATA);
       setAvatarFailed(false);
       setEditState(GUEST_EDIT_STATE);
-      setEntitlementsVerified(true);
       setLoading(false);
       return;
     }
@@ -509,7 +491,6 @@ export default function ProfileScreen() {
       setSummary((cur) => cur ?? hydrated.summary);
       setEditState((cur) => (cur === INITIAL_EDIT ? hydrated.editState : cur));
       setEmail(identity.email ?? '');
-      setEntitlementsVerified(false);
       setLoading(false);
       if (profileRouteOpenRecordedForRef.current !== identityKey) {
         profileRouteOpenRecordedForRef.current = identityKey;
@@ -571,12 +552,9 @@ export default function ProfileScreen() {
       app_language: payload.profile.appLanguage,
       active_symbol_id: payload.profile.activeSymbolId,
       seva_score: payload.profile.sevaScore,
-      is_pro: payload.profile.isPro,
-      subscription_status: payload.profile.subscriptionStatus,
       kul_id: cur && cur.id === payload.profile.id ? cur.kul_id : null,
       kul_name: cur && cur.id === payload.profile.id ? cur.kul_name : null,
     }));
-    setEntitlementsVerified(true);
     setAvatarFailed(false);
     setEditState({
       fullName: payload.profile.fullName,
@@ -617,14 +595,11 @@ export default function ProfileScreen() {
       app_language: payload.profile.appLanguage,
       active_symbol_id: payload.profile.activeSymbolId,
       seva_score: payload.profile.sevaScore,
-      is_pro: payload.profile.isPro,
-      subscription_status: payload.profile.subscriptionStatus,
       kul_id: profileRow?.kul_id ?? null,
       kul_name: kulName,
     };
 
     setProfile(nextProfile);
-    setEntitlementsVerified(true);
     setAvatarFailed(false);
 
     if (nextProfile) {
@@ -1172,10 +1147,6 @@ export default function ProfileScreen() {
 
   const traditionMeta = TRADITION_META[profile.tradition];
   const initials = profile.full_name.trim().slice(0, 1).toUpperCase() || 'S';
-  const isVerifiedPro = entitlementsVerified && profile.is_pro;
-  const subscriptionLabel = entitlementsVerified
-    ? (profile.is_pro ? 'Pro Member' : 'Free Plan')
-    : 'Plan status pending';
   const username = profile.username || profile.id.replace(/-/g, '').slice(0, 10);
   const spiritualLevel = getSpiritualLevel(profile.seva_score);
   const levelPct = spiritualLevel.next > spiritualLevel.current
@@ -1374,22 +1345,6 @@ export default function ProfileScreen() {
               >
                 <Text style={{ ...TYPE.label, color: theme.brand, textTransform: 'uppercase', letterSpacing: 1.2 }}>@{username}</Text>
               </PressableSurface>
-              <View
-                style={{
-                  borderRadius: 999,
-                  paddingHorizontal: 12,
-                  paddingVertical: 5,
-                  backgroundColor: isVerifiedPro ? theme.brandSoft : theme.glass,
-                  borderWidth: 1,
-                  borderColor: isVerifiedPro ? theme.premiumBorder : theme.borderSoft,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                }}
-              >
-                <Feather name={entitlementsVerified ? 'star' : 'clock'} size={13} color={isVerifiedPro ? theme.brand : theme.dim} />
-                <Text style={{ ...TYPE.chip, color: isVerifiedPro ? theme.brand : theme.dim }}>{subscriptionLabel}</Text>
-              </View>
             </View>
             <View
               style={{

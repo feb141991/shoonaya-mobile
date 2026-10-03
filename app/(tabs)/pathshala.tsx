@@ -100,7 +100,6 @@ function isPathshalaPath(value: unknown): value is PathshalaPath {
     (candidate.difficulty === 'beginner' ||
       candidate.difficulty === 'intermediate' ||
       candidate.difficulty === 'advanced') &&
-    typeof candidate.proRequired === 'boolean' &&
     typeof candidate.tradition === 'string' &&
     typeof candidate.total_lessons === 'number' &&
     typeof candidate.duration_days === 'number'

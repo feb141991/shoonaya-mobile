@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { ScrollUnrollPanel } from '@/components/home/ScrollUnrollPanel';
-import { useAiChat, DAILY_LIMITS, type ChatMessage } from '@/hooks/useAiChat';
+import { useAiChat, DAILY_AI_MESSAGE_LIMIT, type ChatMessage } from '@/hooks/useAiChat';
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
@@ -690,7 +690,7 @@ export function DharmaMitraChatSheet({ visible, origin, onClose, tradition }: Dh
             }}
           >
             <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, flex: 1 }}>
-              {usageLabel ?? `Free tier · ${profile?.isPro ? DAILY_LIMITS.pro : DAILY_LIMITS.free} messages/day`}
+              {usageLabel ?? `${DAILY_AI_MESSAGE_LIMIT} messages/day`}
             </Text>
             <View
               style={{

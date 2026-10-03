@@ -42,7 +42,6 @@ export type PathshalaLesson = { title: string; entries: PathshalaLessonEntry[] }
 export type PathshalaPathDetail = {
   path: PathshalaPath;
   lessons: PathshalaLesson[];
-  locked: boolean;
 };
 
 type PathshalaCacheEnvelope = {
@@ -76,7 +75,7 @@ function isValidDetail(value: unknown): value is PathshalaPathDetail {
   const candidate = value as Record<string, unknown>;
   return Boolean(
     candidate.path && typeof candidate.path === 'object' &&
-    Array.isArray(candidate.lessons) && typeof candidate.locked === 'boolean' &&
+    Array.isArray(candidate.lessons) &&
     candidate.lessons.every((lesson) => lesson && typeof lesson === 'object' &&
       typeof lesson.title === 'string' && Array.isArray(lesson.entries))
   );
@@ -116,9 +115,6 @@ export async function readPathshalaDetailCache(identityKey: string, pathId: stri
 }
 
 export async function writePathshalaDetailCache(identityKey: string, pathId: string, detail: PathshalaPathDetail): Promise<void> {
-  // Never persist locked payloads: entitlement-gated responses must not be
-  // reusable after the account's subscription changes.
-  if (detail.locked) return;
   const key = detailCacheKey(identityKey, pathId);
   detailSnapshots.set(key, detail);
   try {
