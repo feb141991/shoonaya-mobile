@@ -20,16 +20,10 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeCo
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Button } from '@/components/ui/Button';
 
-export const DELETION_FEEDBACK_OPTIONS = [
-  "I don't use it enough",
-  'Too many notifications',
-  'Missing features I need',
-  'Privacy concerns',
-  'Starting fresh',
-  'Other reason',
-] as const;
-
-export type DeletionFeedbackOption = (typeof DELETION_FEEDBACK_OPTIONS)[number];
+// Exit-feedback reasons come from GET /api/user/delete/preview (backend
+// DELETION_REASONS, src/lib/account-deletion-reasons.ts) and the chosen `id`
+// is sent back -- never a client-side copy of the list.
+import type { DeletionReason } from '@/lib/accountDeletionStore';
 
 export type DeletionJourneySnapshot = {
   userName: string;
@@ -42,6 +36,9 @@ export type DeletionJourneySnapshot = {
   activeSankalpas?: number;
   ownedKuls?: Array<{ id: string; name: string }>;
   ownedMandalis?: Array<{ id: string; name: string }>;
+  reasons?: DeletionReason[];
+  /** false when the preview could not be loaded: show no numbers rather than guessed ones. */
+  summaryAvailable?: boolean;
   lang?: 'en' | 'hi' | 'pa';
 };
 
@@ -81,7 +78,7 @@ export function AccountDeletionSheet({
   const theme = themeColor(isDark);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [selectedReason, setSelectedReason] = useState<DeletionFeedbackOption | ''>('');
+  const [selectedReason, setSelectedReason] = useState<string>('');
   const [otherReason, setOtherReason] = useState('');
   const [confirmInput, setConfirmInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -109,6 +106,10 @@ export function AccountDeletionSheet({
   }, [visible, anim]);
 
   if (!visible) return null;
+
+  const reasons = snapshot.reasons ?? [];
+  const selectedReasonNeedsDetails = reasons.some((r) => r.id === selectedReason && r.requireDetails);
+  const summaryAvailable = snapshot.summaryAvailable !== false;
 
   const handleNextStep = (next: 1 | 2 | 3 | 4) => {
     void Haptics.selectionAsync().catch(() => {});
@@ -138,7 +139,7 @@ export function AccountDeletionSheet({
     try {
       await onConfirmDeletion({
         reason: selectedReason || undefined,
-        otherReason: selectedReason === 'Other reason' ? otherReason.trim() : undefined,
+        otherReason: selectedReasonNeedsDetails && otherReason.trim() ? otherReason.trim() : undefined,
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
@@ -243,14 +244,24 @@ export function AccountDeletionSheet({
                     <Text style={{ fontSize: 26, lineHeight: 30 }}>{getTraditionSymbol(snapshot.tradition)}</Text>
                   </View>
                   <Text style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>
-                    Before you go, {snapshot.userName}
+                    {snapshot.userName ? `Before you go, ${snapshot.userName}` : 'Before you go'}
                   </Text>
                   <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>
                     Your spiritual journey holds practice history, earned relics, and sacred reflections.
                   </Text>
                 </View>
 
+                {!summaryAvailable && (
+                  <View style={[styles.infoBanner, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
+                    <Feather name="wifi-off" size={16} color={theme.dim} style={{ marginTop: 1 }} />
+                    <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1, lineHeight: 18 }}>
+                      We couldn't load your practice summary right now. Your streaks, karma, relics and journal are all part of your account and would be removed after the 30-day grace period.
+                    </Text>
+                  </View>
+                )}
+
                 {/* 4-Stat Grid */}
+                {summaryAvailable && (
                 <View style={styles.statsGrid}>
                   {stats.map((item) => (
                     <View
@@ -264,6 +275,7 @@ export function AccountDeletionSheet({
                     </View>
                   ))}
                 </View>
+                )}
 
                 {/* Journal entry disclosure */}
                 {snapshot.journalCount > 0 && (
@@ -383,16 +395,19 @@ export function AccountDeletionSheet({
                   </PressableSurface>
                 )}
 
+                {reasons.length > 0 && (
                 <View style={{ gap: 8, marginTop: 4 }}>
                   <Text style={{ ...TYPE.label, color: theme.text }}>Why are you leaving? (Optional)</Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {DELETION_FEEDBACK_OPTIONS.map((opt) => {
-                      const selected = selectedReason === opt;
+                    {reasons.map((reason) => {
+                      const selected = selectedReason === reason.id;
                       return (
                         <PressableSurface
-                          key={opt}
+                          key={reason.id}
                           haptic="selection"
-                          onPress={() => setSelectedReason(selected ? '' : opt)}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
+                          onPress={() => setSelectedReason(selected ? '' : reason.id)}
                           style={[
                             styles.chip,
                             {
@@ -402,13 +417,13 @@ export function AccountDeletionSheet({
                           ]}
                         >
                           <Text style={{ ...TYPE.caption, color: selected ? theme.brandStrong : theme.text }}>
-                            {opt}
+                            {reason.label}
                           </Text>
                         </PressableSurface>
                       );
                     })}
                   </View>
-                  {selectedReason === 'Other reason' && (
+                  {selectedReasonNeedsDetails && (
                     <TextInput
                       value={otherReason}
                       onChangeText={setOtherReason}
@@ -422,6 +437,7 @@ export function AccountDeletionSheet({
                     />
                   )}
                 </View>
+                )}
 
                 <View style={{ gap: 10, marginTop: 4 }}>
                   <Button label="I'll Stay" variant="primary" onPress={onClose} />

@@ -4,7 +4,8 @@ import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { registerPushToken } from '@/lib/notifications';
 import { createAccountDeletionStore, type AccountDeletionStatus } from '@/lib/accountDeletionStore';
 
-export type { AccountDeletionStatus } from '@/lib/accountDeletionStore';
+export type { AccountDeletionStatus, DeletionReason } from '@/lib/accountDeletionStore';
+export { readDeletionReasons } from '@/lib/accountDeletionStore';
 
 /** App-wide deletion cool-off state; see lib/accountDeletionStore.ts. */
 export const accountDeletion = createAccountDeletionStore({

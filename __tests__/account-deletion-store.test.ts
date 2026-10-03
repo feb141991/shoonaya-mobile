@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createAccountDeletionStore, daysUntil } from '../lib/accountDeletionStore';
+import { createAccountDeletionStore, daysUntil, readDeletionReasons } from '../lib/accountDeletionStore';
 
 const NOW = Date.parse('2026-10-03T00:00:00Z');
 const PURGE = '2026-10-18T00:00:00Z';
@@ -119,4 +119,21 @@ test('daysUntil clamps past dates to 0 and rejects missing or invalid dates', ()
   assert.equal(daysUntil('2026-09-01T00:00:00Z', NOW), 0);
   assert.equal(daysUntil(null, NOW), null);
   assert.equal(daysUntil('not a date', NOW), null);
+});
+
+test('readDeletionReasons keeps valid server reasons in order and drops malformed or duplicate ones', () => {
+  assert.deepEqual(readDeletionReasons([
+    { id: 'taking_break', label: 'Taking a temporary spiritual break' },
+    { id: 'other', label: 'Other reason', requireDetails: true },
+    { id: 'other', label: 'Duplicate' },
+    { id: '', label: 'No id' },
+    { id: 'no_label' },
+    'not an object',
+    null,
+  ]), [
+    { id: 'taking_break', label: 'Taking a temporary spiritual break' },
+    { id: 'other', label: 'Other reason', requireDetails: true },
+  ]);
+  assert.deepEqual(readDeletionReasons(undefined), []);
+  assert.deepEqual(readDeletionReasons({ id: 'x' }), []);
 });

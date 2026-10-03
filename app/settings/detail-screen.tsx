@@ -70,7 +70,7 @@ import {
   type HeroSize,
 } from '@/lib/heroPreference';
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
-import { accountDeletion, useAccountDeletionStatus } from '@/lib/accountDeletion';
+import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { getGreetingPick } from '@/lib/greetingPreference';
 
 type ThemePref = 'light' | 'dark' | 'system';
@@ -774,6 +774,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           activeSankalpas?: number;
           ownedKuls?: Array<{ id: string; name: string }>;
           ownedMandalis?: Array<{ id: string; name: string }>;
+          reasons?: unknown;
         } | null;
 
         if (preview?.success) {
@@ -788,6 +789,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
             activeSankalpas: preview.activeSankalpas ?? 0,
             ownedKuls: preview.ownedKuls ?? [],
             ownedMandalis: preview.ownedMandalis ?? [],
+            reasons: readDeletionReasons(preview.reasons),
+            summaryAvailable: true,
             lang: language,
           });
           setDeletionSheetVisible(true);
@@ -795,54 +798,28 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         }
       }
     } catch {
-      // Fallback to client query if network fails
+      // Falls through to the unavailable summary below.
     }
 
-    try {
-      const [profileRes, sadhanaRes, journalRes] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('full_name, username, tradition, karma_points, seva_score, shloka_streak')
-          .eq('id', appIdentity.userId)
-          .maybeSingle(),
-        supabase
-          .from('daily_sadhana')
-          .select('streak_count')
-          .eq('user_id', appIdentity.userId)
-          .order('date', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from('journal_entries')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', appIdentity.userId),
-      ]);
-
-      const prof = profileRes.data;
-      const streak = sadhanaRes.data?.streak_count ?? prof?.shloka_streak ?? 0;
-      const karma = prof?.karma_points ?? 0;
-      const seva = prof?.seva_score ?? 0;
-      const tradition = prof?.tradition ?? profileTradition ?? 'hindu';
-      const name = prof?.full_name || prof?.username || 'Seeker';
-      const journalCount = journalRes.count ?? 0;
-
-      setDeletionSnapshot({
-        userName: name,
-        tradition,
-        streak,
-        karmaPoints: karma,
-        sevaScore: seva,
-        relicsCount: 0, // In offline fallback, do NOT fabricate (Rule 3)
-        journalCount,
-        lang: language,
-      });
-    } catch {
-      setDeletionSnapshot((prev) => ({
-        ...prev,
-        tradition: profileTradition || 'hindu',
-        lang: language,
-      }));
-    }
+    // No client-side reconstruction of the summary: the preview route is the
+    // one source for these numbers, so offline we show none rather than
+    // partial or guessed ones. Reasons are hidden too (they are optional).
+    setDeletionSnapshot((prev) => ({
+      ...prev,
+      userName: '',
+      tradition: profileTradition || 'hindu',
+      streak: 0,
+      karmaPoints: 0,
+      sevaScore: 0,
+      relicsCount: 0,
+      journalCount: 0,
+      activeSankalpas: 0,
+      ownedKuls: [],
+      ownedMandalis: [],
+      reasons: [],
+      summaryAvailable: false,
+      lang: language,
+    }));
     setDeletionSheetVisible(true);
   };
 

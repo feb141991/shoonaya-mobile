@@ -32,6 +32,23 @@ type Dependencies = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+export type DeletionReason = { id: string; label: string; requireDetails?: boolean };
+
+/** Validates preview.reasons; malformed entries are dropped, never patched. */
+export function readDeletionReasons(value: unknown): DeletionReason[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const reasons: DeletionReason[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue;
+    const { id, label, requireDetails } = item as Record<string, unknown>;
+    if (typeof id !== 'string' || !id || typeof label !== 'string' || !label || seen.has(id)) continue;
+    seen.add(id);
+    reasons.push(requireDetails === true ? { id, label, requireDetails: true } : { id, label });
+  }
+  return reasons;
+}
+
 export function daysUntil(purgeAfter: string | null, now: number): number | null {
   if (!purgeAfter) return null;
   const target = new Date(purgeAfter).getTime();
