@@ -70,6 +70,7 @@ import {
   type HeroSize,
 } from '@/lib/heroPreference';
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
+import { accountDeletion, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { getGreetingPick } from '@/lib/greetingPreference';
 
 type ThemePref = 'light' | 'dark' | 'system';
@@ -322,11 +323,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [downloading, setDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [cancelingDeletion, setCancelingDeletion] = useState(false);
-  const [deletionStatus, setDeletionStatus] = useState<{
-    isDeleting: boolean;
-    deletionRequestedAt: string | null;
-    purgeAfter: string | null;
-  } | null>(null);
+  const deletionStatus = useAccountDeletionStatus();
   const [deletionSheetVisible, setDeletionSheetVisible] = useState(false);
   const [deletionSnapshot, setDeletionSnapshot] = useState<DeletionJourneySnapshot>({
     userName: '',
@@ -621,29 +618,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   // loading (loadSettings/runLoad above already has its own retry UI for
   // the settings it's responsible for).
   const loadDeletionStatus = useCallback(async () => {
-    const lease = captureAppIdentity();
-    if (!isSameAppIdentity(lease.identity, appIdentity) || appIdentity.kind !== 'authenticated') return;
-    try {
-      const response = await apiFetch('/api/user/delete/status', { expectedUserId: appIdentity.userId });
-      if (!lease.isCurrent()) return;
-      if (!response.ok) return;
-      const data: unknown = await response.json();
-      if (!lease.isCurrent()) return;
-      if (data && typeof data === 'object' && (data as { success?: boolean }).success) {
-        const status = data as {
-          isDeleting?: boolean;
-          deletionRequestedAt?: string | null;
-          purgeAfter?: string | null;
-        };
-        setDeletionStatus({
-          isDeleting: !!status.isDeleting,
-          deletionRequestedAt: status.deletionRequestedAt ?? null,
-          purgeAfter: status.purgeAfter ?? null,
-        });
-      }
-    } catch {
-      // Best-effort -- see comment above.
-    }
+    if (appIdentity.kind !== 'authenticated') return;
+    await accountDeletion.refresh(appIdentity.userId);
   }, [appIdentity]);
 
   useEffect(() => {
@@ -884,11 +860,13 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         const detail = data && typeof data.error === 'string' ? data.error : '';
         throw new Error(detail || `Request failed (status ${response.status})`);
       }
-      setDeletionStatus({
-        isDeleting: true,
-        deletionRequestedAt: typeof data?.deletionRequestedAt === 'string' ? data.deletionRequestedAt : new Date().toISOString(),
-        purgeAfter: typeof data?.purgeAfter === 'string' ? data.purgeAfter : null,
-      });
+      if (appIdentity.kind === 'authenticated') {
+        accountDeletion.markScheduled(
+          appIdentity.userId,
+          typeof data?.deletionRequestedAt === 'string' ? data.deletionRequestedAt : new Date().toISOString(),
+          typeof data?.purgeAfter === 'string' ? data.purgeAfter : null,
+        );
+      }
 
       // Immediately unregister device push token and clear local home caches
       await unregisterPushToken({ beforeSignOut: false }).catch(() => {});
@@ -928,14 +906,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const handleCancelDeletion = async () => {
     setCancelingDeletion(true);
     try {
-      const response = await apiFetch('/api/user/delete/cancel', { method: 'POST' });
-      if (!response.ok) throw new Error(`Request failed (status ${response.status})`);
-      setDeletionStatus({ isDeleting: false, deletionRequestedAt: null, purgeAfter: null });
-
-      // Re-register push token on cancel
-      if (appIdentity.kind === 'authenticated') {
-        void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
-      }
+      if (appIdentity.kind !== 'authenticated') return;
+      // Confirms the response, re-registers push and updates Profile too.
+      await accountDeletion.cancel(appIdentity.userId);
 
       Alert.alert('Deletion cancelled', 'Welcome back — your account is safe.');
     } catch (error) {

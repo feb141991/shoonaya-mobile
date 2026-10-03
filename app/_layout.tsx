@@ -92,6 +92,7 @@ import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { accountDeletion } from '@/lib/accountDeletion';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
 import { AuthCoordinator, USE_AUTH_COORDINATOR, type BootstrapProfileResult, type OnboardingStatus } from '@/lib/authCoordinator';
@@ -269,51 +270,48 @@ function RootLayout() {
   }, [readyToRender, isAppInteractive, markInteractive]);
 
   // ── Startup Account Restoration Check (30-day cool-off) ───────────────
-  const deletionPromptShownRef = useRef(false);
+  // Once per signed-in account per app session (an account switch re-checks).
+  // Cancel goes through lib/accountDeletion so Profile and Settings update
+  // too, push is re-registered, and failure is reported instead of "Restored".
+  const deletionIdentity = useAppIdentity();
+  const deletionPromptedUserRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!isAppInteractive || deletionPromptShownRef.current) return;
-    const identity = getAppIdentity();
-    if (identity.kind !== 'authenticated') return;
+    if (!isAppInteractive || deletionIdentity.kind !== 'authenticated') return;
+    const userId = deletionIdentity.userId;
+    if (deletionPromptedUserRef.current === userId) return;
+    deletionPromptedUserRef.current = userId;
+    const stillSignedIn = () => {
+      const current = getAppIdentity();
+      return current.kind === 'authenticated' && current.userId === userId;
+    };
 
-    deletionPromptShownRef.current = true;
-    void apiFetch('/api/user/delete/status', { expectedUserId: identity.userId })
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json().catch(() => null)) as {
-          success?: boolean;
-          isDeleting?: boolean;
-          daysRemaining?: number | null;
-          purgeAfter?: string | null;
-        } | null;
-
-        if (data?.success && data.isDeleting) {
-          const days =
-            data.daysRemaining ??
-            (data.purgeAfter
-              ? Math.max(0, Math.ceil((new Date(data.purgeAfter).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
-              : null);
-          const daysText = days !== null ? `${days} days` : 'soon';
-          Alert.alert(
-            'Account Deletion Scheduled',
-            `Your account is scheduled for permanent deletion in ${daysText}. All notifications are silenced. Would you like to restore your account now?`,
-            [
-              { text: 'Keep Deletion Scheduled', style: 'cancel' },
-              {
-                text: 'Restore My Account',
-                style: 'default',
-                onPress: () => {
-                  void apiFetch('/api/user/delete/cancel', { method: 'POST' }).then(() => {
-                    void registerPushToken(identity.userId, { force: true, reason: 'settings' });
-                    Alert.alert('Account Restored', 'Welcome back 🙏 Your account and sacred practice history are completely safe.');
-                  });
+    void accountDeletion.refresh(userId).then((status) => {
+      if (!status?.isDeleting || !stillSignedIn()) return;
+      const daysText = status.daysRemaining !== null ? `${status.daysRemaining} days` : 'soon';
+      Alert.alert(
+        'Account Deletion Scheduled',
+        `Your account is scheduled for permanent deletion in ${daysText}. Notifications are off until then. Would you like to restore your account now?`,
+        [
+          { text: 'Keep Deletion Scheduled', style: 'cancel' },
+          {
+            text: 'Restore My Account',
+            style: 'default',
+            onPress: () => {
+              accountDeletion.cancel(userId).then(
+                () => { Alert.alert('Account Restored', 'Welcome back 🙏 Your account and sacred practice history are completely safe.'); },
+                (error: unknown) => {
+                  Alert.alert(
+                    'Could not restore your account',
+                    `${error instanceof Error ? error.message : 'Check your connection and try again.'} You can also cancel from Settings or your Profile.`,
+                  );
                 },
-              },
-            ]
-          );
-        }
-      })
-      .catch(() => {});
-  }, [isAppInteractive]);
+              );
+            },
+          },
+        ],
+      );
+    });
+  }, [isAppInteractive, deletionIdentity]);
 
   // Leaves a privacy-safe local receipt when startup remains unresolved. This
   // performs no network work and never gates rendering; it exists solely to
@@ -445,6 +443,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        accountDeletion.clear();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -492,6 +491,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        accountDeletion.clear();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -673,6 +673,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        accountDeletion.clear();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -692,6 +693,7 @@ function RootLayout() {
         void clearSevaCache();
         void clearVratGeoCache();
         void clearMoodStatusCache();
+        accountDeletion.clear();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();

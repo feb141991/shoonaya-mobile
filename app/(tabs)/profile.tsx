@@ -61,6 +61,7 @@ import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { requestAndSyncDeviceLocation } from '@/lib/locationSync';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { AccountDeletionBanner } from '@/components/profile/AccountDeletionBanner';
+import { accountDeletion, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import {
@@ -388,12 +389,7 @@ export default function ProfileScreen() {
   const [locationSyncing, setLocationSyncing] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<any[] | null>(null);
-  const [deletionStatus, setDeletionStatus] = useState<{
-    isDeleting: boolean;
-    deletionRequestedAt: string | null;
-    purgeAfter: string | null;
-    daysRemaining: number | null;
-  } | null>(null);
+  const deletionStatus = useAccountDeletionStatus();
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -640,42 +636,20 @@ export default function ProfileScreen() {
         progress: payload.progress,
       },
     });
-    // Check if account deletion is pending in cool-off
-    if (appIdentity.kind === 'authenticated') {
-      void apiFetch('/api/user/delete/status', { expectedUserId: appIdentity.userId })
-        .then(async (res) => {
-          if (!res.ok) return;
-          const json = await res.json().catch(() => null) as {
-            success?: boolean;
-            isDeleting?: boolean;
-            deletionRequestedAt?: string | null;
-            purgeAfter?: string | null;
-            daysRemaining?: number | null;
-          } | null;
-          if (json?.success) {
-            setDeletionStatus(json.isDeleting ? {
-              isDeleting: true,
-              deletionRequestedAt: json.deletionRequestedAt ?? null,
-              purgeAfter: json.purgeAfter ?? null,
-              daysRemaining: typeof json.daysRemaining === 'number' ? json.daysRemaining : null,
-            } : null);
-          }
-        })
-        .catch(() => {});
-    }
+    // Deletion cool-off state is shared with Settings and the startup prompt.
+    if (appIdentity.kind === 'authenticated') void accountDeletion.refresh(appIdentity.userId);
   }, [appIdentity, router]);
 
   const handleCancelDeletion = useCallback(async () => {
+    if (appIdentity.kind !== 'authenticated') return;
     try {
-      const res = await apiFetch('/api/user/delete/cancel', { method: 'POST' });
-      if (!res.ok) throw new Error('Cancellation failed');
-      setDeletionStatus(null);
+      await accountDeletion.cancel(appIdentity.userId);
       Alert.alert('Deletion Cancelled', 'Welcome back 🙏 Your account and sacred practice are completely safe.');
     } catch (err) {
       Alert.alert('Could not cancel deletion', err instanceof Error ? err.message : 'Please check your connection and try again.');
       throw err;
     }
-  }, []);
+  }, [appIdentity]);
 
   useEffect(() => {
     const effectIdentityKey = profileIdentityKey(appIdentity);
