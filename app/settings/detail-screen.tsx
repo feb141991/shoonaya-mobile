@@ -121,7 +121,7 @@ const LANGUAGE_LABELS: Record<AppLanguage, string> = {
 
 const PUSH_STATUS_COPY: Record<AppLanguage, {
   device: string; checking: string; permissionOff: string; registered: string;
-  unavailable: string; failed: string; openSettings: string; checkSetup: string;
+  unavailable: string; failed: string; openSettings: string; checkSetup: string; deletionPending: string;
 }> = {
   en: {
     device: 'This device', checking: 'Checking notification setup…',
@@ -130,6 +130,7 @@ const PUSH_STATUS_COPY: Record<AppLanguage, {
     unavailable: 'Push notifications are unavailable in this app environment.',
     failed: 'Could not register this device. Check your connection and try again.',
     openSettings: 'Open phone settings', checkSetup: 'Check notification setup',
+    deletionPending: 'Notifications are off while your account deletion is scheduled. Cancel the deletion to turn them back on.',
   },
   hi: {
     device: 'यह डिवाइस', checking: 'सूचना सेटअप जाँचा जा रहा है…',
@@ -138,6 +139,7 @@ const PUSH_STATUS_COPY: Record<AppLanguage, {
     unavailable: 'इस ऐप परिवेश में पुश सूचनाएँ उपलब्ध नहीं हैं।',
     failed: 'यह डिवाइस पंजीकृत नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
     openSettings: 'फ़ोन की सेटिंग खोलें', checkSetup: 'सूचना सेटअप जाँचें',
+    deletionPending: 'खाता हटाने का अनुरोध निर्धारित रहने तक सूचनाएँ बंद हैं। उन्हें फिर चालू करने के लिए अनुरोध रद्द करें।',
   },
   pa: {
     device: 'ਇਹ ਡਿਵਾਈਸ', checking: 'ਸੂਚਨਾ ਸੈਟਅੱਪ ਦੀ ਜਾਂਚ ਹੋ ਰਹੀ ਹੈ…',
@@ -146,6 +148,7 @@ const PUSH_STATUS_COPY: Record<AppLanguage, {
     unavailable: 'ਇਸ ਐਪ ਮਾਹੌਲ ਵਿੱਚ ਪੁਸ਼ ਸੂਚਨਾਵਾਂ ਉਪਲਬਧ ਨਹੀਂ ਹਨ।',
     failed: 'ਇਹ ਡਿਵਾਈਸ ਰਜਿਸਟਰ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਨੈਕਸ਼ਨ ਜਾਂਚ ਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
     openSettings: 'ਫ਼ੋਨ ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ', checkSetup: 'ਸੂਚਨਾ ਸੈਟਅੱਪ ਜਾਂਚੋ',
+    deletionPending: 'ਖਾਤਾ ਮਿਟਾਉਣ ਦੀ ਬੇਨਤੀ ਨਿਰਧਾਰਤ ਹੋਣ ਤੱਕ ਸੂਚਨਾਵਾਂ ਬੰਦ ਹਨ। ਇਨ੍ਹਾਂ ਨੂੰ ਮੁੜ ਚਾਲੂ ਕਰਨ ਲਈ ਬੇਨਤੀ ਰੱਦ ਕਰੋ।',
   },
 };
 
@@ -1070,14 +1073,17 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                       : pushStatus.status === 'permission_denied' ? pushStatusCopy.permissionOff
                       : pushStatus.status === 'registered' || pushStatus.status === 'fresh' ? pushStatusCopy.registered
                       : pushStatus.status === 'unavailable' ? pushStatusCopy.unavailable
+                      : pushStatus.status === 'deletion_pending' ? pushStatusCopy.deletionPending
                       : pushStatusCopy.failed}
                   </Text>
-                  <Button label={pushStatus.status === 'permission_denied' ? pushStatusCopy.openSettings : pushStatusCopy.checkSetup}
-                    variant="secondary" disabled={pushStatus.status === 'syncing'}
-                    onPress={() => {
-                      if (pushStatus.status === 'permission_denied') { void openNotificationSettings(); return; }
-                      void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
-                    }} />
+                  {pushStatus.status === 'deletion_pending' ? null : (
+                    <Button label={pushStatus.status === 'permission_denied' ? pushStatusCopy.openSettings : pushStatusCopy.checkSetup}
+                      variant="secondary" disabled={pushStatus.status === 'syncing'}
+                      onPress={() => {
+                        if (pushStatus.status === 'permission_denied') { void openNotificationSettings(); return; }
+                        void registerPushToken(appIdentity.userId, { force: true, reason: 'settings' });
+                      }} />
+                  )}
                   <View style={{ height: 1, backgroundColor: theme.borderSoft, marginTop: 8 }} />
                 </View>
               ) : null}

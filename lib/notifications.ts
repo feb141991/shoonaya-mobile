@@ -441,6 +441,12 @@ const pushRegistration = new PushRegistrationCoordinator({
       method: 'POST', expectedUserId: userId, timeoutMs: 8_000,
       body: JSON.stringify({ token, platform: Platform.OS, registrationReason: reason }),
     });
+    if (response.status === 409) {
+      const refusal: unknown = await response.json().catch(() => null);
+      if (refusal && typeof refusal === 'object' && 'code' in refusal && refusal.code === 'ACCOUNT_DELETION_PENDING') {
+        throw Object.assign(new Error('Push registration refused: account deletion pending'), { retryable: false, deletionPending: true });
+      }
+    }
     if (!response.ok) throw Object.assign(new Error(`Push registration rejected: ${response.status}`), {
       retryable: response.status >= 500 || response.status === 408 || response.status === 429,
     });

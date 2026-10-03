@@ -133,3 +133,21 @@ test('logout waits for an in-flight registration before deleting its binding', a
   assert.equal((await h.api.registerPushToken('owner')).status, 'superseded');
   setAppIdentity({ kind: 'unauthenticated' });
 });
+
+test('a deleting account is refused once, is not retried or reported, and registers again after cancel', async () => {
+  const h = loadPushRegistration(); const stop = h.api.startPushRegistrationRecovery();
+  h.setDeletionPending(true);
+  const result = await h.api.registerPushToken('owner');
+  assert.equal(result.status, 'deletion_pending');
+  assert.equal(h.api.getPushRegistrationStatus().status, 'deletion_pending');
+  await h.advance(80_000);
+  assert.equal(registrations(h).length, 1);
+  assert.equal(h.requests.filter((r) => Array.isArray(r.body.failureEvents) || typeof r.body.failureReason === 'string').length, 0);
+  assert.equal(h.server.size, 0);
+  h.setDeletionPending(false);
+  await h.api.registerPushToken('owner', { force: true, reason: 'settings' });
+  assert.equal(h.api.getPushRegistrationStatus().status, 'registered');
+  assert.equal(registrations(h).length, 2);
+  assert.equal(h.server.size, 1);
+  stop();
+});

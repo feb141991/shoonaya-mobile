@@ -15,6 +15,7 @@ export function loadPushRegistration(options: {
   let now = 1_800_000_000_000;
   let granted = options.granted ?? true;
   let failingPosts = 0;
+  let deletionPending = false;
   let signOutError: Error | null = null;
   let nativeToken = 'native-initial';
   let versionNumber = 0;
@@ -57,6 +58,7 @@ export function loadPushRegistration(options: {
       if (matches) server.delete(String(body.token));
       return response({ removed: matches });
     }
+    if (deletionPending) return response({ error: 'Account deletion is pending', code: 'ACCOUNT_DELETION_PENDING' }, 409);
     if (failingPosts-- > 0) return response({}, 503);
     await options.post?.();
     const version = `00000000-0000-4000-8000-${String(++versionNumber).padStart(12, '0')}`;
@@ -133,6 +135,7 @@ export function loadPushRegistration(options: {
     permissionPrompts: () => permissionPrompts,
     setGranted: (value: boolean) => { granted = value; },
     failPosts: (count: number) => { failingPosts = count; },
+    setDeletionPending: (value: boolean) => { deletionPending = value; },
     failSignOut: (error: Error) => { signOutError = error; },
     state: async (state: string) => { lifecycle.forEach((listener) => listener(state)); await settle(); },
     rotate: async (value: string) => { nativeToken = value; rotation.forEach((listener) => listener({ type: options.platform ?? 'ios', data: value })); await settle(); },

@@ -9,7 +9,9 @@ export const PUSH_RECOVERY_DELAYS_MS = [2_000, 10_000, 60_000] as const;
 
 export type NativePushToken = { type: 'ios' | 'android'; data: string };
 export type PushRegistrationResult = {
-  status: 'registered' | 'fresh' | 'permission_denied' | 'unavailable' | 'failed' | 'superseded';
+  // deletion_pending: the backend refused this account (409 ACCOUNT_DELETION_PENDING)
+  // during its deletion cool-off. Terminal until the user cancels deletion.
+  status: 'registered' | 'fresh' | 'permission_denied' | 'unavailable' | 'failed' | 'superseded' | 'deletion_pending';
   retryable?: boolean;
 };
 export type PushRegistrationSnapshot = {
@@ -154,6 +156,12 @@ export class PushRegistrationCoordinator {
     } catch (error) {
       if (!lease.isCurrent()) return { status: 'superseded' };
       this.acknowledgementValid = false;
+      if (error instanceof Error && 'deletionPending' in error && error.deletionPending === true) {
+        // An expected refusal, not a registration fault: no failure report, no retry.
+        this.binding = null;
+        this.publish(userId, 'deletion_pending');
+        return { status: 'deletion_pending' };
+      }
       this.publish(userId, 'failed');
       this.reportFailure(userId, stage, error);
       return { status: 'failed', retryable: !(error instanceof Error && 'retryable' in error && error.retryable === false) };
