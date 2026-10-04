@@ -1019,13 +1019,16 @@ function RootLayout() {
       // on callback completion. The route generation still discards stale
       // deferred work after a newer auth event.
       setApiAccessTokenFromSession(session);
-      if (event === 'SIGNED_IN' && session?.user.id) {
-        void reportNewDeviceSignIn(session.user.id);
-      }
       void Promise.resolve().then(async () => {
         if (!mounted) return;
         try {
           await dispatchRouteForSession(session);
+          // Route resolution publishes the current app identity before this
+          // reporter captures its identity lease. Calling it in the sync part
+          // above races first sign-in and is correctly rejected as stale.
+          if (event === 'SIGNED_IN' && session?.user.id) {
+            void reportNewDeviceSignIn(session.user.id);
+          }
         } catch (e) {
           console.error('Auth state routing error:', e);
         }

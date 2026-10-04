@@ -11,6 +11,18 @@ describe('root auth lifecycle contracts', () => {
     assert.doesNotMatch(root, /onAuthStateChange\(async \(_?event, session\)/);
   });
 
+  it('reports a new-device sign-in only after the route publishes authenticated identity', () => {
+    const listenerStart = root.indexOf('supabase.auth.onAuthStateChange');
+    const listenerEnd = root.indexOf('return () => {', listenerStart);
+    const listener = root.slice(listenerStart, listenerEnd);
+    const routeIndex = listener.indexOf('await dispatchRouteForSession(session);');
+    const reportIndex = listener.indexOf('reportNewDeviceSignIn(session.user.id)');
+
+    assert.ok(routeIndex >= 0, 'auth event should await route resolution');
+    assert.ok(reportIndex > routeIndex, 'identity-dependent device report must follow route resolution');
+    assert.doesNotMatch(listener.slice(0, routeIndex), /reportNewDeviceSignIn/);
+  });
+
   it('masks the old account before asynchronous sign-out cleanup', () => {
     const signOutBranch = root.slice(root.indexOf('if (!session) {'), root.indexOf('// If guest mode is active'));
     assert.ok(signOutBranch.indexOf("setAppIdentity({ kind: 'loading' });") < signOutBranch.indexOf('await clearDeviceStartupPreferences();'));
