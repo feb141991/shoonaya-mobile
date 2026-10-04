@@ -6,9 +6,9 @@ const root = readFileSync(new URL('../app/_layout.tsx', import.meta.url), 'utf8'
 
 describe('root auth lifecycle contracts', () => {
   it('keeps the auth event callback synchronous and defers route work', () => {
-    assert.match(root, /onAuthStateChange\(\(_event, session\) => \{/);
+    assert.match(root, /onAuthStateChange\(\(_?event, session\) => \{/);
     assert.match(root, /void Promise\.resolve\(\)\.then\(async \(\) => \{/);
-    assert.doesNotMatch(root, /onAuthStateChange\(async \(_event, session\)/);
+    assert.doesNotMatch(root, /onAuthStateChange\(async \(_?event, session\)/);
   });
 
   it('masks the old account before asynchronous sign-out cleanup', () => {

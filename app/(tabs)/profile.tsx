@@ -44,6 +44,8 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { API_BASE, COLORS, FONTS, OFFICIAL_EMAIL, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
+import { performManualUpdateCheck } from '@/lib/updateManager';
+import { getUpdateCopy } from '@/lib/updateCopy';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
@@ -383,6 +385,7 @@ export default function ProfileScreen() {
   const [shareLoading, setShareLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [summary, setSummary] = useState<ProgressSummary | null>(initialCache?.summary ?? null);
   const [editState, setEditState] = useState<EditState>(initialCache?.editState ?? INITIAL_EDIT);
   const [email, setEmail] = useState(appIdentity.kind === 'authenticated' ? appIdentity.email ?? '' : '');
@@ -393,6 +396,7 @@ export default function ProfileScreen() {
   const [catalog, setCatalog] = useState<any[] | null>(null);
   const deletionStatus = useAccountDeletionStatus();
   const { language: deletionLanguage } = useLanguage();
+  const updateCopy = getUpdateCopy(deletionLanguage);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
@@ -1790,6 +1794,40 @@ export default function ProfileScreen() {
           </View>
           <Text style={{ ...TYPE.caption, color: theme.dim }}>Shoonaya · Find your infinity</Text>
           <Text style={{ ...TYPE.caption, fontSize: 11, color: theme.dim, opacity: 0.65 }}>{APP_VERSION_LABEL}</Text>
+          <PressableSurface
+            accessibilityLabel={updateCopy.checkAction}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: checkingUpdates, busy: checkingUpdates }}
+            disabled={checkingUpdates}
+            onPress={async () => {
+              if (checkingUpdates) return;
+              setCheckingUpdates(true);
+              try {
+                await performManualUpdateCheck();
+              } finally {
+                setCheckingUpdates(false);
+              }
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: RADII.pill,
+              backgroundColor: theme.cardSoft,
+              borderWidth: 1,
+              borderColor: theme.borderSoft,
+              marginTop: 4,
+            }}
+          >
+            {checkingUpdates
+              ? <ActivityIndicator size="small" color={theme.brand} />
+              : <Feather name="refresh-cw" size={11} color={theme.brand} />}
+            <Text style={{ ...TYPE.caption, fontSize: 11, color: theme.brand, fontWeight: '600' }}>
+              {checkingUpdates ? updateCopy.checkingAction : updateCopy.checkAction}
+            </Text>
+          </PressableSurface>
         </View>
       </ScrollView>
 

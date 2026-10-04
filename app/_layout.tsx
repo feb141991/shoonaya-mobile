@@ -97,6 +97,13 @@ import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
 import { AuthCoordinator, USE_AUTH_COORDINATOR, type BootstrapProfileResult, type OnboardingStatus } from '@/lib/authCoordinator';
+import { runAutomaticUpdateCheck } from '@/lib/updateManager';
+import { reportNewDeviceSignIn } from '@/lib/securityEmail';
+import {
+  isUpdatePromptSafeSurface,
+  shouldCheckForUpdateOnResume,
+  type UpdateAppState,
+} from '@/lib/updateLifecyclePolicy';
 
 // Keep splash screen visible until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -118,6 +125,10 @@ function RootLayout() {
   const segments = useSegments();
   const rootSegment = segments[0];
   const childSegment = segments[1];
+  const updatePromptSafe = isUpdatePromptSafeSurface(rootSegment, childSegment);
+  const updatePromptSafeRef = useRef(updatePromptSafe);
+  const initialUpdateCheckCompleteRef = useRef(false);
+  updatePromptSafeRef.current = updatePromptSafe;
 
   const [fontsLoaded, fontError] = useFonts({
     CormorantGaramond_600SemiBold,
@@ -846,6 +857,39 @@ function RootLayout() {
     return () => subscription.remove();
   }, []);
 
+  // ── Deferred Update Checks (EAS OTA & Store Binary) ──────────────────
+  // Non-blocking: Runs 2.5s after readyToRender to guarantee time-to-first-paint is never delayed.
+  // Also runs on app foreground resume.
+  useEffect(() => {
+    if (!readyToRender) return;
+
+    const timeoutId = setTimeout(() => {
+      initialUpdateCheckCompleteRef.current = true;
+      void runAutomaticUpdateCheck(() => updatePromptSafeRef.current);
+    }, 2500);
+
+    let previousState: UpdateAppState = AppState.currentState;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (shouldCheckForUpdateOnResume(previousState, state)) {
+        void runAutomaticUpdateCheck(() => updatePromptSafeRef.current);
+      }
+      previousState = state;
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      subscription.remove();
+    };
+  }, [readyToRender]);
+
+  // If startup or a foreground resume happened during a lesson, practice, or
+  // community flow, recheck when the devotee returns to Home so optional
+  // update prompts do not interrupt those focused activities.
+  useEffect(() => {
+    if (!readyToRender || !updatePromptSafe || !initialUpdateCheckCompleteRef.current) return;
+    void runAutomaticUpdateCheck(() => updatePromptSafeRef.current);
+  }, [readyToRender, updatePromptSafe]);
+
   // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
   useEffect(() => {
     if (readyToRender) return;
@@ -967,7 +1011,7 @@ function RootLayout() {
       });
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       // Keep the auth callback synchronous. routeForSession can perform API
       // work (including a token refresh during profile repair); running that
@@ -975,6 +1019,9 @@ function RootLayout() {
       // on callback completion. The route generation still discards stale
       // deferred work after a newer auth event.
       setApiAccessTokenFromSession(session);
+      if (event === 'SIGNED_IN' && session?.user.id) {
+        void reportNewDeviceSignIn(session.user.id);
+      }
       void Promise.resolve().then(async () => {
         if (!mounted) return;
         try {
