@@ -19,10 +19,13 @@ import { PressableSurface } from "@/components/ui/PressableSurface";
 import { SacredLoader } from "@/components/ui/SacredLoader";
 import { Screen } from "@/components/ui/Screen";
 import { AuthGate } from "@/components/ui/AuthGate";
+import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
+import { computeVanshLayout, getEligibleParentIds } from "@/lib/vanshLayout";
 import {
   COLORS,
   FONTS,
   MIN_TOUCH_TARGET,
+  RADII,
   SHADOWS,
   TYPE,
   themeColor,
@@ -314,6 +317,8 @@ export default function KulScreen() {
   const [familyParent, setFamilyParent] = useState("");
   const [familySpouse, setFamilySpouse] = useState("");
   const [familyIsAlive, setFamilyIsAlive] = useState(true);
+  const [vanshViewMode, setVanshViewMode] = useState<"canvas" | "list">("canvas");
+  const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<string | null>(null);
 
   const [showLineageForm, setShowLineageForm] = useState(false);
   const [lineageDraft, setLineageDraft] = useState<KulLineage | null>(null);
@@ -380,6 +385,8 @@ export default function KulScreen() {
     setTirthaSearchResults([]);
     setTirthaSearchLoading(false);
     setYatraFilter("all");
+    setVanshViewMode("canvas");
+    setSelectedFamilyMemberId(null);
   }, []);
 
   const loadSnapshot = useCallback(async (userId: string, isPull = false) => {
@@ -473,6 +480,24 @@ export default function KulScreen() {
   const familyMemberById = useMemo(
     () => new Map((snapshot?.familyMembers ?? []).map((member) => [member.id, member])),
     [snapshot?.familyMembers],
+  );
+  const familyTreeLayout = useMemo(
+    () => computeVanshLayout(snapshot?.familyMembers ?? [], kul?.lineage),
+    [snapshot?.familyMembers, kul?.lineage],
+  );
+  const familyTreeNodeById = useMemo(
+    () => new Map(familyTreeLayout.nodes.map((node) => [node.data.id, node])),
+    [familyTreeLayout.nodes],
+  );
+  const selectedFamilyMember = selectedFamilyMemberId
+    ? familyMemberById.get(selectedFamilyMemberId) ?? null
+    : null;
+  const selectedTreeNode = selectedFamilyMember
+    ? familyTreeNodeById.get(selectedFamilyMember.id) ?? null
+    : null;
+  const eligibleFamilyParentIds = useMemo(
+    () => new Set(getEligibleParentIds(snapshot?.familyMembers ?? [], editingFamilyMemberId)),
+    [snapshot?.familyMembers, editingFamilyMemberId],
   );
   const upcomingEvents = useMemo(() => {
     const today = snapshot?.today ?? localIsoDate();
@@ -860,7 +885,10 @@ export default function KulScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "Remove", style: "destructive", onPress: () => void runMutation(
         (userId) => deleteKulFamilyMember(userId, member.id),
-        { reload: false, apply: () => patchSnapshot((current) => ({ ...current, familyMembers: current.familyMembers.filter((row) => row.id !== member.id).map((row) => ({ ...row, parent_id: row.parent_id === member.id ? null : row.parent_id, spouse_id: row.spouse_id === member.id ? null : row.spouse_id })) })) },
+        { reload: false, apply: () => {
+          setSelectedFamilyMemberId((selectedId) => selectedId === member.id ? null : selectedId);
+          patchSnapshot((current) => ({ ...current, familyMembers: current.familyMembers.filter((row) => row.id !== member.id).map((row) => ({ ...row, parent_id: row.parent_id === member.id ? null : row.parent_id, spouse_id: row.spouse_id === member.id ? null : row.spouse_id })) }));
+        } },
       ) },
     ]);
   };
@@ -1355,7 +1383,7 @@ export default function KulScreen() {
                           </Text>
                         </View>
                         {snapshot.role === "guardian" && member.userId !== currentUserId ? (
-                          <PressableSurface accessibilityLabel={`Manage ${personLabel(member.profile)}`} onPress={() => manageKulMember(member)} style={{ minHeight: MIN_TOUCH_TARGET, width: 40, alignItems: "center", justifyContent: "center" }}>
+                          <PressableSurface accessibilityLabel={`Manage ${personLabel(member.profile)}`} onPress={() => manageKulMember(member)} style={{ minHeight: MIN_TOUCH_TARGET, width: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}>
                             <Feather name="more-horizontal" size={18} color={theme.dim} />
                           </PressableSurface>
                         ) : null}
@@ -1556,8 +1584,8 @@ export default function KulScreen() {
                           </Text>
                         </View>
                         {snapshot.role === "guardian" ? <View style={{ flexDirection: "row", gap: 4 }}>
-                          <PressableSurface accessibilityLabel={`Edit ${event.title}`} onPress={() => beginEditEvent(event)} style={{ minHeight: 42, width: 40, alignItems: "center", justifyContent: "center" }}><Feather name="edit-2" size={15} color={theme.dim} /></PressableSurface>
-                          <PressableSurface accessibilityLabel={`Delete ${event.title}`} onPress={() => removeFamilyEvent(event)} style={{ minHeight: 42, width: 40, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={15} color={theme.dim} /></PressableSurface>
+                          <PressableSurface accessibilityLabel={`Edit ${event.title}`} onPress={() => beginEditEvent(event)} style={{ minHeight: MIN_TOUCH_TARGET, width: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}><Feather name="edit-2" size={15} color={theme.dim} /></PressableSurface>
+                          <PressableSurface accessibilityLabel={`Delete ${event.title}`} onPress={() => removeFamilyEvent(event)} style={{ minHeight: MIN_TOUCH_TARGET, width: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={15} color={theme.dim} /></PressableSurface>
                         </View> : null}
                       </View>
                     ))
@@ -1953,7 +1981,7 @@ export default function KulScreen() {
                             onPress={() => setFamilyParent("")}
                             theme={theme}
                           />
-                          {snapshot.familyMembers.slice(0, 20).map((member) => (
+                          {snapshot.familyMembers.filter((member) => eligibleFamilyParentIds.has(member.id)).map((member) => (
                             <Choice
                               key={member.id}
                               label={member.name}
@@ -1990,54 +2018,108 @@ export default function KulScreen() {
                   </View>
                 ) : null}
                 {snapshot.familyMembers.length ? (
-                  <View style={{ gap: 8 }}>
-                    {snapshot.familyMembers.map((member) => (
-                      <View
-                        key={member.id}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          minHeight: 54,
-                          gap: 10,
-                          paddingLeft: Math.min(member.generation ?? 0, 4) * 12,
-                          borderTopWidth: 1,
-                          borderTopColor: theme.borderSoft,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 17,
-                            backgroundColor: theme.brandSoft,
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Feather name="user" size={16} color={theme.brand} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ ...TYPE.label, color: theme.text }}>
-                            {member.name}
-                          </Text>
-                          <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                            {member.role || "Family member"}
-                            {member.generation != null
-                              ? ` · Generation ${member.generation}`
-                              : ""}
-                          </Text>
-                        </View>
-                        {member.parent_id ? (
-                          <Feather
-                            name="corner-down-right"
-                            size={15}
-                            color={theme.dim}
-                          />
-                        ) : null}
-                        {snapshot.role === "guardian" ? <PressableSurface accessibilityLabel={`Edit ${member.name}`} onPress={() => beginEditFamilyMember(member)} style={{ minHeight: MIN_TOUCH_TARGET, width: 38, alignItems: "center", justifyContent: "center" }}><Feather name="edit-2" size={14} color={theme.dim} /></PressableSurface> : null}
-                        {snapshot.role === "guardian" ? <PressableSurface accessibilityLabel={`Remove ${member.name}`} onPress={() => removeFamilyRecord(member)} style={{ minHeight: MIN_TOUCH_TARGET, width: 38, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={14} color={theme.dim} /></PressableSurface> : null}
+                  <View style={{ gap: 10 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        paddingTop: 8,
+                      }}
+                    >
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                        {vanshViewMode === "canvas"
+                          ? "Interactive lineage tree · drag to explore · pinch to zoom"
+                          : "Family list"}
+                      </Text>
+                      <View style={{ flexDirection: "row", gap: 6 }}>
+                        <Choice
+                          label="Tree Canvas"
+                          selected={vanshViewMode === "canvas"}
+                          onPress={() => setVanshViewMode("canvas")}
+                          theme={theme}
+                        />
+                        <Choice
+                          label="List"
+                          selected={vanshViewMode === "list"}
+                          onPress={() => setVanshViewMode("list")}
+                          theme={theme}
+                        />
                       </View>
-                    ))}
+                    </View>
+
+                    {vanshViewMode === "canvas" ? (
+                      <>
+                        <VanshGraphCanvas
+                          layout={familyTreeLayout}
+                          selectedMemberId={selectedFamilyMemberId}
+                          onSelectMember={(member) =>
+                            setSelectedFamilyMemberId((prev) =>
+                              prev === member.id ? null : member.id
+                            )
+                          }
+                          isGuardian={snapshot.role === "guardian"}
+                        />
+                      </>
+                    ) : (
+                      <View style={{ gap: 8 }}>
+                        {familyTreeLayout.nodes.map((node) => {
+                          const member = node.data;
+                          const selected = selectedFamilyMemberId === member.id;
+                          const parentName = node.resolvedParentId
+                            ? familyMemberById.get(node.resolvedParentId)?.name
+                            : null;
+                          return (
+                            <View
+                              key={member.id}
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                minHeight: MIN_TOUCH_TARGET,
+                                gap: 8,
+                                paddingLeft: Math.min(node.generation - 1, 4) * 12,
+                                borderTopWidth: 1,
+                                borderTopColor: theme.borderSoft,
+                              }}
+                            >
+                              <PressableSurface
+                                accessibilityRole="button"
+                                accessibilityLabel={`${member.name}, ${member.role || "Family member"}, generation ${node.generation}${parentName ? `, child of ${parentName}` : ""}`}
+                                accessibilityState={{ selected }}
+                                onPress={() => setSelectedFamilyMemberId((previous) => previous === member.id ? null : member.id)}
+                                style={{
+                                  minHeight: MIN_TOUCH_TARGET,
+                                  flex: 1,
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  gap: 10,
+                                  borderRadius: RADII.md,
+                                  paddingHorizontal: 8,
+                                  borderWidth: selected ? 1 : 0,
+                                  borderColor: theme.brand,
+                                  backgroundColor: selected ? theme.brandSoft : theme.cardSoft,
+                                }}
+                              >
+                                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: theme.brandSoft, alignItems: "center", justifyContent: "center" }}>
+                                  <Feather name="user" size={16} color={theme.brand} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                  <Text style={{ ...TYPE.label, color: theme.text }}>
+                                    {member.name}
+                                  </Text>
+                                  <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                                    {member.role || "Family member"} · Generation {node.generation}
+                                    {member.generation == null ? " · inferred" : ""}
+                                    {member.generation != null && member.generation !== node.generation ? ` · recorded as ${member.generation}` : ""}
+                                  </Text>
+                                </View>
+                                {parentName ? <Feather name="corner-down-right" size={15} color={theme.dim} /> : null}
+                              </PressableSurface>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
                   </View>
                 ) : (
                   <EmptyState
@@ -2045,6 +2127,61 @@ export default function KulScreen() {
                     subtitle="Guardians can add the people and relationships your family wants to preserve."
                   />
                 )}
+                {selectedFamilyMember ? (
+                  <View
+                    style={{
+                      borderRadius: RADII.lg,
+                      borderWidth: 1,
+                      borderColor: theme.borderSoft,
+                      backgroundColor: theme.cardSoft,
+                      padding: 12,
+                      gap: 8,
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Text style={{ ...TYPE.label, color: theme.text }}>
+                          {selectedFamilyMember.name}
+                        </Text>
+                        <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                          {selectedFamilyMember.role || "Family member"} · Generation {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                          {selectedFamilyMember.generation == null ? " (inferred from family links)" : ""}
+                          {selectedTreeNode && selectedFamilyMember.generation != null && selectedFamilyMember.generation !== selectedTreeNode.generation ? ` (recorded as ${selectedFamilyMember.generation}; adjusted to keep the parent link downward)` : ""}
+                          {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
+                        </Text>
+                      </View>
+                      <PressableSurface
+                        accessibilityLabel={`Clear selection for ${selectedFamilyMember.name}`}
+                        onPress={() => setSelectedFamilyMemberId(null)}
+                        style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}
+                      >
+                        <Feather name="x" size={17} color={theme.dim} />
+                      </PressableSurface>
+                    </View>
+                    {snapshot.role === "guardian" ? (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <PressableSurface
+                          accessibilityRole="button"
+                          accessibilityLabel={`Edit ${selectedFamilyMember.name}`}
+                          onPress={() => beginEditFamilyMember(selectedFamilyMember)}
+                          style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
+                        >
+                          <Feather name="edit-2" size={15} color={theme.brand} />
+                          <Text style={{ ...TYPE.caption, color: theme.brand }}>Edit person</Text>
+                        </PressableSurface>
+                        <PressableSurface
+                          accessibilityRole="button"
+                          accessibilityLabel={`Remove ${selectedFamilyMember.name} from family tree`}
+                          onPress={() => removeFamilyRecord(selectedFamilyMember)}
+                          style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
+                        >
+                          <Feather name="trash-2" size={15} color={theme.dim} />
+                          <Text style={{ ...TYPE.caption, color: theme.dim }}>Remove</Text>
+                        </PressableSurface>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
                 {snapshot.familyMembers.length >= 100 ? (
                   <Text
                     style={{
@@ -2071,10 +2208,10 @@ export default function KulScreen() {
                         <Text style={{ ...TYPE.caption, color: theme.dim }}>{place.tradition}{place.deity ? ` · ${place.deity}` : ""}{place.address ? ` · ${place.address}` : ""}</Text>
                       </View>
                       {showLineageForm && lineageDraft ? <View style={{ gap: 3 }}>
-                        <PressableSurface accessibilityLabel={`Link ${place.name} as Kuldevi temple`} onPress={() => setLineageDraft((current) => current ? { ...current, kuldeviPlaceId: place.id, kuldeviName: current.kuldeviName || place.name } : current)} style={{ minHeight: 38, justifyContent: "center" }}><Text style={{ ...TYPE.caption, color: theme.brand }}>Link Kuldevi</Text></PressableSurface>
-                        <PressableSurface accessibilityLabel={`Link ${place.name} as Kuldevta temple`} onPress={() => setLineageDraft((current) => current ? { ...current, kuldevtaPlaceId: place.id, kuldevtaName: current.kuldevtaName || place.name } : current)} style={{ minHeight: 38, justifyContent: "center" }}><Text style={{ ...TYPE.caption, color: theme.brand }}>Link Kuldevta</Text></PressableSurface>
+                        <PressableSurface accessibilityLabel={`Link ${place.name} as Kuldevi temple`} onPress={() => setLineageDraft((current) => current ? { ...current, kuldeviPlaceId: place.id, kuldeviName: current.kuldeviName || place.name } : current)} style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: "center" }}><Text style={{ ...TYPE.caption, color: theme.brand }}>Link Kuldevi</Text></PressableSurface>
+                        <PressableSurface accessibilityLabel={`Link ${place.name} as Kuldevta temple`} onPress={() => setLineageDraft((current) => current ? { ...current, kuldevtaPlaceId: place.id, kuldevtaName: current.kuldevtaName || place.name } : current)} style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: "center" }}><Text style={{ ...TYPE.caption, color: theme.brand }}>Link Kuldevta</Text></PressableSurface>
                       </View> : null}
-                      <PressableSurface accessibilityLabel={added ? `${place.name} is on family Yatra` : `Add ${place.name} to family Yatra`} disabled={added || working} onPress={() => void addSearchResultToYatra(place)} style={{ minHeight: 42, minWidth: 42, alignItems: "center", justifyContent: "center" }}><Feather name={added ? "check" : "plus-circle"} size={20} color={theme.brand} /></PressableSurface>
+                      <PressableSurface accessibilityLabel={added ? `${place.name} is on family Yatra` : `Add ${place.name} to family Yatra`} disabled={added || working} onPress={() => void addSearchResultToYatra(place)} style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}><Feather name={added ? "check" : "plus-circle"} size={20} color={theme.brand} /></PressableSurface>
                     </View>;
                   })}
                   <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
@@ -2086,9 +2223,9 @@ export default function KulScreen() {
                     <Text style={{ ...TYPE.label, color: theme.text }}>{wish.name}</Text>
                     <Text style={{ ...TYPE.caption, color: theme.dim }}>{wish.tradition}{wish.deity ? ` · ${wish.deity}` : ""}{wish.status === "visited" && wish.visitedAt ? ` · Visited ${formatDate(wish.visitedAt)}` : " · On family wishlist"}</Text>
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                      <PressableSurface accessibilityLabel={`Open ${wish.name} in Tirtha`} onPress={() => openPlaceInTirtha(wish.placeId)} haptic="selection" style={{ minHeight: 40, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, backgroundColor: theme.brandSoft, borderRadius: 12 }}><Feather name="map-pin" size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand }}>Open in Tirtha</Text></PressableSurface>
-                      <PressableSurface accessibilityLabel={wish.status === "visited" ? `Move ${wish.name} to wishlist` : `Mark ${wish.name} visited`} onPress={() => setYatraStatus(wish.placeId, wish.status === "visited" ? "wishlist" : "visited")} haptic="selection" style={{ minHeight: 40, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, borderWidth: 1, borderColor: theme.border, borderRadius: 12 }}><Feather name={wish.status === "visited" ? "rotate-ccw" : "check-circle"} size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.text }}>{wish.status === "visited" ? "Wishlist" : "Mark visited"}</Text></PressableSurface>
-                      <PressableSurface accessibilityLabel={`Remove ${wish.name} from family Yatra`} onPress={() => removeYatraPlace(wish.placeId, wish.name)} style={{ minHeight: 40, width: 40, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={14} color={theme.dim} /></PressableSurface>
+                      <PressableSurface accessibilityLabel={`Open ${wish.name} in Tirtha`} onPress={() => openPlaceInTirtha(wish.placeId)} haptic="selection" style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, backgroundColor: theme.brandSoft, borderRadius: 12 }}><Feather name="map-pin" size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand }}>Open in Tirtha</Text></PressableSurface>
+                      <PressableSurface accessibilityLabel={wish.status === "visited" ? `Move ${wish.name} to wishlist` : `Mark ${wish.name} visited`} onPress={() => setYatraStatus(wish.placeId, wish.status === "visited" ? "wishlist" : "visited")} haptic="selection" style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, borderWidth: 1, borderColor: theme.border, borderRadius: 12 }}><Feather name={wish.status === "visited" ? "rotate-ccw" : "check-circle"} size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.text }}>{wish.status === "visited" ? "Wishlist" : "Mark visited"}</Text></PressableSurface>
+                      <PressableSurface accessibilityLabel={`Remove ${wish.name} from family Yatra`} onPress={() => removeYatraPlace(wish.placeId, wish.name)} style={{ minHeight: MIN_TOUCH_TARGET, width: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={14} color={theme.dim} /></PressableSurface>
                     </View>
                   </View>) : <Text style={{ ...TYPE.body, color: theme.dim }}>Your family Yatra list is empty. Search the catalog or add a temple from Tirtha.</Text>}
                 </View>
@@ -2130,7 +2267,7 @@ function Choice({
       onPress={onPress}
       haptic="selection"
       style={{
-        minHeight: 40,
+        minHeight: MIN_TOUCH_TARGET,
         borderRadius: 999,
         borderWidth: 1,
         borderColor: selected ? theme.brand : theme.border,
