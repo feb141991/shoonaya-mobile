@@ -45,6 +45,8 @@ export type SettingsFields = {
   wants_sankalpa_midpoint_reminders: boolean;
   wants_community_notifications: boolean;
   wants_family_notifications: boolean;
+  wants_family_remembrance_reminders: boolean;
+  family_remembrance_time: string;
   app_language: AppLanguage;
   transliteration_language: AppLanguage;
   meaning_language: AppLanguage;

@@ -63,7 +63,7 @@ const MAX_EVENTS = 500;
 
 export type TelemetryIdentity = { kind: 'guest' } | { kind: 'authenticated'; userId: string };
 
-export type RouteName = 'home' | 'mandali' | 'settings' | 'notifications' | 'bhakti' | 'dharm_veer' | 'pathshala' | 'panchang' | 'vrat' | 'japa' | 'profile';
+export type RouteName = 'home' | 'mandali' | 'settings' | 'notifications' | 'bhakti' | 'dharm_veer' | 'pathshala' | 'panchang' | 'vrat' | 'japa' | 'profile' | 'kul';
 export type OutboxFeature = 'settings' | 'notifications' | 'japa' | 'mandali_posts' | 'mood' | 'sankalpa' | 'reactions';
 export type RetryOutcome = 'success' | 'retry' | 'permanent_failure';
 
@@ -84,7 +84,7 @@ export type FailureReason =
 // open/refresh cycle -- starts with exactly the one the plan's Stage 3 is
 // about (Mandali comment expansion); add more here as later stages need them,
 // not preemptively.
-export type InteractionName = 'mandali_comment_expand';
+export type InteractionName = 'mandali_comment_expand' | 'kul_mutation' | 'kul_tirtha_search';
 
 // Where a request-dedup opportunity (or, for Mandali comments today, an
 // actual un-deduplicated double-fire -- see recordDuplicateRequestDetected's

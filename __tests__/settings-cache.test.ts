@@ -41,6 +41,8 @@ const sampleSettings: SettingsFields = {
   wants_sankalpa_midpoint_reminders: false,
   wants_community_notifications: true,
   wants_family_notifications: true,
+  wants_family_remembrance_reminders: false,
+  family_remembrance_time: '09:00',
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
@@ -96,6 +98,19 @@ describe('Settings cache -- identity isolation', () => {
     const cached = await readSettingsCache({ kind: 'authenticated', userId: 'user-A' });
     assert.equal(cached?.settings.japa_reminder_enabled, true);
     assert.equal(cached?.settings.japa_reminder_time, '06:45');
+  });
+
+  it('persists family-remembrance consent and preferred local time in the identity-scoped cache', async () => {
+    const remembranceSettings = {
+      ...sampleSettings,
+      wants_family_remembrance_reminders: true,
+      family_remembrance_time: '08:30',
+    };
+    await writeSettingsCache(envelope({ settings: remembranceSettings }));
+
+    const cached = await readSettingsCache({ kind: 'authenticated', userId: 'user-A' });
+    assert.equal(cached?.settings.wants_family_remembrance_reminders, true);
+    assert.equal(cached?.settings.family_remembrance_time, '08:30');
   });
 
   it('the legacy unscoped global key is purged, never read as a cache hit', async () => {

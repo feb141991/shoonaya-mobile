@@ -17,7 +17,7 @@ import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import MapView, { Marker, PROVIDER_DEFAULT, type Region } from 'react-native-maps';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TempleCard } from '@/components/tirtha/TempleCard';
@@ -42,6 +42,8 @@ import {
 } from '@/lib/overpass';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity } from '@/lib/appIdentity';
+import { addKulTirthaWish, fetchKulMembership, fetchTirthaPlace } from '@/lib/kul';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 
@@ -156,6 +158,7 @@ function formatDistance(center: { lat: number; lon: number }, temple: Temple) {
 
 export default function TirthaScreen() {
   const router = useRouter();
+  const { kulPlaceId } = useLocalSearchParams<{ kulPlaceId?: string }>();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -191,16 +194,66 @@ export default function TirthaScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState('');
   const [checkinError, setCheckinError] = useState('');
+  const [kulMember, setKulMember] = useState(false);
+  const [kulWishPlaceIds, setKulWishPlaceIds] = useState<string[]>([]);
+  const [kulWishSaving, setKulWishSaving] = useState(false);
+  const [kulWishNotice, setKulWishNotice] = useState('');
+  const kulPlaceRequestRef = useRef<string | null>(null);
+  const kulWishRequestRef = useRef(0);
 
   const openCheckIn = useCallback((temple: Temple) => {
+    kulWishRequestRef.current += 1;
+    setKulWishSaving(false);
+    setKulWishNotice('');
     setCheckinError('');
     setSelectedTemple(temple);
   }, []);
 
   const closeCheckIn = useCallback(() => {
+    kulWishRequestRef.current += 1;
+    setKulWishSaving(false);
+    setKulWishNotice('');
     setSelectedTemple(null);
     setCheckinError('');
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    if (appIdentity.kind !== 'authenticated') {
+      setKulMember(false);
+      setKulWishPlaceIds([]);
+      return;
+    }
+    const lease = captureAppIdentity();
+    void fetchKulMembership(appIdentity.userId).then((membership) => {
+      if (!lease.isCurrent()) return;
+      setKulMember(Boolean(membership));
+      setKulWishPlaceIds(membership?.wishPlaceIds ?? []);
+    }).catch(() => {
+      if (!lease.isCurrent()) return;
+      setKulMember(false);
+      setKulWishPlaceIds([]);
+    });
+  }, [appIdentity]));
+
+  useEffect(() => {
+    if (typeof kulPlaceId !== 'string' || !kulPlaceId || appIdentity.kind !== 'authenticated' || kulPlaceRequestRef.current === kulPlaceId) return;
+    kulPlaceRequestRef.current = kulPlaceId;
+    const lease = captureAppIdentity();
+    const existing = temples.find((temple) => tirthaPlaceId(temple) === kulPlaceId || temple.id === kulPlaceId);
+    if (existing) {
+      setPassportTab('map');
+      openCheckIn(existing);
+      return;
+    }
+    void fetchTirthaPlace(appIdentity.userId, kulPlaceId).then(({ temple }) => {
+      if (!lease.isCurrent()) return;
+      setPassportTab('map');
+      openCheckIn(temple);
+    }).catch(() => {
+      if (!lease.isCurrent()) return;
+      setNotice('Could not open this family Tirtha place. Try searching for it on the map.');
+    });
+  }, [appIdentity, kulPlaceId, openCheckIn, temples]);
   const [locationBlocked, setLocationBlocked] = useState(false);
   const [radiusKm, setRadiusKm] = useState<number>(RADIUS_OPTIONS_KM[0]);
   const [traditionFilter, setTraditionFilter] = useState<TraditionFilter>('all');
@@ -601,6 +654,31 @@ export default function TirthaScreen() {
     refreshPassport,
     selectedTemple,
   ]);
+
+  const addSelectedPlaceToFamilyYatra = useCallback(async () => {
+    if (!selectedTemple || appIdentity.kind !== 'authenticated' || !kulMember) return;
+    const userId = appIdentity.userId;
+    const lease = captureAppIdentity();
+    const requestId = ++kulWishRequestRef.current;
+    setKulWishSaving(true);
+    setKulWishNotice('');
+    try {
+      const wish = await addKulTirthaWish(userId, templeToPlaceRow(selectedTemple));
+      if (!lease.isCurrent()) return;
+      setKulWishPlaceIds((current) => current.includes(wish.placeId) ? current : [...current, wish.placeId]);
+      if (requestId === kulWishRequestRef.current) {
+        setKulWishNotice(wish.alreadyExists ? 'This place is already on your family Yatra.' : 'Added to your family Yatra.');
+      }
+      if (!wish.alreadyExists) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      if (!lease.isCurrent()) return;
+      if (requestId === kulWishRequestRef.current) {
+        setKulWishNotice(error instanceof Error ? error.message : 'Could not add this place to your family Yatra.');
+      }
+    } finally {
+      if (lease.isCurrent() && requestId === kulWishRequestRef.current) setKulWishSaving(false);
+    }
+  }, [appIdentity, kulMember, selectedTemple]);
 
   const searchCity = useCallback(async () => {
     if (!cityQuery.trim()) return;
@@ -1303,6 +1381,36 @@ export default function TirthaScreen() {
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: '#E0684C' }}>
                   {checkinError}
                 </Text>
+              </View>
+            ) : null}
+
+            {kulMember && selectedTemple ? (
+              <View style={{ gap: 6 }}>
+                <PressableSurface
+                  accessibilityLabel={kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'This place is on your family Yatra' : 'Add this place to your family KUL wishlist'}
+                  disabled={kulWishSaving || kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple))}
+                  onPress={() => void addSelectedPlaceToFamilyYatra()}
+                  haptic="selection"
+                  style={{
+                    minHeight: MIN_TOUCH_TARGET,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: border,
+                    backgroundColor: surface,
+                    paddingHorizontal: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    opacity: kulWishSaving || kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 0.65 : 1,
+                  }}
+                >
+                  {kulWishSaving ? <ActivityIndicator size="small" color={brand} /> : <Feather name={kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'check-circle' : 'users'} size={16} color={brand} />}
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>
+                    {kulWishSaving ? 'Adding to family Yatra…' : kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'On family Yatra' : 'Add to family KUL wishlist'}
+                  </Text>
+                </PressableSurface>
+                {kulWishNotice ? <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>{kulWishNotice}</Text> : null}
               </View>
             ) : null}
 

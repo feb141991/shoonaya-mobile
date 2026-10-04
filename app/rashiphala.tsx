@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Share,
   ScrollView,
   Text,
@@ -9,7 +8,6 @@ import {
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -21,6 +19,8 @@ import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { RASHI_LIST } from '@/lib/jyotish';
 import { useAppIdentity } from '@/lib/appIdentity';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { formatRashiphalaSpiritualDate } from '@/lib/rashiphalaDate';
 
 type RashiHoroscope = {
   rashi: string;
@@ -43,6 +43,7 @@ type RashiHoroscope = {
   transitHighlights: Array<{ title: string; detail: string; tone: 'support' | 'discipline' | 'neutral'; structure?: string[] }>;
   sadhanaPlan: Array<{ label: string; action: string }>;
   accuracyNote: string;
+  spiritualDate?: string;
   dashaContext?: { planet: string; endDate: string; note: string } | null;
   dashaContextStatus?: 'not_requested' | 'available' | 'unavailable';
 };
@@ -64,43 +65,44 @@ function normalizeRashiKey(value: string | null | undefined): string | null {
   return match?.key ?? null;
 }
 
-function toneStyle(tone: RashiHoroscope['transitHighlights'][number]['tone']) {
-  if (tone === 'support') {
-    return { bg: COLORS.successBg, border: COLORS.successBorder, color: COLORS.success };
-  }
-  if (tone === 'discipline') {
-    return { bg: COLORS.dangerBg, border: COLORS.dangerBorder, color: COLORS.danger };
-  }
-  return { bg: COLORS.homeSoftLight, border: COLORS.homeBorderSoftLight, color: COLORS.brandEarthLight };
-}
-
 export default function RashiphalaScreen() {
-  const router = useRouter();
   const handleBack = useFallbackBackHandler('/(tabs)', true);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
   const appIdentity = useAppIdentity();
+  const { language } = useLanguage();
+  const identityKey = appIdentity.kind === 'authenticated' ? `user:${appIdentity.userId}` : appIdentity.kind;
+  const authenticatedUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
 
-  const [selectedRashi, setSelectedRashi] = useState<string>('aries');
+  const [selection, setSelection] = useState<{ identityKey: string; rashi: string | null }>({ identityKey: 'loading', rashi: null });
+  const selectedRashi = selection.identityKey === identityKey ? selection.rashi : null;
+  const selectRashi = useCallback((rashi: string) => {
+    setErrorMessage(null);
+    setSelection({ identityKey, rashi });
+  }, [identityKey]);
   const [timezone, setTimezone] = useState<string>(() => {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
   });
-  const [data, setData] = useState<RashiHoroscope | null>(null);
+  const [contextIdentityKey, setContextIdentityKey] = useState<string | null>(null);
+  const [profileContextMessage, setProfileContextMessage] = useState<string | null>(null);
+  const [loadedReading, setLoadedReading] = useState<{
+    identityKey: string;
+    rashi: string;
+    value: RashiHoroscope;
+  } | null>(null);
+  const data = loadedReading?.identityKey === identityKey && loadedReading.rashi === selectedRashi
+    ? loadedReading.value
+    : null;
+  const contextReady = contextIdentityKey === identityKey;
   const [loading, setLoading] = useState(true);
-  const [initialLoad, setInitialLoad] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const dateLabel = useMemo(() => {
-    return new Date().toLocaleDateString('en-IN', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }, []);
+    return data?.spiritualDate ? formatRashiphalaSpiritualDate(data.spiritualDate, language) : 'Today';
+  }, [data?.spiritualDate, language]);
 
   const shareReading = useCallback(async () => {
     if (!data) return;
@@ -110,6 +112,7 @@ export default function RashiphalaScreen() {
       `Karma & Focus: ${data.karma}\n` +
       `Body & Energy: ${data.health}\n` +
       `Lucky Color: ${data.luckyColor} | Lucky Number: ${data.luckyNumber}\n\n` +
+      `${data.accuracyNote}\n\n` +
       'Shared from Shoonaya';
     await Share.share({ title: 'Daily Rashiphala', message: text });
   }, [data, dateLabel]);
@@ -121,50 +124,80 @@ export default function RashiphalaScreen() {
       return;
     }
 
+    setContextIdentityKey(null);
+    setSelection({ identityKey, rashi: null });
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata');
+    setProfileContextMessage(null);
+    setErrorMessage(null);
+    setLoadedReading(null);
+    setLoading(true);
+
     async function loadContext() {
+      let profileRashi: string | null = null;
+      let profileTimezone: string | null = null;
+      let contextMessage: string | null = null;
       try {
-        if (appIdentity.kind === 'authenticated') {
-          const { data: profile } = await supabase
+        if (authenticatedUserId) {
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('rashi, timezone')
-            .eq('id', appIdentity.userId)
+            .eq('id', authenticatedUserId)
             .single();
-          if (active) {
-            const profileRashi = normalizeRashiKey(profile?.rashi);
-            if (profileRashi) setSelectedRashi(profileRashi);
-            if (profile?.timezone) setTimezone(profile.timezone);
+
+          if (error) {
+            contextMessage = 'Your saved Rashi could not be loaded. Choose one below to continue.';
+          } else {
+            profileRashi = normalizeRashiKey(profile?.rashi);
+            profileTimezone = profile?.timezone ?? null;
+            if (!profileRashi) {
+              contextMessage = 'No Chandra Rashi is saved to your profile. Choose one below to view the daily reflection.';
+            }
           }
         }
-      } catch (e) {
-        // use defaults
+      } catch {
+        contextMessage = 'Your saved Rashi could not be loaded. Choose one below to continue.';
       } finally {
-        if (active) setInitialLoad(false);
+        if (active) {
+          if (profileTimezone) setTimezone(profileTimezone);
+          setSelection({ identityKey, rashi: profileRashi });
+          setProfileContextMessage(contextMessage);
+          setContextIdentityKey(identityKey);
+          setLoading(false);
+        }
       }
     }
     void loadContext();
     return () => { active = false; };
-  }, [appIdentity]);
+  }, [appIdentity.kind, authenticatedUserId, identityKey]);
 
-  // Fetch horoscope when selectedRashi or timezone changes
+  // A reading belongs to both the active account and selected sign. Masking
+  // it during render prevents Dasha context from one account reaching another
+  // even before the identity-change effect has run.
   useEffect(() => {
-    if (initialLoad) return;
+    if (!contextReady) return;
+    if (!selectedRashi) {
+      setLoading(false);
+      return;
+    }
+
+    const requestedRashi = selectedRashi;
     let active = true;
     setLoading(true);
     setErrorMessage(null);
 
     async function loadHoroscope() {
       try {
-        const res = await apiFetch(`/api/jyotish/rashiphal?rashi=${selectedRashi}&tz=${encodeURIComponent(timezone)}`);
+        const res = await apiFetch(`/api/jyotish/rashiphal?rashi=${requestedRashi}&tz=${encodeURIComponent(timezone)}`);
         const payload = await res.json().catch(() => null);
         if (!res.ok) {
           throw new Error(payload?.error ?? 'Unable to load Rashiphala.');
         }
         if (active) {
-          setData(payload as RashiHoroscope);
+          setLoadedReading({ identityKey, rashi: requestedRashi, value: payload as RashiHoroscope });
         }
       } catch (e) {
         if (active) {
-          setData(null);
+          setLoadedReading(null);
           setErrorMessage(e instanceof Error ? e.message : 'Unable to load Rashiphala.');
         }
       } finally {
@@ -174,7 +207,7 @@ export default function RashiphalaScreen() {
 
     void loadHoroscope();
     return () => { active = false; };
-  }, [selectedRashi, timezone, initialLoad, reloadToken]);
+  }, [contextReady, identityKey, selectedRashi, timezone, reloadToken]);
 
   return (
     <Screen
@@ -205,13 +238,17 @@ export default function RashiphalaScreen() {
     >
       <View style={{ paddingTop: 14 }}>
         {/* Horizontal Rashi Selector */}
+        <Text style={{ paddingHorizontal: 16, paddingBottom: 10, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+          {selectedRashi ? 'Chandra Rashi' : 'Choose your Chandra Rashi'}
+        </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingBottom: 14 }}>
           {RASHI_LIST.map((rashi) => {
             const isSelected = selectedRashi === rashi.key;
             return (
               <PressableSurface
                 key={rashi.key}
-                onPress={() => setSelectedRashi(rashi.key)}
+                onPress={() => selectRashi(rashi.key)}
+                disabled={!contextReady}
                 haptic="selection"
                 accessibilityLabel={`${rashi.sa} (${rashi.en})`}
                 style={{
@@ -239,7 +276,26 @@ export default function RashiphalaScreen() {
         </ScrollView>
       </View>
 
-      {loading ? (
+      {!contextReady ? (
+        <SacredLoader
+          icon="rashiphala"
+          title="Reading Planetary Transits"
+          subtitle="Aligning with your celestial signs and cosmic movements..."
+        />
+      ) : !selectedRashi ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+          <Card tone="auto" style={{ alignItems: 'center', gap: 12 }}>
+            <Text style={{ fontSize: 30 }}>🌙</Text>
+            <Text style={{ ...TYPE.metric, color: theme.text, textAlign: 'center' }}>Select your Chandra Rashi</Text>
+            <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>
+              Rashiphala is organized by Moon sign. Choose the sign you follow to see today’s general transit reflection.
+            </Text>
+            {profileContextMessage ? (
+              <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>{profileContextMessage}</Text>
+            ) : null}
+          </Card>
+        </View>
+      ) : loading ? (
         <SacredLoader
           icon="rashiphala"
           title="Reading Planetary Transits"
@@ -257,8 +313,6 @@ export default function RashiphalaScreen() {
             </Text>
             <PressableSurface
               onPress={() => {
-                setInitialLoad(false);
-                setSelectedRashi((current: string) => normalizeRashiKey(current) ?? 'aries');
                 setReloadToken((current) => current + 1);
               }}
               style={{
@@ -331,26 +385,23 @@ export default function RashiphalaScreen() {
                 <Feather name="activity" size={18} color={theme.brand} />
               </View>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Facts</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Selected Transit Reflections</Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{data.gocharSummary}</Text>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{data.moonTransit}</Text>
               </View>
             </View>
             <View style={{ gap: 10 }}>
-              {data.transitHighlights.slice(0, 4).map((item, idx) => {
-                const tone = toneStyle(item.tone);
-                return (
-                  <View key={`${item.title}-${idx}`} style={{ backgroundColor: tone.bg, borderColor: tone.border, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <Text style={{ color: tone.color, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
-                      {item.structure?.map((tag) => (
-                        <Text key={tag} style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase' }}>{tag}</Text>
-                      ))}
-                    </View>
-                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{item.detail}</Text>
+              {data.transitHighlights.map((item, idx) => (
+                <View key={`${item.title}-${idx}`} style={{ backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>{item.title}</Text>
+                    {item.structure?.map((tag) => (
+                      <Text key={tag} style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase' }}>{tag}</Text>
+                    ))}
                   </View>
-                );
-              })}
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{item.detail}</Text>
+                </View>
+              ))}
             </View>
           </Card>
 

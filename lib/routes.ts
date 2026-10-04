@@ -79,6 +79,10 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/nitya-plans')) return '/nitya-plans' as Href;
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';
   if (pathname.startsWith('/mandali')) return '/mandali';
+  // Annual KUL family-remembrance notifications target this exact route with
+  // `?section=family`; preserve its query so the hub opens the family dates
+  // section instead of falling back to the notification inbox.
+  if (pathname === '/kul') return path as Href;
   if (pathname.startsWith('/discover/mood') || pathname.startsWith('/mood')) return '/mood' as Href;
   // Mood's recommendation stack (lib/mood/engine.ts on web) always includes
   // a fixed "Live Darshan" card with href '/live-darshan' — a real native

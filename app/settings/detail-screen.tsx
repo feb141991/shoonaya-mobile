@@ -77,8 +77,9 @@ import { getGreetingPick } from '@/lib/greetingPreference';
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
 
-// Every field below already exists on `profiles` and is already read/written
-// by the focused settings screens — no new backend columns introduced.
+// Settings mirror the profile fields written by this screen. Family
+// remembrance is an additive server field and remains disabled until the
+// matching backend migration is present.
 type SettingsState = SettingsFields;
 
 const THEME_STORAGE_KEY = 'sangam_theme_preference';
@@ -96,6 +97,8 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_sankalpa_midpoint_reminders: false,
   wants_community_notifications: true,
   wants_family_notifications: true,
+  wants_family_remembrance_reminders: false,
+  family_remembrance_time: '09:00',
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
@@ -113,6 +116,7 @@ const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle:
   { key: 'wants_tithi_reminders', label: 'Tithi alerts', subtitle: 'Daily lunar phase transitions' },
   { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
   { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', disabled: true, badge: 'Coming soon' },
+  { key: 'wants_family_remembrance_reminders', label: 'Family remembrance', subtitle: 'A yearly, private reminder for family dates you link to a deceased relative', requiresAccount: true },
 ];
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
@@ -176,6 +180,8 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     wants_sankalpa_midpoint_reminders: value?.wants_sankalpa_midpoint_reminders ?? INITIAL_SETTINGS.wants_sankalpa_midpoint_reminders,
     wants_community_notifications: value?.wants_community_notifications ?? INITIAL_SETTINGS.wants_community_notifications,
     wants_family_notifications: value?.wants_family_notifications ?? INITIAL_SETTINGS.wants_family_notifications,
+    wants_family_remembrance_reminders: value?.wants_family_remembrance_reminders ?? INITIAL_SETTINGS.wants_family_remembrance_reminders,
+    family_remembrance_time: value?.family_remembrance_time ?? INITIAL_SETTINGS.family_remembrance_time,
     app_language: value?.app_language ?? INITIAL_SETTINGS.app_language,
     transliteration_language: value?.transliteration_language ?? INITIAL_SETTINGS.transliteration_language,
     meaning_language: value?.meaning_language ?? INITIAL_SETTINGS.meaning_language,
@@ -337,7 +343,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     journalCount: 0,
   });
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
+  const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [japaReminderTimeDraft, setJapaReminderTimeDraft] = useState(INITIAL_SETTINGS.japa_reminder_time);
+  const [familyRemembranceTimeDraft, setFamilyRemembranceTimeDraft] = useState(INITIAL_SETTINGS.family_remembrance_time);
   const [reminderTimeDraft, setReminderTimeDraft] = useState(INITIAL_SETTINGS.observance_reminder_time ?? '08:00');
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
@@ -488,6 +496,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setGreetingPickState(greeting);
 
     if (guest) {
+      setFamilyRemembranceSchemaReady(false);
       identityRef.current = { kind: 'guest' };
       clearRetryTimer();
       setPendingWrite(null);
@@ -497,6 +506,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       ]);
       if (!lease.isCurrent()) return;
       setSettings(toSettingsState({ ...INITIAL_SETTINGS, ...cached?.settings }));
+      setFamilyRemembranceTimeDraft(toSettingsState({ ...INITIAL_SETTINGS, ...cached?.settings }).family_remembrance_time);
       if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
         setThemePref(localTheme);
       }
@@ -511,14 +521,34 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     const identity: SettingsCacheIdentity = { kind: 'authenticated', userId: appIdentity.userId };
     identityRef.current = identity;
 
-  const [profileRes, cached, localTheme] = await Promise.all([
-      supabase
+    setFamilyRemembranceSchemaReady(false);
+    const profileSettingsPromise = (async () => {
+      const current = await supabase
+        .from('profiles')
+        .select(
+          'tradition, japa_reminder_enabled, japa_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, wants_family_remembrance_reminders, family_remembrance_time, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
+        )
+        .eq('id', appIdentity.userId)
+        .single();
+      if (!current.error) return { ...current, familyRemembranceSchemaReady: true };
+      if ((current.error as { code?: string }).code !== '42703') {
+        return { ...current, familyRemembranceSchemaReady: false };
+      }
+      // The Native bundle may be installed before the additive DB migration.
+      // Keep all existing settings readable and keep this new control disabled
+      // until the server schema is ready.
+      const legacy = await supabase
         .from('profiles')
         .select(
           'tradition, japa_reminder_enabled, japa_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
         )
         .eq('id', appIdentity.userId)
-        .single(),
+        .single();
+      return { ...legacy, familyRemembranceSchemaReady: false };
+    })();
+
+    const [profileRes, cached, localTheme] = await Promise.all([
+      profileSettingsPromise,
       readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
     ]);
@@ -526,12 +556,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     if (profileRes.error) throw profileRes.error;
 
+    setFamilyRemembranceSchemaReady(profileRes.familyRemembranceSchemaReady);
     setProfileTradition(profileRes.data?.tradition || 'hindu');
     const remote = toSettingsState(profileRes.data ?? INITIAL_SETTINGS);
     const pending = (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
 
     setSettings(merged);
+    setFamilyRemembranceTimeDraft(merged.family_remembrance_time);
     setPendingWrite(pending[0] ?? null);
     await writeSettingsCache({
       schemaVersion: 2,
@@ -720,6 +752,26 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     if (appIdentity.kind === 'authenticated') {
       void registerPushToken(appIdentity.userId, { force: true, reason: 'permission' });
+    }
+  };
+
+  const enableFamilyRemembranceReminder = async (nextState: SettingsState) => {
+    // The central dispatcher always creates the in-app bell record before it
+    // attempts OS push. Keep the explicit family opt-in useful even when OS
+    // permission is off; push permission controls only the device delivery.
+    const allowed = await requestNotificationPermission();
+    await persistSettings(nextState);
+    if (appIdentity.kind === 'authenticated' && allowed) {
+      void registerPushToken(appIdentity.userId, { force: true, reason: 'permission' });
+    } else if (!allowed) {
+      Alert.alert(
+        'In-app reminders enabled',
+        'Your family reminder will appear in Shoonaya. Allow notifications in phone settings if you also want lock-screen alerts.',
+        [
+          { text: 'Later', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => { void openNotificationSettings(); } },
+        ],
+      );
     }
   };
 
@@ -1042,12 +1094,16 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     label={item.label}
                     subtitle={item.requiresAccount && isGuest
                       ? `${item.subtitle} (sign in to enable)`
-                      : item.subtitle}
+                      : item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady
+                        ? 'Available after the matching server update is installed'
+                        : item.subtitle}
                     value={settings[item.key] as boolean}
-                    disabled={item.disabled || (item.requiresAccount === true && isGuest)}
+                    disabled={item.disabled || (item.requiresAccount === true && isGuest) ||
+                      (item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady)}
                     badge={item.badge}
                     onChange={(value) => {
-                      if (item.disabled || (item.requiresAccount === true && isGuest)) return;
+                      if (item.disabled || (item.requiresAccount === true && isGuest) ||
+                        (item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady)) return;
                       // Turning a reminder ON is exactly the "contextual"
                       // moment to (re-)ask for OS push permission — mirrors
                       // the web app's own contextual push-permission
@@ -1065,6 +1121,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                       // can still be prompted.
                       const nextState = { ...settings, [item.key]: value };
                       if (value) {
+                        if (item.key === 'wants_family_remembrance_reminders') {
+                          void enableFamilyRemembranceReminder(nextState);
+                          return;
+                        }
                         void enableNotificationReminder(nextState);
                         return;
                       }
@@ -1092,6 +1152,30 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                           variant="secondary"
                           disabled={!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(japaReminderTimeDraft) || japaReminderTimeDraft === settings.japa_reminder_time}
                           onPress={() => { void persistSettings({ ...settings, japa_reminder_time: japaReminderTimeDraft }); }}
+                        />
+                      </View>
+                    </View>
+                  ) : null}
+                  {item.key === 'wants_family_remembrance_reminders' && !isGuest && settings.wants_family_remembrance_reminders ? (
+                    <View style={{ gap: 10, marginTop: 12, marginBottom: 14 }}>
+                      <Text style={{ ...TYPE.label, color: theme.text }}>Reminder time</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>Choose 08:00–21:59 in your profile timezone. Quiet hours can move it to the next allowed time.</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <TextInput
+                          accessibilityLabel="Family remembrance reminder time"
+                          value={familyRemembranceTimeDraft}
+                          onChangeText={setFamilyRemembranceTimeDraft}
+                          keyboardType="numbers-and-punctuation"
+                          maxLength={5}
+                          placeholder="09:00"
+                          placeholderTextColor={theme.dim}
+                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
+                        />
+                        <Button
+                          label="Save time"
+                          variant="secondary"
+                          disabled={!/^(0[8-9]|1[0-9]|2[01]):[0-5][0-9]$/.test(familyRemembranceTimeDraft) || familyRemembranceTimeDraft === settings.family_remembrance_time}
+                          onPress={() => { void persistSettings({ ...settings, family_remembrance_time: familyRemembranceTimeDraft }); }}
                         />
                       </View>
                     </View>
