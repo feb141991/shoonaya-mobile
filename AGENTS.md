@@ -52,6 +52,15 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - Clear private caches on sign-out or account switch.
 - Never display one user's cached profile-qualified data to another user.
 - Offline data must disclose when timing/date information may be stale.
+- Treat cache as a resilience fallback, never as the source of truth: render a
+  validated same-identity snapshot immediately when available, then revalidate
+  in the background. A successful network response replaces it; a failed or
+  cancelled refresh must not erase usable cached content or expose raw transport
+  errors to the UI.
+- Bound persisted caches by schema/version and age. Encrypt private family,
+  health, or user-generated content at rest; exclude credentials and reusable
+  invitation secrets. Any stale date-sensitive content must be visibly marked,
+  and cached state must never authorize a private mutation.
 
 ### 6. Notification Delivery
 - Trace notification creation through eligibility, canonical occurrence,

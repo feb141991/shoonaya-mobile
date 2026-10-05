@@ -32,7 +32,12 @@ import {
 } from "@/lib/constants";
 import { NAV_BAR_CLEARANCE } from "@/lib/nav-bar";
 import { captureAppIdentity, useAppIdentity } from "@/lib/appIdentity";
+import { isFetchCancelled } from "@/lib/api";
 import { canRetainKulSnapshot } from "@/lib/kul-contract";
+import {
+  readKulSnapshotCache,
+  writeKulSnapshotCache,
+} from "@/lib/kulSnapshotCache";
 import {
   addKulFamilyMember,
   addExistingKulTirthaWish,
@@ -275,6 +280,7 @@ export default function KulScreen() {
   const snapshotRef = useRef<KulSnapshot | null>(null);
   const activeOwnerRef = useRef<string | null>(null);
   const [snapshot, setSnapshot] = useState<KulSnapshot | null>(null);
+  const [snapshotIsStale, setSnapshotIsStale] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -336,6 +342,7 @@ export default function KulScreen() {
   const clearPrivateScreenState = useCallback(() => {
     snapshotRef.current = null;
     setSnapshot(null);
+    setSnapshotIsStale(false);
     setLoading(true);
     setRefreshing(false);
     setError(null);
@@ -398,29 +405,52 @@ export default function KulScreen() {
       return;
     const hadSnapshot = Boolean(snapshotRef.current);
     const startedAt = Date.now();
+    let displayedCache = hadSnapshot;
     if (hadSnapshot) setRefreshing(isPull);
     else setLoading(true);
+
+    // Read a bounded, encrypted, exact-owner disk snapshot in parallel with
+    // the authoritative API request. If the live request wins the race, its
+    // response remains authoritative and the older cache is ignored.
+    if (!hadSnapshot) {
+      void readKulSnapshotCache(userId).then((cached) => {
+        if (!cached || !lease.isCurrent() || snapshotRef.current) return;
+        snapshotRef.current = cached.snapshot;
+        setSnapshot(cached.snapshot);
+        setSnapshotIsStale(true);
+        setError(null);
+        setLoading(false);
+        displayedCache = true;
+      });
+    }
     try {
       const next = await fetchKulSnapshot(userId);
       if (!lease.isCurrent()) return;
       snapshotRef.current = next;
       setSnapshot(next);
+      setSnapshotIsStale(false);
       setError(null);
+      void writeKulSnapshotCache(next);
       recordRouteOpen({ kind: "authenticated", userId }, "kul", {
-        cacheHit: hadSnapshot,
+        cacheHit: displayedCache,
+        stale: false,
         durationMs: Date.now() - startedAt,
       });
     } catch (loadError) {
       if (!lease.isCurrent()) return;
-      recordRefreshFailure({ kind: "authenticated", userId }, "kul", {
-        reason: "unknown",
-        hadCachedData: hadSnapshot,
-      });
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : "Could not load your family circle.",
-      );
+      const hasFallback = Boolean(snapshotRef.current);
+      if (!isFetchCancelled(loadError)) {
+        recordRefreshFailure({ kind: "authenticated", userId }, "kul", {
+          reason: "unknown",
+          hadCachedData: hasFallback,
+        });
+      }
+      setSnapshotIsStale(hasFallback);
+      setError(hasFallback
+        ? "Showing saved family information. Messages and date calculations may be out of date."
+        : isFetchCancelled(loadError)
+          ? "The connection paused before your family circle loaded. Tap Retry when ready."
+          : "We couldn’t reach your family circle. Check your connection and try again.");
     } finally {
       if (lease.isCurrent()) {
         setLoading(false);
@@ -445,6 +475,7 @@ export default function KulScreen() {
           // previous account's snapshot visible while the next account loads.
           snapshotRef.current = null;
           setSnapshot(null);
+          setSnapshotIsStale(false);
           setLoading(true);
           setError(null);
         }
@@ -454,6 +485,7 @@ export default function KulScreen() {
         activeOwnerRef.current = null;
         snapshotRef.current = null;
         setSnapshot(null);
+        setSnapshotIsStale(false);
         setLoading(identity.kind === "loading");
         setError(null);
       }
@@ -518,6 +550,7 @@ export default function KulScreen() {
     const next = update(current);
     snapshotRef.current = next;
     setSnapshot(next);
+    void writeKulSnapshotCache(next);
   }, []);
 
   const tirthaSearchRequestRef = useRef(0);
@@ -567,6 +600,13 @@ export default function KulScreen() {
         setAuthGateVisible(true);
         return false;
       }
+      if (snapshotIsStale) {
+        Alert.alert(
+          "Refresh your family circle",
+          "Reconnect and refresh before changing family details, so this action uses your latest role and membership.",
+        );
+        return false;
+      }
       const lease = captureAppIdentity();
       if (
         lease.identity.kind !== "authenticated" ||
@@ -597,7 +637,7 @@ export default function KulScreen() {
         if (lease.isCurrent()) setWorking(false);
       }
     },
-    [currentUserId, loadSnapshot],
+    [currentUserId, loadSnapshot, snapshotIsStale],
   );
 
   const handleCreateKul = async () => {
@@ -1041,6 +1081,30 @@ export default function KulScreen() {
           </Card>
         ) : null}
 
+        {identity.kind === "authenticated" && snapshot && snapshotIsStale ? (
+          <Card
+            tone="auto"
+            style={{
+              backgroundColor: theme.cardSoft,
+              borderColor: theme.border,
+              gap: 10,
+            }}
+          >
+            <Text style={{ ...TYPE.body, color: theme.text }}>
+              {error ?? "You’re viewing a saved family snapshot. Messages and date calculations may be out of date."}
+            </Text>
+            <ActionButton
+              label={refreshing ? "Refreshing…" : "Refresh family circle"}
+              icon="refresh-cw"
+              secondary
+              disabled={refreshing}
+              onPress={() => void loadSnapshot(currentUserId!, true)}
+              theme={theme}
+              isDark={isDark}
+            />
+          </Card>
+        ) : null}
+
         {identity.kind === "authenticated" && !snapshot && error ? (
           <Card
             tone="auto"
@@ -1303,27 +1367,6 @@ export default function KulScreen() {
                 );
               })}
             </View>
-
-            {error ? (
-              <Card
-                tone="auto"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: COLORS.dangerBorder,
-                  gap: 10,
-                }}
-              >
-                <Text style={{ ...TYPE.body, color: theme.text }}>{error}</Text>
-                <ActionButton
-                  label="Retry"
-                  icon="refresh-cw"
-                  secondary
-                  onPress={() => void loadSnapshot(currentUserId!, true)}
-                  theme={theme}
-                  isDark={isDark}
-                />
-              </Card>
-            ) : null}
 
             {activeSection === "home" ? (
               <>

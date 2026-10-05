@@ -60,6 +60,7 @@ import { clearAllMandaliCaches } from '@/lib/mandaliCache';
 import { clearAllSettingsCaches } from '@/lib/settingsCache';
 import { clearAllNotificationsCaches } from '@/lib/notificationsCache';
 import { clearAllPathshalaCaches } from '@/lib/pathshalaCache';
+import { clearAllKulSnapshotCaches } from '@/lib/kulSnapshotCache';
 import { clearJapaContextCache } from '@/lib/japaContextCache';
 import { clearQuizCache } from '@/lib/quizCache';
 import { clearSevaCache } from '@/lib/sevaCache';
@@ -453,6 +454,7 @@ function RootLayout() {
         void clearAllSettingsCaches();
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
+        void clearAllKulSnapshotCaches();
         void clearJapaContextCache();
         void clearQuizCache();
         void clearSevaCache();
@@ -501,6 +503,7 @@ function RootLayout() {
         void clearAllSettingsCaches();
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
+        void clearAllKulSnapshotCaches();
         void clearJapaContextCache();
         void clearQuizCache();
         void clearSevaCache();
@@ -683,6 +686,7 @@ function RootLayout() {
         void clearAllSettingsCaches();
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
+        void clearAllKulSnapshotCaches();
         void clearJapaContextCache();
         void clearQuizCache();
         void clearSevaCache();
@@ -703,6 +707,7 @@ function RootLayout() {
         void clearAllSettingsCaches();
         void clearAllNotificationsCaches();
         void clearAllPathshalaCaches();
+        void clearAllKulSnapshotCaches();
         void clearJapaContextCache();
         void clearQuizCache();
         void clearSevaCache();
