@@ -23,7 +23,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-clever-hare-and-elephant': require('@/assets/panchatantra/clever-hare-and-elephant.jpg'),
   'panchatantra-moon-lake-rabbits': require('@/assets/panchatantra/moon-lake-rabbits.jpg'),
   'panchatantra-blue-jackal': require('@/assets/panchatantra/blue-jackal.jpg'),
-  'panchatantra-lion-and-rabbit': require('@/assets/panchatantra/lion-and-rabbit.jpg'),
+  'panchatantra-lion-and-rabbit': require('@/assets/panchatantra/lion-rabbit-1.jpg'),
   'panchatantra-crows-and-cobra': require('@/assets/panchatantra/crows-and-cobra.jpg'),
   'panchatantra-mice-and-elephants': require('@/assets/panchatantra/mice-and-elephants.jpg'),
   'panchatantra-four-friends': require('@/assets/panchatantra/four-friends.jpg'),
@@ -37,6 +37,14 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
  * Each entry provides an array of illustrations matching the 6 progressive scenes of the tale.
  */
 const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = {
+  'panchatantra-lion-and-rabbit': [
+    require('@/assets/panchatantra/lion-rabbit-1.jpg'),
+    require('@/assets/panchatantra/lion-rabbit-2.jpg'),
+    require('@/assets/panchatantra/lion-rabbit-3.jpg'),
+    require('@/assets/panchatantra/lion-rabbit-4.jpg'),
+    require('@/assets/panchatantra/lion-rabbit-5.jpg'),
+    require('@/assets/panchatantra/lion-rabbit-6.jpg'),
+  ],
   'panchatantra-monkey-and-crocodile': [
     require('@/assets/panchatantra/monkey-croc-1.jpg'),
     require('@/assets/panchatantra/monkey-croc-2.jpg'),
