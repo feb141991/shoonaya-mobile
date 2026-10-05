@@ -8,6 +8,7 @@ import {
 } from '../lib/panchatantraExpanded';
 import {
   getPanchatantraArtworkSource,
+  getPanchatantraSceneArtwork,
   hasPanchatantraArtwork,
 } from '../lib/panchatantraArtwork';
 
@@ -101,6 +102,22 @@ test('Panchatantra Artwork Resolution', async (t) => {
     assert.ok(sourceDove, 'Dove king and net artwork should resolve');
   });
 
+  await t.test('resolves page-by-page dedicated scene artwork for monkey-and-crocodile and talkative-tortoise', () => {
+    for (let sceneIndex = 0; sceneIndex < 6; sceneIndex++) {
+      const sceneArtMonkey = getPanchatantraSceneArtwork('panchatantra-monkey-and-crocodile', sceneIndex);
+      assert.ok(sceneArtMonkey, `Scene ${sceneIndex + 1} artwork must resolve for monkey-and-crocodile`);
+      const sceneArtTortoise = getPanchatantraSceneArtwork('panchatantra-talkative-tortoise', sceneIndex);
+      assert.ok(sceneArtTortoise, `Scene ${sceneIndex + 1} artwork must resolve for talkative-tortoise`);
+    }
+
+    // Fallback to master artwork for stories without individual scene splits
+    const camelScene = getPanchatantraSceneArtwork('panchatantra-camel-bell', 2);
+    assert.equal(camelScene, getPanchatantraArtworkSource('panchatantra-camel-bell'));
+
+    // Nonexistent story returns null
+    assert.equal(getPanchatantraSceneArtwork('panchatantra-nonexistent', 0), null);
+  });
+
   await t.test('returns null gracefully for stories without local artwork', () => {
     assert.equal(hasPanchatantraArtwork('panchatantra-nonexistent-story'), false);
     assert.equal(getPanchatantraArtworkSource('panchatantra-nonexistent-story'), null);
@@ -153,3 +170,18 @@ test('Panchatantra detail screen error handling', async (t) => {
     assert.doesNotMatch(src, /startsWith\('panchatantra-'\)\) setLoadError/, 'no Panchatantra exemption on setLoadError');
   });
 });
+
+test('Panchatantra storybook font scaling controls', async (t) => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const src = fs.readFileSync(path.join(process.cwd(), 'components/reader/PanchatantraStorybookView.tsx'), 'utf8');
+
+  await t.test('provides dedicated -- and ++ font scaling steppers while reading', () => {
+    assert.match(src, /accessibilityLabel="Decrease text size \(--\)"/);
+    assert.match(src, /accessibilityLabel="Increase text size \(\+\+\)"/);
+    assert.match(src, /STORYBOOK_FONT_SCALES/);
+    assert.match(src, />\s*--\s*<\/Text>/);
+    assert.match(src, />\s*\+\+\s*<\/Text>/);
+  });
+});
+

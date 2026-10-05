@@ -4,9 +4,7 @@ import {
   Text,
   StyleSheet,
   useColorScheme,
-  Dimensions,
-  Animated,
-  PanResponder,
+  useWindowDimensions,
   ScrollView,
   Platform,
 } from "react-native";
@@ -26,7 +24,10 @@ import {
   themeColor,
   KATHA_VIEW_ACCENT,
 } from "@/lib/constants";
-import { getPanchatantraArtworkSource } from "@/lib/panchatantraArtwork";
+import {
+  getPanchatantraSceneArtwork,
+  getPanchatantraArtworkSource,
+} from "@/lib/panchatantraArtwork";
 
 export interface StorybookKathaData {
   id: string;
@@ -55,14 +56,19 @@ interface PanchatantraStorybookViewProps {
   onComplete?: () => void;
 }
 
-// Scene camera focal points per page (0 to 5) for subtle Ken Burns cinematography
-const SCENE_FRAMING = [
-  { scale: 1.0, translateX: 0, translateY: 0 },
-  { scale: 1.12, translateX: -6, translateY: -8 },
-  { scale: 1.18, translateX: 6, translateY: 6 },
-  { scale: 1.15, translateX: 8, translateY: -4 },
-  { scale: 1.08, translateX: -4, translateY: 4 },
-  { scale: 1.0, translateX: 0, translateY: 0 },
+export interface StorybookFontScale {
+  label: string;
+  fontSize: number;
+  lineHeight: number;
+  dropCapSize: number;
+  dropCapFont: number;
+}
+
+export const STORYBOOK_FONT_SCALES: StorybookFontScale[] = [
+  { label: "sm", fontSize: 14, lineHeight: 24, dropCapSize: 40, dropCapFont: 24 },
+  { label: "md", fontSize: 16.5, lineHeight: 28, dropCapSize: 46, dropCapFont: 27 },
+  { label: "lg", fontSize: 19.5, lineHeight: 32, dropCapSize: 52, dropCapFont: 31 },
+  { label: "xl", fontSize: 23, lineHeight: 37, dropCapSize: 58, dropCapFont: 35 },
 ];
 
 export function PanchatantraStorybookView({
@@ -79,11 +85,34 @@ export function PanchatantraStorybookView({
   const isDark = useColorScheme() === "dark";
   const theme = themeColor(isDark);
   const insets = useSafeAreaInsets();
-  const screenDimensions = Dimensions.get("window");
-  const accent = KATHA_VIEW_ACCENT.panchatantra; // #C87850 warm terracotta
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const accent = KATHA_VIEW_ACCENT.panchatantra; // warm terracotta #C87850
 
-  // Current page state (0-indexed, 0 to body.length - 1)
+  const scrollRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState(0);
+
+  // Dedicated font size scale state: allows instant stepping through -- and ++ while reading
+  const [fontScaleIndex, setFontScaleIndex] = useState(1);
+
+  const handleDecreaseFontSize = () => {
+    if (fontScaleIndex > 0) {
+      if (Platform.OS !== "web") void Haptics.selectionAsync();
+      setFontScaleIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleIncreaseFontSize = () => {
+    if (fontScaleIndex < STORYBOOK_FONT_SCALES.length - 1) {
+      if (Platform.OS !== "web") void Haptics.selectionAsync();
+      setFontScaleIndex((prev) => prev + 1);
+    }
+  };
+
+  const currentScale = STORYBOOK_FONT_SCALES[fontScaleIndex];
+  const fontStyle = {
+    fontSize: currentScale.fontSize,
+    lineHeight: currentScale.lineHeight,
+  };
 
   const hasHindi = Boolean(katha.titleHi && katha.bodyHi?.length && katha.phalHi);
   const title = activeLanguage === "hi" && katha.titleHi ? katha.titleHi : katha.title;
@@ -92,124 +121,58 @@ export function PanchatantraStorybookView({
 
   const totalPages = bodyParagraphs.length;
   const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
-  const currentParagraph = bodyParagraphs[safePage] ?? "";
 
-  const artworkSource = useMemo(() => getPanchatantraArtworkSource(katha.id), [katha.id]);
-
-  // Animated values for page turn transitions
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  // Scene camera animation values
-  const cameraScale = useRef(new Animated.Value(1.0)).current;
-  const cameraX = useRef(new Animated.Value(0)).current;
-  const cameraY = useRef(new Animated.Value(0)).current;
-
-  // Trigger smooth transition whenever page changes
+  // Keep page alignment if language changes
   useEffect(() => {
-    const framing = SCENE_FRAMING[safePage % SCENE_FRAMING.length];
+    scrollRef.current?.scrollTo({
+      x: safePage * screenWidth,
+      animated: false,
+    });
+  }, [activeLanguage, screenWidth]);
 
-    // Smooth page content cross-fade
-    fadeAnim.setValue(0.35);
-    slideAnim.setValue(12);
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 320,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 320,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cameraScale, {
-        toValue: framing.scale,
-        duration: 650,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cameraX, {
-        toValue: framing.translateX,
-        duration: 650,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cameraY, {
-        toValue: framing.translateY,
-        duration: 650,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [safePage]);
-
-  // Change page with optional haptics
-  const goToPage = (nextPage: number) => {
-    if (nextPage < 0 || nextPage >= totalPages) return;
+  // Navigate to specific page with smooth scroll & haptics
+  const goToPage = (nextIndex: number, animated = true) => {
+    if (nextIndex < 0 || nextIndex >= totalPages) return;
     if (Platform.OS !== "web") {
       void Haptics.selectionAsync();
     }
-    setCurrentPage(nextPage);
+    setCurrentPage(nextIndex);
+    scrollRef.current?.scrollTo({
+      x: nextIndex * screenWidth,
+      animated,
+    });
   };
 
-  // Horizontal Swipe Gestures on the Book Canvas
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 18 && Math.abs(gestureState.dy) < 30;
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -36) {
-          // Swipe Left -> Next Page
-          if (safePage < totalPages - 1) {
-            goToPage(safePage + 1);
-          }
-        } else if (gestureState.dx > 36) {
-          // Swipe Right -> Previous Page
-          if (safePage > 0) {
-            goToPage(safePage - 1);
-          }
-        }
-      },
-    })
-  ).current;
-
-  // Extract illuminated drop cap letter and remainder of text
-  const { dropCap, remainderText } = useMemo(() => {
-    if (!currentParagraph || currentParagraph.length === 0) {
-      return { dropCap: "", remainderText: "" };
-    }
-    const trimmed = currentParagraph.trim();
-    if (trimmed.startsWith('"') || trimmed.startsWith('“')) {
-      const cap = trimmed.slice(0, 2);
-      return { dropCap: cap, remainderText: trimmed.slice(2) };
-    }
-    const cap = trimmed.charAt(0);
-    return { dropCap: cap, remainderText: trimmed.slice(1) };
-  }, [currentParagraph]);
-
-  const fontStyle = fontSize ?? { fontSize: 16.5, lineHeight: 28 };
   const textFontFamily = activeLanguage === "hi" ? FONTS.devanagari : FONTS.serif;
   const headingFontFamily = activeLanguage === "hi" ? FONTS.devanagariBold : FONTS.serifBold;
 
-  // Parchment palette tokens
-  const parchmentBg = isDark ? "#18130E" : "#FAF6EE";
-  const parchmentBorder = isDark ? "rgba(197,160,89,0.24)" : "rgba(216,138,28,0.22)";
-  const shadowValue = isDark ? SHADOWS.heroCard.dark : SHADOWS.heroCard.light;
-
-  // Calculate dynamic responsive artwork height (fits 38% of screen height for proper book sizing)
-  const artHeight = Math.min(340, Math.max(230, Math.round(screenDimensions.height * 0.38)));
+  // Parchment palette
+  const screenBg = isDark ? "#0A0806" : "#FAF6EE";
+  const parchmentBg = isDark ? "#14100C" : "#FAF6EE";
+  const parchmentBorder = isDark ? "rgba(197,160,89,0.22)" : "rgba(216,138,28,0.24)";
+  const artHeight = Math.round(screenHeight * 0.45);
 
   return (
-    <View style={[styles.screen, { backgroundColor: isDark ? "#0E0B08" : "#F4EFE6" }]}>
-      {/* ── 1. Smart Minimal Floating Top Bar (Height: 44px, Zero Clutter) ── */}
+    <View style={[styles.screen, { backgroundColor: screenBg }]}>
+      {/* ── 1. Floating Semi-Transparent Top Bar ── */}
       <View
         style={[
           styles.topBar,
           {
-            paddingTop: Math.max(insets.top + 4, 10),
-            borderBottomColor: isDark ? "rgba(197,160,89,0.15)" : "rgba(200,160,110,0.18)",
+            paddingTop: Math.max(insets.top + 6, 12),
           },
         ]}
       >
+        <LinearGradient
+          colors={[
+            "rgba(0,0,0,0.8)",
+            "rgba(0,0,0,0.45)",
+            "transparent",
+          ]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
         {/* Left: Back Button */}
         <PressableSurface
           haptic="selection"
@@ -221,12 +184,12 @@ export function PanchatantraStorybookView({
             style={[
               styles.circleBtn,
               {
-                backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                borderColor: isDark ? "rgba(197,160,89,0.25)" : "rgba(200,160,110,0.3)",
+                backgroundColor: "rgba(0,0,0,0.4)",
+                borderColor: "rgba(255,255,255,0.25)",
               },
             ]}
           >
-            <Feather name="chevron-left" size={20} color={theme.text} />
+            <Feather name="chevron-left" size={20} color="#FFFFFF" />
           </View>
         </PressableSurface>
 
@@ -234,13 +197,13 @@ export function PanchatantraStorybookView({
         <View style={styles.topCenterInfo}>
           <Text
             numberOfLines={1}
-            style={[styles.topStoryTitle, { color: theme.text, fontFamily: headingFontFamily }]}
+            style={[styles.topStoryTitle, { color: "#FFFFFF", fontFamily: headingFontFamily }]}
           >
             {title}
           </Text>
           <View style={styles.scenePill}>
-            <View style={[styles.sceneDot, { backgroundColor: accent }]} />
-            <Text style={[styles.scenePillText, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
+            <View style={[styles.sceneDot, { backgroundColor: COLORS.brandGold }]} />
+            <Text style={[styles.scenePillText, { color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }]}>
               {safePage === totalPages - 1
                 ? activeLanguage === "hi"
                   ? "कथा बोध"
@@ -259,8 +222,8 @@ export function PanchatantraStorybookView({
               style={[
                 styles.langTrack,
                 {
-                  backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                  borderColor: isDark ? "rgba(197,160,89,0.25)" : "rgba(200,160,110,0.25)",
+                  backgroundColor: "rgba(0,0,0,0.4)",
+                  borderColor: "rgba(255,255,255,0.25)",
                 },
               ]}
             >
@@ -276,7 +239,7 @@ export function PanchatantraStorybookView({
                   style={[
                     styles.langSegmentText,
                     {
-                      color: activeLanguage === "en" ? "#FFFFFF" : theme.dim,
+                      color: "#FFFFFF",
                       fontFamily: FONTS.sansSemiBold,
                     },
                   ]}
@@ -297,7 +260,7 @@ export function PanchatantraStorybookView({
                   style={[
                     styles.langSegmentText,
                     {
-                      color: activeLanguage === "hi" ? "#FFFFFF" : theme.dim,
+                      color: "#FFFFFF",
                       fontFamily: FONTS.devanagariBold,
                     },
                   ]}
@@ -329,15 +292,15 @@ export function PanchatantraStorybookView({
                         elevation: 4,
                       }
                     : {
-                        backgroundColor: `${accent}16`,
-                        borderColor: `${accent}35`,
+                        backgroundColor: "rgba(0,0,0,0.4)",
+                        borderColor: "rgba(255,255,255,0.25)",
                       },
                 ]}
               >
                 <Feather
                   name={isSpeaking ? "square" : "volume-2"}
                   size={16}
-                  color={isSpeaking ? "#FFFFFF" : accent}
+                  color={isSpeaking ? "#FFFFFF" : COLORS.brandGold}
                 />
               </View>
             </PressableSurface>
@@ -345,270 +308,374 @@ export function PanchatantraStorybookView({
         </View>
       </View>
 
-      {/* ── 2. The Main Interactive Book Canvas (Swipeable) ── */}
-      <View style={styles.bookCanvas} {...panResponder.panHandlers}>
-        {/* Top: Book-Style Illustration Stage */}
-        <View
-          style={[
-            styles.illustrationStage,
-            {
-              height: artHeight,
-              borderColor: isDark ? "rgba(216,138,28,0.38)" : "rgba(216,138,28,0.45)",
-              boxShadow: shadowValue,
-            },
-          ]}
-        >
-          {artworkSource ? (
-            <View style={styles.artworkContainer}>
-              <Animated.View
-                style={[
-                  styles.animatedArtLayer,
-                  {
-                    transform: [
-                      { scale: cameraScale },
-                      { translateX: cameraX },
-                      { translateY: cameraY },
-                    ],
-                  },
-                ]}
-              >
-                <Image
-                  source={artworkSource}
-                  style={styles.fullArtImage}
-                  contentFit="cover"
-                  contentPosition="center"
-                  priority="high"
-                  cachePolicy="memory-disk"
-                  transition={250}
-                  accessibilityLabel={`${title} illustration scene`}
-                />
-              </Animated.View>
+      {/* ── 2. Full-Screen Horizontal Paging Carousel (Edge-to-Edge) ── */}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        bounces={false}
+        scrollEventThrottle={16}
+        onMomentumScrollEnd={(event) => {
+          const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+          if (newIndex !== safePage && newIndex >= 0 && newIndex < totalPages) {
+            setCurrentPage(newIndex);
+            if (Platform.OS !== "web") {
+              void Haptics.selectionAsync();
+            }
+          }
+        }}
+        style={styles.pagerScrollView}
+      >
+        {bodyParagraphs.map((paragraph, pageIndex) => {
+          const sceneArt = getPanchatantraSceneArtwork(katha.id, pageIndex);
+          const isFinalPage = pageIndex === totalPages - 1;
 
-              {/* Ornate Gold Filigree Corners */}
-              <View style={[styles.cornerFiligree, styles.cornerTL]}>
-                <Text style={styles.filigreeSymbol}>❦</Text>
-              </View>
-              <View style={[styles.cornerFiligree, styles.cornerTR]}>
-                <Text style={styles.filigreeSymbol}>❦</Text>
-              </View>
-              <View style={[styles.cornerFiligree, styles.cornerBL]}>
-                <Text style={styles.filigreeSymbol}>❦</Text>
-              </View>
-              <View style={[styles.cornerFiligree, styles.cornerBR]}>
-                <Text style={styles.filigreeSymbol}>❦</Text>
-              </View>
+          // Extract drop cap letter for scene 0 or intermediate scenes
+          const trimmed = paragraph.trim();
+          let dropCap = "";
+          let remainderText = trimmed;
+          if (trimmed.length > 0) {
+            if (trimmed.startsWith('"') || trimmed.startsWith("“")) {
+              dropCap = trimmed.slice(0, 2);
+              remainderText = trimmed.slice(2);
+            } else {
+              dropCap = trimmed.charAt(0);
+              remainderText = trimmed.slice(1);
+            }
+          }
 
-              <LinearGradient
-                colors={["rgba(0,0,0,0.1)", "transparent", isDark ? "rgba(14,11,8,0.7)" : "rgba(244,239,230,0.6)"]}
-                style={styles.artGradientOverlay}
-                pointerEvents="none"
-              />
-            </View>
-          ) : (
-            /* Traditional Indian Folio Bookplate for stories without JPG */
-            <View
-              style={[
-                styles.folioBookplate,
-                {
-                  backgroundColor: isDark ? "#17120D" : "#241810",
-                  borderColor: "rgba(216,138,28,0.4)",
-                },
-              ]}
-            >
-              {/* Decorative Indian Manuscript Border */}
-              <View style={styles.folioInnerBorder}>
-                <View style={styles.folioHeader}>
-                  <Text style={styles.folioHeaderSymbol}>✦</Text>
-                  <Text style={[styles.folioHeaderText, { fontFamily: FONTS.devanagariBold }]}>
-                    पञ्चतन्त्र नीति कथा
-                  </Text>
-                  <Text style={styles.folioHeaderSymbol}>✦</Text>
-                </View>
+          return (
+            <View key={pageIndex} style={[styles.pageSlide, { width: screenWidth, height: screenHeight }]}>
+              {/* Top: Grand Edge-to-Edge Scene Illustration */}
+              <View style={[styles.illustrationStage, { height: artHeight, width: screenWidth }]}>
+                {sceneArt ? (
+                  <View style={StyleSheet.absoluteFill}>
+                    <Image
+                      source={sceneArt}
+                      style={StyleSheet.absoluteFill}
+                      contentFit="cover"
+                      contentPosition="center"
+                      priority="high"
+                      cachePolicy="memory-disk"
+                      transition={250}
+                      accessibilityLabel={`${title} scene ${pageIndex + 1}`}
+                    />
 
-                {/* Central Gilded Medallion */}
-                <View style={styles.folioMedallionGlow}>
-                  <View style={styles.folioMedallion}>
-                    <Text style={styles.folioMedallionEmoji}>{katha.portrait ?? "📜"}</Text>
-                  </View>
-                </View>
+                    {/* Ornate Gold Filigree Corners */}
+                    <View style={[styles.cornerFiligree, styles.cornerTL]}>
+                      <Text style={styles.filigreeSymbol}>❦</Text>
+                    </View>
+                    <View style={[styles.cornerFiligree, styles.cornerTR]}>
+                      <Text style={styles.filigreeSymbol}>❦</Text>
+                    </View>
 
-                {/* Title in Folio */}
-                <Text
-                  numberOfLines={2}
-                  style={[styles.folioTitle, { fontFamily: headingFontFamily }]}
-                >
-                  {title}
-                </Text>
-
-                <View style={styles.folioBottomBanner}>
-                  <Text style={[styles.folioSubtext, { fontFamily: FONTS.sansSemiBold }]}>
-                    ANCIENT INDIAN WISDOM FABLE
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* Bottom: Parchment Story Card */}
-        <Animated.View
-          style={[
-            styles.parchmentPage,
-            {
-              backgroundColor: parchmentBg,
-              borderColor: parchmentBorder,
-              boxShadow: shadowValue,
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.parchmentScrollContent}
-            bounces={false}
-          >
-            {safePage === totalPages - 1 ? (
-              /* Final Moral Celebration Screen */
-              <View style={styles.moralCelebrationContainer}>
-                <View style={[styles.moralSealBadge, { backgroundColor: `${accent}18`, borderColor: `${accent}45` }]}>
-                  <View style={[styles.moralSealInner, { backgroundColor: `${accent}25` }]}>
-                    <Feather name="award" size={26} color={accent} />
-                  </View>
-                  <Text style={[styles.moralSealTag, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
-                    {activeLanguage === "hi" ? "कथा का फल (बोध)" : "THE WISDOM FRUIT"}
-                  </Text>
-                </View>
-
-                <Text
-                  style={[
-                    styles.moralParagraph,
-                    {
-                      color: theme.text,
-                      fontFamily: headingFontFamily,
-                      fontSize: fontStyle.fontSize + 2,
-                      lineHeight: fontStyle.lineHeight + 4,
-                    },
-                  ]}
-                >
-                  “{moralText}”
-                </Text>
-
-                <Text
-                  style={[
-                    styles.moralClosingBody,
-                    {
-                      color: theme.dim,
-                      fontFamily: textFontFamily,
-                      fontSize: fontStyle.fontSize - 1.5,
-                      lineHeight: fontStyle.lineHeight - 2,
-                    },
-                  ]}
-                >
-                  {currentParagraph}
-                </Text>
-
-                {onComplete ? (
-                  <PressableSurface
-                    haptic="impact"
-                    onPress={onComplete}
-                    style={styles.completeStoryBtnWrap}
-                  >
-                    <View style={[styles.completeStoryBtn, { backgroundColor: accent }]}>
-                      <Feather name="check-circle" size={18} color="#FFFFFF" />
-                      <Text style={[styles.completeStoryBtnText, { fontFamily: FONTS.sansSemiBold }]}>
-                        {activeLanguage === "hi" ? "कथा पूर्ण करें" : "Complete Tale & Earn Karma"}
+                    {/* Scene Badge On Image */}
+                    <View style={styles.imageSceneBadge}>
+                      <Text style={styles.imageSceneBadgeText}>
+                        {isFinalPage
+                          ? activeLanguage === "hi"
+                            ? "कथा बोध"
+                            : "WISDOM MORAL"
+                          : activeLanguage === "hi"
+                          ? `दृश्य ${pageIndex + 1} / ${totalPages}`
+                          : `SCENE ${pageIndex + 1} OF ${totalPages}`}
                       </Text>
                     </View>
-                  </PressableSurface>
-                ) : null}
-              </View>
-            ) : (
-              /* Standard Story Scene with Drop Cap */
-              <View style={styles.sceneBodyWrapper}>
-                {safePage === 0 && dropCap ? (
-                  <View style={styles.dropCapRow}>
-                    <View
-                      style={[
-                        styles.dropCapBox,
-                        {
-                          backgroundColor: `${accent}16`,
-                          borderColor: `${accent}40`,
-                        },
+
+                    {/* Bottom Vignette Gradients blending into parchment below */}
+                    <LinearGradient
+                      colors={[
+                        "transparent",
+                        isDark ? "rgba(20,16,12,0.4)" : "rgba(250,246,238,0.4)",
+                        parchmentBg,
                       ]}
-                    >
-                      <Text
-                        style={[
-                          styles.dropCapLetter,
-                          { color: accent, fontFamily: headingFontFamily },
-                        ]}
-                      >
-                        {dropCap}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.bodyText,
-                        {
-                          color: theme.text,
-                          fontFamily: textFontFamily,
-                          fontSize: fontStyle.fontSize,
-                          lineHeight: fontStyle.lineHeight,
-                        },
-                      ]}
-                    >
-                      {remainderText}
-                    </Text>
+                      style={styles.imageBottomVignette}
+                      pointerEvents="none"
+                    />
                   </View>
                 ) : (
-                  <Text
+                  /* Authentic Indian Manuscript Folio Bookplate for unillustrated tales */
+                  <View
                     style={[
-                      styles.bodyText,
+                      styles.folioBookplate,
                       {
-                        color: theme.text,
-                        fontFamily: textFontFamily,
-                        fontSize: fontStyle.fontSize,
-                        lineHeight: fontStyle.lineHeight,
+                        backgroundColor: isDark ? "#17120D" : "#241810",
                       },
                     ]}
                   >
-                    {currentParagraph}
-                  </Text>
+                    <View style={styles.folioInnerBorder}>
+                      <View style={styles.folioHeader}>
+                        <Text style={styles.folioHeaderSymbol}>✦</Text>
+                        <Text style={[styles.folioHeaderText, { fontFamily: FONTS.devanagariBold }]}>
+                          पञ्चतन्त्र नीति कथा · दृश्य {pageIndex + 1}
+                        </Text>
+                        <Text style={styles.folioHeaderSymbol}>✦</Text>
+                      </View>
+
+                      <View style={styles.folioMedallion}>
+                        <Text style={styles.folioMedallionEmoji}>{katha.portrait ?? "📜"}</Text>
+                      </View>
+
+                      <Text numberOfLines={2} style={[styles.folioTitle, { fontFamily: headingFontFamily }]}>
+                        {title}
+                      </Text>
+
+                      <View style={styles.folioBottomBanner}>
+                        <Text style={[styles.folioSubtext, { fontFamily: FONTS.sansSemiBold }]}>
+                          ANCIENT INDIAN WISDOM FABLE
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
                 )}
               </View>
-            )}
-          </ScrollView>
-        </Animated.View>
-      </View>
 
-      {/* ── 3. Ultra-Slim Smart Bottom Bar (Height: 44px, Zero Clutter) ── */}
+              {/* Bottom: Parchment Story Card */}
+              <View
+                style={[
+                  styles.parchmentPage,
+                  {
+                    backgroundColor: parchmentBg,
+                    borderTopColor: parchmentBorder,
+                  },
+                ]}
+              >
+                {/* Parchment Subheader with Scene Tag and [-- A ++] Font Controls */}
+                <View style={styles.parchmentHeaderBar}>
+                  <Text style={[styles.parchmentSceneTag, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
+                    {isFinalPage
+                      ? activeLanguage === "hi"
+                        ? "कथा का फल (बोध)"
+                        : "WISDOM FRUIT"
+                      : activeLanguage === "hi"
+                      ? `दृश्य ${pageIndex + 1}`
+                      : `SCENE ${pageIndex + 1}`}
+                  </Text>
+
+                  <View
+                    style={[
+                      styles.fontScalerPill,
+                      {
+                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                        borderColor: isDark ? "rgba(197,160,89,0.3)" : "rgba(200,160,110,0.3)",
+                      },
+                    ]}
+                  >
+                    <PressableSurface
+                      haptic="selection"
+                      onPress={handleDecreaseFontSize}
+                      disabled={fontScaleIndex === 0}
+                      accessibilityLabel="Decrease text size (--)"
+                      style={[styles.fontScaleBtn, fontScaleIndex === 0 && { opacity: 0.28 }]}
+                    >
+                      <Text style={[styles.fontScaleSign, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
+                        --
+                      </Text>
+                    </PressableSurface>
+
+                    <View
+                      style={[
+                        styles.fontScaleDivider,
+                        { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
+                      ]}
+                    />
+
+                    <View style={styles.fontScaleCenterBadge}>
+                      <Text style={[styles.fontScaleBadgeText, { color: accent, fontFamily: FONTS.serifBold }]}>
+                        A
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.fontScaleDivider,
+                        { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
+                      ]}
+                    />
+
+                    <PressableSurface
+                      haptic="selection"
+                      onPress={handleIncreaseFontSize}
+                      disabled={fontScaleIndex === STORYBOOK_FONT_SCALES.length - 1}
+                      accessibilityLabel="Increase text size (++)"
+                      style={[styles.fontScaleBtn, fontScaleIndex === STORYBOOK_FONT_SCALES.length - 1 && { opacity: 0.28 }]}
+                    >
+                      <Text style={[styles.fontScaleSign, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
+                        ++
+                      </Text>
+                    </PressableSurface>
+                  </View>
+                </View>
+
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={[
+                    styles.parchmentScrollContent,
+                    { paddingBottom: insets.bottom + 70 },
+                  ]}
+                  bounces={false}
+                >
+                  {isFinalPage ? (
+                    /* Final Moral Celebration Screen */
+                    <View style={styles.moralCelebrationContainer}>
+                      <View style={[styles.moralSealBadge, { backgroundColor: `${accent}18`, borderColor: `${accent}45` }]}>
+                        <View style={[styles.moralSealInner, { backgroundColor: `${accent}25` }]}>
+                          <Feather name="award" size={24} color={accent} />
+                        </View>
+                        <Text style={[styles.moralSealTag, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
+                          {activeLanguage === "hi" ? "कथा का फल (बोध)" : "THE WISDOM FRUIT"}
+                        </Text>
+                      </View>
+
+                      <Text
+                        style={[
+                          styles.moralParagraph,
+                          {
+                            color: theme.text,
+                            fontFamily: headingFontFamily,
+                            fontSize: fontStyle.fontSize + 2,
+                            lineHeight: fontStyle.lineHeight + 4,
+                          },
+                        ]}
+                      >
+                        “{moralText}”
+                      </Text>
+
+                      <Text
+                        style={[
+                          styles.moralClosingBody,
+                          {
+                            color: theme.dim,
+                            fontFamily: textFontFamily,
+                            fontSize: fontStyle.fontSize - 1,
+                            lineHeight: fontStyle.lineHeight - 1,
+                          },
+                        ]}
+                      >
+                        {paragraph}
+                      </Text>
+
+                      {onComplete ? (
+                        <PressableSurface
+                          haptic="impact"
+                          onPress={onComplete}
+                          style={styles.completeStoryBtnWrap}
+                        >
+                          <View style={[styles.completeStoryBtn, { backgroundColor: accent }]}>
+                            <Feather name="check-circle" size={18} color="#FFFFFF" />
+                            <Text style={[styles.completeStoryBtnText, { fontFamily: FONTS.sansSemiBold }]}>
+                              {activeLanguage === "hi" ? "कथा पूर्ण करें" : "Complete Tale & Earn Karma"}
+                            </Text>
+                          </View>
+                        </PressableSurface>
+                      ) : null}
+                    </View>
+                  ) : (
+                    /* Standard Story Scene with Drop Cap */
+                    <View style={styles.sceneBodyWrapper}>
+                      {pageIndex === 0 && dropCap ? (
+                        <View style={styles.dropCapRow}>
+                          <View
+                            style={[
+                              styles.dropCapBox,
+                              {
+                                width: currentScale.dropCapSize,
+                                height: currentScale.dropCapSize,
+                                backgroundColor: `${accent}16`,
+                                borderColor: `${accent}40`,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.dropCapLetter,
+                                {
+                                  fontSize: currentScale.dropCapFont,
+                                  lineHeight: currentScale.dropCapSize - 8,
+                                  color: accent,
+                                  fontFamily: headingFontFamily,
+                                },
+                              ]}
+                            >
+                              {dropCap}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              styles.bodyText,
+                              {
+                                color: theme.text,
+                                fontFamily: textFontFamily,
+                                fontSize: fontStyle.fontSize,
+                                lineHeight: fontStyle.lineHeight,
+                              },
+                            ]}
+                          >
+                            {remainderText}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.bodyText,
+                            {
+                              color: theme.text,
+                              fontFamily: textFontFamily,
+                              fontSize: fontStyle.fontSize,
+                              lineHeight: fontStyle.lineHeight,
+                            },
+                          ]}
+                        >
+                          {paragraph}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+
+      {/* ── 3. Floating Bottom Navigation Bar (Prev / Next & Scene Beads) ── */}
       <View
         style={[
           styles.bottomBar,
           {
-            paddingBottom: Math.max(insets.bottom, 10),
-            borderTopColor: isDark ? "rgba(197,160,89,0.15)" : "rgba(200,160,110,0.18)",
+            paddingBottom: Math.max(insets.bottom + 8, 22),
           },
         ]}
       >
-        {/* Left Arrow: Previous Scene */}
+        <LinearGradient
+          colors={[
+            "transparent",
+            isDark ? "rgba(10,8,6,0.85)" : "rgba(250,246,238,0.88)",
+            isDark ? "rgba(10,8,6,0.98)" : "rgba(250,246,238,0.98)",
+          ]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        {/* Left: Prev Scene */}
         <PressableSurface
           haptic="selection"
           onPress={() => goToPage(safePage - 1)}
           disabled={safePage === 0}
-          style={{ opacity: safePage === 0 ? 0.25 : 1 }}
+          style={{ opacity: safePage === 0 ? 0.2 : 1 }}
           accessibilityLabel="Previous scene"
         >
           <View
             style={[
               styles.navMiniBtn,
               {
-                backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                borderColor: isDark ? "rgba(197,160,89,0.25)" : "rgba(200,160,110,0.25)",
+                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
+                borderColor: isDark ? "rgba(197,160,89,0.3)" : "rgba(200,160,110,0.3)",
               },
             ]}
           >
-            <Feather name="chevron-left" size={18} color={theme.text} />
+            <Feather name="chevron-left" size={17} color={theme.text} />
             <Text style={[styles.navMiniText, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
               Prev
             </Text>
@@ -628,8 +695,8 @@ export function PanchatantraStorybookView({
                 style={[
                   styles.beadDot,
                   {
-                    backgroundColor: i === safePage ? accent : `${theme.dim}35`,
-                    width: i === safePage ? 20 : 6,
+                    backgroundColor: i === safePage ? accent : `${theme.dim}40`,
+                    width: i === safePage ? 22 : 6,
                   },
                 ]}
               />
@@ -637,7 +704,7 @@ export function PanchatantraStorybookView({
           ))}
         </View>
 
-        {/* Right Arrow: Next Scene / Complete */}
+        {/* Right: Next Scene / Complete */}
         {safePage < totalPages - 1 ? (
           <PressableSurface
             haptic="selection"
@@ -648,7 +715,7 @@ export function PanchatantraStorybookView({
               <Text style={[styles.navMiniText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>
                 Next
               </Text>
-              <Feather name="chevron-right" size={18} color="#FFFFFF" />
+              <Feather name="chevron-right" size={17} color="#FFFFFF" />
             </View>
           </PressableSurface>
         ) : (
@@ -675,21 +742,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    zIndex: 10,
+    paddingBottom: 12,
   },
   circleBtnWrapper: {
     borderRadius: 20,
   },
   circleBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -700,7 +770,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   topStoryTitle: {
-    fontSize: 15,
+    fontSize: 14.5,
     textAlign: "center",
     letterSpacing: -0.2,
   },
@@ -716,8 +786,8 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   scenePillText: {
-    fontSize: 10.5,
-    letterSpacing: 0.5,
+    fontSize: 10,
+    letterSpacing: 0.6,
     textTransform: "uppercase",
   },
   topRightControls: {
@@ -733,8 +803,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   langSegment: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
     borderRadius: RADII.pill,
   },
   langSegmentActive: {
@@ -747,64 +817,73 @@ const styles = StyleSheet.create({
   langSegmentText: {
     fontSize: 11,
   },
-  bookCanvas: {
+  pagerScrollView: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 6,
-    gap: 12,
+  },
+  pageSlide: {
+    flex: 1,
   },
   illustrationStage: {
-    width: "100%",
-    borderRadius: 22,
-    borderWidth: 1.5,
     overflow: "hidden",
     position: "relative",
   },
-  artworkContainer: {
-    ...StyleSheet.absoluteFill,
-    overflow: "hidden",
-  },
-  animatedArtLayer: {
-    ...StyleSheet.absoluteFill,
-  },
-  fullArtImage: {
-    ...StyleSheet.absoluteFill,
-  },
-  artGradientOverlay: {
-    ...StyleSheet.absoluteFill,
+  imageBottomVignette: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 60,
   },
   cornerFiligree: {
     position: "absolute",
-    zIndex: 5,
-    padding: 4,
+    zIndex: 10,
+    padding: 6,
   },
-  cornerTL: { top: 4, left: 6 },
-  cornerTR: { top: 4, right: 6 },
-  cornerBL: { bottom: 4, left: 6 },
-  cornerBR: { bottom: 4, right: 6 },
+  cornerTL: { top: 52, left: 10 },
+  cornerTR: { top: 52, right: 10 },
   filigreeSymbol: {
-    color: "rgba(216,138,28,0.7)",
-    fontSize: 13,
+    color: "rgba(216,138,28,0.75)",
+    fontSize: 14,
+  },
+  imageSceneBadge: {
+    position: "absolute",
+    bottom: 12,
+    left: 14,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADII.pill,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  imageSceneBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    letterSpacing: 1,
+    fontFamily: FONTS.sansSemiBold,
+    textTransform: "uppercase",
   },
   folioBookplate: {
     ...StyleSheet.absoluteFill,
-    padding: 10,
+    padding: 16,
+    paddingTop: 60,
+    justifyContent: "center",
   },
   folioInnerBorder: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "rgba(216,138,28,0.3)",
+    borderColor: "rgba(216,138,28,0.35)",
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
+    padding: 16,
   },
   folioHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   folioHeaderSymbol: {
     color: "#D88A1C",
@@ -815,35 +894,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1,
   },
-  folioMedallionGlow: {
-    marginVertical: 8,
-  },
   folioMedallion: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     borderWidth: 1.5,
     borderColor: "rgba(216,138,28,0.5)",
-    backgroundColor: "rgba(216,138,28,0.12)",
+    backgroundColor: "rgba(216,138,28,0.14)",
     alignItems: "center",
     justifyContent: "center",
+    marginVertical: 10,
   },
   folioMedallionEmoji: {
-    fontSize: 34,
+    fontSize: 36,
   },
   folioTitle: {
     color: "#FAF6EE",
     fontSize: 18,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 24,
     marginTop: 4,
+    paddingHorizontal: 12,
   },
   folioBottomBanner: {
-    marginTop: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: RADII.pill,
-    backgroundColor: "rgba(216,138,28,0.12)",
+    backgroundColor: "rgba(216,138,28,0.14)",
     borderWidth: 1,
     borderColor: "rgba(216,138,28,0.25)",
   },
@@ -854,14 +932,57 @@ const styles = StyleSheet.create({
   },
   parchmentPage: {
     flex: 1,
-    borderRadius: 22,
+    borderTopWidth: 1,
+  },
+  parchmentHeaderBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 4,
+    zIndex: 15,
+  },
+  parchmentSceneTag: {
+    fontSize: 10.5,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+  fontScalerPill: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    overflow: "hidden",
+    borderRadius: RADII.pill,
+    height: 30,
+    paddingHorizontal: 4,
+  },
+  fontScaleBtn: {
+    paddingHorizontal: 8,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 0,
+  },
+  fontScaleSign: {
+    fontSize: 13,
+    letterSpacing: -0.5,
+  },
+  fontScaleCenterBadge: {
+    paddingHorizontal: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fontScaleBadgeText: {
+    fontSize: 12,
+  },
+  fontScaleDivider: {
+    width: 1,
+    height: 14,
   },
   parchmentScrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingTop: 10,
     justifyContent: "center",
   },
   sceneBodyWrapper: {
@@ -892,8 +1013,8 @@ const styles = StyleSheet.create({
   moralCelebrationContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
-    gap: 12,
+    paddingVertical: 6,
+    gap: 10,
   },
   moralSealBadge: {
     flexDirection: "row",
@@ -905,14 +1026,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   moralSealInner: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
   moralSealTag: {
-    fontSize: 11,
+    fontSize: 10.5,
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
@@ -943,13 +1064,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 18,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    zIndex: 10,
+    paddingTop: 10,
   },
   navMiniBtn: {
     flexDirection: "row",

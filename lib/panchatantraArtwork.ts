@@ -33,6 +33,29 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
 };
 
 /**
+ * Page-by-page dedicated scene illustrations for expanded Panchatantra fables.
+ * Each entry provides an array of illustrations matching the 6 progressive scenes of the tale.
+ */
+const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = {
+  'panchatantra-monkey-and-crocodile': [
+    require('@/assets/panchatantra/monkey-croc-1.jpg'),
+    require('@/assets/panchatantra/monkey-croc-2.jpg'),
+    require('@/assets/panchatantra/monkey-croc-3.jpg'),
+    require('@/assets/panchatantra/monkey-croc-4.jpg'),
+    require('@/assets/panchatantra/monkey-croc-5.jpg'),
+    require('@/assets/panchatantra/monkey-croc-6.jpg'),
+  ],
+  'panchatantra-talkative-tortoise': [
+    require('@/assets/panchatantra/talkative-tortoise-1.jpg'),
+    require('@/assets/panchatantra/talkative-tortoise-2.jpg'),
+    require('@/assets/panchatantra/talkative-tortoise-3.jpg'),
+    require('@/assets/panchatantra/talkative-tortoise-4.jpg'),
+    require('@/assets/panchatantra/talkative-tortoise-5.jpg'),
+    require('@/assets/panchatantra/talkative-tortoise-6.jpg'),
+  ],
+};
+
+/**
  * Resolves the artwork source for a given Panchatantra story.
  * Prioritizes local pre-bundled assets; falls back to cloud CDN if available, or returns null.
  */
@@ -45,6 +68,21 @@ export function getPanchatantraArtworkSource(storyId: string): ImageSourcePropTy
   }
 
   return null;
+}
+
+/**
+ * Resolves the page-specific scene illustration for a given story and page index.
+ * If a dedicated scene image exists for that page index, it is returned.
+ * Otherwise, falls back to the story's master artwork, or null.
+ */
+export function getPanchatantraSceneArtwork(storyId: string, sceneIndex: number): ImageSourcePropType | null {
+  if (!storyId) return null;
+  const normalizedId = storyId.trim().toLowerCase();
+  const sceneList = LOCAL_PANCHATANTRA_SCENE_ARTWORK[normalizedId];
+  if (sceneList && sceneList[sceneIndex]) {
+    return sceneList[sceneIndex];
+  }
+  return getPanchatantraArtworkSource(storyId);
 }
 
 /**
