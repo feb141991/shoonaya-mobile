@@ -92,3 +92,11 @@ export function hasPanchatantraArtwork(storyId: string): boolean {
   if (!storyId) return false;
   return Boolean(LOCAL_PANCHATANTRA_ARTWORK[storyId.trim().toLowerCase()]);
 }
+
+/**
+ * Returns true if dedicated scene-by-scene illustrations exist for this story.
+ */
+export function hasDedicatedSceneArtwork(storyId: string): boolean {
+  if (!storyId) return false;
+  return Boolean(LOCAL_PANCHATANTRA_SCENE_ARTWORK[storyId.trim().toLowerCase()]);
+}

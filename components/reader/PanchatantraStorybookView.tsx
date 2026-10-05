@@ -27,6 +27,7 @@ import {
 import {
   getPanchatantraSceneArtwork,
   getPanchatantraArtworkSource,
+  hasDedicatedSceneArtwork,
 } from "@/lib/panchatantraArtwork";
 
 export interface StorybookKathaData {
@@ -69,6 +70,37 @@ export const STORYBOOK_FONT_SCALES: StorybookFontScale[] = [
   { label: "md", fontSize: 16.5, lineHeight: 28, dropCapSize: 46, dropCapFont: 27 },
   { label: "lg", fontSize: 19.5, lineHeight: 32, dropCapSize: 52, dropCapFont: 31 },
   { label: "xl", fontSize: 23, lineHeight: 37, dropCapSize: 58, dropCapFont: 35 },
+];
+
+/**
+ * Scene-by-scene cinematic camera perspectives for single-masterwork stories.
+ * Creates dynamic pan/zoom framing across the 6 dramatic narrative phases.
+ */
+const MASTERWORK_SCENE_FRAMING = [
+  // Scene 1: Wide panoramic establishing framing
+  { scale: 1.05, translateX: 0, translateY: 0 },
+  // Scene 2: Tension / inciting dilemma — camera pushes in towards left action
+  { scale: 1.18, translateX: -16, translateY: -8 },
+  // Scene 3: Scheme / conflict — camera swings towards right opposing action
+  { scale: 1.20, translateX: 16, translateY: 8 },
+  // Scene 4: Climax / confrontation — dramatic tight center zoom
+  { scale: 1.28, translateX: 0, translateY: -6 },
+  // Scene 5: Consequence / resolution — pulling back
+  { scale: 1.12, translateX: 0, translateY: 6 },
+  // Scene 6: Wisdom fruit — radiant balanced view with golden aura
+  { scale: 1.04, translateX: 0, translateY: 0 },
+];
+
+/**
+ * Classical Sanskrit narrative stages for the 6 scenes of each Panchatantra tale.
+ */
+const SCENE_STAGE_LABELS = [
+  { hi: "आरम्भ · कथा सूत्र", en: "THE ENCOUNTER", icon: "🌿" },
+  { hi: "द्वन्द्व · परिस्थिति", en: "THE CONFLICT", icon: "⚡" },
+  { hi: "युक्ति · चातुर्य", en: "THE CLEVER PLAN", icon: "💡" },
+  { hi: "मोड़ · निर्णायक क्षण", en: "THE TURNING POINT", icon: "🎯" },
+  { hi: "परिणाम · सत्य प्रगट", en: "THE RESOLUTION", icon: "🌅" },
+  { hi: "नीति फल · शाश्वत बोध", en: "THE ETERNAL WISDOM", icon: "🪷" },
 ];
 
 export function PanchatantraStorybookView({
@@ -337,7 +369,10 @@ export function PanchatantraStorybookView({
       >
         {bodyParagraphs.map((paragraph, pageIndex) => {
           const sceneArt = getPanchatantraSceneArtwork(katha.id, pageIndex);
+          const isMultiScene = hasDedicatedSceneArtwork(katha.id);
           const isFinalPage = pageIndex === totalPages - 1;
+          const framing = MASTERWORK_SCENE_FRAMING[Math.min(pageIndex, MASTERWORK_SCENE_FRAMING.length - 1)];
+          const stageInfo = SCENE_STAGE_LABELS[Math.min(pageIndex, SCENE_STAGE_LABELS.length - 1)];
 
           // Extract drop cap letter for scene 0 or intermediate scenes
           const trimmed = paragraph.trim();
@@ -361,7 +396,16 @@ export function PanchatantraStorybookView({
                   <View style={StyleSheet.absoluteFill}>
                     <Image
                       source={sceneArt}
-                      style={StyleSheet.absoluteFill}
+                      style={[
+                        StyleSheet.absoluteFill,
+                        !isMultiScene && {
+                          transform: [
+                            { scale: framing.scale },
+                            { translateX: framing.translateX },
+                            { translateY: framing.translateY },
+                          ],
+                        },
+                      ]}
                       contentFit="cover"
                       contentPosition="center"
                       priority="high"
@@ -391,6 +435,19 @@ export function PanchatantraStorybookView({
                       </Text>
                     </View>
 
+                    {/* Subtle Golden Aura overlay on single-masterwork wisdom finale */}
+                    {!isMultiScene && isFinalPage ? (
+                      <LinearGradient
+                        colors={[
+                          "rgba(212,175,55,0.06)",
+                          "rgba(212,175,55,0.18)",
+                          "transparent",
+                        ]}
+                        style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
+                      />
+                    ) : null}
+
                     {/* Bottom Vignette Gradients blending into parchment below */}
                     <LinearGradient
                       colors={[
@@ -413,16 +470,34 @@ export function PanchatantraStorybookView({
                     ]}
                   >
                     <View style={styles.folioInnerBorder}>
+                      {/* Ornate Corner Filigree on Folio */}
+                      <View style={[styles.cornerFiligree, styles.folioCornerTL]}>
+                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                      </View>
+                      <View style={[styles.cornerFiligree, styles.folioCornerTR]}>
+                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                      </View>
+                      <View style={[styles.cornerFiligree, styles.folioCornerBL]}>
+                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                      </View>
+                      <View style={[styles.cornerFiligree, styles.folioCornerBR]}>
+                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                      </View>
+
                       <View style={styles.folioHeader}>
                         <Text style={styles.folioHeaderSymbol}>✦</Text>
                         <Text style={[styles.folioHeaderText, { fontFamily: FONTS.devanagariBold }]}>
-                          पञ्चतन्त्र नीति कथा · दृश्य {pageIndex + 1}
+                          {activeLanguage === "hi"
+                            ? `पञ्चतन्त्र · ${stageInfo.hi}`
+                            : `PANCHATANTRA · ${stageInfo.en}`}
                         </Text>
                         <Text style={styles.folioHeaderSymbol}>✦</Text>
                       </View>
 
                       <View style={styles.folioMedallion}>
-                        <Text style={styles.folioMedallionEmoji}>{katha.portrait ?? "📜"}</Text>
+                        <Text style={styles.folioMedallionEmoji}>
+                          {isFinalPage ? "🪷" : katha.portrait ?? stageInfo.icon}
+                        </Text>
                       </View>
 
                       <Text numberOfLines={2} style={[styles.folioTitle, { fontFamily: headingFontFamily }]}>
@@ -431,7 +506,7 @@ export function PanchatantraStorybookView({
 
                       <View style={styles.folioBottomBanner}>
                         <Text style={[styles.folioSubtext, { fontFamily: FONTS.sansSemiBold }]}>
-                          ANCIENT INDIAN WISDOM FABLE
+                          {stageInfo.icon} SCENE {pageIndex + 1} OF {totalPages} · ANCIENT WISDOM
                         </Text>
                       </View>
                     </View>
@@ -849,6 +924,10 @@ const styles = StyleSheet.create({
   },
   cornerTL: { top: 52, left: 10 },
   cornerTR: { top: 52, right: 10 },
+  folioCornerTL: { top: 8, left: 8 },
+  folioCornerTR: { top: 8, right: 8 },
+  folioCornerBL: { bottom: 8, left: 8 },
+  folioCornerBR: { bottom: 8, right: 8 },
   filigreeSymbol: {
     color: "rgba(216,138,28,0.75)",
     fontSize: 14,
