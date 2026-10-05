@@ -10,6 +10,9 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.shoonaya.app",
+      "associatedDomains": [
+        "applinks:www.shoonaya.com"
+      ],
       "usesAppleSignIn": true,
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -99,6 +102,24 @@
     },
     "android": {
       "package": "com.shoonaya.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/panchang" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/vrat" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/festival" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/bhakti" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/pathshala" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/dharm-veer" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/live-darshan" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/seva" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/mantras" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
