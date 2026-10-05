@@ -83,6 +83,9 @@ test('Panchatantra Artwork Resolution', async (t) => {
     assert.equal(hasPanchatantraArtwork('panchatantra-mice-and-elephants'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-moon-lake-rabbits'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-four-friends'), true);
+    assert.equal(hasPanchatantraArtwork('panchatantra-monkey-and-crocodile'), true);
+    assert.equal(hasPanchatantraArtwork('panchatantra-talkative-tortoise'), true);
+    assert.equal(hasPanchatantraArtwork('panchatantra-dove-king-and-net'), true);
 
     const source = getPanchatantraArtworkSource('panchatantra-camel-bell');
     assert.ok(source, 'Artwork source should resolve');
@@ -90,6 +93,12 @@ test('Panchatantra Artwork Resolution', async (t) => {
     assert.ok(sourceGond, 'Gond artwork source should resolve');
     const sourceMoonLake = getPanchatantraArtworkSource('panchatantra-moon-lake-rabbits');
     assert.ok(sourceMoonLake, 'Moon lake artwork source should resolve');
+    const sourceMonkey = getPanchatantraArtworkSource('panchatantra-monkey-and-crocodile');
+    assert.ok(sourceMonkey, 'Monkey and crocodile artwork should resolve');
+    const sourceTortoise = getPanchatantraArtworkSource('panchatantra-talkative-tortoise');
+    assert.ok(sourceTortoise, 'Talkative tortoise artwork should resolve');
+    const sourceDove = getPanchatantraArtworkSource('panchatantra-dove-king-and-net');
+    assert.ok(sourceDove, 'Dove king and net artwork should resolve');
   });
 
   await t.test('returns null gracefully for stories without local artwork', () => {
