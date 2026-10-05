@@ -29,7 +29,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-four-friends': require('@/assets/panchatantra/four-friends.jpg'),
   'panchatantra-monkey-and-crocodile': require('@/assets/panchatantra/monkey-and-crocodile.jpg'),
   'panchatantra-talkative-tortoise': require('@/assets/panchatantra/talkative-tortoise.jpg'),
-  'panchatantra-dove-king-and-net': require('@/assets/panchatantra/dove-king-and-net.jpg'),
+  'panchatantra-dove-king-and-net': require('@/assets/panchatantra/dove-king-1.jpg'),
 };
 
 /**
@@ -37,6 +37,14 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
  * Each entry provides an array of illustrations matching the 6 progressive scenes of the tale.
  */
 const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = {
+  'panchatantra-dove-king-and-net': [
+    require('@/assets/panchatantra/dove-king-1.jpg'),
+    require('@/assets/panchatantra/dove-king-2.jpg'),
+    require('@/assets/panchatantra/dove-king-3.jpg'),
+    require('@/assets/panchatantra/dove-king-4.jpg'),
+    require('@/assets/panchatantra/dove-king-5.jpg'),
+    require('@/assets/panchatantra/dove-king-6.jpg'),
+  ],
   'panchatantra-lion-and-rabbit': [
     require('@/assets/panchatantra/lion-rabbit-1.jpg'),
     require('@/assets/panchatantra/lion-rabbit-2.jpg'),
