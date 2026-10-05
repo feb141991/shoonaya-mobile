@@ -2682,7 +2682,7 @@ function HomeContent() {
         message="Sign in to personalize your sacred days, festivals and vrats."
       />
       <MoodPulseSheet
-        key={moodPulseUserId ?? 'guest'}
+        key={`mood-pulse-${moodPulseUserId ?? 'guest'}`}
         visible={moodPulseVisible && isMoodStatusOwnedBy(moodStatusOwnerId, moodPulseUserId)}
         firstName={state.profile.firstName}
         userId={moodPulseUserId ?? ''}
@@ -2714,7 +2714,7 @@ function HomeContent() {
         }}
       />
       <DharmaMitraChatSheet
-        key={appIdentity.kind === 'authenticated' ? appIdentity.userId : appIdentity.kind}
+        key={`dharma-chat-${appIdentity.kind === 'authenticated' ? appIdentity.userId : appIdentity.kind}`}
         visible={chatSheetVisible}
         origin={chatOrigin}
         onClose={handleCloseChatSheet}
