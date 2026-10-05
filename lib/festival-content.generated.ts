@@ -42,7 +42,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
   "festivals": [
     {
       "definitionKey": "raksha-bandhan",
-      "emoji": "🧵",
+      "emoji": "🪔",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -173,7 +173,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "ganesh-chaturthi",
-      "emoji": "🐘",
+      "emoji": "ॐ",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -1384,7 +1384,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "holi",
-      "emoji": "🎨",
+      "emoji": "🔥",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -1652,7 +1652,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "hanuman-jayanti",
-      "emoji": "🐒",
+      "emoji": "🔱",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -1787,7 +1787,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "makar-sankranti",
-      "emoji": "🪁",
+      "emoji": "🌅",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -2863,7 +2863,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "nag-panchami",
-      "emoji": "🐍",
+      "emoji": "ॐ",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -8558,7 +8558,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "chhath-kharna",
-      "emoji": "🥣",
+      "emoji": "🌅",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -9076,7 +9076,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "vivah-panchami",
-      "emoji": "💍",
+      "emoji": "🪔",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -10610,7 +10610,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "vaikunta-ekadashi",
-      "emoji": "🚪",
+      "emoji": "🐚",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -10739,7 +10739,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "devshayani-ekadashi",
-      "emoji": "🛏️",
+      "emoji": "ॐ",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -11120,7 +11120,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "amalaki-ekadashi",
-      "emoji": "🍈",
+      "emoji": "🌿",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -11628,7 +11628,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "shravana-putrada-ekadashi",
-      "emoji": "👶",
+      "emoji": "🪷",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -11882,7 +11882,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "parivartini-ekadashi",
-      "emoji": "🔄",
+      "emoji": "🪷",
       "tradition": "hindu",
       "name": {
         "value": {
@@ -12263,7 +12263,7 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
     },
     {
       "definitionKey": "saphala-ekadashi",
-      "emoji": "🎯",
+      "emoji": "🪷",
       "tradition": "hindu",
       "name": {
         "value": {

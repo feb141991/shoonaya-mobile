@@ -33,6 +33,7 @@ import { ReaderShell } from '@/components/reader/ReaderShell';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { FestivalEmblem } from '@/components/festivals/FestivalEmblem';
 
 const FONT_PRESETS = [
   { label: 'A-', value: 0 },
@@ -661,20 +662,13 @@ export default function FestivalDetailScreen() {
         <Card style={{ padding: 18, marginBottom: 14, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             {/* Deity / Sacred Medallion */}
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: theme.brandSoft,
-                borderWidth: 1.5,
-                borderColor: isDark ? 'rgba(212, 175, 55, 0.4)' : 'rgba(212, 175, 55, 0.5)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 32 }}>{festival?.emoji ?? '🪔'}</Text>
-            </View>
+            <FestivalEmblem
+              slug={slug}
+              name={name}
+              tradition={festival?.tradition}
+              size={56}
+              isDark={isDark}
+            />
 
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
