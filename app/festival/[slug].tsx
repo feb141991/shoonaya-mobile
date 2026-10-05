@@ -80,7 +80,8 @@ export default function FestivalDetailScreen() {
   // a different language" preview, not an account-wide setting, and must not
   // overwrite the user's global app_language/Supabase profile.
   const { language } = useLanguage();
-  const [readerLanguage, setReaderLanguage] = useState(language);
+  const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
+  const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1);
   const [sharing, setSharing] = useState(false);
   const [copiedMantra, setCopiedMantra] = useState(false);
@@ -601,7 +602,7 @@ export default function FestivalDetailScreen() {
       setFontStep={setFontStep}
       languages={availableLanguages.length > 1 ? availableLanguages : undefined}
       currentLanguage={resolvedLang}
-      setLanguage={(code) => setReaderLanguage(code as any)}
+      setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
       onShare={publishable ? handleShare : undefined}
       scrollViewRef={scrollViewRef}
       onScroll={handleScroll}

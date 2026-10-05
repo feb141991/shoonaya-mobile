@@ -34,11 +34,14 @@ export interface StorybookKathaData {
   id: string;
   title: string;
   titleHi?: string;
+  titlePa?: string;
   preview?: string;
   body: string[];
   bodyHi?: string[];
+  bodyPa?: string[];
   phal: string;
   phalHi?: string;
+  phalPa?: string;
   durationMin: number;
   tags?: string[];
   portrait?: string;
@@ -47,8 +50,8 @@ export interface StorybookKathaData {
 
 interface PanchatantraStorybookViewProps {
   katha: StorybookKathaData;
-  activeLanguage: "en" | "hi";
-  onLanguageChange: (lang: "en" | "hi") => void;
+  activeLanguage: "en" | "hi" | "pa";
+  onLanguageChange: (lang: "en" | "hi" | "pa") => void;
   onBack?: () => void;
   fontSize?: { fontSize: number; lineHeight: number };
   onTTS?: (sceneText?: string) => void;
@@ -95,13 +98,17 @@ const MASTERWORK_SCENE_FRAMING = [
  * Classical Sanskrit narrative stages for the 6 scenes of each Panchatantra tale.
  */
 const SCENE_STAGE_LABELS = [
-  { hi: "आरम्भ · कथा सूत्र", en: "THE ENCOUNTER", icon: "🌿" },
-  { hi: "द्वन्द्व · परिस्थिति", en: "THE CONFLICT", icon: "⚡" },
-  { hi: "युक्ति · चातुर्य", en: "THE CLEVER PLAN", icon: "💡" },
-  { hi: "मोड़ · निर्णायक क्षण", en: "THE TURNING POINT", icon: "🎯" },
-  { hi: "परिणाम · सत्य प्रगट", en: "THE RESOLUTION", icon: "🌅" },
-  { hi: "नीति फल · शाश्वत बोध", en: "THE ETERNAL WISDOM", icon: "🪷" },
+  { hi: "आरम्भ · कथा सूत्र", pa: "ਆਰੰਭ · ਕਥਾ ਸੂਤਰ", en: "THE ENCOUNTER", icon: "🌿" },
+  { hi: "द्वन्द्व · परिस्थिति", pa: "ਦੁਵਿਧਾ · ਸਥਿਤੀ", en: "THE CONFLICT", icon: "⚡" },
+  { hi: "युक्ति · चातुर्य", pa: "ਜੁਗਤ · ਸਿਆਣਪ", en: "THE CLEVER PLAN", icon: "💡" },
+  { hi: "मोड़ · निर्णायक क्षण", pa: "ਮੋੜ · ਨਿਰਣਾਇਕ ਪਲ", en: "THE TURNING POINT", icon: "🎯" },
+  { hi: "परिणाम · सत्य प्रगट", pa: "ਨਤੀਜਾ · ਸੱਚ ਦਾ ਪ੍ਰਗਟਾਵਾ", en: "THE RESOLUTION", icon: "🌅" },
+  { hi: "नीति फल · शाश्वत बोध", pa: "ਨੀਤੀ ਫਲ · ਸਦੀਵੀ ਬੋਧ", en: "THE ETERNAL WISDOM", icon: "🪷" },
 ];
+
+function localizedLabel(language: 'en' | 'hi' | 'pa', english: string, hindi: string, punjabi: string) {
+  return language === 'pa' ? punjabi : language === 'hi' ? hindi : english;
+}
 
 export function PanchatantraStorybookView({
   katha,
@@ -147,9 +154,22 @@ export function PanchatantraStorybookView({
   };
 
   const hasHindi = Boolean(katha.titleHi && katha.bodyHi?.length && katha.phalHi);
-  const title = activeLanguage === "hi" && katha.titleHi ? katha.titleHi : katha.title;
-  const bodyParagraphs = activeLanguage === "hi" && katha.bodyHi?.length ? katha.bodyHi : katha.body;
-  const moralText = activeLanguage === "hi" && katha.phalHi ? katha.phalHi : katha.phal;
+  const hasPunjabi = Boolean(katha.titlePa && katha.bodyPa?.length && katha.phalPa);
+  const title = activeLanguage === "hi" && katha.titleHi
+    ? katha.titleHi
+    : activeLanguage === "pa" && katha.titlePa
+      ? katha.titlePa
+      : katha.title;
+  const bodyParagraphs = activeLanguage === "hi" && katha.bodyHi?.length
+    ? katha.bodyHi
+    : activeLanguage === "pa" && katha.bodyPa?.length
+      ? katha.bodyPa
+      : katha.body;
+  const moralText = activeLanguage === "hi" && katha.phalHi
+    ? katha.phalHi
+    : activeLanguage === "pa" && katha.phalPa
+      ? katha.phalPa
+      : katha.phal;
 
   const totalPages = bodyParagraphs.length;
   const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
@@ -175,8 +195,16 @@ export function PanchatantraStorybookView({
     });
   };
 
-  const textFontFamily = activeLanguage === "hi" ? FONTS.devanagari : FONTS.serif;
-  const headingFontFamily = activeLanguage === "hi" ? FONTS.devanagariBold : FONTS.serifBold;
+  const textFontFamily = activeLanguage === "hi"
+    ? FONTS.devanagari
+    : activeLanguage === "pa"
+      ? Platform.OS === 'ios' ? 'System' : 'sans-serif'
+      : FONTS.serif;
+  const headingFontFamily = activeLanguage === "hi"
+    ? FONTS.devanagariBold
+    : activeLanguage === "pa"
+      ? Platform.OS === 'ios' ? 'System' : 'sans-serif'
+      : FONTS.serifBold;
 
   // Parchment palette
   const screenBg = isDark ? "#0A0806" : "#FAF6EE";
@@ -237,19 +265,15 @@ export function PanchatantraStorybookView({
             <View style={[styles.sceneDot, { backgroundColor: COLORS.brandGold }]} />
             <Text style={[styles.scenePillText, { color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }]}>
               {safePage === totalPages - 1
-                ? activeLanguage === "hi"
-                  ? "कथा बोध"
-                  : "Final Moral"
-                : activeLanguage === "hi"
-                ? `दृश्य ${safePage + 1} / ${totalPages}`
-                : `Scene ${safePage + 1} of ${totalPages}`}
+                ? localizedLabel(activeLanguage, 'Final Moral', 'कथा बोध', 'ਅੰਤਿਮ ਸਿੱਖਿਆ')
+                : localizedLabel(activeLanguage, `Scene ${safePage + 1} of ${totalPages}`, `दृश्य ${safePage + 1} / ${totalPages}`, `ਦ੍ਰਿਸ਼ ${safePage + 1} / ${totalPages}`)}
             </Text>
           </View>
         </View>
 
         {/* Right: Language Pill [EN | HI] + Narrator Audio Button */}
         <View style={styles.topRightControls}>
-          {hasHindi ? (
+          {hasHindi || hasPunjabi ? (
             <View
               style={[
                 styles.langTrack,
@@ -280,26 +304,30 @@ export function PanchatantraStorybookView({
                 </Text>
               </PressableSurface>
 
-              <PressableSurface
-                haptic="selection"
-                onPress={() => onLanguageChange("hi")}
-                style={[
-                  styles.langSegment,
-                  activeLanguage === "hi" && [styles.langSegmentActive, { backgroundColor: accent }],
-                ]}
-              >
-                <Text
+              {hasHindi ? (
+                <PressableSurface
+                  haptic="selection"
+                  onPress={() => onLanguageChange("hi")}
                   style={[
-                    styles.langSegmentText,
-                    {
-                      color: "#FFFFFF",
-                      fontFamily: FONTS.devanagariBold,
-                    },
+                    styles.langSegment,
+                    activeLanguage === "hi" && [styles.langSegmentActive, { backgroundColor: accent }],
                   ]}
                 >
-                  हिं
-                </Text>
-              </PressableSurface>
+                  <Text style={[styles.langSegmentText, { color: "#FFFFFF", fontFamily: FONTS.devanagariBold }]}>हिं</Text>
+                </PressableSurface>
+              ) : null}
+              {hasPunjabi ? (
+                <PressableSurface
+                  haptic="selection"
+                  onPress={() => onLanguageChange("pa")}
+                  style={[
+                    styles.langSegment,
+                    activeLanguage === "pa" && [styles.langSegmentActive, { backgroundColor: accent }],
+                  ]}
+                >
+                  <Text style={[styles.langSegmentText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>ਪੰ</Text>
+                </PressableSurface>
+              ) : null}
             </View>
           ) : null}
 
@@ -309,7 +337,7 @@ export function PanchatantraStorybookView({
               onPress={() => {
                 const isFinal = safePage === totalPages - 1;
                 const currentSceneText = isFinal
-                  ? `${activeLanguage === 'hi' ? 'कथा का बोध:' : 'Moral of the story:'} ${moralText}. ${bodyParagraphs[safePage] ?? ''}`
+                  ? `${localizedLabel(activeLanguage, 'Moral of the story:', 'कथा का बोध:', 'ਕਥਾ ਦੀ ਸਿੱਖਿਆ:')} ${moralText}. ${bodyParagraphs[safePage] ?? ''}`
                   : safePage === 0
                   ? `${title}. ${bodyParagraphs[0] ?? ''}`
                   : (bodyParagraphs[safePage] ?? '');
@@ -426,12 +454,8 @@ export function PanchatantraStorybookView({
                     <View style={styles.imageSceneBadge}>
                       <Text style={styles.imageSceneBadgeText}>
                         {isFinalPage
-                          ? activeLanguage === "hi"
-                            ? "कथा बोध"
-                            : "WISDOM MORAL"
-                          : activeLanguage === "hi"
-                          ? `दृश्य ${pageIndex + 1} / ${totalPages}`
-                          : `SCENE ${pageIndex + 1} OF ${totalPages}`}
+                          ? localizedLabel(activeLanguage, 'WISDOM MORAL', 'कथा बोध', 'ਅੰਤਿਮ ਸਿੱਖਿਆ')
+                          : localizedLabel(activeLanguage, `SCENE ${pageIndex + 1} OF ${totalPages}`, `दृश्य ${pageIndex + 1} / ${totalPages}`, `ਦ੍ਰਿਸ਼ ${pageIndex + 1} / ${totalPages}`)}
                       </Text>
                     </View>
 
@@ -486,10 +510,12 @@ export function PanchatantraStorybookView({
 
                       <View style={styles.folioHeader}>
                         <Text style={styles.folioHeaderSymbol}>✦</Text>
-                        <Text style={[styles.folioHeaderText, { fontFamily: FONTS.devanagariBold }]}>
+                        <Text style={[styles.folioHeaderText, { fontFamily: headingFontFamily }]}>
                           {activeLanguage === "hi"
                             ? `पञ्चतन्त्र · ${stageInfo.hi}`
-                            : `PANCHATANTRA · ${stageInfo.en}`}
+                            : activeLanguage === "pa"
+                              ? `ਪੰਚਤੰਤਰ · ${stageInfo.pa}`
+                              : `PANCHATANTRA · ${stageInfo.en}`}
                         </Text>
                         <Text style={styles.folioHeaderSymbol}>✦</Text>
                       </View>
@@ -506,7 +532,7 @@ export function PanchatantraStorybookView({
 
                       <View style={styles.folioBottomBanner}>
                         <Text style={[styles.folioSubtext, { fontFamily: FONTS.sansSemiBold }]}>
-                          {stageInfo.icon} SCENE {pageIndex + 1} OF {totalPages} · ANCIENT WISDOM
+                          {stageInfo.icon} {localizedLabel(activeLanguage, `SCENE ${pageIndex + 1} OF ${totalPages} · ANCIENT WISDOM`, `दृश्य ${pageIndex + 1} / ${totalPages} · प्राचीन ज्ञान`, `ਦ੍ਰਿਸ਼ ${pageIndex + 1} / ${totalPages} · ਪ੍ਰਾਚੀਨ ਗਿਆਨ`)}
                         </Text>
                       </View>
                     </View>
@@ -528,12 +554,8 @@ export function PanchatantraStorybookView({
                 <View style={styles.parchmentHeaderBar}>
                   <Text style={[styles.parchmentSceneTag, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
                     {isFinalPage
-                      ? activeLanguage === "hi"
-                        ? "कथा का फल (बोध)"
-                        : "WISDOM FRUIT"
-                      : activeLanguage === "hi"
-                      ? `दृश्य ${pageIndex + 1}`
-                      : `SCENE ${pageIndex + 1}`}
+                      ? localizedLabel(activeLanguage, 'WISDOM FRUIT', 'कथा का फल (बोध)', 'ਕਥਾ ਦਾ ਸਿੱਖਿਆ-ਫਲ')
+                      : localizedLabel(activeLanguage, `SCENE ${pageIndex + 1}`, `दृश्य ${pageIndex + 1}`, `ਦ੍ਰਿਸ਼ ${pageIndex + 1}`)}
                   </Text>
 
                   <View
@@ -607,7 +629,7 @@ export function PanchatantraStorybookView({
                           <Feather name="award" size={24} color={accent} />
                         </View>
                         <Text style={[styles.moralSealTag, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
-                          {activeLanguage === "hi" ? "कथा का फल (बोध)" : "THE WISDOM FRUIT"}
+                          {localizedLabel(activeLanguage, 'THE WISDOM FRUIT', 'कथा का फल (बोध)', 'ਕਥਾ ਦਾ ਸਿੱਖਿਆ-ਫਲ')}
                         </Text>
                       </View>
 
@@ -648,7 +670,7 @@ export function PanchatantraStorybookView({
                           <View style={[styles.completeStoryBtn, { backgroundColor: accent }]}>
                             <Feather name="check-circle" size={18} color="#FFFFFF" />
                             <Text style={[styles.completeStoryBtnText, { fontFamily: FONTS.sansSemiBold }]}>
-                              {activeLanguage === "hi" ? "कथा पूर्ण करें" : "Complete Tale & Earn Karma"}
+                              {localizedLabel(activeLanguage, 'Complete Tale & Earn Karma', 'कथा पूर्ण करें', 'ਕਥਾ ਪੂਰੀ ਕਰੋ ਅਤੇ ਕਰਮ ਅੰਕ ਪ੍ਰਾਪਤ ਕਰੋ')}
                             </Text>
                           </View>
                         </PressableSurface>

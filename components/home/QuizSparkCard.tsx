@@ -9,6 +9,7 @@ import { COLORS, SHADOWS, TYPE } from "@/lib/constants";
 import { resolveNativeRoute } from "@/lib/routes";
 import { spiritualDate } from "@/lib/spiritualDate";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 type DailyQuiz = {
   question: string;
@@ -21,12 +22,17 @@ type QuizStats = {
 
 type Status = "loading" | "ready" | "hidden" | "error";
 
-const TRADITION_LABEL: Record<string, string> = {
-  hindu: "Hindu",
-  sikh: "Sikh",
-  buddhist: "Buddhist",
-  jain: "Jain",
-};
+const QUIZ_COPY = {
+  en: { hindu: 'Hindu', sikh: 'Sikh', buddhist: 'Buddhist', jain: 'Jain', daily: 'Daily', quiz: 'Quiz',
+    answer: "Answer today's dharmic question", completed: 'Completed today', memory: 'Test your dharmic memory',
+    accessibilityDone: 'completed today', accessibilityPlay: 'play', accessibilityReview: 'review' },
+  hi: { hindu: 'हिंदू', sikh: 'सिख', buddhist: 'बौद्ध', jain: 'जैन', daily: 'दैनिक', quiz: 'प्रश्नोत्तरी',
+    answer: 'आज के धर्म-संबंधी प्रश्न का उत्तर दें', completed: 'आज पूरा किया', memory: 'अपनी धर्म-स्मृति आज़माएँ',
+    accessibilityDone: 'आज पूरा किया', accessibilityPlay: 'खेलें', accessibilityReview: 'फिर देखें' },
+  pa: { hindu: 'ਹਿੰਦੂ', sikh: 'ਸਿੱਖ', buddhist: 'ਬੌਧ', jain: 'ਜੈਨ', daily: 'ਰੋਜ਼ਾਨਾ', quiz: 'ਪ੍ਰਸ਼ਨੋਤਰੀ',
+    answer: 'ਅੱਜ ਦੇ ਧਰਮਕ ਸਵਾਲ ਦਾ ਜਵਾਬ ਦਿਓ', completed: 'ਅੱਜ ਪੂਰਾ ਕੀਤਾ', memory: 'ਆਪਣੀ ਧਰਮਕ ਯਾਦਦਾਸ਼ਤ ਪਰਖੋ',
+    accessibilityDone: 'ਅੱਜ ਪੂਰਾ ਕੀਤਾ', accessibilityPlay: 'ਖੇਡੋ', accessibilityReview: 'ਮੁੜ ਵੇਖੋ' },
+} as const;
 
 export type QuizSparkCardProps = {
   tradition?: string;
@@ -46,6 +52,8 @@ export function QuizSparkCard({
   timezone: propTimezone,
 }: QuizSparkCardProps = {}) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const copy = QUIZ_COPY[language];
   const isDark = useColorScheme() === "dark";
   const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
   const border = isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight;
@@ -54,7 +62,7 @@ export function QuizSparkCard({
 
   const [status, setStatus] = useState<Status>(propTradition !== undefined ? "ready" : "loading");
   const [quiz, setQuiz] = useState<DailyQuiz | null>(
-    propTradition ? { question: propQuestion || "Answer today's dharmic question", tradition: propTradition } : null
+    propTradition ? { question: propQuestion || copy.answer, tradition: propTradition } : null
   );
   const [quizStreak, setQuizStreak] = useState(propQuizStreak ?? 0);
   const [quizDone, setQuizDone] = useState(propQuizDone ?? false);
@@ -62,12 +70,12 @@ export function QuizSparkCard({
   // Sync props when updated from parent
   useEffect(() => {
     if (propTradition !== undefined) {
-      setQuiz({ question: propQuestion || "Answer today's dharmic question", tradition: propTradition });
+      setQuiz({ question: propQuestion || copy.answer, tradition: propTradition });
       if (propQuizDone !== undefined) setQuizDone(propQuizDone);
       if (propQuizStreak !== undefined) setQuizStreak(propQuizStreak);
       setStatus("ready");
     }
-  }, [propTradition, propQuizDone, propQuizStreak, propQuestion]);
+  }, [propTradition, propQuizDone, propQuizStreak, propQuestion, copy.answer]);
 
   const load = useCallback(async () => {
     // Skip self-fetching if parent already provided complete data
@@ -106,7 +114,7 @@ export function QuizSparkCard({
       const today = spiritualDate(effectiveTimezone);
 
       const [quizResponse, statsResponse, savedResponse] = await Promise.all([
-        apiFetch(`/api/quiz/daily?tradition=${effectiveTradition}&date=${today}&language=en`),
+        apiFetch(`/api/quiz/daily?tradition=${effectiveTradition}&date=${today}&language=${language}`),
         apiFetch("/api/quiz/stats").catch(() => null),
         supabase
           .from("quiz_responses")
@@ -126,17 +134,17 @@ export function QuizSparkCard({
       const previewQuestion =
         quizData?.question ||
         savedResponse.data?.question ||
-        "Answer today's dharmic question";
+        copy.answer;
 
       setQuiz({ question: previewQuestion, tradition: effectiveTradition });
       setQuizDone(completedToday);
       setStatus("ready");
     } catch {
-      setQuiz({ question: "Answer today's dharmic question", tradition: propTradition ?? "hindu" });
+      setQuiz({ question: copy.answer, tradition: propTradition ?? "hindu" });
       setQuizDone(false);
       setStatus("ready");
     }
-  }, [propTradition, propQuizDone, propUserId, propTimezone]);
+  }, [propTradition, propQuizDone, propUserId, propTimezone, language, copy.answer]);
 
   useEffect(() => {
     if (propTradition === undefined) {
@@ -152,13 +160,14 @@ export function QuizSparkCard({
     return null;
   }
 
-  const title = `${TRADITION_LABEL[quiz.tradition] ?? "Daily"} Quiz`;
-  const previewTitle = "Answer today's dharmic question";
+  const traditionLabel = copy[quiz.tradition as keyof typeof copy] ?? copy.daily;
+  const title = `${traditionLabel} ${copy.quiz}`;
+  const previewTitle = propQuestion ?? quiz.question ?? copy.answer;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}: ${quizDone ? "completed today" : quiz.question}. Tap to ${quizDone ? "review" : "play"}`}
+      accessibilityLabel={`${title}: ${quizDone ? copy.accessibilityDone : quiz.question}. Tap to ${quizDone ? copy.accessibilityReview : copy.accessibilityPlay}`}
       onPress={() => router.push(resolveNativeRoute("/quiz", "/(tabs)"))}
       style={{
         minHeight: 70,
@@ -187,7 +196,7 @@ export function QuizSparkCard({
             {previewTitle}
           </Text>
           <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
-            {quizDone ? "Completed today" : "Test your dharmic memory"}
+            {quizDone ? copy.completed : copy.memory}
           </Text>
         </View>
       </View>

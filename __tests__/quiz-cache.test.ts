@@ -32,6 +32,7 @@ function state(overrides: Partial<QuizState> = {}): QuizState {
       tradition: 'hindu',
       date: TODAY,
     },
+    language: 'en',
     todayResponse: null,
     tradition: 'hindu',
     timezone: 'UTC',
@@ -58,6 +59,12 @@ describe('Quiz cache -- identity isolation', () => {
 
     const asA = await readQuizCache({ kind: 'authenticated', userId: 'user-A' });
     assert.equal(asA?.userName, 'Alice');
+  });
+
+  it('does not paint a cached quiz from another language', async () => {
+    await writeQuizCache({ kind: 'guest' }, state({ language: 'hi' }));
+    assert.equal(await readQuizCache({ kind: 'guest' }, 'pa'), null);
+    assert.equal((await readQuizCache({ kind: 'guest' }, 'hi'))?.language, 'hi');
   });
 });
 
@@ -122,14 +129,14 @@ describe('Quiz cache -- fails safe', () => {
   });
 
   it('a corrupt cache entry is treated as a miss, not a crash', async () => {
-    await AsyncStorage.setItem('shoonaya.quiz.daily.v1', '{{{not json');
+    await AsyncStorage.setItem('shoonaya.quiz.daily.v2', '{{{not json');
     const result = await readQuizCache({ kind: 'guest' });
     assert.equal(result, null);
   });
 
   it('a stale schema version is treated as a miss', async () => {
     await AsyncStorage.setItem(
-      'shoonaya.quiz.daily.v1',
+      'shoonaya.quiz.daily.v2',
       JSON.stringify({ schemaVersion: 99, identity: { kind: 'guest' }, cachedAt: new Date().toISOString(), state: state() })
     );
     const result = await readQuizCache({ kind: 'guest' });

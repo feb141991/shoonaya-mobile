@@ -6,7 +6,9 @@ import { apiFetch } from '@/lib/api';
 import { APP_BUILD_NUMBER, APP_VERSION, APP_VERSION_LABEL } from '@/lib/appVersion';
 import { createSingleFlight } from '@/lib/async-single-flight';
 import { createUpdateAlertGate } from '@/lib/updateAlertGate';
-import { APP_LANGUAGE_STORAGE_KEY } from '@/lib/i18n/LanguageContext';
+import { getLanguageStorageKey } from '@/lib/i18n/language-storage';
+import { getAppIdentity } from '@/lib/appIdentity';
+import { isAppLanguage } from '@/lib/language-runtime';
 import { getUpdateCopy } from '@/lib/updateCopy';
 import {
   evaluateStoreVersionPolicy,
@@ -31,6 +33,13 @@ const automaticCheckFlight = createSingleFlight<void>();
 const manualCheckFlight = createSingleFlight<void>();
 let downloadedOtaPromptPending = false;
 
+async function getPreferredUpdateLanguage() {
+  const key = getLanguageStorageKey(getAppIdentity());
+  if (!key) return null;
+  const value = await AsyncStorage.getItem(key).catch(() => null);
+  return isAppLanguage(value) ? value : null;
+}
+
 function getNativeStorePlatform(): 'android' | 'ios' | null {
   if (Platform.OS === 'android' || Platform.OS === 'ios') return Platform.OS;
   return null;
@@ -45,14 +54,14 @@ async function openStoreUrl(url: string): Promise<void> {
   try {
     await Linking.openURL(url);
   } catch {
-    const language = await AsyncStorage.getItem(APP_LANGUAGE_STORAGE_KEY).catch(() => null);
+    const language = await getPreferredUpdateLanguage();
     const copy = getUpdateCopy(language);
     showExclusiveAlert(copy.storeOpenFailedTitle, copy.storeOpenFailedMessage(url));
   }
 }
 
 async function getPreferredUpdateCopy() {
-  const language = await AsyncStorage.getItem(APP_LANGUAGE_STORAGE_KEY).catch(() => null);
+  const language = await getPreferredUpdateLanguage();
   return getUpdateCopy(language);
 }
 

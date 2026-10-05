@@ -395,7 +395,7 @@ export default function ProfileScreen() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<any[] | null>(null);
   const deletionStatus = useAccountDeletionStatus();
-  const { language: deletionLanguage } = useLanguage();
+  const { language: deletionLanguage, setLanguage } = useLanguage();
   const updateCopy = getUpdateCopy(deletionLanguage);
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
@@ -727,6 +727,10 @@ export default function ProfileScreen() {
       if (!isCurrent()) return;
       if (!response.ok) throw new Error(await readApiError(response));
 
+      // The profile API has already persisted this value; update shared app
+      // state without issuing a duplicate profile write.
+      await setLanguage(editState.appLanguage, { syncProfile: false });
+      if (!isCurrent()) return;
       await loadProfile();
       if (isCurrent()) setEditVisible(false);
     } catch (error) {

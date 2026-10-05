@@ -57,7 +57,8 @@ export default function VratDetailScreen() {
   // one page in a different language" preview, not an account-wide setting,
   // and must not overwrite the user's global app_language/Supabase profile.
   const { language } = useLanguage();
-  const [readerLanguage, setReaderLanguage] = useState(language);
+  const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
+  const readerLanguage = readerLanguageOverride ?? language;
   const [isGuest, setIsGuest] = useState(false);
   const [observedToday, setObservedToday] = useState(false);
   const [observeCount, setObserveCount] = useState(0);
@@ -242,7 +243,10 @@ export default function VratDetailScreen() {
   };
 
   const hasLocalVrat = Boolean(vrat.nameLocal && vrat.taglineLocal && vrat.significanceLocal && vrat.practiceLocal);
-  const showLocal = (readerLanguage === 'hi' || readerLanguage === 'pa') && hasLocalVrat;
+  // VratData currently contains Hindi local copy only. Do not label it Punjabi
+  // just because the user's app language is Punjabi; use the original English
+  // text until reviewed Punjabi content exists for this vrat.
+  const showLocal = readerLanguage === 'hi' && hasLocalVrat;
   const selectedName = showLocal && vrat.nameLocal ? vrat.nameLocal : vrat.name;
   const selectedTagline = showLocal && vrat.taglineLocal ? vrat.taglineLocal : vrat.tagline;
   const selectedSignificance = showLocal && vrat.significanceLocal ? vrat.significanceLocal : vrat.significance;
@@ -282,9 +286,9 @@ export default function VratDetailScreen() {
       fontStep={fontStep}
       setFontStep={setFontStep}
       languages={hasLocalVrat ? [{ code: 'en' as const, label: 'EN' }, { code: 'hi' as const, label: 'हिंदी' }] : undefined}
-      currentLanguage={readerLanguage === 'hi' || readerLanguage === 'pa' ? 'hi' : 'en'}
+      currentLanguage={showLocal ? 'hi' : 'en'}
       onShare={handleShare}
-      setLanguage={(code) => setReaderLanguage(code as any)}
+      setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
     >
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header Card */}

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { SUPPORTED_APP_LANGUAGES, isAppLanguage } from '../lib/language-runtime';
+import { getLanguageStorageKey } from '../lib/i18n/language-storage';
 
 describe('Unified Language Architecture & Provider Integrity', () => {
   const contextSource = readFileSync(join(process.cwd(), 'lib/i18n/LanguageContext.tsx'), 'utf8');
@@ -20,6 +21,15 @@ describe('Unified Language Architecture & Provider Integrity', () => {
     assert.ok(contextSource.includes("export const APP_LANGUAGE_STORAGE_KEY = '@shoonaya/app_language'"));
     assert.ok(contextSource.includes("export const LEGACY_CHAT_LANGUAGE_KEY = '@shoonaya/chat_language'"));
     assert.ok(contextSource.includes("export const PWA_STORAGE_KEY = 'shoonaya-app-lang'"));
+  });
+
+  it('isolates cached language by account and guest identity', () => {
+    assert.equal(getLanguageStorageKey({ kind: 'authenticated', userId: 'user-A' }), '@shoonaya/app_language:user:user-A');
+    assert.equal(getLanguageStorageKey({ kind: 'authenticated', userId: 'user-B' }), '@shoonaya/app_language:user:user-B');
+    assert.equal(getLanguageStorageKey({ kind: 'guest' }), '@shoonaya/app_language:guest');
+    assert.equal(getLanguageStorageKey({ kind: 'unauthenticated' }), '@shoonaya/app_language:guest');
+    assert.equal(getLanguageStorageKey({ kind: 'loading' }), null);
+    assert.doesNotMatch(contextSource, /getItem\(APP_LANGUAGE_STORAGE_KEY\)/, 'the former device-wide key must not hydrate another account');
   });
 
   it('mounts LanguageProvider in AppProviders root layout', () => {
@@ -78,6 +88,6 @@ describe('Unified Language Architecture & Provider Integrity', () => {
     assert.match(contextSource, /getAppIdentity\(\)/);
     // The sign-out/guest branch must exist and must not be a no-op --
     // the old code silently left a just-signed-out user's language visible.
-    assert.match(contextSource, /if \(identity\.kind !== 'authenticated'\)\s*\{/);
+    assert.match(contextSource, /if \(identity\.kind !== 'authenticated'\) return;/);
   });
 });

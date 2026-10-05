@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
+import { pickDharmVeerLocalizedText } from '../lib/dharm-veer';
 
 const screen = readFileSync(new URL('../app/dharm-veer/[id].tsx', import.meta.url), 'utf8');
 
 describe('Dharm Veer localized reader', () => {
+  it('falls back to the source language instead of Hindi when Punjabi is absent', () => {
+    assert.equal(pickDharmVeerLocalizedText('English source', 'Hindi copy', undefined, 'pa'), 'English source');
+    assert.equal(pickDharmVeerLocalizedText('English source', 'Hindi copy', 'Punjabi copy', 'pa'), 'Punjabi copy');
+  });
+
   it('does not hide the language control when only the decorative tagline is absent', () => {
     assert.match(screen, /const hasCompleteLocalContent = !!hero\?\.nameLocal && !!hero\?\.journeyLocal/);
     assert.doesNotMatch(screen, /hasCompleteLocalContent = !!hero\?\.nameLocal && !!hero\?\.taglineLocal/);

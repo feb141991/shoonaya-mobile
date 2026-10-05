@@ -25,6 +25,7 @@ import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { AuthGate } from '@/components/ui/AuthGate';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   readQuizCache,
   writeQuizCache,
@@ -50,6 +51,7 @@ type QuizSaveData = {
 };
 
 const DEFAULT_STATE: QuizState = {
+  language: 'en',
   quiz: null,
   todayResponse: null,
   tradition: 'hindu',
@@ -60,6 +62,7 @@ const DEFAULT_STATE: QuizState = {
 export default function QuizScreen() {
   const router = useRouter();
   const appIdentity = useAppIdentity();
+  const { language } = useLanguage();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
@@ -104,19 +107,20 @@ export default function QuizScreen() {
       // clears `loading` immediately, so SacredLoader is reserved for a
       // genuine first-ever load with nothing cached yet. The fetch below
       // still runs to reconcile it in the background.
-      const cached = await readQuizCache(identity);
+      const cached = await readQuizCache(identity, language);
       if (!isCurrent()) return;
       if (cached) {
         setState(cached);
         setLoading(false);
       }
 
-      const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`, { expectedGuest: true });
+      const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=${language}`, { expectedGuest: true });
       if (!isCurrent()) return;
       const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
       if (!isCurrent()) return;
 
       const nextState: QuizState = {
+        language,
         timezone,
         userName,
         tradition,
@@ -135,7 +139,7 @@ export default function QuizScreen() {
     const userId = appIdentity.userId;
     const identity: QuizCacheIdentity = { kind: 'authenticated', userId };
 
-    const cached = await readQuizCache(identity);
+    const cached = await readQuizCache(identity, language);
     if (!isCurrent()) return;
     if (cached) {
       setState(cached);
@@ -156,7 +160,7 @@ export default function QuizScreen() {
     const today = spiritualDate(timezone);
 
     const [quizResponse, savedResponse] = await Promise.all([
-      apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=en`, { expectedUserId: userId }),
+      apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=${language}`, { expectedUserId: userId }),
       supabase
         .from('quiz_responses')
         .select('chosen_index, correct_index, is_correct, explanation, question, date')
@@ -180,6 +184,7 @@ export default function QuizScreen() {
       : null;
 
     const nextState: QuizState = {
+      language,
       quiz: quizData,
       todayResponse: responseData,
       tradition,
@@ -190,7 +195,7 @@ export default function QuizScreen() {
     setSelectedAnswer(responseData?.chosen_index ?? null);
     setSaveData(null);
     if (quizData) void writeQuizCache(identity, nextState);
-  }, [appIdentity, router]);
+  }, [appIdentity, language, router]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;

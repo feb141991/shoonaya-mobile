@@ -1,5 +1,6 @@
 import { createCacheStorageBarrier } from './cacheStorageBarrier';
 import { spiritualDate } from '@/lib/spiritualDate';
+import { isAppLanguage, type AppLanguage } from '@/lib/language-runtime';
 
 // Reliability plan item 6: lets app/quiz.tsx paint the last-known quiz
 // instantly on revisit instead of always blocking on SacredLoader while
@@ -8,7 +9,7 @@ import { spiritualDate } from '@/lib/spiritualDate';
 // the identity stored inside the envelope and checked on read: a mismatch
 // is simply treated as a miss, so a stale entry from a previous account
 // can never paint over the current one.
-const QUIZ_CACHE_KEY = 'shoonaya.quiz.daily.v1';
+const QUIZ_CACHE_KEY = 'shoonaya.quiz.daily.v2';
 
 export type QuizCacheIdentity = { kind: 'guest' } | { kind: 'authenticated'; userId: string };
 
@@ -36,6 +37,7 @@ export type TodayQuizResponse = {
 };
 
 export type QuizState = {
+  language: AppLanguage;
   quiz: DailyQuiz | null;
   todayResponse: TodayQuizResponse | null;
   tradition: Tradition;
@@ -44,7 +46,7 @@ export type QuizState = {
 };
 
 type CachedQuizState = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   identity: QuizCacheIdentity;
   cachedAt: string;
   state: QuizState;
@@ -57,15 +59,19 @@ function identityMatches(a: QuizCacheIdentity, b: QuizCacheIdentity): boolean {
   return a.kind === 'authenticated' && b.kind === 'authenticated' ? a.userId === b.userId : true;
 }
 
-export async function readQuizCache(identity: QuizCacheIdentity): Promise<QuizState | null> {
+export async function readQuizCache(
+  identity: QuizCacheIdentity,
+  preferredLanguage: AppLanguage = 'en',
+): Promise<QuizState | null> {
   try {
     const stored = await cacheStorage.read(QUIZ_CACHE_KEY);
     if (!stored) return null;
     const cached = JSON.parse(stored.value) as CachedQuizState;
-    if (cached.schemaVersion !== 1 || !identityMatches(cached.identity, identity)) return null;
+    if (cached.schemaVersion !== 2 || !identityMatches(cached.identity, identity)) return null;
 
     const state = cached.state;
     if (!state || typeof state.timezone !== 'string' || !state.quiz) return null;
+    if (!isAppLanguage(state.language) || state.language !== preferredLanguage) return null;
 
     // Quiz content is scoped to one spiritual day -- a cache entry from a
     // prior day (or an answer recorded for a prior day) must never paint
@@ -82,7 +88,7 @@ export async function readQuizCache(identity: QuizCacheIdentity): Promise<QuizSt
 
 export async function writeQuizCache(identity: QuizCacheIdentity, state: QuizState): Promise<void> {
   const payload: CachedQuizState = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     identity,
     cachedAt: new Date().toISOString(),
     state,

@@ -74,11 +74,9 @@ export interface DharmVeer {
 
 /**
  * Picks which language's text to show for a given field, given the viewer's
- * resolved local-content language. Punjabi falls back to Hindi (not English)
- * when a specific row hasn't been backfilled with Punjabi yet, so a
- * Punjabi-preferring reader still sees local-script content rather than a
- * sudden drop to English. Mirrors the backend's identical helper in
- * src/lib/dharm-veer.ts (Sanatan Sangam/Shoonaya).
+ * resolved local-content language. Punjabi copy falls back to the English
+ * source when Punjabi has not been authored; showing Hindi to a Punjabi-
+ * preferring reader would misrepresent the selected language.
  */
 export function pickDharmVeerLocalizedText(
   english: string | undefined,
@@ -86,7 +84,7 @@ export function pickDharmVeerLocalizedText(
   punjabi: string | undefined,
   contentLanguage: 'hi' | 'pa',
 ): string | undefined {
-  if (contentLanguage === 'pa') return punjabi || hindi || english;
+  if (contentLanguage === 'pa') return punjabi || english;
   return hindi || english;
 }
 

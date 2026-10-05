@@ -158,7 +158,8 @@ export default function DharmVeerDetailScreen() {
   // language" is a preview, not an account-wide setting) -- see
   // readerLanguage.
   const { language } = useLanguage();
-  const [readerLanguage, setReaderLanguage] = useState(language);
+  const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
+  const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1); // 'md'
 
   // Explicit Inspiration state
@@ -498,7 +499,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         setFontStep={setFontStep}
         languages={availableLanguages.length > 1 ? availableLanguages : undefined}
         currentLanguage={showLocal ? localContentLanguage : 'en'}
-        setLanguage={(code) => setReaderLanguage(code as any)}
+        setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
         onCopy={() => handlers.copyText(textToCopy, 'Story')}
         isCopied={state.isCopied}
         onShare={() => handlers.share(textToShare)}

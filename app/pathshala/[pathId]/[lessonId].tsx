@@ -30,6 +30,7 @@ import { PathshalaCompletionModal } from '@/components/pathshala/PathshalaComple
 import { useLocalizedMeaning } from '@/hooks/useLocalizedMeaning';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import type { AppLanguage } from '@/lib/language-runtime';
 import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 import {
   getPathshalaDetailCacheSnapshot,
@@ -138,7 +139,8 @@ export default function LessonReaderScreen() {
   // account-wide language silently forced to English (see the guest branch
   // below) -- a real, reported regression, not a hypothetical one.
   const { language: appLang } = useLanguage();
-  const [language, setLanguage] = useState<'en' | 'hi'>(appLang === 'hi' ? 'hi' : 'en');
+  const [languageOverride, setLanguageOverride] = useState<AppLanguage | null>(null);
+  const language = languageOverride ?? appLang;
   const [saving, setSaving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
@@ -174,6 +176,7 @@ export default function LessonReaderScreen() {
           lessonTitle: lesson.title,
           pathTitle: path.title,
           tradition: path.tradition,
+          language,
           completedCount,
           totalLessons: lessons.length,
         }),
@@ -188,7 +191,7 @@ export default function LessonReaderScreen() {
     } finally {
       setBridgeLoading(false);
     }
-  }, [lesson, path, lessons.length]);
+  }, [lesson, path, lessons.length, language]);
 
   // ── AI verse explanation (real /api/pathshala/explain wiring) ──────────
   const [explainStatus, setExplainStatus] = useState<ExplainStatus>('idle');
@@ -325,7 +328,6 @@ export default function LessonReaderScreen() {
         setIsGuest(true);
         setUserId('guest');
         setCompletedLessons([]);
-        setLanguage('en');
         setLoadingState(false);
         return;
       }
@@ -829,10 +831,10 @@ export default function LessonReaderScreen() {
             {/* ── Subheader Controls Ribbon ── */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {(['en', 'hi'] as const).map((option) => (
+                {(['en', 'hi', 'pa'] as const).map((option) => (
                   <PressableSurface
                     key={option}
-                    onPress={() => setLanguage(option)}
+                    onPress={() => setLanguageOverride(option)}
                     haptic="selection"
                     style={{
                       borderRadius: 999,
@@ -844,7 +846,7 @@ export default function LessonReaderScreen() {
                     }}
                   >
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? (isDark ? brand : COLORS.ink) : dim }}>
-                      {option.toUpperCase()}
+                      {option === 'hi' ? 'हिं' : option === 'pa' ? 'ਪੰ' : 'EN'}
                     </Text>
                   </PressableSurface>
                 ))}

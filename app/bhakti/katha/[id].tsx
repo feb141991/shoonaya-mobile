@@ -107,7 +107,8 @@ export default function KathaReaderScreen() {
   // a different language" preview, not an account-wide setting, and must not
   // overwrite the user's global app_language/Supabase profile.
   const { language } = useLanguage();
-  const [readerLanguage, setReaderLanguage] = useState(language);
+  const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
+  const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1); // 'md'
   const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
 
@@ -263,8 +264,8 @@ export default function KathaReaderScreen() {
     return (
       <PanchatantraStorybookView
         katha={katha}
-        activeLanguage={activeLang === 'hi' ? 'hi' : 'en'}
-        onLanguageChange={(l) => setReaderLanguage(l)}
+        activeLanguage={activeLang}
+        onLanguageChange={(l) => setReaderLanguageOverride(l)}
         onBack={() => {
           handlers.stopTTS();
           if (router.canGoBack()) router.back();
@@ -273,7 +274,7 @@ export default function KathaReaderScreen() {
         fontSize={fs}
         onTTS={(sceneText) => handlers.toggleTTS(sceneText || textToCopy, {
           quality: 'pandit',
-          language: activeLang === 'hi' ? 'hi-IN' : 'en-IN',
+          language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',
           speed: 0.86,
           rate: ttsRate,
           pipelineTags: {
@@ -306,7 +307,7 @@ export default function KathaReaderScreen() {
         ...(hasPunjabi ? [{ code: 'pa' as const, label: 'ਪੰ' }] : []),
       ]}
       currentLanguage={activeLang}
-      setLanguage={(code) => setReaderLanguage(code as any)}
+      setLanguage={(code) => setReaderLanguageOverride(code as any)}
       onTTS={() => handlers.toggleTTS(textToCopy, {
         quality: 'pandit',
         language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',

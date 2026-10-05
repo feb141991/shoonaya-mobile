@@ -86,7 +86,8 @@ export default function StotramDetailScreen() {
   // a different language" preview, not an account-wide setting, and must not
   // overwrite the user's global app_language/Supabase profile.
   const { language } = useLanguage();
-  const [readerLanguage, setReaderLanguage] = useState(language);
+  const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
+  const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1); // 'md'
   const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
 
@@ -242,7 +243,7 @@ export default function StotramDetailScreen() {
         ...(hasPunjabi ? [{ code: 'pa' as const, label: 'ਪੰ' }] : []),
       ]}
       currentLanguage={activeLang}
-      setLanguage={(code) => setReaderLanguage(code as any)}
+      setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
       showTransliterationToggle
       isTransliterationOn={state.showTransliteration}
       onToggleTransliteration={handlers.toggleTransliteration}
