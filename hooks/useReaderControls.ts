@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Share } from 'react-native';
+import { Alert, Platform, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as FileSystem from 'expo-file-system/legacy';
 import { apiFetch } from '@/lib/api';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
@@ -150,7 +151,21 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
     setTtsError(null);
 
     try {
-      const ttsText = text.length > 4600 ? `${text.slice(0, 4550)}.` : text;
+      // Backend /api/tts enforces MAX_TTS_TEXT_CHARS = 3_000.
+      // Safely bound request to 2,800 chars cleanly at sentence / newline boundary.
+      const MAX_TTS_LIMIT = 2800;
+      let ttsText = text.trim();
+      if (ttsText.length > MAX_TTS_LIMIT) {
+        const sentenceEnd = Math.max(
+          ttsText.lastIndexOf('. ', MAX_TTS_LIMIT),
+          ttsText.lastIndexOf('। ', MAX_TTS_LIMIT),
+          ttsText.lastIndexOf('\n', MAX_TTS_LIMIT),
+          ttsText.lastIndexOf('? ', MAX_TTS_LIMIT),
+          ttsText.lastIndexOf('! ', MAX_TTS_LIMIT)
+        );
+        ttsText = sentenceEnd > 1200 ? ttsText.slice(0, sentenceEnd + 1).trim() : `${ttsText.slice(0, MAX_TTS_LIMIT - 3)}...`;
+      }
+
       const res = await apiFetch('/api/tts', {
         method: 'POST',
         body: JSON.stringify({
@@ -173,8 +188,23 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
       if (requestId !== ttsRequestIdRef.current || !mountedRef.current) return;
 
       if (data.audioContent) {
-        const uri = `data:audio/mp3;base64,${data.audioContent}`;
-        await loadAndPlay(uri, false, () => setIsSpeaking(false));
+        // Detect format: Sarvam returns WAV (base64 starting with 'UklGR' for RIFF header)
+        const isWav = typeof data.audioContent === 'string' && data.audioContent.startsWith('UklGR');
+        let audioUri: string;
+
+        if (Platform.OS !== 'web' && FileSystem.cacheDirectory) {
+          const ext = isWav ? 'wav' : 'mp3';
+          const localPath = `${FileSystem.cacheDirectory}tts_audio.${ext}`;
+          await FileSystem.writeAsStringAsync(localPath, data.audioContent, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          audioUri = localPath;
+        } else {
+          const mime = isWav ? 'audio/wav' : 'audio/mp3';
+          audioUri = `data:${mime};base64,${data.audioContent}`;
+        }
+
+        await loadAndPlay(audioUri, false, () => setIsSpeaking(false));
         if (requestId === ttsRequestIdRef.current && mountedRef.current) setIsSpeaking(true);
       } else if (data.error) {
         throw new Error(data.error as string);

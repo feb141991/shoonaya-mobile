@@ -311,8 +311,29 @@ export function ReaderShell<LanguageCode extends string = string>({
           >
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {fontPresets && setFontStep && typeof fontStep === 'number' ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                  <Feather name="type" size={14} color={textDim} style={{ marginHorizontal: 4 }} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 4, height: 44, borderRadius: 22 }}>
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => {
+                      if (fontStep > 0) setFontStep(fontStep - 1);
+                    }}
+                    disabled={fontStep === 0}
+                    accessibilityLabel="Decrease text size (--)"
+                    style={{
+                      height: 36,
+                      paddingHorizontal: 7,
+                      borderRadius: 18,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: fontStep === 0 ? 0.35 : 1,
+                      minHeight: 0,
+                    }}
+                  >
+                    <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13, letterSpacing: -0.5 }}>
+                      --
+                    </Text>
+                  </PressableSurface>
+
                   {fontPresets.map((preset, index) => {
                     const selected = fontStep === index;
                     return (
@@ -324,7 +345,7 @@ export function ReaderShell<LanguageCode extends string = string>({
                         accessibilityState={{ selected }}
                         style={{
                           height: 36,
-                          paddingHorizontal: 9,
+                          paddingHorizontal: 8,
                           borderRadius: 18,
                           backgroundColor: selected ? themeColor : 'transparent',
                           alignItems: 'center',
@@ -338,6 +359,28 @@ export function ReaderShell<LanguageCode extends string = string>({
                       </PressableSurface>
                     );
                   })}
+
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => {
+                      if (fontStep < fontPresets.length - 1) setFontStep(fontStep + 1);
+                    }}
+                    disabled={fontStep === fontPresets.length - 1}
+                    accessibilityLabel="Increase text size (++)"
+                    style={{
+                      height: 36,
+                      paddingHorizontal: 7,
+                      borderRadius: 18,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: fontStep === fontPresets.length - 1 ? 0.35 : 1,
+                      minHeight: 0,
+                    }}
+                  >
+                    <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13, letterSpacing: -0.5 }}>
+                      ++
+                    </Text>
+                  </PressableSurface>
                 </View>
               ) : null}
 

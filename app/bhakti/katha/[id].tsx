@@ -271,7 +271,7 @@ export default function KathaReaderScreen() {
           else router.replace('/(tabs)/bhakti' as Href);
         }}
         fontSize={fs}
-        onTTS={() => handlers.toggleTTS(textToCopy, {
+        onTTS={(sceneText) => handlers.toggleTTS(sceneText || textToCopy, {
           quality: 'pandit',
           language: activeLang === 'hi' ? 'hi-IN' : 'en-IN',
           speed: 0.86,

@@ -50,7 +50,7 @@ interface PanchatantraStorybookViewProps {
   onLanguageChange: (lang: "en" | "hi") => void;
   onBack?: () => void;
   fontSize?: { fontSize: number; lineHeight: number };
-  onTTS?: () => void;
+  onTTS?: (sceneText?: string) => void;
   isSpeaking?: boolean;
   isTTSGenerating?: boolean;
   onComplete?: () => void;
@@ -274,7 +274,15 @@ export function PanchatantraStorybookView({
           {onTTS ? (
             <PressableSurface
               haptic="selection"
-              onPress={onTTS}
+              onPress={() => {
+                const isFinal = safePage === totalPages - 1;
+                const currentSceneText = isFinal
+                  ? `${activeLanguage === 'hi' ? 'कथा का बोध:' : 'Moral of the story:'} ${moralText}. ${bodyParagraphs[safePage] ?? ''}`
+                  : safePage === 0
+                  ? `${title}. ${bodyParagraphs[0] ?? ''}`
+                  : (bodyParagraphs[safePage] ?? '');
+                onTTS(currentSceneText);
+              }}
               disabled={isTTSGenerating}
               style={styles.circleBtnWrapper}
               accessibilityLabel={isSpeaking ? "Pause story narration" : "Listen to story"}

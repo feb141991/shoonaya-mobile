@@ -62,4 +62,26 @@ describe('reader navigation and audio lifecycle', () => {
     assert.match(backButton, /targetPath\.startsWith\('\/\(tabs\)\/'\)/);
     assert.match(backButton, /router\.replace\(target\)/);
   });
+
+  it('guarantees ReaderShell renders explicit -- and ++ font scaling steppers while reading', () => {
+    assert.match(readerShell, /accessibilityLabel="Decrease text size \(--\)"/);
+    assert.match(readerShell, /accessibilityLabel="Increase text size \(\+\+\)"/);
+    assert.match(readerShell, /if \(fontStep > 0\) setFontStep\(fontStep - 1\)/);
+    assert.match(readerShell, /if \(fontStep < fontPresets\.length - 1\) setFontStep\(fontStep \+ 1\)/);
+  });
+
+  it('guarantees TTS bounds text under backend limits and persists native audio to cache file', () => {
+    assert.match(readerControls, /const MAX_TTS_LIMIT = 2800;/);
+    assert.match(readerControls, /FileSystem\.writeAsStringAsync\(localPath, data\.audioContent/);
+    assert.match(readerControls, /FileSystem\.EncodingType\.Base64/);
+  });
+
+  it('guarantees Panchatantra storybook narrations pass active scene text rather than dumping whole multi-thousand char text', () => {
+    const storybookSrc = readFileSync(new URL('../components/reader/PanchatantraStorybookView.tsx', import.meta.url), 'utf8');
+    assert.match(storybookSrc, /onTTS\?: \(sceneText\?: string\) => void;/);
+    assert.match(storybookSrc, /onTTS\(currentSceneText\);/);
+    assert.match(katha, /onTTS=\{\(sceneText\) => handlers\.toggleTTS\(sceneText \|\| textToCopy/);
+  });
 });
+
+
