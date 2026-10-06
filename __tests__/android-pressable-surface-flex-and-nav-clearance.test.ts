@@ -29,12 +29,18 @@ test('"Ask Dharma Mitra" is a plain content-hugging button with no flex of its o
   assert.doesNotMatch(buttonBlock, /\n\s*flex:\s*\d/);
 });
 
-test('ReaderShell reserves NAV_BAR_CLEARANCE for the globally-floating nav when no bottomBar is rendered', () => {
+test('ReaderShell content is never hidden under floating UI: nav hidden on readers, padding clears the capsule', () => {
+  // Phase 1 of docs/READER_EXPERIENCE_GRAND_PLAN.md: reading screens hide the
+  // global floating nav (lib/readerRoutes.ts via app/_layout.tsx), and the
+  // reader's own bottom padding clears its floating control capsule.
   const src = fs.readFileSync(path.join(process.cwd(), 'components/reader/ReaderShell.tsx'), 'utf8');
-  assert.match(src, /import \{ NAV_BAR_CLEARANCE \} from '@\/lib\/nav-bar';/);
+  const layout = fs.readFileSync(path.join(process.cwd(), 'app/_layout.tsx'), 'utf8');
+  assert.match(layout, /const isReaderScreen = isReaderRoute\(segments\);/);
+  assert.match(layout, /!isReaderScreen &&/);
   assert.match(
     src,
-    /paddingBottom:\s*insets\.bottom\s*\+\s*\(bottomBar\s*\?\s*120\s*:\s*NAV_BAR_CLEARANCE\)/,
-    'the no-bottomBar branch must use the real reserved clearance, not an undersized literal',
+    /const bottomPadding = \(bottomBar \? bottomBarHeight : insets\.bottom\) \+ \(hasCapsule \? capsuleHeight \+ CAPSULE_GAP \* 2 : 32\);/,
+    'bottom padding must clear the measured capsule height (or the bottomBar when present)',
   );
+  assert.match(src, /paddingBottom: bottomPadding/);
 });

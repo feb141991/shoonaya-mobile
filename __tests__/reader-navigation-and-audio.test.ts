@@ -63,11 +63,16 @@ describe('reader navigation and audio lifecycle', () => {
     assert.match(backButton, /router\.replace\(target\)/);
   });
 
-  it('guarantees ReaderShell renders explicit -- and ++ font scaling steppers while reading', () => {
-    assert.match(readerShell, /accessibilityLabel="Decrease text size \(--\)"/);
-    assert.match(readerShell, /accessibilityLabel="Increase text size \(\+\+\)"/);
-    assert.match(readerShell, /if \(fontStep > 0\) setFontStep\(fontStep - 1\)/);
-    assert.match(readerShell, /if \(fontStep < fontPresets\.length - 1\) setFontStep\(fontStep \+ 1\)/);
+  it('guarantees ReaderShell renders explicit smaller/larger text steppers while reading, clamped to the presets', () => {
+    // Phase 1 of docs/READER_EXPERIENCE_GRAND_PLAN.md moved the steppers from
+    // the header row into the floating capsule (components/reader/ReaderControls.tsx).
+    const capsuleSrc = readFileSync(new URL('../components/reader/ReaderControls.tsx', import.meta.url), 'utf8');
+    assert.match(capsuleSrc, /testID="reader-font-smaller"/);
+    assert.match(capsuleSrc, /testID="reader-font-larger"/);
+    assert.match(readerShell, /onDecrease: \(\) => setFontStep\(Math\.max\(0, fontStep - 1\)\)/);
+    assert.match(readerShell, /onIncrease: \(\) => setFontStep\(Math\.min\(fontPresets\.length - 1, fontStep \+ 1\)\)/);
+    assert.match(readerShell, /canDecrease: fontStep > 0/);
+    assert.match(readerShell, /canIncrease: fontStep < fontPresets\.length - 1/);
   });
 
   it('guarantees TTS bounds text under backend limits and persists native audio to cache file', () => {

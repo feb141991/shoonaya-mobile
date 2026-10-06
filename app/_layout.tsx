@@ -94,6 +94,8 @@ import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { accountDeletion } from '@/lib/accountDeletion';
+import { clearAllReaderPrefs } from '@/lib/readerPrefs';
+import { isReaderRoute } from '@/lib/readerRoutes';
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getOrReadHomeCache } from '@/lib/homeCache';
 import { resolveProfileOutcome } from '@/lib/profileResolution';
@@ -152,7 +154,7 @@ function RootLayout() {
   // stalled (see F01/F02, docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md).
   const emergencyFallbackUsedRef = useRef(false);
   const readyToRender = appIsReady && authReady;
-  const isReaderScreen = rootSegment === 'pathshala' && segments.length >= 3;
+  const isReaderScreen = isReaderRoute(segments);
   const isAiChatScreen = rootSegment === 'ai-chat';
   const isDyutaGameScreen = rootSegment === 'dyuta';
   const showBottomNav =
@@ -463,6 +465,7 @@ function RootLayout() {
         void clearVratGeoCache();
         void clearMoodStatusCache();
         accountDeletion.clear();
+        void clearAllReaderPrefs();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -512,6 +515,7 @@ function RootLayout() {
         void clearVratGeoCache();
         void clearMoodStatusCache();
         accountDeletion.clear();
+        void clearAllReaderPrefs();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -695,6 +699,7 @@ function RootLayout() {
         void clearVratGeoCache();
         void clearMoodStatusCache();
         accountDeletion.clear();
+        void clearAllReaderPrefs();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -716,6 +721,7 @@ function RootLayout() {
         void clearVratGeoCache();
         void clearMoodStatusCache();
         accountDeletion.clear();
+        void clearAllReaderPrefs();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();

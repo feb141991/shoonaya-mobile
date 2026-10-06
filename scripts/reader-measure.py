@@ -3,8 +3,8 @@
 
 Usage: python3 scripts/reader-measure.py <screenshot.png> [...]
 
-Scans the left 3 pt margin (inside the screen's 16 pt page padding, so no
-cards) from the top for the first row that is the page colour (COLORS.creamBg
+Scans the right 2 pt margin (inside the screen's 16 pt page padding, so no
+cards; the left edge has a decorative ambient glow that reaches ~208 pt) from the top for the first row that is the page colour (COLORS.creamBg
 #FAF6EF, light mode) after the header band, and reports it in points. iPhone
 17 Pro Max screenshots are 1320 px wide = 440 pt (3x).
 """
@@ -21,7 +21,7 @@ def close(a, b, tol=6):
 for path in sys.argv[1:]:
     im = Image.open(path).convert('RGB')
     scale = im.width / 440
-    x = round(3 * scale)
+    x = im.width - 1 - round(2 * scale)
     start = round(70 * scale)  # skip status bar / dynamic island
     edge = None
     for y in range(start, im.height):

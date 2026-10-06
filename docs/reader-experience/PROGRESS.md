@@ -10,8 +10,8 @@ audio included).
 
 | Phase | Status | Commits |
 |---|---|---|
-| 0. Baseline | done | (this commit) |
-| 1. Immersive controls | — | |
+| 0. Baseline | done | 299fbe0 |
+| 1. Immersive controls | done | (this commit) |
 | 2. Paper themes | — | |
 | 3. Resume | — | |
 | 4. Listening | — | |
@@ -32,7 +32,17 @@ Each is the conservative choice; revisit any of them on review.
    largest accessibility size the current font row runs off screen and titles
    truncate (`before-xxxl-*`). Chrome text uses `maxFontSizeMultiplier`; body
    text keeps full Dynamic Type.
-3. The floating gear at top-right in every baseline screenshot is the Expo
+3. **The control capsule is solid, not glass.** It first copied the floating
+   nav's translucent glass, but it floats over body text and the text showed
+   through (`dv-pair` check). It uses the card colour (`COLORS.cardBg*`) with
+   the nav's glass border and floating shadow.
+4. **Speed moved into the "Aa" sheet**, and the language button cycles through
+   the available languages on tap (EN → हिंदी → …). Keeps the capsule at five
+   controls (− + listen language Aa), all 44 pt, which fits a 320 pt-wide phone.
+5. **Hint waits for the existing reader intro.** The one-time "tap the page"
+   hint shows only once `shoonaya_reader_intro_seen` is set, so the two never
+   stack; a user who has not seen the intro gets the hint on a later visit.
+6. The floating gear at top-right in every baseline screenshot is the Expo
    dev-menu button (`expo-dev-menu` FAB, development builds only) — not app UI,
    ignored.
 
@@ -48,11 +58,15 @@ How much of the screen the controls take before content starts (measured by
 
 | Screen | Controls end at | Share of screen |
 |---|---|---|
-| Dharm Veer (`sri-krishna`) | 208 pt | 22% |
-| Stotram (`ganesha-pancharatnam`) | 307 pt | 32% |
-| Katha (`katha-ekadashi-margashirsha-shukla`) | 253 pt | 26% |
-| Vrat (`ekadashi`) | 208 pt | 22% |
-| Festival (`diwali`) | 208 pt | 22% |
+| Dharm Veer (`sri-krishna`) | 205 pt | 21% |
+| Stotram (`ganesha-pancharatnam`) | 312 pt | 33% |
+| Katha (`katha-ekadashi-margashirsha-shukla`) | 247 pt | 26% |
+| Vrat (`ekadashi`) | 205 pt | 21% |
+| Festival (`diwali`) | 205 pt | 21% |
+
+(Corrected in Phase 1: the first version of `reader-measure.py` sampled the
+left edge, where a decorative glow reaches ~208 pt; it now samples the right
+edge. Numbers above are re-measured from the same baseline screenshots.)
 
 Also observed:
 - Collapsed bottom-nav Home button overlaps reading text (all 5 screens).
@@ -63,3 +77,47 @@ Also observed:
 
 Android baseline: deferred to the end-of-run pass (emulator + Android dev build
 needed; disk is at 97%, so it is done once).
+
+## Phase 1 — Immersive controls (2026-10-07)
+
+Built: compact top bar (back · title · ⛶ pin), floating capsule (− · + ·
+listen · language · Aa), "Aa" sheet (text size, listening speed,
+transliteration, meaning, copy, share), 3.5 s auto-hide with tap-to-show
+(`lib/readerChrome.ts`), keep-screen-awake while a reader is focused
+(`expo-keep-awake`, tagged, released on blur), one-time tap hint, per-user
+reader prefs (`lib/readerPrefs.ts`, cleared at the four purge points), en/hi/pa
+control text (`lib/readerCopy.ts`), bottom nav hidden on reader routes
+(`lib/readerRoutes.ts`). ReaderShell's props are unchanged; no screen edited.
+
+Measured (same method, controls showing, light, default text):
+
+| Screen | Before | After (controls shown) | After (hidden) |
+|---|---|---|---|
+| Dharm Veer | 205 pt (21%) | 129 pt (13%) | 0 |
+| Stotram | 312 pt (33%) | 130 pt (14%) | 0 |
+| Katha | 247 pt (26%) | 130 pt (14%) | 0 |
+| Vrat | 205 pt (21%) | 130 pt (14%) | 0 |
+| Festival | 205 pt (21%) | 129 pt (13%) | 0 |
+
+Checked on iOS Simulator (screenshots `p1-light-*`, `p1-dark-*`,
+`p1-xxxl-*`):
+- Controls hide at 3.5 s; a tap on plain page shows them; a tap on a Stotram
+  verse expands the verse **and** shows the controls (never swallowed).
+- "Aa" sheet opens, holds the controls visible, Done closes.
+- Dark mode uses the dark palette; largest text size: no clipping (old
+  header clipped "++" and titles).
+- The debug build handles taps with a visible delay; screenshots taken
+  immediately can show the pre-tap state. Waiting 2 s after a tap gives the
+  settled result.
+
+Not verifiable here: VoiceOver/TalkBack pinning and Reduce Motion are covered
+by unit tests (`__tests__/reader-chrome.test.ts`), not by a live screen
+reader; keep-awake needs a real device (the Simulator does not sleep).
+
+Tests: 1131 passed, 1 failed, 0 skipped (`npm test`). The failure is
+`__tests__/astro-engine-numerical.test.ts`, which imports the backend repo by
+a relative path that does not resolve from this nested worktree location; it
+passes 18/18 on the main checkout and Phase 1 touches no astrology code.
+Updated two source-level tests that asserted the old header (font "--"/"++"
+labels, NAV_BAR_CLEARANCE padding) to assert the same guarantees on the new
+design. New: `reader-chrome` (10), `reader-shell-support` (5).

@@ -1,22 +1,50 @@
-import { useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator,
+  AccessibilityInfo,
+  Animated,
+  Pressable,
   ScrollView,
   Text,
   useColorScheme,
   View,
+  type GestureResponderEvent,
   type ViewStyle,
 } from 'react-native';
-import Feather from '@expo/vector-icons/Feather';
-import { type Href } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, type Href } from 'expo-router';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { ReaderIntro } from '@/components/reader/ReaderIntro';
-import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import {
+  CHROME_MAX_FONT_SCALE,
+  ReaderCapsule,
+  ReaderOptionsSheet,
+  ReaderTopBar,
+  SheetChip,
+  defaultReaderPalette,
+  type OptionsSheetSection,
+} from '@/components/reader/ReaderControls';
+import { COLORS, TYPE } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
-import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { createReaderChromeController, isPageTap } from '@/lib/readerChrome';
+import { readerCopy } from '@/lib/readerCopy';
+import { setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
+
+// Shared reader frame for Dharm Veer, Stotram, Katha, Vrat and Festival.
+//
+// Phase 1 of docs/READER_EXPERIENCE_GRAND_PLAN.md: a compact top bar
+// (back · title · pin) and a floating bottom capsule (text size · listen ·
+// language · "Aa" options) that hide after 3.5 s without interaction and come
+// back on a tap on the page (lib/readerChrome.ts). Copy, share, speed,
+// transliteration and meaning moved into the "Aa" sheet. The screen stays
+// awake while a reader is in front. With a screen reader running the controls
+// never hide; with Reduce Motion they fade instead of sliding.
+//
+// Props are unchanged from the previous two-row header, so screens did not
+// need to change.
 
 type ReaderLanguage<Code extends string> = {
   code: Code;
@@ -72,6 +100,9 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
 }
 
 const TTS_RATES = [0.75, 1, 1.25] as const;
+const READER_INTRO_KEY = 'shoonaya_reader_intro_seen';
+const TAP_HINT_MS = 4000;
+const CAPSULE_GAP = 12;
 
 export function ReaderShell<LanguageCode extends string = string>({
   title,
@@ -115,6 +146,18 @@ export function ReaderShell<LanguageCode extends string = string>({
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack, onBeforeBack);
+  const { language: appLanguage } = useLanguage();
+  const copy = readerCopy(appLanguage);
+  const { prefs, loaded: prefsLoaded } = useReaderPrefs();
+
+  const palette = useMemo(() => {
+    const base = defaultReaderPalette(isDark, themeColor);
+    return {
+      ...base,
+      page: shellBackgroundColor ?? base.page,
+      bar: shellHeaderBackgroundColor ?? base.bar,
+    };
+  }, [isDark, themeColor, shellBackgroundColor, shellHeaderBackgroundColor]);
 
   useEffect(() => {
     trackReaderEvent('reader_opened', {
@@ -124,25 +167,200 @@ export function ReaderShell<LanguageCode extends string = string>({
     });
   }, [showMeaningToggle, showTransliterationToggle, title]);
 
-  const bgBase = shellBackgroundColor ?? (isDark ? COLORS.darkBg : COLORS.creamBg);
-  const bgCard = shellHeaderBackgroundColor ?? (isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight);
-  const bgSubCard = isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const softBorder = isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight;
-  const textMain = isDark ? COLORS.creamBg : COLORS.ink;
-  const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const selectedText = isDark ? COLORS.ink : COLORS.onMediaWhite;
+  // ── Controls visibility ──────────────────────────────────────────────
+  const [visible, setVisible] = useState(true);
+  const [screenReader, setScreenReader] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const chromeRef = useRef<ReturnType<typeof createReaderChromeController> | null>(null);
+  if (!chromeRef.current) {
+    chromeRef.current = createReaderChromeController({ onChange: (state) => setVisible(state.visible) });
+  }
+  const chrome = chromeRef.current;
+  const progress = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    chrome.start();
+    return () => chrome.dispose();
+  }, [chrome]);
+
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((on) => { if (mounted) { setScreenReader(on); chrome.setScreenReader(on); } }).catch(() => {});
+    void AccessibilityInfo.isReduceMotionEnabled().then((on) => { if (mounted) setReduceMotion(on); }).catch(() => {});
+    const sr = AccessibilityInfo.addEventListener('screenReaderChanged', (on) => { setScreenReader(on); chrome.setScreenReader(on); });
+    const rm = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => { mounted = false; sr.remove(); rm.remove(); };
+  }, [chrome]);
+
+  useEffect(() => {
+    if (prefsLoaded) chrome.setPinned(prefs.pinned);
+  }, [chrome, prefs.pinned, prefsLoaded]);
+
+  useEffect(() => {
+    if (isTTSGenerating) chrome.hold('tts-loading'); else chrome.release('tts-loading');
+  }, [chrome, isTTSGenerating]);
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: visible ? 1 : 0,
+      duration: reduceMotion ? 120 : 260,
+      useNativeDriver: true,
+    }).start();
+  }, [progress, visible, reduceMotion]);
+
+  // ── Keep the screen awake while this reader is in front ─────────────
+  const keepAwakeTag = `reader-${useId()}`;
+  useFocusEffect(useCallback(() => {
+    void activateKeepAwakeAsync(keepAwakeTag).catch(() => {});
+    return () => { void deactivateKeepAwake(keepAwakeTag).catch(() => {}); };
+  }, [keepAwakeTag]));
+
+  // ── First-time hint ("tap the page") ────────────────────────────────
+  const [hintVisible, setHintVisible] = useState(false);
+  useEffect(() => {
+    if (!prefsLoaded || prefs.tapHintSeen || screenReader) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    // Wait until the existing reader intro has been seen, so the two never stack.
+    void AsyncStorage.getItem(READER_INTRO_KEY).then((seen) => {
+      if (cancelled || seen !== 'true') return;
+      setHintVisible(true);
+      chrome.hold('hint');
+      timer = setTimeout(() => {
+        setHintVisible(false);
+        chrome.release('hint');
+        void setReaderPrefs({ tapHintSeen: true });
+      }, TAP_HINT_MS);
+    }).catch(() => {});
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      chrome.release('hint');
+    };
+  }, [chrome, prefsLoaded, prefs.tapHintSeen, screenReader]);
+
+  // ── Options sheet ───────────────────────────────────────────────────
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const openSheet = useCallback(() => { setSheetOpen(true); chrome.hold('sheet'); }, [chrome]);
+  const closeSheet = useCallback(() => { setSheetOpen(false); chrome.release('sheet'); }, [chrome]);
+
+  // ── Page taps: a tap on plain page area toggles; a tap on content that
+  // handles it (a verse, a link) does its own job and only ever shows. ──
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const plainPagePress = useRef(false);
+  const onPageTouchStart = (event: GestureResponderEvent) => {
+    touchStart.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() };
+    plainPagePress.current = false;
+  };
+  const onPageTouchEnd = (event: GestureResponderEvent) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    if (!isPageTap(start, { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() })) return;
+    // The plain-page Pressable's onPress runs in the same touch dispatch; defer
+    // so we know whether the tap landed on plain page or on content.
+    setTimeout(() => chrome.pageTap(!plainPagePress.current), 0);
+  };
+
+  // ── Layout ──────────────────────────────────────────────────────────
+  const [topBarHeight, setTopBarHeight] = useState(insets.top + 60);
+  const [capsuleHeight, setCapsuleHeight] = useState(52);
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
+
+  const hasFont = Boolean(fontPresets && setFontStep && typeof fontStep === 'number' && fontPresets.length > 0);
+  const languageList = languages && setLanguage && currentLanguage && languages.length > 1 ? languages : null;
   const hasTTSRate = Boolean(onTTS && ttsRate !== undefined && onTTSRateChange);
-  const hasSubheader = Boolean(
-    fontPresets
-    || languages
-    || showTransliterationToggle
-    || showMeaningToggle
-    || hasTTSRate,
+
+  const sections: OptionsSheetSection[] = [];
+  if (hasFont && fontPresets && setFontStep) {
+    sections.push({
+      key: 'text',
+      title: copy.sectionText,
+      content: fontPresets.map((preset, index) => (
+        <SheetChip key={preset.label} label={preset.label} role="radio" selected={fontStep === index} palette={palette}
+          accessibilityLabel={copy.textSize(preset.label)} onPress={() => setFontStep(index)} />
+      )),
+    });
+  }
+  if (hasTTSRate) {
+    sections.push({
+      key: 'speed',
+      title: copy.sectionSpeed,
+      content: TTS_RATES.map((rate) => (
+        <SheetChip key={rate} label={`${rate}×`} role="radio" selected={ttsRate === rate} palette={palette}
+          accessibilityLabel={copy.speed(String(rate))} onPress={() => onTTSRateChange?.(rate)} />
+      )),
+    });
+  }
+  if ((showTransliterationToggle && onToggleTransliteration) || (showMeaningToggle && onToggleMeaning)) {
+    sections.push({
+      key: 'show',
+      title: copy.sectionShow,
+      content: (
+        <>
+          {showTransliterationToggle && onToggleTransliteration ? (
+            <SheetChip label={copy.transliteration} role="switch" icon="type" selected={Boolean(isTransliterationOn)} palette={palette} onPress={onToggleTransliteration} />
+          ) : null}
+          {showMeaningToggle && onToggleMeaning ? (
+            <SheetChip label={copy.meaning} role="switch" icon="book-open" selected={Boolean(isMeaningOn)} palette={palette} onPress={onToggleMeaning} />
+          ) : null}
+        </>
+      ),
+    });
+  }
+  if (onCopy || onShare) {
+    sections.push({
+      key: 'actions',
+      title: copy.sectionActions,
+      content: (
+        <>
+          {onCopy ? <SheetChip label={isCopied ? copy.copied : copy.copy} icon={isCopied ? 'check' : 'copy'} palette={palette} onPress={onCopy} /> : null}
+          {onShare ? <SheetChip label={copy.share} icon="share-2" palette={palette} onPress={() => { closeSheet(); onShare(); }} /> : null}
+        </>
+      ),
+    });
+  }
+
+  const cycleLanguage = () => {
+    if (!languageList || !setLanguage) return;
+    const index = languageList.findIndex((language) => language.code === currentLanguage);
+    setLanguage(languageList[(index + 1) % languageList.length].code);
+  };
+  const currentLanguageLabel = languageList?.find((language) => language.code === currentLanguage)?.label;
+
+  const capsule = (
+    <ReaderCapsule
+      palette={palette}
+      copy={copy}
+      onInteract={() => chrome.interact()}
+      font={hasFont && fontPresets && setFontStep && typeof fontStep === 'number' ? {
+        label: fontPresets[fontStep]?.label ?? '',
+        canDecrease: fontStep > 0,
+        canIncrease: fontStep < fontPresets.length - 1,
+        onDecrease: () => setFontStep(Math.max(0, fontStep - 1)),
+        onIncrease: () => setFontStep(Math.min(fontPresets.length - 1, fontStep + 1)),
+      } : undefined}
+      listen={onTTS ? { speaking: Boolean(isSpeaking), preparing: Boolean(isTTSGenerating), onPress: onTTS } : undefined}
+      language={languageList && currentLanguageLabel ? { label: currentLanguageLabel, onPress: cycleLanguage } : undefined}
+      onOpenOptions={sections.length > 0 ? openSheet : undefined}
+    />
   );
+  const hasCapsule = Boolean(hasFont || onTTS || languageList || sections.length > 0);
+
+  const slide = reduceMotion ? 0 : 1;
+  const topStyle = {
+    opacity: progress,
+    transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [-topBarHeight * slide, 0] }) }],
+  };
+  const bottomStyle = {
+    opacity: progress,
+    transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [(capsuleHeight + CAPSULE_GAP + insets.bottom) * slide, 0] }) }],
+  };
+  const capsuleBottom = (bottomBar ? bottomBarHeight : insets.bottom) + CAPSULE_GAP;
+  const bottomPadding = (bottomBar ? bottomBarHeight : insets.bottom) + (hasCapsule ? capsuleHeight + CAPSULE_GAP * 2 : 32);
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgBase }}>
+    <View style={{ flex: 1, backgroundColor: palette.page }}>
       {ambientGlowColor ? (
         <View
           pointerEvents="none"
@@ -159,374 +377,100 @@ export function ReaderShell<LanguageCode extends string = string>({
         />
       ) : null}
 
-      <View
-        style={{
-          paddingTop: insets.top + 8,
-          paddingHorizontal: 16,
-          paddingBottom: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: softBorder,
-          backgroundColor: bgCard,
-          boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-          zIndex: 10,
-          gap: 12,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <PressableSurface
-            haptic="selection"
-            onPress={handleBack}
-            accessibilityLabel="Go back"
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: bgSubCard,
-              borderColor: border,
-              borderWidth: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 0,
-            }}
+      <View style={{ flex: 1 }} onTouchStart={onPageTouchStart} onTouchEnd={onPageTouchEnd}>
+        <ScrollView
+          ref={(node) => {
+            if (scrollViewRef) {
+              (scrollViewRef as any).current = node;
+            }
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={scrollEventThrottle ?? (onScroll ? 16 : undefined)}
+          contentContainerStyle={[
+            {
+              flexGrow: 1,
+              paddingHorizontal: 16,
+              paddingTop: topBarHeight + 16,
+              paddingBottom: bottomPadding,
+            },
+            contentContainerStyle,
+          ]}
+        >
+          <Pressable
+            accessible={false}
+            onPress={() => { plainPagePress.current = true; }}
+            style={{ flexGrow: 1 }}
           >
-            <Feather name="chevron-left" size={20} color={themeColor} />
-          </PressableSurface>
-
-          <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }}>
-            {headerCenterContent ?? (
-              <>
-                {subtitle ? (
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      color: themeColor,
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 10,
-                      textTransform: 'uppercase',
-                      letterSpacing: 1.5,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {subtitle}
-                  </Text>
-                ) : null}
-                <Text
-                  numberOfLines={1}
-                  style={{ color: textMain, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}
-                >
-                  {title}
-                </Text>
-              </>
-            )}
-          </View>
-
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {onTTS ? (
-              <PressableSurface
-                haptic="selection"
-                onPress={onTTS}
-                disabled={isTTSGenerating}
-                accessibilityLabel={isSpeaking ? 'Stop reading aloud' : 'Listen to this content'}
-                accessibilityState={{ disabled: Boolean(isTTSGenerating), selected: Boolean(isSpeaking) }}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: bgSubCard,
-                  borderColor: border,
-                  borderWidth: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 0,
-                  opacity: isTTSGenerating ? 0.55 : 1,
-                }}
-              >
-                {isTTSGenerating ? (
-                  <ActivityIndicator size="small" color={themeColor} />
-                ) : (
-                  <Feather name={isSpeaking ? 'volume-x' : 'volume-2'} size={18} color={themeColor} />
-                )}
-              </PressableSurface>
-            ) : null}
-            {onCopy ? (
-              <PressableSurface
-                haptic="selection"
-                onPress={onCopy}
-                accessibilityLabel={isCopied ? 'Copied' : 'Copy content'}
-                accessibilityState={{ selected: Boolean(isCopied) }}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: bgSubCard,
-                  borderColor: border,
-                  borderWidth: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 0,
-                }}
-              >
-                <Feather
-                  name={isCopied ? 'check' : 'copy'}
-                  size={18}
-                  color={isCopied ? COLORS.success : themeColor}
-                />
-              </PressableSurface>
-            ) : null}
-            {onShare ? (
-              <PressableSurface
-                haptic="selection"
-                onPress={onShare}
-                accessibilityLabel="Share content"
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: bgSubCard,
-                  borderColor: border,
-                  borderWidth: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 0,
-                }}
-              >
-                <Feather name="share-2" size={18} color={themeColor} />
-              </PressableSurface>
-            ) : null}
-          </View>
-        </View>
-
-        {hasSubheader ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderTopWidth: 1,
-              borderTopColor: softBorder,
-              paddingTop: 12,
-              gap: 10,
-            }}
-          >
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {fontPresets && setFontStep && typeof fontStep === 'number' ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 4, height: 44, borderRadius: 22 }}>
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={() => {
-                      if (fontStep > 0) setFontStep(fontStep - 1);
-                    }}
-                    disabled={fontStep === 0}
-                    accessibilityLabel="Decrease text size (--)"
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 7,
-                      borderRadius: 18,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: fontStep === 0 ? 0.35 : 1,
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13, letterSpacing: -0.5 }}>
-                      --
-                    </Text>
-                  </PressableSurface>
-
-                  {fontPresets.map((preset, index) => {
-                    const selected = fontStep === index;
-                    return (
-                      <PressableSurface
-                        key={preset.label}
-                        haptic="selection"
-                        onPress={() => setFontStep(index)}
-                        accessibilityLabel={`Text size ${preset.label}`}
-                        accessibilityState={{ selected }}
-                        style={{
-                          height: 36,
-                          paddingHorizontal: 8,
-                          borderRadius: 18,
-                          backgroundColor: selected ? themeColor : 'transparent',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Text style={{ color: selected ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-                          {preset.label}
-                        </Text>
-                      </PressableSurface>
-                    );
-                  })}
-
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={() => {
-                      if (fontStep < fontPresets.length - 1) setFontStep(fontStep + 1);
-                    }}
-                    disabled={fontStep === fontPresets.length - 1}
-                    accessibilityLabel="Increase text size (++)"
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 7,
-                      borderRadius: 18,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: fontStep === fontPresets.length - 1 ? 0.35 : 1,
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13, letterSpacing: -0.5 }}>
-                      ++
-                    </Text>
-                  </PressableSurface>
-                </View>
-              ) : null}
-
-              {languages && setLanguage && currentLanguage ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                  <Feather name="globe" size={14} color={textDim} style={{ marginHorizontal: 4 }} />
-                  {languages.map((language) => {
-                    const selected = currentLanguage === language.code;
-                    return (
-                      <PressableSurface
-                        key={language.code}
-                        haptic="selection"
-                        onPress={() => setLanguage(language.code)}
-                        accessibilityLabel={`Reading language ${language.label}`}
-                        accessibilityState={{ selected }}
-                        style={{
-                          height: 36,
-                          paddingHorizontal: 9,
-                          borderRadius: 18,
-                          backgroundColor: selected ? themeColor : 'transparent',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Text style={{ color: selected ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-                          {language.label}
-                        </Text>
-                      </PressableSurface>
-                    );
-                  })}
-                </View>
-              ) : null}
-
-              {hasTTSRate ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                  {TTS_RATES.map((rate) => {
-                    const selected = ttsRate === rate;
-                    return (
-                      <PressableSurface
-                        key={rate}
-                        haptic="selection"
-                        onPress={() => onTTSRateChange?.(rate)}
-                        accessibilityLabel={`Reading speed ${rate} times`}
-                        accessibilityState={{ selected }}
-                        style={{
-                          height: 36,
-                          paddingHorizontal: 9,
-                          borderRadius: 18,
-                          backgroundColor: selected ? themeColor : 'transparent',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Text style={{ color: selected ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-                          {rate === 1 ? '1' : rate}x
-                        </Text>
-                      </PressableSurface>
-                    );
-                  })}
-                </View>
-              ) : null}
-            </View>
-
-            {showTransliterationToggle || showMeaningToggle ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                {showTransliterationToggle && onToggleTransliteration ? (
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={onToggleTransliteration}
-                    accessibilityLabel="Toggle transliteration"
-                    accessibilityState={{ selected: Boolean(isTransliterationOn) }}
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 10,
-                      borderRadius: 18,
-                      backgroundColor: isTransliterationOn ? themeColor : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: isTransliterationOn ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>
-                      TRNS
-                    </Text>
-                  </PressableSurface>
-                ) : null}
-                {showMeaningToggle && onToggleMeaning ? (
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={onToggleMeaning}
-                    accessibilityLabel="Toggle meaning"
-                    accessibilityState={{ selected: Boolean(isMeaningOn) }}
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 10,
-                      borderRadius: 18,
-                      backgroundColor: isMeaningOn ? themeColor : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: isMeaningOn ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>
-                      MEANING
-                    </Text>
-                  </PressableSurface>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+            {children}
+          </Pressable>
+        </ScrollView>
       </View>
 
-      <ScrollView
-        ref={(node) => {
-          if (scrollViewRef) {
-            (scrollViewRef as any).current = node;
-          }
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        onScroll={onScroll}
-        scrollEventThrottle={scrollEventThrottle ?? (onScroll ? 16 : undefined)}
-        contentContainerStyle={[
+      {/* Status-bar backdrop: keeps text from running under the clock when the bar hides. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, backgroundColor: palette.page }} />
+
+      <Animated.View
+        pointerEvents={visible ? 'box-none' : 'none'}
+        accessibilityElementsHidden={!visible}
+        importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
+        onLayout={(event) => setTopBarHeight(event.nativeEvent.layout.height)}
+        style={[
           {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            paddingTop: insets.top + 6,
             paddingHorizontal: 16,
-            paddingTop: 24,
-            // 32 was less than half of NAV_BAR_CLEARANCE (106 -- the
-            // globally-mounted CollapsibleBottomNav's own reserved band,
-            // see lib/nav-bar.ts). Confirmed on a real Android device
-            // (where insets.bottom is commonly 0, unlike iOS's reliable
-            // home-indicator inset): the last button on a reader screen
-            // with no bottomBar rendered underneath the floating nav,
-            // effectively hidden. bottomBar's own 120 already clears it.
-            paddingBottom: insets.bottom + (bottomBar ? 120 : NAV_BAR_CLEARANCE),
+            paddingBottom: 10,
+            backgroundColor: palette.bar,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.barBorder,
+            boxShadow: palette.shadow,
+            zIndex: 10,
           },
-          contentContainerStyle,
+          topStyle,
         ]}
       >
-        {children}
-      </ScrollView>
+        <ReaderTopBar
+          palette={palette}
+          title={title}
+          subtitle={subtitle}
+          centerContent={headerCenterContent}
+          onBack={handleBack}
+          pinned={prefs.pinned}
+          onTogglePin={() => { chrome.interact(); void setReaderPrefs({ pinned: !prefs.pinned }); }}
+          copy={copy}
+        />
+      </Animated.View>
+
+      {hasCapsule ? (
+        <Animated.View
+          pointerEvents={visible ? 'box-none' : 'none'}
+          accessibilityElementsHidden={!visible}
+          importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
+          onLayout={(event) => setCapsuleHeight(event.nativeEvent.layout.height)}
+          style={[{ position: 'absolute', left: 16, right: 16, bottom: capsuleBottom, zIndex: 20, alignItems: 'center', gap: 8 }, bottomStyle]}
+        >
+          {hintVisible ? (
+            <View
+              accessibilityLiveRegion="polite"
+              style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: palette.capsule, borderWidth: 1, borderColor: palette.glassBorder }}
+            >
+              <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.caption, color: palette.text, textAlign: 'center' }}>
+                {copy.tapHint}
+              </Text>
+            </View>
+          ) : null}
+          {capsule}
+        </Animated.View>
+      ) : null}
 
       {bottomBar ? (
         <View
+          onLayout={(event) => setBottomBarHeight(event.nativeEvent.layout.height)}
           style={{
             position: 'absolute',
             bottom: 0,
@@ -534,14 +478,24 @@ export function ReaderShell<LanguageCode extends string = string>({
             right: 0,
             paddingBottom: insets.bottom,
             borderTopWidth: 1,
-            borderTopColor: border,
-            backgroundColor: bgCard,
-            boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            borderTopColor: palette.border,
+            backgroundColor: palette.bar,
+            boxShadow: palette.shadow,
           }}
         >
           {bottomBar}
         </View>
       ) : null}
+
+      <ReaderOptionsSheet
+        visible={sheetOpen}
+        onClose={closeSheet}
+        palette={palette}
+        copy={copy}
+        sections={sections}
+        bottomInset={insets.bottom}
+        reduceMotion={reduceMotion}
+      />
 
       <ReaderIntro
         isDark={isDark}
