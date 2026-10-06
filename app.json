@@ -14,6 +14,11 @@
         "applinks:www.shoonaya.com"
       ],
       "usesAppleSignIn": true,
+      "entitlements": {
+        "keychain-access-groups": [
+          "$(AppIdentifierPrefix)com.shoonaya.app"
+        ]
+      },
       "privacyManifests": {
         "NSPrivacyTracking": false,
         "NSPrivacyCollectedDataTypes": [

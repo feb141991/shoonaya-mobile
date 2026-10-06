@@ -24,7 +24,23 @@ const secureOptions: SecureStore.SecureStoreOptions = {
 const authStorage = createSecureAuthStorage({
   legacy: AsyncStorage,
   secure: {
-    getItem: (key) => SecureStore.getItemAsync(key, secureOptions),
+    getItem: async (key) => {
+      try {
+        return await SecureStore.getItemAsync(key, secureOptions);
+      } catch (error: any) {
+        // If Keychain access fails due to missing entitlement in simulator/dev builds
+        // or temporary OS keychain locking, treat as miss so auth auto-refresh does not crash
+        if (
+          error?.message?.includes('entitlement') ||
+          error?.message?.includes('KeyChainException') ||
+          error?.code === 'ERR_SECURESTORE_KEYCHAIN_ERROR'
+        ) {
+          console.warn('[auth-storage] SecureStore read deferred due to transient Keychain availability:', error?.message);
+          return null;
+        }
+        throw error;
+      }
+    },
     setItem: (key, value) => SecureStore.setItemAsync(key, value, secureOptions),
     removeItem: (key) => SecureStore.deleteItemAsync(key, secureOptions),
   },
