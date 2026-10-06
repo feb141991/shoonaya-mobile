@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { ActivityIndicator, Alert, Animated, Easing, Text, TextInput, useColorScheme, useWindowDimensions, View, ScrollView } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient as SvgLinearGradient, Path, Polygon, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, Line, LinearGradient as SvgLinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Image, type ImageSource } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -352,33 +352,103 @@ function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, ro
   );
 }
 
+type Vec = { x: number; y: number };
+function cubicPoint(p0: Vec, p1: Vec, p2: Vec, p3: Vec, t: number): Vec {
+  const u = 1 - t;
+  return { x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x, y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y };
+}
+
 /**
- * Low-contrast palace hall behind the in-game header: three scalloped arches
- * on columns and two hanging diyas. Decorative only; it scrolls with the page.
+ * Cusped (multifoil) pointed arch from `left` to `right`, springing at
+ * `spring` and peaking at `apex`, closed down to `floor`. Each lobe bulges
+ * outward between inward-pointing cusps, the classic Mughal opening.
+ */
+function multifoilArch(left: number, right: number, spring: number, apex: number, floor: number, lobes = 4): string {
+  const width = right - left;
+  const mid = left + width / 2;
+  const leftCurve = [{ x: left, y: spring }, { x: left, y: spring - width * 0.5 }, { x: mid - width * 0.14, y: apex + width * 0.1 }, { x: mid, y: apex }] as const;
+  const rightCurve = [{ x: mid, y: apex }, { x: mid + width * 0.14, y: apex + width * 0.1 }, { x: right, y: spring - width * 0.5 }, { x: right, y: spring }] as const;
+  const centre = { x: mid, y: spring };
+  const depth = width * 0.05;
+  const points: Vec[] = [];
+  for (let index = 0; index <= lobes; index += 1) points.push(cubicPoint(...leftCurve, index / lobes));
+  for (let index = 1; index <= lobes; index += 1) points.push(cubicPoint(...rightCurve, index / lobes));
+  let d = `M ${left} ${floor} L ${left} ${spring}`;
+  for (let index = 1; index < points.length; index += 1) {
+    const from = points[index - 1]; const to = points[index];
+    const m = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+    const away = { x: m.x - centre.x, y: m.y - centre.y };
+    const length = Math.hypot(away.x, away.y) || 1;
+    d += ` Q ${m.x + (away.x / length) * depth} ${m.y + (away.y / length) * depth} ${to.x} ${to.y}`;
+  }
+  return `${d} L ${right} ${floor} Z`;
+}
+
+/**
+ * Palace hall behind the in-game header, after the mockup: a cream wall with
+ * three sunlit multifoil arches on capitals, a jali screen in the centre
+ * opening, hanging brass diyas with glowing flames and potted plants, fading
+ * into the floor the table sits on. Decorative only; it scrolls with the page.
  */
 function SabhaHallBackdrop({ width, theme, isDark }: { width: number; theme: Theme; isDark: boolean }) {
-  const height = 420;
-  const opening = isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowIvoryLight;
-  const column = width * 0.07;
+  const height = 560;
+  const wall = theme.cardSoft;
+  const lightTop = isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight;
+  const lightBottom = isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight;
+  const glow = isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight;
+  const column = width * 0.075;
   const span = (width - column * 4) / 3;
-  const arch = (left: number) => {
-    const right = left + span; const mid = left + span / 2; const spring = 210; const apex = 70;
-    return `M ${left} ${height} V ${spring} C ${left} ${spring - span * 0.5} ${mid - span * 0.14} ${apex + span * 0.1} ${mid} ${apex} C ${mid + span * 0.14} ${apex + span * 0.1} ${right} ${spring - span * 0.5} ${right} ${spring} V ${height} Z`;
-  };
+  const spring = 250;
+  const apex = 96;
+  const opening = (index: number) => { const left = column + index * (span + column); return { left, right: left + span }; };
+  const centre = opening(1);
   const lamp = (x: number) => <G key={x}>
-    <Path d={`M ${x} 0 V 58`} stroke={theme.brand} strokeWidth={1} />
-    <Circle cx={x} cy={52} r={18} fill={isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight} />
-    <Ellipse cx={x} cy={50} rx={2.6} ry={5} fill={theme.brand} />
-    <Path d={`M ${x - 11} 56 Q ${x} 70 ${x + 11} 56 Z`} fill={theme.brand} />
-    <Path d={`M ${x - 13} 56 H ${x + 13}`} stroke={theme.brandStrong} strokeWidth={1.2} />
+    {Array.from({ length: 9 }, (_, index) => <Ellipse key={index} cx={x} cy={4 + index * 6} rx={1.6} ry={2.8} fill="none" stroke={theme.brandStrong} strokeWidth={1} />)}
+    <Circle cx={x} cy={66} r={30} fill="url(#hallFlame)" />
+    <Path d={`M ${x - 16} 66 Q ${x} 86 ${x + 16} 66 Z`} fill={theme.brand} stroke={theme.brandStrong} strokeWidth={1} />
+    <Path d={`M ${x - 18} 66 H ${x + 18}`} stroke={theme.brandStrong} strokeWidth={1.6} strokeLinecap="round" />
+    <Circle cx={x} cy={80} r={2.2} fill={theme.brandStrong} />
+    <Path d={`M ${x} 50 Q ${x + 4} 58 ${x} 64 Q ${x - 4} 58 ${x} 50 Z`} fill={theme.brand} />
+    <Ellipse cx={x} cy={60} rx={1.4} ry={2.6} fill={COLORS.dyutaIvory} />
   </G>;
-  return <View pointerEvents="none" style={{ position: 'absolute', top: -SPACING.lg, left: -SPACING.xl, width, height }}>
+  const plant = (x: number, flip: 1 | -1) => <G key={x} transform={`translate(${x} 40) scale(${flip * 0.6} 0.6)`}>
+    {[[-22, 120, -38], [-10, 108, -14], [6, 112, 14], [18, 126, 36], [-2, 98, 2], [-30, 140, -60], [26, 142, 58]].map(([dx, cy, deg], index) => <Ellipse key={index} cx={dx} cy={cy} rx={6} ry={20} fill={COLORS.sage} fillOpacity={0.55 + (index % 3) * 0.12} transform={`rotate(${deg} ${dx} ${cy})`} />)}
+    <Path d="M -20 150 H 20 L 15 182 Q 0 188 -15 182 Z" fill={theme.brand} />
+    <Path d="M -22 150 H 22" stroke={theme.brandStrong} strokeWidth={3} strokeLinecap="round" />
+  </G>;
+  return <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height }}>
     <Svg width={width} height={height}>
-      {[0, 1, 2].map((index) => { const left = column + index * (span + column); return <G key={index}>
-        <Path d={arch(left)} fill={opening} stroke={theme.premiumBorder} strokeWidth={1.5} />
+      <Defs>
+        <SvgLinearGradient id="hallLight" x1="0" y1="0" x2="0" y2="1"><Stop offset={0} stopColor={lightTop} /><Stop offset={1} stopColor={lightBottom} /></SvgLinearGradient>
+        <SvgLinearGradient id="hallFade" x1="0" y1="0" x2="0" y2="1"><Stop offset={0} stopColor={theme.bg} stopOpacity={0} /><Stop offset={1} stopColor={theme.bg} stopOpacity={1} /></SvgLinearGradient>
+        <RadialGradient id="hallSun" cx="50%" cy="40%" r="50%"><Stop offset={0} stopColor={glow} stopOpacity={0.55} /><Stop offset={1} stopColor={glow} stopOpacity={0} /></RadialGradient>
+        <RadialGradient id="hallFlame" cx="50%" cy="50%" r="50%"><Stop offset={0} stopColor={glow} /><Stop offset={1} stopColor={glow} stopOpacity={0} /></RadialGradient>
+        <ClipPath id="hallJali"><Path d={multifoilArch(centre.left + 14, centre.right - 14, spring + 30, apex + 60, height)} /></ClipPath>
+      </Defs>
+      <Rect x={0} y={0} width={width} height={height} fill={wall} />
+      {[0, 1, 2].map((index) => { const { left, right } = opening(index); return <G key={index}>
+        <Path d={multifoilArch(left - 5, right + 5, spring, apex - 7, height)} fill="none" stroke={theme.premiumBorder} strokeWidth={6} />
+        <Path d={multifoilArch(left, right, spring, apex, height)} fill="url(#hallLight)" stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1.2} />
       </G>; })}
-      {[0, 1, 2, 3].map((index) => <Path key={index} d={`M ${index * (span + column)} ${height} V 196 H ${index * (span + column) + column} V ${height} Z`} fill={theme.brandSoft} />)}
+      {/* jali screen in the centre opening */}
+      <G clipPath="url(#hallJali)">
+        <Rect x={centre.left} y={apex} width={span} height={height - apex} fill={theme.brandSoft} />
+        {Array.from({ length: 30 }, (_, index) => { const offset = index * 14 - 160; return <G key={index}>
+          <Line x1={centre.left + offset} y1={height} x2={centre.left + offset + height} y2={0} stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1} />
+          <Line x1={centre.left + offset} y1={0} x2={centre.left + offset + height} y2={height} stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1} />
+        </G>; })}
+      </G>
+      <Ellipse cx={width / 2} cy={spring} rx={width * 0.5} ry={spring * 0.9} fill="url(#hallSun)" />
+      {/* columns with capitals and bases */}
+      {[0, 1, 2, 3].map((index) => { const x = index * (span + column); return <G key={index}>
+        <Rect x={x + column * 0.18} y={spring - 4} width={column * 0.64} height={height - spring} fill={wall} stroke={theme.premiumBorder} strokeWidth={1} />
+        <Rect x={x - 2} y={spring - 14} width={column + 4} height={10} rx={2} fill={wall} stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1} />
+        <Path d={`M ${x + column * 0.5} ${spring - 26} l 5 8 l -5 4 l -5 -4 Z`} fill={theme.brand} fillOpacity={0.6} />
+      </G>; })}
       {[width * 0.24, width * 0.76].map(lamp)}
+      {plant(width * 0.03, 1)}
+      {plant(width * 0.97, -1)}
+      <Rect x={0} y={height - 200} width={width} height={200} fill="url(#hallFade)" />
     </Svg>
   </View>;
 }
@@ -386,8 +456,15 @@ function SabhaHallBackdrop({ width, theme, isDark }: { width: number; theme: The
 /** Double-framed ivory plaque with a gold rule, the mockup's card treatment. */
 function Plaque({ theme, isDark, highlighted = false, compact = false, style, children }: { theme: Theme; isDark: boolean; highlighted?: boolean; compact?: boolean; style?: object; children: React.ReactNode }) {
   return <View style={[{ borderRadius: RADII.sm, borderWidth: highlighted ? 2 : 1.5, borderColor: theme.brand, backgroundColor: theme.card, padding: 3, boxShadow: highlighted ? `0 0 20px ${theme.brand}` : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) }, style]}>
+    <PlaqueCorners theme={theme} />
     <View style={{ borderRadius: RADII.xs, borderWidth: 1, borderColor: highlighted ? theme.brand : theme.premiumBorder, backgroundColor: highlighted ? theme.brandSoft : undefined, paddingHorizontal: compact ? SPACING.sm : SPACING.md, paddingVertical: compact ? SPACING.xs : SPACING.sm, gap: SPACING.xs }}>{children}</View>
   </View>;
+}
+
+/** Gold diamond studs on a frame's four corners. */
+function PlaqueCorners({ theme, size = 7 }: { theme: Theme; size?: number }) {
+  const offset = -size / 2 - 1;
+  return <>{[{ top: offset, left: offset }, { top: offset, right: offset }, { bottom: offset, left: offset }, { bottom: offset, right: offset }].map((position, index) => <View key={index} pointerEvents="none" style={{ position: 'absolute', zIndex: 1, ...position }}><Diamond size={size} theme={theme} /></View>)}</>;
 }
 
 function Diamond({ size = 8, theme }: { size?: number; theme: Theme }) {
@@ -466,6 +543,15 @@ function SabhaTable({ width, theme, isDark, children }: { width: number; theme: 
       <Polygon points={octagon(49.5, 4)} fill={edge} />
       <Polygon points={octagon(49.5, 2)} fill={edge} stroke={edge} strokeWidth={0.4} />
       <Polygon points={octagon(49.5)} fill="url(#dyutaSlab)" stroke={edge} strokeWidth={0.6} />
+      {/* faceted stone panels: faces turned away from the light (lower half) carry more shade */}
+      <G>{Array.from({ length: 8 }, (_, index) => {
+        const corner = (radius: number, step: number) => { const angle = Math.PI / 8 + (step * Math.PI) / 4; return `${50 + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`; };
+        const facing = Math.sin(Math.PI / 8 + ((index + 0.5) * Math.PI) / 4);
+        return <G key={index}>
+          <Polygon points={`${corner(49.5, index)} ${corner(49.5, index + 1)} ${corner(39.5, index + 1)} ${corner(39.5, index)}`} fill={edge} fillOpacity={0.12 + Math.max(0, facing) * 0.4} />
+          <Line x1={50 + 49.5 * Math.cos(Math.PI / 8 + (index * Math.PI) / 4)} y1={cy + 49.5 * Math.sin(Math.PI / 8 + (index * Math.PI) / 4)} x2={50 + 39.5 * Math.cos(Math.PI / 8 + (index * Math.PI) / 4)} y2={cy + 39.5 * Math.sin(Math.PI / 8 + (index * Math.PI) / 4)} stroke={edge} strokeWidth={0.5} />
+        </G>;
+      })}</G>
       <Polygon points={octagon(47.4)} fill="none" stroke={highlight} strokeWidth={0.6} />
       {/* lotus relief: each petal is carved (edge tone) with a lit upper lip */}
       <G>{ring(28, 42).map(({ x, y, deg }, index) => <G key={index} transform={`translate(${x} ${y}) rotate(${deg})`}>
@@ -664,6 +750,8 @@ function SabhaButton({ label, icon, onPress, variant = 'primary', disabled = fal
   const ink = primary ? COLORS.dyutaIvory : theme.text;
   return <PressableSurface accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, busy }} disabled={disabled} onPress={onPress} haptic={hapticsEnabled ? 'selection' : 'none'} style={{ flex: 1, minHeight: 60, borderRadius: RADII.sm, borderWidth: 1.5, borderColor: theme.brand, backgroundColor: primary ? COLORS.navy : theme.card, padding: 3, opacity: disabled ? 0.55 : 1 }}>
     <View style={{ flex: 1, borderRadius: RADII.xs, borderWidth: 1, borderColor: primary ? COLORS.homeGoldPillBorder : theme.premiumBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, paddingHorizontal: SPACING.sm }}>
+      <View pointerEvents="none" style={{ position: 'absolute', left: SPACING.xs, top: 0, bottom: 0, justifyContent: 'center' }}><Diamond size={6} theme={theme} /></View>
+      <View pointerEvents="none" style={{ position: 'absolute', right: SPACING.xs, top: 0, bottom: 0, justifyContent: 'center' }}><Diamond size={6} theme={theme} /></View>
       {busy ? <ActivityIndicator color={ink} /> : <><MaterialCommunityIcons name={icon} size={20} color={primary ? COLORS.dyutaIvory : theme.brand} /><Text numberOfLines={2} style={{ ...TYPE.cardHeading, color: ink, textAlign: 'center', flexShrink: 1 }}>{label}</Text></>}
     </View>
   </PressableSurface>;
