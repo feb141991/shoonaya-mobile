@@ -109,6 +109,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
     const storiesWithScenes = [
       'panchatantra-blue-jackal',
       'panchatantra-camel-bell',
+      'panchatantra-clever-hare-and-elephant',
       'panchatantra-crows-and-cobra',
       'panchatantra-dove-king-and-net',
       'panchatantra-four-friends',
@@ -126,8 +127,8 @@ test('Panchatantra Artwork Resolution', async (t) => {
     }
 
     // Fallback to master artwork for stories without individual scene splits
-    const hareScene = getPanchatantraSceneArtwork('panchatantra-clever-hare-and-elephant', 2);
-    assert.equal(hareScene, getPanchatantraArtworkSource('panchatantra-clever-hare-and-elephant'));
+    const moonLakeScene = getPanchatantraSceneArtwork('panchatantra-moon-lake-rabbits', 2);
+    assert.equal(moonLakeScene, getPanchatantraArtworkSource('panchatantra-moon-lake-rabbits'));
 
     // Nonexistent story returns null
     assert.equal(getPanchatantraSceneArtwork('panchatantra-nonexistent', 0), null);
@@ -205,6 +206,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     // Tier 2: Dedicated 6-scene storybooks
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-blue-jackal'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-camel-bell'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-clever-hare-and-elephant'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-crows-and-cobra'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-dove-king-and-net'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-four-friends'), 2);
@@ -214,7 +216,6 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-talkative-tortoise'), 2);
 
     // Tier 1: Masterwork cover artwork
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-clever-hare-and-elephant'), 1);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-moon-lake-rabbits'), 1);
 
     // Tier 0: Manuscript folios without local art
@@ -225,7 +226,6 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
   await t.test('sorts stories so full scene storybooks appear first, then masterwork, then manuscript', () => {
     const mixed = [
       { id: 'panchatantra-brahmin-and-crooks', title: 'Brahmin and Crooks' },
-      { id: 'panchatantra-clever-hare-and-elephant', title: 'The Clever Hare and Elephant' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
@@ -238,13 +238,12 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[0].id, 'panchatantra-dove-king-and-net');
     assert.equal(sorted[1].id, 'panchatantra-lion-and-rabbit');
 
-    // Tier 1 items must appear at indices 2 and 3
-    assert.equal(sorted[2].id, 'panchatantra-clever-hare-and-elephant');
-    assert.equal(sorted[3].id, 'panchatantra-moon-lake-rabbits');
+    // Tier 1 item must appear at index 2
+    assert.equal(sorted[2].id, 'panchatantra-moon-lake-rabbits');
 
-    // Tier 0 items must follow at indices 4 and 5
-    assert.equal(sorted[4].id, 'panchatantra-brahmin-and-crooks');
-    assert.equal(sorted[5].id, 'panchatantra-wedge-pulling-monkey');
+    // Tier 0 items must follow at indices 3 and 4
+    assert.equal(sorted[3].id, 'panchatantra-brahmin-and-crooks');
+    assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {

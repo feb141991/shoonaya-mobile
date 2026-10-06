@@ -53,6 +53,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/camel-bell-5.jpg'),
     require('@/assets/panchatantra/camel-bell-6.jpg'),
   ],
+  'panchatantra-clever-hare-and-elephant': [
+    require('@/assets/panchatantra/clever-hare-1.jpg'),
+    require('@/assets/panchatantra/clever-hare-2.jpg'),
+    require('@/assets/panchatantra/clever-hare-3.jpg'),
+    require('@/assets/panchatantra/clever-hare-4.jpg'),
+    require('@/assets/panchatantra/clever-hare-5.jpg'),
+    require('@/assets/panchatantra/clever-hare-6.jpg'),
+  ],
   'panchatantra-crows-and-cobra': [
     require('@/assets/panchatantra/crows-cobra-1.jpg'),
     require('@/assets/panchatantra/crows-cobra-2.jpg'),
