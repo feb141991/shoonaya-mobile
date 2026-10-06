@@ -91,6 +91,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
     assert.equal(hasPanchatantraArtwork('panchatantra-talkative-tortoise'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-dove-king-and-net'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-mongoose-and-child'), true);
+    assert.equal(hasPanchatantraArtwork('panchatantra-foolish-friend-monkey'), true);
 
     const source = getPanchatantraArtworkSource('panchatantra-camel-bell');
     assert.ok(source, 'Artwork source should resolve');
@@ -114,6 +115,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-clever-hare-and-elephant',
       'panchatantra-crows-and-cobra',
       'panchatantra-dove-king-and-net',
+      'panchatantra-foolish-friend-monkey',
       'panchatantra-four-friends',
       'panchatantra-lion-and-rabbit',
       'panchatantra-mice-and-elephants',
@@ -213,6 +215,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-clever-hare-and-elephant'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-crows-and-cobra'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-dove-king-and-net'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-foolish-friend-monkey'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-four-friends'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-and-rabbit'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-mice-and-elephants'), 2);

@@ -32,6 +32,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-mongoose-and-child': require('@/assets/panchatantra/mongoose-child-1.jpg'),
   'panchatantra-talkative-tortoise': require('@/assets/panchatantra/talkative-tortoise.jpg'),
   'panchatantra-dove-king-and-net': require('@/assets/panchatantra/dove-king-1.jpg'),
+  'panchatantra-foolish-friend-monkey': require('@/assets/panchatantra/foolish-friend-1.jpg'),
 };
 
 /**
@@ -86,6 +87,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/dove-king-4.jpg'),
     require('@/assets/panchatantra/dove-king-5.jpg'),
     require('@/assets/panchatantra/dove-king-6.jpg'),
+  ],
+  'panchatantra-foolish-friend-monkey': [
+    require('@/assets/panchatantra/foolish-friend-1.jpg'),
+    require('@/assets/panchatantra/foolish-friend-2.jpg'),
+    require('@/assets/panchatantra/foolish-friend-3.jpg'),
+    require('@/assets/panchatantra/foolish-friend-4.jpg'),
+    require('@/assets/panchatantra/foolish-friend-5.jpg'),
+    require('@/assets/panchatantra/foolish-friend-6.jpg'),
   ],
   'panchatantra-four-friends': [
     require('@/assets/panchatantra/four-friends-1.jpg'),
