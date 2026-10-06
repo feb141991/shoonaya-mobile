@@ -61,8 +61,9 @@ describe('Dyuta Sabha product surface', () => {
     assert.match(screen, /copy\.factSourceLabel/);
     assert.match(screen, /BORI Critical Edition · Mahabharata 2\.53\.4–5; Stage 0 evidence review/);
     assert.match(screen, /writeDyutaPreferences\(\{ hapticsEnabled: enabled \}\)/);
-    // GameExtras must be mounted on both the setup and in-match screens.
-    assert.equal(screen.match(/<GameExtras/g)?.length, 2);
+    // GameExtras is built once and mounted on both the setup and in-match screens.
+    assert.equal(screen.match(/<GameExtras/g)?.length, 1);
+    assert.equal(screen.match(/\{extras\}/g)?.length, 2);
     assert.doesNotMatch(screen, /haptic="selection"/, 'every control must honour the haptics preference');
     for (const language of ['en', 'hi', 'pa'] as const) {
       const copy = DYUTA_COPY[language];

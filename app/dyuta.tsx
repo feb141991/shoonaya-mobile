@@ -11,7 +11,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { DYUTA_COPY, type DyutaCopy } from '@/lib/dyuta/copy';
 import {
@@ -90,11 +90,8 @@ export default function DyutaScreen() {
   const [rollingSide, setRollingSide] = useState<DyutaSide | null>(null);
   const [guideThinking, setGuideThinking] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
-  const [factsOpen, setFactsOpen] = useState(false);
-  const [savesOpen, setSavesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<ExtrasPanel | null>(null);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const [savedMatches, setSavedMatches] = useState<DyutaSavedMatch[]>([]);
   const [savingCopy, setSavingCopy] = useState(false);
   const [preferences, setPreferences] = useState<DyutaPreferences>({ hapticsEnabled: true, tutorialCompleted: false, unlockedFunFacts: 0, completedMatches: 0 });
@@ -201,7 +198,8 @@ export default function DyutaScreen() {
   const deleteCopy = useCallback((saved: DyutaSavedMatch) => {
     Alert.alert(copy.deleteSave, copy.deleteSaveMessage, [{ text: copy.cancel, style: 'cancel' }, { text: copy.deleteSave, style: 'destructive', onPress: () => { void deleteDyutaSavedMatch(saved.id).then(() => setSavedMatches((current) => current.filter((item) => item.id !== saved.id))); } }]);
   }, [copy]);
-  const completeTutorial = useCallback(() => { setTutorialStep(null); void markDyutaTutorialCompleted().then(setPreferences).catch(() => {}); }, []);
+  const completeTutorial = useCallback(() => { setOpenPanel(null); setTutorialStep(0); void markDyutaTutorialCompleted().then(setPreferences).catch(() => {}); }, []);
+  const togglePanel = useCallback((panel: ExtrasPanel) => setOpenPanel((current) => current === panel ? null : panel), []);
   const toggleHaptics = useCallback(() => {
     const enabled = !preferences.hapticsEnabled;
     setPreferences((current) => ({ ...current, hapticsEnabled: enabled }));
@@ -228,66 +226,74 @@ export default function DyutaScreen() {
   const canDeclare = match?.activeSide === 'player' && match.phase === 'awaiting_declaration';
   const canRespond = match?.activeSide === 'player' && match.phase === 'awaiting_response';
 
+  const shadow = isDark ? SHADOWS.sm.dark : SHADOWS.sm.light;
+  const extras = (
+    <GameExtras
+      copy={copy}
+      theme={theme}
+      shadow={shadow}
+      match={match}
+      openPanel={openPanel}
+      onPanel={togglePanel}
+      tutorialStep={tutorialStep}
+      onTutorialStep={setTutorialStep}
+      tutorialCompleted={preferences.tutorialCompleted}
+      onCompleteTutorial={completeTutorial}
+      unlockedFacts={preferences.unlockedFunFacts}
+      savedMatches={savedMatches}
+      onSave={() => void saveCopy()}
+      onLoad={loadCopy}
+      onDelete={deleteCopy}
+      savingCopy={savingCopy}
+      hapticsEnabled={preferences.hapticsEnabled}
+      onToggleHaptics={toggleHaptics}
+    />
+  );
+
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
-      <LinearGradient colors={isDark ? [theme.bg, theme.card, theme.bg] : [COLORS.homeRaisedLight, theme.bg, theme.card]} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING.xxl, gap: SPACING.md }} showsVerticalScrollIndicator={false}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
-            <BackButton label={copy.backLabel} variant="glass" showLabel={false} fallbackHref="/play" />
-            <View style={{ flex: 1 }}><Text style={{ ...TYPE.title, color: theme.text }}>{copy.gameTitle}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.gameSubtitle}</Text></View>
-            <View style={{ minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, borderRadius: RADII.pill, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}><Feather name="wifi-off" size={18} color={theme.brand} /></View>
+      {/* Backdrop glows copied from app/play.tsx, the screen that launches Dyuta. */}
+      <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <View style={{ position: 'absolute', top: 70, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft }} />
+        <View style={{ position: 'absolute', top: 390, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight }} />
+      </View>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.xxl, gap: SPACING.lg }} showsVerticalScrollIndicator={false}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <BackButton label={copy.backLabel} showLabel={false} fallbackHref="/play" />
+          <View accessible accessibilityLabel={copy.offlineLabel} style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: MIN_TOUCH_TARGET / 2, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center', boxShadow: shadow }}>
+            <Feather name="wifi-off" size={17} color={theme.brand} />
           </View>
+        </View>
+        <View>
+          <Text style={{ ...TYPE.section, color: theme.brand }}>{copy.experienceLabel}</Text>
+          <Text style={{ ...TYPE.display, color: theme.text, marginTop: 2 }}>{copy.gameTitle}</Text>
+          <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: SPACING.xs }}>{copy.gameSubtitle}</Text>
+        </View>
 
-          {!match ? (
-            <>
-              <SetupCard mode={mode} onMode={setMode} difficulty={difficulty} onDifficulty={setDifficulty} playerOne={playerOne} playerTwo={playerTwo} onPlayerOne={setPlayerOne} onPlayerTwo={setPlayerTwo} faction={setupFaction} onFaction={setSetupFaction} playerAvatar={playerAvatar} onPlayerAvatar={setPlayerAvatar} playerColor={playerColor} onPlayerColor={setPlayerColor} guideAvatar={guideAvatar} onGuideAvatar={setGuideAvatar} guideColor={guideColor} onGuideColor={setGuideColor} onStart={startMatch} copy={copy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} />
-              <GameExtras copy={copy} theme={theme} match={null} tutorialStep={tutorialStep} onTutorialStep={setTutorialStep} onCompleteTutorial={completeTutorial} factsOpen={factsOpen} onFactsOpen={() => setFactsOpen((value) => !value)} unlockedFacts={preferences.unlockedFunFacts} savesOpen={savesOpen} onSavesOpen={() => setSavesOpen((value) => !value)} savedMatches={savedMatches} onSave={() => void saveCopy()} onLoad={loadCopy} onDelete={deleteCopy} savingCopy={savingCopy} settingsOpen={settingsOpen} onSettingsOpen={() => setSettingsOpen((value) => !value)} hapticsEnabled={preferences.hapticsEnabled} onToggleHaptics={toggleHaptics} />
-            </>
-          ) : (
-            <>
-              <SabhaBoard match={match} playerLabel={playerLabel} guideLabel={guideLabel} guideMood={guideMood} visibleRoll={visibleRoll} rollingSide={rollingSide} status={status} latest={latest} copy={copy} theme={theme} reducedMotion={reducedMotion} />
+        {!match ? (
+          <>
+            <SetupSection mode={mode} onMode={setMode} difficulty={difficulty} onDifficulty={setDifficulty} playerOne={playerOne} playerTwo={playerTwo} onPlayerOne={setPlayerOne} onPlayerTwo={setPlayerTwo} faction={setupFaction} onFaction={setSetupFaction} playerAvatar={playerAvatar} onPlayerAvatar={setPlayerAvatar} playerColor={playerColor} onPlayerColor={setPlayerColor} guideAvatar={guideAvatar} onGuideAvatar={setGuideAvatar} guideColor={guideColor} onGuideColor={setGuideColor} onStart={startMatch} copy={copy} theme={theme} shadow={shadow} hapticsEnabled={preferences.hapticsEnabled} />
+            {extras}
+          </>
+        ) : (
+          <>
+            <SabhaBoard match={match} playerLabel={playerLabel} guideLabel={guideLabel} guideMood={guideMood} visibleRoll={visibleRoll} rollingSide={rollingSide} status={status} latest={latest} copy={copy} theme={theme} reducedMotion={reducedMotion} />
 
-              <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, gap: SPACING.sm }}>
-                {match.phase === 'handoff' ? <PrimaryAction label={copy.continueTurn} onPress={continueHandoff} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /> : null}
-                {canPlayerRoll ? <PrimaryAction label={copy.roll} onPress={() => void rollPlayer()} busy={busy} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /> : null}
-                {canPlayerDecide ? <View style={{ gap: SPACING.sm }}><PrimaryAction label={copy.keep} onPress={keep} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SecondaryAction label={copy.rerollFirst} onPress={() => void reroll(0)} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.rerollSecond} onPress={() => void reroll(1)} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View></View> : null}
-                {canDeclare ? <View style={{ gap: SPACING.sm }}><Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>{copy.declarePrompt}</Text><View style={{ flexDirection: 'row', gap: SPACING.sm }}>{([1, 2, 3] as DyutaStake[]).map((stake) => <StakeAction key={stake} stake={stake} disabled={stake > maxAvailableStake(match)} onPress={() => declare(stake)} copy={copy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} />)}</View></View> : null}
-                {canRespond && match.declaredStake ? <View style={{ gap: SPACING.md }}><Text style={{ ...TYPE.body, color: theme.text, textAlign: 'center' }}>{copy.responsePrompt.replace('{name}', guideLabel).replace('{count}', String(match.declaredStake))}</Text><PrimaryAction label={copy.accept} onPress={() => respond('accept')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.yield} onPress={() => respond('yield')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View> : null}
-                {match.activeSide === 'guide' && match.phase !== 'complete' && match.phase !== 'handoff' ? <View style={{ alignItems: 'center', gap: SPACING.sm }}><ActivityIndicator color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.guideThinking}</Text></View> : null}
-                {match.phase === 'complete' ? <View style={{ gap: SPACING.md }}><Text style={{ ...TYPE.title, color: theme.text, textAlign: 'center' }}>{status}</Text><PrimaryAction label={copy.shareRecap} onPress={() => void shareCapturedShoonayaCard(recapRef, { fileName: 'shoonaya-dyuta-sabha.png', dialogTitle: copy.shareRecap })} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.startMatch} onPress={startMatch} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.close} onPress={() => router.replace('/play')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View> : null}
-              </Card>
+            <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, gap: SPACING.sm }}>
+              {match.phase === 'handoff' ? <PrimaryAction label={copy.continueTurn} onPress={continueHandoff} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /> : null}
+              {canPlayerRoll ? <PrimaryAction label={copy.roll} onPress={() => void rollPlayer()} busy={busy} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /> : null}
+              {canPlayerDecide ? <View style={{ gap: SPACING.sm }}><PrimaryAction label={copy.keep} onPress={keep} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SecondaryAction label={copy.rerollFirst} onPress={() => void reroll(0)} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.rerollSecond} onPress={() => void reroll(1)} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View></View> : null}
+              {canDeclare ? <View style={{ gap: SPACING.sm }}><Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>{copy.declarePrompt}</Text><View style={{ flexDirection: 'row', gap: SPACING.sm }}>{([1, 2, 3] as DyutaStake[]).map((stake) => <StakeAction key={stake} stake={stake} disabled={stake > maxAvailableStake(match)} onPress={() => declare(stake)} copy={copy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} />)}</View></View> : null}
+              {canRespond && match.declaredStake ? <View style={{ gap: SPACING.md }}><Text style={{ ...TYPE.body, color: theme.text, textAlign: 'center' }}>{copy.responsePrompt.replace('{name}', guideLabel).replace('{count}', String(match.declaredStake))}</Text><PrimaryAction label={copy.accept} onPress={() => respond('accept')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.yield} onPress={() => respond('yield')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View> : null}
+              {match.activeSide === 'guide' && match.phase !== 'complete' && match.phase !== 'handoff' ? <View style={{ alignItems: 'center', gap: SPACING.sm }}><ActivityIndicator color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.guideThinking}</Text></View> : null}
+              {match.phase === 'complete' ? <View style={{ gap: SPACING.md }}><Text style={{ ...TYPE.title, color: theme.text, textAlign: 'center' }}>{status}</Text><PrimaryAction label={copy.shareRecap} onPress={() => void shareCapturedShoonayaCard(recapRef, { fileName: 'shoonaya-dyuta-sabha.png', dialogTitle: copy.shareRecap })} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.startMatch} onPress={startMatch} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SecondaryAction label={copy.close} onPress={() => router.replace('/play')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View> : null}
+            </Card>
 
-              <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }}>
-                <PressableSurface accessibilityLabel={rulesOpen ? copy.hideRules : copy.showRules} accessibilityState={{ expanded: rulesOpen }} onPress={() => setRulesOpen((value) => !value)} haptic={preferences.hapticsEnabled ? 'selection' : 'none'} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.rulesTitle}</Text><Feather name={rulesOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.brand} /></PressableSurface>
-                {rulesOpen ? <Text style={{ ...TYPE.body, color: theme.dim, marginTop: SPACING.sm }}>{copy.rulesBody}</Text> : null}
-              </Card>
-              <GameExtras
-                copy={copy}
-                theme={theme}
-                match={match}
-                tutorialStep={tutorialStep}
-                onTutorialStep={setTutorialStep}
-                onCompleteTutorial={completeTutorial}
-                factsOpen={factsOpen}
-                onFactsOpen={() => setFactsOpen((value) => !value)}
-                unlockedFacts={preferences.unlockedFunFacts}
-                savesOpen={savesOpen}
-                onSavesOpen={() => setSavesOpen((value) => !value)}
-                savedMatches={savedMatches}
-                onSave={() => void saveCopy()}
-                onLoad={loadCopy}
-                onDelete={deleteCopy}
-                savingCopy={savingCopy}
-                settingsOpen={settingsOpen}
-                onSettingsOpen={() => setSettingsOpen((value) => !value)}
-                hapticsEnabled={preferences.hapticsEnabled}
-                onToggleHaptics={toggleHaptics}
-              />
-              {match.phase !== 'complete' ? <SecondaryAction label={copy.changeMode} onPress={reset} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /> : null}
-            </>
-          )}
-        </ScrollView>
-      </LinearGradient>
+            {extras}
+            {match.phase !== 'complete' ? <RowTile icon="refresh-ccw" title={copy.changeMode} onPress={reset} theme={theme} shadow={shadow} hapticsEnabled={preferences.hapticsEnabled} /> : null}
+          </>
+        )}
+      </ScrollView>
       {match?.phase === 'complete' ? <MatchRecapCard ref={recapRef} match={match} playerLabel={playerLabel} guideLabel={guideLabel} copy={copy} theme={theme} /> : null}
     </Screen>
   );
@@ -338,60 +344,149 @@ function RoundReveal({ record, playerLabel, guideLabel, copy, theme }: { record:
   return <View accessible accessibilityLiveRegion="polite" accessibilityLabel={line} style={{ borderTopWidth: 1, borderTopColor: theme.border, paddingTop: SPACING.sm, alignItems: 'center', gap: 4 }}><Text style={{ ...TYPE.label, color: theme.text }}>{line}</Text>{record.overreach ? <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.overreach}</Text> : null}{record.response === 'accept' && record.responderRoll ? <View style={{ flexDirection: 'row', gap: SPACING.md }}><Text style={{ ...TYPE.caption, color: theme.dim }}>{record.challengerRoll.finalDice.join(' + ')}</Text><Text style={{ ...TYPE.caption, color: theme.brand }}>{copy.versus}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{record.responderRoll.finalDice.join(' + ')}</Text></View> : null}</View>;
 }
 
-function SetupCard({ mode, onMode, difficulty, onDifficulty, playerOne, playerTwo, onPlayerOne, onPlayerTwo, faction, onFaction, playerAvatar, onPlayerAvatar, playerColor, onPlayerColor, guideAvatar, onGuideAvatar, guideColor, onGuideColor, onStart, copy, theme, hapticsEnabled }: {
+type Theme = ReturnType<typeof themeColor>;
+type FeatherName = React.ComponentProps<typeof Feather>['name'];
+type ExtrasPanel = 'rules' | 'tutorial' | 'facts' | 'saves' | 'settings';
+const AVATAR_ORDER: DyutaAvatarId[] = ['sun', 'moon', 'star', 'feather', 'heart', 'compass'];
+const COLOR_ORDER: DyutaBoardColor[] = ['gold', 'sage', 'navy', 'clay'];
+
+function SetupSection({ mode, onMode, difficulty, onDifficulty, playerOne, playerTwo, onPlayerOne, onPlayerTwo, faction, onFaction, playerAvatar, onPlayerAvatar, playerColor, onPlayerColor, guideAvatar, onGuideAvatar, guideColor, onGuideColor, onStart, copy, theme, shadow, hapticsEnabled }: {
   mode: DyutaMode; onMode: (value: DyutaMode) => void; difficulty: GuideDifficulty; onDifficulty: (value: GuideDifficulty) => void;
   playerOne: string; playerTwo: string; onPlayerOne: (value: string) => void; onPlayerTwo: (value: string) => void;
   faction: DyutaFaction; onFaction: (value: DyutaFaction) => void;
   playerAvatar: DyutaAvatarId; onPlayerAvatar: (value: DyutaAvatarId) => void; playerColor: DyutaBoardColor; onPlayerColor: (value: DyutaBoardColor) => void;
   guideAvatar: DyutaAvatarId; onGuideAvatar: (value: DyutaAvatarId) => void; guideColor: DyutaBoardColor; onGuideColor: (value: DyutaBoardColor) => void;
-  onStart: () => void; copy: DyutaCopy; theme: ReturnType<typeof themeColor>; hapticsEnabled: boolean;
+  onStart: () => void; copy: DyutaCopy; theme: Theme; shadow: string; hapticsEnabled: boolean;
 }) {
-  return <Card elevated tone="auto" style={{ padding: SPACING.lg, backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, gap: SPACING.md }}>
-    <Text style={{ ...TYPE.title, color: theme.text }}>{copy.modeTitle}</Text>
-    <View style={{ flexDirection: 'row', gap: SPACING.sm }}><Choice label={copy.soloMode} selected={mode === 'solo'} onPress={() => onMode('solo')} theme={theme} hapticsEnabled={hapticsEnabled} /><Choice label={copy.passAndPlayMode} selected={mode === 'pass_and_play'} onPress={() => onMode('pass_and_play')} theme={theme} hapticsEnabled={hapticsEnabled} /></View>
-    {mode === 'solo' ? <><Text style={{ ...TYPE.label, color: theme.text }}>{copy.difficultyTitle}</Text><View style={{ flexDirection: 'row', gap: SPACING.sm }}><Choice label={copy.difficultyEasy} selected={difficulty === 'easy'} onPress={() => onDifficulty('easy')} theme={theme} hapticsEnabled={hapticsEnabled} /><Choice label={copy.difficultyMedium} selected={difficulty === 'medium'} onPress={() => onDifficulty('medium')} theme={theme} hapticsEnabled={hapticsEnabled} /><Choice label={copy.difficultyHard} selected={difficulty === 'hard'} onPress={() => onDifficulty('hard')} theme={theme} hapticsEnabled={hapticsEnabled} /></View><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.difficultyDescription}</Text></> : <View style={{ gap: SPACING.sm }}><NameInput value={playerOne} onChange={onPlayerOne} label={copy.playerOneLabel} theme={theme} /><NameInput value={playerTwo} onChange={onPlayerTwo} label={copy.playerTwoLabel} theme={theme} /></View>}
-    <Text style={{ ...TYPE.label, color: theme.text }}>{copy.factionTitle}</Text>
-    <View style={{ flexDirection: 'row', gap: SPACING.sm }}><Choice label={copy.pandavas} selected={faction === 'pandavas'} onPress={() => onFaction('pandavas')} theme={theme} hapticsEnabled={hapticsEnabled} /><Choice label={copy.kauravas} selected={faction === 'kauravas'} onPress={() => onFaction('kauravas')} theme={theme} hapticsEnabled={hapticsEnabled} /></View>
-    <IdentityChoices title={mode === 'solo' ? copy.player : copy.playerOneLabel} avatar={playerAvatar} color={playerColor} onAvatar={onPlayerAvatar} onColor={onPlayerColor} copy={copy} theme={theme} hapticsEnabled={hapticsEnabled} />
-    {mode === 'pass_and_play' ? <IdentityChoices title={copy.playerTwoLabel} avatar={guideAvatar} color={guideColor} onAvatar={onGuideAvatar} onColor={onGuideColor} copy={copy} theme={theme} hapticsEnabled={hapticsEnabled} /> : null}
+  const tile = { theme, shadow, hapticsEnabled };
+  return <View style={{ gap: SPACING.md }}>
+    <SectionLabel label={copy.modeTitle} theme={theme} />
+    <View style={{ gap: SPACING.sm }}>
+      <SelectTile label={copy.soloMode} icon="user" selected={mode === 'solo'} onPress={() => onMode('solo')} {...tile} />
+      <SelectTile label={copy.passAndPlayMode} icon="users" selected={mode === 'pass_and_play'} onPress={() => onMode('pass_and_play')} {...tile} />
+    </View>
+    {mode === 'solo' ? <>
+      <SectionLabel label={copy.difficultyTitle} theme={theme} />
+      <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+        <SelectTile compact label={copy.difficultyEasy} selected={difficulty === 'easy'} onPress={() => onDifficulty('easy')} {...tile} />
+        <SelectTile compact label={copy.difficultyMedium} selected={difficulty === 'medium'} onPress={() => onDifficulty('medium')} {...tile} />
+        <SelectTile compact label={copy.difficultyHard} selected={difficulty === 'hard'} onPress={() => onDifficulty('hard')} {...tile} />
+      </View>
+      <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.difficultyDescription}</Text>
+    </> : <View style={{ gap: SPACING.sm }}><NameInput value={playerOne} onChange={onPlayerOne} label={copy.playerOneLabel} theme={theme} /><NameInput value={playerTwo} onChange={onPlayerTwo} label={copy.playerTwoLabel} theme={theme} /></View>}
+    <SectionLabel label={copy.factionTitle} theme={theme} />
+    <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+      <SelectTile compact label={copy.pandavas} selected={faction === 'pandavas'} onPress={() => onFaction('pandavas')} {...tile} />
+      <SelectTile compact label={copy.kauravas} selected={faction === 'kauravas'} onPress={() => onFaction('kauravas')} {...tile} />
+    </View>
+    <IdentityChoices title={mode === 'solo' ? copy.avatarTitle : copy.playerOneLabel} avatar={playerAvatar} color={playerColor} onAvatar={onPlayerAvatar} onColor={onPlayerColor} copy={copy} {...tile} />
+    {mode === 'pass_and_play' ? <IdentityChoices title={copy.playerTwoLabel} avatar={guideAvatar} color={guideColor} onAvatar={onGuideAvatar} onColor={onGuideColor} copy={copy} {...tile} /> : null}
     <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.cosmeticChoice}</Text>
-    <Text style={{ ...TYPE.body, color: theme.dim }}>{copy.rulesBody}</Text>
     <PrimaryAction label={copy.startMatch} onPress={onStart} theme={theme} hapticsEnabled={hapticsEnabled} />
-  </Card>;
+  </View>;
 }
 
-function IdentityChoices({ title, avatar, color, onAvatar, onColor, copy, theme, hapticsEnabled }: { title: string; avatar: DyutaAvatarId; color: DyutaBoardColor; onAvatar: (value: DyutaAvatarId) => void; onColor: (value: DyutaBoardColor) => void; copy: DyutaCopy; theme: ReturnType<typeof themeColor>; hapticsEnabled: boolean }) {
-  const avatars: Array<[DyutaAvatarId, string]> = [['sun', copy.avatarSun], ['moon', copy.avatarMoon], ['star', copy.avatarStar], ['feather', copy.avatarFeather], ['heart', copy.avatarHeart], ['compass', copy.avatarCompass]];
-  const colors: Array<[DyutaBoardColor, string]> = [['gold', copy.colorGold], ['sage', copy.colorSage], ['navy', copy.colorNavy], ['clay', copy.colorClay]];
-  return <View style={{ gap: SPACING.sm }}><Text style={{ ...TYPE.label, color: theme.text }}>{title}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm }}>{avatars.map(([id, label]) => <Choice key={id} label={label} selected={avatar === id} onPress={() => onAvatar(id)} theme={theme} hapticsEnabled={hapticsEnabled} />)}</View><View style={{ flexDirection: 'row', gap: SPACING.sm }}>{colors.map(([id, label]) => <Choice key={id} label={label} selected={color === id} onPress={() => onColor(id)} theme={theme} hapticsEnabled={hapticsEnabled} />)}</View></View>;
+function IdentityChoices({ title, avatar, color, onAvatar, onColor, copy, theme, shadow, hapticsEnabled }: { title: string; avatar: DyutaAvatarId; color: DyutaBoardColor; onAvatar: (value: DyutaAvatarId) => void; onColor: (value: DyutaBoardColor) => void; copy: DyutaCopy; theme: Theme; shadow: string; hapticsEnabled: boolean }) {
+  const avatarLabels: Record<DyutaAvatarId, string> = { sun: copy.avatarSun, moon: copy.avatarMoon, star: copy.avatarStar, feather: copy.avatarFeather, heart: copy.avatarHeart, compass: copy.avatarCompass };
+  const colorLabels: Record<DyutaBoardColor, string> = { gold: copy.colorGold, sage: copy.colorSage, navy: copy.colorNavy, clay: copy.colorClay };
+  const chosen = boardColorValue(color, theme);
+  return <View style={{ gap: SPACING.md }}>
+    <SectionLabel label={title} theme={theme} />
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm }}>
+      {AVATAR_ORDER.map((id) => <SelectTile key={id} compact columns={3} label={avatarLabels[id]} icon={id} iconColor={avatar === id ? chosen : undefined} selected={avatar === id} onPress={() => onAvatar(id)} theme={theme} shadow={shadow} hapticsEnabled={hapticsEnabled} />)}
+    </View>
+    <SectionLabel label={copy.colorTitle} theme={theme} />
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm }}>
+      {COLOR_ORDER.map((id) => <SelectTile key={id} compact columns={2} label={colorLabels[id]} swatch={boardColorValue(id, theme)} selected={color === id} onPress={() => onColor(id)} theme={theme} shadow={shadow} hapticsEnabled={hapticsEnabled} />)}
+    </View>
+  </View>;
 }
 
-function GameExtras({ copy, theme, match, tutorialStep, onTutorialStep, onCompleteTutorial, factsOpen, onFactsOpen, unlockedFacts, savesOpen, onSavesOpen, savedMatches, onSave, onLoad, onDelete, savingCopy, settingsOpen, onSettingsOpen, hapticsEnabled, onToggleHaptics }: {
-  copy: DyutaCopy; theme: ReturnType<typeof themeColor>; match: DyutaMatchState | null; tutorialStep: number | null; onTutorialStep: (value: number | null) => void; onCompleteTutorial: () => void;
-  factsOpen: boolean; onFactsOpen: () => void; unlockedFacts: number; savesOpen: boolean; onSavesOpen: () => void; savedMatches: DyutaSavedMatch[]; onSave: () => void; onLoad: (saved: DyutaSavedMatch) => void; onDelete: (saved: DyutaSavedMatch) => void; savingCopy: boolean;
-  settingsOpen: boolean; onSettingsOpen: () => void; hapticsEnabled: boolean; onToggleHaptics: () => void;
+function GameExtras({ copy, theme, shadow, match, openPanel, onPanel, tutorialStep, onTutorialStep, tutorialCompleted, onCompleteTutorial, unlockedFacts, savedMatches, onSave, onLoad, onDelete, savingCopy, hapticsEnabled, onToggleHaptics }: {
+  copy: DyutaCopy; theme: Theme; shadow: string; match: DyutaMatchState | null; openPanel: ExtrasPanel | null; onPanel: (panel: ExtrasPanel) => void;
+  tutorialStep: number; onTutorialStep: (value: number) => void; tutorialCompleted: boolean; onCompleteTutorial: () => void; unlockedFacts: number;
+  savedMatches: DyutaSavedMatch[]; onSave: () => void; onLoad: (saved: DyutaSavedMatch) => void; onDelete: (saved: DyutaSavedMatch) => void; savingCopy: boolean;
+  hapticsEnabled: boolean; onToggleHaptics: () => void;
 }) {
   const tutorial = [copy.tutorialRoll, copy.tutorialChoice, copy.tutorialScore];
   const facts = [copy.factOne, copy.factTwo, copy.factThree];
   const sources = ['Shoonaya Dyuta ruleset dyuta-sabha-bluff-v1', 'BORI Critical Edition · Mahabharata 2.53', 'BORI Critical Edition · Mahabharata 2.53.4–5; Stage 0 evidence review'];
-  return <>
-    <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }}>
-      <PressableSurface accessibilityRole="button" accessibilityLabel={copy.tutorialTitle} accessibilityState={{ expanded: tutorialStep !== null }} haptic={hapticsEnabled ? 'selection' : 'none'} onPress={() => onTutorialStep(tutorialStep === null ? 0 : null)} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.tutorialTitle}</Text><Feather name={tutorialStep === null ? 'chevron-down' : 'chevron-up'} size={18} color={theme.brand} /></PressableSurface>
-      {tutorialStep !== null ? <View style={{ gap: SPACING.md, paddingTop: SPACING.sm }}><Text style={{ ...TYPE.chip, color: theme.brand }}>{copy.tutorialStep.replace('{step}', String(tutorialStep + 1))}</Text><Text style={{ ...TYPE.body, color: theme.dim }}>{tutorial[tutorialStep]}</Text><PrimaryAction label={tutorialStep < tutorial.length - 1 ? copy.tutorialNext : copy.tutorialDone} onPress={() => tutorialStep < tutorial.length - 1 ? onTutorialStep(tutorialStep + 1) : onCompleteTutorial()} theme={theme} hapticsEnabled={hapticsEnabled} /></View> : null}
-    </Card>
-    <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }}>
-      <PressableSurface accessibilityRole="button" accessibilityLabel={copy.factsTitle} accessibilityState={{ expanded: factsOpen }} haptic={hapticsEnabled ? 'selection' : 'none'} onPress={onFactsOpen} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.factsTitle}</Text><Text style={{ ...TYPE.caption, color: theme.brand }}>{copy.factsProgress.replace('{count}', String(unlockedFacts))}</Text></PressableSurface>
-      {factsOpen ? <View style={{ gap: SPACING.md, paddingTop: SPACING.sm }}>{facts.map((fact, index) => index < unlockedFacts ? <View key={sources[index]} style={{ gap: 4 }}><Text style={{ ...TYPE.body, color: theme.text }}>{fact}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.factSourceLabel}: {sources[index]}</Text></View> : <Text key={sources[index]} style={{ ...TYPE.caption, color: theme.dim }}>{copy.factsLocked}</Text>)}</View> : null}
-    </Card>
-    {(match || savedMatches.length > 0) ? <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }}>
-      <PressableSurface accessibilityRole="button" accessibilityLabel={copy.savedMatchesTitle} accessibilityState={{ expanded: savesOpen }} haptic={hapticsEnabled ? 'selection' : 'none'} onPress={onSavesOpen} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.savedMatchesTitle} · {savedMatches.length}/{MAX_DYUTA_SAVED_MATCHES}</Text><Feather name={savesOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.brand} /></PressableSurface>
-      {savesOpen ? <View style={{ gap: SPACING.md, paddingTop: SPACING.sm }}>{match ? <PrimaryAction label={copy.saveCopy} onPress={onSave} disabled={savedMatches.length >= MAX_DYUTA_SAVED_MATCHES || savingCopy} busy={savingCopy} theme={theme} hapticsEnabled={hapticsEnabled} /> : null}{savedMatches.length === 0 ? <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.noSavedMatches}</Text> : null}{savedMatches.map((saved) => <View key={saved.id} style={{ gap: SPACING.sm, borderTopWidth: 1, borderTopColor: theme.border, paddingTop: SPACING.sm }}><Text style={{ ...TYPE.label, color: theme.text }}>{saved.label}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.savedAt.replace('{date}', new Date(saved.savedAt).toLocaleString())}</Text><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SecondaryAction label={copy.loadSave} onPress={() => onLoad(saved)} theme={theme} hapticsEnabled={hapticsEnabled} /><SecondaryAction label={copy.deleteSave} onPress={() => onDelete(saved)} theme={theme} hapticsEnabled={hapticsEnabled} /></View></View>)}</View> : null}
-    </Card> : null}
-    <Card tone="auto" style={{ padding: SPACING.md, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }}>
-      <PressableSurface accessibilityRole="button" accessibilityLabel={copy.settingsTitle} accessibilityState={{ expanded: settingsOpen }} haptic={hapticsEnabled ? 'selection' : 'none'} onPress={onSettingsOpen} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.settingsTitle}</Text><Feather name={settingsOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.brand} /></PressableSurface>
-      {settingsOpen ? <View style={{ paddingTop: SPACING.sm, gap: SPACING.sm }}><Text style={{ ...TYPE.label, color: theme.text }}>{copy.hapticsTitle}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.hapticsDescription}</Text><Choice label={hapticsEnabled ? copy.enabled : copy.disabled} selected={hapticsEnabled} onPress={onToggleHaptics} theme={theme} hapticsEnabled={hapticsEnabled} accessibilityRole="switch" /></View> : null}
-    </Card>
-  </>;
+  const tile = { theme, shadow, hapticsEnabled };
+  const showSaves = match !== null || savedMatches.length > 0;
+  return <View style={{ gap: SPACING.sm }}>
+    <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+      <ToolTile icon="book-open" title={copy.rulesTitle} subtitle={openPanel === 'rules' ? copy.hideRules : copy.showRules} expanded={openPanel === 'rules'} onPress={() => onPanel('rules')} {...tile} />
+      <ToolTile icon="play-circle" title={copy.tutorialTitle} subtitle={tutorialCompleted ? copy.tutorialReplay : copy.tutorialStart} expanded={openPanel === 'tutorial'} onPress={() => onPanel('tutorial')} {...tile} />
+    </View>
+    {openPanel === 'rules' ? <ExtrasPanelCard theme={theme} shadow={shadow}><Text style={{ ...TYPE.body, color: theme.dim }}>{copy.rulesBody}</Text></ExtrasPanelCard> : null}
+    {openPanel === 'tutorial' ? <ExtrasPanelCard theme={theme} shadow={shadow}><Text style={{ ...TYPE.chip, color: theme.brand }}>{copy.tutorialStep.replace('{step}', String(tutorialStep + 1))}</Text><Text style={{ ...TYPE.body, color: theme.dim }}>{tutorial[tutorialStep]}</Text><PrimaryAction label={tutorialStep < tutorial.length - 1 ? copy.tutorialNext : copy.tutorialDone} onPress={() => tutorialStep < tutorial.length - 1 ? onTutorialStep(tutorialStep + 1) : onCompleteTutorial()} theme={theme} hapticsEnabled={hapticsEnabled} /></ExtrasPanelCard> : null}
+    <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+      <ToolTile icon="feather" title={copy.factsTitle} subtitle={copy.factsProgress.replace('{count}', String(unlockedFacts))} expanded={openPanel === 'facts'} onPress={() => onPanel('facts')} {...tile} />
+      {showSaves ? <ToolTile icon="archive" title={copy.savedMatchesTitle} subtitle={`${savedMatches.length}/${MAX_DYUTA_SAVED_MATCHES}`} expanded={openPanel === 'saves'} onPress={() => onPanel('saves')} {...tile} /> : null}
+    </View>
+    {openPanel === 'facts' ? <ExtrasPanelCard theme={theme} shadow={shadow}>{facts.map((fact, index) => index < unlockedFacts ? <View key={sources[index]} style={{ gap: SPACING.xs }}><Text style={{ ...TYPE.body, color: theme.text }}>{fact}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.factSourceLabel}: {sources[index]}</Text></View> : <View key={sources[index]} style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}><Feather name="lock" size={14} color={theme.dim} /><Text style={{ ...TYPE.caption, color: theme.dim, flex: 1 }}>{copy.factsLocked}</Text></View>)}</ExtrasPanelCard> : null}
+    {openPanel === 'saves' && showSaves ? <ExtrasPanelCard theme={theme} shadow={shadow}>
+      {match ? <PrimaryAction label={copy.saveCopy} onPress={onSave} disabled={savedMatches.length >= MAX_DYUTA_SAVED_MATCHES || savingCopy} busy={savingCopy} theme={theme} hapticsEnabled={hapticsEnabled} /> : null}
+      {savedMatches.length === 0 ? <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.noSavedMatches}</Text> : null}
+      {savedMatches.map((saved) => <View key={saved.id} style={{ gap: SPACING.sm, borderTopWidth: 1, borderTopColor: theme.border, paddingTop: SPACING.sm }}><Text style={{ ...TYPE.label, color: theme.text }}>{saved.label}</Text><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.savedAt.replace('{date}', new Date(saved.savedAt).toLocaleString())}</Text><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SecondaryAction label={copy.loadSave} onPress={() => onLoad(saved)} theme={theme} hapticsEnabled={hapticsEnabled} /><SecondaryAction label={copy.deleteSave} onPress={() => onDelete(saved)} theme={theme} hapticsEnabled={hapticsEnabled} /></View></View>)}
+    </ExtrasPanelCard> : null}
+    <RowTile icon="sliders" title={copy.settingsTitle} subtitle={`${copy.hapticsTitle} · ${hapticsEnabled ? copy.enabled : copy.disabled}`} expanded={openPanel === 'settings'} onPress={() => onPanel('settings')} {...tile} />
+    {openPanel === 'settings' ? <ExtrasPanelCard theme={theme} shadow={shadow}>
+      <Text style={{ ...TYPE.label, color: theme.text }}>{copy.hapticsTitle}</Text>
+      <Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.hapticsDescription}</Text>
+      <SelectTile label={hapticsEnabled ? copy.enabled : copy.disabled} icon={hapticsEnabled ? 'smartphone' : 'slash'} selected={hapticsEnabled} onPress={onToggleHaptics} accessibilityRole="switch" {...tile} />
+    </ExtrasPanelCard> : null}
+  </View>;
+}
+
+function SectionLabel({ label, theme }: { label: string; theme: Theme }) {
+  return <Text accessibilityRole="header" style={{ ...TYPE.section, color: theme.brand }}>{label}</Text>;
+}
+
+/** Icon well from Japa's launcher tiles: a 34px brandSoft circle with a brand glyph. */
+function IconWell({ name, theme, fill }: { name: FeatherName; theme: Theme; fill?: string }) {
+  return <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: fill ?? theme.brandSoft }}><Feather name={name} size={16} color={fill ? theme.textOnBrand : theme.brand} /></View>;
+}
+
+/** Selection card matching Japa's SelectableCard treatment (premium border, brandSoft when selected, radio dot). */
+function SelectTile({ label, selected, onPress, icon, iconColor, swatch, compact = false, columns, theme, shadow, hapticsEnabled, accessibilityRole = 'radio' }: { label: string; selected: boolean; onPress: () => void; icon?: FeatherName; iconColor?: string; swatch?: string; compact?: boolean; columns?: 2 | 3; theme: Theme; shadow: string; hapticsEnabled: boolean; accessibilityRole?: 'radio' | 'switch' }) {
+  return <PressableSurface accessibilityRole={accessibilityRole} accessibilityState={{ checked: selected }} accessibilityLabel={label} onPress={onPress} haptic={hapticsEnabled ? 'selection' : 'none'} style={{ flexGrow: 1, flexBasis: columns === 3 ? '30%' : columns === 2 ? '45%' : compact ? 0 : 'auto', minHeight: MIN_TOUCH_TARGET + SPACING.md, borderRadius: RADII.md, borderWidth: selected ? 1.5 : 1, borderColor: selected ? theme.brand : theme.premiumBorder, backgroundColor: selected ? theme.brandSoft : theme.card, boxShadow: shadow, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, flexDirection: 'row', alignItems: 'center', justifyContent: compact && !icon && !swatch ? 'center' : 'flex-start', gap: SPACING.sm }}>
+    {icon ? <IconWell name={icon} theme={theme} fill={iconColor} /> : null}
+    {swatch ? <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: swatch, borderWidth: 1, borderColor: theme.premiumBorder }} /> : null}
+    <Text numberOfLines={1} style={{ ...TYPE.label, color: selected ? theme.brand : theme.text, flexShrink: 1, flexGrow: compact ? 0 : 1 }}>{label}</Text>
+    {!compact ? (selected
+      ? <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center' }}><Feather name="check" size={13} color={theme.textOnBrand} /></View>
+      : <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: theme.premiumBorder }} />) : null}
+  </PressableSurface>;
+}
+
+/** Two-up launcher tile matching Japa's "Change mala" / "Ambient sound" pair. */
+function ToolTile({ icon, title, subtitle, expanded, onPress, theme, shadow, hapticsEnabled }: { icon: FeatherName; title: string; subtitle: string; expanded: boolean; onPress: () => void; theme: Theme; shadow: string; hapticsEnabled: boolean }) {
+  return <PressableSurface accessibilityRole="button" accessibilityLabel={`${title}. ${subtitle}`} accessibilityState={{ expanded }} haptic={hapticsEnabled ? 'selection' : 'none'} onPress={onPress} style={{ flex: 1, minHeight: 84, borderRadius: RADII.lg, borderWidth: expanded ? 1.5 : 1, borderColor: expanded ? theme.brand : theme.premiumBorder, backgroundColor: expanded ? theme.brandSoft : theme.card, boxShadow: shadow, paddingHorizontal: SPACING.md, paddingVertical: SPACING.md, justifyContent: 'center', gap: SPACING.sm }}>
+    <IconWell name={icon} theme={theme} />
+    <View style={{ minWidth: 0 }}>
+      <Text numberOfLines={2} style={{ ...TYPE.label, color: theme.text }}>{title}</Text>
+      <Text numberOfLines={1} style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text>
+    </View>
+  </PressableSurface>;
+}
+
+/** Full-width row tile matching Japa's "Recent sessions" row. */
+function RowTile({ icon, title, subtitle, expanded, onPress, theme, shadow, hapticsEnabled }: { icon: FeatherName; title: string; subtitle?: string; expanded?: boolean; onPress: () => void; theme: Theme; shadow: string; hapticsEnabled: boolean }) {
+  return <PressableSurface accessibilityRole="button" accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title} accessibilityState={expanded === undefined ? undefined : { expanded }} haptic={hapticsEnabled ? 'selection' : 'none'} onPress={onPress} style={{ minHeight: MIN_TOUCH_TARGET + SPACING.lg, borderRadius: RADII.lg, borderWidth: 1, borderColor: expanded ? theme.brand : theme.premiumBorder, backgroundColor: expanded ? theme.brandSoft : theme.card, boxShadow: shadow, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.md }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md, flex: 1 }}>
+      <IconWell name={icon} theme={theme} />
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...TYPE.label, color: theme.text }}>{title}</Text>
+        {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text> : null}
+      </View>
+    </View>
+    <Feather name={expanded ? 'chevron-up' : expanded === false ? 'chevron-down' : 'chevron-right'} size={16} color={theme.dim} />
+  </PressableSurface>;
+}
+
+function ExtrasPanelCard({ theme, shadow, children }: { theme: Theme; shadow: string; children: React.ReactNode }) {
+  return <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, boxShadow: shadow, padding: SPACING.lg, gap: SPACING.md }}>{children}</View>;
 }
 
 function MatchRecapCard({ ref, match, playerLabel, guideLabel, copy, theme }: { ref: React.RefObject<View | null>; match: DyutaMatchState; playerLabel: string; guideLabel: string; copy: DyutaCopy; theme: ReturnType<typeof themeColor> }) {
@@ -408,7 +503,6 @@ function getStatus(match: DyutaMatchState | null, copy: DyutaCopy, playerLabel: 
 }
 
 function DiceFace({ value, label, theme }: { value: number | null; label: string; theme: ReturnType<typeof themeColor> }) { const pips = value ? DIE_PIPS[value] ?? [] : []; return <View accessible accessibilityRole="image" accessibilityLabel={value ? `${label}: ${value}` : `${label}: concealed`} style={{ width: 72, height: 72, borderRadius: RADII.lg, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center' }}>{value === null ? <Feather name="help-circle" size={24} color={theme.dim} /> : <View style={{ gap: 4 }}>{[0, 1, 2].map((row) => <View key={row} style={{ flexDirection: 'row', gap: 4 }}>{[0, 1, 2].map((column) => <View key={column} style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: pips.includes(row * 3 + column) ? theme.brand : 'transparent' }} />)}</View>)}</View>}</View>; }
-function Choice({ label, selected, onPress, theme, hapticsEnabled = true, accessibilityRole = 'radio' }: { label: string; selected: boolean; onPress: () => void; theme: ReturnType<typeof themeColor>; hapticsEnabled?: boolean; accessibilityRole?: 'radio' | 'switch' }) { return <PressableSurface accessibilityRole={accessibilityRole} accessibilityState={accessibilityRole === 'switch' ? { checked: selected } : { checked: selected }} accessibilityLabel={label} onPress={onPress} haptic={hapticsEnabled ? 'selection' : 'none'} style={{ flex: 1, minWidth: 76, minHeight: MIN_TOUCH_TARGET, padding: SPACING.sm, borderRadius: RADII.md, borderWidth: 1, borderColor: selected ? theme.brand : theme.border, backgroundColor: selected ? theme.brandSoft : theme.bg, justifyContent: 'center' }}><Text style={{ ...TYPE.label, color: selected ? theme.brand : theme.text, textAlign: 'center' }}>{label}</Text></PressableSurface>; }
 function NameInput({ value, onChange, label, theme }: { value: string; onChange: (v: string) => void; label: string; theme: ReturnType<typeof themeColor> }) { return <TextInput accessibilityLabel={label} value={value} onChangeText={onChange} placeholder={label} placeholderTextColor={theme.dim} maxLength={24} style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: SPACING.md, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, color: theme.text, backgroundColor: theme.bg, ...TYPE.body }} />; }
 function StakeAction({ stake, disabled, onPress, copy, theme, hapticsEnabled }: { stake: DyutaStake; disabled: boolean; onPress: () => void; copy: DyutaCopy; theme: ReturnType<typeof themeColor>; hapticsEnabled: boolean }) { return <PressableSurface accessibilityLabel={copy.declareStake.replace('{count}', String(stake))} accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} haptic={hapticsEnabled ? 'selection' : 'none'} style={{ flex: 1, minHeight: 58, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.brand, backgroundColor: disabled ? theme.cardSoft : theme.brandSoft, alignItems: 'center', justifyContent: 'center', opacity: disabled ? 0.45 : 1 }}><Text style={{ ...TYPE.metric, color: theme.brand }}>{stake}</Text><Text style={{ ...TYPE.chip, color: theme.dim }}>{copy.seals}</Text></PressableSurface>; }
 function PrimaryAction({ label, onPress, disabled = false, busy = false, theme, hapticsEnabled = true }: { label: string; onPress: () => void; disabled?: boolean; busy?: boolean; theme: ReturnType<typeof themeColor>; hapticsEnabled?: boolean }) { return <PressableSurface accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, busy }} disabled={disabled} onPress={onPress} haptic={hapticsEnabled ? 'selection' : 'none'} style={{ minHeight: 52, borderRadius: RADII.lg, backgroundColor: theme.brand, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.md, opacity: disabled ? 0.5 : 1 }}>{busy ? <ActivityIndicator color={theme.textOnBrand} /> : <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: theme.textOnBrand }}>{label}</Text>}</PressableSurface>; }
