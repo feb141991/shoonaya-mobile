@@ -5,7 +5,6 @@ import {
   Pressable,
   Text,
   TextInput,
-  useColorScheme,
   View,
   Modal,
   Switch,
@@ -129,12 +128,13 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
 }
 
 import { useAppIdentity } from '@/lib/appIdentity';
+import { useReaderAppearance } from '@/lib/useReaderAppearance';
 
 export default function DharmVeerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  // Reader paper theme (Phase 2) instead of the device scheme.
+  const { isDark, theme: paperTheme } = useReaderAppearance();
   const appIdentity = useAppIdentity();
 
   const [loading, setLoading] = useState(true);
@@ -175,11 +175,11 @@ export default function DharmVeerDetailScreen() {
   const [askMoreResponse, setAskMoreResponse] = useState('');
   const [askMoreLoading, setAskMoreLoading] = useState(false);
 
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const text = isDark ? COLORS.creamBg : COLORS.ink;
-  const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const surface = isDark ? COLORS.darkBg : COLORS.creamBg;
+  const cardBg = paperTheme.card;
+  const border = paperTheme.border;
+  const text = paperTheme.text;
+  const textDim = paperTheme.dim;
+  const surface = paperTheme.bg;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const gold = brand;
 

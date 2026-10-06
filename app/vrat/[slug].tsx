@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
@@ -17,7 +16,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { lookupVratData, getVratData, type VratData } from '@/lib/vrat-data';
 import {
   buildVratObservationPayload,
@@ -31,6 +30,7 @@ import { ReaderShell } from '@/components/reader/ReaderShell';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useReaderAppearance } from '@/lib/useReaderAppearance';
 
 // Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
 // screens share the same ReaderShell toolbar component, this is just the
@@ -153,9 +153,8 @@ export default function VratDetailScreen() {
   const slug = params.slug || 'ekadashi';
   const occurrenceIdParam = params.occurrence_id || null;
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = themeColor(isDark);
+  // Reader paper theme (Phase 2) instead of the device scheme.
+  const { isDark, theme } = useReaderAppearance();
 
   // `language` (global) seeds this page's initial reading language, but the
   // in-page toggle below (line ~280) must stay page-local: it's a "read this

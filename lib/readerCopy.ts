@@ -29,6 +29,8 @@ export type ReaderCopy = {
   speed: (rate: string) => string;
   done: string;
   tapHint: string;
+  sectionPaper: string;
+  paper: { auto: string; bhojpatra: string; sandhya: string; templeNight: string };
 };
 
 const en: ReaderCopy = {
@@ -56,6 +58,8 @@ const en: ReaderCopy = {
   speed: (rate) => `${rate}× speed`,
   done: 'Done',
   tapHint: 'Tap the page to show or hide the controls',
+  sectionPaper: 'Paper',
+  paper: { auto: 'Auto', bhojpatra: 'Bhojpatra', sandhya: 'Sandhya', templeNight: 'Temple Night' },
 };
 
 const hi: ReaderCopy = {
@@ -83,6 +87,8 @@ const hi: ReaderCopy = {
   speed: (rate) => `${rate}× गति`,
   done: 'हो गया',
   tapHint: 'नियंत्रण दिखाने या छिपाने के लिए पृष्ठ पर टैप करें',
+  sectionPaper: 'पृष्ठ',
+  paper: { auto: 'स्वचालित', bhojpatra: 'भोजपत्र', sandhya: 'संध्या', templeNight: 'मंदिर रात्रि' },
 };
 
 const pa: ReaderCopy = {
@@ -110,6 +116,8 @@ const pa: ReaderCopy = {
   speed: (rate) => `${rate}× ਗਤੀ`,
   done: 'ਹੋ ਗਿਆ',
   tapHint: 'ਕੰਟਰੋਲ ਦਿਖਾਉਣ ਜਾਂ ਲੁਕਾਉਣ ਲਈ ਪੰਨੇ \'ਤੇ ਟੈਪ ਕਰੋ',
+  sectionPaper: 'ਪੰਨਾ',
+  paper: { auto: 'ਆਪਣੇ-ਆਪ', bhojpatra: 'ਭੋਜਪੱਤਰ', sandhya: 'ਸੰਧਿਆ', templeNight: 'ਮੰਦਰ ਰਾਤ' },
 };
 
 export const READER_COPY: Record<AppLanguage, ReaderCopy> = { en, hi, pa };

@@ -3,7 +3,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'rea
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { FONTS, RADII, TYPE } from '@/lib/constants';
 import type { ReaderCopy } from '@/lib/readerCopy';
 
 // Presentational pieces of the reader controls (Phase 1 of
@@ -238,7 +238,7 @@ function SheetSection({ title, palette, children }: { title: string; palette: Re
 }
 
 export function SheetChip({
-  label, selected, onPress, palette, icon, accessibilityLabel, role = 'button',
+  label, selected, onPress, palette, icon, accessibilityLabel, role = 'button', swatch,
 }: {
   label: string;
   selected?: boolean;
@@ -247,6 +247,8 @@ export function SheetChip({
   icon?: keyof typeof Feather.glyphMap;
   accessibilityLabel?: string;
   role?: 'button' | 'switch' | 'radio';
+  /** Small paper sample (page colour with an ink dot) for paper-theme chips. */
+  swatch?: { page: string; ink: string };
 }) {
   return (
     <PressableSurface
@@ -268,6 +270,15 @@ export function SheetChip({
       }}
     >
       {icon ? <Feather name={icon} size={15} color={selected ? palette.onAccent : palette.accent} /> : null}
+      {swatch ? (
+        <View
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: swatch.page, borderWidth: 1, borderColor: palette.border, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: swatch.ink }} />
+        </View>
+      ) : null}
       <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.label, color: selected ? palette.onAccent : palette.text }}>
         {label}
       </Text>
@@ -339,26 +350,4 @@ export function ReaderOptionsSheet({
       </View>
     </Modal>
   );
-}
-
-/** Default palette = today's reader colours (light/dark). Phase 2 adds paper themes. */
-export function defaultReaderPalette(isDark: boolean, accent: string): ReaderPalette {
-  return {
-    isDark,
-    page: isDark ? COLORS.darkBg : COLORS.creamBg,
-    bar: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
-    barBorder: isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight,
-    well: isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight,
-    border: isDark ? COLORS.borderDark : COLORS.borderLight,
-    text: isDark ? COLORS.creamBg : COLORS.ink,
-    dim: isDark ? COLORS.textDimDark : COLORS.textDimLight,
-    accent,
-    onAccent: isDark ? COLORS.ink : COLORS.onMediaWhite,
-    glass: isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight,
-    capsule: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
-    glassBorder: isDark ? COLORS.premiumBorderDark : COLORS.premiumBorderLight,
-    shadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-    floatingShadow: isDark ? SHADOWS.navFloating.dark : SHADOWS.navFloating.light,
-    scrim: COLORS.celebrationScrim,
-  };
 }

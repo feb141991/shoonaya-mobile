@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useSyncExternalStore } from 'react';
 
 import { getAppIdentity, useAppIdentity, type AppIdentity } from '@/lib/appIdentity';
+import type { ReaderPaperKey } from '@/lib/constants';
 
 // Reader preferences that apply across every reader (ReaderShell screens,
 // Panchatantra storybook, Pathshala lessons).
@@ -17,9 +18,14 @@ export type ReaderPrefs = {
   pinned: boolean;
   /** "Tap the page to show controls" hint already shown. */
   tapHintSeen: boolean;
+  /** Paper theme; 'auto' follows the device light/dark setting. */
+  paper: ReaderPaperChoice;
 };
 
-export const DEFAULT_READER_PREFS: ReaderPrefs = { pinned: false, tapHintSeen: false };
+export type ReaderPaperChoice = 'auto' | ReaderPaperKey;
+export const READER_PAPER_CHOICES: readonly ReaderPaperChoice[] = ['auto', 'bhojpatra', 'sandhya', 'templeNight'];
+
+export const DEFAULT_READER_PREFS: ReaderPrefs = { pinned: false, tapHintSeen: false, paper: 'auto' };
 
 const PREFIX = 'shoonaya:reader-prefs:v1:';
 
@@ -37,6 +43,7 @@ export function parseReaderPrefs(raw: string | null): ReaderPrefs {
     return {
       pinned: value.pinned === true,
       tapHintSeen: value.tapHintSeen === true,
+      paper: READER_PAPER_CHOICES.includes(value.paper as ReaderPaperChoice) ? (value.paper as ReaderPaperChoice) : 'auto',
     };
   } catch {
     return DEFAULT_READER_PREFS;

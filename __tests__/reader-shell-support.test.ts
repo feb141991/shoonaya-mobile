@@ -36,8 +36,8 @@ test('reader routes: every reader screen, and no list page', () => {
 });
 
 test('reader prefs: only a v1 record is read; anything else is the default', () => {
-  assert.deepEqual(parseReaderPrefs(JSON.stringify({ v: 1, pinned: true, tapHintSeen: true })), { pinned: true, tapHintSeen: true });
-  assert.deepEqual(parseReaderPrefs(JSON.stringify({ v: 1, pinned: 'yes' })), { pinned: false, tapHintSeen: false });
+  assert.deepEqual(parseReaderPrefs(JSON.stringify({ v: 1, pinned: true, tapHintSeen: true })), { pinned: true, tapHintSeen: true, paper: 'auto' });
+  assert.deepEqual(parseReaderPrefs(JSON.stringify({ v: 1, pinned: 'yes', paper: 'neon' })), { pinned: false, tapHintSeen: false, paper: 'auto' });
   for (const raw of [null, '', 'not json', JSON.stringify({ v: 2, pinned: true }), JSON.stringify({ pinned: true })]) {
     assert.deepEqual(parseReaderPrefs(raw), DEFAULT_READER_PREFS, String(raw));
   }

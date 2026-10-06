@@ -12,7 +12,7 @@ audio included).
 |---|---|---|
 | 0. Baseline | done | 299fbe0 |
 | 1. Immersive controls | done | (this commit) |
-| 2. Paper themes | — | |
+| 2. Paper themes | IN PROGRESS (WIP commit, not verified on device) | |
 | 3. Resume | — | |
 | 4. Listening | — | |
 | 5. Pathshala + Panchatantra | — | |
@@ -121,3 +121,19 @@ passes 18/18 on the main checkout and Phase 1 touches no astrology code.
 Updated two source-level tests that asserted the old header (font "--"/"++"
 labels, NAV_BAR_CLEARANCE padding) to assert the same guarantees on the new
 design. New: `reader-chrome` (10), `reader-shell-support` (5).
+
+## Phase 2 — Paper themes (IN PROGRESS, stopped 2026-10-07: usage limit)
+
+Done: READER_PAPER tokens in lib/constants.ts (contrast computed: text >= 11.5:1,
+dim >= 6:1, accent >= 4.6:1); `paper` pref (auto/bhojpatra/sandhya/templeNight);
+lib/readerAppearance.ts + lib/useReaderAppearance.ts; ReaderShell uses the
+paper palette, light/dark status bar, "Paper" section with swatches in "Aa";
+the 5 reader screens read colours from useReaderAppearance(). Typecheck clean;
+reader tests 26/26.
+
+Left: contrast unit test (__tests__/reader-appearance.test.ts, referenced in
+constants.ts comment but not written yet); Panchatantra storybook parchment
+colours onto tokens + NATIVE_VISUAL_DEBT_MATRIX update; ReaderIntro "Reading
+Mode" text; simulator check of all 3 papers on all 5 screens; full npm test.
+Decision 7: reader controls use the paper's accent, not the screen's brand
+gold (~2.6:1 on light paper, below the 3:1 control minimum).

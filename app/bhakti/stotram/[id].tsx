@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { ActivityIndicator, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -9,7 +9,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import { getDevotionalTrackById } from '@/lib/devotional-audio';
 import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -21,6 +21,7 @@ import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useReaderAppearance } from '@/lib/useReaderAppearance';
 
 type StotramVerse = {
   number: number;
@@ -73,8 +74,8 @@ export default function StotramDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const isDark = useColorScheme() === 'dark';
-  const theme = themeColor(isDark);
+  // Reader paper theme (Phase 2) instead of the device scheme.
+  const { isDark, theme } = useReaderAppearance();
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);

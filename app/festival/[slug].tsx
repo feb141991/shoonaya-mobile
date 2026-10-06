@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { Card } from '@/components/ui/Card';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
-import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
 import { OBSERVANCE_SERIES_CONTENT_SNAPSHOT } from '@/lib/observance-series-content.generated';
 import {
@@ -34,6 +34,7 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { FestivalEmblem } from '@/components/festivals/FestivalEmblem';
+import { useReaderAppearance } from '@/lib/useReaderAppearance';
 
 const FONT_PRESETS = [
   { label: 'A-', value: 0 },
@@ -66,9 +67,8 @@ export default function FestivalDetailScreen() {
   const slug = params.slug ?? '';
   const router = useRouter();
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = themeColor(isDark);
+  // Reader paper theme (Phase 2) instead of the device scheme.
+  const { isDark, theme } = useReaderAppearance();
 
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [occurrence, setOccurrence] = useState<ClientObservanceResult | null>(null);

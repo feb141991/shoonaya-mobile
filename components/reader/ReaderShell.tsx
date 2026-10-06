@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  useColorScheme,
   View,
   type GestureResponderEvent,
   type ViewStyle,
@@ -14,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, type Href } from 'expo-router';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { ReaderIntro } from '@/components/reader/ReaderIntro';
@@ -23,15 +23,17 @@ import {
   ReaderOptionsSheet,
   ReaderTopBar,
   SheetChip,
-  defaultReaderPalette,
   type OptionsSheetSection,
 } from '@/components/reader/ReaderControls';
-import { COLORS, TYPE } from '@/lib/constants';
+import { TYPE } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { createReaderChromeController, isPageTap } from '@/lib/readerChrome';
 import { readerCopy } from '@/lib/readerCopy';
-import { setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
+import { READER_PAPER_CHOICES, setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
+import { readerControlsPalette } from '@/lib/readerAppearance';
+import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { READER_PAPER } from '@/lib/constants';
 
 // Shared reader frame for Dharm Veer, Stotram, Katha, Vrat and Festival.
 //
@@ -110,7 +112,6 @@ export function ReaderShell<LanguageCode extends string = string>({
   fallbackBackUrl,
   onBack,
   onBeforeBack,
-  themeColor = COLORS.brandGoldLight,
   headerCenterContent,
   ambientGlowColor,
   fontPresets,
@@ -143,21 +144,25 @@ export function ReaderShell<LanguageCode extends string = string>({
   onScroll,
   scrollEventThrottle,
 }: ReaderShellProps<LanguageCode>) {
-  const isDark = useColorScheme() === 'dark';
+  const { paper, isDark } = useReaderAppearance();
   const insets = useSafeAreaInsets();
   const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack, onBeforeBack);
   const { language: appLanguage } = useLanguage();
   const copy = readerCopy(appLanguage);
   const { prefs, loaded: prefsLoaded } = useReaderPrefs();
 
+  // Controls use the paper's own accent (contrast-tested in
+  // __tests__/reader-appearance.test.ts). The screen's `themeColor` prop is
+  // accepted for compatibility but no longer used: brand gold is ~2.6:1 on
+  // light paper, below the 3:1 minimum for controls.
   const palette = useMemo(() => {
-    const base = defaultReaderPalette(isDark, themeColor);
+    const base = readerControlsPalette(paper);
     return {
       ...base,
       page: shellBackgroundColor ?? base.page,
       bar: shellHeaderBackgroundColor ?? base.bar,
     };
-  }, [isDark, themeColor, shellBackgroundColor, shellHeaderBackgroundColor]);
+  }, [paper, shellBackgroundColor, shellHeaderBackgroundColor]);
 
   useEffect(() => {
     trackReaderEvent('reader_opened', {
@@ -292,6 +297,21 @@ export function ReaderShell<LanguageCode extends string = string>({
       )),
     });
   }
+  sections.push({
+    key: 'paper',
+    title: copy.sectionPaper,
+    content: READER_PAPER_CHOICES.map((choice) => (
+      <SheetChip
+        key={choice}
+        label={copy.paper[choice]}
+        role="radio"
+        selected={prefs.paper === choice}
+        palette={palette}
+        swatch={choice === 'auto' ? undefined : { page: READER_PAPER[choice].page, ink: READER_PAPER[choice].text }}
+        onPress={() => { void setReaderPrefs({ paper: choice }); }}
+      />
+    )),
+  });
   if ((showTransliterationToggle && onToggleTransliteration) || (showMeaningToggle && onToggleMeaning)) {
     sections.push({
       key: 'show',
@@ -361,6 +381,7 @@ export function ReaderShell<LanguageCode extends string = string>({
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.page }}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       {ambientGlowColor ? (
         <View
           pointerEvents="none"
