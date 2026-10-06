@@ -37,6 +37,14 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
  * Each entry provides an array of illustrations matching the 6 progressive scenes of the tale.
  */
 const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = {
+  'panchatantra-blue-jackal': [
+    require('@/assets/panchatantra/blue-jackal-1.jpg'),
+    require('@/assets/panchatantra/blue-jackal-2.jpg'),
+    require('@/assets/panchatantra/blue-jackal-3.jpg'),
+    require('@/assets/panchatantra/blue-jackal-4.jpg'),
+    require('@/assets/panchatantra/blue-jackal-5.jpg'),
+    require('@/assets/panchatantra/blue-jackal-6.jpg'),
+  ],
   'panchatantra-dove-king-and-net': [
     require('@/assets/panchatantra/dove-king-1.jpg'),
     require('@/assets/panchatantra/dove-king-2.jpg'),
@@ -115,4 +123,29 @@ export function hasPanchatantraArtwork(storyId: string): boolean {
 export function hasDedicatedSceneArtwork(storyId: string): boolean {
   if (!storyId) return false;
   return Boolean(LOCAL_PANCHATANTRA_SCENE_ARTWORK[storyId.trim().toLowerCase()]);
+}
+
+/**
+ * Computes the visual tier for a Panchatantra fable:
+ * Tier 2 = Has dedicated 6-scene storybook artwork (highest priority)
+ * Tier 1 = Has masterwork cover artwork
+ * Tier 0 = Manuscript text-only folio
+ */
+export function getPanchatantraStoryVisualTier(storyId: string): number {
+  if (hasDedicatedSceneArtwork(storyId)) return 2;
+  if (hasPanchatantraArtwork(storyId)) return 1;
+  return 0;
+}
+
+/**
+ * Sorts an array of Panchatantra stories:
+ * Stories with full 6-scene dedicated illustrations appear first (Tier 2),
+ * followed by stories with masterwork covers (Tier 1),
+ * followed by remaining manuscript fables (Tier 0).
+ * Stable sort preserves the catalog order within each tier.
+ */
+export function sortPanchatantraStoriesByVisualTier<T extends { id: string }>(stories: T[]): T[] {
+  return [...stories].sort((a, b) => {
+    return getPanchatantraStoryVisualTier(b.id) - getPanchatantraStoryVisualTier(a.id);
+  });
 }

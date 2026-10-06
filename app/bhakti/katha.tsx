@@ -25,7 +25,12 @@ import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
 import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import panchatantraExpandedSnapshot from '@/assets/data/panchatantra-expanded-snapshot.json';
-import { getPanchatantraArtworkSource, hasDedicatedSceneArtwork } from '@/lib/panchatantraArtwork';
+import {
+  getPanchatantraArtworkSource,
+  hasDedicatedSceneArtwork,
+  hasPanchatantraArtwork,
+  sortPanchatantraStoriesByVisualTier,
+} from '@/lib/panchatantraArtwork';
 
 // ── Bhakti Phase 4 — native equivalent of the PWA's
 // src/app/(main)/bhakti/katha/KathaClient.tsx. Every katha-card in the
@@ -170,19 +175,42 @@ export default function KathaListScreen() {
   const dayOfYear = Math.floor(
     (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
   );
-  const todayKatha = kathas.length > 0 ? kathas[dayOfYear % kathas.length] : null;
-  const weekKathas = kathas.filter((k) => k.id !== todayKatha?.id).slice(0, 5);
 
-  const filtered = kathas.filter((k) => {
-    if (searchQuery.trim() === '') return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      k.title.toLowerCase().includes(q) ||
-      (k.deity ?? '').toLowerCase().includes(q) ||
-      (OCCASION_LABEL[k.occasion] ?? '').toLowerCase().includes(q) ||
-      k.tags.some((tag) => tag.toLowerCase().includes(q))
-    );
-  });
+  const sortedKathas = useMemo(() => {
+    if (view !== 'panchatantra') return kathas;
+    return sortPanchatantraStoriesByVisualTier(kathas);
+  }, [kathas, view]);
+
+  const todayKatha = useMemo(() => {
+    if (sortedKathas.length === 0) return null;
+    if (view === 'panchatantra') {
+      // Prioritize stories that have full dedicated scene artwork or masterwork artwork
+      const featuredPool = sortedKathas.filter(
+        (k) => hasDedicatedSceneArtwork(k.id) || hasPanchatantraArtwork(k.id)
+      );
+      if (featuredPool.length > 0) {
+        return featuredPool[dayOfYear % featuredPool.length];
+      }
+    }
+    return sortedKathas[dayOfYear % sortedKathas.length];
+  }, [sortedKathas, view, dayOfYear]);
+
+  const weekKathas = useMemo(() => {
+    return sortedKathas.filter((k) => k.id !== todayKatha?.id).slice(0, 5);
+  }, [sortedKathas, todayKatha?.id]);
+
+  const filtered = useMemo(() => {
+    return sortedKathas.filter((k) => {
+      if (searchQuery.trim() === '') return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        k.title.toLowerCase().includes(q) ||
+        (k.deity ?? '').toLowerCase().includes(q) ||
+        (OCCASION_LABEL[k.occasion] ?? '').toLowerCase().includes(q) ||
+        k.tags.some((tag) => tag.toLowerCase().includes(q))
+      );
+    });
+  }, [sortedKathas, searchQuery]);
 
   if (loading) {
     return (
@@ -275,6 +303,7 @@ export default function KathaListScreen() {
             <View style={{ paddingHorizontal: 20, gap: 20, marginTop: 20 }}>
               {!searchQuery && todayKatha && (() => {
                 const todayArtwork = view === 'panchatantra' ? getPanchatantraArtworkSource(todayKatha.id) : null;
+                const isDedicated = view === 'panchatantra' && hasDedicatedSceneArtwork(todayKatha.id);
                 return (
                   <PressableSurface
                     haptic="selection"
@@ -294,7 +323,7 @@ export default function KathaListScreen() {
                       }}
                     >
                       {todayArtwork ? (
-                        <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                        <View style={{ width: '100%', height: 168, position: 'relative' }}>
                           <Image
                             source={todayArtwork}
                             style={StyleSheet.absoluteFill}
@@ -302,13 +331,15 @@ export default function KathaListScreen() {
                             contentPosition="center"
                           />
                           <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.8)']}
+                            colors={['transparent', 'rgba(0,0,0,0.85)']}
                             style={StyleSheet.absoluteFill}
                             pointerEvents="none"
                           />
-                          <View style={{ position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
-                            <Feather name="star" size={11} color="#F59E0B" />
-                            <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: '#FDE68A' }}>Today&apos;s Wisdom Fable</Text>
+                          <View style={{ position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: isDedicated ? 'rgba(180,83,9,0.92)' : 'rgba(0,0,0,0.65)', paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: isDedicated ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.2)' }}>
+                            <Feather name="star" size={11} color={isDedicated ? '#FDE68A' : '#F59E0B'} />
+                            <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: '#FFFFFF', fontFamily: FONTS.sansSemiBold }}>
+                              {isDedicated ? 'Story of the Day • 6 Scenes' : "Today's Wisdom Fable"}
+                            </Text>
                           </View>
                           <View style={{ position: 'absolute', bottom: 10, left: 14, right: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <View style={{ flex: 1, paddingRight: 10 }}>
@@ -317,9 +348,9 @@ export default function KathaListScreen() {
                                 <Text style={{ ...TYPE.micro, color: '#FDE68A', fontFamily: FONTS.devanagari }}>{todayKatha.titleHi}</Text>
                               ) : null}
                             </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: meta.accent, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: meta.accent, borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3 }}>
                               <Feather name="book-open" size={12} color={COLORS.onMediaWhite} />
-                              <Text style={{ ...TYPE.micro, color: '#FFFFFF', fontFamily: FONTS.sansSemiBold }}>Read</Text>
+                              <Text style={{ ...TYPE.micro, color: '#FFFFFF', fontFamily: FONTS.sansSemiBold }}>Read Storybook</Text>
                             </View>
                           </View>
                         </View>
