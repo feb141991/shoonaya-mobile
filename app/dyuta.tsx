@@ -296,7 +296,7 @@ export default function DyutaScreen() {
               {canDeclare ? <View style={{ flexDirection: 'row', gap: SPACING.sm }}>{([1, 2, 3] as DyutaStake[]).map((stake) => <StakeAction key={stake} stake={stake} disabled={stake > maxAvailableStake(match)} onPress={() => declare(stake)} copy={copy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} />)}</View> : null}
               {canRespond && match.declaredStake ? <View style={{ flexDirection: 'row', gap: SPACING.sm }}><SabhaButton label={copy.accept} icon="handshake-outline" onPress={() => respond('accept')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SabhaButton variant="secondary" label={copy.yield} icon="flag-outline" onPress={() => respond('yield')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View> : null}
               {match.mode === 'solo' && match.activeSide === 'guide' && match.phase !== 'complete' ? <View style={{ alignItems: 'center', gap: SPACING.sm, minHeight: 60, justifyContent: 'center' }}><ActivityIndicator color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.guideThinking}</Text></View> : null}
-              {match.phase === 'complete' ? <><SabhaButton label={copy.shareRecap} icon="share-variant-outline" onPress={() => void shareCapturedShoonayaCard(recapRef, { fileName: 'shoonaya-dyuta-sabha.png', dialogTitle: copy.shareRecap })} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SabhaButton variant="secondary" label={copy.startMatch} icon="restart" onPress={startMatch} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SabhaButton variant="secondary" label={copy.close} icon="arrow-left" onPress={() => router.replace('/play')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View></> : null}
+              {match.phase === 'complete' ? <><SabhaButton label={copy.shareRecap} icon="share-variant-outline" onPress={() => void shareCapturedShoonayaCard(recapRef, { fileName: 'shoonaya-dyuta-sabha.png', dialogTitle: copy.shareRecap })} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SabhaButton variant="secondary" label={copy.newMatch} icon="restart" onPress={startMatch} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SabhaButton variant="secondary" label={copy.close} icon="arrow-left" onPress={() => router.replace('/play')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View></> : null}
             </View>
 
             {extras}
@@ -341,7 +341,9 @@ function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, ro
       </View>
       <RoundBanner label={roundLabel} theme={theme} />
       <SabhaTable width={tableWidth} theme={theme} isDark={isDark}>
-        <DiceStage dice={visibleRoll} rolling={rollingSide !== null ? [rerollingIndex !== 1, rerollingIndex !== 0] : null} theme={theme} isDark={isDark} copy={copy} reducedMotion={reducedMotion} />
+        {live
+          ? <DiceStage dice={visibleRoll} rolling={rollingSide !== null ? [rerollingIndex !== 1, rerollingIndex !== 0] : null} theme={theme} isDark={isDark} copy={copy} reducedMotion={reducedMotion} />
+          : <FinalTally playerLabel={playerLabel} guideLabel={guideLabel} seals={match.seals} copy={copy} theme={theme} isDark={isDark} />}
       </SabhaTable>
       <Plaque theme={theme} isDark={isDark} style={{ marginTop: -SPACING.xl, marginHorizontal: SPACING.md }}>
         <Text accessibilityLiveRegion="polite" style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>{status}</Text>
@@ -450,6 +452,18 @@ function SabhaHallBackdrop({ width, theme, isDark }: { width: number; theme: The
       {plant(width * 0.97, -1)}
       <Rect x={0} y={height - 200} width={width} height={200} fill="url(#hallFade)" />
     </Svg>
+  </View>;
+}
+
+/** Final seal count shown on the mat once the match is over, in place of the dice. */
+function FinalTally({ playerLabel, guideLabel, seals, copy, theme, isDark }: { playerLabel: string; guideLabel: string; seals: Record<DyutaSide, number>; copy: DyutaCopy; theme: Theme; isDark: boolean }) {
+  return <View accessible accessibilityLabel={`${copy.finalScore}: ${playerLabel} ${seals.player}, ${guideLabel} ${seals.guide}`} style={{ alignItems: 'center', gap: SPACING.xs }}>
+    <Text style={{ ...TYPE.chip, color: theme.brandStrong, textTransform: 'uppercase', letterSpacing: 1.5, backgroundColor: isDark ? COLORS.dyutaMatDark : COLORS.dyutaMatLight, paddingHorizontal: SPACING.sm, borderRadius: RADII.xs, overflow: 'hidden' }}>{copy.finalScore}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.lg, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.xs, borderRadius: RADII.pill, backgroundColor: isDark ? COLORS.dyutaMatDark : COLORS.dyutaMatLight }}>
+      <View style={{ alignItems: 'center' }}><Text style={{ ...TYPE.display, fontSize: 52, lineHeight: 58, color: theme.text, fontVariant: ['lining-nums'] }}>{seals.player}</Text><Text numberOfLines={1} style={{ ...TYPE.label, color: theme.dim }}>{playerLabel}</Text></View>
+      <Diamond size={12} theme={theme} />
+      <View style={{ alignItems: 'center' }}><Text style={{ ...TYPE.display, fontSize: 52, lineHeight: 58, color: theme.text, fontVariant: ['lining-nums'] }}>{seals.guide}</Text><Text numberOfLines={1} style={{ ...TYPE.label, color: theme.dim }}>{guideLabel}</Text></View>
+    </View>
   </View>;
 }
 
@@ -749,7 +763,7 @@ function SabhaButton({ label, icon, onPress, variant = 'primary', disabled = fal
   const primary = variant === 'primary';
   const ink = primary ? COLORS.dyutaIvory : theme.text;
   return <PressableSurface accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, busy }} disabled={disabled} onPress={onPress} haptic={hapticsEnabled ? 'selection' : 'none'} style={{ flex: 1, minHeight: 60, borderRadius: RADII.sm, borderWidth: 1.5, borderColor: theme.brand, backgroundColor: primary ? COLORS.navy : theme.card, padding: 3, opacity: disabled ? 0.55 : 1 }}>
-    <View style={{ flex: 1, borderRadius: RADII.xs, borderWidth: 1, borderColor: primary ? COLORS.homeGoldPillBorder : theme.premiumBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, paddingHorizontal: SPACING.sm }}>
+    <View style={{ flex: 1, borderRadius: RADII.xs, borderWidth: 1, borderColor: primary ? COLORS.homeGoldPillBorder : theme.premiumBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, paddingHorizontal: SPACING.lg }}>
       <View pointerEvents="none" style={{ position: 'absolute', left: SPACING.xs, top: 0, bottom: 0, justifyContent: 'center' }}><Diamond size={6} theme={theme} /></View>
       <View pointerEvents="none" style={{ position: 'absolute', right: SPACING.xs, top: 0, bottom: 0, justifyContent: 'center' }}><Diamond size={6} theme={theme} /></View>
       {busy ? <ActivityIndicator color={ink} /> : <><MaterialCommunityIcons name={icon} size={20} color={primary ? COLORS.dyutaIvory : theme.brand} /><Text numberOfLines={2} style={{ ...TYPE.cardHeading, color: ink, textAlign: 'center', flexShrink: 1 }}>{label}</Text></>}
