@@ -21,29 +21,74 @@ const secureOptions: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
   requireAuthentication: false,
 };
+function isKeychainEntitlementError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('entitlement') ||
+    message.includes('KeyChainException') ||
+    message.includes('-34018') ||
+    (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: unknown }).code === 'ERR_SECURESTORE_KEYCHAIN_ERROR')
+  );
+}
+
+let useFallbackStorage = false;
+
+const fallbackSecureStore = {
+  getItem: async (key: string) => AsyncStorage.getItem(`secure_fallback.${key}`),
+  setItem: async (key: string, value: string) => AsyncStorage.setItem(`secure_fallback.${key}`, value),
+  removeItem: async (key: string) => AsyncStorage.removeItem(`secure_fallback.${key}`),
+};
+
+const secureKeyValueStore = {
+  getItem: async (key: string) => {
+    if (useFallbackStorage) {
+      return fallbackSecureStore.getItem(key);
+    }
+    try {
+      return await SecureStore.getItemAsync(key, secureOptions);
+    } catch (error) {
+      if (isKeychainEntitlementError(error)) {
+        useFallbackStorage = true;
+        console.warn('[auth-storage] Native Keychain entitlement missing (iOS Simulator); using dev storage fallback.');
+        return fallbackSecureStore.getItem(key);
+      }
+      throw error;
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    if (useFallbackStorage) {
+      return fallbackSecureStore.setItem(key, value);
+    }
+    try {
+      await SecureStore.setItemAsync(key, value, secureOptions);
+    } catch (error) {
+      if (isKeychainEntitlementError(error)) {
+        useFallbackStorage = true;
+        console.warn('[auth-storage] Native Keychain entitlement missing (iOS Simulator); using dev storage fallback.');
+        return fallbackSecureStore.setItem(key, value);
+      }
+      throw error;
+    }
+  },
+  removeItem: async (key: string) => {
+    if (useFallbackStorage) {
+      return fallbackSecureStore.removeItem(key);
+    }
+    try {
+      await SecureStore.deleteItemAsync(key, secureOptions);
+    } catch (error) {
+      if (isKeychainEntitlementError(error)) {
+        useFallbackStorage = true;
+        return fallbackSecureStore.removeItem(key);
+      }
+      throw error;
+    }
+  },
+};
+
 const authStorage = createSecureAuthStorage({
   legacy: AsyncStorage,
-  secure: {
-    getItem: async (key) => {
-      try {
-        return await SecureStore.getItemAsync(key, secureOptions);
-      } catch (error: any) {
-        // If Keychain access fails due to missing entitlement in simulator/dev builds
-        // or temporary OS keychain locking, treat as miss so auth auto-refresh does not crash
-        if (
-          error?.message?.includes('entitlement') ||
-          error?.message?.includes('KeyChainException') ||
-          error?.code === 'ERR_SECURESTORE_KEYCHAIN_ERROR'
-        ) {
-          console.warn('[auth-storage] SecureStore read deferred due to transient Keychain availability:', error?.message);
-          return null;
-        }
-        throw error;
-      }
-    },
-    setItem: (key, value) => SecureStore.setItemAsync(key, value, secureOptions),
-    removeItem: (key) => SecureStore.deleteItemAsync(key, secureOptions),
-  },
+  secure: secureKeyValueStore,
   randomId: () => Crypto.randomUUID(),
   onDeferredCleanup: () => console.warn('[auth-storage] Secure migration or cleanup deferred; no credential values logged.'),
 });
