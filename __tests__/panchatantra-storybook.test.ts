@@ -122,6 +122,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-mice-and-elephants',
       'panchatantra-monkey-and-crocodile',
       'panchatantra-mongoose-and-child',
+      'panchatantra-moon-lake-rabbits',
       'panchatantra-talkative-tortoise',
       'panchatantra-two-fish-and-frog',
     ];
@@ -133,9 +134,9 @@ test('Panchatantra Artwork Resolution', async (t) => {
       }
     }
 
-    // Fallback to master artwork for stories without individual scene splits
-    const moonLakeScene = getPanchatantraSceneArtwork('panchatantra-moon-lake-rabbits', 2);
-    assert.equal(moonLakeScene, getPanchatantraArtworkSource('panchatantra-moon-lake-rabbits'));
+    // Fallback to master artwork when requested beyond scene splits
+    const outOfRangeScene = getPanchatantraSceneArtwork('panchatantra-moon-lake-rabbits', 99);
+    assert.equal(outOfRangeScene, getPanchatantraArtworkSource('panchatantra-moon-lake-rabbits'));
 
     // Nonexistent story returns null
     assert.equal(getPanchatantraSceneArtwork('panchatantra-nonexistent', 0), null);
@@ -225,16 +226,14 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-mongoose-and-child'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-talkative-tortoise'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-two-fish-and-frog'), 2);
-
-    // Tier 1: Masterwork cover artwork
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-moon-lake-rabbits'), 1);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-moon-lake-rabbits'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
-  await t.test('sorts stories so full scene storybooks appear first, then masterwork, then manuscript', () => {
+  await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
       { id: 'panchatantra-cat-as-judge', title: 'The Cat as Judge' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
@@ -245,11 +244,9 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     const sorted = sortPanchatantraStoriesByVisualTier(mixed);
 
-    // Tier 2 items must appear at indices 0 and 1
+    // Tier 2 items must appear at indices 0, 1, and 2
     assert.equal(sorted[0].id, 'panchatantra-dove-king-and-net');
     assert.equal(sorted[1].id, 'panchatantra-lion-and-rabbit');
-
-    // Tier 1 item must appear at index 2
     assert.equal(sorted[2].id, 'panchatantra-moon-lake-rabbits');
 
     // Tier 0 items must follow at indices 3 and 4

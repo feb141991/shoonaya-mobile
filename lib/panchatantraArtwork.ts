@@ -137,6 +137,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/mongoose-child-5.jpg'),
     require('@/assets/panchatantra/mongoose-child-6.jpg'),
   ],
+  'panchatantra-moon-lake-rabbits': [
+    require('@/assets/panchatantra/clever-hare-1.jpg'),
+    require('@/assets/panchatantra/clever-hare-2.jpg'),
+    require('@/assets/panchatantra/clever-hare-3.jpg'),
+    require('@/assets/panchatantra/clever-hare-4.jpg'),
+    require('@/assets/panchatantra/clever-hare-5.jpg'),
+    require('@/assets/panchatantra/clever-hare-6.jpg'),
+  ],
   'panchatantra-talkative-tortoise': [
     require('@/assets/panchatantra/talkative-tortoise-1.jpg'),
     require('@/assets/panchatantra/talkative-tortoise-2.jpg'),
