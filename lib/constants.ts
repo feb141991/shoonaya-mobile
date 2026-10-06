@@ -271,6 +271,19 @@ export const COLORS = {
   // reaction heart matches that established precedent instead of picking a
   // new red/pink independently.
   like: '#F47888',
+
+  // Dyuta Sabha table surfaces — sampled from the approved in-game mockup
+  // (ivory dice, carved sandstone octagon, woven mat). Dice stay ivory in
+  // dark mode because they read as physical objects; the table darkens to
+  // sit on darkBg. Used only by app/dyuta.tsx.
+  dyutaIvory: '#FBF5E8',
+  dyutaIvoryShade: '#E3D2B4',
+  dyutaRimLight: '#EADBC2',
+  dyutaRimDark: '#2B2117',
+  dyutaRimEdgeLight: '#D2B98F',
+  dyutaRimEdgeDark: '#4A3822',
+  dyutaMatLight: '#F7F0E3',
+  dyutaMatDark: '#1B1611',
 } as const;
 
 // Tradition accent colors — was independently redeclared twice in the same
@@ -288,6 +301,7 @@ export const TRADITION_ACCENT = {
   jain: '#2D9E4A',
   all: '#8B9E6E',
   none: '#8B9E6E',
+
 } as const;
 
 // Katha-specific view-key accents — puranic/bani/dhamma/jain/panchatantra

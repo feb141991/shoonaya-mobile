@@ -170,7 +170,7 @@ export const DYUTA_COPY: Record<AppLanguage, DyutaCopy> = {
     declarePrompt: 'You have seen your throw. Declare after judging its strength.',
     accept: 'Accept declaration', yield: 'Yield one seal',
     responsePrompt: '{name} declares {count} seals. Accept without seeing the concealed throw, or yield one seal.',
-    wonSeals: '{name} wins {count} seals', yieldedSeal: '{name} yielded one seal',
+    wonSeals: '{name} won {count} seals', yieldedSeal: '{name} yielded one seal',
     overreach: 'The bold declaration was overturned', lampsLabel: 'Seven Sabha lamps',
     shareRecap: 'Share match card', guideThinking: 'The Guide is considering the declaration…',
     modeTitle: 'Choose how to play',

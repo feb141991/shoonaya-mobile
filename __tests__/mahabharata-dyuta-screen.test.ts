@@ -51,7 +51,8 @@ describe('Dyuta Sabha product surface', () => {
     assert.match(screen, /<IdentityChoices /);
     assert.match(screen, /onFaction\('pandavas'\)/);
     assert.match(screen, /onFaction\('kauravas'\)/);
-    assert.match(screen, /<Feather name=\{avatar\}/);
+    assert.match(screen, /<Feather name=\{match\.identities\.player\.avatar\}/);
+    assert.match(screen, /<Feather name=\{match\.identities\.guide\.avatar\}/);
     assert.match(screen, /saveDyutaMatchCopy\(match\)/);
     assert.match(screen, /readDyutaSavedMatches\(\)/);
     assert.match(screen, /onLoad=\{loadCopy\}/);
@@ -81,5 +82,10 @@ describe('Dyuta Sabha product surface', () => {
     assert.match(screen, /if \(complete && !previousComplete\.current\) void recordDyutaMatchCompletion\(\)/);
     assert.equal(screen.match(/recordDyutaMatchCompletion\(\)/g)?.length, 1);
   });
-});
 
+  it('reports a won round in the past tense so "You" reads correctly', () => {
+    const line = DYUTA_COPY.en.wonSeals.replace('{name}', DYUTA_COPY.en.player).replace('{count}', '2');
+    assert.doesNotMatch(line, /\bwins\b/);
+    assert.match(DYUTA_COPY.en.wonSeals, /\{name\} won \{count\} seals/);
+  });
+});
