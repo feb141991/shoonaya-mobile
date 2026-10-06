@@ -118,6 +118,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-lion-and-rabbit',
       'panchatantra-mice-and-elephants',
       'panchatantra-monkey-and-crocodile',
+      'panchatantra-mongoose-and-child',
       'panchatantra-talkative-tortoise',
     ];
 
@@ -216,11 +217,11 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-and-rabbit'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-mice-and-elephants'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-monkey-and-crocodile'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-mongoose-and-child'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-talkative-tortoise'), 2);
 
     // Tier 1: Masterwork cover artwork
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-moon-lake-rabbits'), 1);
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-mongoose-and-child'), 1);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
