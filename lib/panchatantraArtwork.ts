@@ -29,6 +29,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-mice-and-elephants': require('@/assets/panchatantra/mice-and-elephants.jpg'),
   'panchatantra-four-friends': require('@/assets/panchatantra/four-friends.jpg'),
   'panchatantra-monkey-and-crocodile': require('@/assets/panchatantra/monkey-and-crocodile.jpg'),
+  'panchatantra-mongoose-and-child': require('@/assets/panchatantra/mongoose-child-1.jpg'),
   'panchatantra-talkative-tortoise': require('@/assets/panchatantra/talkative-tortoise.jpg'),
   'panchatantra-dove-king-and-net': require('@/assets/panchatantra/dove-king-1.jpg'),
 };
