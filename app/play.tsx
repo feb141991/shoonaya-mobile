@@ -55,6 +55,7 @@ export default function PlayScreen() {
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ ...TYPE.chip, color: theme.brand, textTransform: 'uppercase' }}>{copy.experienceLabel}</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>Hindu · Mahabharata</Text>
               <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{copy.featuredGame}</Text>
             </View>
             <Feather name="chevron-right" size={20} color={theme.dim} />

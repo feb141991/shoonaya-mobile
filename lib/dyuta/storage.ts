@@ -5,7 +5,7 @@ import { isDyutaMatchState, type DyutaMatchState } from './engine';
 const STORAGE_KEY = 'shoonaya.dyuta.local-match.v1';
 const SAVES_KEY = 'shoonaya.dyuta.saved-matches.v1';
 const PREFERENCES_KEY = 'shoonaya.dyuta.preferences.v1';
-const STORAGE_SCHEMA_VERSION = 3;
+const STORAGE_SCHEMA_VERSION = 4;
 const MAX_SAVE_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 export const MAX_DYUTA_SAVED_MATCHES = 5;
 let preferenceWriteQueue: Promise<void> = Promise.resolve();
@@ -81,32 +81,9 @@ export async function readDyutaMatch(now = Date.now()): Promise<DyutaMatchState 
 function migrateMatch(value: unknown): DyutaMatchState | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
   const legacy = value as Record<string, unknown>;
-  if (legacy.rulesetId !== 'open-throw-v1') return null;
-  if (legacy.schemaVersion === STORAGE_SCHEMA_VERSION) return isDyutaMatchState(legacy) ? legacy : null;
-
-  const oldDifficulty = legacy.guideStyle;
-  if (legacy.schemaVersion === 1 || legacy.schemaVersion === 2) {
-    const migrated = {
-      ...legacy,
-      schemaVersion: STORAGE_SCHEMA_VERSION,
-      mode: legacy.schemaVersion === 1 ? 'solo' : legacy.mode,
-      playerNames: legacy.schemaVersion === 1
-        ? { player: 'You', guide: 'Guide' }
-        : legacy.playerNames,
-      guideDifficulty: oldDifficulty === 'gentle' ? 'easy' : oldDifficulty === 'steady' ? 'medium' : 'medium',
-      identities: defaultIdentities(),
-    };
-    delete (migrated as Record<string, unknown>).guideStyle;
-    return isDyutaMatchState(migrated) ? migrated : null;
-  }
-  return null;
-}
-
-function defaultIdentities() {
-  return {
-    player: { avatar: 'sun', color: 'gold', faction: 'pandavas' },
-    guide: { avatar: 'compass', color: 'navy', faction: 'kauravas' },
-  } as const;
+  // The bluffing rules have a different state machine and scoring contract.
+  // Old prototype matches cannot be migrated without inventing declarations.
+  return legacy.schemaVersion === STORAGE_SCHEMA_VERSION && isDyutaMatchState(legacy) ? legacy : null;
 }
 
 export async function writeDyutaMatch(match: DyutaMatchState, now = Date.now()): Promise<void> {
@@ -144,7 +121,7 @@ export async function saveDyutaMatchCopy(match: DyutaMatchState, now = Date.now(
     if (existing.length >= MAX_DYUTA_SAVED_MATCHES) throw new Error('All local save slots are full. Delete a saved match before saving another.');
     const save: DyutaSavedMatch = {
       id: `dyuta-${now}-${Math.random().toString(36).slice(2, 8)}`,
-      label: `${match.mode === 'solo' ? 'Solo' : 'Pass and play'} · ${match.phase === 'complete' ? 'Complete' : `Round ${match.round}`}`,
+      label: `${match.mode === 'solo' ? 'Solo' : 'Pass and play'} · ${match.phase === 'complete' ? 'Complete' : `Round ${match.round} of 7`}`,
       savedAt: now,
       match,
     };

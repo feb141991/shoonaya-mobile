@@ -2516,7 +2516,7 @@ function HomeContent() {
 
           <FestivalQuizBanner />
 
-          <PressableSurface
+          {state.profile.tradition === 'hindu' ? <PressableSurface
             accessibilityLabel={`${dyutaHomeCopy.playTitle}. ${dyutaHomeCopy.featuredDescription}`}
             haptic="selection"
             onPress={() => navigate('/play' as Href)}
@@ -2542,7 +2542,7 @@ function HomeContent() {
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={theme.brand} />
-          </PressableSurface>
+          </PressableSurface> : null}
 
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}

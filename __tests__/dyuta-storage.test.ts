@@ -16,7 +16,7 @@ if (typeof window === 'undefined' || !(window as any).localStorage) {
 }
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createDyutaMatch, keepPlayerRoll, rollForPlayer } from '../lib/dyuta/engine';
+import { createDyutaMatch, keepCurrentRoll, rollForSide } from '../lib/dyuta/engine';
 import {
   clearDyutaMatch,
   deleteDyutaSavedMatch,
@@ -44,13 +44,13 @@ describe('Dyuta local save and resume', () => {
   });
 
   it('persists and restores a validated in-progress match', async () => {
-    const match = keepPlayerRoll(rollForPlayer(createDyutaMatch(), [4, 6]));
+    const match = keepCurrentRoll(rollForSide(createDyutaMatch(), 'player', [4, 6]));
     await writeDyutaMatch(match, NOW);
 
     assert.deepEqual(await readDyutaMatch(NOW + 1_000), match);
   });
 
-  it('migrates a valid v1 solo save without discarding the match', async () => {
+  it('retires a v1 match rather than inventing declarations for the bluff rules', async () => {
     const legacyMatch = {
       schemaVersion: 1,
       rulesetId: 'open-throw-v1',
@@ -64,17 +64,11 @@ describe('Dyuta local save and resume', () => {
     };
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 1, savedAt: NOW, match: legacyMatch }));
 
-    const migrated = await readDyutaMatch(NOW + 1);
-    assert.equal(migrated?.schemaVersion, 3);
-    assert.equal(migrated?.mode, 'solo');
-    assert.deepEqual(migrated?.playerNames, { player: 'You', guide: 'Guide' });
-    assert.equal(migrated?.guideDifficulty, 'medium');
-    assert.equal(migrated?.totals.player, 10);
-    const persisted = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null') as { schemaVersion?: number };
-    assert.equal(persisted.schemaVersion, 3);
+    assert.equal(await readDyutaMatch(NOW + 1), null);
+    assert.equal(await AsyncStorage.getItem(STORAGE_KEY), null);
   });
 
-  it('migrates the previous schema and maps its two guide policies to the equivalent three-level difficulty', async () => {
+  it('retires the previous schema because its score cannot become seals safely', async () => {
     const oldMatch = {
       ...createDyutaMatch(),
       schemaVersion: 2,
@@ -84,10 +78,7 @@ describe('Dyuta local save and resume', () => {
     delete oldMatch.identities;
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, savedAt: NOW, match: oldMatch }));
 
-    const migrated = await readDyutaMatch(NOW + 1);
-    assert.equal(migrated?.schemaVersion, 3);
-    assert.equal(migrated?.guideDifficulty, 'medium');
-    assert.equal(migrated?.identities.player.faction, 'pandavas');
+    assert.equal(await readDyutaMatch(NOW + 1), null);
   });
 
   it('rejects corrupted, impossible, future-dated and expired saves', async () => {
@@ -104,7 +95,7 @@ describe('Dyuta local save and resume', () => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
       schemaVersion: 1,
       savedAt: NOW,
-      match: { ...createDyutaMatch(), totals: { player: 600, guide: 0 } },
+      match: { ...createDyutaMatch(), seals: { player: 600, guide: 0 } },
     }));
     assert.equal(await readDyutaMatch(NOW), null);
   });
@@ -116,7 +107,7 @@ describe('Dyuta local save and resume', () => {
   });
 
   it('keeps up to five manual save copies independently from the autosaved active match', async () => {
-    const match = keepPlayerRoll(rollForPlayer(createDyutaMatch(), [4, 6]));
+    const match = keepCurrentRoll(rollForSide(createDyutaMatch(), 'player', [4, 6]));
     await writeDyutaMatch(match, NOW);
     const saved = await saveDyutaMatchCopy(match, NOW + 1);
     assert.equal((await readDyutaSavedMatches()).length, 1);
