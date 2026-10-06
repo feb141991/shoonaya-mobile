@@ -19,6 +19,7 @@ if (typeof require !== 'undefined' && require.extensions) {
  * Allows zero-latency, 100% offline rendering without network roundtrips.
  */
 const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
+  'panchatantra-brahmin-and-crooks': require('@/assets/panchatantra/brahmin-crooks-1.jpg'),
   'panchatantra-camel-bell': require('@/assets/panchatantra/camel-bell.jpg'),
   'panchatantra-clever-hare-and-elephant': require('@/assets/panchatantra/clever-hare-and-elephant.jpg'),
   'panchatantra-moon-lake-rabbits': require('@/assets/panchatantra/moon-lake-rabbits.jpg'),
@@ -44,6 +45,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/blue-jackal-4.jpg'),
     require('@/assets/panchatantra/blue-jackal-5.jpg'),
     require('@/assets/panchatantra/blue-jackal-6.jpg'),
+  ],
+  'panchatantra-brahmin-and-crooks': [
+    require('@/assets/panchatantra/brahmin-crooks-1.jpg'),
+    require('@/assets/panchatantra/brahmin-crooks-2.jpg'),
+    require('@/assets/panchatantra/brahmin-crooks-3.jpg'),
+    require('@/assets/panchatantra/brahmin-crooks-4.jpg'),
+    require('@/assets/panchatantra/brahmin-crooks-5.jpg'),
+    require('@/assets/panchatantra/brahmin-crooks-6.jpg'),
   ],
   'panchatantra-camel-bell': [
     require('@/assets/panchatantra/camel-bell-1.jpg'),

@@ -108,6 +108,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
   await t.test('resolves page-by-page dedicated scene artwork for stories with full scene splits', () => {
     const storiesWithScenes = [
       'panchatantra-blue-jackal',
+      'panchatantra-brahmin-and-crooks',
       'panchatantra-camel-bell',
       'panchatantra-clever-hare-and-elephant',
       'panchatantra-crows-and-cobra',
@@ -205,6 +206,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
   await t.test('calculates correct visual tier for each fable category', () => {
     // Tier 2: Dedicated 6-scene storybooks
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-blue-jackal'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-brahmin-and-crooks'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-camel-bell'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-clever-hare-and-elephant'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-crows-and-cobra'), 2);
@@ -219,13 +221,13 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-moon-lake-rabbits'), 1);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-brahmin-and-crooks'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then masterwork, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-brahmin-and-crooks', title: 'Brahmin and Crooks' },
+      { id: 'panchatantra-cat-as-judge', title: 'The Cat as Judge' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
@@ -242,7 +244,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[2].id, 'panchatantra-moon-lake-rabbits');
 
     // Tier 0 items must follow at indices 3 and 4
-    assert.equal(sorted[3].id, 'panchatantra-brahmin-and-crooks');
+    assert.equal(sorted[3].id, 'panchatantra-cat-as-judge');
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
   });
 
