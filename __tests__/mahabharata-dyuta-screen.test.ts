@@ -88,4 +88,12 @@ describe('Dyuta Sabha product surface', () => {
     assert.doesNotMatch(line, /\bwins\b/);
     assert.match(DYUTA_COPY.en.wonSeals, /\{name\} won \{count\} seals/);
   });
+
+  it('routes every human action through the active seat instead of a hard-coded player side', () => {
+    assert.doesNotMatch(screen, /activeSide === 'player' && \(match\.phase/);
+    assert.doesNotMatch(screen, /declareStake\(state, 'player'|respondToStake\(state, 'player'|rollForSide\(state, 'player'/);
+    assert.match(screen, /const humanTurn = getHumanTurnSide\(match\) !== null/);
+    assert.match(screen, /match\.mode === 'solo' && match\.activeSide === 'guide' && match\.phase !== 'complete'/);
+  });
 });
+

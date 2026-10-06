@@ -170,6 +170,16 @@ export function getVisibleDice(state: DyutaMatchState | null): DicePair | null {
   return state.responderRoll?.finalDice ?? null;
 }
 
+/**
+ * The side whose controls this device may show right now: either seat in
+ * pass-and-play, only the player in solo (the Guide acts on its own), and
+ * nobody during a handoff or after the match.
+ */
+export function getHumanTurnSide(state: DyutaMatchState | null): DyutaSide | null {
+  if (!state || state.phase === 'handoff' || state.phase === 'complete') return null;
+  return state.mode === 'pass_and_play' || state.activeSide === 'player' ? state.activeSide : null;
+}
+
 export function maxAvailableStake(state: DyutaMatchState): DyutaStake {
   return Math.max(1, Math.min(3, state.seals.player, state.seals.guide)) as DyutaStake;
 }

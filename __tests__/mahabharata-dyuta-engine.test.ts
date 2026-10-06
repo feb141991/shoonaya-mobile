@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DYUTA_ROUND_COUNT, DYUTA_RULESET_ID, DYUTA_STARTING_SEALS, continueAfterHandoff, createDyutaMatch, declareStake, getMatchOutcome, getPublicResponseState, getVisibleDice, isDyutaMatchState, keepCurrentRoll, respondToStake, rerollCurrentDie, rollForSide, shouldGuideAccept, type DicePair, type DieValue, type DyutaMatchState, type DyutaStake } from '../lib/dyuta/engine';
+import { DYUTA_ROUND_COUNT, DYUTA_RULESET_ID, DYUTA_STARTING_SEALS, continueAfterHandoff, createDyutaMatch, declareStake, getMatchOutcome, getHumanTurnSide, getPublicResponseState, getVisibleDice, isDyutaMatchState, keepCurrentRoll, respondToStake, rerollCurrentDie, rollForSide, shouldGuideAccept, type DicePair, type DieValue, type DyutaMatchState, type DyutaStake } from '../lib/dyuta/engine';
 
 function declare(state = createDyutaMatch(), dice: DicePair = [4, 5], stake: DyutaStake = 2) {
   return declareStake(keepCurrentRoll(rollForSide(state, state.challenger, dice)), state.challenger, stake);
@@ -187,5 +187,28 @@ describe('Dyuta persisted-state validation', () => {
     const complete = playRandomMatch('solo', 7).at(-1) as DyutaMatchState;
     assert.equal(isDyutaMatchState(complete), true);
     assert.equal(isDyutaMatchState({ ...complete, declaredStake: 2 }), false);
+  });
+});
+
+describe('Dyuta human controls', () => {
+  it('lets the second pass-and-play seat act, so the match cannot stall on Player 2', () => {
+    const declared = declare(continueAfterHandoff(createDyutaMatch('medium', 'pass_and_play')), [4, 4], 2);
+    assert.equal(getHumanTurnSide(declared), null, 'nobody acts during a handoff');
+    const responding = continueAfterHandoff(declared);
+    assert.equal(responding.activeSide, 'guide');
+    assert.equal(getHumanTurnSide(responding), 'guide');
+  });
+  it('never hands the solo Guide seat to the human', () => {
+    const guideTurn = respondToStake(declare(createDyutaMatch(), [2, 2], 1), 'guide', 'yield');
+    assert.equal(guideTurn.activeSide, 'guide');
+    assert.equal(getHumanTurnSide(guideTurn), null);
+    assert.equal(getHumanTurnSide(createDyutaMatch()), 'player');
+  });
+  it('completes every pass-and-play match using only human-turn controls', () => {
+    for (let seed = 1; seed <= 20; seed += 1) {
+      const states = playRandomMatch('pass_and_play', seed);
+      for (const state of states) if (state.phase !== 'handoff' && state.phase !== 'complete') assert.equal(getHumanTurnSide(state), state.activeSide);
+      assert.equal(states.at(-1)?.phase, 'complete');
+    }
   });
 });

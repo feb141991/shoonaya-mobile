@@ -278,6 +278,8 @@ export const COLORS = {
   // sit on darkBg. Used only by app/dyuta.tsx.
   dyutaIvory: '#FBF5E8',
   dyutaIvoryShade: '#E3D2B4',
+  dyutaIvoryEdge: '#C9B28A',
+  dyutaDieShadow: 'rgba(62,42,31,0.32)',
   dyutaRimLight: '#EADBC2',
   dyutaRimDark: '#2B2117',
   dyutaRimEdgeLight: '#D2B98F',

@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { ActivityIndicator, Alert, Animated, Easing, Text, TextInput, useColorScheme, useWindowDimensions, View, ScrollView } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Svg, { Circle, Defs, Ellipse, G, Polygon, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient as SvgLinearGradient, Path, Polygon, RadialGradient, Stop } from 'react-native-svg';
 import { Image, type ImageSource } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -24,6 +24,7 @@ import {
   getGuideRerollIndex,
   getMatchOutcome,
   getPublicResponseState,
+  getHumanTurnSide,
   getVisibleDice,
   keepCurrentRoll,
   maxAvailableStake,
@@ -91,6 +92,7 @@ export default function DyutaScreen() {
   const [guideColor, setGuideColor] = useState<DyutaBoardColor>('navy');
   const [hydrated, setHydrated] = useState(false);
   const [rollingSide, setRollingSide] = useState<DyutaSide | null>(null);
+  const [rerollingIndex, setRerollingIndex] = useState<0 | 1 | null>(null);
   const [guideThinking, setGuideThinking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [openPanel, setOpenPanel] = useState<ExtrasPanel | null>(null);
@@ -167,26 +169,28 @@ export default function DyutaScreen() {
   }, [difficulty, guideAvatar, guideColor, mode, playerAvatar, playerColor, playerOne, playerTwo, setupFaction]);
 
   const rollPlayer = useCallback(async () => {
-    if (!match || match.activeSide !== 'player' || busy) return;
+    const side = getHumanTurnSide(match);
+    if (!side || busy) return;
     const currentGeneration = generation.current;
-    setBusy(true); setRollingSide('player');
+    setBusy(true); setRollingSide(side);
     try {
       const dice = await rollDicePair();
       await wait(reducedMotion ? 80 : 720);
-      if (generation.current === currentGeneration) setMatch((state) => state ? rollForSide(state, 'player', dice) : state);
+      if (generation.current === currentGeneration) setMatch((state) => state && getHumanTurnSide(state) === side ? rollForSide(state, side, dice) : state);
     } finally { setBusy(false); setRollingSide(null); }
   }, [busy, match, reducedMotion]);
 
-  const keep = useCallback(() => setMatch((state) => state ? keepCurrentRoll(state) : state), []);
+  const keep = useCallback(() => setMatch((state) => state && getHumanTurnSide(state) ? keepCurrentRoll(state) : state), []);
   const reroll = useCallback(async (index: 0 | 1) => {
-    if (busy) return;
-    setBusy(true); setRollingSide('player');
-    try { const value = await rollDie(); await wait(reducedMotion ? 80 : 520); setMatch((state) => state ? rerollCurrentDie(state, index, value) : state); }
-    finally { setBusy(false); setRollingSide(null); }
-  }, [busy, reducedMotion]);
+    const side = getHumanTurnSide(match);
+    if (!side || busy) return;
+    setBusy(true); setRollingSide(side); setRerollingIndex(index);
+    try { const value = await rollDie(); await wait(reducedMotion ? 80 : 520); setMatch((state) => state && getHumanTurnSide(state) === side ? rerollCurrentDie(state, index, value) : state); }
+    finally { setBusy(false); setRollingSide(null); setRerollingIndex(null); }
+  }, [busy, match, reducedMotion]);
 
-  const declare = useCallback((stake: DyutaStake) => setMatch((state) => state ? declareStake(state, 'player', stake) : state), []);
-  const respond = useCallback((response: 'accept' | 'yield') => setMatch((state) => state ? respondToStake(state, 'player', response) : state), []);
+  const declare = useCallback((stake: DyutaStake) => setMatch((state) => { const side = getHumanTurnSide(state); return state && side ? declareStake(state, side, stake) : state; }), []);
+  const respond = useCallback((response: 'accept' | 'yield') => setMatch((state) => { const side = getHumanTurnSide(state); return state && side ? respondToStake(state, side, response) : state; }), []);
   const continueHandoff = useCallback(() => setMatch((state) => state ? continueAfterHandoff(state) : state), []);
   const saveCopy = useCallback(async () => {
     if (!match || savingCopy) return;
@@ -224,10 +228,12 @@ export default function DyutaScreen() {
   const guideMood = guideThinking || rollingSide === 'guide' ? 'thinking' : outcome === 'player_win' ? 'defeat' : latest?.winner === 'guide' ? 'pleased' : 'neutral';
   const visibleRoll = getVisibleDice(match);
   const status = getStatus(match, copy, playerLabel, guideLabel);
-  const canPlayerRoll = match?.activeSide === 'player' && (match.phase === 'awaiting_challenger_roll' || match.phase === 'awaiting_responder_roll');
-  const canPlayerDecide = match?.activeSide === 'player' && (match.phase === 'challenger_decision' || match.phase === 'responder_decision');
-  const canDeclare = match?.activeSide === 'player' && match.phase === 'awaiting_declaration';
-  const canRespond = match?.activeSide === 'player' && match.phase === 'awaiting_response';
+  // Either seat acts in pass-and-play; in solo only the player does.
+  const humanTurn = getHumanTurnSide(match) !== null;
+  const canPlayerRoll = humanTurn && (match?.phase === 'awaiting_challenger_roll' || match?.phase === 'awaiting_responder_roll');
+  const canPlayerDecide = humanTurn && (match?.phase === 'challenger_decision' || match?.phase === 'responder_decision');
+  const canDeclare = humanTurn && match?.phase === 'awaiting_declaration';
+  const canRespond = humanTurn && match?.phase === 'awaiting_response';
 
   const shadow = isDark ? SHADOWS.sm.dark : SHADOWS.sm.light;
   const extras = (
@@ -261,6 +267,7 @@ export default function DyutaScreen() {
         <View style={{ position: 'absolute', top: 390, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight }} />
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.xxl, gap: SPACING.lg }} showsVerticalScrollIndicator={false}>
+        {match ? <SabhaHallBackdrop width={windowWidth} theme={theme} isDark={isDark} /> : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackButton label={copy.backLabel} showLabel={false} fallbackHref="/play" />
           <View accessible accessibilityLabel={copy.offlineLabel} style={{ width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, borderRadius: MIN_TOUCH_TARGET / 2, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center', boxShadow: shadow }}>
@@ -280,7 +287,7 @@ export default function DyutaScreen() {
           </>
         ) : (
           <>
-            <SabhaBoard match={match} playerLabel={playerLabel} guideLabel={guideLabel} guideMood={guideMood} visibleRoll={visibleRoll} rollingSide={rollingSide} status={status} latest={latest} copy={copy} theme={theme} isDark={isDark} roman={language === 'en'} tableWidth={windowWidth - SPACING.xl * 2} reducedMotion={reducedMotion} />
+            <SabhaBoard match={match} playerLabel={playerLabel} guideLabel={guideLabel} guideMood={guideMood} visibleRoll={visibleRoll} rollingSide={rollingSide} rerollingIndex={rerollingIndex} status={status} latest={latest} copy={copy} theme={theme} isDark={isDark} roman={language === 'en'} tableWidth={windowWidth - SPACING.xl * 2} reducedMotion={reducedMotion} />
 
             <View style={{ gap: SPACING.sm }}>
               {match.phase === 'handoff' ? <SabhaButton label={copy.continueTurn} icon="account-arrow-right" onPress={continueHandoff} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /> : null}
@@ -288,7 +295,7 @@ export default function DyutaScreen() {
               {canPlayerDecide ? <><SabhaButton label={copy.keep} icon="check-bold" onPress={keep} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SabhaButton variant="secondary" label={copy.rerollFirst} icon="autorenew" onPress={() => void reroll(0)} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SabhaButton variant="secondary" label={copy.rerollSecond} icon="autorenew" onPress={() => void reroll(1)} disabled={busy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View></> : null}
               {canDeclare ? <View style={{ flexDirection: 'row', gap: SPACING.sm }}>{([1, 2, 3] as DyutaStake[]).map((stake) => <StakeAction key={stake} stake={stake} disabled={stake > maxAvailableStake(match)} onPress={() => declare(stake)} copy={copy} theme={theme} hapticsEnabled={preferences.hapticsEnabled} />)}</View> : null}
               {canRespond && match.declaredStake ? <View style={{ flexDirection: 'row', gap: SPACING.sm }}><SabhaButton label={copy.accept} icon="handshake-outline" onPress={() => respond('accept')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SabhaButton variant="secondary" label={copy.yield} icon="flag-outline" onPress={() => respond('yield')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View> : null}
-              {match.activeSide === 'guide' && match.phase !== 'complete' && match.phase !== 'handoff' ? <View style={{ alignItems: 'center', gap: SPACING.sm, minHeight: 60, justifyContent: 'center' }}><ActivityIndicator color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.guideThinking}</Text></View> : null}
+              {match.mode === 'solo' && match.activeSide === 'guide' && match.phase !== 'complete' ? <View style={{ alignItems: 'center', gap: SPACING.sm, minHeight: 60, justifyContent: 'center' }}><ActivityIndicator color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.dim }}>{copy.guideThinking}</Text></View> : null}
               {match.phase === 'complete' ? <><SabhaButton label={copy.shareRecap} icon="share-variant-outline" onPress={() => void shareCapturedShoonayaCard(recapRef, { fileName: 'shoonaya-dyuta-sabha.png', dialogTitle: copy.shareRecap })} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><View style={{ flexDirection: 'row', gap: SPACING.sm }}><SabhaButton variant="secondary" label={copy.startMatch} icon="restart" onPress={startMatch} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /><SabhaButton variant="secondary" label={copy.close} icon="arrow-left" onPress={() => router.replace('/play')} theme={theme} hapticsEnabled={preferences.hapticsEnabled} /></View></> : null}
             </View>
 
@@ -309,8 +316,8 @@ const ROMAN_ROUNDS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const;
  * title, two score plaques, round banner, octagonal carved table with ivory
  * dice, a result plaque and the seven-round track.
  */
-function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, rollingSide, status, latest, copy, theme, isDark, roman, tableWidth, reducedMotion }: {
-  match: DyutaMatchState; playerLabel: string; guideLabel: string; guideMood: keyof typeof GUIDE_ASSETS; visibleRoll: DicePair | null; rollingSide: DyutaSide | null; status: string; latest: DyutaRoundRecord | null; copy: DyutaCopy; theme: Theme; isDark: boolean; roman: boolean; tableWidth: number; reducedMotion: boolean;
+function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, rollingSide, rerollingIndex, status, latest, copy, theme, isDark, roman, tableWidth, reducedMotion }: {
+  match: DyutaMatchState; playerLabel: string; guideLabel: string; guideMood: keyof typeof GUIDE_ASSETS; visibleRoll: DicePair | null; rollingSide: DyutaSide | null; rerollingIndex: 0 | 1 | null; status: string; latest: DyutaRoundRecord | null; copy: DyutaCopy; theme: Theme; isDark: boolean; roman: boolean; tableWidth: number; reducedMotion: boolean;
 }) {
   const playerColor = boardColorValue(match.identities.player.color, theme);
   const guideColor = boardColorValue(match.identities.guide.color, theme);
@@ -324,17 +331,17 @@ function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, ro
       </View>
       <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
         <ScorePlaque label={playerLabel} seals={match.seals.player} active={match.activeSide === 'player' && live} copy={copy} theme={theme} isDark={isDark}>
-          <Medallion color={playerColor} theme={theme}><Feather name={match.identities.player.avatar} size={18} color={COLORS.dyutaIvory} /></Medallion>
+          <Medallion color={playerColor} theme={theme}><Feather name={match.identities.player.avatar} size={14} color={COLORS.dyutaIvory} /></Medallion>
         </ScorePlaque>
         <ScorePlaque label={guideLabel} seals={match.seals.guide} active={match.activeSide === 'guide' && live} copy={copy} theme={theme} isDark={isDark}>
           {match.mode === 'solo'
-            ? <Medallion color={guideColor} theme={theme} innerRadius={27}><Image source={GUIDE_ASSETS[guideMood]} style={{ width: 30, height: 30, borderRadius: 15 }} contentFit="cover" /></Medallion>
-            : <Medallion color={guideColor} theme={theme}><Feather name={match.identities.guide.avatar} size={18} color={COLORS.dyutaIvory} /></Medallion>}
+            ? <Medallion color={guideColor} theme={theme} innerRadius={27}><Image source={GUIDE_ASSETS[guideMood]} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" /></Medallion>
+            : <Medallion color={guideColor} theme={theme}><Feather name={match.identities.guide.avatar} size={14} color={COLORS.dyutaIvory} /></Medallion>}
         </ScorePlaque>
       </View>
       <RoundBanner label={roundLabel} theme={theme} />
       <SabhaTable width={tableWidth} theme={theme} isDark={isDark}>
-        <DiceStage dice={visibleRoll} rolling={rollingSide !== null} theme={theme} isDark={isDark} copy={copy} reducedMotion={reducedMotion} />
+        <DiceStage dice={visibleRoll} rolling={rollingSide !== null ? [rerollingIndex !== 1, rerollingIndex !== 0] : null} theme={theme} isDark={isDark} copy={copy} reducedMotion={reducedMotion} />
       </SabhaTable>
       <Plaque theme={theme} isDark={isDark} style={{ marginTop: -SPACING.xl, marginHorizontal: SPACING.md }}>
         <Text accessibilityLiveRegion="polite" style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>{status}</Text>
@@ -345,10 +352,41 @@ function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, ro
   );
 }
 
+/**
+ * Low-contrast palace hall behind the in-game header: three scalloped arches
+ * on columns and two hanging diyas. Decorative only; it scrolls with the page.
+ */
+function SabhaHallBackdrop({ width, theme, isDark }: { width: number; theme: Theme; isDark: boolean }) {
+  const height = 420;
+  const opening = isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowIvoryLight;
+  const column = width * 0.07;
+  const span = (width - column * 4) / 3;
+  const arch = (left: number) => {
+    const right = left + span; const mid = left + span / 2; const spring = 210; const apex = 70;
+    return `M ${left} ${height} V ${spring} C ${left} ${spring - span * 0.5} ${mid - span * 0.14} ${apex + span * 0.1} ${mid} ${apex} C ${mid + span * 0.14} ${apex + span * 0.1} ${right} ${spring - span * 0.5} ${right} ${spring} V ${height} Z`;
+  };
+  const lamp = (x: number) => <G key={x}>
+    <Path d={`M ${x} 0 V 58`} stroke={theme.brand} strokeWidth={1} />
+    <Circle cx={x} cy={52} r={18} fill={isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight} />
+    <Ellipse cx={x} cy={50} rx={2.6} ry={5} fill={theme.brand} />
+    <Path d={`M ${x - 11} 56 Q ${x} 70 ${x + 11} 56 Z`} fill={theme.brand} />
+    <Path d={`M ${x - 13} 56 H ${x + 13}`} stroke={theme.brandStrong} strokeWidth={1.2} />
+  </G>;
+  return <View pointerEvents="none" style={{ position: 'absolute', top: -SPACING.lg, left: -SPACING.xl, width, height }}>
+    <Svg width={width} height={height}>
+      {[0, 1, 2].map((index) => { const left = column + index * (span + column); return <G key={index}>
+        <Path d={arch(left)} fill={opening} stroke={theme.premiumBorder} strokeWidth={1.5} />
+      </G>; })}
+      {[0, 1, 2, 3].map((index) => <Path key={index} d={`M ${index * (span + column)} ${height} V 196 H ${index * (span + column) + column} V ${height} Z`} fill={theme.brandSoft} />)}
+      {[width * 0.24, width * 0.76].map(lamp)}
+    </Svg>
+  </View>;
+}
+
 /** Double-framed ivory plaque with a gold rule, the mockup's card treatment. */
-function Plaque({ theme, isDark, highlighted = false, style, children }: { theme: Theme; isDark: boolean; highlighted?: boolean; style?: object; children: React.ReactNode }) {
+function Plaque({ theme, isDark, highlighted = false, compact = false, style, children }: { theme: Theme; isDark: boolean; highlighted?: boolean; compact?: boolean; style?: object; children: React.ReactNode }) {
   return <View style={[{ borderRadius: RADII.sm, borderWidth: highlighted ? 2 : 1.5, borderColor: theme.brand, backgroundColor: theme.card, padding: 3, boxShadow: highlighted ? `0 0 20px ${theme.brand}` : (isDark ? SHADOWS.sm.dark : SHADOWS.sm.light) }, style]}>
-    <View style={{ borderRadius: RADII.xs, borderWidth: 1, borderColor: highlighted ? theme.brand : theme.premiumBorder, backgroundColor: highlighted ? theme.brandSoft : undefined, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, gap: SPACING.xs }}>{children}</View>
+    <View style={{ borderRadius: RADII.xs, borderWidth: 1, borderColor: highlighted ? theme.brand : theme.premiumBorder, backgroundColor: highlighted ? theme.brandSoft : undefined, paddingHorizontal: compact ? SPACING.sm : SPACING.md, paddingVertical: compact ? SPACING.xs : SPACING.sm, gap: SPACING.xs }}>{children}</View>
   </View>;
 }
 
@@ -362,13 +400,13 @@ function OrnamentDivider({ width, theme }: { width: number; theme: Theme }) {
 
 function ScorePlaque({ label, seals, active, copy, theme, isDark, children }: { label: string; seals: number; active: boolean; copy: DyutaCopy; theme: Theme; isDark: boolean; children: React.ReactNode }) {
   return <View accessible accessibilityLabel={`${label}, ${seals} ${copy.seals}`} accessibilityState={{ selected: active }} style={{ flex: 1 }}>
-    <Plaque theme={theme} isDark={isDark} highlighted={active}>
+    <Plaque theme={theme} isDark={isDark} highlighted={active} compact>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
         {children}
-        <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-          <Text numberOfLines={1} style={{ ...TYPE.cardHeading, color: theme.text }}>{label}</Text>
-          <OrnamentDivider width={56} theme={theme} />
-          <Text style={{ ...TYPE.display, color: theme.text, fontVariant: ['lining-nums'] }}>{seals}</Text>
+        <View style={{ flex: 1, alignItems: 'center', gap: 1 }}>
+          <Text numberOfLines={1} style={{ ...TYPE.label, fontFamily: FONTS.serifBold, fontSize: 15, color: theme.text }}>{label}</Text>
+          <OrnamentDivider width={40} theme={theme} />
+          <Text style={{ ...TYPE.metric, color: theme.text, fontVariant: ['lining-nums'] }}>{seals}</Text>
         </View>
       </View>
     </Plaque>
@@ -376,7 +414,7 @@ function ScorePlaque({ label, seals, active, copy, theme, isDark, children }: { 
 }
 
 /** Petal mandala medallion; `children` sits in the filled centre. */
-function Medallion({ color, theme, innerRadius = 17, size = 58, children }: { color: string; theme: Theme; innerRadius?: number; size?: number; children: React.ReactNode }) {
+function Medallion({ color, theme, innerRadius = 17, size = 44, children }: { color: string; theme: Theme; innerRadius?: number; size?: number; children: React.ReactNode }) {
   const inner = (innerRadius * 2 * size) / 100;
   return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
     <Svg width={size} height={size} viewBox="0 0 100 100" style={{ position: 'absolute' }}>
@@ -399,49 +437,187 @@ function RoundBanner({ label, theme }: { label: string; theme: Theme }) {
   </View>;
 }
 
-/** Octagonal carved table drawn in a 100×100 box and squashed vertically for a seated perspective. */
+/**
+ * Octagonal carved table drawn in a 100×100 box and squashed vertically for a
+ * seated perspective: a heavy sandstone slab with a lotus-relief rim, a carved
+ * lip, a gold filigree band and a layered mandala on the mat.
+ */
 function SabhaTable({ width, theme, isDark, children }: { width: number; theme: Theme; isDark: boolean; children: React.ReactNode }) {
-  const height = Math.round(width * 0.72);
+  const height = Math.round(width * 0.76);
   const rim = isDark ? COLORS.dyutaRimDark : COLORS.dyutaRimLight;
   const edge = isDark ? COLORS.dyutaRimEdgeDark : COLORS.dyutaRimEdgeLight;
   const mat = isDark ? COLORS.dyutaMatDark : COLORS.dyutaMatLight;
-  const octagon = (radius: number) => Array.from({ length: 8 }, (_, index) => { const angle = Math.PI / 8 + (index * Math.PI) / 4; return `${50 + radius * Math.cos(angle)},${50 + radius * Math.sin(angle)}`; }).join(' ');
+  const highlight = isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowIvoryLight;
+  const gold = theme.brand;
+  const cy = 47;
+  const octagon = (radius: number, dy = 0) => Array.from({ length: 8 }, (_, index) => { const angle = Math.PI / 8 + (index * Math.PI) / 4; return `${50 + radius * Math.cos(angle)},${cy + dy + radius * Math.sin(angle)}`; }).join(' ');
+  const ring = (count: number, radius: number, offset = 0) => Array.from({ length: count }, (_, index) => { const angle = offset + (index * 2 * Math.PI) / count; return { x: 50 + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), deg: (angle * 180) / Math.PI }; });
+  // Radial lotus petal centred on (x, y), pointing outward.
+  const petal = (x: number, y: number, deg: number, length: number, girth: number) => `M ${-length} 0 Q 0 ${-girth} ${length} 0 Q 0 ${girth} ${-length} 0 Z`;
   return <View style={{ width, height, alignSelf: 'center' }}>
     <Svg width={width} height={height} viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute' }}>
       <Defs>
-        <RadialGradient id="dyutaMat" cx={50} cy={50} r={42} gradientUnits="userSpaceOnUse"><Stop offset={0.6} stopColor={mat} /><Stop offset={1} stopColor={rim} /></RadialGradient>
+        <SvgLinearGradient id="dyutaSlab" x1="0" y1="0" x2="0" y2="1"><Stop offset={0} stopColor={rim} /><Stop offset={0.55} stopColor={rim} /><Stop offset={1} stopColor={edge} /></SvgLinearGradient>
+        <RadialGradient id="dyutaMat" cx={50} cy={cy} r={37} gradientUnits="userSpaceOnUse"><Stop offset={0} stopColor={mat} /><Stop offset={0.82} stopColor={mat} /><Stop offset={1} stopColor={rim} /></RadialGradient>
+        <RadialGradient id="dyutaFloor" cx="50%" cy="50%" r="50%"><Stop offset={0} stopColor={COLORS.dyutaDieShadow} /><Stop offset={1} stopColor={COLORS.dyutaDieShadow} stopOpacity={0} /></RadialGradient>
       </Defs>
-      <Polygon points={octagon(50)} fill={rim} stroke={edge} strokeWidth={0.8} />
-      <Polygon points={octagon(46)} fill="none" stroke={edge} strokeWidth={0.5} />
-      <G>{Array.from({ length: 24 }, (_, index) => { const angle = (index * Math.PI) / 12; return <Circle key={index} cx={50 + 44 * Math.cos(angle)} cy={50 + 44 * Math.sin(angle)} r={0.9} fill={edge} />; })}</G>
-      <Circle cx={50} cy={50} r={41} fill="url(#dyutaMat)" stroke={theme.brand} strokeWidth={0.6} />
-      <Circle cx={50} cy={50} r={37} fill="none" stroke={theme.brand} strokeWidth={0.4} strokeDasharray="1 1.6" />
-      <Circle cx={50} cy={50} r={28} fill="none" stroke={theme.brand} strokeWidth={0.4} strokeOpacity={0.6} />
-      <G>{Array.from({ length: 16 }, (_, index) => <Ellipse key={index} cx={50} cy={27} rx={2.2} ry={5} fill="none" stroke={theme.brand} strokeWidth={0.4} strokeOpacity={0.6} transform={`rotate(${index * 22.5} 50 50)`} />)}</G>
+      {/* floor shadow and slab thickness */}
+      <Ellipse cx={50} cy={cy + 8} rx={50} ry={46} fill="url(#dyutaFloor)" />
+      <Polygon points={octagon(49.5, 4)} fill={edge} />
+      <Polygon points={octagon(49.5, 2)} fill={edge} stroke={edge} strokeWidth={0.4} />
+      <Polygon points={octagon(49.5)} fill="url(#dyutaSlab)" stroke={edge} strokeWidth={0.6} />
+      <Polygon points={octagon(47.4)} fill="none" stroke={highlight} strokeWidth={0.6} />
+      {/* lotus relief: each petal is carved (edge tone) with a lit upper lip */}
+      <G>{ring(28, 42).map(({ x, y, deg }, index) => <G key={index} transform={`translate(${x} ${y}) rotate(${deg})`}>
+        <Path d={petal(x, y, deg, 2.7, 1.9)} fill={edge} fillOpacity={0.55} />
+        <Path d={petal(x, y, deg, 2.7, 1.9)} fill="none" stroke={highlight} strokeWidth={0.35} transform="translate(-0.25 -0.25)" />
+      </G>)}</G>
+      <G>{ring(28, 42, Math.PI / 28).map(({ x, y }, index) => <Circle key={index} cx={x} cy={y} r={0.45} fill={edge} />)}</G>
+      {/* carved lip around the mat */}
+      <Circle cx={50} cy={cy} r={38.4} fill="none" stroke={edge} strokeWidth={1.1} />
+      <Circle cx={50} cy={cy} r={39.3} fill="none" stroke={highlight} strokeWidth={0.4} />
+      {/* gold filigree band */}
+      <Circle cx={50} cy={cy} r={37.4} fill="url(#dyutaMat)" stroke={gold} strokeWidth={0.7} />
+      <Circle cx={50} cy={cy} r={35.2} fill="none" stroke={gold} strokeWidth={0.35} />
+      <G>{ring(36, 36.3).map(({ x, y, deg }, index) => <Ellipse key={index} cx={x} cy={y} rx={0.5} ry={1} fill={gold} fillOpacity={0.75} transform={`rotate(${deg} ${x} ${y})`} />)}</G>
+      <Circle cx={50} cy={cy} r={31.5} fill="none" stroke={gold} strokeWidth={0.3} strokeDasharray="0.8 1.2" />
+      <G>{ring(12, 31.5).map(({ x, y, deg }, index) => <Path key={index} d={`M ${x} ${y - 2} Q ${x + 1.5} ${y} ${x} ${y + 2} Q ${x - 1.5} ${y} ${x} ${y - 2} Z`} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.8} transform={`rotate(${deg + 90} ${x} ${y})`} />)}</G>
+      {/* layered centre mandala */}
+      <Circle cx={50} cy={cy} r={25} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} />
+      <G>{Array.from({ length: 16 }, (_, index) => <Ellipse key={index} cx={50} cy={cy - 18} rx={2.3} ry={5.2} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} transform={`rotate(${index * 22.5} 50 ${cy})`} />)}</G>
+      <G>{Array.from({ length: 8 }, (_, index) => <Ellipse key={index} cx={50} cy={cy - 11} rx={2.8} ry={6} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} transform={`rotate(${index * 45 + 22.5} 50 ${cy})`} />)}</G>
+      <Circle cx={50} cy={cy} r={8.5} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} />
+      <Circle cx={50} cy={cy} r={3} fill={gold} fillOpacity={0.35} />
     </Svg>
-    <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>{children}</View>
+    <View style={{ position: 'absolute', top: 0, right: 0, bottom: height * 0.06, left: 0, alignItems: 'center', justifyContent: 'center' }}>{children}</View>
   </View>;
 }
 
-function DiceStage({ dice, rolling, theme, isDark, copy, reducedMotion }: { dice: DicePair | null; rolling: boolean; theme: Theme; isDark: boolean; copy: DyutaCopy; reducedMotion: boolean }) {
-  const motion = useRef(new Animated.Value(0)).current;
-  useEffect(() => { if (!rolling || reducedMotion) { motion.setValue(0); return; } const animation = Animated.loop(Animated.sequence([Animated.timing(motion, { toValue: 1, duration: 180, easing: Easing.linear, useNativeDriver: true }), Animated.timing(motion, { toValue: 0, duration: 180, easing: Easing.linear, useNativeDriver: true })])); animation.start(); return () => animation.stop(); }, [motion, reducedMotion, rolling]);
-  const transform = { transform: [{ translateY: motion.interpolate({ inputRange: [0, 1], outputRange: [0, -16] }) }, { rotate: motion.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '18deg'] }) }] };
-  return <View style={{ alignItems: 'center', gap: SPACING.lg }}>
+// Cosmetic faces shown while the dice tumble; never a real result.
+const TUMBLE_FACES = [3, 6, 2, 5, 1, 4] as const;
+
+/**
+ * Throw → tumble → land. While `rolling`, each die spins along a short arc
+ * with flickering faces; when the result arrives it drops in and settles with
+ * a spring. Reduced motion skips all movement and just shows the result.
+ */
+function DiceStage({ dice, rolling: rollingDice, theme, isDark, copy, reducedMotion }: { dice: DicePair | null; rolling: [boolean, boolean] | null; theme: Theme; isDark: boolean; copy: DyutaCopy; reducedMotion: boolean }) {
+  const rolling = rollingDice !== null;
+  const lastThrown = useRef<[boolean, boolean]>([true, true]);
+  const tumble = useRef(new Animated.Value(0)).current;
+  const land = useRef(new Animated.Value(1)).current;
+  const wasRolling = useRef(rolling);
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    if (reducedMotion) { tumble.setValue(0); land.setValue(1); wasRolling.current = rolling; return; }
+    if (rolling) {
+      land.setValue(0);
+      tumble.setValue(0);
+      const spin = Animated.loop(Animated.timing(tumble, { toValue: 1, duration: 520, easing: Easing.linear, useNativeDriver: true }));
+      spin.start();
+      const flicker = setInterval(() => setFrame((value) => value + 1), 90);
+      wasRolling.current = true;
+      return () => { spin.stop(); clearInterval(flicker); };
+    }
+    if (wasRolling.current) {
+      wasRolling.current = false;
+      land.setValue(0);
+      Animated.spring(land, { toValue: 1, friction: 4, tension: 70, useNativeDriver: true }).start();
+    }
+    return undefined;
+  }, [land, reducedMotion, rolling, tumble]);
+
+  const tumbling = rolling && !reducedMotion;
+  const dieMotion = (direction: 1 | -1, delay: number, moving: boolean) => {
+    const settle = { transform: [{ translateY: land.interpolate({ inputRange: [0, 1], outputRange: [-34, 0] }) }, { scale: land.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1.12, 0.96, 1] }) }] };
+    // The spin only applies mid-throw; a landed die always rests upright.
+    if (!tumbling || !moving) return moving ? settle : {};
+    const phase = Animated.modulo(Animated.add(tumble, delay), 1);
+    return {
+      transform: [
+        // airborne arc while tumbling, then a drop that overshoots and settles
+        { translateY: Animated.add(phase.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -26, 0] }), land.interpolate({ inputRange: [0, 1], outputRange: [-34, 0] })) },
+        { translateX: phase.interpolate({ inputRange: [0, 0.5, 1], outputRange: [-6 * direction, 6 * direction, -6 * direction] }) },
+        { rotate: phase.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${360 * direction}deg`] }) },
+        { scale: land.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1.12, 0.96, 1] }) },
+      ],
+    };
+  };
+  const faceFor = (offset: number) => TUMBLE_FACES[(frame + offset) % TUMBLE_FACES.length];
+  // A single-die reroll tumbles only that die; the kept die stays visible and still.
+  const faceOf = (index: 0 | 1) => { const moving = rollingDice?.[index] ?? false; if (moving) return tumbling ? faceFor(index * 3) : null; return dice?.[index] ?? null; };
+  const first = faceOf(0);
+  const second = faceOf(1);
+  // Remember which dice were thrown so only they replay the landing bounce.
+  if (rollingDice) lastThrown.current = rollingDice;
+  const [movingFirst, movingSecond] = rollingDice ?? lastThrown.current;
+
+  return <View style={{ alignItems: 'center', gap: SPACING.sm }}>
     <Text style={{ ...TYPE.chip, color: theme.brandStrong, textTransform: 'uppercase', letterSpacing: 1.5, backgroundColor: isDark ? COLORS.dyutaMatDark : COLORS.dyutaMatLight, paddingHorizontal: SPACING.sm, borderRadius: RADII.xs, overflow: 'hidden' }}>{copy.concealedThrow}</Text>
-    <Animated.View style={[{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.xxl }, transform]}>
-      <IvoryDie value={rolling ? null : dice?.[0] ?? null} label={copy.firstDie} tilt="-11deg" isDark={isDark} />
-      <View style={{ marginTop: SPACING.xl }}><IvoryDie value={rolling ? null : dice?.[1] ?? null} label={copy.secondDie} tilt="9deg" isDark={isDark} /></View>
-    </Animated.View>
+    <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.lg }}>
+      <Animated.View style={dieMotion(1, 0, movingFirst)}><IvoryDie value={first} label={copy.firstDie} tilt="-14deg" airborne={tumbling && movingFirst} /></Animated.View>
+      <Animated.View style={[{ marginTop: SPACING.xxl }, dieMotion(-1, 0.35, movingSecond)]}><IvoryDie value={second} label={copy.secondDie} tilt="10deg" airborne={tumbling && movingSecond} /></Animated.View>
+    </View>
   </View>;
 }
 
-function IvoryDie({ value, label, tilt, isDark }: { value: number | null; label: string; tilt: string; isDark: boolean }) {
-  const pips = value ? DIE_PIPS[value] ?? [] : [];
-  return <View accessible accessibilityRole="image" accessibilityLabel={value ? `${label}: ${value}` : `${label}: concealed`} style={{ width: 68, height: 68, borderRadius: RADII.sm, transform: [{ rotate: tilt }], boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light }}>
-    <LinearGradient colors={[COLORS.dyutaIvory, COLORS.dyutaIvoryShade]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ flex: 1, borderRadius: RADII.sm, borderWidth: 1, borderColor: COLORS.dyutaRimEdgeLight, alignItems: 'center', justifyContent: 'center' }}>
-      {value === null ? <Feather name="help-circle" size={24} color={COLORS.brandEarthLight} /> : <View style={{ gap: 5 }}>{[0, 1, 2].map((row) => <View key={row} style={{ flexDirection: 'row', gap: 5 }}>{[0, 1, 2].map((column) => <View key={column} style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: pips.includes(row * 3 + column) ? COLORS.ink : 'transparent' }} />)}</View>)}</View>}
-    </LinearGradient>
+// Pip centres on a unit face, indexed like DIE_PIPS (row-major 3×3).
+const PIP_GRID = [0.24, 0.5, 0.76] as const;
+// Faces visible beside each front value; opposite faces of a standard die sum to seven.
+const DIE_NEIGHBOURS: Record<number, [number, number]> = { 1: [2, 3], 2: [3, 1], 3: [1, 2], 4: [5, 1], 5: [1, 3], 6: [2, 4] };
+
+type Point = readonly [number, number];
+/** Closed SVG path through `points` with every corner rounded by up to `radius`. */
+function roundedPath(points: readonly Point[], radius: number): string {
+  const n = points.length;
+  const toward = (from: Point, to: Point): Point => { const dx = to[0] - from[0]; const dy = to[1] - from[1]; const length = Math.hypot(dx, dy) || 1; const r = Math.min(radius, length / 2); return [from[0] + (dx / length) * r, from[1] + (dy / length) * r]; };
+  return points.map((point, index) => {
+    const before = toward(point, points[(index - 1 + n) % n]);
+    const after = toward(point, points[(index + 1) % n]);
+    return `${index === 0 ? 'M' : 'L'} ${before[0]} ${before[1]} Q ${point[0]} ${point[1]} ${after[0]} ${after[1]}`;
+  }).join(' ') + ' Z';
+}
+
+/**
+ * Ivory cube in oblique projection with rounded edges: the front face carries
+ * the value, the top and right faces show neighbouring faces, a soft rim light
+ * runs along the top edge and a shadow sits on the mat. A concealed die keeps
+ * every face blank.
+ */
+function IvoryDie({ value, label, tilt, size = 92, airborne = false }: { value: number | null; label: string; tilt: string; size?: number; airborne?: boolean }) {
+  const x0 = 12, y0 = 32, s = 54, d = 15;
+  const x1 = x0 + s, y1 = y0 + s;
+  const tl: Point = [x0, y0], tr: Point = [x1, y0], br: Point = [x1, y1], bl: Point = [x0, y1];
+  const btl: Point = [x0 + d, y0 - d], btr: Point = [x1 + d, y0 - d], bbr: Point = [x1 + d, y1 - d];
+  const pipsFor = (face: number) => DIE_PIPS[face] ?? [];
+  const [topFace, sideFace] = value ? DIE_NEIGHBOURS[value] : [0, 0];
+  const inset = 0.08;
+  const grid = (index: number) => inset + (1 - inset * 2) * PIP_GRID[index];
+  const frontPips = value ? pipsFor(value).map((cell) => ({ cx: x0 + s * grid(cell % 3), cy: y0 + s * grid(Math.floor(cell / 3)) })) : [];
+  const topPips = value ? pipsFor(topFace).map((cell) => { const u = grid(cell % 3); const v = 1 - grid(Math.floor(cell / 3)); return { cx: x0 + s * u + d * v, cy: y0 - d * v }; }) : [];
+  const sidePips = value ? pipsFor(sideFace).map((cell) => { const u = grid(cell % 3); const v = 1 - grid(Math.floor(cell / 3)); return { cx: x1 + d * u, cy: y1 - d * u - s * v }; }) : [];
+  return <View accessible accessibilityRole="image" accessibilityLabel={airborne ? `${label}: rolling` : value ? `${label}: ${value}` : `${label}: concealed`} style={{ width: size, height: size, transform: [{ rotate: tilt }] }}>
+    <Svg width={size} height={size} viewBox="0 0 100 100">
+      <Defs>
+        <SvgLinearGradient id="dieFront" x1="0" y1="0" x2="1" y2="1"><Stop offset={0} stopColor={COLORS.dyutaIvory} /><Stop offset={1} stopColor={COLORS.dyutaIvoryShade} /></SvgLinearGradient>
+        <SvgLinearGradient id="dieTop" x1="0" y1="1" x2="1" y2="0"><Stop offset={0} stopColor={COLORS.dyutaIvory} /><Stop offset={1} stopColor={COLORS.dyutaIvoryShade} /></SvgLinearGradient>
+        <SvgLinearGradient id="dieSide" x1="0" y1="0" x2="1" y2="1"><Stop offset={0} stopColor={COLORS.dyutaIvoryShade} /><Stop offset={1} stopColor={COLORS.dyutaIvoryEdge} /></SvgLinearGradient>
+        <RadialGradient id="dieShadow" cx="50%" cy="50%" r="50%"><Stop offset={0} stopColor={COLORS.dyutaDieShadow} /><Stop offset={1} stopColor={COLORS.dyutaDieShadow} stopOpacity={0} /></RadialGradient>
+      </Defs>
+      {airborne ? null : <Ellipse cx={x0 + s / 2 + 10} cy={y1 + 3} rx={s * 0.66} ry={7.5} fill="url(#dieShadow)" />}
+      {/* silhouette doubles as the softened edge between faces */}
+      <Path d={roundedPath([bl, tl, btl, btr, bbr, br], 9)} fill={COLORS.dyutaIvoryEdge} />
+      <Path d={roundedPath([tr, btr, bbr, br], 7)} fill="url(#dieSide)" transform="translate(-0.6 0.4)" />
+      <Path d={roundedPath([tl, btl, btr, tr], 7)} fill="url(#dieTop)" transform="translate(0.4 0.5)" />
+      <Path d={roundedPath([tl, tr, br, bl], 10)} fill="url(#dieFront)" />
+      <Path d={`M ${x0 + 9} ${y0 + 1.4} H ${x1 - 9}`} stroke={COLORS.navGlowIvoryLight} strokeWidth={1.6} strokeLinecap="round" />
+      <Path d={`M ${x0 + 1.4} ${y0 + 9} V ${y1 - 9}`} stroke={COLORS.navGlowIvoryLight} strokeWidth={1.2} strokeLinecap="round" />
+      {topPips.map((pip, index) => <Ellipse key={`t${index}`} cx={pip.cx} cy={pip.cy} rx={3.2} ry={1.5} fill={COLORS.ink} fillOpacity={0.85} />)}
+      {sidePips.map((pip, index) => <Ellipse key={`s${index}`} cx={pip.cx} cy={pip.cy} rx={1.4} ry={3.4} fill={COLORS.ink} fillOpacity={0.8} />)}
+      {frontPips.map((pip, index) => <Circle key={`f${index}`} cx={pip.cx} cy={pip.cy} r={5} fill={COLORS.ink} />)}
+    </Svg>
+    {value === null ? <View style={{ position: 'absolute', left: (x0 / 100) * size, top: (y0 / 100) * size, width: (s / 100) * size, height: (s / 100) * size, alignItems: 'center', justifyContent: 'center' }}><Feather name="help-circle" size={24} color={COLORS.brandEarthLight} /></View> : null}
   </View>;
 }
 
@@ -647,8 +823,10 @@ function getStatus(match: DyutaMatchState | null, copy: DyutaCopy, playerLabel: 
   if (match.phase === 'complete') { const outcome = getMatchOutcome(match); return outcome === 'draw' ? copy.drawTitle : outcome === 'player_win' ? copy.playerWon.replace('{name}', playerLabel) : copy.opponentWon.replace('{name}', guideLabel); }
   if (match.phase === 'handoff') return copy.handoffPrompt.replace('{name}', match.activeSide === 'player' ? playerLabel : guideLabel);
   if (match.phase === 'awaiting_declaration') return copy.declarePrompt;
+  // The accept/yield prompt is for the responder; in solo the Guide responds on its own.
+  if (match.phase === 'awaiting_response' && match.mode === 'solo' && match.activeSide === 'guide') return copy.guideTurn;
   if (match.phase === 'awaiting_response' && match.declaredStake) return copy.responsePrompt.replace('{name}', match.challenger === 'player' ? playerLabel : guideLabel).replace('{count}', String(match.declaredStake));
-  return match.activeSide === 'player' ? copy.yourTurn : copy.guideTurn;
+  return match.activeSide === 'player' || match.mode === 'pass_and_play' ? copy.yourTurn : copy.guideTurn;
 }
 
 function NameInput({ value, onChange, label, theme }: { value: string; onChange: (v: string) => void; label: string; theme: ReturnType<typeof themeColor> }) { return <TextInput accessibilityLabel={label} value={value} onChangeText={onChange} placeholder={label} placeholderTextColor={theme.dim} maxLength={24} style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: SPACING.md, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, color: theme.text, backgroundColor: theme.bg, ...TYPE.body }} />; }
