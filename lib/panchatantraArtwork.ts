@@ -34,6 +34,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-dove-king-and-net': require('@/assets/panchatantra/dove-king-1.webp'),
   'panchatantra-foolish-friend-monkey': require('@/assets/panchatantra/foolish-friend-1.webp'),
   'panchatantra-two-fish-and-frog': require('@/assets/panchatantra/two-fish-frog-1.webp'),
+  'panchatantra-bird-with-two-heads': require('@/assets/panchatantra/bird-two-heads-1.webp'),
 };
 
 /**
@@ -160,6 +161,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/two-fish-frog-4.webp'),
     require('@/assets/panchatantra/two-fish-frog-5.webp'),
     require('@/assets/panchatantra/two-fish-frog-6.webp'),
+  ],
+  'panchatantra-bird-with-two-heads': [
+    require('@/assets/panchatantra/bird-two-heads-1.webp'),
+    require('@/assets/panchatantra/bird-two-heads-2.webp'),
+    require('@/assets/panchatantra/bird-two-heads-3.webp'),
+    require('@/assets/panchatantra/bird-two-heads-4.webp'),
+    require('@/assets/panchatantra/bird-two-heads-5.webp'),
+    require('@/assets/panchatantra/bird-two-heads-6.webp'),
   ],
 };
 
