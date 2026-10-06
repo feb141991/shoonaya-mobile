@@ -69,6 +69,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/dove-king-5.jpg'),
     require('@/assets/panchatantra/dove-king-6.jpg'),
   ],
+  'panchatantra-four-friends': [
+    require('@/assets/panchatantra/four-friends-1.jpg'),
+    require('@/assets/panchatantra/four-friends-2.jpg'),
+    require('@/assets/panchatantra/four-friends-3.jpg'),
+    require('@/assets/panchatantra/four-friends-4.jpg'),
+    require('@/assets/panchatantra/four-friends-5.jpg'),
+    require('@/assets/panchatantra/four-friends-6.jpg'),
+  ],
   'panchatantra-lion-and-rabbit': [
     require('@/assets/panchatantra/lion-rabbit-1.jpg'),
     require('@/assets/panchatantra/lion-rabbit-2.jpg'),
