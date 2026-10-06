@@ -154,13 +154,15 @@ function RootLayout() {
   const readyToRender = appIsReady && authReady;
   const isReaderScreen = rootSegment === 'pathshala' && segments.length >= 3;
   const isAiChatScreen = rootSegment === 'ai-chat';
+  const isDyutaGameScreen = rootSegment === 'dyuta';
   const showBottomNav =
     readyToRender &&
     rootSegment !== '(auth)' &&
     rootSegment !== 'auth' &&
     rootSegment !== undefined &&
     !isReaderScreen &&
-    !isAiChatScreen;
+    !isAiChatScreen &&
+    !isDyutaGameScreen;
 
   // Explicit profile-resolution failure state -- set only when an
   // authenticated session's profile row is missing AND the repair

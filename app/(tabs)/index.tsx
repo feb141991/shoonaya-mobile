@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { calculatePanchang } from '@sangam/panchang-engine';
 import { findMoodConfig } from '@/lib/mood-registry';
+import { DYUTA_COPY } from '@/lib/dyuta/copy';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -51,7 +52,7 @@ import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { HomeHeroGuide } from '@/components/home/HomeHeroGuide';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, TYPE } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TRADITION_ACCENT, TYPE } from '@/lib/constants';
 import { recordLoaderShown, type TelemetryIdentity } from '@/lib/telemetry';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
@@ -1661,6 +1662,7 @@ function HomeContent() {
   // Match the PWA Home hero: show only the first verse line in the
   // transitional Home block, with the full text available on /shloka.
   const sacredTextLine = state.sacredText.original.split('\n')[0] || state.sacredText.original;
+  const dyutaHomeCopy = DYUTA_COPY[state.profile.appLanguage] ?? DYUTA_COPY.en;
 
   const navigate = useCallback(
     (href: Href) => {
@@ -2513,6 +2515,34 @@ function HomeContent() {
           />
 
           <FestivalQuizBanner />
+
+          <PressableSurface
+            accessibilityLabel={`${dyutaHomeCopy.playTitle}. ${dyutaHomeCopy.featuredDescription}`}
+            haptic="selection"
+            onPress={() => navigate('/play' as Href)}
+            style={{
+              minHeight: MIN_TOUCH_TARGET,
+              padding: SPACING.md,
+              borderRadius: RADII.lg,
+              borderWidth: 1,
+              borderColor: theme.premiumBorder,
+              backgroundColor: theme.card,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: SPACING.md,
+            }}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: RADII.md, backgroundColor: theme.soft, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="play-circle" size={23} color={theme.brand} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ ...TYPE.label, color: theme.text }}>{dyutaHomeCopy.playTitle}</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
+                {dyutaHomeCopy.featuredGame} · {dyutaHomeCopy.featuredDescription}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={theme.brand} />
+          </PressableSurface>
 
           {/* Jyotish & Panchang — compact quick-access tiles. Keep this as
               contextual Home access rather than adding a sixth bottom tab. */}
