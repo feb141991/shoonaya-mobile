@@ -73,6 +73,8 @@ import {
 } from '@/lib/homeCoordinator';
 import { safeTimezone, spiritualDate } from '@/lib/spiritualDate';
 import { buildCalendarIdentityKey } from '@/lib/calendarIdentityKey';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { lookupVratData } from '@/lib/vrat-data';
 import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate, getMoodTimeZone } from '@/lib/moodPulsePreference';
 import { isMoodStatusOwnedBy, shouldShowMoodPulse } from '@/lib/moodPulsePolicy';
@@ -512,6 +514,7 @@ function PanchangPill({
   // today" result, for the rest of the mount.
   onRetryUnavailable?: () => void;
 }) {
+  const { language } = useLanguage();
   const pillText = onSurface ? theme.text : COLORS.homePwaPillText;
   const observanceText = onSurface ? theme.text : COLORS.homePwaObservanceText;
   const dotActive = onSurface ? theme.brand : COLORS.homePwaPillDotActive;
@@ -546,11 +549,46 @@ function PanchangPill({
       rows.push({ key: row.key, icon: row.icon, label: row.label, monthLabel: row.monthLabel, href: row.href });
     };
 
-    const formatObservancePillLabel = (label: string, name?: string | null, daysLeft?: number) => {
-      if (name) {
-        if (daysLeft === 0) return name;
-        if (daysLeft === 1) return `${name} · Tomorrow`;
-        if (typeof daysLeft === 'number' && daysLeft > 1) return `${name} · in ${daysLeft}d`;
+    const formatObservancePillLabel = (
+      label: string,
+      name?: string | null,
+      daysLeft?: number,
+      nameLocal?: string | null,
+      namePa?: string | null,
+      slug?: string | null,
+    ) => {
+      const fallbackLocal = language === 'hi'
+        ? (nameLocal || (slug ? lookupVratData(slug)?.nameLocal : null) || (name ? lookupVratData(name)?.nameLocal : null))
+        : (language === 'pa' ? namePa : null);
+
+      const selectedName = fallbackLocal || name;
+
+      if (selectedName) {
+        if (daysLeft === 0) return selectedName;
+        if (daysLeft === 1) {
+          if (language === 'hi') return `${selectedName} · कल`;
+          if (language === 'pa') return `${selectedName} · ਭਲਕੇ`;
+          return `${selectedName} · Tomorrow`;
+        }
+        if (typeof daysLeft === 'number' && daysLeft > 1) {
+          if (language === 'hi') return `${selectedName} · ${daysLeft} दिन में`;
+          if (language === 'pa') return `${selectedName} · ${daysLeft} ਦਿਨਾਂ ਵਿੱਚ`;
+          return `${selectedName} · in ${daysLeft}d`;
+        }
+      }
+      if (language === 'hi') {
+        return label
+          .replace(/^(today is|tomorrow is)\s+/i, '')
+          .replace(/\s+today$/i, '')
+          .replace(/\s+tomorrow$/i, ' · कल')
+          .replace(/\s+in\s+(\d+)\s+days$/i, ' · $1 दिन में');
+      }
+      if (language === 'pa') {
+        return label
+          .replace(/^(today is|tomorrow is)\s+/i, '')
+          .replace(/\s+today$/i, '')
+          .replace(/\s+tomorrow$/i, ' · ਭਲਕੇ')
+          .replace(/\s+in\s+(\d+)\s+days$/i, ' · $1 ਦਿਨਾਂ ਵਿੱਚ');
       }
       return label
         .replace(/^(today is|tomorrow is)\s+/i, '')
@@ -572,7 +610,14 @@ function PanchangPill({
       add(summary.observance ? {
         key: 'observance',
         icon: summary.observance.emoji ?? '🪔',
-        label: formatObservancePillLabel(summary.observance.label, summary.observance.name, summary.observance.daysLeft),
+        label: formatObservancePillLabel(
+          summary.observance.label,
+          summary.observance.name,
+          summary.observance.daysLeft,
+          summary.observance.nameLocal,
+          summary.observance.namePa,
+          summary.observance.routeSlug,
+        ),
         dedupeKey: summary.observance.name ? summary.observance.name.trim().toLowerCase() : undefined,
         monthLabel: summary.observance.monthLabel,
         href: resolvedObservanceHref,
@@ -594,7 +639,14 @@ function PanchangPill({
         add({
           key: `upcoming-${i}`,
           icon: entry.emoji ?? '🪔',
-          label: formatObservancePillLabel(entry.label, entry.name, entry.daysLeft),
+          label: formatObservancePillLabel(
+            entry.label,
+            entry.name,
+            entry.daysLeft,
+            entry.nameLocal,
+            entry.namePa,
+            entry.routeSlug,
+          ),
           dedupeKey: entry.name ? entry.name.trim().toLowerCase() : undefined,
           monthLabel: entry.monthLabel,
           href: resolvedEntryHref,
@@ -620,7 +672,7 @@ function PanchangPill({
     add({ key: 'nakshatra', icon: '✨', label: `${panchang.nakshatra} · ${panchang.yoga}` });
 
     return rows;
-  }, [kind, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.festivalLabel, summary.observance, summary.upcomingObservances, summary.vratLabel]);
+  }, [kind, language, panchang.nakshatra, panchang.samvatYear, panchang.tithi, panchang.yoga, summary.festivalLabel, summary.observance, summary.upcomingObservances, summary.vratLabel]);
   const total = slides.length;
 
   useEffect(() => {
@@ -679,6 +731,12 @@ function PanchangPill({
       );
     }
     if (calendarStatus === 'unavailable' || calendarStatus === 'stale' || calendarStatus === 'degraded') {
+      const statusLabel = calendarStatus === 'stale'
+        ? (language === 'hi' ? 'सुरक्षित तिथि · रीफ़्रेश करें' : language === 'pa' ? 'ਸੰਭਾਲੀ ਮਿਤੀ · ਤਾਜ਼ਾ ਕਰੋ' : 'Saved date · Refresh')
+        : calendarStatus === 'degraded'
+          ? (language === 'hi' ? 'सत्यापित तिथियाँ · जांचें' : language === 'pa' ? 'ਪ੍ਰਮਾਣਿਤ ਮਿਤੀਆਂ · ਜਾਂਚ ਕਰੋ' : 'Verified dates · Check coverage')
+          : (language === 'hi' ? 'जांच नहीं हो सकी · पुनः प्रयास' : language === 'pa' ? 'ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ · ਮੁੜ ਕੋਸ਼ਿਸ਼' : 'Couldn&apos;t check · Retry');
+
       return (
         <PressableSurface
           haptic="selection"
@@ -700,7 +758,7 @@ function PanchangPill({
         >
           <Feather name={calendarStatus === 'unavailable' ? 'cloud-off' : 'refresh-cw'} size={12} color={COLORS.homePwaPillText} />
           <Text style={{ ...TYPE.chip, fontSize: 12, lineHeight: 15, color: COLORS.homePwaPillText }} numberOfLines={1}>
-            {calendarStatus === 'stale' ? 'Saved date · Refresh' : calendarStatus === 'degraded' ? 'Verified dates · Check coverage' : 'Couldn&apos;t check · Retry'}
+            {statusLabel}
           </Text>
         </PressableSurface>
       );

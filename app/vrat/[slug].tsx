@@ -42,6 +42,111 @@ const FONT_PRESETS = [
   { label: 'A++', value: 3 },
 ];
 
+const VRAT_DETAIL_COPY = {
+  en: {
+    significance: 'Significance',
+    practiceRules: 'Practice & Fasting Rules',
+    fastType: 'Fast Type:',
+    parana: 'Parana (Breaking Fast):',
+    dos: "Recommended Practices (Do's)",
+    donts: "Restrictions (Don'ts)",
+    pujaItems: 'Puja Samagri',
+    mantra: 'Sacred Mantra',
+    canonical: 'Canonical',
+    upcoming: 'Upcoming',
+    backToCalendar: 'Back to Fasting Calendar',
+    occurrenceUnavailable: 'Occurrence Details Unavailable',
+    occurrenceUnavailableDesc: 'This specific observance occurrence is not active or could not be verified with the canonical calendar service. You can explore the sacred significance and practices below.',
+    observedToday: 'Observed today ✓',
+    markAsObserved: 'Mark as Observed',
+    practiceRecorded: 'Your practice is recorded',
+    earnKarma: 'Earn 25 karma for completing this vrat today',
+    aroundWorld: 'Around the World',
+    nextDate: 'Next date',
+    observingToday: 'Observing today',
+    allTime: 'All-time',
+    seekersOnShoonaya: 'seekers on Shoonaya',
+    observancesRecorded: 'observances recorded',
+    alternativeTraditions: 'Alternative Traditions / Dates:',
+    fastTypes: {
+      nirjala: 'Nirjala (Waterless)',
+      phalahar: 'Phalahar (Fruit-based)',
+      sattvic: 'Sattvic food',
+      ekbhukta: 'Ekbhukta (Single meal)',
+      partial: 'Partial fast',
+      none: 'None',
+    },
+  },
+  hi: {
+    significance: 'पावन महत्व',
+    practiceRules: 'व्रत नियम व विधि',
+    fastType: 'व्रत प्रकार:',
+    parana: 'पारणा (व्रत खोलना):',
+    dos: 'शुभ आचरण (क्या करें)',
+    donts: 'वर्जित आचरण (क्या न करें)',
+    pujaItems: 'पूजन सामग्री',
+    mantra: 'पावन मंत्र',
+    canonical: 'मान्य तिथि',
+    upcoming: 'आगामी',
+    backToCalendar: 'व्रत कैलेंडर पर वापस जाएं',
+    occurrenceUnavailable: 'तिथि विवरण उपलब्ध नहीं',
+    occurrenceUnavailableDesc: 'यह विशिष्ट पर्व तिथि वर्तमान में सक्रिय नहीं है अथवा मान्य कैलेंडर सेवा से सत्यापित नहीं हो सकी। आप नीचे इसका पावन महत्व और विधि देख सकते हैं।',
+    observedToday: 'आज पूर्ण हुआ ✓',
+    markAsObserved: 'व्रत पूर्ण अंकित करें',
+    practiceRecorded: 'आपकी साधना दर्ज हो गई है',
+    earnKarma: 'आज यह व्रत पूर्ण करने पर 25 कर्म अर्जित करें',
+    aroundWorld: 'विश्व भर में',
+    nextDate: 'अगली तिथि',
+    observingToday: 'आज व्रत कर रहे हैं',
+    allTime: 'कुल अब तक',
+    seekersOnShoonaya: 'शून्या पर साधक',
+    observancesRecorded: 'व्रत अनुष्ठान दर्ज',
+    alternativeTraditions: 'वैकल्पिक परंपराएं व तिथियां:',
+    fastTypes: {
+      nirjala: 'निर्जला',
+      phalahar: 'फलाहार',
+      sattvic: 'सात्विक भोजन',
+      ekbhukta: 'एकभुक्त (एक समय)',
+      partial: 'आंशिक उपवास',
+      none: 'सामान्य',
+    },
+  },
+  pa: {
+    significance: 'ਪਾਵਨ ਮਹੱਤਵ',
+    practiceRules: 'ਵਰਤ ਨਿਯਮ ਅਤੇ ਵਿਧੀ',
+    fastType: 'ਵਰਤ ਕਿਸਮ:',
+    parana: 'ਪਾਰਣਾ (ਵਰਤ ਖੋਲ੍ਹਣਾ):',
+    dos: 'ਸ਼ੁਭ ਆਚਰਣ (ਕੀ ਕਰੋ)',
+    donts: 'ਵਰਜਿਤ ਆਚਰਣ (ਕੀ ਨਾ ਕਰੋ)',
+    pujaItems: 'ਪੂਜਾ ਸਮੱਗਰੀ',
+    mantra: 'ਪਾਵਨ ਮੰਤਰ',
+    canonical: 'ਮੰਨਿਆ ਹੋਇਆ',
+    upcoming: 'ਆਉਣ ਵਾਲਾ',
+    backToCalendar: 'ਵਰਤ ਕੈਲੰਡਰ ਤੇ ਵਾਪਸ ਜਾਓ',
+    occurrenceUnavailable: 'ਤਾਰੀਖ ਵੇਰਵੇ ਉਪਲਬਧ ਨਹੀਂ',
+    occurrenceUnavailableDesc: 'ਇਹ ਵਿਸ਼ੇਸ਼ ਤਾਰੀਖ ਵਰਤਮਾਨ ਵਿੱਚ ਸਰਗਰਮ ਨਹੀਂ ਹੈ ਜਾਂ ਕੈਲੰਡਰ ਸੇਵਾ ਨਾਲ ਪ੍ਰਮਾਣਿਤ ਨਹੀਂ ਹੋ ਸਕੀ। ਤੁਸੀਂ ਹੇਠਾਂ ਇਸਦਾ ਮਹੱਤਵ ਅਤੇ ਵਿਧੀ ਪੜ੍ਹ ਸਕਦੇ ਹੋ।',
+    observedToday: 'ਅੱਜ ਪੂਰਾ ਹੋਇਆ ✓',
+    markAsObserved: 'ਵਰਤ ਪੂਰਾ ਦਰਜ ਕਰੋ',
+    practiceRecorded: 'ਤੁਹਾਡੀ ਸਾਧਨਾ ਦਰਜ ਹੋ ਗਈ ਹੈ',
+    earnKarma: 'ਅੱਜ ਇਹ ਵਰਤ ਪੂਰਾ ਕਰਨ ਤੇ 25 ਕਰਮ ਪ੍ਰਾਪਤ ਕਰੋ',
+    aroundWorld: 'ਦੁਨੀਆ ਭਰ ਵਿੱਚ',
+    nextDate: 'ਅਗਲੀ ਤਾਰੀਖ',
+    observingToday: 'ਅੱਜ ਵਰਤ ਰੱਖ ਰਹੇ ਹਨ',
+    allTime: 'ਹੁਣ ਤੱਕ ਕੁੱਲ',
+    seekersOnShoonaya: 'ਸ਼ੂਨਯਾ ਤੇ ਸਾਧਕ',
+    observancesRecorded: 'ਵਰਤ ਅਨੁਸ਼ਠਾਨ ਦਰਜ',
+    alternativeTraditions: 'ਹੋਰ ਪਰੰਪਰਾਵਾਂ ਅਤੇ ਤਾਰੀਖਾਂ:',
+    fastTypes: {
+      nirjala: 'ਨਿਰਜਲਾ',
+      phalahar: 'ਫਲਾਹਾਰ',
+      sattvic: 'ਸਾਤਵਿਕ ਭੋਜਨ',
+      ekbhukta: 'ਇੱਕਭੁਗਤ',
+      partial: 'ਅੰਸ਼ਿਕ ਵਰਤ',
+      none: 'ਸਧਾਰਨ',
+    },
+  },
+} as const;
+
 export default function VratDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ slug: string; occurrence_id?: string; date?: string }>();
@@ -247,11 +352,16 @@ export default function VratDetailScreen() {
   // just because the user's app language is Punjabi; use the original English
   // text until reviewed Punjabi content exists for this vrat.
   const showLocal = readerLanguage === 'hi' && hasLocalVrat;
+  const copy = VRAT_DETAIL_COPY[readerLanguage === 'hi' ? 'hi' : readerLanguage === 'pa' ? 'pa' : 'en'];
   const selectedName = showLocal && vrat.nameLocal ? vrat.nameLocal : vrat.name;
   const selectedTagline = showLocal && vrat.taglineLocal ? vrat.taglineLocal : vrat.tagline;
   const selectedSignificance = showLocal && vrat.significanceLocal ? vrat.significanceLocal : vrat.significance;
   const selectedPractice = showLocal && vrat.practiceLocal ? vrat.practiceLocal : vrat.practice;
   const selectedMantra = showLocal && vrat.mantraLocal ? vrat.mantraLocal : vrat.mantra;
+  const selectedDos = showLocal && vrat.dosLocal && vrat.dosLocal.length > 0 ? vrat.dosLocal : vrat.dos;
+  const selectedDonts = showLocal && vrat.dontsLocal && vrat.dontsLocal.length > 0 ? vrat.dontsLocal : vrat.donts;
+  const selectedBreakFastTime = showLocal && vrat.breakFastTimeLocal ? vrat.breakFastTimeLocal : vrat.breakFastTime;
+  const selectedFastingType = vrat.fastingType ? (copy.fastTypes[vrat.fastingType] ?? vrat.fastingType) : null;
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
   // Same rendered-image-card approach as app/shloka.tsx's share (via
@@ -328,7 +438,7 @@ export default function VratDetailScreen() {
                       marginLeft: 'auto',
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>Canonical</Text>
+                    <Text style={{ fontSize: 11, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>{copy.canonical}</Text>
                   </View>
                 ) : (
                   <View
@@ -340,7 +450,7 @@ export default function VratDetailScreen() {
                       marginLeft: 'auto',
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>Upcoming</Text>
+                    <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>{copy.upcoming}</Text>
                   </View>
                 )}
               </View>
@@ -366,7 +476,7 @@ export default function VratDetailScreen() {
               {occurrence.alternatives && occurrence.alternatives.length > 0 ? (
                 <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: theme.borderSoft }}>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>
-                    Alternative Traditions / Dates:
+                    {copy.alternativeTraditions}
                   </Text>
                   {occurrence.alternatives.map((alt, i) => (
                     <Text key={i} style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.text, marginTop: 2 }}>
@@ -395,11 +505,11 @@ export default function VratDetailScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Feather name="info" size={16} color={theme.dim} />
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>
-                    Occurrence Details Unavailable
+                    {copy.occurrenceUnavailable}
                   </Text>
                 </View>
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, marginTop: 4, lineHeight: 18 }}>
-                  This specific observance occurrence is not active or could not be verified with the canonical calendar service. You can explore the sacred significance and practices below.
+                  {copy.occurrenceUnavailableDesc}
                 </Text>
                 <PressableSurface
                   onPress={() => router.push('/vrat')}
@@ -413,7 +523,7 @@ export default function VratDetailScreen() {
                   }}
                 >
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
-                    Back to Fasting Calendar
+                    {copy.backToCalendar}
                   </Text>
                 </PressableSurface>
               </View>
@@ -441,7 +551,7 @@ export default function VratDetailScreen() {
               >
                 <Feather name="check-circle" size={18} color={COLORS.success} />
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.success }}>
-                  Observed today ✓ {observeCount > 1 ? `(${observeCount}× total)` : ''}
+                  {copy.observedToday} {observeCount > 1 ? `(${observeCount}× total)` : ''}
                 </Text>
               </View>
             ) : (
@@ -465,14 +575,14 @@ export default function VratDetailScreen() {
                   <>
                     <Text style={{ fontSize: 16 }}>🙏</Text>
                     <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.textOnBrand }}>
-                      Mark as Observed {observeCount > 0 ? `(${observeCount}× before)` : ''}
+                      {copy.markAsObserved} {observeCount > 0 ? `(${observeCount}× before)` : ''}
                     </Text>
                   </>
                 )}
               </PressableSurface>
             )}
             <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
-              {observedToday ? 'Your practice is recorded' : 'Earn 25 karma for completing this vrat today'}
+              {observedToday ? copy.practiceRecorded : copy.earnKarma}
             </Text>
           </Card>
         ) : null}
@@ -485,45 +595,45 @@ export default function VratDetailScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <Feather name="calendar" size={14} color={theme.dim} />
               <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Around the World
+                {copy.aroundWorld}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 12 }}>
               {globalStats.next_date ? (
                 <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    Next date
+                    {copy.nextDate}
                   </Text>
                   <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
-                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString('en', { day: 'numeric', month: 'short' })}
+                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString(readerLanguage === 'hi' ? 'hi-IN' : 'en', { day: 'numeric', month: 'short' })}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
-                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString('en', { weekday: 'long' })}
+                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString(readerLanguage === 'hi' ? 'hi-IN' : 'en', { weekday: 'long' })}
                   </Text>
                 </View>
               ) : null}
               {globalStats.today_count > 0 ? (
                 <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    Observing today
+                    {copy.observingToday}
                   </Text>
                   <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
                     {globalStats.today_count.toLocaleString()}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
-                    seekers on Shoonaya
+                    {copy.seekersOnShoonaya}
                   </Text>
                 </View>
               ) : globalStats.total_count > 0 ? (
                 <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    All-time
+                    {copy.allTime}
                   </Text>
                   <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
                     {globalStats.total_count.toLocaleString()}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
-                    observances recorded
+                    {copy.observancesRecorded}
                   </Text>
                 </View>
               ) : null}
@@ -538,39 +648,39 @@ export default function VratDetailScreen() {
 
         {/* Significance */}
         <Card style={{ padding: 16, marginBottom: 16 }}>
-          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Significance</Text>
+          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.significance}</Text>
           <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedSignificance}</Text>
         </Card>
 
         {/* Fasting & Practice */}
         <Card style={{ padding: 16, marginBottom: 16 }}>
-          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Practice & Fasting Rules</Text>
+          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.practiceRules}</Text>
           <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedPractice}</Text>
 
-          {vrat.fastingType ? (
+          {selectedFastingType ? (
             <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>Fast Type:</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.fastType}</Text>
               <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, textTransform: 'capitalize' }}>
-                  {vrat.fastingType}
+                  {selectedFastingType}
                 </Text>
               </View>
             </View>
           ) : null}
 
-          {vrat.breakFastTime ? (
+          {selectedBreakFastTime ? (
             <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>Parana (Breaking Fast):</Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{vrat.breakFastTime}</Text>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.parana}</Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{selectedBreakFastTime}</Text>
             </View>
           ) : null}
         </Card>
 
         {/* Do's and Don'ts if present */}
-        {vrat.dos && vrat.dos.length > 0 ? (
+        {selectedDos && selectedDos.length > 0 ? (
           <Card style={{ padding: 16, marginBottom: 16 }}>
-            <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 8 }}>Recommended Practices (Do's)</Text>
-            {vrat.dos.map((item, idx) => (
+            <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 8 }}>{copy.dos}</Text>
+            {selectedDos.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
                 <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
@@ -579,10 +689,10 @@ export default function VratDetailScreen() {
           </Card>
         ) : null}
 
-        {vrat.donts && vrat.donts.length > 0 ? (
+        {selectedDonts && selectedDonts.length > 0 ? (
           <Card style={{ padding: 16, marginBottom: 16 }}>
-            <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 8 }}>Restrictions (Don'ts)</Text>
-            {vrat.donts.map((item, idx) => (
+            <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 8 }}>{copy.donts}</Text>
+            {selectedDonts.map((item, idx) => (
               <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
                 <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
@@ -593,7 +703,7 @@ export default function VratDetailScreen() {
 
         {/* Sacred Mantra */}
         <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
-          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>Sacred Mantra</Text>
+          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.mantra}</Text>
           <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
             {selectedMantra}
           </Text>

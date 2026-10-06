@@ -18,9 +18,13 @@ export interface VratData {
   // ── Enriched fields ──────────────────────────────────────────────────────
   fastingType?: FastingType;
   breakFastTime?: string;      // e.g. "After moonrise" / "Next day sunrise"
+  breakFastTimeLocal?: string;
   dos?: string[];
+  dosLocal?: string[];
   donts?: string[];
+  dontsLocal?: string[];
   pujaItems?: string[];
+  pujaItemsLocal?: string[];
   kathaId?: string;            // links to katha-library.ts katha ID
 }
 
@@ -40,6 +44,7 @@ export const VRAT_DATABASE: Record<string, VratData> = {
     mantraLocal: 'ॐ नमो भगवते वासुदेवाय',
     fastingType: 'nirjala',
     breakFastTime: 'Next day (Dwadashi) after sunrise within the parana window',
+    breakFastTimeLocal: 'अगले दिन (द्वादशी) को सूर्योदय के उपरांत पारणा मुहूर्त में',
     dos: [
       'Wake before sunrise and take a bath before starting the fast',
       'Chant the name of Lord Vishnu throughout the day',
@@ -48,6 +53,15 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Keep a night vigil (jagaran) and spend the night in prayer or kirtan',
       'Donate food, clothing, or money to the needy on this day',
       'Break the fast (parana) on Dwadashi within the prescribed time window',
+    ],
+    dosLocal: [
+      'सूर्योदय से पूर्व उठकर पवित्र स्नान करें और व्रत का संकल्प लें',
+      'दिनभर भगवान विष्णु के पावन नामों और मंत्रों का जप करें',
+      'विष्णु सहस्रनाम का पाठ करें अथवा एकादशी महात्म्य कथा सुनें',
+      'भगवान नारायण को तुलसी पत्र अर्पित करें, आज के दिन यह परम पावन है',
+      'रात्रि में जागरण करें तथा भजन, कीर्तन व सत्संग में समय व्यतीत करें',
+      'किसी सुपात्र, ब्राह्मण या निर्धन को अन्न, वस्त्र या दान दें',
+      'द्वादशी तिथि के दिन निर्धारित पारणा काल में ही व्रत का पारण करें',
     ],
     donts: [
       'Do not eat grains (rice, wheat, dal, bread) or beans of any kind',
@@ -58,6 +72,15 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Do not speak harsh words or engage in gossip',
       'Do not touch or eat Tulsi leaves that have been plucked on Ekadashi itself',
     ],
+    dontsLocal: [
+      'अन्न (चावल, गेहूं, दाल, रोटी) व किसी भी प्रकार की फलियों का सेवन न करें',
+      'प्याज, लहसुन, तामसिक भोजन व मदिरा का सर्वथा त्याग करें',
+      'एकादशी के पावन दिन दिन के समय सोने से बचें',
+      'द्वादशी को पारणा समय से पहले या बाद में पारण न करें, शास्त्रोक्त समय पर ही करें',
+      'इस पावन दिन बाल या नाखून काटने से बचें',
+      'कटु वचन, कलह, क्रोध अथवा असत्य संभाषण न करें',
+      'एकादशी के दिन स्वयं तुलसी पत्र न तोड़ें, पूर्व संचित पत्र ही अर्पित करें',
+    ],
     pujaItems: [
       'Tulsi leaves (essential — do not substitute)',
       'Yellow flowers (especially marigold)',
@@ -67,6 +90,16 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Yellow cloth for the deity',
       'Fruits (banana, coconut, mango)',
       'Chandan (sandalwood paste)',
+    ],
+    pujaItemsLocal: [
+      'तुलसी दल (अनिवार्य, पूर्व संचित)',
+      'पीले पुष्प (विशेषतः गेंदा)',
+      'पंचामृत (दूध, दही, घी, शहद, शर्करा)',
+      'धूप, दीप एवं शुद्ध कर्पूर',
+      'तिल के तेल या शुद्ध देशी घी का दीपक',
+      'भगवान के लिए पीला वस्त्र',
+      'ऋतु फल (केला, नारियल, आम)',
+      'पीला चंदन व अक्षत',
     ],
     kathaId: 'katha-ekadashi-margashirsha-shukla',
   },
@@ -85,6 +118,7 @@ export const VRAT_DATABASE: Record<string, VratData> = {
     mantraLocal: 'ॐ सों सोमाय नमः',
     fastingType: 'partial',
     breakFastTime: 'After moonrise — offer Arghya to the moon first',
+    breakFastTimeLocal: 'चंद्रोदय के उपरांत, पहले चंद्रमा को अर्घ्य दें',
     dos: [
       'Take a bath at sunrise and wear white or light-coloured clothes',
       'Perform Satyanarayan Puja in the evening with family',
@@ -93,10 +127,23 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Share food and sweets with neighbours and the needy (Langar / Prasad)',
       'Recite Vishnu Sahasranama or Lalita Sahasranama',
     ],
+    dosLocal: [
+      'सूर्योदय के समय पवित्र स्नान करें और श्वेत या हल्के वस्त्र धारण करें',
+      'सायंकाल में सपरिवार सत्यनारायण भगवान की पावन कथा व पूजन करें',
+      'चंद्रोदय के समय पूर्ण चंद्रमा को जल (अर्घ्य) अर्पित करें',
+      'ईश्वर के समक्ष दीप प्रज्वलित करें और आंतरिक शांति का ध्यान करें',
+      'पड़ोसियों और निर्धनों के साथ प्रसाद व मिष्ठान बांटें',
+      'विष्णु सहस्रनाम अथवा ललिता सहस्रनाम का पाठ करें',
+    ],
     donts: [
       'Avoid non-vegetarian food and alcohol',
       'Avoid harsh speech and unnecessary conflict',
       'Do not begin the fast-breaking meal before offering Arghya to the moon',
+    ],
+    dontsLocal: [
+      'तामसिक भोजन, मदिरा एवं व्यसनों का पूर्णतः त्याग करें',
+      'कटु वचन और व्यर्थ विवाद से बचें',
+      'चंद्रमा को अर्घ्य देने से पूर्व भोजन ग्रहण न करें',
     ],
     pujaItems: [
       'Akshat (unbroken rice with turmeric)',
@@ -105,6 +152,14 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Camphor and incense',
       'Fruits and milk sweets',
       'Copper vessel for moon Arghya',
+    ],
+    pujaItemsLocal: [
+      'हल्दी युक्त अक्षत (अखंडित चावल)',
+      'श्वेत पुष्प (चमेली, श्वेत कमल)',
+      'पंचामृत',
+      'कर्पूर एवं धूप',
+      'ऋतु फल एवं दुग्ध निर्मित मिष्ठान',
+      'चंद्र अर्घ्य के लिए तांबे का पात्र',
     ],
     kathaId: 'katha-satyanarayan',
   },
@@ -123,6 +178,7 @@ export const VRAT_DATABASE: Record<string, VratData> = {
     mantraLocal: 'ॐ शांति शांति शांति',
     fastingType: 'sattvic',
     breakFastTime: 'After completing Tarpan at the river / after midday',
+    breakFastTimeLocal: 'पवित्र जलाशय या पात्र में तर्पण पूर्ण करने के उपरांत / मध्याह्न बाद',
     dos: [
       'Perform Pitru Tarpan at a river, pond, or dedicated Tarpan vessel',
       'Offer sesame seeds and water in the name of each ancestor (3 generations)',
@@ -131,11 +187,25 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Observe silence or limit speech — a day of reflection and gratitude',
       'Feed Brahmins or the poor as proxy offering to ancestors',
     ],
+    dosLocal: [
+      'पवित्र नदी, जलाशय अथवा शुद्ध पात्र में पितृ तर्पण करें',
+      'तीन पीढ़ियों के पूर्वजों के निमित्त काले तिल व जल से तर्पण करें',
+      'दिवंगत पूर्वजों की स्मृति में अन्न, वस्त्र अथवा धन का दान करें',
+      'संध्याकाल में दक्षिण दिशा की ओर तिल के तेल का दीपक जलाएं',
+      'मौन अथवा सीमित संभाषण रखें, यह कृतज्ञता और आत्म-अवलोकन का दिन है',
+      'ब्राह्मण, गोमाता या निर्धनों को भोजन कराएं',
+    ],
     donts: [
       'Avoid non-vegetarian food and alcohol — considered inauspicious for Pitru',
       'Do not start any new auspicious venture (wedding, housewarming, etc.)',
       'Avoid cutting hair or nails',
       'Do not waste food on this day',
+    ],
+    dontsLocal: [
+      'तामसिक भोजन व मदिरा से दूर रहें, पितरों के निमित्त यह वर्जित है',
+      'कोई नया सांसारिक शुभ कार्य (विवाह, गृह प्रवेश आदि) आरंभ न करें',
+      'बाल अथवा नाखून काटने से बचें',
+      'इस पावन दिन अन्न का अपव्यय न करें',
     ],
     pujaItems: [
       'Black sesame seeds (til)',
@@ -145,6 +215,15 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Sesame oil lamp',
       'White flowers',
       'Barley (jau)',
+    ],
+    pujaItemsLocal: [
+      'काले तिल',
+      'कुश घास',
+      'गंगाजल या शुद्ध जल',
+      'तर्पण के लिए तांबे की थाली व पात्र',
+      'तिल के तेल का दीपक',
+      'श्वेत पुष्प',
+      'जौ',
     ],
     kathaId: 'katha-amavasya-tarpan',
   },
@@ -163,6 +242,7 @@ export const VRAT_DATABASE: Record<string, VratData> = {
     mantraLocal: 'ॐ नमः शिवाय',
     fastingType: 'ekbhukta',
     breakFastTime: 'During Pradosh Kaal (1.5 hours before and after sunset)',
+    breakFastTimeLocal: 'प्रदोष काल में (सूर्यास्त के 1.5 घंटे पूर्व और पश्चात)',
     dos: [
       'Fast through the day, eating nothing until Pradosh Kaal',
       'Perform Shiva Abhishekam with milk, curd, honey, ghee, and rose water at twilight',
@@ -171,11 +251,25 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Light a ghee lamp and incense before the Shivalinga',
       'Recite Shiva Chalisa or Shiva Ashtakam during the evening puja',
     ],
+    dosLocal: [
+      'दिनभर उपवास रखें और प्रदोष काल तक निराहार रहें',
+      'गोधूलि वेला में दूध, दही, शहद, घी व गुलाब जल से शिव अभिषेक करें',
+      'भगवान शिव को प्रिय तीन दल वाले बिल्वपत्र अर्पित करें',
+      'प्रदोष वेला में 108 बार महामृत्युंजय मंत्र का जप करें',
+      'शिवलिंग के समक्ष शुद्ध घी का दीपक व धूप प्रज्वलित करें',
+      'संध्या पूजन के समय शिव चालीसा या शिवाष्टक का पाठ करें',
+    ],
     donts: [
       'Do not eat during the day before Pradosh Kaal',
       'Avoid onion, garlic, and non-vegetarian food entirely',
       'Do not break the fast before the twilight puja is complete',
       'Avoid speaking ill of anyone or engaging in dispute today',
+    ],
+    dontsLocal: [
+      'प्रदोष काल की पूजा से पहले दिन में अन्न ग्रहण न करें',
+      'प्याज, लहसुन और तामसिक भोजन का पूर्ण त्याग करें',
+      'संध्या पूजन संपन्न होने से पहले व्रत न खोलें',
+      'किसी की निंदा, कटु वचन अथवा विवाद में न पड़ें',
     ],
     pujaItems: [
       'Bilva leaves (bel patra) — 3 or 5 leaves, stem removed',
@@ -186,6 +280,16 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Sandalwood paste (chandan)',
       'Camphor and incense',
       'Ghee lamp',
+    ],
+    pujaItemsLocal: [
+      'बिल्व पत्र (अखंडित 3 या 5 पत्र)',
+      'अभिषेक के लिए कच्चा गाय का दूध',
+      'पंचामृत',
+      'धतूरा और मदार पुष्प',
+      'श्वेत पुष्प',
+      'सफेद चंदन',
+      'कर्पूर व धूप',
+      'शुद्ध घी का दीपक',
     ],
     kathaId: 'katha-pradosh-vrat',
   },
@@ -204,6 +308,7 @@ export const VRAT_DATABASE: Record<string, VratData> = {
     mantraLocal: 'ॐ गं गणपतये नमः',
     fastingType: 'partial',
     breakFastTime: 'After moonrise — sight the moon and offer Arghya first',
+    breakFastTimeLocal: 'चंद्रोदय के उपरांत, चंद्र दर्शन व अर्घ्य देने के पश्चात',
     dos: [
       'Fast from sunrise until moonrise — no grains or beans',
       'Offer Durva grass (21 blades tied together) to Ganesha — most sacred offering',
@@ -212,11 +317,25 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Light a lamp and apply red sindhoor to Ganesha\'s idol',
       'Break the fast only after sighting the moon and offering Arghya with rice',
     ],
+    dosLocal: [
+      'सूर्योदय से चंद्रोदय तक उपवास रखें, अन्न व फलियों से बचें',
+      'गणेश जी को 21 गांठ वाली दूर्वा अर्पित करें, यह अत्यंत प्रिय है',
+      'मोदक अथवा लड्डू का नैवेद्य अर्पित करें',
+      'गणेश अथर्वशीर्ष अथवा संकट नाशन गणेश स्तोत्र का पाठ करें',
+      'दीप जलाएं और गणेश जी को लाल सिंदूर का तिलक लगाएं',
+      'चंद्र दर्शन और अक्षत युक्त अर्घ्य देने के बाद ही व्रत खोलें',
+    ],
     donts: [
       'Never look at the moon directly on Ganesh Chaturthi itself — there is a specific curse associated with this',
       'Do not offer Tulsi leaves to Ganesha — He does not accept them due to a divine disagreement',
       'Do not eat rice before sighting the moon',
       'Avoid non-vegetarian food and alcohol',
+    ],
+    dontsLocal: [
+      'भाद्रपद गणेश चतुर्थी के दिन चंद्रमा को सीधे न देखें',
+      'गणेश जी को तुलसी पत्र कदापि न चढ़ाएं, यह वर्जित है',
+      'चंद्र दर्शन व अर्घ्य से पूर्व अन्न ग्रहण न करें',
+      'तामसिक भोजन व मदिरा का सर्वथा त्याग करें',
     ],
     pujaItems: [
       'Durva grass (most important)',
@@ -227,6 +346,16 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Coconut',
       'Camphor and incense',
       'Yellow cloth or thread for decoration',
+    ],
+    pujaItemsLocal: [
+      'दूर्वा घास (अत्यंत महत्वपूर्ण)',
+      'मोदक अथवा बेसन के लड्डू',
+      'लाल पुष्प (गुड़हल या गुलाब)',
+      'लाल सिंदूर / कुमकुम',
+      'पंचामृत',
+      'श्रीफल (नारियल)',
+      'कर्पूर व अगरबत्ती',
+      'पीला वस्त्र अथवा कलावा',
     ],
     kathaId: 'katha-sankashti-chaturthi',
   },
@@ -245,6 +374,7 @@ export const VRAT_DATABASE: Record<string, VratData> = {
     mantraLocal: 'ॐ तत्पुरुषाय विद्महे महादेवाय धीमहि',
     fastingType: 'nirjala',
     breakFastTime: 'Next morning after sunrise — the Chaturdashi night ends at dawn',
+    breakFastTimeLocal: 'अगली सुबह सूर्योदय के पश्चात, चतुर्दशी निशा समाप्ति पर',
     dos: [
       'Observe a complete day-long fast (Nirjala is highest, water-only or fruit acceptable)',
       'Perform Shiva Abhishekam four times — at midnight and the three praharas of night',
@@ -253,11 +383,25 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Chant Om Namah Shivaya or Maha Mrityunjaya Mantra continuously',
       'Visit a Shiva temple for the four-prahara puja if possible',
     ],
+    dosLocal: [
+      'दिनभर पूर्ण उपवास रखें (निर्जला सर्वोत्तम, जलाहार या फलाहार भी ग्राह्य)',
+      'रात्रि के चारों प्रहर में भगवान शिव का विधिपूर्वक अभिषेक करें',
+      'बिल्वपत्र, धतूरा, मदार पुष्प और श्वेत चंदन अर्पित करें',
+      'रात्रि में जागरण करें, चारों प्रहर शिव नाम संकीर्तन करें',
+      'ॐ नमः शिवाय अथवा महामृत्युंजय मंत्र का निरंतर जप करें',
+      'संभव हो तो शिवालय जाकर चार प्रहर की आरती में भाग लें',
+    ],
     donts: [
       'Do not sleep during the night of Shivaratri — Jagaran is essential',
       'Avoid all grains, non-vegetarian food, and alcohol',
       'Do not break the fast before sunrise on the following day',
       'Avoid Tulsi leaves for Shiva puja — He prefers Bilva',
+    ],
+    dontsLocal: [
+      'शिवरात्रि की रात सोने से बचें, रात्रि जागरण का विशेष महात्म्य है',
+      'अन्न, तामसिक भोजन व मदिरा का पूर्ण त्याग करें',
+      'अगले दिन सूर्योदय से पूर्व उपवास न तोड़ें',
+      'शिव जी को तुलसी दल न चढ़ाएं, केवल बिल्वपत्र अर्पित करें',
     ],
     pujaItems: [
       'Bilva leaves (bel patra) — most important',
@@ -268,6 +412,16 @@ export const VRAT_DATABASE: Record<string, VratData> = {
       'Camphor for Aarti',
       'Hemp seeds / bhang (traditional offering)',
       'Chandan and kumkum',
+    ],
+    pujaItemsLocal: [
+      'बिल्व पत्र (अखंडित)',
+      'कच्चा दूध (अभिषेक हेतु)',
+      'पंचामृत',
+      'धतूरा, आक व श्वेत पुष्प',
+      'भस्म',
+      'आरती हेतु कर्पूर',
+      'भांग (पारंपरिक नैवेद्य)',
+      'श्वेत चंदन',
     ],
     kathaId: 'katha-shivaratri',
   },
@@ -526,16 +680,28 @@ This observance is best treated as a named Vishnu festival, not merely a generic
     mantraLocal: 'ॐ नमो नारायणाय।',
     fastingType: 'nirjala',
     breakFastTime: 'Ekadashi parana on the following Dwadashi, per sampradaya',
+    breakFastTimeLocal: 'अपनी संप्रदाय के अनुसार अगली द्वादशी को पारणा मुहूर्त में',
     dos: [
       'Follow Ekadashi discipline and parana timing carefully',
       'Increase Vishnu nama-japa and stotra recitation',
       'Attend temple darshan if possible',
       'Follow sampradaya guidance where dates vary slightly',
     ],
+    dosLocal: [
+      'एकादशी व्रत के नियमों और पारणा समय का निष्ठापूर्वक पालन करें',
+      'विष्णु नाम-जप, श्रीमद्भगवद्गीता व विष्णु सहस्रनाम का पाठ बढ़ाएं',
+      'संभव हो तो मंदिर में वैकुण्ठ द्वार दर्शन में भाग लें',
+      'जहां तिथियों में संप्रदाय अनुसार भेद हो, अपनी परंपरा का अनुसरण करें',
+    ],
     donts: [
       'Do not flatten the observance into “just another Ekadashi” when temple tradition gives it a distinct place',
       'Avoid grains and tamasic food',
       'Do not break the fast outside the Dwadashi parana window',
+    ],
+    dontsLocal: [
+      'इसे केवल सामान्य एकादशी न मानें, मंदिर परंपरा में इसका सर्वोच्च स्थान है',
+      'अन्न, तामसिक भोजन व व्यसनों से पूर्णतः दूर रहें',
+      'द्वादशी के पारणा मुहूर्त के अतिरिक्त समय में व्रत न खोलें',
     ],
     pujaItems: [
       'Tulsi leaves',
@@ -544,6 +710,14 @@ This observance is best treated as a named Vishnu festival, not merely a generic
       'Ghee lamp',
       'Panchamrit',
       'Fruits for naivedya',
+    ],
+    pujaItemsLocal: [
+      'तुलसी दल (अनिवार्य)',
+      'पीले पुष्प',
+      'भगवान विष्णु या शालिग्राम जी का विग्रह',
+      'शुद्ध घी का दीपक',
+      'पंचामृत',
+      'नैवेद्य हेतु फल व मिष्ठान',
     ],
   },
 

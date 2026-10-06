@@ -14,6 +14,9 @@ import {
   SACRED_DAYS_CARD_HEIGHT,
   type SacredDaysObservance,
 } from '@/lib/sacred-days-deck';
+import { lookupVratData } from '@/lib/vrat-data';
+import { lookupFestivalContent } from '@/lib/festival-content.generated';
+import { resolveFestivalText } from '@/lib/festival-content-helpers';
 
 export type ObservanceEntryLike = SacredDaysObservance;
 
@@ -61,13 +64,40 @@ export function SacredDaysCard({
   const iconName = ROUTE_ICON[entry.routeKind] ?? 'panchang';
   const isToday = entry.daysLeft === 0;
   const copy = getNativeSeriesCardCopy(lang);
+
+  const matchedVrat = entry.routeKind === 'vrat' || !entry.routeKind
+    ? (lookupVratData(entry.routeSlug) || lookupVratData(entry.name))
+    : null;
+  const matchedFestival = entry.routeKind === 'festival' || !entry.routeKind
+    ? (lookupFestivalContent(entry.routeSlug) || lookupFestivalContent(entry.name))
+    : null;
+
+  const fallbackLocalName = lang === 'hi'
+    ? (matchedVrat?.nameLocal ?? (matchedFestival ? resolveFestivalText(matchedFestival.name, 'hi') : undefined))
+    : (lang === 'pa'
+        ? (matchedFestival ? resolveFestivalText(matchedFestival.name, 'pa') : undefined)
+        : undefined);
+
   const rawDisplayName = lang === 'en'
     ? entry.name
-    : pickSacredDayLocalizedText(entry.name, entry.nameLocal, entry.namePa, lang) ?? entry.name;
+    : (pickSacredDayLocalizedText(entry.name, entry.nameLocal, entry.namePa, lang) || fallbackLocalName || entry.name);
   const displayName = rawDisplayName || entry.label || 'Sacred Day';
+
+  const entryLocalDesc = lang === 'en'
+    ? entry.description
+    : (lang === 'pa'
+        ? (entry.descriptionPa || entry.descriptionLocal)
+        : entry.descriptionLocal);
+
+  const fallbackLocalDesc = lang === 'hi'
+    ? (matchedVrat?.taglineLocal || matchedVrat?.significanceLocal || (matchedFestival ? (resolveFestivalText(matchedFestival.tagline, 'hi') || resolveFestivalText(matchedFestival.significance, 'hi')) : undefined))
+    : (lang === 'pa'
+        ? (matchedFestival ? (resolveFestivalText(matchedFestival.tagline, 'pa') || resolveFestivalText(matchedFestival.significance, 'pa')) : undefined)
+        : undefined);
+
   const displayDescription = lang === 'en'
     ? entry.description
-    : pickSacredDayLocalizedText(entry.description, entry.descriptionLocal, entry.descriptionPa, lang) ?? entry.description;
+    : (entryLocalDesc || fallbackLocalDesc || entry.description);
   const gradient: readonly [string, string] = isDark
     ? [COLORS.navGlassTopDark, COLORS.navGlassBottomDark]
     : [COLORS.navGlassTopLight, COLORS.navGlassBottomLight];

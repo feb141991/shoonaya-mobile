@@ -35,10 +35,80 @@ import {
   recordRouteOpen,
   recordServerTiming,
 } from '@/lib/telemetry';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type Tradition = 'all' | 'hindu' | 'sikh' | 'buddhist' | 'jain';
 
 const TRADITION_FILTERS: Tradition[] = ['all', 'hindu', 'sikh', 'buddhist', 'jain'];
+
+const VRAT_LIST_COPY = {
+  en: {
+    title: 'Vrat & Fasting',
+    traditions: {
+      all: 'All',
+      hindu: 'Hindu',
+      sikh: 'Sikh',
+      buddhist: 'Buddhist',
+      jain: 'Jain',
+    },
+    alignFastingDates: 'Align Fasting Dates',
+    calendarPromptDesc: 'Set your sampradaya or regional calendar profile for exact observance and parana calculation.',
+    setCalendarProfile: 'Set Calendar Profile',
+    notNow: 'Not now',
+    todaysObservance: "Today's Observance",
+    canonicalToday: 'Canonical Today',
+    noActiveVratToday: 'No Active Vrat Today',
+    noActiveVratDesc: 'Today follows the standard nitya rhythm. View upcoming fasting days below.',
+    upcoming60Days: 'Upcoming in Next 60 Days',
+    upcomingError: 'Could not load upcoming observances.',
+    noUpcomingVrats: 'No upcoming vrats found in the selected tradition.',
+    vratLibrary: 'Vrat Library & Guidelines',
+  },
+  hi: {
+    title: 'व्रत एवं उपवास',
+    traditions: {
+      all: 'सभी',
+      hindu: 'सनातन',
+      sikh: 'सिख',
+      buddhist: 'बौद्ध',
+      jain: 'जैन',
+    },
+    alignFastingDates: 'सटीक व्रत तिथियां चुनें',
+    calendarPromptDesc: 'सटीक व्रत तिथि व पारण समय के लिए अपना संप्रदाय या क्षेत्रीय कैलेंडर चुनें।',
+    setCalendarProfile: 'कैलेंडर प्रोफाइल चुनें',
+    notNow: 'बाद में',
+    todaysObservance: 'आज का पावन व्रत',
+    canonicalToday: 'आज मान्य',
+    noActiveVratToday: 'आज कोई मुख्य व्रत नहीं',
+    noActiveVratDesc: 'आज नित्य नियम अनुसार दिनचर्या रखें। आगामी व्रत तिथियां नीचे देखें।',
+    upcoming60Days: 'अगले 60 दिनों में आगामी व्रत',
+    upcomingError: 'आगामी व्रत लोड नहीं किए जा सके।',
+    noUpcomingVrats: 'चयनित परंपरा में कोई आगामी व्रत नहीं मिला।',
+    vratLibrary: 'व्रत संग्रह व विधि-विधान',
+  },
+  pa: {
+    title: 'ਵਰਤ ਅਤੇ ਉਪਵਾਸ',
+    traditions: {
+      all: 'ਸਾਰੇ',
+      hindu: 'ਸਨਾਤਨ',
+      sikh: 'ਸਿੱਖ',
+      buddhist: 'ਬੋਧੀ',
+      jain: 'ਜੈਨ',
+    },
+    alignFastingDates: 'ਸਹੀ ਵਰਤ ਮਿਤੀਆਂ ਚੁਣੋ',
+    calendarPromptDesc: 'ਸਹੀ ਵਰਤ ਮਿਤੀ ਅਤੇ ਪਾਰਣਾ ਸਮੇਂ ਲਈ ਆਪਣਾ ਕੈਲੰਡਰ ਪ੍ਰੋਫਾਈਲ ਚੁਣੋ।',
+    setCalendarProfile: 'ਕੈਲੰਡਰ ਪ੍ਰੋਫਾਈਲ ਚੁਣੋ',
+    notNow: 'ਬਾਅਦ ਵਿੱਚ',
+    todaysObservance: 'ਅੱਜ ਦਾ ਪਾਵਨ ਵਰਤ',
+    canonicalToday: 'ਅੱਜ ਮਾਨਤਾ ਪ੍ਰਾਪਤ',
+    noActiveVratToday: 'ਅੱਜ ਕੋਈ ਮੁੱਖ ਵਰਤ ਨਹੀਂ',
+    noActiveVratDesc: 'ਅੱਜ ਨਿੱਤ ਨੇਮ ਅਨੁਸਾਰ ਦਿਨਚਰਿਆ ਰੱਖੋ। ਆਉਣ ਵਾਲੇ ਵਰਤ ਹੇਠਾਂ ਵੇਖੋ।',
+    upcoming60Days: 'ਅਗਲੇ 60 ਦਿਨਾਂ ਵਿੱਚ ਆਉਣ ਵਾਲੇ ਵਰਤ',
+    upcomingError: 'ਆਉਣ ਵਾਲੇ ਵਰਤ ਲੋਡ ਨਹੀਂ ਕੀਤੇ ਜਾ ਸਕੇ।',
+    noUpcomingVrats: 'ਚੁਣੀ ਗਈ ਪਰੰਪਰਾ ਵਿੱਚ ਕੋਈ ਆਉਣ ਵਾਲਾ ਵਰਤ ਨਹੀਂ ਮਿਲਿਆ।',
+    vratLibrary: 'ਵਰਤ ਸੰਗ੍ਰਹਿ ਅਤੇ ਨਿਯਮ',
+  },
+} as const;
 
 const DEFAULT_GEO: VratGeoState = {
   lat: 23.1765,
@@ -76,6 +146,9 @@ export default function VratScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = themeColor(isDark);
+  const { language } = useLanguage();
+  const copy = VRAT_LIST_COPY[language] ?? VRAT_LIST_COPY.en;
+  const isLocal = language === 'hi';
 
   const [loading, setLoading] = useState(true);
   const [geo, setGeo] = useState<VratGeoState>(DEFAULT_GEO);
@@ -388,7 +461,7 @@ export default function VratScreen() {
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
           <BackButton fallbackHref="/(tabs)/bhakti" handleHardwareBack />
-          <Text style={{ ...TYPE.title, color: theme.text, marginLeft: 12 }}>Vrat & Fasting</Text>
+          <Text style={{ ...TYPE.title, color: theme.text, marginLeft: 12 }}>{copy.title}</Text>
         </View>
 
         {/* Tradition filter chips */}
@@ -414,10 +487,9 @@ export default function VratScreen() {
                       fontFamily: active ? FONTS.sansSemiBold : FONTS.sans,
                       fontSize: 13,
                       color: active ? theme.textOnBrand : theme.text,
-                      textTransform: 'capitalize',
                     }}
                   >
-                    {t}
+                    {copy.traditions[t] ?? t}
                   </Text>
                 </Pressable>
               );
@@ -438,9 +510,9 @@ export default function VratScreen() {
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 4 }}>Align Fasting Dates</Text>
+                <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 4 }}>{copy.alignFastingDates}</Text>
                 <Text style={{ ...TYPE.caption, color: theme.text, lineHeight: 18 }}>
-                  Set your sampradaya or regional calendar profile for exact observance and parana calculation.
+                  {copy.calendarPromptDesc}
                 </Text>
               </View>
               <Pressable onPress={handleDismissPrompt} hitSlop={8}>
@@ -458,7 +530,7 @@ export default function VratScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: '#1c1208' }}>Set Calendar Profile</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: '#1c1208' }}>{copy.setCalendarProfile}</Text>
               </PressableSurface>
               <Pressable
                 onPress={handleDismissPrompt}
@@ -469,14 +541,14 @@ export default function VratScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>Not now</Text>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.dim }}>{copy.notNow}</Text>
               </Pressable>
             </View>
           </Card>
         ) : null}
 
         {/* Section: Today's Vrat (Determined Exclusively from Canonical Calendar) */}
-        <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Today's Observance</Text>
+        <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.todaysObservance}</Text>
         {todayVratOccurrence ? (
           <PressableSurface
             onPress={() => openVratDetail(todayVratOccurrence.vratData, todayVratOccurrence.observance)}
@@ -493,12 +565,20 @@ export default function VratScreen() {
               <Text style={{ fontSize: 32 }}>{todayVratOccurrence.vratData.emoji}</Text>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ ...TYPE.section, color: theme.text }}>{todayVratOccurrence.vratData.name}</Text>
+                  <Text style={{ ...TYPE.section, color: theme.text }}>
+                    {isLocal
+                      ? (todayVratOccurrence.vratData.nameLocal || todayVratOccurrence.vratData.name)
+                      : todayVratOccurrence.vratData.name}
+                  </Text>
                   <View style={{ backgroundColor: 'rgba(134,187,110,0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ fontSize: 10, color: '#5aaa38', fontFamily: FONTS.sansSemiBold }}>Canonical Today</Text>
+                    <Text style={{ fontSize: 10, color: '#5aaa38', fontFamily: FONTS.sansSemiBold }}>{copy.canonicalToday}</Text>
                   </View>
                 </View>
-                <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{todayVratOccurrence.vratData.tagline}</Text>
+                <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
+                  {isLocal
+                    ? (todayVratOccurrence.vratData.taglineLocal || todayVratOccurrence.vratData.tagline)
+                    : todayVratOccurrence.vratData.tagline}
+                </Text>
               </View>
               <Feather name="chevron-right" size={20} color={theme.dim} />
             </View>
@@ -508,9 +588,9 @@ export default function VratScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Text style={{ fontSize: 24 }}>🌿</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.section, color: theme.text }}>No Active Vrat Today</Text>
+                <Text style={{ ...TYPE.section, color: theme.text }}>{copy.noActiveVratToday}</Text>
                 <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
-                  Today follows the standard nitya rhythm. View upcoming fasting days below.
+                  {copy.noActiveVratDesc}
                 </Text>
               </View>
             </View>
@@ -518,10 +598,10 @@ export default function VratScreen() {
         )}
 
         {/* Section: Upcoming Vrats (Canonical Calendar Feed) */}
-        <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Upcoming in Next 60 Days</Text>
+        <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.upcoming60Days}</Text>
         {upcomingError ? (
           <Card style={{ padding: 16, marginBottom: 20 }}>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>Could not load upcoming observances.</Text>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>{copy.upcomingError}</Text>
           </Card>
         ) : upcomingVrats.length > 0 ? (
           <View style={{ gap: 8, marginBottom: 24 }}>
@@ -542,7 +622,11 @@ export default function VratScreen() {
               >
                 <Text style={{ fontSize: 24 }}>{upcoming.vratData.emoji}</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ ...TYPE.section, fontSize: 14, color: theme.text }}>{upcoming.vratData.name}</Text>
+                  <Text style={{ ...TYPE.section, fontSize: 14, color: theme.text }}>
+                    {isLocal
+                      ? (upcoming.vratData.nameLocal || upcoming.vratData.name)
+                      : upcoming.vratData.name}
+                  </Text>
                   <Text style={{ ...TYPE.caption, color: theme.dim }}>{upcoming.date}</Text>
                 </View>
                 <Feather name="chevron-right" size={18} color={theme.dim} />
@@ -551,12 +635,12 @@ export default function VratScreen() {
           </View>
         ) : (
           <Card style={{ padding: 16, marginBottom: 24 }}>
-            <Text style={{ ...TYPE.body, color: theme.dim }}>No upcoming vrats found in the selected tradition.</Text>
+            <Text style={{ ...TYPE.body, color: theme.dim }}>{copy.noUpcomingVrats}</Text>
           </Card>
         )}
 
         {/* Section: Complete Vrat Library (Catalogue Overview) */}
-        <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>Vrat Library & Guidelines</Text>
+        <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.vratLibrary}</Text>
         <View style={{ gap: 10 }}>
           {vrats.map((vrat) => (
             <PressableSurface
@@ -575,9 +659,11 @@ export default function VratScreen() {
             >
               <Text style={{ fontSize: 24 }}>{vrat.emoji}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.section, fontSize: 14, color: theme.text }}>{vrat.name}</Text>
+                <Text style={{ ...TYPE.section, fontSize: 14, color: theme.text }}>
+                  {isLocal ? (vrat.nameLocal || vrat.name) : vrat.name}
+                </Text>
                 <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                  {vrat.tagline}
+                  {isLocal ? (vrat.taglineLocal || vrat.tagline) : vrat.tagline}
                 </Text>
               </View>
               <Feather name="chevron-right" size={18} color={theme.dim} />
