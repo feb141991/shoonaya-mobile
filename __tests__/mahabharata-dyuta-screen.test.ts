@@ -33,9 +33,14 @@ describe('Mahabharata Dyuta screen human actions', () => {
     assert.match(screen, /function RoundTrack\(/);
     assert.match(screen, /accessibilityRole="progressbar"/);
     assert.match(screen, /size=\{72\}/);
+    assert.match(screen, /function TurnResult\(/);
+    assert.match(screen, /turn\.initialDice\[turn\.rerolledIndex\]/);
+    assert.match(screen, /match\.totals\[latestTurn\.side\]/);
     for (const language of ['en', 'hi', 'pa'] as const) {
       assert.ok(DYUTA_COPY[language].boardTitle.trim().length > 0, `${language} needs a localized board title`);
       assert.ok(DYUTA_COPY[language].versus.trim().length > 0, `${language} needs a localized versus label`);
+      assert.ok(DYUTA_COPY[language].scoredPoints.includes('{points}'), `${language} needs a points placeholder`);
+      assert.ok(DYUTA_COPY[language].scoredPoints.includes('{total}'), `${language} needs a total placeholder`);
     }
   });
 

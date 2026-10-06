@@ -21,6 +21,10 @@ export type DyutaCopy = {
   offlineLabel: string;
   guideName: string;
   guideRule: string;
+  lastTurn: string;
+  keptBoth: string;
+  rerolledDie: string;
+  scoredPoints: string;
   modeTitle: string;
   soloMode: string;
   passAndPlayMode: string;
@@ -145,6 +149,10 @@ export const DYUTA_COPY: Record<AppLanguage, DyutaCopy> = {
     offlineLabel: 'Offline · no account needed',
     guideName: 'Guide',
     guideRule: 'At this difficulty the Guide rerolls its lower die on {threshold}. The dice odds are unchanged.',
+    lastTurn: 'Last turn',
+    keptBoth: 'Kept both dice',
+    rerolledDie: 'Rerolled {die}: {from} → {to}',
+    scoredPoints: 'Scored {points} points · total {total}',
     modeTitle: 'Choose how to play',
     soloMode: 'Solo with Guide',
     passAndPlayMode: 'Pass and play',
@@ -232,6 +240,10 @@ export const DYUTA_COPY: Record<AppLanguage, DyutaCopy> = {
     offlineLabel: 'ऑफ़लाइन · खाते की ज़रूरत नहीं',
     guideName: 'साथी',
     guideRule: 'इस स्तर पर साथी कम अंक वाला पासा {threshold} आने पर फिर फेंकता है। पासों की संभावना नहीं बदलती।',
+    lastTurn: 'पिछली बारी',
+    keptBoth: 'दोनों पासे रखे',
+    rerolledDie: '{die} फिर फेंका: {from} → {to}',
+    scoredPoints: '{points} अंक मिले · कुल {total}',
     modeTitle: 'खेलने का तरीका चुनें',
     soloMode: 'साथी के साथ अकेले',
     passAndPlayMode: 'बारी-बारी से खेलें',
@@ -319,6 +331,10 @@ export const DYUTA_COPY: Record<AppLanguage, DyutaCopy> = {
     offlineLabel: 'ਆਫ਼ਲਾਈਨ · ਖਾਤੇ ਦੀ ਲੋੜ ਨਹੀਂ',
     guideName: 'ਸਾਥੀ',
     guideRule: 'ਇਸ ਪੱਧਰ ਤੇ ਸਾਥੀ ਘੱਟ ਅੰਕ ਵਾਲਾ ਪਾਸਾ {threshold} ਆਉਣ ਤੇ ਮੁੜ ਸੁੱਟਦਾ ਹੈ। ਪਾਸਿਆਂ ਦੀ ਸੰਭਾਵਨਾ ਨਹੀਂ ਬਦਲਦੀ।',
+    lastTurn: 'ਪਿਛਲੀ ਵਾਰੀ',
+    keptBoth: 'ਦੋਵੇਂ ਪਾਸੇ ਰੱਖੇ',
+    rerolledDie: '{die} ਮੁੜ ਸੁੱਟਿਆ: {from} → {to}',
+    scoredPoints: '{points} ਅੰਕ ਮਿਲੇ · ਕੁੱਲ {total}',
     modeTitle: 'ਖੇਡਣ ਦਾ ਤਰੀਕਾ ਚੁਣੋ',
     soloMode: 'ਸਾਥੀ ਨਾਲ ਇਕੱਲੇ',
     passAndPlayMode: 'ਵਾਰੀ-ਵਾਰੀ ਖੇਡੋ',

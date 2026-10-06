@@ -372,7 +372,6 @@ export default function DyutaScreen() {
     || (match?.mode === 'pass_and_play' && match.phase === 'guide_decision');
   const isPlayerTurn = match?.phase === 'awaiting_roll'
     && (match.mode === 'pass_and_play' || match.activeSide === 'player');
-  const currentDice = match?.currentRoll?.finalDice ?? null;
   const playerOneLabel = match?.mode === 'pass_and_play' ? match.playerNames.player : copy.player;
   const playerTwoLabel = match?.mode === 'pass_and_play' ? match.playerNames.guide : copy.guideName;
   const statusTitle = !match
@@ -428,6 +427,7 @@ export default function DyutaScreen() {
             statusTitle={statusTitle}
             prompt={isHumanDecision ? copy.chooseAction : match.mode === 'solo' && match.activeSide === 'guide' ? copy.waitingForGuide : match.phase === 'handoff' ? copy.handoffPrompt.replace('{name}', match.playerNames[match.activeSide]) : copy.rollPrompt}
             guideBusy={guideBusy}
+            latestTurn={latestTurn}
             theme={theme}
             copy={copy}
           />
@@ -648,14 +648,6 @@ export default function DyutaScreen() {
           </>
         ) : null}
 
-        {latestTurn && match?.phase !== 'complete' ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.xs }}>
-            <Feather name="activity" size={14} color={theme.dim} />
-            <Text style={{ ...TYPE.caption, color: theme.dim }}>
-              {latestTurn.side === 'player' ? playerOneLabel : playerTwoLabel}: {latestTurn.finalDice[0]} + {latestTurn.finalDice[1]} = {latestTurn.points} {copy.points}
-            </Text>
-          </View>
-        ) : null}
       </ScrollView>
     </Screen>
   );
@@ -668,6 +660,7 @@ function GameBoard({
   statusTitle,
   prompt,
   guideBusy,
+  latestTurn,
   theme,
   copy,
 }: {
@@ -677,6 +670,7 @@ function GameBoard({
   statusTitle: string;
   prompt: string;
   guideBusy: boolean;
+  latestTurn: DyutaMatchState['history'][number] | null;
   theme: ReturnType<typeof themeColor>;
   copy: DyutaCopy;
 }) {
@@ -729,8 +723,64 @@ function GameBoard({
         {guideBusy ? <ActivityIndicator size="small" color={theme.brand} /> : null}
       </View>
 
+      {latestTurn ? (
+        <TurnResult
+          turn={latestTurn}
+          playerLabel={latestTurn.side === 'player' ? playerOneLabel : playerTwoLabel}
+          total={match.totals[latestTurn.side]}
+          theme={theme}
+          copy={copy}
+        />
+      ) : null}
+
       <RoundTrack match={match} label={copy.round} theme={theme} />
     </Card>
+  );
+}
+
+function TurnResult({ turn, playerLabel, total, theme, copy }: {
+  turn: DyutaMatchState['history'][number];
+  playerLabel: string;
+  total: number;
+  theme: ReturnType<typeof themeColor>;
+  copy: DyutaCopy;
+}) {
+  const rerollDescription = turn.rerolledIndex === null
+    ? copy.keptBoth
+    : copy.rerolledDie
+      .replace('{die}', turn.rerolledIndex === 0 ? copy.firstDie : copy.secondDie)
+      .replace('{from}', String(turn.initialDice[turn.rerolledIndex]))
+      .replace('{to}', String(turn.finalDice[turn.rerolledIndex]));
+  const scoreDescription = copy.scoredPoints
+    .replace('{points}', String(turn.points))
+    .replace('{total}', String(total));
+
+  return (
+    <View
+      accessible
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={`${copy.lastTurn}. ${playerLabel}. ${rerollDescription}. ${scoreDescription}`}
+      style={{ padding: SPACING.md, borderRadius: RADII.lg, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.bg, gap: SPACING.sm }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.sm }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ ...TYPE.chip, color: theme.brand, textTransform: 'uppercase' }}>{copy.lastTurn}</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ ...TYPE.label, color: theme.text }}>{playerLabel}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
+          <DiceFace value={turn.finalDice[0]} theme={theme} label={`${playerLabel}, ${copy.firstDie}`} size={44} />
+          <Text style={{ ...TYPE.label, color: theme.dim }}>+</Text>
+          <DiceFace value={turn.finalDice[1]} theme={theme} label={`${playerLabel}, ${copy.secondDie}`} size={44} />
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm }}>
+        <Feather name={turn.rerolledIndex === null ? 'check-circle' : 'repeat'} size={16} color={theme.brand} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>{rerollDescription}</Text>
+          <Text style={{ ...TYPE.label, color: theme.text }}>{scoreDescription}</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
