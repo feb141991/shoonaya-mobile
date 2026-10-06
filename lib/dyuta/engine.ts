@@ -158,6 +158,18 @@ export function getPublicResponseState(state: DyutaMatchState): DyutaPublicRespo
   return { round: state.round, declaredStake: state.declaredStake, responderSeals: state.seals[state.activeSide], challengerSeals: state.seals[state.challenger], roundsRemaining: DYUTA_ROUND_COUNT - state.round + 1 };
 }
 
+/**
+ * Dice the current device may show. Concealed throws stay hidden through
+ * handoffs and responses, and a solo Guide's throw is never shown before the
+ * round is revealed in history.
+ */
+export function getVisibleDice(state: DyutaMatchState | null): DicePair | null {
+  if (!state || state.phase === 'handoff' || state.phase === 'awaiting_response' || state.phase === 'complete') return null;
+  if (state.mode === 'solo' && state.activeSide === 'guide') return null;
+  if (state.activeSide === state.challenger) return state.challengerRoll?.finalDice ?? null;
+  return state.responderRoll?.finalDice ?? null;
+}
+
 export function maxAvailableStake(state: DyutaMatchState): DyutaStake {
   return Math.max(1, Math.min(3, state.seals.player, state.seals.guide)) as DyutaStake;
 }
@@ -209,7 +221,15 @@ function isStake(value: unknown): value is DyutaStake { return value === 1 || va
 function validateDicePair(dice: readonly number[]): asserts dice is DicePair { if (!Array.isArray(dice) || dice.length !== 2 || !dice.every(isDieValue)) throw new TypeError('A Dyuta throw must contain exactly two dice with values from 1 to 6.'); }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }
 function isDicePair(value: unknown): value is DicePair { return Array.isArray(value) && value.length === 2 && value.every(isDieValue); }
-function isRoll(value: unknown): value is DyutaRoll { return isRecord(value) && isDicePair(value.initialDice) && isDicePair(value.finalDice) && (value.rerolledIndex === null || value.rerolledIndex === 0 || value.rerolledIndex === 1); }
+function isRoll(value: unknown): value is DyutaRoll {
+  if (!isRecord(value) || !isDicePair(value.initialDice) || !isDicePair(value.finalDice)) return false;
+  const { initialDice, finalDice, rerolledIndex } = value;
+  // A kept throw is unchanged; a reroll changes at most the chosen die.
+  if (rerolledIndex === null) return initialDice[0] === finalDice[0] && initialDice[1] === finalDice[1];
+  if (rerolledIndex !== 0 && rerolledIndex !== 1) return false;
+  const untouched = rerolledIndex === 0 ? 1 : 0;
+  return initialDice[untouched] === finalDice[untouched];
+}
 
 /** Strict validation for local saves. Pre-bluff saves are retired instead of being misrepresented under this new contract. */
 export function isDyutaMatchState(value: unknown): value is DyutaMatchState {
@@ -230,9 +250,38 @@ export function isDyutaMatchState(value: unknown): value is DyutaMatchState {
   if (value.challengerRoll !== null && !isRoll(value.challengerRoll)) return false;
   if (value.responderRoll !== null && !isRoll(value.responderRoll)) return false;
   if (value.declaredStake !== null && !isStake(value.declaredStake)) return false;
-  if (value.phase === 'handoff' ? value.mode !== 'pass_and_play' || typeof value.pendingPhase !== 'string' : value.pendingPhase !== null) return false;
+  const playablePhases: PlayableDyutaPhase[] = ['awaiting_challenger_roll', 'challenger_decision', 'awaiting_declaration', 'awaiting_response', 'awaiting_responder_roll', 'responder_decision'];
+  if (value.phase === 'handoff' ? value.mode !== 'pass_and_play' || !playablePhases.includes(value.pendingPhase as PlayableDyutaPhase) : value.pendingPhase !== null) return false;
+  if (value.phase !== 'complete' && !hasPhaseInvariants(value as DyutaMatchState)) return false;
+  if (value.phase === 'complete' && (value.challengerRoll !== null || value.responderRoll !== null || value.declaredStake !== null)) return false;
   if (value.history.length > DYUTA_ROUND_COUNT) return false;
-  for (let index = 0; index < value.history.length; index += 1) { const record = value.history[index]; if (!isRecord(record) || record.round !== index + 1 || !isStake(record.declaredStake) || !isRoll(record.challengerRoll) || (record.response !== 'accept' && record.response !== 'yield')) return false; if (record.response === 'accept' && !isRoll(record.responderRoll)) return false; if (record.response === 'yield' && record.responderRoll !== null) return false; }
+  for (let index = 0; index < value.history.length; index += 1) { const record = value.history[index]; if (!isRecord(record) || record.round !== index + 1 || record.challenger !== (index % 2 === 0 ? 'player' : 'guide') || !isStake(record.declaredStake) || !isRoll(record.challengerRoll) || (record.response !== 'accept' && record.response !== 'yield')) return false; if (record.response === 'accept' && !isRoll(record.responderRoll)) return false; if (record.response === 'yield' && record.responderRoll !== null) return false; }
   if (value.phase === 'complete') return value.history.length > 0 && (value.history.length === DYUTA_ROUND_COUNT || value.seals.player === 0 || value.seals.guide === 0);
   return value.history.length === value.round - 1;
+}
+
+/** Each phase requires exactly the throws and declaration the next legal action reads. */
+function hasPhaseInvariants(state: DyutaMatchState): boolean {
+  const phase = state.phase === 'handoff' ? state.pendingPhase : state.phase;
+  if (!phase) return false;
+  if (state.challenger !== (state.round % 2 === 1 ? 'player' : 'guide')) return false;
+  if (state.seals.player === 0 || state.seals.guide === 0) return false;
+  const responder = otherSide(state.challenger);
+  const { challengerRoll, responderRoll, declaredStake } = state;
+  if (declaredStake !== null && declaredStake > maxAvailableStake(state)) return false;
+  switch (phase) {
+    case 'awaiting_challenger_roll':
+      return state.activeSide === state.challenger && !challengerRoll && !responderRoll && declaredStake === null;
+    case 'challenger_decision':
+      return state.activeSide === state.challenger && !!challengerRoll && challengerRoll.rerolledIndex === null && !responderRoll && declaredStake === null;
+    case 'awaiting_declaration':
+      return state.activeSide === state.challenger && !!challengerRoll && !responderRoll && declaredStake === null;
+    case 'awaiting_response':
+    case 'awaiting_responder_roll':
+      return state.activeSide === responder && !!challengerRoll && !responderRoll && declaredStake !== null;
+    case 'responder_decision':
+      return state.activeSide === responder && !!challengerRoll && !!responderRoll && responderRoll.rerolledIndex === null && declaredStake !== null;
+    default:
+      return false;
+  }
 }

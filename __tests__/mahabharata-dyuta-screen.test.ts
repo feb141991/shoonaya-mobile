@@ -37,4 +37,48 @@ describe('Dyuta Sabha product surface', () => {
       assert.ok(DYUTA_COPY[language].storyBoundary.match(/Shoonaya|शून्य|ਸ਼ੂਨਿਆ|interpretation|व्याख्या|ਵਿਆਖਿਆ/i));
     }
   });
+
+  it('renders dice only through the engine visibility contract', () => {
+    assert.match(screen, /const visibleRoll = getVisibleDice\(match\)/);
+    assert.doesNotMatch(screen, /challengerRoll\?\.finalDice|responderRoll\?\.finalDice/);
+  });
+
+  it('keeps difficulty, identity, save slots, tutorial, source notes and haptics reachable', () => {
+    assert.match(screen, /difficultyEasy/);
+    assert.match(screen, /difficultyMedium/);
+    assert.match(screen, /difficultyHard/);
+    assert.match(screen, /function IdentityChoices\(/);
+    assert.match(screen, /<IdentityChoices /);
+    assert.match(screen, /onFaction\('pandavas'\)/);
+    assert.match(screen, /onFaction\('kauravas'\)/);
+    assert.match(screen, /<Feather name=\{avatar\}/);
+    assert.match(screen, /saveDyutaMatchCopy\(match\)/);
+    assert.match(screen, /readDyutaSavedMatches\(\)/);
+    assert.match(screen, /onLoad=\{loadCopy\}/);
+    assert.match(screen, /deleteDyutaSavedMatch\(saved\.id\)/);
+    assert.match(screen, /savedMatches\.length >= MAX_DYUTA_SAVED_MATCHES/);
+    assert.match(screen, /markDyutaTutorialCompleted\(\)/);
+    assert.match(screen, /copy\.factSourceLabel/);
+    assert.match(screen, /BORI Critical Edition · Mahabharata 2\.53\.4–5; Stage 0 evidence review/);
+    assert.match(screen, /writeDyutaPreferences\(\{ hapticsEnabled: enabled \}\)/);
+    // GameExtras must be mounted on both the setup and in-match screens.
+    assert.equal(screen.match(/<GameExtras/g)?.length, 2);
+    assert.doesNotMatch(screen, /haptic="selection"/, 'every control must honour the haptics preference');
+    for (const language of ['en', 'hi', 'pa'] as const) {
+      const copy = DYUTA_COPY[language];
+      for (const key of ['difficultyEasy', 'difficultyMedium', 'difficultyHard', 'pandavas', 'kauravas', 'avatarSun', 'colorGold', 'tutorialTitle', 'factsTitle', 'savedMatchesTitle', 'hapticsTitle'] as const) {
+        assert.ok(copy[key].trim().length > 0, `${language}.${key} must have localized copy`);
+      }
+    }
+  });
+
+  it('records a completion only on a live transition, not when restoring a finished match', () => {
+    // Hydration and save-loading must seed the "already complete" ref before the match is set,
+    // so the completion effect cannot fire for a match that was already complete.
+    assert.match(screen, /previousComplete\.current = saved\?\.phase === 'complete'; setMatch\(saved\)/);
+    assert.match(screen, /previousComplete\.current = saved\.match\.phase === 'complete'; setMatch\(saved\.match\)/);
+    assert.match(screen, /if \(complete && !previousComplete\.current\) void recordDyutaMatchCompletion\(\)/);
+    assert.equal(screen.match(/recordDyutaMatchCompletion\(\)/g)?.length, 1);
+  });
 });
+
