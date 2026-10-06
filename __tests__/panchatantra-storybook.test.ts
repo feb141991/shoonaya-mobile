@@ -92,6 +92,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
     assert.equal(hasPanchatantraArtwork('panchatantra-dove-king-and-net'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-mongoose-and-child'), true);
     assert.equal(hasPanchatantraArtwork('panchatantra-foolish-friend-monkey'), true);
+    assert.equal(hasPanchatantraArtwork('panchatantra-two-fish-and-frog'), true);
 
     const source = getPanchatantraArtworkSource('panchatantra-camel-bell');
     assert.ok(source, 'Artwork source should resolve');
@@ -225,6 +226,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 1: Masterwork cover artwork
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-moon-lake-rabbits'), 1);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-two-fish-and-frog'), 1);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
