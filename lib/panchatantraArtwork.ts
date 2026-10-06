@@ -145,6 +145,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/talkative-tortoise-5.jpg'),
     require('@/assets/panchatantra/talkative-tortoise-6.jpg'),
   ],
+  'panchatantra-two-fish-and-frog': [
+    require('@/assets/panchatantra/two-fish-frog-1.jpg'),
+    require('@/assets/panchatantra/two-fish-frog-2.jpg'),
+    require('@/assets/panchatantra/two-fish-frog-3.jpg'),
+    require('@/assets/panchatantra/two-fish-frog-4.jpg'),
+    require('@/assets/panchatantra/two-fish-frog-5.jpg'),
+    require('@/assets/panchatantra/two-fish-frog-6.jpg'),
+  ],
 };
 
 /**
