@@ -60,6 +60,7 @@ const ICON_ASSETS: Partial<Record<SacredIconName, ImageSource>> = {
 };
 
 const FULL_COLOR_ASSETS = new Set<SacredIconName>([
+  'bhakti',
   'japa',
   'mandali',
   'nitya',

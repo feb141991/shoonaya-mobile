@@ -87,6 +87,8 @@ const THEME_STORAGE_KEY = 'sangam_theme_preference';
 const INITIAL_SETTINGS: SettingsState = {
   japa_reminder_enabled: false,
   japa_reminder_time: '07:00',
+  quiz_reminder_enabled: false,
+  quiz_reminder_time: '08:00',
   wants_festival_reminders: true,
   wants_vrat_reminders: true,
   wants_tithi_reminders: false,
@@ -108,6 +110,7 @@ const INITIAL_SETTINGS: SettingsState = {
 
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
   { key: 'japa_reminder_enabled', label: 'Japa practice reminder', subtitle: 'A gentle daily reminder at your chosen time', requiresAccount: true },
+  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', subtitle: 'When the daily quiz is ready, plus one 6:00 PM nudge if it is still unfinished', requiresAccount: true },
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
   { key: 'wants_sankalpa_midpoint_reminders', label: 'Sankalpa midpoint', subtitle: 'One gentle reminder halfway through an active vow', requiresAccount: true },
@@ -170,6 +173,8 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
   return {
     japa_reminder_enabled: value?.japa_reminder_enabled ?? INITIAL_SETTINGS.japa_reminder_enabled,
     japa_reminder_time: value?.japa_reminder_time ?? INITIAL_SETTINGS.japa_reminder_time,
+    quiz_reminder_enabled: value?.quiz_reminder_enabled ?? INITIAL_SETTINGS.quiz_reminder_enabled,
+    quiz_reminder_time: value?.quiz_reminder_time ?? INITIAL_SETTINGS.quiz_reminder_time,
     wants_festival_reminders: value?.wants_festival_reminders ?? INITIAL_SETTINGS.wants_festival_reminders,
     wants_vrat_reminders: value?.wants_vrat_reminders ?? INITIAL_SETTINGS.wants_vrat_reminders,
     wants_tithi_reminders: value?.wants_tithi_reminders ?? INITIAL_SETTINGS.wants_tithi_reminders,
@@ -188,6 +193,14 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     consent_religious_data: value?.consent_religious_data ?? INITIAL_SETTINGS.consent_religious_data,
     consent_activity_personalization: value?.consent_activity_personalization ?? INITIAL_SETTINGS.consent_activity_personalization,
   };
+}
+
+function isValidQuizReminderTime(value: string): boolean {
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return false;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  return hour >= 7 && hour < 15 || (hour === 15 && minute === 0);
 }
 
 function SettingsSection({
@@ -345,6 +358,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [japaReminderTimeDraft, setJapaReminderTimeDraft] = useState(INITIAL_SETTINGS.japa_reminder_time);
+  const [quizReminderTimeDraft, setQuizReminderTimeDraft] = useState(INITIAL_SETTINGS.quiz_reminder_time);
   const [familyRemembranceTimeDraft, setFamilyRemembranceTimeDraft] = useState(INITIAL_SETTINGS.family_remembrance_time);
   const [reminderTimeDraft, setReminderTimeDraft] = useState(INITIAL_SETTINGS.observance_reminder_time ?? '08:00');
   const [themePref, setThemePref] = useState<ThemePref>('system');
@@ -370,6 +384,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   useEffect(() => {
     setJapaReminderTimeDraft(settings.japa_reminder_time);
   }, [settings.japa_reminder_time]);
+
+  useEffect(() => {
+    setQuizReminderTimeDraft(settings.quiz_reminder_time);
+  }, [settings.quiz_reminder_time]);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current) {
@@ -526,7 +544,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       const current = await supabase
         .from('profiles')
         .select(
-          'tradition, japa_reminder_enabled, japa_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, wants_family_remembrance_reminders, family_remembrance_time, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
+          'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, wants_family_remembrance_reminders, family_remembrance_time, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
         )
         .eq('id', appIdentity.userId)
         .single();
@@ -540,7 +558,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       const legacy = await supabase
         .from('profiles')
         .select(
-          'tradition, japa_reminder_enabled, japa_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
+          'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
         )
         .eq('id', appIdentity.userId)
         .single();
@@ -916,6 +934,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const handlePauseNotificationsInstead = async () => {
     const mutedSettings: Partial<SettingsState> = {
       japa_reminder_enabled: false,
+      quiz_reminder_enabled: false,
       wants_festival_reminders: false,
       wants_vrat_reminders: false,
       wants_tithi_reminders: false,
@@ -1152,6 +1171,32 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                           variant="secondary"
                           disabled={!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(japaReminderTimeDraft) || japaReminderTimeDraft === settings.japa_reminder_time}
                           onPress={() => { void persistSettings({ ...settings, japa_reminder_time: japaReminderTimeDraft }); }}
+                        />
+                      </View>
+                    </View>
+                  ) : null}
+                  {item.key === 'quiz_reminder_enabled' && !isGuest && settings.quiz_reminder_enabled ? (
+                    <View style={{ gap: 10, marginTop: 12, marginBottom: 14 }}>
+                      <Text style={{ ...TYPE.label, color: theme.text }}>Quiz-ready reminder time</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                        Uses your profile timezone. Choose 7:00 AM–3:00 PM. If the quiz is still unfinished, one follow-up is planned for 6:00 PM; quiet hours and the daily notification limit still apply.
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <TextInput
+                          accessibilityLabel="Daily quiz reminder time"
+                          value={quizReminderTimeDraft}
+                          onChangeText={setQuizReminderTimeDraft}
+                          keyboardType="numbers-and-punctuation"
+                          maxLength={5}
+                          placeholder="08:00"
+                          placeholderTextColor={theme.dim}
+                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
+                        />
+                        <Button
+                          label="Save time"
+                          variant="secondary"
+                          disabled={!isValidQuizReminderTime(quizReminderTimeDraft) || quizReminderTimeDraft === settings.quiz_reminder_time}
+                          onPress={() => { void persistSettings({ ...settings, quiz_reminder_time: quizReminderTimeDraft }); }}
                         />
                       </View>
                     </View>

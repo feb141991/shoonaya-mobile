@@ -35,6 +35,8 @@ import {
 const sampleSettings: SettingsFields = {
   japa_reminder_enabled: false,
   japa_reminder_time: '07:00',
+  quiz_reminder_enabled: false,
+  quiz_reminder_time: '08:00',
   wants_festival_reminders: true,
   wants_shloka_reminders: true,
   wants_nitya_reminders: true,

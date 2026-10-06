@@ -35,6 +35,8 @@ export type SettingsCacheIdentity =
 export type SettingsFields = {
   japa_reminder_enabled: boolean;
   japa_reminder_time: string;
+  quiz_reminder_enabled: boolean;
+  quiz_reminder_time: string;
   wants_festival_reminders: boolean;
   wants_vrat_reminders?: boolean;
   wants_tithi_reminders?: boolean;
