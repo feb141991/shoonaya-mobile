@@ -134,6 +134,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-ass-in-tiger-skin',
       'panchatantra-greedy-jackal',
       'panchatantra-heron-and-fish',
+      'panchatantra-sparrow-and-elephant',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -245,6 +246,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-ass-in-tiger-skin'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-greedy-jackal'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-heron-and-fish'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-sparrow-and-elephant'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
