@@ -1,6 +1,8 @@
-import { useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator,
+  AccessibilityInfo,
+  Animated,
+  Pressable,
   ScrollView,
   Text,
   useColorScheme,
@@ -10,11 +12,20 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeepAwake } from 'expo-keep-awake';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { ReaderIntro } from '@/components/reader/ReaderIntro';
-import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import { ReaderCapsule } from '@/components/reader/ReaderCapsule';
+import { ReaderSettingsSheet } from '@/components/reader/ReaderSettingsSheet';
+import {
+  getReaderPinned,
+  setReaderPinned,
+  hasSeenFirstTimeHint,
+  markFirstTimeHintSeen,
+} from '@/lib/readerPrefs';
+import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 
@@ -71,7 +82,7 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   scrollEventThrottle?: number;
 }
 
-const TTS_RATES = [0.75, 1, 1.25] as const;
+const AUTO_HIDE_DELAY_MS = 3500;
 
 export function ReaderShell<LanguageCode extends string = string>({
   title,
@@ -112,9 +123,183 @@ export function ReaderShell<LanguageCode extends string = string>({
   onScroll,
   scrollEventThrottle,
 }: ReaderShellProps<LanguageCode>) {
+  // Prevent device screen from dimming or locking during active reading
+  useKeepAwake();
+
   const isDark = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack, onBeforeBack);
+
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isScreenReader, setIsScreenReader] = useState(false);
+  const [isReduceMotion, setIsReduceMotion] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+
+  const headerAnim = useRef(new Animated.Value(1)).current;
+  const capsuleAnim = useRef(new Animated.Value(1)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load pinned preference and accessibility state on mount
+  useEffect(() => {
+    let mounted = true;
+    getReaderPinned().then((pinned) => {
+      if (mounted && pinned) {
+        setIsPinned(true);
+      }
+    });
+
+    AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+      if (mounted) setIsScreenReader(enabled);
+    });
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (mounted) setIsReduceMotion(enabled);
+    });
+
+    const screenReaderSub = AccessibilityInfo.addEventListener(
+      'screenReaderChanged',
+      (enabled) => {
+        if (mounted) setIsScreenReader(enabled);
+      },
+    );
+    const reduceMotionSub = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      (enabled) => {
+        if (mounted) setIsReduceMotion(enabled);
+      },
+    );
+
+    return () => {
+      mounted = false;
+      screenReaderSub?.remove();
+      reduceMotionSub?.remove();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const hideControls = useCallback(async () => {
+    if (isPinned || isScreenReader || isSheetOpen || isTTSGenerating || isSpeaking) {
+      return;
+    }
+    setIsControlsVisible(false);
+    if (isReduceMotion) {
+      headerAnim.setValue(0);
+      capsuleAnim.setValue(0);
+    } else {
+      Animated.parallel([
+        Animated.timing(headerAnim, {
+          toValue: 0,
+          duration: 240,
+          useNativeDriver: true,
+        }),
+        Animated.timing(capsuleAnim, {
+          toValue: 0,
+          duration: 240,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+
+    // Display first-time hint if not yet seen
+    const seen = await hasSeenFirstTimeHint();
+    if (!seen) {
+      setShowHint(true);
+      await markFirstTimeHintSeen();
+      setTimeout(() => setShowHint(false), 3200);
+    }
+  }, [
+    isPinned,
+    isScreenReader,
+    isSheetOpen,
+    isTTSGenerating,
+    isSpeaking,
+    isReduceMotion,
+    headerAnim,
+    capsuleAnim,
+  ]);
+
+  const resetAutoHideTimer = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (isPinned || isScreenReader || isSheetOpen || isTTSGenerating || isSpeaking) {
+      return;
+    }
+    timerRef.current = setTimeout(() => {
+      void hideControls();
+    }, AUTO_HIDE_DELAY_MS);
+  }, [isPinned, isScreenReader, isSheetOpen, isTTSGenerating, isSpeaking, hideControls]);
+
+  const showControls = useCallback(() => {
+    setIsControlsVisible(true);
+    if (isReduceMotion) {
+      headerAnim.setValue(1);
+      capsuleAnim.setValue(1);
+    } else {
+      Animated.parallel([
+        Animated.timing(headerAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(capsuleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+    resetAutoHideTimer();
+  }, [isReduceMotion, headerAnim, capsuleAnim, resetAutoHideTimer]);
+
+  // Keep controls open or trigger timer when speaking / sheet state changes
+  useEffect(() => {
+    if (isPinned || isScreenReader || isSheetOpen || isTTSGenerating || isSpeaking) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (!isControlsVisible) {
+        showControls();
+      }
+    } else if (isControlsVisible) {
+      resetAutoHideTimer();
+    }
+  }, [
+    isPinned,
+    isScreenReader,
+    isSheetOpen,
+    isTTSGenerating,
+    isSpeaking,
+    isControlsVisible,
+    showControls,
+    resetAutoHideTimer,
+  ]);
+
+  const togglePin = useCallback(async () => {
+    const next = !isPinned;
+    setIsPinned(next);
+    await setReaderPinned(next);
+    if (next) {
+      showControls();
+    } else {
+      resetAutoHideTimer();
+    }
+  }, [isPinned, showControls, resetAutoHideTimer]);
+
+  const handleInteraction = useCallback(() => {
+    if (!isControlsVisible) {
+      showControls();
+    } else {
+      resetAutoHideTimer();
+    }
+  }, [isControlsVisible, showControls, resetAutoHideTimer]);
+
+  const handlePageTap = useCallback(() => {
+    if (isControlsVisible) {
+      if (!isPinned && !isScreenReader) {
+        void hideControls();
+      }
+    } else {
+      showControls();
+    }
+  }, [isControlsVisible, isPinned, isScreenReader, hideControls, showControls]);
 
   useEffect(() => {
     trackReaderEvent('reader_opened', {
@@ -130,19 +315,13 @@ export function ReaderShell<LanguageCode extends string = string>({
   const border = isDark ? COLORS.borderDark : COLORS.borderLight;
   const softBorder = isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight;
   const textMain = isDark ? COLORS.creamBg : COLORS.ink;
-  const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
   const selectedText = isDark ? COLORS.ink : COLORS.onMediaWhite;
-  const hasTTSRate = Boolean(onTTS && ttsRate !== undefined && onTTSRateChange);
-  const hasSubheader = Boolean(
-    fontPresets
-    || languages
-    || showTransliterationToggle
-    || showMeaningToggle
-    || hasTTSRate,
-  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgBase }}>
+    <View
+      style={{ flex: 1, backgroundColor: bgBase }}
+      onTouchStart={handleInteraction}
+    >
       {ambientGlowColor ? (
         <View
           pointerEvents="none"
@@ -159,8 +338,24 @@ export function ReaderShell<LanguageCode extends string = string>({
         />
       ) : null}
 
-      <View
+      {/* Compact Top Bar */}
+      <Animated.View
+        pointerEvents={isControlsVisible ? 'auto' : 'none'}
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          transform: [
+            {
+              translateY: headerAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-insets.top - 80, 0],
+              }),
+            },
+          ],
+          opacity: headerAnim,
           paddingTop: insets.top + 8,
           paddingHorizontal: 16,
           paddingBottom: 12,
@@ -168,8 +363,6 @@ export function ReaderShell<LanguageCode extends string = string>({
           borderBottomColor: softBorder,
           backgroundColor: bgCard,
           boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-          zIndex: 10,
-          gap: 12,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -220,281 +413,62 @@ export function ReaderShell<LanguageCode extends string = string>({
             )}
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {onTTS ? (
-              <PressableSurface
-                haptic="selection"
-                onPress={onTTS}
-                disabled={isTTSGenerating}
-                accessibilityLabel={isSpeaking ? 'Stop reading aloud' : 'Listen to this content'}
-                accessibilityState={{ disabled: Boolean(isTTSGenerating), selected: Boolean(isSpeaking) }}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: bgSubCard,
-                  borderColor: border,
-                  borderWidth: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 0,
-                  opacity: isTTSGenerating ? 0.55 : 1,
-                }}
-              >
-                {isTTSGenerating ? (
-                  <ActivityIndicator size="small" color={themeColor} />
-                ) : (
-                  <Feather name={isSpeaking ? 'volume-x' : 'volume-2'} size={18} color={themeColor} />
-                )}
-              </PressableSurface>
-            ) : null}
-            {onCopy ? (
-              <PressableSurface
-                haptic="selection"
-                onPress={onCopy}
-                accessibilityLabel={isCopied ? 'Copied' : 'Copy content'}
-                accessibilityState={{ selected: Boolean(isCopied) }}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: bgSubCard,
-                  borderColor: border,
-                  borderWidth: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 0,
-                }}
-              >
-                <Feather
-                  name={isCopied ? 'check' : 'copy'}
-                  size={18}
-                  color={isCopied ? COLORS.success : themeColor}
-                />
-              </PressableSurface>
-            ) : null}
-            {onShare ? (
-              <PressableSurface
-                haptic="selection"
-                onPress={onShare}
-                accessibilityLabel="Share content"
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: bgSubCard,
-                  borderColor: border,
-                  borderWidth: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 0,
-                }}
-              >
-                <Feather name="share-2" size={18} color={themeColor} />
-              </PressableSurface>
-            ) : null}
-          </View>
-        </View>
-
-        {hasSubheader ? (
-          <View
+          {/* ⛶ Pin controls button */}
+          <PressableSurface
+            haptic="selection"
+            onPress={togglePin}
+            accessibilityLabel={isPinned ? 'Unpin controls' : 'Pin controls'}
+            accessibilityState={{ selected: isPinned }}
             style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: isPinned ? themeColor : bgSubCard,
+              borderColor: isPinned ? themeColor : border,
+              borderWidth: 1,
               alignItems: 'center',
-              justifyContent: 'space-between',
-              borderTopWidth: 1,
-              borderTopColor: softBorder,
-              paddingTop: 12,
-              gap: 10,
+              justifyContent: 'center',
+              minHeight: 0,
             }}
           >
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {fontPresets && setFontStep && typeof fontStep === 'number' ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 4, height: 44, borderRadius: 22 }}>
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={() => {
-                      if (fontStep > 0) setFontStep(fontStep - 1);
-                    }}
-                    disabled={fontStep === 0}
-                    accessibilityLabel="Decrease text size (--)"
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 7,
-                      borderRadius: 18,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: fontStep === 0 ? 0.35 : 1,
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13, letterSpacing: -0.5 }}>
-                      --
-                    </Text>
-                  </PressableSurface>
+            <Feather
+              name={isPinned ? 'lock' : 'maximize-2'}
+              size={18}
+              color={isPinned ? selectedText : themeColor}
+            />
+          </PressableSurface>
+        </View>
+      </Animated.View>
 
-                  {fontPresets.map((preset, index) => {
-                    const selected = fontStep === index;
-                    return (
-                      <PressableSurface
-                        key={preset.label}
-                        haptic="selection"
-                        onPress={() => setFontStep(index)}
-                        accessibilityLabel={`Text size ${preset.label}`}
-                        accessibilityState={{ selected }}
-                        style={{
-                          height: 36,
-                          paddingHorizontal: 8,
-                          borderRadius: 18,
-                          backgroundColor: selected ? themeColor : 'transparent',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Text style={{ color: selected ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-                          {preset.label}
-                        </Text>
-                      </PressableSurface>
-                    );
-                  })}
-
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={() => {
-                      if (fontStep < fontPresets.length - 1) setFontStep(fontStep + 1);
-                    }}
-                    disabled={fontStep === fontPresets.length - 1}
-                    accessibilityLabel="Increase text size (++)"
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 7,
-                      borderRadius: 18,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: fontStep === fontPresets.length - 1 ? 0.35 : 1,
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13, letterSpacing: -0.5 }}>
-                      ++
-                    </Text>
-                  </PressableSurface>
-                </View>
-              ) : null}
-
-              {languages && setLanguage && currentLanguage ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                  <Feather name="globe" size={14} color={textDim} style={{ marginHorizontal: 4 }} />
-                  {languages.map((language) => {
-                    const selected = currentLanguage === language.code;
-                    return (
-                      <PressableSurface
-                        key={language.code}
-                        haptic="selection"
-                        onPress={() => setLanguage(language.code)}
-                        accessibilityLabel={`Reading language ${language.label}`}
-                        accessibilityState={{ selected }}
-                        style={{
-                          height: 36,
-                          paddingHorizontal: 9,
-                          borderRadius: 18,
-                          backgroundColor: selected ? themeColor : 'transparent',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Text style={{ color: selected ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-                          {language.label}
-                        </Text>
-                      </PressableSurface>
-                    );
-                  })}
-                </View>
-              ) : null}
-
-              {hasTTSRate ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                  {TTS_RATES.map((rate) => {
-                    const selected = ttsRate === rate;
-                    return (
-                      <PressableSurface
-                        key={rate}
-                        haptic="selection"
-                        onPress={() => onTTSRateChange?.(rate)}
-                        accessibilityLabel={`Reading speed ${rate} times`}
-                        accessibilityState={{ selected }}
-                        style={{
-                          height: 36,
-                          paddingHorizontal: 9,
-                          borderRadius: 18,
-                          backgroundColor: selected ? themeColor : 'transparent',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minHeight: 0,
-                        }}
-                      >
-                        <Text style={{ color: selected ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>
-                          {rate === 1 ? '1' : rate}x
-                        </Text>
-                      </PressableSurface>
-                    );
-                  })}
-                </View>
-              ) : null}
-            </View>
-
-            {showTransliterationToggle || showMeaningToggle ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: bgSubCard, borderColor: border, borderWidth: 1, paddingHorizontal: 6, height: 44, borderRadius: 22 }}>
-                {showTransliterationToggle && onToggleTransliteration ? (
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={onToggleTransliteration}
-                    accessibilityLabel="Toggle transliteration"
-                    accessibilityState={{ selected: Boolean(isTransliterationOn) }}
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 10,
-                      borderRadius: 18,
-                      backgroundColor: isTransliterationOn ? themeColor : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: isTransliterationOn ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>
-                      TRNS
-                    </Text>
-                  </PressableSurface>
-                ) : null}
-                {showMeaningToggle && onToggleMeaning ? (
-                  <PressableSurface
-                    haptic="selection"
-                    onPress={onToggleMeaning}
-                    accessibilityLabel="Toggle meaning"
-                    accessibilityState={{ selected: Boolean(isMeaningOn) }}
-                    style={{
-                      height: 36,
-                      paddingHorizontal: 10,
-                      borderRadius: 18,
-                      backgroundColor: isMeaningOn ? themeColor : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minHeight: 0,
-                    }}
-                  >
-                    <Text style={{ color: isMeaningOn ? selectedText : textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>
-                      MEANING
-                    </Text>
-                  </PressableSurface>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
-        ) : null}
-      </View>
+      {/* First-time tap hint toast */}
+      {showHint ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: insets.top + 76,
+            alignSelf: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 9,
+            borderRadius: RADII.pill,
+            backgroundColor: bgCard,
+            borderColor: border,
+            borderWidth: 1,
+            boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            zIndex: 30,
+          }}
+        >
+          <Text
+            style={{
+              color: textMain,
+              fontFamily: FONTS.sansSemiBold,
+              fontSize: 12,
+            }}
+          >
+            Tap anywhere to show controls
+          </Text>
+        </View>
+      ) : null}
 
       <ScrollView
         ref={(node) => {
@@ -504,26 +478,94 @@ export function ReaderShell<LanguageCode extends string = string>({
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        onScroll={onScroll}
+        onScroll={(e) => {
+          handleInteraction();
+          onScroll?.(e);
+        }}
         scrollEventThrottle={scrollEventThrottle ?? (onScroll ? 16 : undefined)}
         contentContainerStyle={[
           {
             paddingHorizontal: 16,
-            paddingTop: 24,
-            // 32 was less than half of NAV_BAR_CLEARANCE (106 -- the
-            // globally-mounted CollapsibleBottomNav's own reserved band,
-            // see lib/nav-bar.ts). Confirmed on a real Android device
-            // (where insets.bottom is commonly 0, unlike iOS's reliable
-            // home-indicator inset): the last button on a reader screen
-            // with no bottomBar rendered underneath the floating nav,
-            // effectively hidden. bottomBar's own 120 already clears it.
+            // Header height clearance
+            paddingTop: insets.top + 72,
+            // Reserved clearance for bottom thumb capsule and nav bar
             paddingBottom: insets.bottom + (bottomBar ? 120 : NAV_BAR_CLEARANCE),
           },
           contentContainerStyle,
         ]}
       >
-        {children}
+        <Pressable onPress={handlePageTap}>
+          <View onStartShouldSetResponder={() => false}>
+            {children}
+          </View>
+        </Pressable>
       </ScrollView>
+
+      {/* Floating Thumb Capsule */}
+      <Animated.View
+        pointerEvents={isControlsVisible ? 'auto' : 'none'}
+        style={{
+          position: 'absolute',
+          bottom: insets.bottom + 16,
+          left: 0,
+          right: 0,
+          alignItems: 'center',
+          zIndex: 10,
+          transform: [
+            {
+              translateY: capsuleAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [90, 0],
+              }),
+            },
+          ],
+          opacity: capsuleAnim,
+        }}
+      >
+        <ReaderCapsule
+          isDark={isDark}
+          themeColor={themeColor}
+          fontPresets={fontPresets}
+          fontStep={fontStep}
+          setFontStep={setFontStep}
+          onTTS={onTTS}
+          isSpeaking={isSpeaking}
+          isTTSGenerating={isTTSGenerating}
+          ttsRate={ttsRate}
+          languages={languages}
+          currentLanguage={currentLanguage}
+          setLanguage={setLanguage}
+          onOpenSettings={() => setIsSheetOpen(true)}
+          onInteraction={handleInteraction}
+        />
+      </Animated.View>
+
+      {/* Reader Settings Sheet ("Aa" Modal) */}
+      <ReaderSettingsSheet
+        visible={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        isDark={isDark}
+        themeColor={themeColor}
+        fontPresets={fontPresets}
+        fontStep={fontStep}
+        setFontStep={setFontStep}
+        languages={languages}
+        currentLanguage={currentLanguage}
+        setLanguage={setLanguage}
+        showTransliterationToggle={showTransliterationToggle}
+        isTransliterationOn={isTransliterationOn}
+        onToggleTransliteration={onToggleTransliteration}
+        showMeaningToggle={showMeaningToggle}
+        isMeaningOn={isMeaningOn}
+        onToggleMeaning={onToggleMeaning}
+        ttsRate={ttsRate}
+        onTTSRateChange={onTTSRateChange}
+        onCopy={onCopy}
+        isCopied={isCopied}
+        onShare={onShare}
+        isPinned={isPinned}
+        onTogglePin={togglePin}
+      />
 
       {bottomBar ? (
         <View
