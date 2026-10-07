@@ -242,6 +242,9 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-fox-and-grapes'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-ass-in-tiger-skin'), 2);
 
+    // Tier 1: Masterwork cover art
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-greedy-jackal'), 1);
+
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
