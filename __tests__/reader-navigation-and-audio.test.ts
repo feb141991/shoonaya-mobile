@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 
 const backButton = readFileSync(new URL('../components/ui/BackButton.tsx', import.meta.url), 'utf8');
 const readerShell = readFileSync(new URL('../components/reader/ReaderShell.tsx', import.meta.url), 'utf8');
+const readerCapsule = readFileSync(new URL('../components/reader/ReaderCapsule.tsx', import.meta.url), 'utf8');
 const readerControls = readFileSync(new URL('../hooks/useReaderControls.ts', import.meta.url), 'utf8');
 const stotram = readFileSync(new URL('../app/bhakti/stotram/[id].tsx', import.meta.url), 'utf8');
 const katha = readFileSync(new URL('../app/bhakti/katha/[id].tsx', import.meta.url), 'utf8');
@@ -64,10 +65,10 @@ describe('reader navigation and audio lifecycle', () => {
   });
 
   it('guarantees ReaderShell renders explicit -- and ++ font scaling steppers while reading', () => {
-    assert.match(readerShell, /accessibilityLabel="Decrease text size \(--\)"/);
-    assert.match(readerShell, /accessibilityLabel="Increase text size \(\+\+\)"/);
-    assert.match(readerShell, /if \(fontStep > 0\) setFontStep\(fontStep - 1\)/);
-    assert.match(readerShell, /if \(fontStep < fontPresets\.length - 1\) setFontStep\(fontStep \+ 1\)/);
+    assert.match(readerCapsule, /accessibilityLabel="Decrease text size \(--\)"/);
+    assert.match(readerCapsule, /accessibilityLabel="Increase text size \(\+\+\)"/);
+    assert.match(readerCapsule, /if \(fontStep > 0\) setFontStep\(fontStep - 1\)/);
+    assert.match(readerCapsule, /if \(fontStep < fontPresets\.length - 1\) setFontStep\(fontStep \+ 1\)/);
   });
 
   it('guarantees TTS bounds text under backend limits and persists native audio to cache file', () => {
