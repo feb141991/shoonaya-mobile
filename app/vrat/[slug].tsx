@@ -386,6 +386,8 @@ export default function VratDetailScreen() {
 
   return (
     <ReaderShell
+      progressId={`vrat:${slug}`}
+      progressVersion={showLocal ? 'hi' : 'en'}
       title={selectedName}
       subtitle={selectedTagline}
       fallbackBackUrl="/vrat"

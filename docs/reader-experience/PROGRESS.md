@@ -13,7 +13,7 @@ audio included).
 | 0. Baseline | done | 299fbe0 |
 | 1. Immersive controls | done | (this commit) |
 | 2. Paper themes | done | cf337b1 (wip) + (this commit) |
-| 3. Resume | — | |
+| 3. Resume | done | (this commit) |
 | 4. Listening | — | |
 | 5. Pathshala + Panchatantra | — | |
 | 6. Chapters (Dharm Veer, Vrat) | — | |
@@ -159,3 +159,28 @@ left on "Auto".
 
 Tests: npm test 1139 passed, 1 failed (astro-engine-numerical, worktree-path
 only), 0 skipped. New: reader-appearance (8).
+
+## Phase 3 — Pick up where you left off (2026-10-07)
+
+Built: lib/readingProgress.ts (per identity, key = content id + version,
+position stored as a fraction of the scrollable height so it survives
+text-size changes; max 50 items / 90 days; cleared at the four purge points;
+never stored when signed out). ReaderShell restores once content has laid
+out (re-applied for up to 2.5 s while content grows, unless the user
+scrolls), saves while scrolling (throttled 1.5 s) and on leaving, and shows
+"Resumed where you left off · NN% · Start over" for 6 s. Start over scrolls
+to the top and forgets the position. Positions under 5% or over 97% are not
+offered (not started / finished). All five ReaderShell readers pass a
+progress id; the version includes the reading language.
+
+Decision 10: no section names in the resume prompt for now (percentage
+only). Dharm Veer and Vrat become chaptered in Phase 6 and will name the
+chapter then; building section tracking for their current scrolling layout
+would be thrown away. Storybook and Pathshala get resume in Phase 5.
+
+Checked on iOS Simulator (Katha): read to ~75%, left, came back -> scrolled
+back to the same passage (a few lines lower) with the banner; Start over
+returned to the top. Reading to the end and coming back starts at the top.
+
+Tests: npm test 1146 passed, 1 failed (astro-engine-numerical, worktree path
+only), 0 skipped. New: reading-progress (7).

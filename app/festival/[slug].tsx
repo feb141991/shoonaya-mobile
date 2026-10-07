@@ -592,6 +592,8 @@ export default function FestivalDetailScreen() {
 
   return (
     <ReaderShell
+      progressId={`festival:${slug}`}
+      progressVersion={resolvedLang}
       title={name}
       subtitle={tagline}
       fallbackBackUrl="/(tabs)"

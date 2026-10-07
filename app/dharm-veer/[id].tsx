@@ -494,6 +494,8 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
   return (
     <>
       <ReaderShell
+        progressId={`dharm-veer:${id}`}
+        progressVersion={showLocal ? readerLanguage : 'en'}
         title={title ?? 'Dharm Veer'}
         subtitle={meta?.dharmVeerLocal || 'Dharm Veer'}
         fallbackBackUrl="/dharm-veer"

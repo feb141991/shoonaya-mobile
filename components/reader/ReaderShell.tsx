@@ -31,6 +31,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { createReaderChromeController, isPageTap } from '@/lib/readerChrome';
 import { readerCopy } from '@/lib/readerCopy';
 import { READER_PAPER_CHOICES, setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
+import { clearReadingPosition, getReadingPosition, isResumableRatio, saveReadingPosition } from '@/lib/readingProgress';
 import { readerControlsPalette } from '@/lib/readerAppearance';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderAppearanceContext } from '@/lib/readerAppearanceContext';
@@ -100,6 +101,14 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   scrollViewRef?: React.RefObject<ScrollView | null>;
   onScroll?: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
   scrollEventThrottle?: number;
+
+  /**
+   * Resume (Phase 3): when set, the reader remembers how far down the user
+   * read and returns there next time. `progressVersion` must change when the
+   * text changes (e.g. include the reading language).
+   */
+  progressId?: string;
+  progressVersion?: string;
 }
 
 const TTS_RATES = [0.75, 1, 1.25] as const;
@@ -144,6 +153,8 @@ export function ReaderShell<LanguageCode extends string = string>({
   scrollViewRef,
   onScroll,
   scrollEventThrottle,
+  progressId,
+  progressVersion = 'v1',
 }: ReaderShellProps<LanguageCode>) {
   const appearance = useReaderAppearance();
   const { paper, isDark } = appearance;
@@ -269,6 +280,71 @@ export function ReaderShell<LanguageCode extends string = string>({
     // so we know whether the tap landed on plain page or on content.
     setTimeout(() => chrome.pageTap(!plainPagePress.current), 0);
   };
+
+  // ── Resume where you left off (Phase 3) ─────────────────────────────
+  const scrollRef = useRef<ScrollView | null>(null);
+  const metrics = useRef({ y: 0, contentHeight: 0, viewport: 0 });
+  const restore = useRef<{ ratio: number; deadline: number; done: boolean; userMoved: boolean } | null>(null);
+  const lastSave = useRef(0);
+  const [resumeBanner, setResumeBanner] = useState<string | null>(null);
+
+  const currentRatio = () => {
+    const { y, contentHeight, viewport } = metrics.current;
+    const scrollable = contentHeight - viewport;
+    return scrollable > 0 ? Math.min(1, Math.max(0, y / scrollable)) : 0;
+  };
+  const persistPosition = useCallback(() => {
+    if (!progressId) return;
+    const pending = restore.current;
+    if (pending && !pending.done) return; // never overwrite before the restore ran
+    const ratio = currentRatio();
+    void saveReadingPosition(progressId, progressVersion, { ratio });
+  }, [progressId, progressVersion]);
+
+  useEffect(() => {
+    restore.current = null;
+    setResumeBanner(null);
+    if (!progressId) return;
+    let cancelled = false;
+    void getReadingPosition(progressId, progressVersion).then((position) => {
+      if (cancelled || !position || !isResumableRatio(position.ratio)) return;
+      restore.current = { ratio: position.ratio as number, deadline: Date.now() + 2500, done: false, userMoved: false };
+      applyRestore();
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressId, progressVersion]);
+
+  // Content often grows after first layout (images, async sections): keep
+  // re-applying the target for a short window unless the user has scrolled.
+  const applyRestore = () => {
+    const pending = restore.current;
+    const { contentHeight, viewport } = metrics.current;
+    if (!pending || pending.userMoved || contentHeight <= viewport + 1 || viewport === 0) return;
+    if (pending.done && Date.now() > pending.deadline) return;
+    scrollRef.current?.scrollTo({ y: pending.ratio * (contentHeight - viewport), animated: false });
+    if (!pending.done) {
+      pending.done = true;
+      setResumeBanner(copy.resumed(`${Math.round(pending.ratio * 100)}%`));
+      chrome.hold('resume');
+    }
+  };
+
+  useEffect(() => {
+    if (!resumeBanner) return;
+    const timer = setTimeout(() => { setResumeBanner(null); chrome.release('resume'); }, 6000);
+    return () => { clearTimeout(timer); chrome.release('resume'); };
+  }, [chrome, resumeBanner]);
+
+  const startOver = () => {
+    if (restore.current) restore.current.userMoved = true;
+    scrollRef.current?.scrollTo({ y: 0, animated: !reduceMotion });
+    setResumeBanner(null);
+    chrome.release('resume');
+    if (progressId) void clearReadingPosition(progressId, progressVersion);
+  };
+
+  useFocusEffect(useCallback(() => () => { persistPosition(); }, [persistPosition]));
 
   // ── Layout ──────────────────────────────────────────────────────────
   const [topBarHeight, setTopBarHeight] = useState(insets.top + 60);
@@ -404,14 +480,23 @@ export function ReaderShell<LanguageCode extends string = string>({
       <View style={{ flex: 1 }} onTouchStart={onPageTouchStart} onTouchEnd={onPageTouchEnd}>
         <ScrollView
           ref={(node) => {
+            scrollRef.current = node;
             if (scrollViewRef) {
               (scrollViewRef as any).current = node;
             }
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          onScroll={onScroll}
-          scrollEventThrottle={scrollEventThrottle ?? (onScroll ? 16 : undefined)}
+          onLayout={(event) => { metrics.current.viewport = event.nativeEvent.layout.height; applyRestore(); }}
+          onContentSizeChange={(_, height) => { metrics.current.contentHeight = height; applyRestore(); }}
+          onScrollBeginDrag={() => { if (restore.current) restore.current.userMoved = true; }}
+          onScroll={(event) => {
+            metrics.current.y = event.nativeEvent.contentOffset.y;
+            const now = Date.now();
+            if (progressId && now - lastSave.current > 1500) { lastSave.current = now; persistPosition(); }
+            onScroll?.(event);
+          }}
+          scrollEventThrottle={scrollEventThrottle ?? 32}
           contentContainerStyle={[
             {
               flexGrow: 1,
@@ -481,6 +566,24 @@ export function ReaderShell<LanguageCode extends string = string>({
           onLayout={(event) => setCapsuleHeight(event.nativeEvent.layout.height)}
           style={[{ position: 'absolute', left: 16, right: 16, bottom: capsuleBottom, zIndex: 20, alignItems: 'center', gap: 8 }, bottomStyle]}
         >
+          {resumeBanner ? (
+            <View
+              accessibilityLiveRegion="polite"
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 14, paddingRight: 4, borderRadius: 999, backgroundColor: palette.capsule, borderWidth: 1, borderColor: palette.glassBorder, boxShadow: palette.floatingShadow }}
+            >
+              <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.caption, color: palette.text, flexShrink: 1 }}>
+                {resumeBanner}
+              </Text>
+              <Pressable
+                onPress={startOver}
+                accessibilityRole="button"
+                accessibilityLabel={copy.startOver}
+                style={{ minHeight: 44, paddingHorizontal: 10, justifyContent: 'center' }}
+              >
+                <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.label, color: palette.accent }}>{copy.startOver}</Text>
+              </Pressable>
+            </View>
+          ) : null}
           {hintVisible ? (
             <View
               accessibilityLiveRegion="polite"

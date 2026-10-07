@@ -95,6 +95,7 @@ import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { accountDeletion } from '@/lib/accountDeletion';
 import { clearAllReaderPrefs } from '@/lib/readerPrefs';
+import { clearAllReadingProgress } from '@/lib/readingProgress';
 import { isReaderRoute } from '@/lib/readerRoutes';
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getOrReadHomeCache } from '@/lib/homeCache';
@@ -466,6 +467,7 @@ function RootLayout() {
         void clearMoodStatusCache();
         accountDeletion.clear();
         void clearAllReaderPrefs();
+        void clearAllReadingProgress();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -516,6 +518,7 @@ function RootLayout() {
         void clearMoodStatusCache();
         accountDeletion.clear();
         void clearAllReaderPrefs();
+        void clearAllReadingProgress();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -700,6 +703,7 @@ function RootLayout() {
         void clearMoodStatusCache();
         accountDeletion.clear();
         void clearAllReaderPrefs();
+        void clearAllReadingProgress();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();
@@ -722,6 +726,7 @@ function RootLayout() {
         void clearMoodStatusCache();
         accountDeletion.clear();
         void clearAllReaderPrefs();
+        void clearAllReadingProgress();
         clearPanchangScreenSnapshots();
         void clearAllTelemetry();
         void clearAllSankalpaOutboxes();

@@ -231,6 +231,8 @@ export default function StotramDetailScreen() {
 
   return (
     <ReaderShell
+      progressId={`stotram:${id}`}
+      progressVersion={activeLang}
       title={stotram.title}
       subtitle={stotram.deityEmoji ? `${stotram.deityEmoji} ${stotram.type}` : stotram.type}
       fallbackBackUrl="/(tabs)/bhakti"

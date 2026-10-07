@@ -31,6 +31,8 @@ export type ReaderCopy = {
   tapHint: string;
   sectionPaper: string;
   paper: { auto: string; bhojpatra: string; sandhya: string; templeNight: string };
+  resumed: (where: string) => string;
+  startOver: string;
 };
 
 const en: ReaderCopy = {
@@ -60,6 +62,8 @@ const en: ReaderCopy = {
   tapHint: 'Tap the page to show or hide the controls',
   sectionPaper: 'Paper',
   paper: { auto: 'Auto', bhojpatra: 'Bhojpatra', sandhya: 'Sandhya', templeNight: 'Temple Night' },
+  resumed: (where) => `Resumed where you left off · ${where}`,
+  startOver: 'Start over',
 };
 
 const hi: ReaderCopy = {
@@ -89,6 +93,8 @@ const hi: ReaderCopy = {
   tapHint: 'नियंत्रण दिखाने या छिपाने के लिए पृष्ठ पर टैप करें',
   sectionPaper: 'पृष्ठ',
   paper: { auto: 'स्वचालित', bhojpatra: 'भोजपत्र', sandhya: 'संध्या', templeNight: 'मंदिर रात्रि' },
+  resumed: (where) => `जहाँ छोड़ा था, वहीं से · ${where}`,
+  startOver: 'शुरू से पढ़ें',
 };
 
 const pa: ReaderCopy = {
@@ -118,6 +124,8 @@ const pa: ReaderCopy = {
   tapHint: 'ਕੰਟਰੋਲ ਦਿਖਾਉਣ ਜਾਂ ਲੁਕਾਉਣ ਲਈ ਪੰਨੇ \'ਤੇ ਟੈਪ ਕਰੋ',
   sectionPaper: 'ਪੰਨਾ',
   paper: { auto: 'ਆਪਣੇ-ਆਪ', bhojpatra: 'ਭੋਜਪੱਤਰ', sandhya: 'ਸੰਧਿਆ', templeNight: 'ਮੰਦਰ ਰਾਤ' },
+  resumed: (where) => `ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਉੱਥੋਂ · ${where}`,
+  startOver: 'ਸ਼ੁਰੂ ਤੋਂ ਪੜ੍ਹੋ',
 };
 
 export const READER_COPY: Record<AppLanguage, ReaderCopy> = { en, hi, pa };

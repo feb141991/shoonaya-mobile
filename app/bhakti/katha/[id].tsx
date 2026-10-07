@@ -298,6 +298,8 @@ export default function KathaReaderScreen() {
 
   return (
     <ReaderShell
+      progressId={`katha:${id}`}
+      progressVersion={activeLang}
       title={titleToShow}
       subtitle={badge}
       fallbackBackUrl="/(tabs)/bhakti"
