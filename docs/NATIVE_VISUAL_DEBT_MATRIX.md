@@ -34,6 +34,7 @@ pass fixed vs. deferred. This is Prompt 7 of the native migration series.
 | Flat icon candidates | Feature-identity icons rendered as flat `Feather` glyphs where the PWA's equivalent has more visual presence. | 12 named icons across Home, Bhakti, and 10 other screens (see icon inventory below) | Infrastructure fixed this pass (see Slice 1); asset population deferred |
 | Inconsistent cards/surfaces | Not separately re-audited this pass — out of scope; see Slice 2 candidate below. | — | Deferred |
 | Typography scale usage | Not separately re-audited this pass (already covered by task #74's full typography audit, which is why `TYPE.*` already exists and is in active use in `index.tsx`). | — | Already addressed in an earlier pass |
+| Relic art that is JPEG-named-`.png` with a baked-in checkerboard | `assets/relics/{chakra,dharma-wheel,diya-bronze,halo,khanda,khanda-gold,mala,trishula-gold}.png` are 1024px JPEGs with no alpha, so they break the Android release build (AAPT2) and would draw a grey checker tile behind the relic on iOS. Identical copies exist in the backend repo's `public/relics/`. 5 are `require()`d by `components/festivals/FestivalEmblem.tsx`. | 8 files | **Open, Android build blocker.** Needs real cut-outs (true alpha, ~256px like the other 49 relics). Guarded by `npm run check:assets` and the shrink-only `KNOWN_BROKEN` list in `__tests__/asset-formats.test.ts`; see AGENTS.md section 11. |
 
 Raw rgba(...) file-by-file (the real, actionable 9):
 
