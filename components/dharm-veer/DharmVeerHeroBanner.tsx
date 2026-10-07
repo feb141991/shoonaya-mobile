@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
+import { withAlpha } from '@/lib/readerAppearance';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '@/lib/constants';
@@ -25,12 +27,12 @@ export function DharmVeerHeroBanner({
   accentColor,
   brandColor,
 }: DharmVeerHeroBannerProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  // Inside a reader this follows the paper theme (lib/readerAppearanceContext.ts).
+  const { isDark, theme } = useSchemeOrReaderAppearance();
 
-  const surfaceBg = isDark ? COLORS.darkBg : COLORS.creamBg;
-  const textColor = isDark ? COLORS.creamBg : COLORS.ink;
-  const textDimColor = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  const surfaceBg = theme.bg;
+  const textColor = theme.text;
+  const textDimColor = theme.dim;
   const goldColor = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
 
   const artworkSource = getDharmVeerArtworkSource(hero.id);
@@ -60,7 +62,7 @@ export function DharmVeerHeroBanner({
 
           {/* Bottom Gradient Fade into Page Surface */}
           <LinearGradient
-            colors={['rgba(0,0,0,0)', isDark ? 'rgba(10,9,8,0.7)' : 'rgba(250,248,245,0.7)', surfaceBg]}
+            colors={['rgba(0,0,0,0)', withAlpha(surfaceBg, 0.7), surfaceBg]}
             locations={[0, 0.65, 1]}
             style={styles.bottomGradient}
             pointerEvents="none"

@@ -23,6 +23,7 @@ import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
 
 type FullKatha = {
   id: string;
@@ -238,6 +239,7 @@ export default function KathaReaderScreen() {
 
   if (loading) {
     return (
+      <ReaderPaperScope>
       <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
         <SacredLoader
           icon="bhakti"
@@ -246,11 +248,13 @@ export default function KathaReaderScreen() {
           showBack={true}
         />
       </Screen>
+      </ReaderPaperScope>
     );
   }
 
   if (loadError || !katha) {
     return (
+      <ReaderPaperScope>
       <Screen style={{ backgroundColor: theme.bg }}>
         <BackButton style={{ marginBottom: 4 }} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 24 }}>
@@ -258,6 +262,7 @@ export default function KathaReaderScreen() {
           <Button label="Retry" onPress={() => void load()} />
         </View>
       </Screen>
+      </ReaderPaperScope>
     );
   }
 

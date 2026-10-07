@@ -3,7 +3,6 @@ import {
   Animated,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -37,7 +36,8 @@ const FALLBACK_GLYPHS: Record<SacredIconName, keyof typeof Feather.glyphMap> = {
   rashiphala: 'star',
   kundali: 'compass',
 };
-import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
 
 export type SacredLoaderProps = {
   /** Title shown under the breathing aura (e.g. "Invoking Today's Shloka") */
@@ -76,8 +76,7 @@ export function SacredLoader({
   fallbackHref,
   style,
 }: SacredLoaderProps) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = themeColor(isDark);
+  const { isDark, theme } = useSchemeOrReaderAppearance();
   const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
 
@@ -268,7 +267,7 @@ export function SacredLoader({
  * Wraps in a themed ambient gradient background with edge-to-edge support.
  */
 export function SacredScreenLoader(props: SacredLoaderProps) {
-  const isDark = useColorScheme() === 'dark';
+  const { isDark } = useSchemeOrReaderAppearance();
 
   return (
     <View style={styles.fullscreen}>

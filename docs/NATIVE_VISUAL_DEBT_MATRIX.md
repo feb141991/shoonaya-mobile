@@ -181,3 +181,17 @@ any other screen.
 - `rg -n "backgroundColor: '#|color: '#|borderColor: '#|as any|TouchableOpacity|elevation:" app components lib` — zero matches (confirms the app has no inline hex style literals, no legacy touchables, no legacy elevation shadows, and no `as any` casts, before or after this change).
 - Manual re-derivation of the `COLORS.brandGold` (200/30 files), raw `rgba(` (96 total / 9 real UI-chrome), and raw hex (21 total / 2 false-positive comments, 19 legitimate content data) counts via targeted `rg` passes, cross-checked against file contents to exclude data files (`lib/mala-skins.ts`, `lib/dharm-veer.ts`) and comments from the debt totals.
 - Screenshots: not available. This session runs in a sandboxed environment with no Android Virtual Device or iOS Simulator attached, so no on-device visual verification could be captured. The change is icon-well-content-only (same container, same size, same color prop) and is covered by the typecheck pass plus manual reasoning that `ICON_ASSETS` being empty makes every affected render path identical to its pre-change output.
+
+## Panchatantra storybook (`components/reader/PanchatantraStorybookView.tsx`) — 2026-10-07
+
+Reader Phase 2 (`docs/READER_EXPERIENCE_GRAND_PLAN.md`) moved the page
+surfaces onto the reader paper tokens (`READER_PAPER` in `lib/constants.ts`
+via `useReaderAppearance()`): screen background, parchment panel and border,
+the image-to-page fade and the bottom bar gradient (previously hard-coded
+`#0A0806`/`#14100C`/`#FAF6EE` and matching rgba fades).
+
+Still literal, deliberately: white text/icons and dark scrims drawn **on top
+of the artwork** (`#FFFFFF`, `rgba(0,0,0,…)`, `rgba(255,255,255,0.25)` borders),
+which must stay legible on any image regardless of paper; the gold filigree
+(`rgba(216,138,28,0.55)`) and a dark scene-number badge. Real debt, deferred:
+these could become named overlay tokens, but they do not vary by paper.

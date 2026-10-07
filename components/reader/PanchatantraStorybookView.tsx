@@ -3,13 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  useColorScheme,
   useWindowDimensions,
   ScrollView,
   Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { useReaderAppearance } from "@/lib/useReaderAppearance";
+import { withAlpha } from "@/lib/readerAppearance";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
@@ -21,7 +22,6 @@ import {
   RADII,
   SHADOWS,
   TYPE,
-  themeColor,
   KATHA_VIEW_ACCENT,
 } from "@/lib/constants";
 import {
@@ -121,8 +121,8 @@ export function PanchatantraStorybookView({
   isTTSGenerating = false,
   onComplete,
 }: PanchatantraStorybookViewProps) {
-  const isDark = useColorScheme() === "dark";
-  const theme = themeColor(isDark);
+  // Reader paper theme (Phase 2, docs/READER_EXPERIENCE_GRAND_PLAN.md).
+  const { isDark, theme } = useReaderAppearance();
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const accent = KATHA_VIEW_ACCENT.panchatantra; // warm terracotta #C87850
@@ -207,9 +207,12 @@ export function PanchatantraStorybookView({
       : FONTS.serifBold;
 
   // Parchment palette
-  const screenBg = isDark ? "#0A0806" : "#FAF6EE";
-  const parchmentBg = isDark ? "#14100C" : "#FAF6EE";
-  const parchmentBorder = isDark ? "rgba(197,160,89,0.22)" : "rgba(216,138,28,0.24)";
+  // Page surfaces come from the reader paper tokens (were hard-coded
+  // #0A0806/#14100C dark and #FAF6EE light). Overlays drawn on the artwork
+  // (white text on dark scrims) stay as they are.
+  const screenBg = theme.bg;
+  const parchmentBg = isDark ? theme.card : theme.bg;
+  const parchmentBorder = theme.border;
   const artHeight = Math.round(screenHeight * 0.45);
 
   return (
@@ -476,7 +479,7 @@ export function PanchatantraStorybookView({
                     <LinearGradient
                       colors={[
                         "transparent",
-                        isDark ? "rgba(20,16,12,0.4)" : "rgba(250,246,238,0.4)",
+                        withAlpha(parchmentBg, 0.4),
                         parchmentBg,
                       ]}
                       style={styles.imageBottomVignette}
@@ -756,8 +759,8 @@ export function PanchatantraStorybookView({
         <LinearGradient
           colors={[
             "transparent",
-            isDark ? "rgba(10,8,6,0.85)" : "rgba(250,246,238,0.88)",
-            isDark ? "rgba(10,8,6,0.98)" : "rgba(250,246,238,0.98)",
+            withAlpha(screenBg, 0.88),
+            withAlpha(screenBg, 0.98),
           ]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"

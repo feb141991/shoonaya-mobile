@@ -129,6 +129,7 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
 
 import { useAppIdentity } from '@/lib/appIdentity';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
 
 export default function DharmVeerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -461,6 +462,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
 
   if (loading) {
     return (
+      <ReaderPaperScope>
       <Screen style={{ backgroundColor: surface, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
         <SacredLoader
           icon="dharmveer"
@@ -469,11 +471,13 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
           showBack={true}
         />
       </Screen>
+      </ReaderPaperScope>
     );
   }
 
   if (loadError || notFound || !hero) {
     return (
+      <ReaderPaperScope>
       <Screen style={{ backgroundColor: surface }}>
         <View style={{ padding: 20 }}>
           <BackButton variant="glass" fallbackHref="/dharm-veer" handleHardwareBack />
@@ -483,6 +487,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
           </Text>
         </View>
       </Screen>
+      </ReaderPaperScope>
     );
   }
 

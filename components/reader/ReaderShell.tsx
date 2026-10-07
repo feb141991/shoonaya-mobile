@@ -33,6 +33,7 @@ import { readerCopy } from '@/lib/readerCopy';
 import { READER_PAPER_CHOICES, setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
 import { readerControlsPalette } from '@/lib/readerAppearance';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { ReaderAppearanceContext } from '@/lib/readerAppearanceContext';
 import { READER_PAPER } from '@/lib/constants';
 
 // Shared reader frame for Dharm Veer, Stotram, Katha, Vrat and Festival.
@@ -144,7 +145,9 @@ export function ReaderShell<LanguageCode extends string = string>({
   onScroll,
   scrollEventThrottle,
 }: ReaderShellProps<LanguageCode>) {
-  const { paper, isDark } = useReaderAppearance();
+  const appearance = useReaderAppearance();
+  const { paper, isDark } = appearance;
+  const surfaceAppearance = useMemo(() => ({ isDark: appearance.isDark, theme: appearance.theme }), [appearance]);
   const insets = useSafeAreaInsets();
   const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack, onBeforeBack);
   const { language: appLanguage } = useLanguage();
@@ -424,7 +427,10 @@ export function ReaderShell<LanguageCode extends string = string>({
             onPress={() => { plainPagePress.current = true; }}
             style={{ flexGrow: 1 }}
           >
-            {children}
+            {/* Shared Card/Button inside the page follow the paper theme. */}
+            <ReaderAppearanceContext.Provider value={surfaceAppearance}>
+              {children}
+            </ReaderAppearanceContext.Provider>
           </Pressable>
         </ScrollView>
       </View>

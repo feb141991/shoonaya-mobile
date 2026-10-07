@@ -12,7 +12,7 @@ audio included).
 |---|---|---|
 | 0. Baseline | done | 299fbe0 |
 | 1. Immersive controls | done | (this commit) |
-| 2. Paper themes | IN PROGRESS (WIP commit, not verified on device) | |
+| 2. Paper themes | done | cf337b1 (wip) + (this commit) |
 | 3. Resume | — | |
 | 4. Listening | — | |
 | 5. Pathshala + Panchatantra | — | |
@@ -122,18 +122,40 @@ Updated two source-level tests that asserted the old header (font "--"/"++"
 labels, NAV_BAR_CLEARANCE padding) to assert the same guarantees on the new
 design. New: `reader-chrome` (10), `reader-shell-support` (5).
 
-## Phase 2 — Paper themes (IN PROGRESS, stopped 2026-10-07: usage limit)
+## Phase 2 — Paper themes (2026-10-07)
 
-Done: READER_PAPER tokens in lib/constants.ts (contrast computed: text >= 11.5:1,
-dim >= 6:1, accent >= 4.6:1); `paper` pref (auto/bhojpatra/sandhya/templeNight);
-lib/readerAppearance.ts + lib/useReaderAppearance.ts; ReaderShell uses the
-paper palette, light/dark status bar, "Paper" section with swatches in "Aa";
-the 5 reader screens read colours from useReaderAppearance(). Typecheck clean;
-reader tests 26/26.
+Built: `READER_PAPER` tokens (lib/constants.ts) for Bhojpatra, Sandhya,
+Temple Night; per-user `paper` pref (auto/bhojpatra/sandhya/templeNight,
+default auto: light -> Bhojpatra, dark -> Temple Night); resolver
+(lib/readerAppearance.ts) + hook (lib/useReaderAppearance.ts); "Paper"
+section with swatches in the "Aa" sheet; light/dark status bar per paper.
 
-Left: contrast unit test (__tests__/reader-appearance.test.ts, referenced in
-constants.ts comment but not written yet); Panchatantra storybook parchment
-colours onto tokens + NATIVE_VISUAL_DEBT_MATRIX update; ReaderIntro "Reading
-Mode" text; simulator check of all 3 papers on all 5 screens; full npm test.
-Decision 7: reader controls use the paper's accent, not the screen's brand
-gold (~2.6:1 on light paper, below the 3:1 control minimum).
+Making content follow the paper (not just the frame):
+- the five reader screens read `isDark`/`theme` from useReaderAppearance()
+- shared Surface/Card, Button, Screen, SacredLoader and the Dharm Veer hero
+  banner read lib/readerAppearanceContext.ts: inside a reader (ReaderShell, or
+  ReaderPaperScope for loading/error states) they follow the paper; everywhere
+  else they follow the device exactly as before
+- Panchatantra storybook page surfaces moved onto the tokens
+  (docs/NATIVE_VISUAL_DEBT_MATRIX.md updated; overlay literals on artwork kept)
+- reader intro "Reading Mode" text now mentions the papers
+
+Decisions:
+7. Reader controls use each paper's own accent, not the screen's brand gold
+   (~2.6:1 on light paper, below the 3:1 control minimum).
+8. Paper context is provided per reader screen, not at the app root: a root
+   provider would recolour the screen underneath during a back-swipe.
+9. Pathshala is not on the papers yet (Phase 5); its route is a reader route
+   but it keeps device colours until then.
+
+Contrast (tested in __tests__/reader-appearance.test.ts, mutation-checked):
+text >= 11.5:1, dim >= 6.0:1, accent >= 4.6:1 on page.
+
+Checked on iOS Simulator, each paper on all five readers + storybook
+(`p2-bhojpatra-*`, `p2-sandhya-*`, `p2-templenight-*`). First Sandhya pass
+found Vrat/Festival cards staying white with light text and the Dharm Veer
+name dark-on-dark; fixed via the context above and re-verified. Simulator
+left on "Auto".
+
+Tests: npm test 1139 passed, 1 failed (astro-engine-numerical, worktree-path
+only), 0 skipped. New: reader-appearance (8).

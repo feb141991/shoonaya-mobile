@@ -62,3 +62,11 @@ export function readerControlsPalette(paper: ReaderPaperKey, accent?: string) {
     scrim: COLORS.celebrationScrim,
   };
 }
+
+/** `#RRGGBB` -> `rgba(r,g,b,alpha)`, for fades that must match a paper colour. */
+export function withAlpha(hex: string, alpha: number): string {
+  const v = hex.replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(v)) return hex;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16));
+  return `rgba(${r},${g},${b},${alpha})`;
+}

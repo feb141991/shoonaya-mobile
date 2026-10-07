@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -13,7 +12,8 @@ import {
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
 
 // Reusable CTA primitive — extracted from the near-identical Pressable +
 // ActivityIndicator-swap + Text block that was hand-rolled in at least six
@@ -54,8 +54,8 @@ export function Button({
   style,
   ...props
 }: ButtonProps) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = themeColor(isDark);
+  // Follows the reader's paper theme inside readers, the device elsewhere.
+  const { isDark, theme } = useSchemeOrReaderAppearance();
   const isBusy = loading || !!disabled;
   const [pressed, setPressed] = useState(false);
   const reducedMotion = useReducedMotion();

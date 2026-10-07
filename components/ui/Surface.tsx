@@ -1,7 +1,8 @@
 import type { PropsWithChildren } from 'react';
-import { useColorScheme, View, type ViewProps } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 
-import { COLORS, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
 
 // Lowest-level themed container primitive. Card is now built on top of this
 // (Card = Surface + card-specific padding/radius defaults) so the two never
@@ -14,7 +15,8 @@ import { COLORS, RADII, SHADOWS, themeColor } from '@/lib/constants';
 //     own colors were previously hardcoded light-only), so defaulting here
 //     to 'light' keeps that behavior unchanged.
 //   - 'dark' — always the dark palette.
-//   - 'auto' — follows useColorScheme(). Opt in explicitly once a screen is
+//   - 'auto' — follows useColorScheme(), or the reader's paper theme when
+//     rendered inside a reader (lib/readerAppearanceContext.ts). Opt in explicitly once a screen is
 //     ready for it; not the default, because at least one existing screen
 //     (app/(auth)/login.tsx) has no dark-mode handling at all and is
 //     apparently deliberately light/cream-branded regardless of system
@@ -39,10 +41,10 @@ export function Surface({
   bordered = true,
   ...props
 }: SurfaceProps) {
-  const systemIsDark = useColorScheme() === 'dark';
-  const isDark = tone === 'auto' ? systemIsDark : tone === 'dark';
+  const auto = useSchemeOrReaderAppearance();
+  const isDark = tone === 'auto' ? auto.isDark : tone === 'dark';
 
-  const theme = themeColor(isDark);
+  const theme = tone === 'auto' ? auto.theme : themeColor(isDark);
 
   const backgroundColor =
     variant === 'soft'

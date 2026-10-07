@@ -22,6 +22,7 @@ import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
 
 type StotramVerse = {
   number: number;
@@ -200,6 +201,7 @@ export default function StotramDetailScreen() {
 
   if (loading) {
     return (
+      <ReaderPaperScope>
       <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
         <SacredLoader
           icon="bhakti"
@@ -208,11 +210,13 @@ export default function StotramDetailScreen() {
           showBack={true}
         />
       </Screen>
+      </ReaderPaperScope>
     );
   }
 
   if (loadError || !stotram) {
     return (
+      <ReaderPaperScope>
       <Screen style={{ backgroundColor: theme.bg }}>
         <BackButton />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
@@ -221,6 +225,7 @@ export default function StotramDetailScreen() {
           <Button label="Retry" variant="secondary" onPress={() => void load()} />
         </View>
       </Screen>
+      </ReaderPaperScope>
     );
   }
 

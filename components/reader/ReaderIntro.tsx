@@ -16,7 +16,7 @@ interface IntroStep {
 const ALL_STEPS: IntroStep[] = [
   {
     title: 'Reading Mode',
-    description: 'The reader follows your device light or dark appearance for comfortable reading.',
+    description: 'Choose a reading paper — Bhojpatra, Sandhya or Temple Night — from Aa. Auto follows your device light or dark setting.',
     icon: 'moon',
   },
   {

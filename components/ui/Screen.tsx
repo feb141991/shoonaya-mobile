@@ -2,16 +2,16 @@ import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
 import {
   AccessibilityInfo,
   Animated,
-  useColorScheme,
   View,
   type ViewProps,
   Pressable,
   Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
 import Feather from '@expo/vector-icons/Feather';
 
-import { SPACING, themeColor, FONTS } from '@/lib/constants';
+import { SPACING, FONTS } from '@/lib/constants';
 
 type ScreenProps = PropsWithChildren<ViewProps> & {
   header?: {
@@ -34,8 +34,8 @@ type ScreenProps = PropsWithChildren<ViewProps> & {
 // haven't opted into their own theming, and changing it would have altered
 // Login's appearance without being asked to touch it.
 export function Screen({ children, style, header, entrance = 'fade-up', fullscreen = false, ...props }: ScreenProps) {
-  const isDark = useColorScheme() === 'dark';
-  const theme = themeColor(isDark);
+  // Follows the reader paper theme inside a ReaderPaperScope / ReaderShell.
+  const { isDark, theme } = useSchemeOrReaderAppearance();
   const contentOpacity = useRef(new Animated.Value(entrance === 'none' ? 1 : 0)).current;
   const contentTranslate = useRef(new Animated.Value(entrance === 'none' ? 0 : 10)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
