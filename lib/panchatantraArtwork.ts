@@ -225,6 +225,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/ass-tiger-skin-5.webp'),
     require('@/assets/panchatantra/ass-tiger-skin-6.webp'),
   ],
+  'panchatantra-greedy-jackal': [
+    require('@/assets/panchatantra/greedy-jackal-1.webp'),
+    require('@/assets/panchatantra/greedy-jackal-2.webp'),
+    require('@/assets/panchatantra/greedy-jackal-3.webp'),
+    require('@/assets/panchatantra/greedy-jackal-4.webp'),
+    require('@/assets/panchatantra/greedy-jackal-5.webp'),
+    require('@/assets/panchatantra/greedy-jackal-6.webp'),
+  ],
 };
 
 /**
