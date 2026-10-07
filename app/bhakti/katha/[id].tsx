@@ -283,6 +283,8 @@ export default function KathaReaderScreen() {
           language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',
           speed: 0.86,
           rate: ttsRate,
+          background: true,
+          lockScreenTitle: titleToShow,
           pipelineTags: {
             content_type: 'katha',
             audio_mode: 'story',
@@ -321,6 +323,9 @@ export default function KathaReaderScreen() {
         language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',
         speed: 0.78,
         rate: ttsRate,
+        // Phase 4: keep listening with the screen locked; title on the lock screen.
+        background: true,
+        lockScreenTitle: titleToShow,
         pipelineTags: {
           content_type: 'katha',
           audio_mode: 'meditative',

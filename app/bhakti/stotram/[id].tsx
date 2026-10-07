@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +23,8 @@ import { resolveReadablePreferences } from '@/lib/readable-preferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
+import { nextRecitationStep, nextTrackPlay, REPEAT_OPTIONS, type RecitationPosition } from '@/lib/recitation';
+import { readerCopy } from '@/lib/readerCopy';
 
 type StotramVerse = {
   number: number;
@@ -145,14 +147,38 @@ export default function StotramDetailScreen() {
   const accent = stotram ? (DEITY_COLOR[stotram.deity] ?? DEITY_COLOR.universal) : theme.brand;
   const track = stotram?.audioTrackId ? getDevotionalTrackById(stotram.audioTrackId) : undefined;
 
+  // ── Listening (Phase 4, docs/READER_EXPERIENCE_GRAND_PLAN.md) ──────
+  // Repeat count is standalone (decision D3): nothing is written to Japa,
+  // streak or karma. Playback continues with the screen locked.
+  const [repeatTarget, setRepeatTarget] = useState<number>(1);
+  const repeatTargetRef = useRef(1);
+  repeatTargetRef.current = repeatTarget;
+  const stopAfterPassRef = useRef(false);
+  const [trackPlay, setTrackPlay] = useState(0);
+
+  const playTrack = async (play: number) => {
+    if (!track || !stotram) return;
+    setTrackPlay(play);
+    const started = await audio.loadAndPlay(track.audioUrl, false, () => {
+      const next = nextTrackPlay(play, repeatTargetRef.current, stopAfterPassRef.current);
+      if (next === null) {
+        setPlaying(false);
+        setTrackPlay(0);
+        return;
+      }
+      void playTrack(next);
+    }, { background: true, lockScreen: { title: stotram.title, artist: track.creator } });
+    setPlaying(started);
+  };
+
   const togglePlayback = async () => {
     if (!track) return;
     if (playing) {
-      await audio.pause();
+      await audio.stop();
       setPlaying(false);
+      setTrackPlay(0);
     } else {
-      await audio.loadAndPlay(track.audioUrl, false, () => setPlaying(false));
-      setPlaying(true);
+      await playTrack(1);
     }
   };
 
@@ -187,6 +213,69 @@ export default function StotramDetailScreen() {
   }), [hasHindi, hasPunjabi, stotram, track]);
 
   const { state, handlers } = useReaderControls(capabilities);
+
+  // Verse-by-verse recitation: the open verse first, then on through the
+  // stotram; each verse is opened and highlighted as it plays, and the next
+  // one is fetched while the current one plays so there is no gap.
+  const [recitation, setRecitation] = useState<RecitationPosition | null>(null);
+  const chainRef = useRef(0);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollYRef = useRef(0);
+  const verseRefs = useRef<Record<number, View | null>>({});
+
+  const verseSpeech = (verse: StotramVerse) => [verse.sanskrit, verse.transliteration, meaningForLanguage(verse)].join('\n\n');
+  const speechOptions = () => ({
+    quality: 'pandit' as const,
+    language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'sa-IN',
+    rate: ttsRate,
+    background: true,
+    lockScreenTitle: stotram?.title,
+    pipelineTags: {
+      content_type: 'stotram',
+      audio_mode: 'recitation',
+      script: 'devanagari',
+      delivery_intent: 'recitation',
+    } as const,
+  });
+
+  const scrollToVerse = (index: number) => {
+    const node = verseRefs.current[index];
+    if (!node || !scrollRef.current) return;
+    node.measureInWindow((_x, y) => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, scrollYRef.current + y - 150), animated: true });
+    });
+  };
+
+  const reciteFrom = (position: RecitationPosition, chain: number) => {
+    const verses = stotram?.verses ?? [];
+    const verse = verses[position.verse];
+    if (!verse || chain !== chainRef.current) return;
+    setRecitation(position);
+    setActiveVerse(position.verse);
+    scrollToVerse(position.verse);
+    void handlers.playTTS(verseSpeech(verse), speechOptions(), () => {
+      if (chain !== chainRef.current) return;
+      const next = nextRecitationStep(position, verses.length, repeatTargetRef.current, stopAfterPassRef.current);
+      if (!next) { setRecitation(null); return; }
+      reciteFrom(next, chain);
+    });
+    const upcoming = nextRecitationStep(position, verses.length, repeatTargetRef.current);
+    if (upcoming && verses[upcoming.verse]) void handlers.prefetchTTS(verseSpeech(verses[upcoming.verse]), speechOptions());
+  };
+
+  const stopRecitation = async () => {
+    chainRef.current += 1;
+    setRecitation(null);
+    await handlers.stopTTS();
+  };
+
+  // Leaving the screen stops the audio (useAudioPlayer); end the chain too.
+  useFocusEffect(useCallback(() => () => {
+    chainRef.current += 1;
+    setRecitation(null);
+    setPlaying(false);
+    setTrackPlay(0);
+  }, []));
 
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
   const activeVerseIndex = activeVerse ?? 0;
@@ -237,9 +326,20 @@ export default function StotramDetailScreen() {
       subtitle={stotram.deityEmoji ? `${stotram.deityEmoji} ${stotram.type}` : stotram.type}
       fallbackBackUrl="/(tabs)/bhakti"
       onBeforeBack={async () => {
-        await handlers.stopTTS();
+        await stopRecitation();
         await audio.stop();
       }}
+      scrollViewRef={scrollRef}
+      onScroll={(event) => { scrollYRef.current = event.nativeEvent.contentOffset.y; }}
+      repeat={{ value: repeatTarget, options: REPEAT_OPTIONS, onChange: setRepeatTarget }}
+      onSleepAfterThis={(enabled) => { stopAfterPassRef.current = enabled; }}
+      listeningStatus={
+        recitation
+          ? readerCopy(language).recitationStatus(recitation.pass, repeatTarget, recitation.verse + 1, stotram.verses.length)
+          : track && playing && repeatTarget > 1
+            ? readerCopy(language).recitationStatus(trackPlay, repeatTarget, 1, 1).split(' · ')[0]
+            : undefined
+      }
       themeColor={accent}
       ambientGlowColor={accent}
       fontPresets={FONT_PRESETS}
@@ -263,25 +363,17 @@ export default function StotramDetailScreen() {
           void togglePlayback();
           return;
         }
+        if (recitation || state.isSpeaking || state.isGeneratingTTS) {
+          void stopRecitation();
+          return;
+        }
         if (!verseForAudio) return;
-        void handlers.toggleTTS(
-          [verseForAudio.sanskrit, verseForAudio.transliteration, meaningForLanguage(verseForAudio)].join('\n\n'),
-          {
-            quality: 'pandit',
-            language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'sa-IN',
-            rate: ttsRate,
-            pipelineTags: {
-              content_type: 'stotram',
-              audio_mode: 'recitation',
-              script: 'devanagari',
-              delivery_intent: 'recitation',
-            },
-          },
-        );
+        chainRef.current += 1;
+        reciteFrom({ verse: activeVerseIndex, pass: 1 }, chainRef.current);
       }}
       ttsRate={track ? undefined : ttsRate}
       onTTSRateChange={track ? undefined : (rate) => setTtsRate(rate as 0.75 | 1 | 1.25)}
-      isSpeaking={track ? playing : state.isSpeaking}
+      isSpeaking={track ? playing : Boolean(recitation) || state.isSpeaking}
       isTTSGenerating={state.isGeneratingTTS}
       onCopy={() => handlers.copyText(textToCopy, 'Stotram')}
       isCopied={state.isCopied}
@@ -364,14 +456,17 @@ export default function StotramDetailScreen() {
 
           {stotram.verses.map((verse, i) => {
             const isActive = activeVerse === i || stotram.verses.length === 1;
+            const isReciting = recitation?.verse === i;
             return (
               <View
                 key={verse.number}
+                ref={(node) => { verseRefs.current[i] = node; }}
+                accessibilityLabel={isReciting ? `Verse ${verse.number}, now reciting` : undefined}
                 style={{
                   borderRadius: RADII.lg,
-                  backgroundColor: theme.card,
-                  borderWidth: 1,
-                  borderColor: isActive ? `${accent}40` : theme.border,
+                  backgroundColor: isReciting ? `${accent}14` : theme.card,
+                  borderWidth: isReciting ? 2 : 1,
+                  borderColor: isReciting ? accent : isActive ? `${accent}40` : theme.border,
                   overflow: 'hidden',
                   boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                 }}

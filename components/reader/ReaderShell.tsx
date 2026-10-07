@@ -109,6 +109,13 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
    */
   progressId?: string;
   progressVersion?: string;
+
+  /** Listening (Phase 4): status line shown above the capsule while listening. */
+  listeningStatus?: string;
+  /** Repeat count for the recitation (1/11/21/108); omitted when not supported. */
+  repeat?: { value: number; options: readonly number[]; onChange: (value: number) => void };
+  /** Enables the sleep timer's "After this recitation" option. */
+  onSleepAfterThis?: (enabled: boolean) => void;
 }
 
 const TTS_RATES = [0.75, 1, 1.25] as const;
@@ -155,6 +162,9 @@ export function ReaderShell<LanguageCode extends string = string>({
   scrollEventThrottle,
   progressId,
   progressVersion = 'v1',
+  listeningStatus,
+  repeat,
+  onSleepAfterThis,
 }: ReaderShellProps<LanguageCode>) {
   const appearance = useReaderAppearance();
   const { paper, isDark } = appearance;
@@ -346,6 +356,29 @@ export function ReaderShell<LanguageCode extends string = string>({
 
   useFocusEffect(useCallback(() => () => { persistPosition(); }, [persistPosition]));
 
+  // ── Sleep timer (Phase 4) ──────────────────────────────────────────
+  // Minutes, or 'after' (stop at the end of the current recitation; the
+  // screen does that via onSleepAfterThis). Stops listening via onTTS, the
+  // same control the user would tap. Runs while the app is in the background
+  // because background playback keeps the JS thread alive.
+  const [sleep, setSleep] = useState<'off' | 15 | 30 | 'after'>('off');
+  const speakingRef = useRef(Boolean(isSpeaking));
+  speakingRef.current = Boolean(isSpeaking);
+  const onTTSRef = useRef(onTTS);
+  onTTSRef.current = onTTS;
+  useEffect(() => {
+    if (sleep === 'off' || sleep === 'after') return;
+    const timer = setTimeout(() => {
+      if (speakingRef.current) onTTSRef.current?.();
+      setSleep('off');
+    }, sleep * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [sleep]);
+  const chooseSleep = (value: typeof sleep) => {
+    setSleep(value);
+    onSleepAfterThis?.(value === 'after');
+  };
+
   // ── Layout ──────────────────────────────────────────────────────────
   const [topBarHeight, setTopBarHeight] = useState(insets.top + 60);
   const [capsuleHeight, setCapsuleHeight] = useState(52);
@@ -391,6 +424,31 @@ export function ReaderShell<LanguageCode extends string = string>({
       />
     )),
   });
+  if (repeat) {
+    sections.push({
+      key: 'repeat',
+      title: copy.sectionRepeat,
+      content: repeat.options.map((count) => (
+        <SheetChip key={count} label={copy.repeatTimes(count)} role="radio" selected={repeat.value === count} palette={palette} onPress={() => repeat.onChange(count)} />
+      )),
+    });
+  }
+  if (onTTS) {
+    const sleepChoices: Array<{ value: typeof sleep; label: string }> = [
+      { value: 'off', label: copy.sleepOff },
+      { value: 15, label: copy.sleepMinutes(15) },
+      { value: 30, label: copy.sleepMinutes(30) },
+      ...(onSleepAfterThis ? [{ value: 'after' as const, label: copy.sleepAfterThis }] : []),
+    ];
+    sections.push({
+      key: 'sleep',
+      title: copy.sectionSleep,
+      content: sleepChoices.map((choice) => (
+        <SheetChip key={String(choice.value)} label={choice.label} role="radio" icon={choice.value === 'off' ? undefined : 'moon'}
+          selected={sleep === choice.value} palette={palette} onPress={() => chooseSleep(choice.value)} />
+      )),
+    });
+  }
   if ((showTransliterationToggle && onToggleTransliteration) || (showMeaningToggle && onToggleMeaning)) {
     sections.push({
       key: 'show',
@@ -482,7 +540,7 @@ export function ReaderShell<LanguageCode extends string = string>({
           ref={(node) => {
             scrollRef.current = node;
             if (scrollViewRef) {
-              (scrollViewRef as any).current = node;
+              scrollViewRef.current = node;
             }
           }}
           showsVerticalScrollIndicator={false}
@@ -566,6 +624,16 @@ export function ReaderShell<LanguageCode extends string = string>({
           onLayout={(event) => setCapsuleHeight(event.nativeEvent.layout.height)}
           style={[{ position: 'absolute', left: 16, right: 16, bottom: capsuleBottom, zIndex: 20, alignItems: 'center', gap: 8 }, bottomStyle]}
         >
+          {isSpeaking && (listeningStatus || sleep !== 'off') ? (
+            <View
+              accessibilityLiveRegion="polite"
+              style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: palette.capsule, borderWidth: 1, borderColor: palette.glassBorder }}
+            >
+              <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.caption, color: palette.text, textAlign: 'center' }}>
+                {[listeningStatus, sleep !== 'off' ? copy.sleepActive(sleep === 'after' ? copy.sleepAfterThis : copy.sleepMinutes(sleep)) : null].filter(Boolean).join(' · ')}
+              </Text>
+            </View>
+          ) : null}
           {resumeBanner ? (
             <View
               accessibilityLiveRegion="polite"

@@ -6,8 +6,21 @@ type AudioRate = 0.75 | 1.0 | 1.25;
 
 type AudioSource = string | number | { uri: string };
 
+/**
+ * Per-playback options. `background` keeps this playback going with the
+ * screen locked / app in the background (reader listening only — Phase 4 of
+ * docs/READER_EXPERIENCE_GRAND_PLAN.md); every other caller keeps the old
+ * foreground-only behaviour. `lockScreen` shows lock-screen controls, which
+ * Android requires for background playback beyond ~3 minutes.
+ */
+export type PlaybackOptions = {
+  background?: boolean;
+  lockScreen?: { title: string; artist?: string };
+};
+
 type UseAudioPlayerResult = {
-  loadAndPlay: (source: AudioSource, loop?: boolean, onComplete?: () => void) => Promise<void>;
+  /** Returns false when navigation/focus invalidated the request before playback began. */
+  loadAndPlay: (source: AudioSource, loop?: boolean, onComplete?: () => void, options?: PlaybackOptions) => Promise<boolean>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   stop: () => Promise<void>;
@@ -15,16 +28,29 @@ type UseAudioPlayerResult = {
   setVolume: (volume: number) => Promise<void>;
 };
 
-let audioModeConfigured = false;
+let configuredBackground: boolean | null = null;
 
-async function configureAudioMode() {
-  if (audioModeConfigured) return;
+async function configureAudioMode(background: boolean) {
+  if (configuredBackground === background) return;
   await setAudioModeAsync({
     playsInSilentMode: true,
-    shouldPlayInBackground: false,
+    shouldPlayInBackground: background,
     interruptionMode: 'doNotMix',
   });
-  audioModeConfigured = true;
+  configuredBackground = background;
+}
+
+function releasePlayer(player: AudioPlayer) {
+  try {
+    player.clearLockScreenControls();
+  } catch {
+    // never activated / already removed
+  }
+  try {
+    player.remove();
+  } catch {
+    // already removed
+  }
 }
 
 export function useAudioPlayer(): UseAudioPlayerResult {
@@ -43,10 +69,10 @@ export function useAudioPlayer(): UseAudioPlayerResult {
     try {
       player.pause();
       await player.seekTo(0);
-      player.remove();
     } catch {
       // already removed
     }
+    releasePlayer(player);
   }, []);
 
   // Focus-scoped, not mount/unmount: React Navigation's native-stack keeps
@@ -67,12 +93,12 @@ export function useAudioPlayer(): UseAudioPlayerResult {
   );
 
   const loadAndPlay = useCallback(
-    async (source: AudioSource, loop = false, onComplete?: () => void) => {
+    async (source: AudioSource, loop = false, onComplete?: () => void, options?: PlaybackOptions) => {
       const stopping = stop();
       const generation = generationRef.current;
       await stopping;
-      await configureAudioMode();
-      if (!focusedRef.current || generation !== generationRef.current) return;
+      await configureAudioMode(Boolean(options?.background));
+      if (!focusedRef.current || generation !== generationRef.current) return false;
 
       const player = createAudioPlayer(source);
       player.loop = loop;
@@ -83,18 +109,22 @@ export function useAudioPlayer(): UseAudioPlayerResult {
           statusSubscriptionRef.current = null;
           if (playerRef.current === player) {
             playerRef.current = null;
-            try {
-              player.remove();
-            } catch {
-              // already removed
-            }
+            releasePlayer(player);
           }
           onComplete?.();
         }
       });
       statusSubscriptionRef.current = subscription;
       playerRef.current = player;
+      if (options?.lockScreen) {
+        try {
+          player.setActiveForLockScreen(true, { title: options.lockScreen.title, artist: options.lockScreen.artist ?? 'Shoonaya' });
+        } catch {
+          // lock-screen controls unavailable on this platform
+        }
+      }
       player.play();
+      return true;
     },
     [stop]
   );

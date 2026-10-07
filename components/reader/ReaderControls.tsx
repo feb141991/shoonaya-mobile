@@ -68,7 +68,8 @@ function RoundButton({
       }}
     >
       {busy ? (
-        <ActivityIndicator size="small" color={palette.accent} />
+        // On a selected (accent-filled) button the spinner must use the on-accent colour or it vanishes.
+        <ActivityIndicator size="small" color={selected ? palette.onAccent : palette.accent} />
       ) : (
         <Feather name={icon} size={19} color={selected ? palette.onAccent : palette.accent} />
       )}

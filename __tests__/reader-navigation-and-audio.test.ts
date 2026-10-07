@@ -23,7 +23,9 @@ describe('reader navigation and audio lifecycle', () => {
     assert.match(backButton, /Promise\.resolve\(onBeforeBack\(\)\)\.finally\(navigateBack\)/);
     assert.match(readerControls, /ttsRequestIdRef\.current \+= 1/);
     assert.match(readerControls, /requestId !== ttsRequestIdRef\.current \|\| !mountedRef\.current/);
-    assert.match(stotram, /await handlers\.stopTTS\(\);\s*await audio\.stop\(\);/);
+    // Phase 4: back ends the verse-recitation chain (which stops TTS) and the recorded track.
+    assert.match(stotram, /await stopRecitation\(\);\s*await audio\.stop\(\);/);
+    assert.match(stotram, /const stopRecitation = async \(\) => \{\s*chainRef\.current \+= 1;\s*setRecitation\(null\);\s*await handlers\.stopTTS\(\);/);
     assert.match(katha, /onBeforeBack=\{handlers\.stopTTS\}/);
   });
 

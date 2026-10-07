@@ -14,7 +14,7 @@ audio included).
 | 1. Immersive controls | done | (this commit) |
 | 2. Paper themes | done | cf337b1 (wip) + (this commit) |
 | 3. Resume | done | (this commit) |
-| 4. Listening | — | |
+| 4. Listening | code complete; real-device background check pending | (this commit) |
 | 5. Pathshala + Panchatantra | — | |
 | 6. Chapters (Dharm Veer, Vrat) | — | |
 | 7. Quote cards | — | |
@@ -184,3 +184,31 @@ returned to the top. Reading to the end and coming back starts at the top.
 
 Tests: npm test 1146 passed, 1 failed (astro-engine-numerical, worktree path
 only), 0 skipped. New: reading-progress (7).
+
+## Phase 4 — Listening (2026-10-07)
+
+Built: opt-in background playback and lock-screen controls for reader audio;
+Stotram verse-follow with active-verse highlighting, automatic scrolling and
+prefetch of the next verse; standalone 1×/11×/21×/108× repeat counts; and the
+approved 15-minute, 30-minute and end-of-recitation sleep choices. Katha audio
+also opts into background playback. Repeat state remains local and writes
+nothing to Japa, karma or streaks.
+
+Review fixes before commit:
+- a focus-invalidated audio request now reports that playback never began, so
+  a reader left during TTS generation cannot publish a stale playing state
+- the unplanned 60-minute sleep option was removed
+- the new ReaderShell ref assignment no longer uses an `any` cast
+
+Verified against the Expo SDK 57 audio contract: background playback is
+enabled by the config plugin, the audio mode uses `shouldPlayInBackground`,
+and Android playback activates lock-screen controls with `doNotMix`.
+
+Tests: targeted reader/listening suites 43 passed, 0 failed, 0 skipped;
+TypeScript passed. Full `npm test`: 1158 passed, 1 failed, 0 skipped. The one
+failure remains the known nested-worktree path in
+`astro-engine-numerical.test.ts`; it cannot resolve the adjacent backend repo.
+
+Still required before release sign-off: rebuild the native binaries and prove
+lock-screen/background continuation plus timer stop on physical Android and
+iOS devices. Simulator or unit tests do not establish background delivery.
