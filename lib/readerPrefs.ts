@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ReaderThemeKey } from '@/lib/constants';
 
 const READER_PINNED_KEY = '@shoonaya/reader_controls_pinned';
 const READER_HINT_SEEN_KEY = '@shoonaya/reader_first_time_hint_seen';
+const READER_THEME_KEY = '@shoonaya/reader_theme_choice';
 
 /**
  * Retrieves whether the user has pinned reader controls permanently visible.
@@ -50,11 +52,41 @@ export async function markFirstTimeHintSeen(): Promise<void> {
 }
 
 /**
+ * Retrieves the saved reader paper theme choice (if any).
+ */
+export async function getReaderThemeChoice(): Promise<ReaderThemeKey | null> {
+  try {
+    const val = await AsyncStorage.getItem(READER_THEME_KEY);
+    if (val === 'bhojpatra' || val === 'sandhya' || val === 'templeNight') {
+      return val;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Persists the reader paper theme choice.
+ */
+export async function setReaderThemeChoice(theme: ReaderThemeKey): Promise<void> {
+  try {
+    await AsyncStorage.setItem(READER_THEME_KEY, theme);
+  } catch {
+    // Fail safe
+  }
+}
+
+/**
  * Clears reader preferences upon sign-out or account switch.
  */
 export async function clearReaderPrefs(): Promise<void> {
   try {
-    await AsyncStorage.multiRemove([READER_PINNED_KEY, READER_HINT_SEEN_KEY]);
+    await AsyncStorage.multiRemove([
+      READER_PINNED_KEY,
+      READER_HINT_SEEN_KEY,
+      READER_THEME_KEY,
+    ]);
   } catch {
     // Fail safe
   }

@@ -9,7 +9,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, RADII, SHADOWS, TYPE, ReaderThemeKey, READER_THEMES } from '@/lib/constants';
 
 const TTS_RATES = [0.75, 1, 1.25] as const;
 
@@ -18,6 +18,8 @@ export interface ReaderSettingsSheetProps<LanguageCode extends string = string> 
   onClose: () => void;
   isDark: boolean;
   themeColor: string;
+  paperTheme?: ReaderThemeKey;
+  onSelectPaperTheme?: (theme: ReaderThemeKey) => void;
   fontPresets?: ReadonlyArray<{ label: string }>;
   fontStep?: number;
   setFontStep?: (step: number) => void;
@@ -44,6 +46,8 @@ export function ReaderSettingsSheet<LanguageCode extends string = string>({
   onClose,
   isDark,
   themeColor,
+  paperTheme,
+  onSelectPaperTheme,
   fontPresets,
   fontStep,
   setFontStep,
@@ -203,6 +207,65 @@ export function ReaderSettingsSheet<LanguageCode extends string = string>({
                               }}
                             >
                               {preset.label}
+                            </Text>
+                          </PressableSurface>
+                        );
+                      })}
+                    </View>
+                  </View>
+                ) : null}
+
+                {/* Paper Tone / Folio Theme */}
+                {onSelectPaperTheme ? (
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ ...TYPE.section, color: textDim }}>
+                      Paper Tone
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      {(['bhojpatra', 'sandhya', 'templeNight'] as const).map((key) => {
+                        const themeTokens = READER_THEMES[key];
+                        const selected = (paperTheme ?? (isDark ? 'templeNight' : 'bhojpatra')) === key;
+                        return (
+                          <PressableSurface
+                            key={key}
+                            haptic="selection"
+                            onPress={() => onSelectPaperTheme(key)}
+                            accessibilityLabel={`Paper tone ${themeTokens.label}`}
+                            accessibilityState={{ selected }}
+                            style={{
+                              flex: 1,
+                              height: 48,
+                              borderRadius: RADII.lg,
+                              backgroundColor: selected ? themeColor : bgSubCard,
+                              borderColor: selected ? themeColor : border,
+                              borderWidth: 1,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexDirection: 'row',
+                              paddingHorizontal: 8,
+                              gap: 6,
+                              minHeight: 0,
+                            }}
+                          >
+                            <View
+                              style={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: 6,
+                                backgroundColor: themeTokens.bg,
+                                borderColor: themeTokens.text,
+                                borderWidth: 1,
+                              }}
+                            />
+                            <Text
+                              numberOfLines={1}
+                              style={{
+                                color: selected ? selectedText : textMain,
+                                fontFamily: FONTS.sansSemiBold,
+                                fontSize: 12,
+                              }}
+                            >
+                              {themeTokens.label}
                             </Text>
                           </PressableSurface>
                         );

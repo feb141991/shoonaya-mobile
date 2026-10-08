@@ -1,11 +1,12 @@
 import { Text, View, ActivityIndicator } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
+import { COLORS, FONTS, RADII, SHADOWS, ReaderThemeKey, getReaderTheme } from '@/lib/constants';
 
 export interface ReaderCapsuleProps<LanguageCode extends string = string> {
   isDark: boolean;
   themeColor: string;
+  paperTheme?: ReaderThemeKey;
   fontPresets?: ReadonlyArray<{ label: string }>;
   fontStep?: number;
   setFontStep?: (step: number) => void;
@@ -23,6 +24,7 @@ export interface ReaderCapsuleProps<LanguageCode extends string = string> {
 export function ReaderCapsule<LanguageCode extends string = string>({
   isDark,
   themeColor,
+  paperTheme,
   fontPresets,
   fontStep,
   setFontStep,
@@ -36,12 +38,13 @@ export function ReaderCapsule<LanguageCode extends string = string>({
   onOpenSettings,
   onInteraction,
 }: ReaderCapsuleProps<LanguageCode>) {
-  const bgGlass = isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight;
-  const bgSubCard = isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const textMain = isDark ? COLORS.creamBg : COLORS.ink;
-  const textDim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const selectedText = isDark ? COLORS.ink : COLORS.onMediaWhite;
+  const activeTokens = getReaderTheme(paperTheme, isDark);
+  const bgGlass = activeTokens.glass;
+  const bgSubCard = activeTokens.subCard;
+  const border = activeTokens.border;
+  const textMain = activeTokens.text;
+  const textDim = activeTokens.dim;
+  const selectedText = activeTokens.isDark ? COLORS.ink : COLORS.onMediaWhite;
 
   const handleNextLanguage = () => {
     onInteraction();

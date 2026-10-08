@@ -339,6 +339,84 @@ export const themeColor = (isDark: boolean) => ({
   textOnBrand: isDark ? COLORS.textOnBrandDark : COLORS.textOnBrandLight,
 });
 
+// Reader Paper Themes (Grand Plan Phase 2 - Decision D2)
+// Provides calm, high-contrast book-like folio surfaces:
+// - Bhojpatra (parchment): warm daytime reading surface (#F7F3E8 / #2A2118, AAA 14.2:1)
+// - Sandhya (twilight): indigo dusk tone (#131722 / #E8D8B8, AAA 12.7:1)
+// - Temple Night (temple sanctum): deep obsidian tone (#0C0D0E / #F4F0E8, AAA 17.1:1)
+export type ReaderThemeKey = 'bhojpatra' | 'sandhya' | 'templeNight';
+
+export interface ReaderThemeTokens {
+  key: ReaderThemeKey;
+  label: string;
+  labelHi: string;
+  bg: string;
+  card: string;
+  subCard: string;
+  text: string;
+  dim: string;
+  border: string;
+  borderSoft: string;
+  accent: string;
+  glass: string;
+  isDark: boolean;
+}
+
+export const READER_THEMES: Record<ReaderThemeKey, ReaderThemeTokens> = {
+  bhojpatra: {
+    key: 'bhojpatra',
+    label: 'Bhojpatra',
+    labelHi: 'भोजपत्र',
+    bg: '#F7F3E8',
+    card: '#EFE9D9',
+    subCard: 'rgba(42,33,24,0.05)',
+    text: '#2A2118',
+    dim: '#6E5D4B',
+    border: 'rgba(42,33,24,0.14)',
+    borderSoft: 'rgba(42,33,24,0.07)',
+    accent: '#B45309',
+    glass: 'rgba(247,243,232,0.92)',
+    isDark: false,
+  },
+  sandhya: {
+    key: 'sandhya',
+    label: 'Sandhya',
+    labelHi: 'संध्या',
+    bg: '#131722',
+    card: '#1A2030',
+    subCard: 'rgba(232,216,184,0.06)',
+    text: '#E8D8B8',
+    dim: '#A49680',
+    border: 'rgba(232,216,184,0.16)',
+    borderSoft: 'rgba(232,216,184,0.08)',
+    accent: '#D4AF37',
+    glass: 'rgba(19,23,34,0.92)',
+    isDark: true,
+  },
+  templeNight: {
+    key: 'templeNight',
+    label: 'Temple Night',
+    labelHi: 'मंदिर रात्रि',
+    bg: '#0C0D0E',
+    card: '#16181B',
+    subCard: 'rgba(244,240,232,0.05)',
+    text: '#F4F0E8',
+    dim: '#9C988F',
+    border: 'rgba(244,240,232,0.14)',
+    borderSoft: 'rgba(244,240,232,0.07)',
+    accent: '#C5A059',
+    glass: 'rgba(12,13,14,0.92)',
+    isDark: true,
+  },
+};
+
+export function getReaderTheme(themeKey?: ReaderThemeKey | null, isDarkFallback?: boolean): ReaderThemeTokens {
+  if (themeKey && READER_THEMES[themeKey]) {
+    return READER_THEMES[themeKey];
+  }
+  return isDarkFallback ? READER_THEMES.templeNight : READER_THEMES.bhojpatra;
+}
+
 export const FONTS = {
   serif: 'CormorantGaramond_600SemiBold',
   serifBold: 'CormorantGaramond_700Bold',
