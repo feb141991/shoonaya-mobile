@@ -47,6 +47,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-king-and-minister': require('@/assets/panchatantra/king-minister-1.webp'),
   'panchatantra-owl-and-crows': require('@/assets/panchatantra/owl-crows-1.webp'),
   'panchatantra-golden-dropping-bird': require('@/assets/panchatantra/golden-bird-1.webp'),
+  'panchatantra-weaver-as-vishnu': require('@/assets/panchatantra/weaver-vishnu-1.webp'),
 };
 
 /**
