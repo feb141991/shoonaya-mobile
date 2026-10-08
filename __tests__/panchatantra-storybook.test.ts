@@ -137,6 +137,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-sparrow-and-elephant',
       'panchatantra-king-and-minister',
       'panchatantra-owl-and-crows',
+      'panchatantra-golden-dropping-bird',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -253,6 +254,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-sparrow-and-elephant'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-king-and-minister'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-owl-and-crows'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-golden-dropping-bird'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
@@ -311,5 +313,16 @@ test('The Owls and the Crows story uses six paragraph-aligned offline scenes', (
   assert.equal(hasDedicatedSceneArtwork('panchatantra-owl-and-crows'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-owl-and-crows', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Bird with Golden Droppings story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-golden-dropping-bird');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-golden-dropping-bird'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-golden-dropping-bird'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-golden-dropping-bird', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
