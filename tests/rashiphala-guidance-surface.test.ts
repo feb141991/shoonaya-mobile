@@ -41,3 +41,13 @@ test('Native Rashiphal labels and shares the server spiritual date with the edit
   assert.match(screen, /\$\{data\.accuracyNote\}/);
   assert.doesNotMatch(screen, /new Date\(\)\.toLocaleDateString/);
 });
+
+test('Native Rashiphal only renders and shares the neutral Native contract, never legacy house-derived claims', () => {
+  assert.match(screen, /data\.lifeReflections\?\.length/);
+  assert.match(screen, /data\.lifeReflections\.map\(/);
+  assert.match(screen, /data\.practiceFocus && data\.practiceSteps\?\.length/);
+  assert.match(screen, /&contract=2/);
+  assert.doesNotMatch(screen, /data\.(?:karma|health|love|luckyColor|luckyNumber|luckyTime|sadhanaFocus|sadhanaPlan|beejaMantra)/);
+  assert.doesNotMatch(screen, /Lucky Color|Lucky Number|Suggested Window|Mantra Anchor|Work Guidance/);
+  assert.match(screen, /Transit reflection: \$\{data\.panditAiOracle\}/);
+});

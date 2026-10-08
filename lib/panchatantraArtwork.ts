@@ -38,6 +38,12 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-crane-and-crab': require('@/assets/panchatantra/crane-crab-1.webp'),
   'panchatantra-merchant-and-iron-balance': require('@/assets/panchatantra/merchant-balance-1.webp'),
   'panchatantra-lion-mouse-and-cat': require('@/assets/panchatantra/lion-mouse-cat-1.webp'),
+  'panchatantra-jackal-and-drum': require('@/assets/panchatantra/jackal-drum-1.webp'),
+  'panchatantra-fox-and-grapes': require('@/assets/panchatantra/fox-grapes-1.webp'),
+  'panchatantra-ass-in-tiger-skin': require('@/assets/panchatantra/ass-tiger-skin-1.webp'),
+  'panchatantra-greedy-jackal': require('@/assets/panchatantra/greedy-jackal-1.webp'),
+  'panchatantra-heron-and-fish': require('@/assets/panchatantra/heron-fish-1.webp'),
+  'panchatantra-sparrow-and-elephant': require('@/assets/panchatantra/sparrow-elephant-1.webp'),
 };
 
 /**
@@ -196,6 +202,54 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/lion-mouse-cat-4.webp'),
     require('@/assets/panchatantra/lion-mouse-cat-5.webp'),
     require('@/assets/panchatantra/lion-mouse-cat-6.webp'),
+  ],
+  'panchatantra-jackal-and-drum': [
+    require('@/assets/panchatantra/jackal-drum-1.webp'),
+    require('@/assets/panchatantra/jackal-drum-2.webp'),
+    require('@/assets/panchatantra/jackal-drum-3.webp'),
+    require('@/assets/panchatantra/jackal-drum-4.webp'),
+    require('@/assets/panchatantra/jackal-drum-5.webp'),
+    require('@/assets/panchatantra/jackal-drum-6.webp'),
+  ],
+  'panchatantra-fox-and-grapes': [
+    require('@/assets/panchatantra/fox-grapes-1.webp'),
+    require('@/assets/panchatantra/fox-grapes-2.webp'),
+    require('@/assets/panchatantra/fox-grapes-3.webp'),
+    require('@/assets/panchatantra/fox-grapes-4.webp'),
+    require('@/assets/panchatantra/fox-grapes-5.webp'),
+    require('@/assets/panchatantra/fox-grapes-6.webp'),
+  ],
+  'panchatantra-ass-in-tiger-skin': [
+    require('@/assets/panchatantra/ass-tiger-skin-1.webp'),
+    require('@/assets/panchatantra/ass-tiger-skin-2.webp'),
+    require('@/assets/panchatantra/ass-tiger-skin-3.webp'),
+    require('@/assets/panchatantra/ass-tiger-skin-4.webp'),
+    require('@/assets/panchatantra/ass-tiger-skin-5.webp'),
+    require('@/assets/panchatantra/ass-tiger-skin-6.webp'),
+  ],
+  'panchatantra-greedy-jackal': [
+    require('@/assets/panchatantra/greedy-jackal-1.webp'),
+    require('@/assets/panchatantra/greedy-jackal-2.webp'),
+    require('@/assets/panchatantra/greedy-jackal-3.webp'),
+    require('@/assets/panchatantra/greedy-jackal-4.webp'),
+    require('@/assets/panchatantra/greedy-jackal-5.webp'),
+    require('@/assets/panchatantra/greedy-jackal-6.webp'),
+  ],
+  'panchatantra-heron-and-fish': [
+    require('@/assets/panchatantra/heron-fish-1.webp'),
+    require('@/assets/panchatantra/heron-fish-2.webp'),
+    require('@/assets/panchatantra/heron-fish-3.webp'),
+    require('@/assets/panchatantra/heron-fish-4.webp'),
+    require('@/assets/panchatantra/heron-fish-5.webp'),
+    require('@/assets/panchatantra/heron-fish-6.webp'),
+  ],
+  'panchatantra-sparrow-and-elephant': [
+    require('@/assets/panchatantra/sparrow-elephant-1.webp'),
+    require('@/assets/panchatantra/sparrow-elephant-2.webp'),
+    require('@/assets/panchatantra/sparrow-elephant-3.webp'),
+    require('@/assets/panchatantra/sparrow-elephant-4.webp'),
+    require('@/assets/panchatantra/sparrow-elephant-5.webp'),
+    require('@/assets/panchatantra/sparrow-elephant-6.webp'),
   ],
 };
 
