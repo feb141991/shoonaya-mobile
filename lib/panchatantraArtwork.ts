@@ -46,6 +46,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-sparrow-and-elephant': require('@/assets/panchatantra/sparrow-elephant-1.webp'),
   'panchatantra-king-and-minister': require('@/assets/panchatantra/king-minister-1.webp'),
   'panchatantra-owl-and-crows': require('@/assets/panchatantra/owl-crows-1.webp'),
+  'panchatantra-golden-dropping-bird': require('@/assets/panchatantra/golden-bird-1.webp'),
+  'panchatantra-weaver-as-vishnu': require('@/assets/panchatantra/weaver-vishnu-1.webp'),
 };
 
 /**
@@ -260,6 +262,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/king-minister-4.webp'),
     require('@/assets/panchatantra/king-minister-5.webp'),
     require('@/assets/panchatantra/king-minister-6.webp'),
+  ],
+  'panchatantra-owl-and-crows': [
+    require('@/assets/panchatantra/owl-crows-1.webp'),
+    require('@/assets/panchatantra/owl-crows-2.webp'),
+    require('@/assets/panchatantra/owl-crows-3.webp'),
+    require('@/assets/panchatantra/owl-crows-4.webp'),
+    require('@/assets/panchatantra/owl-crows-5.webp'),
+    require('@/assets/panchatantra/owl-crows-6.webp'),
+  ],
+  'panchatantra-golden-dropping-bird': [
+    require('@/assets/panchatantra/golden-bird-1.webp'),
+    require('@/assets/panchatantra/golden-bird-2.webp'),
+    require('@/assets/panchatantra/golden-bird-3.webp'),
+    require('@/assets/panchatantra/golden-bird-4.webp'),
+    require('@/assets/panchatantra/golden-bird-5.webp'),
+    require('@/assets/panchatantra/golden-bird-6.webp'),
   ],
 };
 
