@@ -77,6 +77,35 @@ export async function setReaderThemeChoice(theme: ReaderThemeKey): Promise<void>
     // Fail safe
   }
 }
+const READER_LAYOUT_MODE_KEY = '@shoonaya/reader_layout_mode';
+
+export type ReaderLayoutMode = 'chapters' | 'continuous';
+
+/**
+ * Retrieves the saved reader layout mode ('chapters' folio vs 'continuous' scroll).
+ * Defaults to 'chapters' for book-like folio experience.
+ */
+export async function getReaderLayoutMode(): Promise<ReaderLayoutMode> {
+  try {
+    const val = await AsyncStorage.getItem(READER_LAYOUT_MODE_KEY);
+    if (val === 'continuous') return 'continuous';
+    return 'chapters';
+  } catch {
+    return 'chapters';
+  }
+}
+
+/**
+ * Persists the reader layout mode.
+ */
+export async function setReaderLayoutMode(mode: ReaderLayoutMode): Promise<void> {
+  try {
+    await AsyncStorage.setItem(READER_LAYOUT_MODE_KEY, mode);
+  } catch {
+    // Fail safe
+  }
+}
+
 /**
  * Clears reader preferences and stored positions upon sign-out or account switch.
  */
@@ -87,6 +116,7 @@ export async function clearReaderPrefs(): Promise<void> {
         READER_PINNED_KEY,
         READER_HINT_SEEN_KEY,
         READER_THEME_KEY,
+        READER_LAYOUT_MODE_KEY,
       ]),
       clearAllReaderPositions(),
     ]);
