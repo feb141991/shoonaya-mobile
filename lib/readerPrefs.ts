@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ReaderThemeKey } from '@/lib/constants';
+import { clearAllReaderPositions } from '@/lib/readerPosition';
 
 const READER_PINNED_KEY = '@shoonaya/reader_controls_pinned';
 const READER_HINT_SEEN_KEY = '@shoonaya/reader_first_time_hint_seen';
@@ -76,16 +77,18 @@ export async function setReaderThemeChoice(theme: ReaderThemeKey): Promise<void>
     // Fail safe
   }
 }
-
 /**
- * Clears reader preferences upon sign-out or account switch.
+ * Clears reader preferences and stored positions upon sign-out or account switch.
  */
 export async function clearReaderPrefs(): Promise<void> {
   try {
-    await AsyncStorage.multiRemove([
-      READER_PINNED_KEY,
-      READER_HINT_SEEN_KEY,
-      READER_THEME_KEY,
+    await Promise.all([
+      AsyncStorage.multiRemove([
+        READER_PINNED_KEY,
+        READER_HINT_SEEN_KEY,
+        READER_THEME_KEY,
+      ]),
+      clearAllReaderPositions(),
     ]);
   } catch {
     // Fail safe

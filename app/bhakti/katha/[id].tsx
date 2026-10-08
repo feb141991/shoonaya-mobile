@@ -292,6 +292,7 @@ export default function KathaReaderScreen() {
 
   return (
     <ReaderShell
+      contentId={`katha-${katha.id}`}
       title={titleToShow}
       subtitle={badge}
       fallbackBackUrl="/(tabs)/bhakti"
