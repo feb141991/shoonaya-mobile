@@ -27,21 +27,15 @@ type RashiHoroscope = {
   rashiSanskrit: string;
   symbol: string;
   lord: string;
-  luckyColor: string;
-  luckyNumber: number;
-  luckyTime: string;
-  sadhanaFocus: string;
-  karma: string;
-  health: string;
-  love: string;
   shloka: string;
   shlokaTranslation: string;
   panditAiOracle: string;
-  beejaMantra: string;
   gocharSummary: string;
   moonTransit: string;
   transitHighlights: Array<{ title: string; detail: string; tone: 'support' | 'discipline' | 'neutral'; structure?: string[] }>;
-  sadhanaPlan: Array<{ label: string; action: string }>;
+  lifeReflections?: Array<{ title: string; detail: string }>;
+  practiceFocus?: string;
+  practiceSteps?: Array<{ label: string; action: string }>;
   accuracyNote: string;
   spiritualDate?: string;
   dashaContext?: { planet: string; endDate: string; note: string } | null;
@@ -53,6 +47,8 @@ type LifeGuidanceItem = {
   title: string;
   text: string;
 };
+
+const LIFE_REFLECTION_ICONS = ['briefcase', 'sun', 'heart'] as const satisfies readonly (keyof typeof Feather.glyphMap)[];
 
 function normalizeRashiKey(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -107,11 +103,8 @@ export default function RashiphalaScreen() {
   const shareReading = useCallback(async () => {
     if (!data) return;
     const text =
-      `Daily Rashiphala for ${data.rashiSanskrit} (${data.rashi}) - ${dateLabel}\n\n` +
-      `Sadhana Focus: ${data.sadhanaFocus}\n` +
-      `Karma & Focus: ${data.karma}\n` +
-      `Body & Energy: ${data.health}\n` +
-      `Lucky Color: ${data.luckyColor} | Lucky Number: ${data.luckyNumber}\n\n` +
+      `Daily Rashiphala for ${data.rashiSanskrit} (${data.rashi}) — ${dateLabel}\n\n` +
+      `Transit reflection: ${data.panditAiOracle}\n\n` +
       `${data.accuracyNote}\n\n` +
       'Shared from Shoonaya';
     await Share.share({ title: 'Daily Rashiphala', message: text });
@@ -187,7 +180,7 @@ export default function RashiphalaScreen() {
 
     async function loadHoroscope() {
       try {
-        const res = await apiFetch(`/api/jyotish/rashiphal?rashi=${requestedRashi}&tz=${encodeURIComponent(timezone)}`);
+        const res = await apiFetch(`/api/jyotish/rashiphal?rashi=${requestedRashi}&tz=${encodeURIComponent(timezone)}&contract=2`);
         const payload = await res.json().catch(() => null);
         if (!res.ok) {
           throw new Error(payload?.error ?? 'Unable to load Rashiphala.');
@@ -422,73 +415,71 @@ export default function RashiphalaScreen() {
             </Card>
           ) : null}
 
-          {/* Life Guidance Areas */}
-          <View style={{ gap: 12 }}>
-            {([
-              { icon: 'briefcase', title: 'Work Guidance', text: data.karma },
-              { icon: 'sun', title: 'Body & Energy', text: data.health },
-              { icon: 'heart', title: 'Relationships', text: data.love },
-            ] satisfies LifeGuidanceItem[]).map((item, index) => (
-              <Card key={index} tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
-                <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name={item.icon} size={17} color={theme.brand} />
-                </View>
-                <View style={{ flex: 1, gap: 4 }}>
-                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.title}</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{item.text}</Text>
-                </View>
-              </Card>
-            ))}
-          </View>
+          {/* Daily life reflections are general prompts, not chart-derived outcomes. */}
+          {data.lifeReflections?.length ? (
+            <View style={{ gap: 12 }}>
+              {data.lifeReflections.map((reflection, index) => {
+                const item: LifeGuidanceItem = {
+                  icon: LIFE_REFLECTION_ICONS[index] ?? 'info',
+                  title: reflection.title,
+                  text: reflection.detail,
+                };
+                return (
+                  <Card key={index} tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                    <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
+                      <Feather name={item.icon} size={17} color={theme.brand} />
+                    </View>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.title}</Text>
+                      <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{item.text}</Text>
+                    </View>
+                  </Card>
+                );
+              })}
+            </View>
+          ) : null}
 
-          {/* Practice Guidance */}
-          <LinearGradient
-            colors={isDark
-              ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
-              : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              padding: 18,
-              gap: 16,
-              boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Practice content is absent on older backends until contract v2 deploys. */}
+          {data.practiceFocus && data.practiceSteps?.length ? (
+            <LinearGradient
+              colors={isDark
+                ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
+                : [COLORS.homeRaisedLight, COLORS.brandSoftLight, COLORS.cardBgLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: theme.premiumBorder,
+                padding: 18,
+                gap: 16,
+                boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+              }}
+            >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 34, height: 34, borderRadius: 13, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name="compass" size={16} color={theme.brand} />
                 </View>
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Practice Guidance</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Practice in Your Tradition</Text>
               </View>
-              <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Suggested Window</Text>
-                <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>{data.luckyTime}</Text>
+              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 22 }}>{data.practiceFocus}</Text>
+              <View style={{ gap: 10 }}>
+                {data.practiceSteps.map((step) => (
+                  <View key={step.label} style={{ backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
+                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{step.label}</Text>
+                    <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{step.action}</Text>
+                  </View>
+                ))}
               </View>
-            </View>
-            <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 22 }}>{data.sadhanaFocus}</Text>
-            <View style={{ gap: 10 }}>
-              {data.sadhanaPlan.map((step) => (
-                <View key={step.label} style={{ backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 }}>
-                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{step.label}</Text>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{step.action}</Text>
-                </View>
-              ))}
-            </View>
 
-            {/* Dhyana Support */}
-            <View style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 14, gap: 8 }}>
-              <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Dhyana Support</Text>
-              <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>{data.shloka}</Text>
-              <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 18 }}>{data.shlokaTranslation}</Text>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 12, marginTop: 4 }}>
-                Mantra Anchor: <Text style={{ fontFamily: FONTS.sansSemiBold, textDecorationLine: 'underline' }}>{data.beejaMantra}</Text>
-              </Text>
-            </View>
-          </LinearGradient>
+              {/* Dhyana Support */}
+              <View style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 14, gap: 8 }}>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Dhyana Support</Text>
+                <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>{data.shloka}</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 18 }}>{data.shlokaTranslation}</Text>
+              </View>
+            </LinearGradient>
+          ) : null}
         </ScrollView>
       )}
     </Screen>
