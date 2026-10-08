@@ -15,6 +15,11 @@ export interface VratData {
   practiceLocal?: string;
   mantra: string;
   mantraLocal?: string;
+  /** Exact-language citations; a source for one language cannot authorize another translation. */
+  mantraSourceCitations?: Partial<Record<'en' | 'hi', {
+    sourceName: string;
+    sourceRef?: string;
+  }>>;
   // ── Enriched fields ──────────────────────────────────────────────────────
   fastingType?: FastingType;
   breakFastTime?: string;      // e.g. "After moonrise" / "Next day sunrise"

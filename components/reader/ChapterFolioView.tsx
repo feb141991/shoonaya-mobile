@@ -35,6 +35,8 @@ export interface ChapterFolioViewProps {
   onComplete?: () => void;
   accentColor?: string;
   isDark?: boolean;
+  quoteAction?: React.ReactNode;
+  mantraAction?: React.ReactNode;
 }
 
 export function ChapterFolioView({
@@ -48,6 +50,8 @@ export function ChapterFolioView({
   onComplete,
   accentColor,
   isDark = false,
+  quoteAction,
+  mantraAction,
 }: ChapterFolioViewProps) {
   const { width: screenWidth } = useWindowDimensions();
   const pagerRef = useRef<ScrollView>(null);
@@ -251,7 +255,7 @@ export function ChapterFolioView({
                       },
                     ]}
                   >
-                    {chapter.content}
+                  {chapter.content}
                   </Text>
                 </View>
               ) : chapter.type === 'dos-donts' ? (
@@ -428,6 +432,7 @@ export function ChapterFolioView({
                   >
                     {chapter.content}
                   </Text>
+                  {mantraAction}
                 </View>
               ) : chapter.type === 'katha' ? (
                 // Katha Multi-paragraph Story
@@ -501,6 +506,7 @@ export function ChapterFolioView({
                       >
                         : {chapter.quote.attribution}
                       </Text>
+                      {quoteAction}
                     </View>
                   ) : null}
 

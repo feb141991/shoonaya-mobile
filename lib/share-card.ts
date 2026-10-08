@@ -3,7 +3,11 @@ import { Alert, type View } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 
-import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/components/share/ShoonayaShareCard';
+import {
+  SHARE_CARD_HEIGHT,
+  SHARE_CARD_SQUARE_SIZE,
+  SHARE_CARD_WIDTH,
+} from '@/components/share/ShoonayaShareCard';
 
 export async function shareCapturedShoonayaCard(
   ref: RefObject<View | null>,
@@ -11,6 +15,7 @@ export async function shareCapturedShoonayaCard(
     fileName: string;
     dialogTitle?: string;
     fallbackMessage?: string;
+    format?: 'story' | 'square';
   },
 ) {
   if (!ref.current) {
@@ -19,12 +24,13 @@ export async function shareCapturedShoonayaCard(
   }
 
   try {
+    const height = options.format === 'square' ? SHARE_CARD_SQUARE_SIZE : SHARE_CARD_HEIGHT;
     const uri = await captureRef(ref, {
       format: 'png',
       quality: 1,
       result: 'tmpfile',
       width: SHARE_CARD_WIDTH * 3,
-      height: SHARE_CARD_HEIGHT * 3,
+      height: height * 3,
       fileName: options.fileName.replace(/\.png$/i, ''),
     });
 
