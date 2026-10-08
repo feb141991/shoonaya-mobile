@@ -29,6 +29,9 @@ import { DharmVeerHeroBanner } from '@/components/dharm-veer/DharmVeerHeroBanner
 
 // New Reader Foundation imports
 import { ReaderShell } from '@/components/reader/ReaderShell';
+import { ChapterFolioView } from '@/components/reader/ChapterFolioView';
+import { getDharmVeerChapters } from '@/lib/readerChapters';
+import { getReaderLayoutMode, setReaderLayoutMode, type ReaderLayoutMode } from '@/lib/readerPrefs';
 import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences, resolveLocalContentLanguage } from '@/lib/readable-preferences';
@@ -161,6 +164,23 @@ export default function DharmVeerDetailScreen() {
   const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
   const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1); // 'md'
+  const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [layoutMode, setLayoutMode] = useState<ReaderLayoutMode>('chapters');
+
+  useEffect(() => {
+    let mounted = true;
+    void getReaderLayoutMode().then((mode) => {
+      if (mounted) setLayoutMode(mode);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleSelectLayoutMode = (mode: ReaderLayoutMode) => {
+    setLayoutMode(mode);
+    void setReaderLayoutMode(mode);
+  };
 
   // Explicit Inspiration state
   const [pendingCheckIn, setPendingCheckIn] = useState(false);
@@ -454,6 +474,11 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
     canShowExplain: false,
   }), [hasCompleteLocalContent, hero?.journey, hero?.journeyLocal]);
 
+  const chapters = useMemo(() => {
+    if (!hero) return [];
+    return getDharmVeerChapters(hero, showLocal ? localContentLanguage : 'en');
+  }, [hero, showLocal, localContentLanguage]);
+
   const { state, handlers } = useReaderControls(capabilities);
 
   const fontSizeToken = FONT_PRESETS[fontStep].value as FontSize;
@@ -490,6 +515,15 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
     <>
       <ReaderShell
         contentId={`dharm-veer-${hero.id}`}
+        activeSectionTitle={chapters[activeChapterIndex]?.title}
+        activeSectionIndex={activeChapterIndex}
+        onPositionRestored={(pos) => {
+          if (typeof pos.sectionIndex === 'number' && pos.sectionIndex >= 0 && pos.sectionIndex < chapters.length) {
+            setActiveChapterIndex(pos.sectionIndex);
+          }
+        }}
+        layoutMode={layoutMode}
+        onSelectLayoutMode={handleSelectLayoutMode}
         title={title ?? 'Dharm Veer'}
         subtitle={meta?.dharmVeerLocal || 'Dharm Veer'}
         fallbackBackUrl="/dharm-veer"
@@ -505,7 +539,28 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         isCopied={state.isCopied}
         onShare={() => handlers.share(textToShare)}
       >
-        {/* Hero Banner with Classical Artwork */}
+        {layoutMode === 'chapters' ? (
+          <ChapterFolioView
+            chapters={chapters}
+            activeChapterIndex={activeChapterIndex}
+            onChapterChange={(idx) => {
+              setActiveChapterIndex(idx);
+            }}
+            themeColor={brand}
+            fontSize={fs}
+            accentColor={brand}
+            isDark={isDark}
+            onComplete={() => {
+              if (isGuest) {
+                setAuthGateVisible(true);
+              } else {
+                setPendingCheckIn(true);
+              }
+            }}
+          />
+        ) : (
+          <>
+            {/* Hero Banner with Classical Artwork */}
         {tagline ? (
           <DharmVeerHeroBanner
             hero={hero}
@@ -682,6 +737,8 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
             </Text>
           </PressableSurface>
         </View>
+        </>
+      )}
       </ReaderShell>
 
       <AuthGate

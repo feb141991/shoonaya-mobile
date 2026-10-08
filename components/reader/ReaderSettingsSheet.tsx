@@ -20,6 +20,8 @@ export interface ReaderSettingsSheetProps<LanguageCode extends string = string> 
   themeColor: string;
   paperTheme?: ReaderThemeKey;
   onSelectPaperTheme?: (theme: ReaderThemeKey) => void;
+  layoutMode?: 'chapters' | 'continuous';
+  onSelectLayoutMode?: (mode: 'chapters' | 'continuous') => void;
   fontPresets?: ReadonlyArray<{ label: string }>;
   fontStep?: number;
   setFontStep?: (step: number) => void;
@@ -48,6 +50,8 @@ export function ReaderSettingsSheet<LanguageCode extends string = string>({
   themeColor,
   paperTheme,
   onSelectPaperTheme,
+  layoutMode,
+  onSelectLayoutMode,
   fontPresets,
   fontStep,
   setFontStep,
@@ -266,6 +270,61 @@ export function ReaderSettingsSheet<LanguageCode extends string = string>({
                               }}
                             >
                               {themeTokens.label}
+                            </Text>
+                          </PressableSurface>
+                        );
+                      })}
+                    </View>
+                  </View>
+                ) : null}
+
+                {/* Reading Layout Style (Folio Chapters vs Continuous Scroll) */}
+                {onSelectLayoutMode ? (
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ ...TYPE.section, color: textDim }}>
+                      Layout Style
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      {[
+                        { mode: 'chapters' as const, label: 'Folio Chapters', icon: 'book-open' },
+                        { mode: 'continuous' as const, label: 'Continuous', icon: 'align-justify' },
+                      ].map(({ mode, label, icon }) => {
+                        const selected = (layoutMode ?? 'chapters') === mode;
+                        return (
+                          <PressableSurface
+                            key={mode}
+                            haptic="selection"
+                            onPress={() => onSelectLayoutMode(mode)}
+                            accessibilityLabel={`Layout style ${label}`}
+                            accessibilityState={{ selected }}
+                            style={{
+                              flex: 1,
+                              height: 48,
+                              borderRadius: RADII.lg,
+                              backgroundColor: selected ? themeColor : bgSubCard,
+                              borderColor: selected ? themeColor : border,
+                              borderWidth: 1,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexDirection: 'row',
+                              paddingHorizontal: 8,
+                              gap: 6,
+                              minHeight: 0,
+                            }}
+                          >
+                            <Feather
+                              name={icon as any}
+                              size={15}
+                              color={selected ? selectedText : textDim}
+                            />
+                            <Text
+                              style={{
+                                color: selected ? selectedText : textMain,
+                                fontFamily: FONTS.sansSemiBold,
+                                fontSize: 13,
+                              }}
+                            >
+                              {label}
                             </Text>
                           </PressableSurface>
                         );

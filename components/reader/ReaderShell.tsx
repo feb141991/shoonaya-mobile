@@ -59,6 +59,8 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   activeSectionTitle?: string;
   activeSectionIndex?: number;
   onPositionRestored?: (pos: SavedReaderPosition) => void;
+  layoutMode?: 'chapters' | 'continuous';
+  onSelectLayoutMode?: (mode: 'chapters' | 'continuous') => void;
 
   headerCenterContent?: ReactNode;
   ambientGlowColor?: string;
@@ -116,6 +118,8 @@ export function ReaderShell<LanguageCode extends string = string>({
   activeSectionTitle,
   activeSectionIndex,
   onPositionRestored,
+  layoutMode,
+  onSelectLayoutMode,
   headerCenterContent,
   ambientGlowColor,
   fontPresets,
@@ -683,34 +687,46 @@ export function ReaderShell<LanguageCode extends string = string>({
         </View>
       ) : null}
 
-      <ScrollView
-        ref={(node) => {
-          internalScrollRef.current = node;
-          if (scrollViewRef) {
-            (scrollViewRef as any).current = node;
-          }
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        onScroll={handleScroll}
-        scrollEventThrottle={scrollEventThrottle ?? 16}
-        contentContainerStyle={[
-          {
-            paddingHorizontal: 16,
-            // Header height clearance
-            paddingTop: insets.top + 72,
-            // Reserved clearance for bottom thumb capsule and nav bar
+      {layoutMode === 'chapters' ? (
+        <View
+          style={{
+            flex: 1,
+            paddingTop: insets.top + 54,
             paddingBottom: insets.bottom + (bottomBar ? 120 : NAV_BAR_CLEARANCE),
-          },
-          contentContainerStyle,
-        ]}
-      >
-        <Pressable onPress={handlePageTap}>
-          <View onStartShouldSetResponder={() => false}>
-            {children}
-          </View>
-        </Pressable>
-      </ScrollView>
+          }}
+        >
+          {children}
+        </View>
+      ) : (
+        <ScrollView
+          ref={(node) => {
+            internalScrollRef.current = node;
+            if (scrollViewRef) {
+              (scrollViewRef as any).current = node;
+            }
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onScroll={handleScroll}
+          scrollEventThrottle={scrollEventThrottle ?? 16}
+          contentContainerStyle={[
+            {
+              paddingHorizontal: 16,
+              // Header height clearance
+              paddingTop: insets.top + 72,
+              // Reserved clearance for bottom thumb capsule and nav bar
+              paddingBottom: insets.bottom + (bottomBar ? 120 : NAV_BAR_CLEARANCE),
+            },
+            contentContainerStyle,
+          ]}
+        >
+          <Pressable onPress={handlePageTap}>
+            <View onStartShouldSetResponder={() => false}>
+              {children}
+            </View>
+          </Pressable>
+        </ScrollView>
+      )}
 
       {/* Floating Thumb Capsule */}
       <Animated.View
@@ -760,6 +776,8 @@ export function ReaderShell<LanguageCode extends string = string>({
         themeColor={themeColor ?? activePaperTheme.accent}
         paperTheme={activePaperTheme.key}
         onSelectPaperTheme={handleSelectPaperTheme}
+        layoutMode={layoutMode}
+        onSelectLayoutMode={onSelectLayoutMode}
         fontPresets={fontPresets}
         fontStep={fontStep}
         setFontStep={setFontStep}

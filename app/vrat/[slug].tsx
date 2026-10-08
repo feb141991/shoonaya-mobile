@@ -28,6 +28,10 @@ import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { ReaderShell } from '@/components/reader/ReaderShell';
+import { ChapterFolioView } from '@/components/reader/ChapterFolioView';
+import { getVratChapters, type KathaPayload } from '@/lib/readerChapters';
+import { getReaderLayoutMode, setReaderLayoutMode, type ReaderLayoutMode } from '@/lib/readerPrefs';
+import { readBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -174,6 +178,24 @@ export default function VratDetailScreen() {
   const [occurrenceLoading, setOccurrenceLoading] = useState(false);
 
   const [fontStep, setFontStep] = useState(1);
+  const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [layoutMode, setLayoutMode] = useState<ReaderLayoutMode>('chapters');
+  const [linkedKatha, setLinkedKatha] = useState<KathaPayload | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void getReaderLayoutMode().then((mode) => {
+      if (mounted) setLayoutMode(mode);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleSelectLayoutMode = (mode: ReaderLayoutMode) => {
+    setLayoutMode(mode);
+    void setReaderLayoutMode(mode);
+  };
 
   // Non-blocking success/error feedback -- matches the local toast pattern
   // already established in app/(tabs)/japa.tsx (this codebase has no shared
@@ -204,6 +226,32 @@ export default function VratDetailScreen() {
       mantra: 'Om Shanti Shanti Shanti',
     };
   }, [slug]);
+
+  // Load linked katha if authored on vrat
+  useEffect(() => {
+    let mounted = true;
+    if (!vrat.kathaId) return;
+
+    const cacheKey = bhaktiCacheKeys.kathaDetail(vrat.kathaId);
+    void readBhaktiContentCache(cacheKey, (val): val is KathaPayload => !!val && typeof val === 'object').then((cached) => {
+      if (mounted && cached) {
+        setLinkedKatha(cached);
+      }
+    });
+
+    void apiFetch(`/api/bhakti/katha/${vrat.kathaId}`).then(async (res) => {
+      if (res.ok) {
+        const json = await res.json();
+        if (mounted && json && json.id) {
+          setLinkedKatha(json);
+        }
+      }
+    }).catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, [vrat.kathaId]);
 
   // Check guest state
   useEffect(() => {
@@ -352,6 +400,9 @@ export default function VratDetailScreen() {
   // just because the user's app language is Punjabi; use the original English
   // text until reviewed Punjabi content exists for this vrat.
   const showLocal = readerLanguage === 'hi' && hasLocalVrat;
+  const chapters = useMemo(() => {
+    return getVratChapters(vrat, showLocal ? 'hi' : 'en', linkedKatha);
+  }, [vrat, showLocal, linkedKatha]);
   const copy = VRAT_DETAIL_COPY[readerLanguage === 'hi' ? 'hi' : readerLanguage === 'pa' ? 'pa' : 'en'];
   const selectedName = showLocal && vrat.nameLocal ? vrat.nameLocal : vrat.name;
   const selectedTagline = showLocal && vrat.taglineLocal ? vrat.taglineLocal : vrat.tagline;
@@ -388,6 +439,15 @@ export default function VratDetailScreen() {
   return (
     <ReaderShell
       contentId={`vrat-${slug}`}
+      activeSectionTitle={chapters[activeChapterIndex]?.title}
+      activeSectionIndex={activeChapterIndex}
+      onPositionRestored={(pos) => {
+        if (typeof pos.sectionIndex === 'number' && pos.sectionIndex >= 0 && pos.sectionIndex < chapters.length) {
+          setActiveChapterIndex(pos.sectionIndex);
+        }
+      }}
+      layoutMode={layoutMode}
+      onSelectLayoutMode={handleSelectLayoutMode}
       title={selectedName}
       subtitle={selectedTagline}
       fallbackBackUrl="/vrat"
@@ -401,7 +461,18 @@ export default function VratDetailScreen() {
       onShare={handleShare}
       setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
     >
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      {layoutMode === 'chapters' ? (
+        <ChapterFolioView
+          chapters={chapters}
+          activeChapterIndex={activeChapterIndex}
+          onChapterChange={(idx) => setActiveChapterIndex(idx)}
+          themeColor={theme.brand}
+          fontSize={{ fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}
+          accentColor={theme.brand}
+          isDark={isDark}
+        />
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header Card */}
         <Card style={{ padding: 20, marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -710,6 +781,7 @@ export default function VratDetailScreen() {
           </Text>
         </Card>
       </ScrollView>
+      )}
 
       {toast.visible ? (
         <View
