@@ -136,6 +136,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-heron-and-fish',
       'panchatantra-sparrow-and-elephant',
       'panchatantra-king-and-minister',
+      'panchatantra-owl-and-crows',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -251,9 +252,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-heron-and-fish'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-sparrow-and-elephant'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-king-and-minister'), 2);
-
-    // Tier 1: Masterwork cover artwork
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-owl-and-crows'), 1);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-owl-and-crows'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
@@ -301,5 +300,16 @@ test('King and Wise Minister story uses six paragraph-aligned offline scenes', (
   assert.equal(hasDedicatedSceneArtwork('panchatantra-king-and-minister'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-king-and-minister', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Owls and the Crows story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-owl-and-crows');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-owl-and-crows'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-owl-and-crows'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-owl-and-crows', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

@@ -261,6 +261,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/king-minister-5.webp'),
     require('@/assets/panchatantra/king-minister-6.webp'),
   ],
+  'panchatantra-owl-and-crows': [
+    require('@/assets/panchatantra/owl-crows-1.webp'),
+    require('@/assets/panchatantra/owl-crows-2.webp'),
+    require('@/assets/panchatantra/owl-crows-3.webp'),
+    require('@/assets/panchatantra/owl-crows-4.webp'),
+    require('@/assets/panchatantra/owl-crows-5.webp'),
+    require('@/assets/panchatantra/owl-crows-6.webp'),
+  ],
 };
 
 /**
