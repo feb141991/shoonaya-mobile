@@ -134,8 +134,11 @@ export async function saveReaderPosition(params: {
   const record = await loadRecord(userKey);
   const now = explicitUpdatedAt ?? Date.now();
 
-  // If user scrolled back to near the top, clear the resume position
-  if (scrollOffsetY < MIN_SCROLL_OFFSET_TO_SAVE) {
+  // A folio/scene reader can have a meaningful section index while its
+  // scroll offset stays at zero. Preserve those chapter-only positions;
+  // continuous readers still clear a near-top scroll with no section.
+  const hasMeaningfulSection = typeof sectionIndex === 'number' && sectionIndex > 0;
+  if (scrollOffsetY < MIN_SCROLL_OFFSET_TO_SAVE && !hasMeaningfulSection) {
     if (record.entries[contentId]) {
       delete record.entries[contentId];
       await writeRecord(userKey, record);

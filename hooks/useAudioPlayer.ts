@@ -1,13 +1,17 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync, type AudioMetadata, type AudioPlayer } from 'expo-audio';
 import { useFocusEffect } from 'expo-router';
 
 type AudioRate = 0.75 | 1.0 | 1.25;
 
 type AudioSource = string | number | { uri: string };
+export type AudioPlaybackOptions = {
+  backgroundPlayback?: boolean;
+  lockScreenMetadata?: AudioMetadata;
+};
 
 type UseAudioPlayerResult = {
-  loadAndPlay: (source: AudioSource, loop?: boolean, onComplete?: () => void) => Promise<void>;
+  loadAndPlay: (source: AudioSource, loop?: boolean, onComplete?: () => void, options?: AudioPlaybackOptions) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   stop: () => Promise<void>;
@@ -15,16 +19,21 @@ type UseAudioPlayerResult = {
   setVolume: (volume: number) => Promise<void>;
 };
 
-let audioModeConfigured = false;
+let configuredBackgroundPlayback: boolean | null = null;
+let audioModeQueue: Promise<void> = Promise.resolve();
 
-async function configureAudioMode() {
-  if (audioModeConfigured) return;
-  await setAudioModeAsync({
-    playsInSilentMode: true,
-    shouldPlayInBackground: false,
-    interruptionMode: 'doNotMix',
+async function configureAudioMode(backgroundPlayback: boolean) {
+  const operation = audioModeQueue.then(async () => {
+    if (configuredBackgroundPlayback === backgroundPlayback) return;
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: backgroundPlayback,
+      interruptionMode: 'doNotMix',
+    });
+    configuredBackgroundPlayback = backgroundPlayback;
   });
-  audioModeConfigured = true;
+  audioModeQueue = operation.catch(() => {});
+  await operation;
 }
 
 export function useAudioPlayer(): UseAudioPlayerResult {
@@ -32,6 +41,7 @@ export function useAudioPlayer(): UseAudioPlayerResult {
   const statusSubscriptionRef = useRef<{ remove: () => void } | null>(null);
   const generationRef = useRef(0);
   const focusedRef = useRef(true);
+  const backgroundPlaybackRef = useRef(false);
 
   const stop = useCallback(async () => {
     generationRef.current += 1;
@@ -39,13 +49,23 @@ export function useAudioPlayer(): UseAudioPlayerResult {
     statusSubscriptionRef.current = null;
     const player = playerRef.current;
     playerRef.current = null;
-    if (!player) return;
+    const shouldRestoreAudioMode = backgroundPlaybackRef.current;
     try {
-      player.pause();
-      await player.seekTo(0);
-      player.remove();
+      if (player) {
+        if (backgroundPlaybackRef.current) player.setActiveForLockScreen(false);
+        player.pause();
+        await player.seekTo(0);
+        player.remove();
+      }
     } catch {
       // already removed
+    } finally {
+      if (shouldRestoreAudioMode) {
+        backgroundPlaybackRef.current = false;
+        await configureAudioMode(false).catch(() => {
+          configuredBackgroundPlayback = null;
+        });
+      }
     }
   }, []);
 
@@ -67,34 +87,84 @@ export function useAudioPlayer(): UseAudioPlayerResult {
   );
 
   const loadAndPlay = useCallback(
-    async (source: AudioSource, loop = false, onComplete?: () => void) => {
+    async (source: AudioSource, loop = false, onComplete?: () => void, options?: AudioPlaybackOptions) => {
       const stopping = stop();
       const generation = generationRef.current;
       await stopping;
-      await configureAudioMode();
-      if (!focusedRef.current || generation !== generationRef.current) return;
-
-      const player = createAudioPlayer(source);
-      player.loop = loop;
-      player.volume = 1.0;
-      const subscription = player.addListener('playbackStatusUpdate', (status) => {
-        if (!loop && status.didJustFinish && playerRef.current === player) {
-          statusSubscriptionRef.current?.remove();
-          statusSubscriptionRef.current = null;
-          if (playerRef.current === player) {
-            playerRef.current = null;
-            try {
-              player.remove();
-            } catch {
-              // already removed
-            }
-          }
-          onComplete?.();
+      const backgroundPlayback = options?.backgroundPlayback === true;
+      let player: AudioPlayer | null = null;
+      try {
+        await configureAudioMode(backgroundPlayback);
+        if (!focusedRef.current || generation !== generationRef.current) {
+          if (backgroundPlayback) await configureAudioMode(false);
+          return;
         }
-      });
-      statusSubscriptionRef.current = subscription;
-      playerRef.current = player;
-      player.play();
+
+        player = createAudioPlayer(source);
+        player.loop = loop;
+        player.volume = 1.0;
+        const activePlayer = player;
+        const subscription = activePlayer.addListener('playbackStatusUpdate', (status) => {
+          if (!loop && status.didJustFinish && playerRef.current === activePlayer) {
+            statusSubscriptionRef.current?.remove();
+            statusSubscriptionRef.current = null;
+            if (playerRef.current === activePlayer) {
+              playerRef.current = null;
+              try {
+                activePlayer.remove();
+              } catch {
+                // already removed
+              }
+            }
+            const finishPlayback = async () => {
+              if (backgroundPlayback) {
+                backgroundPlaybackRef.current = false;
+                try {
+                  activePlayer.setActiveForLockScreen(false);
+                } catch {
+                  // lock-screen state may already be cleared by the OS
+                }
+                await configureAudioMode(false).catch(() => {
+                  configuredBackgroundPlayback = null;
+                });
+              }
+              onComplete?.();
+            };
+            void finishPlayback();
+          }
+        });
+        statusSubscriptionRef.current = subscription;
+        playerRef.current = activePlayer;
+        backgroundPlaybackRef.current = backgroundPlayback;
+        if (backgroundPlayback && options?.lockScreenMetadata) {
+          try {
+            activePlayer.setActiveForLockScreen(true, options.lockScreenMetadata, {
+              showSeekBackward: true,
+              showSeekForward: true,
+            });
+          } catch {
+            // Playback still works if this platform cannot expose lock-screen metadata.
+          }
+        }
+        activePlayer.play();
+      } catch (error) {
+        statusSubscriptionRef.current?.remove();
+        statusSubscriptionRef.current = null;
+        if (playerRef.current === player) playerRef.current = null;
+        try {
+          player?.setActiveForLockScreen(false);
+          player?.remove();
+        } catch {
+          // Player setup did not complete.
+        }
+        if (backgroundPlayback) {
+          backgroundPlaybackRef.current = false;
+          await configureAudioMode(false).catch(() => {
+            configuredBackgroundPlayback = null;
+          });
+        }
+        throw error;
+      }
     },
     [stop]
   );

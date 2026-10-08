@@ -36,6 +36,8 @@ const dharmVeerScreen = readFileSync(new URL('../app/dharm-veer/[id].tsx', impor
 const kathaScreen = readFileSync(new URL('../app/bhakti/katha/[id].tsx', import.meta.url), 'utf8');
 const vratScreen = readFileSync(new URL('../app/vrat/[slug].tsx', import.meta.url), 'utf8');
 const festivalScreen = readFileSync(new URL('../app/festival/[slug].tsx', import.meta.url), 'utf8');
+const pathshalaScreen = readFileSync(new URL('../app/pathshala/[pathId]/[lessonId].tsx', import.meta.url), 'utf8');
+const storybookScreen = readFileSync(new URL('../components/reader/PanchatantraStorybookView.tsx', import.meta.url), 'utf8');
 
 describe('Reader Experience Phase 3 - Pick up where you left off', () => {
   beforeEach(async () => {
@@ -84,6 +86,21 @@ describe('Reader Experience Phase 3 - Pick up where you left off', () => {
     });
     pos = await getReaderPosition({ userKey: 'user-1', contentId: 'stotram-hanuman-chalisa' });
     assert.equal(pos, null, 'Expected position to be cleared when scrolled back to top');
+  });
+
+  it('preserves a scene/folio position at zero scroll offset', async () => {
+    await saveReaderPosition({
+      userKey: 'user-1',
+      contentId: 'panchatantra-wise-minister',
+      scrollOffsetY: 0,
+      sectionTitle: 'Scene 4',
+      sectionIndex: 3,
+    });
+
+    const pos = await getReaderPosition({ userKey: 'user-1', contentId: 'panchatantra-wise-minister' });
+    assert.ok(pos, 'A chapter index is a valid resume point without vertical scrolling');
+    assert.equal(pos.sectionIndex, 3);
+    assert.equal(pos.sectionTitle, 'Scene 4');
   });
 
   it('discards saved position when contentVersion changes', async () => {
@@ -209,11 +226,33 @@ describe('Reader Experience Phase 3 - Pick up where you left off', () => {
     assert.match(readerShell, /saveReaderPosition\(\{/);
   });
 
-  it('wires contentId into all 5 ReaderShell screen surfaces', () => {
+  it('wires contentId into all 7 ReaderShell screen surfaces', () => {
     assert.match(stotramScreen, /contentId=\{`stotram-\$\{stotram\.id\}`\}/);
     assert.match(dharmVeerScreen, /contentId=\{`dharm-veer-\$\{hero\.id\}`\}/);
     assert.match(kathaScreen, /contentId=\{`katha-\$\{katha\.id\}`\}/);
     assert.match(vratScreen, /contentId=\{`vrat-\$\{slug\}`\}/);
     assert.match(festivalScreen, /contentId=\{`festival-\$\{slug\}`\}/);
+    assert.match(pathshalaScreen, /contentId=\{`pathshala-\$\{pathId\}-\$\{lessonIndex\}`\}/);
+    assert.match(storybookScreen, /contentId=\{`panchatantra-\$\{katha\.id\}`\}/);
+  });
+
+  it('adopts shared reader controls and resume for Pathshala and Panchatantra', () => {
+    const pathshala = readFileSync(new URL('../app/pathshala/[pathId]/[lessonId].tsx', import.meta.url), 'utf8');
+    const storybook = readFileSync(new URL('../components/reader/PanchatantraStorybookView.tsx', import.meta.url), 'utf8');
+    const pathshalaCache = readFileSync(new URL('../lib/pathshalaCache.ts', import.meta.url), 'utf8');
+
+    assert.match(pathshala, /<ReaderShell[\s\S]*contentId=\{`pathshala-\$\{pathId\}-\$\{lessonIndex\}`\}/);
+    assert.match(pathshala, /onPositionRestored=\{handlePositionRestored\}/);
+    assert.match(pathshala, /word_by_word\?: string/);
+    assert.match(pathshala, /entry\.word_by_word/);
+    assert.match(pathshala, /contentVersion=\{`\$\{lesson\.entries\.length\}:\$\{lesson\.entries\.map/);
+    assert.doesNotMatch(pathshala, /contentVersion=\{`\$\{entry\.id\}/, 'Pathshala version is stable for the lesson, not the currently selected verse');
+    assert.match(pathshala, /restoredPositionVerseRef\.current === verseIndex/);
+    assert.doesNotMatch(pathshala.slice(pathshala.indexOf('Word by word · source text'), pathshala.indexOf('Word by word · source text') + 500), /explainResult\.word_by_word/);
+    assert.match(pathshalaCache, /word_by_word\?: string/);
+    assert.match(storybook, /<ReaderShell[\s\S]*layoutMode="chapters"/);
+    assert.match(storybook, /contentId=\{`panchatantra-\$\{katha\.id\}`\}/);
+    assert.match(storybook, /activeSectionIndex=\{safePage\}/);
+    assert.match(storybook, /onPositionRestored=\{\(position\) =>/);
   });
 });

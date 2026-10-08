@@ -1,7 +1,21 @@
 # Reader Experience — Grand Plan
 
-Status: planned, not started. Written 2026-10-07. Native only (the PWA is no
-longer maintained; backend changes, where needed, are called out).
+Status: Native implementation is complete through Phase 7. Written 2026-10-07;
+status refreshed 2026-10-08. The PWA is retired from this work. Remaining
+verification gates are listed below; implementation status does not imply a
+store build or physical-device sign-off.
+
+| Phase | Implementation status | Remaining verification or constraint |
+|---|---|---|
+| 0 — Baseline | Not captured | No matched iOS/Android screenshots or visible-lines measurements; do not claim a measured space/performance gain. |
+| 1 — Immersive controls | Implemented | Device accessibility and visual matrix still needed. |
+| 2 — Paper themes | Implemented | Device visual check still needed. |
+| 3 — Resume | Implemented | Pathshala resume now uses a stable lesson content version. |
+| 4 — Listening | Implemented | Background mode requires a new native binary; physical lock-screen and timer checks remain. Recorded Stotram tracks have no verse timestamps. |
+| 5 — Shared Pathshala/Panchatantra readers | Implemented | `word_by_word` is an unstructured source string, so it is shown as supplied and not fabricated into word pairs. |
+| 6 — Chapter folio | Implemented | Device visual and accessibility check still needed. |
+| 7 — Quote cards | Implemented | Device/share-sheet visual check still needed. |
+| Panchatantra art | Story 22 illustrated | Asset-budget tests pass; visual review on target devices remains. |
 
 Goal: make long-form reading in Shoonaya feel like a calm, book-like folio —
 more of the screen for the text, controls within thumb reach and out of the
@@ -22,17 +36,18 @@ reader always able to pick up where they left off.
 
 ## 2. Facts this plan is built on (verified in the code, 2026-10-07)
 
-- `components/reader/ReaderShell.tsx` (558 lines) is used by **5 screens**:
+- `components/reader/ReaderShell.tsx` is used by **7 reader surfaces**:
   Dharm Veer `app/dharm-veer/[id].tsx`, Stotram `app/bhakti/stotram/[id].tsx`,
   Katha `app/bhakti/katha/[id].tsx` (non-Panchatantra), Vrat `app/vrat/[slug].tsx`,
-  Festival `app/festival/[slug].tsx`. Its header holds: back, title, listen
+  Festival `app/festival/[slug].tsx`, Pathshala lessons
+  `app/pathshala/[pathId]/[lessonId].tsx`, and the Panchatantra storybook
+  `components/reader/PanchatantraStorybookView.tsx`. Its header holds: back, title, listen
   (0.75/1/1.25×), copy, share, font steps, language, transliteration and
   meaning toggles.
-- **Not** on ReaderShell: the Panchatantra storybook
-  (`components/reader/PanchatantraStorybookView.tsx`, has its own hard-coded
-  parchment colours) and Pathshala lessons
-  (`app/pathshala/[pathId]/[lessonId].tsx`, has its own font scale and
-  `word_by_word` data).
+- The Pathshala lesson retains lesson navigation and completion actions in its
+  bottom dock; its available `word_by_word` string is rendered verbatim as
+  source text because no structured word/meaning pairs are present in the
+  Native contract.
 - `components/home/FloatingDharmaScroll.tsx` is a Home card, not a reader —
   **out of scope**.
 - Stotram already shows each verse's Sanskrit, transliteration and meaning
@@ -40,8 +55,9 @@ reader always able to pick up where they left off.
 - Listening: Stotram generates speech per verse on the server
   (`quality: 'pandit'`), or plays a recorded track (`lib/devotional-audio.ts`,
   Wikimedia). **Neither provides line/word timing.**
-- `app.json`: `expo-audio` has `"enableBackgroundPlayback": false` → audio
-  stops when the screen locks or the app is backgrounded.
+- `app.json`: `expo-audio` background playback is enabled for the next native
+  build. Runtime audio background mode and lock-screen metadata are requested
+  only while a reader is actively playing.
 - `expo-keep-awake` is installed.
 - Dharm Veer (`lib/dharm-veer.ts`, 76 heroes): every hero has `journey`,
   `trial`, `teaching`, `moral`, optional `legacy`, a `quote {text, attribution}`
@@ -78,7 +94,7 @@ reader always able to pick up where they left off.
 
 ## 4. Phases
 
-### Phase 0 — Baseline (no code changes)
+### Phase 0 — Baseline (no code changes) — NOT CAPTURED
 - Screenshot the 5 ReaderShell screens + Pathshala + Panchatantra on iOS and
   Android, light/dark, default and largest text.
 - Measure: header height (pt), lines of body text visible on first screen.
@@ -139,7 +155,7 @@ Acceptance: tests for keying, version change discards, sign-out clears,
 bound enforced.
 Effort: M.
 
-### Phase 4 — Listening
+### Phase 4 — Listening — IMPLEMENTED IN NATIVE CODE
 Scope:
 - **Verse follow (Stotram):** highlight the verse being played (golden
   glow from tokens) and auto-advance to the next verse; scroll it into view.
@@ -151,21 +167,29 @@ Scope:
 - **Repeat counter (D3, standalone):** 1× / 11× / 21× / 108× for a stotram or
   verse; shows "7 of 11"; stops at target; resets when leaving. Writes nothing
   to the server; no karma/streak/Japa effect.
+- Panchatantra narration follows its existing six paragraph boundaries to the
+  end of the story and offers the same 15 min / 30 min / end-of-story timer.
+- Generated Stotram audio is cached in memory and temporary local files for
+  the reader session, so repeat cycles do not re-request TTS. The cache is
+  bounded and temporary audio files are removed when the reader leaves.
 Acceptance: tests for advance order, sleep timer stop, counter stop at target;
 real-device check that audio continues with screen locked (Simulator is not
-enough for background audio sign-off).
+enough for background audio sign-off). **Implementation is complete; device
+sign-off still required.**
 Effort: L (background audio is the risky part).
 
-### Phase 5 — Pathshala and Panchatantra adopt the shared pieces
+### Phase 5 — Pathshala and Panchatantra adopt the shared pieces — IMPLEMENTED
 Scope:
 - Extract the capsule, auto-hide controller, theme and resume into shared
   modules (`components/reader/ReaderControls/*`, `lib/readerPrefs.ts`).
 - Pathshala lesson: capsule + auto-hide + themes + resume; show the existing
-  `word_by_word` data in an interlinear layout (original · transliteration ·
-  word meanings · meaning) where present — no generated glosses.
+  `word_by_word` data where present — no generated glosses. The current
+  contract supplies a string, not structured original/transliteration/meaning
+  pairs, so the string is displayed verbatim rather than heuristically split.
 - Panchatantra storybook: capsule + auto-hide + themes + resume (scene index).
 Acceptance: per-screen reachability checklist; existing storybook and Pathshala
-tests stay green.
+tests stay green. Focused reader tests and typecheck pass; physical visual and
+accessibility verification remains.
 Effort: L.
 
 ### Phase 6 — Chapter layout for Dharm Veer and Vrat (D5)
@@ -191,7 +215,7 @@ chapters with no empty page; tests assert chapter list per item equals its
 non-empty fields; resume works per chapter.
 Effort: L.
 
-### Phase 7 — Quote cards (D4)
+### Phase 7 — Quote cards (D4) — IMPLEMENTED
 Scope:
 - "Share as card" on the Dharm Veer quote (all 76 have quote + attribution)
   and on Vrat mantras that carry a source.

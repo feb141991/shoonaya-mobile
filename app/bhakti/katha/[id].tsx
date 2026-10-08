@@ -271,20 +271,24 @@ export default function KathaReaderScreen() {
           if (router.canGoBack()) router.back();
           else router.replace('/(tabs)/bhakti' as Href);
         }}
-        fontSize={fs}
-        onTTS={(sceneText) => handlers.toggleTTS(sceneText || textToCopy, {
+        onTTS={(sceneText, onComplete) => { void handlers.playTTS(sceneText || textToCopy, {
           quality: 'pandit',
           language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',
           speed: 0.86,
           rate: ttsRate,
+          backgroundPlayback: true,
+          lockScreenMetadata: { title: titleToShow, artist: 'Shoonaya', albumTitle: 'Panchatantra Stories' },
+          onComplete,
           pipelineTags: {
             content_type: 'katha',
             audio_mode: 'story',
             delivery_intent: 'live_user',
           },
-        })}
+        }); }}
+        onStopTTS={() => { void handlers.stopTTS(); }}
         isSpeaking={state.isSpeaking}
         isTTSGenerating={state.isGeneratingTTS}
+        audioError={state.ttsError}
         onComplete={() => void markDone()}
       />
     );
@@ -314,6 +318,8 @@ export default function KathaReaderScreen() {
         language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'en-IN',
         speed: 0.78,
         rate: ttsRate,
+        backgroundPlayback: true,
+        lockScreenMetadata: { title: titleToShow, artist: 'Shoonaya', albumTitle: 'Sacred Stories' },
         pipelineTags: {
           content_type: 'katha',
           audio_mode: 'meditative',

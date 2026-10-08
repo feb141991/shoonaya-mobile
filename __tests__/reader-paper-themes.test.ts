@@ -134,8 +134,9 @@ describe('Reader Experience Phase 2 - Paper Themes (D2)', () => {
   });
 
   it('uses READER_THEMES tokens in PanchatantraStorybookView instead of untokenized literals', () => {
-    assert.match(storybookView, /import \{[\s\S]*?READER_THEMES[\s\S]*?\} from ['"]@\/lib\/constants['"]/);
-    assert.match(storybookView, /storybookTheme = isDark \? READER_THEMES\.templeNight : READER_THEMES\.bhojpatra/);
+    assert.match(storybookView, /getReaderTheme\(readerThemeKey, isDark\)/);
+    assert.match(storybookView, /storybookTheme = readerPaperTheme/);
+    assert.match(storybookView, /onPaperThemeChange=\{setReaderThemeKey\}/);
     assert.doesNotMatch(storybookView, /const parchmentBg = isDark \? "#14100C" : "#FAF6EE";/);
   });
 });
