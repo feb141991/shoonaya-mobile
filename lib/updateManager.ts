@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 
 import { apiFetch } from '@/lib/api';
-import { APP_BUILD_NUMBER, APP_VERSION, APP_VERSION_LABEL } from '@/lib/appVersion';
+import { APP_VERSION, APP_VERSION_LABEL } from '@/lib/appVersion';
 import { createSingleFlight } from '@/lib/async-single-flight';
 import { createUpdateAlertGate } from '@/lib/updateAlertGate';
 import { getLanguageStorageKey } from '@/lib/i18n/language-storage';
@@ -139,7 +139,7 @@ async function checkStoreBinaryUpdateOnce(): Promise<StoreUpdateCheckResult> {
     const policy = parseAppVersionInfo(await response.json(), platform);
     if (!policy) return { type: 'ERROR', message: 'Invalid update policy response' };
 
-    return evaluateStoreVersionPolicy(APP_VERSION, policy, platform, APP_BUILD_NUMBER);
+    return evaluateStoreVersionPolicy(APP_VERSION, policy, platform);
   } catch (err) {
     return {
       type: 'ERROR',
@@ -198,10 +198,8 @@ async function presentStoreUpdateResult(
     const copy = await getPreferredUpdateCopy();
     const notes = result.releaseNotes ? `\n\n${result.releaseNotes}` : '';
     const shown = showExclusiveAlert(
-      result.reason === 'build' ? copy.optionalBuildTitle : copy.optionalVersionTitle,
-      result.reason === 'build'
-        ? copy.optionalBuildMessage(result.latestVersion, notes)
-        : copy.optionalVersionMessage(result.latestVersion, notes),
+      copy.optionalVersionTitle,
+      copy.optionalVersionMessage(result.latestVersion, notes),
       [
         { text: copy.remindLater, style: 'cancel' },
         { text: copy.updateNow, onPress: () => openStoreUrl(result.storeUrl) },

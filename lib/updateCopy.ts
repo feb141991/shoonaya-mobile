@@ -8,8 +8,6 @@ export interface UpdateCopy {
   updateOnStore: string;
   optionalVersionTitle: string;
   optionalVersionMessage: (version: string, notes: string) => string;
-  optionalBuildTitle: string;
-  optionalBuildMessage: (version: string, notes: string) => string;
   remindLater: string;
   updateNow: string;
   otaTitle: string;
@@ -35,8 +33,6 @@ const copy: Record<AppLanguage, UpdateCopy> = {
     updateOnStore: 'Update on Store',
     optionalVersionTitle: 'New Version Available ✨',
     optionalVersionMessage: (version, notes) => `Shoonaya v${version} is available.${notes}`,
-    optionalBuildTitle: 'New Build Available ✨',
-    optionalBuildMessage: (version, notes) => `A newer Shoonaya build is available for version v${version}.${notes}`,
     remindLater: 'Remind Me Later',
     updateNow: 'Update Now',
     otaTitle: 'Sacred Update Ready ✨',
@@ -60,8 +56,6 @@ const copy: Record<AppLanguage, UpdateCopy> = {
     updateOnStore: 'स्टोर से अपडेट करें',
     optionalVersionTitle: 'नया संस्करण उपलब्ध है ✨',
     optionalVersionMessage: (version, notes) => `Shoonaya v${version} उपलब्ध है।${notes}`,
-    optionalBuildTitle: 'नया बिल्ड उपलब्ध है ✨',
-    optionalBuildMessage: (version, notes) => `Shoonaya v${version} का नया बिल्ड उपलब्ध है।${notes}`,
     remindLater: 'बाद में याद दिलाएँ',
     updateNow: 'अभी अपडेट करें',
     otaTitle: 'नया अपडेट तैयार है ✨',
@@ -85,8 +79,6 @@ const copy: Record<AppLanguage, UpdateCopy> = {
     updateOnStore: 'ਸਟੋਰ ਤੋਂ ਅੱਪਡੇਟ ਕਰੋ',
     optionalVersionTitle: 'ਨਵਾਂ ਵਰਜਨ ਉਪਲਬਧ ਹੈ ✨',
     optionalVersionMessage: (version, notes) => `Shoonaya v${version} ਉਪਲਬਧ ਹੈ।${notes}`,
-    optionalBuildTitle: 'ਨਵਾਂ ਬਿਲਡ ਉਪਲਬਧ ਹੈ ✨',
-    optionalBuildMessage: (version, notes) => `Shoonaya v${version} ਦਾ ਨਵਾਂ ਬਿਲਡ ਉਪਲਬਧ ਹੈ।${notes}`,
     remindLater: 'ਬਾਅਦ ਵਿੱਚ ਯਾਦ ਦਿਵਾਓ',
     updateNow: 'ਹੁਣੇ ਅੱਪਡੇਟ ਕਰੋ',
     otaTitle: 'ਨਵਾਂ ਅੱਪਡੇਟ ਤਿਆਰ ਹੈ ✨',

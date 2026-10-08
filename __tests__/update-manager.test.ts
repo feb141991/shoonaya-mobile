@@ -115,14 +115,28 @@ describe('App Update Policy & Semantic Versioning Engine', () => {
       assert.strictEqual(res.type, 'MANDATORY');
     });
 
-    it('detects a newer store build when the marketing version is unchanged', () => {
-      const buildPolicy: AppVersionInfo = { ...standardPolicy, latestVersion: '1.0.0', latestBuildNumber: 8 };
-      const olderBuild = evaluateStoreVersionPolicy('1.0.0', buildPolicy, 'ios', '7');
-      assert.strictEqual(olderBuild.type, 'OPTIONAL');
-      if (olderBuild.type === 'OPTIONAL') assert.strictEqual(olderBuild.reason, 'build');
-      assert.strictEqual(evaluateStoreVersionPolicy('1.0.0', buildPolicy, 'ios', '8').type, 'UP_TO_DATE');
-      assert.strictEqual(evaluateStoreVersionPolicy('1.1.0', buildPolicy, 'ios', '1').type, 'UP_TO_DATE');
-      assert.strictEqual(evaluateStoreVersionPolicy('1.0.0', buildPolicy, 'ios', 'unknown').type, 'UP_TO_DATE');
+    it('never prompts on a build number: routine same-version builds are Play / App Store territory', () => {
+      // A server that still sends the retired `latestBuildNumber` must change nothing.
+      const legacyBuildPolicy = { ...standardPolicy, latestVersion: '1.0.0', latestBuildNumber: 999 } as AppVersionInfo;
+      for (const platform of ['android', 'ios'] as const) {
+        assert.strictEqual(evaluateStoreVersionPolicy('1.0.0', legacyBuildPolicy, platform).type, 'UP_TO_DATE');
+      }
+    });
+
+    it('still nudges a deliberate version bump, once and only as OPTIONAL', () => {
+      const bump: AppVersionInfo = { ...standardPolicy, minSupportedVersion: '1.0.0', latestVersion: '1.1.0' };
+      const res = evaluateStoreVersionPolicy('1.0.0', bump, 'android');
+      assert.strictEqual(res.type, 'OPTIONAL');
+      if (res.type === 'OPTIONAL') assert.strictEqual(res.latestVersion, '1.1.0');
+      assert.strictEqual(evaluateStoreVersionPolicy('1.1.0', bump, 'android').type, 'UP_TO_DATE');
+    });
+
+    it('ignores a retired latestBuildNumber instead of rejecting the policy, valid or not', () => {
+      for (const legacy of [15, 0, -3, 1.5, 'abc', null]) {
+        const parsed = parseAppVersionInfo({ ...standardPolicy, latestBuildNumber: legacy }, 'android');
+        assert.ok(parsed, `latestBuildNumber=${String(legacy)} must not invalidate an otherwise valid policy`);
+        assert.ok(!('latestBuildNumber' in parsed), 'the retired field is not carried into the parsed policy');
+      }
     });
 
     it('validates the public policy payload and rejects unsafe store URLs', () => {
@@ -205,7 +219,7 @@ describe('App Update Policy & Semantic Versioning Engine', () => {
         const copy = getUpdateCopy(language);
         assert.ok(copy.checkAction.length > 0);
         assert.ok(copy.requiredMessage('2.0.0', '').includes('2.0.0'));
-        assert.ok(copy.optionalBuildMessage('2.0.0', '').includes('2.0.0'));
+        assert.ok(copy.optionalVersionMessage('2.0.0', '').includes('2.0.0'));
         assert.ok(copy.unavailableMessage.length > 0);
       }
     });

@@ -1,8 +1,6 @@
 export interface AppVersionInfo {
   latestVersion: string;
   minSupportedVersion: string;
-  /** Store build number for this request's platform. */
-  latestBuildNumber?: number;
   forceUpdate?: boolean;
   storeUrls: {
     android: string;
@@ -13,13 +11,7 @@ export interface AppVersionInfo {
 
 export type StoreUpdateCheckResult =
   | { type: 'MANDATORY'; storeUrl: string; releaseNotes: string; latestVersion: string }
-  | {
-      type: 'OPTIONAL';
-      storeUrl: string;
-      releaseNotes: string;
-      latestVersion: string;
-      reason: 'version' | 'build';
-    }
+  | { type: 'OPTIONAL'; storeUrl: string; releaseNotes: string; latestVersion: string }
   | { type: 'UP_TO_DATE' }
   | { type: 'ERROR'; message: string };
 
@@ -125,39 +117,35 @@ export function parseAppVersionInfo(
   if (compareSemVer(record.minSupportedVersion, record.latestVersion) > 0) return null;
   if (typeof record.releaseNotes !== 'string' || record.releaseNotes.length > 2000) return null;
   if (record.forceUpdate !== undefined && typeof record.forceUpdate !== 'boolean') return null;
-  if (
-    record.latestBuildNumber !== undefined &&
-    (typeof record.latestBuildNumber !== 'number' ||
-      !Number.isSafeInteger(record.latestBuildNumber) ||
-      record.latestBuildNumber < 1)
-  ) return null;
   if (!isTrustedStoreUrl(urls.android, 'android') || !isTrustedStoreUrl(urls.ios, 'ios')) return null;
 
+  // Unknown fields are ignored on purpose: older servers also sent a
+  // `latestBuildNumber`, which this client no longer reads or validates.
   return {
     latestVersion: record.latestVersion,
     minSupportedVersion: record.minSupportedVersion,
-    ...(record.latestBuildNumber === undefined ? {} : { latestBuildNumber: record.latestBuildNumber }),
     ...(record.forceUpdate === undefined ? {} : { forceUpdate: record.forceUpdate }),
     storeUrls: { android: urls.android, ios: urls.ios },
     releaseNotes: record.releaseNotes,
   };
 }
 
-function parseBuildNumber(buildNumber: string | number | undefined): number | null {
-  if (typeof buildNumber === 'number') {
-    return Number.isSafeInteger(buildNumber) && buildNumber >= 1 ? buildNumber : null;
-  }
-  if (typeof buildNumber !== 'string' || !/^\d+$/.test(buildNumber)) return null;
-  const parsed = Number(buildNumber);
-  return Number.isSafeInteger(parsed) && parsed >= 1 ? parsed : null;
-}
-
-/** Pure policy evaluator comparing client app and platform build to server policy. */
+/**
+ * Pure policy evaluator comparing the installed app VERSION to server policy.
+ *
+ * Only the version string is compared. Every store build of a release shares one
+ * version and differs only by an auto-incremented build number, and nothing
+ * automatic tells the server which build is live, so a build-number comparison
+ * needed a manual env var change after each release and silently did nothing
+ * when it was forgotten. Routine same-version builds reach users through Google
+ * Play / the App Store's own update notice; this policy exists to nudge a
+ * deliberate version bump (`latestVersion`) or to force one (`forceUpdate`,
+ * `minSupportedVersion`).
+ */
 export function evaluateStoreVersionPolicy(
   currentVersion: string,
   policy: AppVersionInfo,
-  platform: 'android' | 'ios',
-  currentBuildNumber?: string | number
+  platform: 'android' | 'ios'
 ): StoreUpdateCheckResult {
   const storeUrl = platform === 'ios' ? policy.storeUrls.ios : policy.storeUrls.android;
 
@@ -178,23 +166,6 @@ export function evaluateStoreVersionPolicy(
       storeUrl,
       releaseNotes: policy.releaseNotes,
       latestVersion: policy.latestVersion,
-      reason: 'version',
-    };
-  }
-
-  const installedBuild = parseBuildNumber(currentBuildNumber);
-  if (
-    versionComparison === 0 &&
-    installedBuild !== null &&
-    policy.latestBuildNumber !== undefined &&
-    installedBuild < policy.latestBuildNumber
-  ) {
-    return {
-      type: 'OPTIONAL',
-      storeUrl,
-      releaseNotes: policy.releaseNotes,
-      latestVersion: policy.latestVersion,
-      reason: 'build',
     };
   }
 
