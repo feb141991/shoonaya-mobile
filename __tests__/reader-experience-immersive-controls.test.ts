@@ -58,7 +58,8 @@ describe('Reader Experience Phase 1 — Immersive Controls (D1)', () => {
 
   it('renders floating thumb capsule at bottom with max 4-5 focused controls', () => {
     assert.match(readerShell, /<ReaderCapsule/);
-    assert.match(readerShell, /bottom: insets\.bottom \+ 16/);
+    assert.match(readerShell, /bottom: insets\.bottom \+ \(bottomBar \? 104 : 16\)/);
+    assert.match(readerShell, /paddingBottom: insets\.bottom \+ \(bottomBar \? 120 : NAV_BAR_CLEARANCE\)/);
     assert.match(readerShell, /alignItems: 'center'/);
 
     // Capsule holds font steppers, audio/TTS, language, and Aa sheet trigger

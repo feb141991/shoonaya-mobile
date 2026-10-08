@@ -3,9 +3,10 @@ import { Alert, Platform, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as FileSystem from 'expo-file-system/legacy';
 import { apiFetch } from '@/lib/api';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useAudioPlayer, type AudioPlaybackOptions } from '@/hooks/useAudioPlayer';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
 import type { ReadableCapabilities, PramanaPipelineTags } from '@/lib/readable-content';
+import { createReaderAudioCacheIdentity } from '@/lib/readerAudioCache';
 
 export interface ReaderControlsState {
   showTransliteration: boolean;
@@ -24,6 +25,9 @@ export interface TTSRequestOptions {
   speed?: number;
   rate?: number;
   pipelineTags?: Partial<PramanaPipelineTags>;
+  backgroundPlayback?: boolean;
+  lockScreenMetadata?: AudioPlaybackOptions['lockScreenMetadata'];
+  onComplete?: () => void;
 }
 
 export interface ExplainContext {
@@ -62,6 +66,7 @@ export interface ReaderControlsHandlers {
   toggleMeaning: () => void;
   resetDisplayState: () => void;
   toggleTTS: (text: string, options?: TTSRequestOptions) => Promise<void>;
+  playTTS: (text: string, options?: TTSRequestOptions) => Promise<void>;
   stopTTS: () => Promise<void>;
   copyText: (text: string, label?: string) => Promise<void>;
   share: (text: string, title?: string, url?: string) => Promise<void>;
@@ -81,6 +86,8 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
   const copiedResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const ttsRequestIdRef = useRef(0);
+  const generatedAudioCacheRef = useRef(new Map<string, { signature: string; uri: string }>());
+  const generatedAudioFilesRef = useRef(new Set<string>());
 
   const { loadAndPlay, stop } = useAudioPlayer();
 
@@ -90,7 +97,11 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
       mountedRef.current = false;
       ttsRequestIdRef.current += 1;
       if (copiedResetTimerRef.current) clearTimeout(copiedResetTimerRef.current);
-      void stop();
+      void stop().finally(async () => {
+        const files = [...generatedAudioFilesRef.current];
+        generatedAudioFilesRef.current.clear();
+        await Promise.all(files.map((uri) => FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {})));
+      });
     };
   }, [stop]);
 
@@ -133,16 +144,11 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
     }
   }, [stop]);
 
-  const toggleTTS = useCallback(async (
+  const playTTS = useCallback(async (
     text: string,
     options?: TTSRequestOptions
   ) => {
     if (!capabilities.canGenerateTTS || !text) return;
-
-    if (isSpeaking) {
-      await stopTTS();
-      return;
-    }
 
     trackReaderEvent('tts_requested', { language: options?.language });
 
@@ -166,60 +172,106 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
         ttsText = sentenceEnd > 1200 ? ttsText.slice(0, sentenceEnd + 1).trim() : `${ttsText.slice(0, MAX_TTS_LIMIT - 3)}...`;
       }
 
-      const res = await apiFetch('/api/tts', {
-        method: 'POST',
-        body: JSON.stringify({
-          text: ttsText,
-          quality: options?.quality ?? 'standard',
-          language: options?.language,
-          voice: options?.voice,
-          speed: options?.speed,
-          rate: options?.rate,
-          pipelineTags: options?.pipelineTags,
-        })
+      const identity = createReaderAudioCacheIdentity(ttsText, {
+        quality: options?.quality,
+        language: options?.language,
+        voice: options?.voice,
+        speed: options?.speed,
+        rate: options?.rate,
+        pipelineTags: options?.pipelineTags,
       });
+      const cachedAudio = generatedAudioCacheRef.current.get(identity.key);
+      let audioUri = cachedAudio?.signature === identity.signature ? cachedAudio.uri : null;
 
-      if (!res.ok) {
-        throw new Error(`TTS request failed: ${res.status}`);
-      }
+      if (!audioUri) {
+        const res = await apiFetch('/api/tts', {
+          method: 'POST',
+          body: JSON.stringify({
+            text: ttsText,
+            quality: options?.quality ?? 'standard',
+            language: options?.language,
+            voice: options?.voice,
+            speed: options?.speed,
+            rate: options?.rate,
+            pipelineTags: options?.pipelineTags,
+          })
+        });
 
-      const data = await res.json();
-      
-      if (requestId !== ttsRequestIdRef.current || !mountedRef.current) return;
+        if (!res.ok) {
+          throw new Error(`TTS request failed: ${res.status}`);
+        }
 
-      if (data.audioContent) {
+        const data = await res.json();
+        if (requestId !== ttsRequestIdRef.current || !mountedRef.current) return;
+        if (!data.audioContent) {
+          if (data.error) throw new Error(data.error as string);
+          throw new Error('No audio content in response');
+        }
         // Detect format: Sarvam returns WAV (base64 starting with 'UklGR' for RIFF header)
         const isWav = typeof data.audioContent === 'string' && data.audioContent.startsWith('UklGR');
-        let audioUri: string;
 
         if (Platform.OS !== 'web' && FileSystem.cacheDirectory) {
           const ext = isWav ? 'wav' : 'mp3';
-          const localPath = `${FileSystem.cacheDirectory}tts_audio.${ext}`;
+          const localPath = `${FileSystem.cacheDirectory}${identity.key}.${ext}`;
           await FileSystem.writeAsStringAsync(localPath, data.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
           });
           audioUri = localPath;
+          generatedAudioFilesRef.current.add(localPath);
         } else {
           const mime = isWav ? 'audio/wav' : 'audio/mp3';
           audioUri = `data:${mime};base64,${data.audioContent}`;
         }
 
-        await loadAndPlay(audioUri, false, () => setIsSpeaking(false));
-        if (requestId === ttsRequestIdRef.current && mountedRef.current) setIsSpeaking(true);
-      } else if (data.error) {
-        throw new Error(data.error as string);
-      } else {
-        throw new Error('No audio content in response');
+        // Keep the bounded cache local to this reader session. This matters
+        // for 11×/21×/108× recitations: repeat cycles replay the generated
+        // audio without repeating a paid TTS request.
+        const cache = generatedAudioCacheRef.current;
+        if (cache.size >= 256) {
+          const oldest = cache.entries().next().value as [string, { signature: string; uri: string }] | undefined;
+          if (oldest) {
+            cache.delete(oldest[0]);
+            if (oldest[1].uri.startsWith(FileSystem.cacheDirectory ?? '\u0000')) {
+              generatedAudioFilesRef.current.delete(oldest[1].uri);
+              void FileSystem.deleteAsync(oldest[1].uri, { idempotent: true }).catch(() => {});
+            }
+          }
+        }
+        cache.set(identity.key, { signature: identity.signature, uri: audioUri });
       }
+
+      await loadAndPlay(
+        audioUri,
+        false,
+        () => {
+          if (!mountedRef.current || requestId !== ttsRequestIdRef.current) return;
+          setIsSpeaking(false);
+          options?.onComplete?.();
+        },
+        {
+          backgroundPlayback: options?.backgroundPlayback,
+          lockScreenMetadata: options?.lockScreenMetadata,
+        },
+      );
+      if (requestId === ttsRequestIdRef.current && mountedRef.current) setIsSpeaking(true);
     } catch (err) {
+      if (!mountedRef.current || requestId !== ttsRequestIdRef.current) return;
       const message = err instanceof Error ? err.message : 'TTS generation failed';
-      if (mountedRef.current && requestId === ttsRequestIdRef.current) setTtsError(message);
+      setTtsError(message);
       console.error('[useReaderControls] TTS error:', err);
       Alert.alert("Audio failed", "We could not load the audio at this time.");
     } finally {
       if (mountedRef.current && requestId === ttsRequestIdRef.current) setIsGeneratingTTS(false);
     }
-  }, [capabilities.canGenerateTTS, isSpeaking, stopTTS, loadAndPlay]);
+  }, [capabilities.canGenerateTTS, loadAndPlay]);
+
+  const toggleTTS = useCallback(async (text: string, options?: TTSRequestOptions) => {
+    if (isSpeaking || isGeneratingTTS) {
+      await stopTTS();
+      return;
+    }
+    await playTTS(text, options);
+  }, [isSpeaking, isGeneratingTTS, stopTTS, playTTS]);
 
   const copyText = useCallback(async (text: string, label = 'Text') => {
     try {
@@ -314,6 +366,7 @@ export function useReaderControls(capabilities: ReadableCapabilities) {
     toggleMeaning,
     resetDisplayState,
     toggleTTS,
+    playTTS,
     stopTTS,
     copyText,
     share,

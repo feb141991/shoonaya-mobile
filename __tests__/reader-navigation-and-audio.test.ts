@@ -24,7 +24,8 @@ describe('reader navigation and audio lifecycle', () => {
     assert.match(backButton, /Promise\.resolve\(onBeforeBack\(\)\)\.finally\(navigateBack\)/);
     assert.match(readerControls, /ttsRequestIdRef\.current \+= 1/);
     assert.match(readerControls, /requestId !== ttsRequestIdRef\.current \|\| !mountedRef\.current/);
-    assert.match(stotram, /await handlers\.stopTTS\(\);\s*await audio\.stop\(\);/);
+    assert.match(stotram, /const stopListening = useCallback\(async \(\) => \{[\s\S]*?await Promise\.all\(\[handlers\.stopTTS\(\), audio\.stop\(\)\]\);/);
+    assert.match(stotram, /onBeforeBack=\{stopListening\}/);
     assert.match(katha, /onBeforeBack=\{handlers\.stopTTS\}/);
   });
 
@@ -79,10 +80,11 @@ describe('reader navigation and audio lifecycle', () => {
 
   it('guarantees Panchatantra storybook narrations pass active scene text rather than dumping whole multi-thousand char text', () => {
     const storybookSrc = readFileSync(new URL('../components/reader/PanchatantraStorybookView.tsx', import.meta.url), 'utf8');
-    assert.match(storybookSrc, /onTTS\?: \(sceneText\?: string\) => void;/);
-    assert.match(storybookSrc, /onTTS\(currentSceneText\);/);
-    assert.match(katha, /onTTS=\{\(sceneText\) => handlers\.toggleTTS\(sceneText \|\| textToCopy/);
+    assert.match(storybookSrc, /onTTS\?: \(sceneText\?: string, onComplete\?: \(\) => void\) => void;/);
+    assert.match(storybookSrc, /onTTS\(sceneText\(pageIndex\), \(\) => \{/);
+    assert.match(storybookSrc, /narrationPageRef\.current \+ 1/);
+    assert.match(katha, /onTTS=\{\(sceneText, onComplete\) => \{ void handlers\.playTTS\(sceneText \|\| textToCopy/);
+    assert.match(katha, /backgroundPlayback: true,[\s\S]*?onComplete,/);
   });
 });
-
 

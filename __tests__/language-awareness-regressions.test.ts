@@ -21,10 +21,14 @@ describe('Native language preference reaches content requests and readers', () =
 
   it('offers Punjabi meaning language in Pathshala and preserves the global default for guests', () => {
     const lesson = read('app/pathshala/[pathId]/[lessonId].tsx');
-    assert.match(lesson, /\['en', 'hi', 'pa'\]/);
     assert.match(lesson, /const language = languageOverride \?\? appLang/);
+    assert.match(lesson, /languages=\{\[/);
+    assert.match(lesson, /code: 'en' as AppLanguage/);
+    assert.match(lesson, /code: 'hi' as AppLanguage/);
+    assert.match(lesson, /code: 'pa' as AppLanguage/);
+    assert.match(lesson, /currentLanguage=\{language\}/);
+    assert.match(lesson, /setLanguage=\{\(code\) => setLanguageOverride\(code\)\}/);
     assert.doesNotMatch(lesson, /setLanguage\('en'\)/);
-    assert.match(lesson, /language,\s*\n\s*\}\),/);
   });
 
   it('does not present Hindi-only Vrat copy as Punjabi', () => {

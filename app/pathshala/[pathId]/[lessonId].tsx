@@ -14,14 +14,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BackButton } from '@/components/ui/BackButton';
 import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
+import { ReaderShell } from '@/components/reader/ReaderShell';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, getReaderTheme, type ReaderThemeKey } from '@/lib/constants';
+import { getReaderThemeChoice } from '@/lib/readerPrefs';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -61,6 +61,8 @@ type LessonEntry = {
   original: string;
   transliteration?: string;
   meaning?: string;
+  /** Reviewed, source-backed gloss supplied by the lesson contract when available. */
+  word_by_word?: string;
 };
 
 type Lesson = {
@@ -95,19 +97,26 @@ const FONT_SCALE: Record<ReaderFontSize, { original: number; meaning: number }> 
 };
 
 const SPEED_OPTIONS: AudioSpeed[] = [0.75, 1.0, 1.25];
+const READER_FONT_OPTIONS = [
+  { label: 'A−' },
+  { label: 'A' },
+  { label: 'A+' },
+  { label: 'A++' },
+] as const;
 
 export default function LessonReaderScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const appIdentity = useAppIdentity();
   const isDark = scheme === 'dark';
-  const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const text = isDark ? COLORS.creamBg : COLORS.ink;
-  const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
-  const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
+  const [readerThemeKey, setReaderThemeKey] = useState<ReaderThemeKey | null>(null);
+  const readerTheme = getReaderTheme(readerThemeKey, isDark);
+  const bg = readerTheme.bg;
+  const cardBg = readerTheme.card;
+  const border = readerTheme.border;
+  const text = readerTheme.text;
+  const dim = readerTheme.dim;
+  const brand = readerTheme.accent;
   const params = useLocalSearchParams<{ pathId?: string | string[]; lessonId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
   const returnToPathshala = useCallback(() => {
@@ -130,6 +139,9 @@ export default function LessonReaderScreen() {
   const entry = lesson?.entries[verseIndex] ?? lesson?.entries[0];
 
   const [fontSize, setFontSize] = useState<ReaderFontSize>('normal');
+  const fontStep = (['small', 'normal', 'large', 'xl'] as const).indexOf(fontSize);
+  const [showTransliteration, setShowTransliteration] = useState(true);
+  const [showMeaning, setShowMeaning] = useState(true);
   // `appLang` (global) seeds this lesson's initial reading language, but the
   // in-page toggle (and the guest-mode reset below) must stay page-local:
   // it's a "read this lesson in a different language" preview, not an
@@ -208,9 +220,21 @@ export default function LessonReaderScreen() {
   audioPlayerRef.current = audioPlayer;
   const currentAudioUrl = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const restoredPositionVerseRef = useRef<number | null>(null);
+  const verseIndexRef = useRef(verseIndex);
+  verseIndexRef.current = verseIndex;
+
+  useEffect(() => {
+    let active = true;
+    void getReaderThemeChoice().then((choice) => {
+      if (active && choice) setReaderThemeKey(choice);
+    });
+    return () => { active = false; };
+  }, []);
 
   // Reset verse index and audio ONLY when lesson index actually changes
   useEffect(() => {
+    restoredPositionVerseRef.current = null;
     setVerseIndex(0);
     setAudioState('idle');
     setExplainExpanded(false);
@@ -224,7 +248,11 @@ export default function LessonReaderScreen() {
     setExplainExpanded(false);
     currentAudioUrl.current = null;
     void audioPlayerRef.current.stop();
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    if (restoredPositionVerseRef.current === verseIndex) {
+      restoredPositionVerseRef.current = null;
+    } else {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }
   }, [verseIndex]);
 
   const localizedMeaning = useLocalizedMeaning({
@@ -503,7 +531,22 @@ export default function LessonReaderScreen() {
       const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
 
       currentAudioUrl.current = audioUrl;
-      await audioPlayer.loadAndPlay(audioUrl, false);
+      await audioPlayer.loadAndPlay(
+        audioUrl,
+        false,
+        () => {
+          currentAudioUrl.current = null;
+          setAudioState('idle');
+        },
+        {
+          backgroundPlayback: true,
+          lockScreenMetadata: {
+            title: lesson?.title ?? entry.source,
+            artist: 'Shoonaya',
+            albumTitle: path?.title ?? 'Pathshala',
+          },
+        },
+      );
       await audioPlayer.setRate(audioSpeed);
       setAudioState('playing');
     } catch {
@@ -667,6 +710,21 @@ export default function LessonReaderScreen() {
   const originalFontFamily =
     path.tradition === 'sikh' ? undefined : FONTS.serif;
 
+  const readerFontSizeOptions = ['small', 'normal', 'large', 'xl'] as const;
+  const setReaderFontStep = useCallback((step: number) => {
+    const next = readerFontSizeOptions[Math.max(0, Math.min(readerFontSizeOptions.length - 1, step))];
+    if (next) saveFontSize(next);
+  }, [saveFontSize]);
+  const handlePositionRestored = useCallback((position: { sectionIndex?: number }) => {
+    const restoredVerseIndex = Math.max(0, Math.min(totalVerses - 1, position.sectionIndex ?? 0));
+    if (restoredVerseIndex !== verseIndexRef.current) restoredPositionVerseRef.current = restoredVerseIndex;
+    setVerseIndex(restoredVerseIndex);
+  }, [totalVerses]);
+  const handleTtsRateChange = useCallback((rate: number) => {
+    const supported = SPEED_OPTIONS.find((option) => option === rate);
+    if (supported) void handleSpeedChange(supported);
+  }, [handleSpeedChange]);
+
   const traditionGlyph =
     path.tradition === 'sikh'
       ? 'ੴ'
@@ -676,53 +734,116 @@ export default function LessonReaderScreen() {
       ? '☸'
       : 'ॐ';
 
-  const audioIcon =
-    audioState === 'loading'
-      ? null
-      : audioState === 'playing'
-      ? 'pause'
-      : 'play';
+  const lessonDock = (
+    <View
+      style={{
+        backgroundColor: bg,
+        borderTopWidth: 1,
+        borderTopColor: border,
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: isDark ? 0.35 : 0.08,
+        shadowRadius: 10,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, maxWidth: 540, alignSelf: 'center', width: '100%' }}>
+        {verseIndex > 0 ? (
+          <PressableSurface
+            onPress={() => setVerseIndex((v) => Math.max(0, v - 1))}
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel="Previous verse"
+            style={{ width: 52, height: 52, borderRadius: 16, borderWidth: 1, borderColor: border, backgroundColor: cardBg, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Feather name="chevron-left" size={22} color={text} />
+          </PressableSurface>
+        ) : null}
+        {verseIndex < totalVerses - 1 ? (
+          <PressableSurface
+            onPress={() => setVerseIndex((v) => Math.min(v + 1, totalVerses - 1))}
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel={`Next verse, verse ${verseIndex + 2} of ${totalVerses}`}
+            style={{ flex: 1, height: 52, borderRadius: 16, backgroundColor: brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+          >
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>Next Verse ({verseIndex + 2}/{totalVerses})</Text>
+            <Feather name="chevron-right" size={18} color={COLORS.ink} />
+          </PressableSurface>
+        ) : (
+          <PressableSurface
+            onPress={() => { void handleDone(); }}
+            disabled={saving}
+            haptic="impact"
+            accessibilityRole="button"
+            accessibilityLabel="Complete lesson"
+            style={{ flex: 1, height: 52, borderRadius: 16, backgroundColor: brand, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+          >
+            {saving ? <ActivityIndicator color={COLORS.ink} size="small" /> : <>
+              <Feather name="check-circle" size={18} color={COLORS.ink} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
+                {completedLessons.includes(lessonIndex) ? lessonIndex < lessons.length - 1 ? 'Next Lesson' : 'Path Completed ✓' : 'Complete Lesson & Earn Karma'}
+              </Text>
+              <Feather name="arrow-right" size={16} color={COLORS.ink} />
+            </>}
+          </PressableSurface>
+        )}
+      </View>
+    </View>
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: bg }}>
+    <>
+    <ReaderShell
+      title={lesson.title}
+      subtitle={`${path.title} · Lesson ${lessonIndex + 1} of ${lessons.length}`}
+      fallbackBackUrl={{ pathname: '/pathshala/[pathId]', params: { pathId } }}
+      onBack={returnToPathshala}
+      onBeforeBack={() => audioPlayer.stop()}
+      themeColor={brand}
+      initialPaperTheme={readerThemeKey ?? undefined}
+      onPaperThemeChange={setReaderThemeKey}
+      contentId={`pathshala-${pathId}-${lessonIndex}`}
+      contentVersion={`${lesson.entries.length}:${lesson.entries.map((item) => item.id).join(',')}`}
+      activeSectionTitle={`Verse ${verseIndex + 1}`}
+      activeSectionIndex={verseIndex}
+      onPositionRestored={handlePositionRestored}
+      layoutMode="continuous"
+      scrollViewRef={scrollRef}
+      fontPresets={READER_FONT_OPTIONS}
+      fontStep={fontStep}
+      setFontStep={setReaderFontStep}
+      languages={[
+        { code: 'en' as AppLanguage, label: 'EN' },
+        { code: 'hi' as AppLanguage, label: 'हिं' },
+        { code: 'pa' as AppLanguage, label: 'ਪੰ' },
+      ]}
+      currentLanguage={language}
+      setLanguage={(code) => setLanguageOverride(code)}
+      showTransliterationToggle={Boolean(entry.transliteration)}
+      isTransliterationOn={showTransliteration}
+      onToggleTransliteration={() => setShowTransliteration((value) => !value)}
+      showMeaningToggle={Boolean(entry.meaning || localizedMeaning.meaning)}
+      isMeaningOn={showMeaning}
+      onToggleMeaning={() => setShowMeaning((value) => !value)}
+      onTTS={() => { void handlePlayPause(); }}
+      isSpeaking={audioState === 'playing'}
+      isTTSGenerating={audioState === 'loading'}
+      ttsRate={audioSpeed}
+      onTTSRateChange={handleTtsRateChange}
+      bottomBar={lessonDock}
+      contentContainerStyle={{ paddingHorizontal: 20, gap: 18 }}
+    >
       <GestureDetector gesture={swipeGesture}>
-        <View style={{ flex: 1 }}>
+        <View>
           <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
-          <ScrollView
-            ref={scrollRef}
-            contentContainerStyle={{
-              paddingTop: 64,
-              paddingHorizontal: 20,
-              paddingBottom: Math.max(insets.bottom, 16) + 90,
-              gap: 18,
-            }}
-          >
+          <View style={{ gap: 18 }}>
             {refreshFailed ? (
               <Text accessibilityRole="alert" style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>
                 Showing saved lesson content. Could not refresh just now.
               </Text>
             ) : null}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <BackButton
-                showLabel={false}
-                iconSize={22}
-                iconColor={text}
-                // A lesson's actual parent is its own path's detail screen,
-                // not the Pathshala hub -- the generic BackButton fallback
-                // (components/ui/BackButton.tsx's inferParentFallback) only
-                // prefix-matches "/pathshala" and has no way to know this
-                // specific lesson's pathId, so a direct-entry open with no
-                // navigation history (deep link, notification) would
-                // otherwise fall back to the hub instead of the path the
-                // lesson actually belongs to.
-                fallbackHref={{ pathname: '/pathshala/[pathId]', params: { pathId } }}
-              />
-              <Text style={{ flex: 1, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 14, color: dim }}>
-                Lesson {lessonIndex + 1} of {lessons.length}
-              </Text>
-              <View style={{ width: 22 }} />
-            </View>
-
             {/* ── Sacred Header & Source Pill Badge ── */}
             <View style={{ gap: 10, alignItems: 'center' }}>
               {entry.source ? (
@@ -828,53 +949,6 @@ export default function LessonReaderScreen() {
               ) : null}
             </View>
 
-            {/* ── Subheader Controls Ribbon ── */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {(['en', 'hi', 'pa'] as const).map((option) => (
-                  <PressableSurface
-                    key={option}
-                    onPress={() => setLanguageOverride(option)}
-                    haptic="selection"
-                    style={{
-                      borderRadius: 999,
-                      paddingHorizontal: 14,
-                      paddingVertical: 7,
-                      borderWidth: 1,
-                      borderColor: option === language ? brand : border,
-                      backgroundColor: option === language ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? (isDark ? brand : COLORS.ink) : dim }}>
-                      {option === 'hi' ? 'हिं' : option === 'pa' ? 'ਪੰ' : 'EN'}
-                    </Text>
-                  </PressableSurface>
-                ))}
-              </View>
-
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                {(['small', 'normal', 'large', 'xl'] as const).map((option) => (
-                  <PressableSurface
-                    key={option}
-                    onPress={() => saveFontSize(option)}
-                    haptic="selection"
-                    style={{
-                      borderRadius: 999,
-                      paddingHorizontal: 10,
-                      paddingVertical: 7,
-                      borderWidth: 1,
-                      borderColor: option === fontSize ? brand : border,
-                      backgroundColor: option === fontSize ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: option === fontSize ? (isDark ? brand : COLORS.ink) : dim }}>
-                      {option === 'small' ? 'A-' : option === 'normal' ? 'A' : option === 'large' ? 'A+' : 'A++'}
-                    </Text>
-                  </PressableSurface>
-                ))}
-              </View>
-            </View>
-
             {/* ── Sacred Tradition Glyph ── */}
             <Text style={{ fontFamily: FONTS.serif, fontSize: 34, color: brand, textAlign: 'center', marginVertical: 4 }}>
               {traditionGlyph}
@@ -900,7 +974,7 @@ export default function LessonReaderScreen() {
                 style={{
                   fontSize: FONT_SCALE[fontSize].original,
                   lineHeight: FONT_SCALE[fontSize].original * 1.5,
-                  color: isDark ? '#F0EDE6' : '#2C1A0E',
+                  color: text,
                   textAlign: 'center',
                   fontFamily: originalFontFamily,
                 }}
@@ -910,13 +984,13 @@ export default function LessonReaderScreen() {
             </View>
 
             {/* ── 2. Transliteration Card (Amber Tinted) ── */}
-            {entry.transliteration ? (
+            {entry.transliteration && showTransliteration ? (
               <View
                 style={{
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: isDark ? 'rgba(197,160,89,0.2)' : '#DEC89A',
-                  backgroundColor: isDark ? 'rgba(197,160,89,0.08)' : '#FFF4E0',
+                  borderColor: readerTheme.borderSoft,
+                  backgroundColor: readerTheme.subCard,
                   paddingVertical: 16,
                   paddingHorizontal: 20,
                   alignItems: 'center',
@@ -939,7 +1013,7 @@ export default function LessonReaderScreen() {
                     fontFamily: FONTS.sans,
                     fontSize: 15,
                     lineHeight: 24,
-                    color: isDark ? 'rgba(240,220,180,0.85)' : '#7A5C3A',
+                    color: dim,
                     fontStyle: 'italic',
                     textAlign: 'center',
                   }}
@@ -949,82 +1023,20 @@ export default function LessonReaderScreen() {
               </View>
             ) : null}
 
-            {/* ── 3. Audio Recitation Panel ── */}
-            <View
-              style={{
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: border,
-                backgroundColor: cardBg,
-                padding: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 14,
-              }}
-            >
-              <PressableSurface
-                onPress={() => { void handlePlayPause(); }}
-                haptic="selection"
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: brand,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {audioState === 'loading' ? (
-                  <ActivityIndicator color={COLORS.ink} size="small" />
-                ) : (
-                  <Feather name={audioIcon ?? 'play'} size={20} color={COLORS.ink} />
-                )}
-              </PressableSurface>
-
-              <View style={{ flex: 1, gap: 6 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
-                  {audioState === 'loading'
-                    ? 'Preparing recitation…'
-                    : audioState === 'playing'
-                    ? 'Playing recitation'
-                    : audioState === 'paused'
-                    ? 'Paused'
-                    : audioState === 'error'
-                    ? 'Audio unavailable'
-                    : 'Listen to recitation'}
+            {/* ── 3. Source-provided word-by-word gloss, when present ── */}
+            {entry.word_by_word?.trim() ? (
+              <View style={{ borderRadius: 20, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 20, gap: 8 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.5, color: brand, textTransform: 'uppercase' }}>
+                  Word by word · source text
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {SPEED_OPTIONS.map((speed) => (
-                    <PressableSurface
-                      key={speed}
-                      onPress={() => { void handleSpeedChange(speed); }}
-                      haptic="selection"
-                      style={{
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                        paddingVertical: 5,
-                        borderWidth: 1,
-                        borderColor: audioSpeed === speed ? brand : border,
-                        backgroundColor: audioSpeed === speed ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: FONTS.sansMedium,
-                          fontSize: 11,
-                          color: audioSpeed === speed ? (isDark ? brand : COLORS.ink) : dim,
-                        }}
-                      >
-                        {speed}×
-                      </Text>
-                    </PressableSurface>
-                  ))}
-                </View>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 15, lineHeight: 23, color: text }}>
+                  {entry.word_by_word}
+                </Text>
               </View>
-            </View>
+            ) : null}
 
             {/* ── 4. Meaning Card ── */}
-            <View
+            {showMeaning ? <View
               style={{
                 borderRadius: 24,
                 borderWidth: 1,
@@ -1056,7 +1068,7 @@ export default function LessonReaderScreen() {
                 {localizedMeaning.meaning}
               </Text>
               {localizedMeaning.isLoading ? <ActivityIndicator color={brand} /> : null}
-            </View>
+            </View> : null}
 
             {/* ── 5. AI Verse Explanation (PWA Inline Wisdom) ── */}
             <View
@@ -1256,128 +1268,10 @@ export default function LessonReaderScreen() {
               </View>
             ) : null}
 
-        </ScrollView>
-      </View>
-    </GestureDetector>
-
-    {/* ── Fixed Floating Bottom Navigation Dock (PWA CanonicalReader Parity) ── */}
-    <View
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        elevation: 10,
-        backgroundColor: bg,
-        borderTopWidth: 1,
-        borderTopColor: border,
-        paddingHorizontal: 20,
-        paddingTop: 12,
-        paddingBottom: Math.max(insets.bottom, 12) + 6,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: isDark ? 0.35 : 0.08,
-        shadowRadius: 10,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, maxWidth: 540, alignSelf: 'center', width: '100%' }}>
-        {verseIndex > 0 ? (
-          <PressableSurface
-            onPress={() => {
-              setVerseIndex((v) => Math.max(0, v - 1));
-            }}
-            haptic="selection"
-            accessibilityRole="button"
-            accessibilityLabel="Previous verse"
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: border,
-              backgroundColor: cardBg,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Feather name="chevron-left" size={22} color={text} />
-          </PressableSurface>
-        ) : null}
-
-        {verseIndex < totalVerses - 1 ? (
-          <PressableSurface
-            onPress={() => {
-              setVerseIndex((v) => Math.min(v + 1, totalVerses - 1));
-            }}
-            haptic="selection"
-            accessibilityRole="button"
-            accessibilityLabel={`Next verse, verse ${verseIndex + 2} of ${totalVerses}`}
-            style={{
-              flex: 1,
-              height: 52,
-              borderRadius: 16,
-              backgroundColor: brand,
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              gap: 8,
-              shadowColor: brand,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 6,
-              elevation: 3,
-            }}
-          >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
-              Next Verse ({verseIndex + 2}/{totalVerses})
-            </Text>
-            <Feather name="chevron-right" size={18} color={COLORS.ink} />
-          </PressableSurface>
-        ) : (
-          <PressableSurface
-            onPress={() => {
-              void handleDone();
-            }}
-            disabled={saving}
-            haptic="impact"
-            accessibilityRole="button"
-            accessibilityLabel="Complete lesson"
-            style={{
-              flex: 1,
-              height: 52,
-              borderRadius: 16,
-              backgroundColor: brand,
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              gap: 8,
-              shadowColor: brand,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
-          >
-            {saving ? (
-              <ActivityIndicator color={COLORS.ink} size="small" />
-            ) : (
-              <>
-                <Feather name="check-circle" size={18} color={COLORS.ink} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: COLORS.ink }}>
-                  {completedLessons.includes(lessonIndex)
-                    ? lessonIndex < lessons.length - 1
-                      ? 'Next Lesson'
-                      : 'Path Completed ✓'
-                    : 'Complete Lesson & Earn Karma'}
-                </Text>
-                <Feather name="arrow-right" size={16} color={COLORS.ink} />
-              </>
-            )}
-          </PressableSurface>
-        )}
-      </View>
-    </View>
+          </View>
+        </View>
+      </GestureDetector>
+    </ReaderShell>
 
       <AuthGate
         visible={authGateVisible}
@@ -1503,6 +1397,6 @@ export default function LessonReaderScreen() {
           returnToPathshala();
         }}
       />
-    </View>
+    </>
   );
 }

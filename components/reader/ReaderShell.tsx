@@ -358,7 +358,8 @@ export function ReaderShell<LanguageCode extends string = string>({
     let cancelled = false;
 
     getReaderPosition({ contentId, contentVersion }).then((savedPos) => {
-      if (cancelled || !savedPos || savedPos.scrollOffsetY < MIN_SCROLL_OFFSET_TO_SAVE) {
+      const hasSavedSection = typeof savedPos?.sectionIndex === 'number' && savedPos.sectionIndex > 0;
+      if (cancelled || !savedPos || (savedPos.scrollOffsetY < MIN_SCROLL_OFFSET_TO_SAVE && !hasSavedSection)) {
         return;
       }
 
@@ -367,13 +368,16 @@ export function ReaderShell<LanguageCode extends string = string>({
         scrollOffsetY: savedPos.scrollOffsetY,
       });
 
-      // Auto-scroll to saved position after initial layout
+      // Restore continuous scroll offsets; chapter readers consume the
+      // saved section through onPositionRestored instead.
       setTimeout(() => {
-        if (!cancelled) {
+        if (!cancelled && layoutMode !== 'chapters') {
           internalScrollRef.current?.scrollTo({ y: savedPos.scrollOffsetY, animated: true });
           if (scrollViewRef && typeof (scrollViewRef as any).current?.scrollTo === 'function') {
             (scrollViewRef as any).current.scrollTo({ y: savedPos.scrollOffsetY, animated: true });
           }
+          onPositionRestored?.(savedPos);
+        } else if (!cancelled) {
           onPositionRestored?.(savedPos);
         }
       }, 300);
@@ -391,7 +395,7 @@ export function ReaderShell<LanguageCode extends string = string>({
       cancelled = true;
       if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     };
-  }, [contentId, contentVersion, onPositionRestored, scrollViewRef]);
+  }, [contentId, contentVersion, layoutMode, onPositionRestored, scrollViewRef]);
 
   const handleStartOver = useCallback(async () => {
     if (contentId) {
@@ -402,7 +406,30 @@ export function ReaderShell<LanguageCode extends string = string>({
     if (scrollViewRef && typeof (scrollViewRef as any).current?.scrollTo === 'function') {
       (scrollViewRef as any).current.scrollTo({ y: 0, animated: true });
     }
-  }, [contentId, scrollViewRef]);
+    onPositionRestored?.({
+      contentId: contentId ?? '',
+      contentVersion,
+      scrollOffsetY: 0,
+      sectionIndex: 0,
+      updatedAt: Date.now(),
+    });
+  }, [contentId, contentVersion, onPositionRestored, scrollViewRef]);
+
+  // Chapter/scene readers have no vertical shell scroll event, so persist
+  // their active folio index directly as it changes.
+  useEffect(() => {
+    if (!contentId || layoutMode !== 'chapters' || typeof activeSectionIndex !== 'number') return;
+    const timer = setTimeout(() => {
+      void saveReaderPosition({
+        contentId,
+        contentVersion,
+        scrollOffsetY: 0,
+        sectionTitle: activeSectionTitle,
+        sectionIndex: activeSectionIndex,
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [contentId, contentVersion, layoutMode, activeSectionIndex, activeSectionTitle]);
 
   // Handle scroll and debounced position save
   const handleScroll = useCallback(
@@ -432,7 +459,8 @@ export function ReaderShell<LanguageCode extends string = string>({
   useEffect(() => {
     return () => {
       if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
-      if (contentId && currentScrollOffsetRef.current >= MIN_SCROLL_OFFSET_TO_SAVE) {
+      const hasMeaningfulSection = typeof activeSectionIndex === 'number' && activeSectionIndex > 0;
+      if (contentId && (currentScrollOffsetRef.current >= MIN_SCROLL_OFFSET_TO_SAVE || hasMeaningfulSection)) {
         void saveReaderPosition({
           contentId,
           contentVersion,
@@ -733,7 +761,7 @@ export function ReaderShell<LanguageCode extends string = string>({
         pointerEvents={isControlsVisible ? 'auto' : 'none'}
         style={{
           position: 'absolute',
-          bottom: insets.bottom + 16,
+          bottom: insets.bottom + (bottomBar ? 104 : 16),
           left: 0,
           right: 0,
           alignItems: 'center',

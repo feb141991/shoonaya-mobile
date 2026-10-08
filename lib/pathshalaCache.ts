@@ -36,6 +36,8 @@ export type PathshalaLessonEntry = {
   original: string;
   transliteration?: string;
   meaning?: string;
+  /** Optional source-backed word gloss; never populated from generated explanations. */
+  word_by_word?: string;
 };
 
 export type PathshalaLesson = { title: string; entries: PathshalaLessonEntry[] };

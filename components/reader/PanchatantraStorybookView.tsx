@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,20 @@ import {
   useWindowDimensions,
   ScrollView,
   Platform,
+  AppState,
 } from "react-native";
+import { useFocusEffect } from 'expo-router';
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import { ReaderShell } from "@/components/reader/ReaderShell";
+import { getReaderTheme, type ReaderThemeKey } from "@/lib/constants";
+import { getReaderThemeChoice } from "@/lib/readerPrefs";
 
 import { PressableSurface } from "@/components/ui/PressableSurface";
+import { DevotionalSleepTimerStrip } from '@/components/reader/DevotionalSleepTimerStrip';
+import { getDevotionalSleepTimerDeadline, isDevotionalSleepTimerExpired, type DevotionalSleepTimerSelection } from '@/lib/devotionalListening';
 import {
   COLORS,
   FONTS,
@@ -23,7 +29,6 @@ import {
   TYPE,
   themeColor,
   KATHA_VIEW_ACCENT,
-  READER_THEMES,
 } from "@/lib/constants";
 import {
   getPanchatantraSceneArtwork,
@@ -54,10 +59,11 @@ interface PanchatantraStorybookViewProps {
   activeLanguage: "en" | "hi" | "pa";
   onLanguageChange: (lang: "en" | "hi" | "pa") => void;
   onBack?: () => void;
-  fontSize?: { fontSize: number; lineHeight: number };
-  onTTS?: (sceneText?: string) => void;
+  onTTS?: (sceneText?: string, onComplete?: () => void) => void;
+  onStopTTS?: () => void;
   isSpeaking?: boolean;
   isTTSGenerating?: boolean;
+  audioError?: string | null;
   onComplete?: () => void;
 }
 
@@ -116,37 +122,44 @@ export function PanchatantraStorybookView({
   activeLanguage,
   onLanguageChange,
   onBack,
-  fontSize,
   onTTS,
+  onStopTTS,
   isSpeaking = false,
   isTTSGenerating = false,
+  audioError = null,
   onComplete,
 }: PanchatantraStorybookViewProps) {
   const isDark = useColorScheme() === "dark";
-  const theme = themeColor(isDark);
-  const insets = useSafeAreaInsets();
+  const baseTheme = themeColor(isDark);
+  const [readerThemeKey, setReaderThemeKey] = useState<ReaderThemeKey | null>(null);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const accent = KATHA_VIEW_ACCENT.panchatantra; // warm terracotta #C87850
 
   const scrollRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [sleepSelection, setSleepSelection] = useState<DevotionalSleepTimerSelection>('end');
+  const [sleepRevision, setSleepRevision] = useState(0);
+  const [isNarrating, setIsNarrating] = useState(false);
+  const readerPaperTheme = getReaderTheme(readerThemeKey, isDark);
+  const theme = {
+    ...baseTheme,
+    bg: readerPaperTheme.bg,
+    card: readerPaperTheme.card,
+    text: readerPaperTheme.text,
+    dim: readerPaperTheme.dim,
+    border: readerPaperTheme.border,
+  };
 
-  // Dedicated font size scale state: allows instant stepping through -- and ++ while reading
+  useEffect(() => {
+    let active = true;
+    void getReaderThemeChoice().then((choice) => {
+      if (active && choice) setReaderThemeKey(choice);
+    });
+    return () => { active = false; };
+  }, []);
+
+  // The shared ReaderShell capsule owns the persistent font-size controls.
   const [fontScaleIndex, setFontScaleIndex] = useState(1);
-
-  const handleDecreaseFontSize = () => {
-    if (fontScaleIndex > 0) {
-      if (Platform.OS !== "web") void Haptics.selectionAsync();
-      setFontScaleIndex((prev) => prev - 1);
-    }
-  };
-
-  const handleIncreaseFontSize = () => {
-    if (fontScaleIndex < STORYBOOK_FONT_SCALES.length - 1) {
-      if (Platform.OS !== "web") void Haptics.selectionAsync();
-      setFontScaleIndex((prev) => prev + 1);
-    }
-  };
 
   const currentScale = STORYBOOK_FONT_SCALES[fontScaleIndex];
   const fontStyle = {
@@ -174,6 +187,104 @@ export function PanchatantraStorybookView({
 
   const totalPages = bodyParagraphs.length;
   const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
+  const narrationActiveRef = useRef(false);
+  const narrationPageRef = useRef(0);
+  const playSceneRef = useRef<(page: number) => void>(() => {});
+  const sleepSelectionRef = useRef<DevotionalSleepTimerSelection>('end');
+  const sleepDeadlineRef = useRef<number | null>(null);
+  const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopNarrationRef = useRef<() => void>(() => {});
+
+  const updateSleepSelection = useCallback((selection: DevotionalSleepTimerSelection) => {
+    sleepSelectionRef.current = selection;
+    setSleepSelection(selection);
+    sleepDeadlineRef.current = getDevotionalSleepTimerDeadline(selection, Date.now());
+    setSleepRevision((revision) => revision + 1);
+  }, []);
+
+  const stopNarration = useCallback(() => {
+    narrationActiveRef.current = false;
+    setIsNarrating(false);
+    sleepDeadlineRef.current = null;
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    sleepTimerRef.current = null;
+    onStopTTS?.();
+  }, [onStopTTS]);
+  stopNarrationRef.current = stopNarration;
+
+  const finishNarration = useCallback(() => {
+    narrationActiveRef.current = false;
+    setIsNarrating(false);
+    sleepDeadlineRef.current = null;
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    sleepTimerRef.current = null;
+  }, []);
+
+  const sceneText = useCallback((pageIndex: number) => {
+    const finalScene = pageIndex === totalPages - 1;
+    return finalScene
+      ? `${localizedLabel(activeLanguage, 'Moral of the story:', 'कथा का बोध:', 'ਕਥਾ ਦਾ ਬੋਧ:')} ${moralText}. ${bodyParagraphs[pageIndex] ?? ''}`
+      : pageIndex === 0
+        ? `${title}. ${bodyParagraphs[0] ?? ''}`
+        : bodyParagraphs[pageIndex] ?? '';
+  }, [totalPages, activeLanguage, moralText, bodyParagraphs, title]);
+
+  const playScene = useCallback((pageIndex: number) => {
+    if (!narrationActiveRef.current || pageIndex < 0 || pageIndex >= totalPages || !onTTS) return;
+    narrationPageRef.current = pageIndex;
+    setCurrentPage(pageIndex);
+    scrollRef.current?.scrollTo({ x: pageIndex * screenWidth, animated: true });
+    onTTS(sceneText(pageIndex), () => {
+      if (!narrationActiveRef.current) return;
+      if (isDevotionalSleepTimerExpired(sleepDeadlineRef.current, Date.now())) {
+        stopNarrationRef.current();
+        return;
+      }
+      const nextPage = narrationPageRef.current + 1;
+      if (nextPage >= totalPages) {
+        finishNarration();
+        return;
+      }
+      setTimeout(() => playSceneRef.current(nextPage), 0);
+    });
+  }, [onTTS, sceneText, screenWidth, totalPages, finishNarration]);
+  playSceneRef.current = playScene;
+
+  const toggleStoryNarration = useCallback(() => {
+    if (!onTTS) return;
+    if (narrationActiveRef.current) {
+      stopNarration();
+      return;
+    }
+    narrationActiveRef.current = true;
+    setIsNarrating(true);
+    sleepDeadlineRef.current = getDevotionalSleepTimerDeadline(sleepSelectionRef.current, Date.now());
+    setSleepRevision((revision) => revision + 1);
+    playSceneRef.current(safePage);
+  }, [onTTS, stopNarration, safePage]);
+
+  useEffect(() => {
+    if (audioError && narrationActiveRef.current) stopNarrationRef.current();
+  }, [audioError]);
+
+  useEffect(() => {
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    const deadline = sleepDeadlineRef.current;
+    if (!isNarrating || deadline === null) return;
+    sleepTimerRef.current = setTimeout(() => stopNarrationRef.current(), Math.max(0, deadline - Date.now()));
+    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && isDevotionalSleepTimerExpired(sleepDeadlineRef.current, Date.now())) {
+        stopNarrationRef.current();
+      }
+    });
+    return () => {
+      if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+      sleepTimerRef.current = null;
+      appStateSubscription.remove();
+    };
+  }, [isNarrating, sleepSelection, sleepRevision]);
+
+  useFocusEffect(useCallback(() => () => stopNarrationRef.current(), []));
 
   // Keep page alignment if language changes
   useEffect(() => {
@@ -208,176 +319,110 @@ export function PanchatantraStorybookView({
       : FONTS.serifBold;
 
   // Parchment palette (Grand Plan Phase 2 tokens)
-  const storybookTheme = isDark ? READER_THEMES.templeNight : READER_THEMES.bhojpatra;
+  const storybookTheme = readerPaperTheme;
   const screenBg = storybookTheme.bg;
   const parchmentBg = storybookTheme.bg;
   const parchmentBorder = storybookTheme.border;
   const artHeight = Math.round(screenHeight * 0.45);
-
-  return (
-    <View style={[styles.screen, { backgroundColor: screenBg }]}>
-      {/* ── 1. Floating Semi-Transparent Top Bar ── */}
-      <View
-        style={[
-          styles.topBar,
-          {
-            paddingTop: Math.max(insets.top + 6, 12),
-          },
-        ]}
+  const storyNavigation = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingHorizontal: 14, paddingVertical: 8 }}>
+      <PressableSurface
+        haptic="selection"
+        onPress={() => goToPage(safePage - 1)}
+        disabled={safePage === 0}
+        accessibilityRole="button"
+        accessibilityLabel="Previous scene"
+        style={{ minWidth: 52, minHeight: 44, opacity: safePage === 0 ? 0.35 : 1, alignItems: 'center', justifyContent: 'center' }}
       >
-        <LinearGradient
-          colors={[
-            "rgba(0,0,0,0.8)",
-            "rgba(0,0,0,0.45)",
-            "transparent",
-          ]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        {/* Left: Back Button */}
+        <Feather name="chevron-left" size={22} color={theme.text} />
+      </PressableSurface>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 2 }}>
+        {Array.from({ length: totalPages }).map((_, index) => (
+          <PressableSurface
+            key={index}
+            onPress={() => goToPage(index)}
+            accessibilityRole="button"
+            accessibilityLabel={`Go to scene ${index + 1}`}
+            style={{ minWidth: 36, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={{ width: index === safePage ? 20 : 7, height: 7, borderRadius: 4, backgroundColor: index === safePage ? accent : `${theme.dim}70` }} />
+          </PressableSurface>
+        ))}
+      </View>
+      {safePage < totalPages - 1 ? (
         <PressableSurface
           haptic="selection"
-          onPress={onBack}
-          style={styles.circleBtnWrapper}
-          accessibilityLabel="Back to tales"
+          onPress={() => goToPage(safePage + 1)}
+          accessibilityRole="button"
+          accessibilityLabel="Next scene"
+          style={{ minWidth: 52, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}
         >
-          <View
-            style={[
-              styles.circleBtn,
-              {
-                backgroundColor: "rgba(0,0,0,0.4)",
-                borderColor: "rgba(255,255,255,0.25)",
-              },
-            ]}
-          >
-            <Feather name="chevron-left" size={20} color="#FFFFFF" />
-          </View>
+          <Text style={{ color: accent, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Next</Text>
+          <Feather name="chevron-right" size={18} color={accent} />
         </PressableSurface>
+      ) : (
+        <PressableSurface
+          haptic="impact"
+          onPress={onComplete}
+          accessibilityRole="button"
+          accessibilityLabel="Finish story"
+          style={{ minWidth: 68, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+        >
+          <Feather name="check" size={16} color={accent} />
+          <Text style={{ color: accent, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Done</Text>
+        </PressableSurface>
+      )}
+    </View>
+  );
 
-        {/* Center: Story Title + Scene Pill */}
-        <View style={styles.topCenterInfo}>
-          <Text
-            numberOfLines={1}
-            style={[styles.topStoryTitle, { color: "#FFFFFF", fontFamily: headingFontFamily }]}
-          >
-            {title}
-          </Text>
-          <View style={styles.scenePill}>
-            <View style={[styles.sceneDot, { backgroundColor: COLORS.brandGold }]} />
-            <Text style={[styles.scenePillText, { color: COLORS.brandGold, fontFamily: FONTS.sansSemiBold }]}>
-              {safePage === totalPages - 1
-                ? localizedLabel(activeLanguage, 'Final Moral', 'कथा बोध', 'ਅੰਤਿਮ ਸਿੱਖਿਆ')
-                : localizedLabel(activeLanguage, `Scene ${safePage + 1} of ${totalPages}`, `दृश्य ${safePage + 1} / ${totalPages}`, `ਦ੍ਰਿਸ਼ ${safePage + 1} / ${totalPages}`)}
-            </Text>
-          </View>
+  return (
+    <ReaderShell
+      title={title}
+      subtitle={localizedLabel(activeLanguage, `Scene ${safePage + 1} of ${totalPages}`, `दृश्य ${safePage + 1} / ${totalPages}`, `ਦ੍ਰਿਸ਼ ${safePage + 1} / ${totalPages}`)}
+      fallbackBackUrl="/(tabs)/bhakti"
+      onBack={onBack}
+      themeColor={accent}
+      initialPaperTheme={readerThemeKey ?? undefined}
+      onPaperThemeChange={setReaderThemeKey}
+      contentId={`panchatantra-${katha.id}`}
+      contentVersion={`scenes-${totalPages}`}
+      activeSectionTitle={`Scene ${safePage + 1}`}
+      activeSectionIndex={safePage}
+      onPositionRestored={(position) => {
+        const restoredPage = Math.max(0, Math.min(totalPages - 1, position.sectionIndex ?? 0));
+        setCurrentPage(restoredPage);
+        requestAnimationFrame(() => scrollRef.current?.scrollTo({ x: restoredPage * screenWidth, animated: false }));
+      }}
+      layoutMode="chapters"
+      fontPresets={STORYBOOK_FONT_SCALES.map(({ label }) => ({ label }))}
+      fontStep={fontScaleIndex}
+      setFontStep={(step) => setFontScaleIndex(Math.max(0, Math.min(STORYBOOK_FONT_SCALES.length - 1, step)))}
+      languages={[
+        { code: 'en' as const, label: 'EN' },
+        ...(hasHindi ? [{ code: 'hi' as const, label: 'हिं' }] : []),
+        ...(hasPunjabi ? [{ code: 'pa' as const, label: 'ਪੰ' }] : []),
+      ]}
+      currentLanguage={activeLanguage}
+      setLanguage={onLanguageChange}
+      onTTS={onTTS ? toggleStoryNarration : undefined}
+      isSpeaking={isSpeaking || isNarrating}
+      isTTSGenerating={isTTSGenerating}
+      bottomBar={(
+        <View>
+          <DevotionalSleepTimerStrip
+            language={activeLanguage}
+            accent={accent}
+            surface={screenBg}
+            border={parchmentBorder}
+            text={theme.text}
+            selectedText={isDark ? COLORS.darkBg : COLORS.onMediaWhite}
+            selection={sleepSelection}
+            onSelectionChange={updateSleepSelection}
+          />
+          {storyNavigation}
         </View>
-
-        {/* Right: Language Pill [EN | HI] + Narrator Audio Button */}
-        <View style={styles.topRightControls}>
-          {hasHindi || hasPunjabi ? (
-            <View
-              style={[
-                styles.langTrack,
-                {
-                  backgroundColor: "rgba(0,0,0,0.4)",
-                  borderColor: "rgba(255,255,255,0.25)",
-                },
-              ]}
-            >
-              <PressableSurface
-                haptic="selection"
-                onPress={() => onLanguageChange("en")}
-                style={[
-                  styles.langSegment,
-                  activeLanguage === "en" && [styles.langSegmentActive, { backgroundColor: accent }],
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.langSegmentText,
-                    {
-                      color: "#FFFFFF",
-                      fontFamily: FONTS.sansSemiBold,
-                    },
-                  ]}
-                >
-                  EN
-                </Text>
-              </PressableSurface>
-
-              {hasHindi ? (
-                <PressableSurface
-                  haptic="selection"
-                  onPress={() => onLanguageChange("hi")}
-                  style={[
-                    styles.langSegment,
-                    activeLanguage === "hi" && [styles.langSegmentActive, { backgroundColor: accent }],
-                  ]}
-                >
-                  <Text style={[styles.langSegmentText, { color: "#FFFFFF", fontFamily: FONTS.devanagariBold }]}>हिं</Text>
-                </PressableSurface>
-              ) : null}
-              {hasPunjabi ? (
-                <PressableSurface
-                  haptic="selection"
-                  onPress={() => onLanguageChange("pa")}
-                  style={[
-                    styles.langSegment,
-                    activeLanguage === "pa" && [styles.langSegmentActive, { backgroundColor: accent }],
-                  ]}
-                >
-                  <Text style={[styles.langSegmentText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>ਪੰ</Text>
-                </PressableSurface>
-              ) : null}
-            </View>
-          ) : null}
-
-          {onTTS ? (
-            <PressableSurface
-              haptic="selection"
-              onPress={() => {
-                const isFinal = safePage === totalPages - 1;
-                const currentSceneText = isFinal
-                  ? `${localizedLabel(activeLanguage, 'Moral of the story:', 'कथा का बोध:', 'ਕਥਾ ਦੀ ਸਿੱਖਿਆ:')} ${moralText}. ${bodyParagraphs[safePage] ?? ''}`
-                  : safePage === 0
-                  ? `${title}. ${bodyParagraphs[0] ?? ''}`
-                  : (bodyParagraphs[safePage] ?? '');
-                onTTS(currentSceneText);
-              }}
-              disabled={isTTSGenerating}
-              style={styles.circleBtnWrapper}
-              accessibilityLabel={isSpeaking ? "Pause story narration" : "Listen to story"}
-            >
-              <View
-                style={[
-                  styles.circleBtn,
-                  isSpeaking
-                    ? {
-                        backgroundColor: accent,
-                        borderColor: accent,
-                        shadowColor: accent,
-                        shadowOpacity: 0.45,
-                        shadowRadius: 8,
-                        elevation: 4,
-                      }
-                    : {
-                        backgroundColor: "rgba(0,0,0,0.4)",
-                        borderColor: "rgba(255,255,255,0.25)",
-                      },
-                ]}
-              >
-                <Feather
-                  name={isSpeaking ? "square" : "volume-2"}
-                  size={16}
-                  color={isSpeaking ? "#FFFFFF" : COLORS.brandGold}
-                />
-              </View>
-            </PressableSurface>
-          ) : null}
-        </View>
-      </View>
-
+      )}
+    >
       {/* ── 2. Full-Screen Horizontal Paging Carousel (Edge-to-Edge) ── */}
       <ScrollView
         ref={scrollRef}
@@ -390,6 +435,7 @@ export function PanchatantraStorybookView({
           const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
           if (newIndex !== safePage && newIndex >= 0 && newIndex < totalPages) {
             setCurrentPage(newIndex);
+            if (narrationActiveRef.current) narrationPageRef.current = newIndex;
             if (Platform.OS !== "web") {
               void Haptics.selectionAsync();
             }
@@ -552,7 +598,7 @@ export function PanchatantraStorybookView({
                   },
                 ]}
               >
-                {/* Parchment Subheader with Scene Tag and [-- A ++] Font Controls */}
+                {/* Scene label; font controls live in the shared reader capsule. */}
                 <View style={styles.parchmentHeaderBar}>
                   <Text style={[styles.parchmentSceneTag, { color: accent, fontFamily: FONTS.sansSemiBold }]}>
                     {isFinalPage
@@ -560,66 +606,14 @@ export function PanchatantraStorybookView({
                       : localizedLabel(activeLanguage, `SCENE ${pageIndex + 1}`, `दृश्य ${pageIndex + 1}`, `ਦ੍ਰਿਸ਼ ${pageIndex + 1}`)}
                   </Text>
 
-                  <View
-                    style={[
-                      styles.fontScalerPill,
-                      {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                        borderColor: isDark ? "rgba(197,160,89,0.3)" : "rgba(200,160,110,0.3)",
-                      },
-                    ]}
-                  >
-                    <PressableSurface
-                      haptic="selection"
-                      onPress={handleDecreaseFontSize}
-                      disabled={fontScaleIndex === 0}
-                      accessibilityLabel="Decrease text size (--)"
-                      style={[styles.fontScaleBtn, fontScaleIndex === 0 && { opacity: 0.28 }]}
-                    >
-                      <Text style={[styles.fontScaleSign, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
-                        --
-                      </Text>
-                    </PressableSurface>
 
-                    <View
-                      style={[
-                        styles.fontScaleDivider,
-                        { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
-                      ]}
-                    />
-
-                    <View style={styles.fontScaleCenterBadge}>
-                      <Text style={[styles.fontScaleBadgeText, { color: accent, fontFamily: FONTS.serifBold }]}>
-                        A
-                      </Text>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.fontScaleDivider,
-                        { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
-                      ]}
-                    />
-
-                    <PressableSurface
-                      haptic="selection"
-                      onPress={handleIncreaseFontSize}
-                      disabled={fontScaleIndex === STORYBOOK_FONT_SCALES.length - 1}
-                      accessibilityLabel="Increase text size (++)"
-                      style={[styles.fontScaleBtn, fontScaleIndex === STORYBOOK_FONT_SCALES.length - 1 && { opacity: 0.28 }]}
-                    >
-                      <Text style={[styles.fontScaleSign, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
-                        ++
-                      </Text>
-                    </PressableSurface>
-                  </View>
                 </View>
 
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={[
                     styles.parchmentScrollContent,
-                    { paddingBottom: insets.bottom + 70 },
+                    { paddingBottom: 24 },
                   ]}
                   bounces={false}
                 >
@@ -746,101 +740,8 @@ export function PanchatantraStorybookView({
         })}
       </ScrollView>
 
-      {/* ── 3. Floating Bottom Navigation Bar (Prev / Next & Scene Beads) ── */}
-      <View
-        style={[
-          styles.bottomBar,
-          {
-            paddingBottom: Math.max(insets.bottom + 8, 22),
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={[
-            "transparent",
-            isDark ? "rgba(10,8,6,0.85)" : "rgba(250,246,238,0.88)",
-            isDark ? "rgba(10,8,6,0.98)" : "rgba(250,246,238,0.98)",
-          ]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
 
-        {/* Left: Prev Scene */}
-        <PressableSurface
-          haptic="selection"
-          onPress={() => goToPage(safePage - 1)}
-          disabled={safePage === 0}
-          style={{ opacity: safePage === 0 ? 0.2 : 1 }}
-          accessibilityLabel="Previous scene"
-        >
-          <View
-            style={[
-              styles.navMiniBtn,
-              {
-                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
-                borderColor: isDark ? "rgba(197,160,89,0.3)" : "rgba(200,160,110,0.3)",
-              },
-            ]}
-          >
-            <Feather name="chevron-left" size={17} color={theme.text} />
-            <Text style={[styles.navMiniText, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
-              Prev
-            </Text>
-          </View>
-        </PressableSurface>
-
-        {/* Center: 6 Illuminated Scene Beads */}
-        <View style={styles.beadsRow}>
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <PressableSurface
-              key={i}
-              onPress={() => goToPage(i)}
-              style={styles.beadTouch}
-              accessibilityLabel={`Go to page ${i + 1}`}
-            >
-              <View
-                style={[
-                  styles.beadDot,
-                  {
-                    backgroundColor: i === safePage ? accent : `${theme.dim}40`,
-                    width: i === safePage ? 22 : 6,
-                  },
-                ]}
-              />
-            </PressableSurface>
-          ))}
-        </View>
-
-        {/* Right: Next Scene / Complete */}
-        {safePage < totalPages - 1 ? (
-          <PressableSurface
-            haptic="selection"
-            onPress={() => goToPage(safePage + 1)}
-            accessibilityLabel="Next scene"
-          >
-            <View style={[styles.navMiniBtn, styles.navMiniBtnActive, { backgroundColor: accent }]}>
-              <Text style={[styles.navMiniText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>
-                Next
-              </Text>
-              <Feather name="chevron-right" size={17} color="#FFFFFF" />
-            </View>
-          </PressableSurface>
-        ) : (
-          <PressableSurface
-            haptic="impact"
-            onPress={onComplete}
-            accessibilityLabel="Finish story"
-          >
-            <View style={[styles.navMiniBtn, styles.navMiniBtnActive, { backgroundColor: accent }]}>
-              <Feather name="check" size={15} color="#FFFFFF" />
-              <Text style={[styles.navMiniText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>
-                Done
-              </Text>
-            </View>
-          </PressableSurface>
-        )}
-      </View>
-    </View>
+  </ReaderShell>
   );
 }
 

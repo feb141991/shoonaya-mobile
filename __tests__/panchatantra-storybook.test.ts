@@ -206,17 +206,19 @@ test('Panchatantra detail screen error handling', async (t) => {
   });
 });
 
-test('Panchatantra storybook font scaling controls', async (t) => {
+test('Panchatantra storybook uses the shared reader font controls', async (t) => {
   const fs = require('node:fs');
   const path = require('node:path');
   const src = fs.readFileSync(path.join(process.cwd(), 'components/reader/PanchatantraStorybookView.tsx'), 'utf8');
+  const shell = fs.readFileSync(path.join(process.cwd(), 'components/reader/ReaderShell.tsx'), 'utf8');
 
-  await t.test('provides dedicated -- and ++ font scaling steppers while reading', () => {
-    assert.match(src, /accessibilityLabel="Decrease text size \(--\)"/);
-    assert.match(src, /accessibilityLabel="Increase text size \(\+\+\)"/);
+  await t.test('provides its story-specific scale presets through ReaderShell settings', () => {
     assert.match(src, /STORYBOOK_FONT_SCALES/);
-    assert.match(src, />\s*--\s*<\/Text>/);
-    assert.match(src, />\s*\+\+\s*<\/Text>/);
+    assert.match(src, /fontPresets=\{STORYBOOK_FONT_SCALES\.map/);
+    assert.match(src, /setFontStep=\{\(step\) => setFontScaleIndex/);
+    assert.match(shell, /fontPresets=\{fontPresets\}/);
+    assert.match(shell, /setFontStep=\{setFontStep\}/);
+    assert.doesNotMatch(src, /Decrease text size|Increase text size/, 'the shared capsule/settings sheet remains the single font control surface');
   });
 });
 

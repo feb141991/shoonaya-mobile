@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import { ActivityIndicator, Text, useColorScheme, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { Alert, AppState, findNodeHandle, ScrollView, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
@@ -21,6 +21,15 @@ import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences } from '@/lib/readable-preferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { DevotionalListeningControls } from '@/components/reader/DevotionalListeningControls';
+import {
+  getDevotionalSleepTimerDeadline,
+  getNextDevotionalRecitationPosition,
+  isDevotionalSleepTimerExpired,
+  type DevotionalRepeatScope,
+  type DevotionalRepeatTarget,
+  type DevotionalSleepTimerSelection,
+} from '@/lib/devotionalListening';
 
 type StotramVerse = {
   number: number;
@@ -81,6 +90,11 @@ export default function StotramDetailScreen() {
   const [stotram, setStotram] = useState<Stotram | null>(null);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [listeningKind, setListeningKind] = useState<'track' | 'recitation' | null>(null);
+  const [repeatScope, setRepeatScope] = useState<DevotionalRepeatScope>('stotram');
+  const [repeatTarget, setRepeatTarget] = useState<DevotionalRepeatTarget>(1);
+  const [completedCycles, setCompletedCycles] = useState(0);
+  const [sleepSelection, setSleepSelection] = useState<DevotionalSleepTimerSelection>('end');
   // `language` (global) seeds this page's initial reading language, but the
   // in-page toggle below must stay page-local: it's a "read this one page in
   // a different language" preview, not an account-wide setting, and must not
@@ -90,6 +104,17 @@ export default function StotramDetailScreen() {
   const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1); // 'md'
   const [ttsRate, setTtsRate] = useState<0.75 | 1 | 1.25>(0.75);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const verseCardRefs = useRef<Array<View | null>>([]);
+  const sleepDeadlineRef = useRef<number | null>(null);
+  const sleepSelectionRef = useRef<DevotionalSleepTimerSelection>('end');
+  const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recitationRef = useRef({ active: false, scope: 'stotram' as DevotionalRepeatScope, target: 1 as DevotionalRepeatTarget, completedCycles: 0, verseIndex: 0 });
+  const trackSessionRef = useRef({ active: false, target: 1 as DevotionalRepeatTarget, completedCycles: 0 });
+  const playVerseRef = useRef<(index: number) => void>(() => {});
+  const playTrackRef = useRef<() => Promise<void>>(async () => {});
+  const stopListeningRef = useRef<() => Promise<void>>(async () => {});
 
   const audio = useAudioPlayer();
 
@@ -143,17 +168,6 @@ export default function StotramDetailScreen() {
   const accent = stotram ? (DEITY_COLOR[stotram.deity] ?? DEITY_COLOR.universal) : theme.brand;
   const track = stotram?.audioTrackId ? getDevotionalTrackById(stotram.audioTrackId) : undefined;
 
-  const togglePlayback = async () => {
-    if (!track) return;
-    if (playing) {
-      await audio.pause();
-      setPlaying(false);
-    } else {
-      await audio.loadAndPlay(track.audioUrl, false, () => setPlaying(false));
-      setPlaying(true);
-    }
-  };
-
   const textToCopy = stotram ? `${stotram.title}\n\n${stotram.verses.map(v => v.sanskrit + '\n' + v.meaning).join('\n\n')}` : '';
   const textToShare = stotram ? `Read the ${stotram.title} on the Shoonaya App! 🙏` : '';
 
@@ -185,18 +199,204 @@ export default function StotramDetailScreen() {
   }), [hasHindi, hasPunjabi, stotram, track]);
 
   const { state, handlers } = useReaderControls(capabilities);
-
-  const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
-  const activeVerseIndex = activeVerse ?? 0;
-  const verseForAudio = stotram?.verses[activeVerseIndex];
-  const meaningForLanguage = (verse: StotramVerse) => (
+  const meaningForLanguage = useCallback((verse: StotramVerse) => (
     activeLang === 'hi' && verse.meaning_hi
       ? verse.meaning_hi
       : activeLang === 'pa' && verse.meaning_pa
         ? verse.meaning_pa
         : verse.meaning
-  );
+  ), [activeLang]);
 
+  const updateSleepSelection = useCallback((selection: DevotionalSleepTimerSelection) => {
+    sleepSelectionRef.current = selection;
+    setSleepSelection(selection);
+    sleepDeadlineRef.current = getDevotionalSleepTimerDeadline(selection, Date.now());
+  }, []);
+
+  const stopListening = useCallback(async () => {
+    recitationRef.current.active = false;
+    trackSessionRef.current.active = false;
+    sleepDeadlineRef.current = null;
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    sleepTimerRef.current = null;
+    setListeningKind(null);
+    setPlaying(false);
+    setCompletedCycles(0);
+    await Promise.all([handlers.stopTTS(), audio.stop()]);
+  }, [audio.stop, handlers.stopTTS]);
+  stopListeningRef.current = stopListening;
+
+  const finishRecitationCycle = useCallback(() => {
+    const session = recitationRef.current;
+    if (!session.active) return;
+    if (isDevotionalSleepTimerExpired(sleepDeadlineRef.current, Date.now())) {
+      void stopListeningRef.current();
+      return;
+    }
+    const next = getNextDevotionalRecitationPosition({
+      scope: session.scope,
+      verseIndex: session.verseIndex,
+      verseCount: stotram?.verses.length ?? 0,
+      completedCycles: session.completedCycles,
+      targetCycles: session.target,
+    });
+    session.completedCycles = next.completedCycles;
+    setCompletedCycles(next.completedCycles);
+    if (next.done) {
+      session.active = false;
+      setListeningKind(null);
+      return;
+    }
+    session.verseIndex = next.verseIndex;
+    setTimeout(() => playVerseRef.current(next.verseIndex), 0);
+  }, [stotram?.verses.length]);
+
+  const playVerse = useCallback((verseIndex: number) => {
+    const session = recitationRef.current;
+    const verse = stotram?.verses[verseIndex];
+    if (!session.active || !verse) return;
+    session.verseIndex = verseIndex;
+    setActiveVerse(verseIndex);
+    requestAnimationFrame(() => {
+      const card = verseCardRefs.current[verseIndex];
+      const scrollView = scrollViewRef.current;
+      if (!card || !scrollView) return;
+      const scrollHandle = findNodeHandle(scrollView);
+      if (scrollHandle === null) return;
+      card.measureLayout(scrollHandle, (_x, y) => {
+        scrollView.scrollTo({ y: Math.max(0, y - 108), animated: true });
+      }, () => {});
+    });
+    const audioText = [verse.sanskrit, verse.transliteration, meaningForLanguage(verse)].join('\n\n');
+    void handlers.playTTS(audioText, {
+      quality: 'pandit',
+      language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'sa-IN',
+      rate: ttsRate,
+      backgroundPlayback: true,
+      lockScreenMetadata: {
+        title: `${stotram?.title ?? 'Stotram'} · Verse ${verse.number}`,
+        artist: 'Shoonaya',
+        albumTitle: 'Devotional recitation',
+      },
+      pipelineTags: {
+        content_type: 'stotram',
+        audio_mode: 'recitation',
+        script: 'devanagari',
+        delivery_intent: 'recitation',
+      },
+      onComplete: finishRecitationCycle,
+    });
+  }, [stotram, activeLang, ttsRate, handlers.playTTS, finishRecitationCycle, meaningForLanguage]);
+  playVerseRef.current = playVerse;
+
+  const startRecitation = useCallback(async (verseIndex?: number) => {
+    const count = stotram?.verses.length ?? 0;
+    if (count === 0) return;
+    const startAt = repeatScope === 'verse' ? Math.max(0, Math.min(verseIndex ?? activeVerse ?? 0, count - 1)) : 0;
+    trackSessionRef.current.active = false;
+    recitationRef.current = { active: true, scope: repeatScope, target: repeatTarget, completedCycles: 0, verseIndex: startAt };
+    setCompletedCycles(0);
+    setListeningKind('recitation');
+    sleepDeadlineRef.current = getDevotionalSleepTimerDeadline(sleepSelectionRef.current, Date.now());
+    await audio.stop();
+    if (!recitationRef.current.active) return;
+    playVerseRef.current(startAt);
+  }, [stotram?.verses.length, repeatScope, repeatTarget, activeVerse, audio.stop]);
+
+  const playTrack = useCallback(async () => {
+    if (!track || !trackSessionRef.current.active) return;
+    try {
+      await audio.loadAndPlay(track.audioUrl, false, () => {
+        const session = trackSessionRef.current;
+        if (!session.active) return;
+        if (isDevotionalSleepTimerExpired(sleepDeadlineRef.current, Date.now())) {
+          void stopListeningRef.current();
+          return;
+        }
+        session.completedCycles += 1;
+        setCompletedCycles(session.completedCycles);
+        if (session.completedCycles >= session.target) {
+          session.active = false;
+          setListeningKind(null);
+          setPlaying(false);
+          sleepDeadlineRef.current = null;
+          return;
+        }
+        void playTrackRef.current();
+      }, {
+        backgroundPlayback: true,
+        lockScreenMetadata: { title: track.title, artist: track.creator, albumTitle: stotram?.title ?? 'Stotram' },
+      });
+      if (trackSessionRef.current.active) setPlaying(true);
+    } catch (error) {
+      if (!trackSessionRef.current.active) return;
+      trackSessionRef.current.active = false;
+      sleepDeadlineRef.current = null;
+      setListeningKind(null);
+      setPlaying(false);
+      Alert.alert('Audio unavailable', 'Could not load this recording. Please try again.');
+      console.warn('[Stotram] Recorded audio playback failed:', error);
+    }
+  }, [track, audio.loadAndPlay, stotram?.title]);
+  playTrackRef.current = playTrack;
+
+  const togglePlayback = useCallback(async () => {
+    if (!track) return;
+    if (trackSessionRef.current.active) {
+      if (playing) {
+        await audio.pause();
+        setPlaying(false);
+      } else {
+        await audio.resume();
+        setPlaying(true);
+      }
+      return;
+    }
+    await handlers.stopTTS();
+    recitationRef.current.active = false;
+    trackSessionRef.current = { active: true, target: repeatTarget, completedCycles: 0 };
+    setCompletedCycles(0);
+    setListeningKind('track');
+    sleepDeadlineRef.current = getDevotionalSleepTimerDeadline(sleepSelectionRef.current, Date.now());
+    await playTrackRef.current();
+  }, [track, playing, audio.pause, audio.resume, handlers.stopTTS, repeatTarget]);
+
+  useEffect(() => {
+    recitationRef.current.target = repeatTarget;
+    trackSessionRef.current.target = repeatTarget;
+  }, [repeatTarget]);
+
+  useEffect(() => {
+    if (!state.ttsError || !recitationRef.current.active) return;
+    void stopListeningRef.current();
+  }, [state.ttsError]);
+
+  useEffect(() => {
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    const deadline = sleepDeadlineRef.current;
+    if (listeningKind === null || deadline === null) return;
+    const delay = Math.max(0, deadline - Date.now());
+    sleepTimerRef.current = setTimeout(() => void stopListeningRef.current(), delay);
+    return () => {
+      if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+      sleepTimerRef.current = null;
+    };
+  }, [listeningKind, sleepSelection, stopListening]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && isDevotionalSleepTimerExpired(sleepDeadlineRef.current, Date.now())) {
+        void stopListeningRef.current();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  useFocusEffect(useCallback(() => () => {
+    void stopListeningRef.current();
+  }, []));
+
+  const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
   if (loading) {
     return (
       <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
@@ -229,10 +429,8 @@ export default function StotramDetailScreen() {
       title={stotram.title}
       subtitle={stotram.deityEmoji ? `${stotram.deityEmoji} ${stotram.type}` : stotram.type}
       fallbackBackUrl="/(tabs)/bhakti"
-      onBeforeBack={async () => {
-        await handlers.stopTTS();
-        await audio.stop();
-      }}
+      onBeforeBack={stopListening}
+      scrollViewRef={scrollViewRef}
       themeColor={accent}
       ambientGlowColor={accent}
       fontPresets={FONT_PRESETS}
@@ -256,25 +454,12 @@ export default function StotramDetailScreen() {
           void togglePlayback();
           return;
         }
-        if (!verseForAudio) return;
-        void handlers.toggleTTS(
-          [verseForAudio.sanskrit, verseForAudio.transliteration, meaningForLanguage(verseForAudio)].join('\n\n'),
-          {
-            quality: 'pandit',
-            language: activeLang === 'hi' ? 'hi-IN' : activeLang === 'pa' ? 'pa-IN' : 'sa-IN',
-            rate: ttsRate,
-            pipelineTags: {
-              content_type: 'stotram',
-              audio_mode: 'recitation',
-              script: 'devanagari',
-              delivery_intent: 'recitation',
-            },
-          },
-        );
+        if (listeningKind === 'recitation') void stopListening();
+        else startRecitation();
       }}
       ttsRate={track ? undefined : ttsRate}
       onTTSRateChange={track ? undefined : (rate) => setTtsRate(rate as 0.75 | 1 | 1.25)}
-      isSpeaking={track ? playing : state.isSpeaking}
+      isSpeaking={track ? playing : state.isSpeaking || listeningKind === 'recitation'}
       isTTSGenerating={state.isGeneratingTTS}
       onCopy={() => handlers.copyText(textToCopy, 'Stotram')}
       isCopied={state.isCopied}
@@ -320,6 +505,27 @@ export default function StotramDetailScreen() {
           </View>
         </View>
 
+        <DevotionalListeningControls
+          language={activeLang}
+          accent={accent}
+          surface={theme.card}
+          border={theme.border}
+          text={theme.text}
+          dim={theme.dim}
+          selectedText={isDark ? COLORS.darkBg : COLORS.onMediaWhite}
+          scope={repeatScope}
+          onScopeChange={setRepeatScope}
+          scopeDisabled={Boolean(track) || listeningKind !== null}
+          target={repeatTarget}
+          onTargetChange={setRepeatTarget}
+          completedCycles={completedCycles}
+          isActive={listeningKind !== null}
+          activeVerseNumber={listeningKind === 'recitation' ? stotram.verses[recitationRef.current.verseIndex]?.number : undefined}
+          verseCount={stotram.verses.length}
+          sleepSelection={sleepSelection}
+          onSleepSelectionChange={updateSleepSelection}
+        />
+
         {/* Audio player — only for stotrams with a pre-recorded track */}
         {track ? (
           <View
@@ -357,14 +563,17 @@ export default function StotramDetailScreen() {
 
           {stotram.verses.map((verse, i) => {
             const isActive = activeVerse === i || stotram.verses.length === 1;
+            const isFollowingVerse = listeningKind === 'recitation' && recitationRef.current.verseIndex === i;
             return (
               <View
                 key={verse.number}
+                ref={(node) => { verseCardRefs.current[i] = node; }}
+                accessible={false}
                 style={{
                   borderRadius: RADII.lg,
                   backgroundColor: theme.card,
-                  borderWidth: 1,
-                  borderColor: isActive ? `${accent}40` : theme.border,
+                  borderColor: isFollowingVerse ? accent : isActive ? `${accent}40` : theme.border,
+                  borderWidth: isFollowingVerse ? 2 : 1,
                   overflow: 'hidden',
                   boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                 }}
