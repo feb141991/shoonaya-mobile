@@ -1,9 +1,15 @@
 /**
  * lib/navratri-content.ts
  *
- * Governed canonical sacred content for Sharad Navratri (Navadurga & Vijayadashami).
- * Grounded in Tier-1 scriptural sources: Devi Mahatmya (Durga Saptashati),
- * Devi Bhagavata Purana, Shiva Purana, and Valmiki Ramayana.
+ * Navratri conduct, samagri and day dhyana verses for Sharad and Chaitra
+ * Navratri (Navadurga & Vijayadashami). Chaitra days reuse the dhyana verse
+ * of the same Navadurga form.
+ *
+ * Review status (2026-10-08): this hand-written Native file has no per-item
+ * source metadata and is not in the backend canonical snapshot (AGENTS.md
+ * sections 1 and 3). Open review items: the day-4 (Kushmanda) translation
+ * renders सुरा/रुधिर as "nectar", and the day-7 (Kalaratri) verse reading and
+ * its translation need checking against a printed source.
  */
 
 export const NAVRATRI_SLUGS = [
@@ -22,6 +28,9 @@ export const NAVRATRI_SLUGS = [
   'vijayadashami',
 ] as const;
 
+/** Chaitra (Vasanta) Navratri day slugs: same Navadurga order as Sharad. */
+const CHAITRA_DAY_PREFIX = 'chaitra-navratri-day-';
+
 export function isNavratriObservance(slug: string): boolean {
   return (
     slug === 'sharad-navratri' ||
@@ -30,8 +39,25 @@ export function isNavratriObservance(slug: string): boolean {
     slug === 'durga-ashtami' ||
     slug === 'maha-navami' ||
     slug === 'dussehra' ||
-    slug === 'vijayadashami'
+    slug === 'vijayadashami' ||
+    slug === 'chaitra-navratri' ||
+    slug === 'chaitra-navratri-begins' ||
+    slug.startsWith(CHAITRA_DAY_PREFIX)
   );
+}
+
+/**
+ * The Sharad slug for the same Navadurga form, so a Chaitra day reuses that
+ * form's dhyana verse (the verse belongs to the goddess, not the season).
+ * Chaitra days 8 and 9 are Mahagauri and Siddhidatri, which Sharad files
+ * under durga-ashtami and maha-navami.
+ */
+function navadurgaSlug(slug: string): string {
+  if (!slug.startsWith(CHAITRA_DAY_PREFIX)) return slug;
+  const rest = slug.slice(CHAITRA_DAY_PREFIX.length); // e.g. "8-mahagauri"
+  if (rest.startsWith('8-')) return 'durga-ashtami';
+  if (rest.startsWith('9-')) return 'maha-navami';
+  return `navratri-day-${rest}`;
 }
 
 export function getNavratriConduct(
@@ -129,9 +155,10 @@ export function getNavratriPujaItems(
 }
 
 export function getNavratriMantra(
-  slug: string,
+  requestedSlug: string,
   lang: 'en' | 'hi' | 'pa',
 ): { sanskrit: string; translation: string } {
+  const slug = navadurgaSlug(requestedSlug);
   if (slug === 'navratri-day-1-shailaputri') {
     return {
       sanskrit: 'वन्दे वाञ्छितलाभाय चन्द्रार्धकृतशेखराम्। वृषारूढां शूलधरां शैलपुत्रीं यशस्विनीम्॥',
@@ -158,7 +185,7 @@ export function getNavratriMantra(
 
   if (slug === 'navratri-day-3-chandraghanta') {
     return {
-      sanskrit: 'पिण्डजप्रवरारूढा चण्डकोपास्त्रकैर्युता। प्रसादिं तनुते मह्यं चन्द्रघण्टेति विश्रुता॥',
+      sanskrit: 'पिण्डजप्रवरारूढा चण्डकोपास्त्रकैर्युता। प्रसादं तनुते मह्यं चन्द्रघण्टेति विश्रुता॥',
       translation:
         lang === 'pa'
           ? "ਸ਼ੇਰ 'ਤੇ ਸਵਾਰ, ਬੁਰਾਈਆਂ ਦਾ ਨਾਸ਼ ਕਰਨ ਵਾਲੀ ਅਤੇ ਘੰਟੇ ਦੀ ਧੁਨੀ ਨਾਲ ਰੱਖਿਆ ਕਰਨ ਵਾਲੀ ਮਾਂ ਚੰਦਰਘੰਟਾ ਸਾਡੇ 'ਤੇ ਮਿਹਰ ਕਰਨ।"
