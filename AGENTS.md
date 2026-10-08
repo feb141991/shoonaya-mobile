@@ -108,6 +108,42 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - Report test results as passed, failed and skipped; never present only the
   passed count as the full denominator.
 
+### 11. Image and Binary Asset Integrity
+- An image's real format must match its file extension. Android's resource
+  compiler (AAPT2) rejects a JPEG named `.png` and fails the whole release
+  build; iOS and the web accept it, so nothing else will catch it. Never rename
+  a file to change its format; re-export it.
+- Cut-out art (`assets/relics/`, `assets/icons/`) must be a real PNG or WebP
+  with a true alpha channel. Never commit a generator's checkerboard
+  "transparency" preview, a screenshot or a flattened JPEG; open the file on a
+  contrasting background before committing it.
+- Run `npm run check:assets` before committing or copying any image, including
+  from the backend repository. The Android build scripts and `npm run
+  eas:update` run it first and refuse to start if it fails: an Android build can
+  wait hours in the EAS queue before failing on this, and an OTA update skips
+  the native build entirely, so it would ship bad art silently. Publish OTA
+  updates with `npm run eas:update -- ...`, not bare `eas update`.
+- Do not report image work as done, or call assets "transparent" or "verified"
+  in a commit message, until the check passes and the art has been viewed in
+  light and dark mode on a device or simulator. A green test suite does not
+  cover assets (see 7: committed is not built is not smoke-tested).
+- Record provenance for generated or third-party art: tool, date and rights
+  status (see 3). Assets copied between repositories carry their defects with
+  them; run the check in both.
+- `__tests__/asset-formats.test.ts` holds a known-broken list that may only
+  shrink. Never add a file to it; fix the artwork and delete the entry.
+- Art that arrives with a baked-in checkerboard is cut out with
+  `scripts/relic-cutout/`, then must pass `npm run check:assets`, be viewed over
+  a bright contrast colour, and compile with `aapt2`. Prefer the generator's
+  original export with a real alpha channel.
+- Why this rule exists: Android production build 46 (2026-10-06) failed after a
+  ~3 hour EAS queue because eight JPEGs named `.png`, each with a checkerboard
+  baked into its pixels, were in `assets/relics/`. They entered the web
+  repository on 2026-05-14 (`1723fa6`) and were copied here in `8e21e69`
+  (2026-10-05) under a message describing them as transparent assets; no step
+  checked them. They were replaced with real transparent cut-outs on
+  2026-10-08. This applies equally to human and AI-agent contributors.
+
 ## Styling — match existing DNA, never invent
 
 `lib/constants.ts` is the single source of truth: `COLORS`, `themeColor(isDark)`

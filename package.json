@@ -79,9 +79,11 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test __tests__/*.test.ts tests/*.test.ts",
     "android:clean": "bash scripts/android-clean.sh",
-    "eas:android:apk": "eas build --platform android --profile preview",
-    "eas:android:dev": "eas build --platform android --profile development",
-    "eas:android:store": "eas build --platform android --profile production"
+    "check:assets": "tsx scripts/check-asset-formats.ts",
+    "eas:android:apk": "npm run check:assets && eas build --platform android --profile preview",
+    "eas:android:dev": "npm run check:assets && eas build --platform android --profile development",
+    "eas:android:store": "npm run check:assets && eas build --platform android --profile production",
+    "eas:update": "npm run check:assets && eas update"
   },
   "private": true,
   "expo": {

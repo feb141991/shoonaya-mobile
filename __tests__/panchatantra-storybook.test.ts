@@ -135,6 +135,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-greedy-jackal',
       'panchatantra-heron-and-fish',
       'panchatantra-sparrow-and-elephant',
+      'panchatantra-king-and-minister',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -247,6 +248,10 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-greedy-jackal'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-heron-and-fish'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-sparrow-and-elephant'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-king-and-minister'), 2);
+
+    // Tier 1: Masterwork cover artwork
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-owl-and-crows'), 1);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
@@ -284,4 +289,15 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.match(src, /Story of the Day • 6 Scenes/);
     assert.match(src, /Read Storybook/);
   });
+});
+
+test('King and Wise Minister story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-king-and-minister');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-king-and-minister'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-king-and-minister'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-king-and-minister', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
 });

@@ -34,6 +34,12 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { FestivalEmblem } from '@/components/festivals/FestivalEmblem';
+import {
+  isNavratriObservance,
+  getNavratriConduct,
+  getNavratriPujaItems,
+  getNavratriMantra,
+} from '@/lib/navratri-content';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 
 const FONT_PRESETS = [
@@ -95,6 +101,7 @@ export default function FestivalDetailScreen() {
   const festival = useMemo(() => lookupFestivalContent(slug), [slug]);
   const seriesChild = useMemo(() => getSeriesChildContent(slug), [slug]);
   const seriesGroup = useMemo(() => getSeriesGroupContent(slug), [slug]);
+  const isNavratri = useMemo(() => isNavratriObservance(slug), [slug]);
 
   useEffect(() => {
     if (seriesGroup && seriesGroup.children.length > 0 && slug === seriesGroup.definitionKey) {
@@ -510,12 +517,24 @@ export default function FestivalDetailScreen() {
       ? 'समस्त देवताओं, पितरों और महायोगियों को बारंबार नमस्कार। स्वाहा और स्वधा स्वरूपिणी शक्तियों को नित्य नमन।'
       : 'Salutations to the revered deities, ancestors, and great yogis. Forever reverence to Svaha and Svadha.';
 
+  const navratriConduct = useMemo(() => isNavratri ? getNavratriConduct(slug, resolvedLang) : null, [isNavratri, slug, resolvedLang]);
+  const navratriItems = useMemo(() => isNavratri ? getNavratriPujaItems(slug, resolvedLang) : null, [isNavratri, slug, resolvedLang]);
+  const navratriMantra = useMemo(() => isNavratri ? getNavratriMantra(slug, resolvedLang) : null, [isNavratri, slug, resolvedLang]);
+
   const canonicalDos = festival ? resolveListContent(festival.dos) : [];
-  const dos = canonicalDos.length > 0 ? canonicalDos : (liveTranslation?.personalPractice ? [liveTranslation.personalPractice] : (isPitruSlug ? pitruDos : []));
-  const donts = (festival && resolveListContent(festival.donts).length > 0) ? resolveListContent(festival.donts) : (isPitruSlug ? pitruDonts : []);
-  const pujaItems = (festival && resolveListContent(festival.pujaItems).length > 0) ? resolveListContent(festival.pujaItems) : (isPitruSlug ? pitruPujaItems : []);
-  const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || (isPitruSlug ? pitruMantraSanskrit : '');
-  const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : (isPitruSlug ? pitruMantraTranslation : ''));
+  const dos = canonicalDos.length > 0
+    ? canonicalDos
+    : (liveTranslation?.personalPractice
+      ? [liveTranslation.personalPractice]
+      : (isPitruSlug ? pitruDos : (navratriConduct ? navratriConduct.dos : [])));
+  const donts = (festival && resolveListContent(festival.donts).length > 0)
+    ? resolveListContent(festival.donts)
+    : (isPitruSlug ? pitruDonts : (navratriConduct ? navratriConduct.donts : []));
+  const pujaItems = (festival && resolveListContent(festival.pujaItems).length > 0)
+    ? resolveListContent(festival.pujaItems)
+    : (isPitruSlug ? pitruPujaItems : (navratriItems || []));
+  const mantraText = liveTranslation?.verse?.original || festival?.mantra?.sanskrit || (isPitruSlug ? pitruMantraSanskrit : (navratriMantra ? navratriMantra.sanskrit : ''));
+  const mantraTranslation = liveTranslation?.verse?.translation || (festival?.mantra ? resolveFestivalText(festival.mantra.translation, resolvedLang) : (isPitruSlug ? pitruMantraTranslation : (navratriMantra ? navratriMantra.translation : '')));
 
   const traditionKey = festival?.tradition || liveStory?.tradition || seriesContext?.tradition || '';
   const traditionLabel =
@@ -532,13 +551,15 @@ export default function FestivalDetailScreen() {
   const hasHindiFestival = Boolean(
     liveStory?.translations?.hi?.significance ||
     (festival && resolveFestivalText(festival.name, 'hi') && resolveFestivalText(festival.significance, 'hi')) ||
-    Boolean(seriesChild?.significance?.value?.hi)
+    Boolean(seriesChild?.significance?.value?.hi) ||
+    isNavratri
   );
 
   const hasPunjabiFestival = Boolean(
     liveStory?.translations?.pa?.significance ||
     (festival && resolveFestivalText(festival.name, 'pa') && resolveFestivalText(festival.significance, 'pa')) ||
-    Boolean(seriesChild?.significance?.value?.pa)
+    Boolean(seriesChild?.significance?.value?.pa) ||
+    isNavratri
   );
 
   const availableLanguages = [
