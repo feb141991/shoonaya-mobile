@@ -5,6 +5,8 @@
 // explanations (journey, teaching, moral…) never go on a card as someone's
 // words. Text is used exactly as stored; nothing is shortened or rephrased.
 
+import { pickDharmVeerQuote } from './dharm-veer';
+
 export type QuoteCardFormat = 'square' | 'story';
 export const QUOTE_CARD_FORMATS: readonly QuoteCardFormat[] = ['square', 'story'];
 
@@ -26,7 +28,6 @@ type DharmVeerQuoteSource = {
 };
 
 const has = (value: string | undefined | null): value is string => typeof value === 'string' && value.trim().length > 0;
-const complete = (quote: Quote): quote is { text: string; attribution: string } => has(quote?.text) && has(quote?.attribution);
 
 export type QuoteCardTypography = { quoteSize: number; quoteLine: number; attributionSize: number; attributionLine: number };
 
@@ -65,15 +66,12 @@ export function quoteCardSources(item: Pick<DharmVeerQuoteSource, 'source' | 'so
 
 /**
  * The Dharm Veer quote card for the language being read, or null when the
- * hero has no complete quote or no source. Hindi/Punjabi use that language's
- * quote only when it is complete (text + attribution); otherwise the English
- * quote — the card never mixes a translated text with another attribution.
+ * hero has no complete quote or no source. The quote is the one the reader
+ * shows (pickDharmVeerQuote), so page and card always match.
  */
 export function dharmVeerQuoteCard(hero: DharmVeerQuoteSource, language: 'en' | 'hi' | 'pa'): QuoteCardContent | null {
   const sources = quoteCardSources(hero);
   if (!sources.length) return null;
-  const localized = language === 'pa' ? hero.quotePa : language === 'hi' ? hero.quoteLocal : undefined;
-  const chosen = complete(localized) ? localized : complete(hero.quote) ? hero.quote : null;
-  if (!chosen) return null;
-  return { text: chosen.text.trim(), attribution: chosen.attribution.trim(), sources };
+  const chosen = pickDharmVeerQuote(hero, language);
+  return chosen ? { ...chosen, sources } : null;
 }

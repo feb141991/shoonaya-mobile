@@ -19,7 +19,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, RADII } from '@/lib/constants';
-import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, type DharmVeer } from '@/lib/dharm-veer';
+import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, pickDharmVeerQuote, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -416,12 +416,11 @@ export default function DharmVeerDetailScreen() {
   const sourceText = showLocal
     ? pickDharmVeerLocalizedText(hero?.source, hero?.sourceLocal, hero?.sourcePa, localContentLanguage)
     : hero?.source;
-  const quoteText = showLocal
-    ? (localContentLanguage === 'pa' ? hero?.quotePa?.text : undefined) || hero?.quoteLocal?.text || hero?.quote?.text
-    : hero?.quote?.text;
-  const quoteAttribution = showLocal
-    ? (localContentLanguage === 'pa' ? hero?.quotePa?.attribution : undefined) || hero?.quoteLocal?.attribution || hero?.quote?.attribution
-    : hero?.quote?.attribution;
+  // Whole quote in the reader's language, else English — never Hindi for a
+  // Punjabi reader, never one quote's text with another's attribution.
+  const shownQuote = hero ? pickDharmVeerQuote(hero, showLocal ? localContentLanguage : 'en') : null;
+  const quoteText = shownQuote?.text;
+  const quoteAttribution = shownQuote?.attribution;
 
   const textToCopy = hero ? `${title}
 ${tagline}

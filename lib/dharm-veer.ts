@@ -88,6 +88,28 @@ export function pickDharmVeerLocalizedText(
   return hindi || english;
 }
 
+type DharmVeerQuote = { text: string; attribution: string };
+
+/**
+ * The hero's quote for the reader's language, chosen as a whole: the Hindi
+ * (`quoteLocal`) or Punjabi (`quotePa`) quote when it has both text and
+ * attribution, otherwise the English quote. Same rule as
+ * pickDharmVeerLocalizedText (Punjabi never falls back to Hindi), and text
+ * and attribution always come from the same quote. Used by the reader and
+ * the quote card so the two always match.
+ */
+export function pickDharmVeerQuote(
+  hero: { quote?: Partial<DharmVeerQuote>; quoteLocal?: Partial<DharmVeerQuote>; quotePa?: Partial<DharmVeerQuote> },
+  contentLanguage: 'en' | 'hi' | 'pa',
+): DharmVeerQuote | null {
+  const complete = (q: Partial<DharmVeerQuote> | undefined): q is DharmVeerQuote =>
+    !!q && typeof q.text === 'string' && q.text.trim().length > 0 && typeof q.attribution === 'string' && q.attribution.trim().length > 0;
+  const localized = contentLanguage === 'pa' ? hero.quotePa : contentLanguage === 'hi' ? hero.quoteLocal : undefined;
+  if (complete(localized)) return { text: localized.text.trim(), attribution: localized.attribution.trim() };
+  if (complete(hero.quote)) return { text: hero.quote.text.trim(), attribution: hero.quote.attribution.trim() };
+  return null;
+}
+
 export const DHARM_VEERS: DharmVeer[] = [
   {
     "id": "sri-krishna",

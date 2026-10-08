@@ -414,11 +414,13 @@ attribution) square + story; the share sheet opened from the export. Nothing
 was sent. Screenshots: `p7-*.jpg`. Not checked: Jain / universal card
 styles on device, Android capture size, VoiceOver.
 
-Noted, not changed (outside this phase): the Dharm Veer page shows the
-**Hindi** quote to a Punjabi reader when a hero has no Punjabi quote. Its
-other fields follow the "Punjabi never falls back to Hindi" rule. The card
-follows that rule and shows the English quote in this case, so page and card
-can differ for those 61 heroes.
+Fixed after review (2026-10-08): the Dharm Veer page showed the **Hindi**
+quote to a Punjabi reader when a hero had no Punjabi quote (61 heroes). It
+also picked text and attribution separately, so they could come from
+different quotes. Page and card now share `pickDharmVeerQuote`
+(lib/dharm-veer.ts): the whole quote in the reader's language when it has
+text and attribution, otherwise the English quote. This is the same rule as
+the other Dharm Veer fields, so page and card always match.
 
 Tests: npm test 1176 passed, 1 failed (astro-engine-numerical, worktree path
 only), 0 skipped. TypeScript passed. New: quote-card (8).
