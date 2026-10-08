@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   getSeriesChildContent,
   getSeriesGroupContent,
@@ -185,4 +187,24 @@ test('approved Pitru editorial is scoped, requires human review and uses honest 
   assert.equal(isEditorialFieldDisplayable(group.name,{tradition:'hindu',calendarProfile:'north_indian_purnimanta'}),false);
   assert.equal(resolveLocalizedText(group.name,'hi',context),'पितृ पक्ष');
   for(const child of group.children) assert.equal(isEditorialFieldDisplayable(child.canonicalTitle,context),true);
+});
+
+test('festival UI never manufactures Sharad Navratri occurrence dates or verification status', () => {
+  const festivalScreen = readFileSync(join(process.cwd(), 'app/festival/[slug].tsx'), 'utf8');
+
+  assert.doesNotMatch(
+    festivalScreen,
+    /2026-10-11/,
+    'Gregorian Navratri dates must come from canonical profile-qualified occurrences, never UI code',
+  );
+  assert.doesNotMatch(
+    festivalScreen,
+    /Canonical ratified fallback for Sharad Navratri/,
+    'offline UI must not synthesize a resolved occurrence when canonical data is unavailable',
+  );
+  assert.doesNotMatch(
+    festivalScreen,
+    /const navratri(?:Dos|Donts|PujaItems|MantraData)/,
+    'ritual guidance and sacred text must come from governed sourced content, not inline UI fallbacks',
+  );
 });
