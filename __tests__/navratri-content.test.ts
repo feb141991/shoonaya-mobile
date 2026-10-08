@@ -70,6 +70,27 @@ test('Sharad Navratri day texts are unchanged by the Chaitra work', () => {
   }
 });
 
+test('dhyana translations say only what each verse says', () => {
+  const en = (slug: string) => getNavratriMantra(slug, 'en');
+  // Day 7: the classical two-stanza ekaveṇī dhyana, not the garbled karālavadanā line.
+  assert.match(en('navratri-day-7-kalaratri').sanskrit, /^एकवेणी जपाकर्णपूरा नग्ना खरास्थिता।/);
+  assert.match(en('navratri-day-7-kalaratri').sanskrit, /कालरात्रिर्भयङ्करी॥$/);
+  assert.doesNotMatch(en('navratri-day-7-kalaratri').sanskrit, /दिव्यरूपा यशस्विनी/);
+  assert.match(en('navratri-day-7-kalaratri').translation, /donkey/);
+  // Day 4: both pots in the verse (surā, rudhira) are translated.
+  assert.match(en('navratri-day-4-kushmanda').translation, /blood/);
+  assert.doesNotMatch(en('navratri-day-4-kushmanda').translation, /cosmic egg|life-force/);
+  assert.match(getNavratriMantra('navratri-day-4-kushmanda', 'hi').translation, /रक्त/);
+  assert.match(getNavratriMantra('navratri-day-4-kushmanda', 'pa').translation, /ਖ਼ੂਨ/);
+  // Day 3/5/6/9: no claims the verse does not make, none of its words dropped.
+  assert.doesNotMatch(en('navratri-day-3-chandraghanta').translation, /lion|bell/);
+  assert.doesNotMatch(en('navratri-day-5-skandamata').translation, /lap/);
+  assert.match(en('navratri-day-6-katyayani').translation, /tiger/);
+  assert.doesNotMatch(en('navratri-day-6-katyayani').translation, /lion/);
+  assert.match(en('maha-navami').translation, /asuras/);
+  assert.match(getNavratriMantra('maha-navami', 'pa').translation, /ਅਸੁਰਾਂ/);
+});
+
 test('the day-3 dhyana verse uses the standard reading', () => {
   const verse = getNavratriMantra('navratri-day-3-chandraghanta', 'en').sanskrit;
   assert.match(verse, /प्रसादं तनुते मह्यं/);

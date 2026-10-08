@@ -5,11 +5,20 @@
  * Navratri (Navadurga & Vijayadashami). Chaitra days reuse the dhyana verse
  * of the same Navadurga form.
  *
- * Review status (2026-10-08): this hand-written Native file has no per-item
- * source metadata and is not in the backend canonical snapshot (AGENTS.md
- * sections 1 and 3). Open review items: the day-4 (Kushmanda) translation
- * renders सुरा/रुधिर as "nectar", and the day-7 (Kalaratri) verse reading and
- * its translation need checking against a printed source.
+ * Verse check (2026-10-08) against the Navadurga dhyana texts in the
+ * brhat.in "Navadurgā" series (old.brhat.in/dhiti/<form>):
+ * - Day 7 Kalaratri: replaced a garbled "karālavadanā…" line with the
+ *   classical "ekaveṇī japākarṇapūrā…" dhyana (two stanzas). Popular sites
+ *   also print a "karālavandanāṃ ghorāṃ…" verse, but every copy found was
+ *   corrupted, so it was not used.
+ * - Translations now say only what each verse says: day 3 (no lion/bell
+ *   claims), day 4 (surā rendered as divine nectar, as brhat.in does, and the
+ *   pot of blood kept), day 5 (no "Skanda on Her lap"), day 6 (śārdūla =
+ *   tiger, not lion), day 9 (asuras restored).
+ * - Day 3: प्रसादिं → प्रसादं (standard reading).
+ * Still open: this hand-written Native file has no per-item source metadata
+ * and is not in the backend canonical snapshot (AGENTS.md sections 1 and 3).
+ * The verse texts and translations have not had a human/council review.
  */
 
 export const NAVRATRI_SLUGS = [
@@ -188,10 +197,10 @@ export function getNavratriMantra(
       sanskrit: 'पिण्डजप्रवरारूढा चण्डकोपास्त्रकैर्युता। प्रसादं तनुते मह्यं चन्द्रघण्टेति विश्रुता॥',
       translation:
         lang === 'pa'
-          ? "ਸ਼ੇਰ 'ਤੇ ਸਵਾਰ, ਬੁਰਾਈਆਂ ਦਾ ਨਾਸ਼ ਕਰਨ ਵਾਲੀ ਅਤੇ ਘੰਟੇ ਦੀ ਧੁਨੀ ਨਾਲ ਰੱਖਿਆ ਕਰਨ ਵਾਲੀ ਮਾਂ ਚੰਦਰਘੰਟਾ ਸਾਡੇ 'ਤੇ ਮਿਹਰ ਕਰਨ।"
+          ? "ਸ੍ਰੇਸ਼ਟ ਵਾਹਨ 'ਤੇ ਸਵਾਰ, ਪ੍ਰਚੰਡ ਕ੍ਰੋਧ ਦੇ ਸ਼ਸਤਰਾਂ ਨਾਲ ਸੁਸੱਜਿਤ, ਚੰਦਰਘੰਟਾ ਨਾਮ ਨਾਲ ਪ੍ਰਸਿੱਧ ਮਾਂ ਮੇਰੇ 'ਤੇ ਕਿਰਪਾ ਕਰੇ।"
           : lang === 'hi'
-          ? 'सिंह पर सवार, दुष्टों के संहारक अस्त्रों से सुसज्जित और घंटे की घोर ध्वनि से दुखों का नाश करने वाली माँ चंद्रघंटा मुझ पर कृपा बरसाएं।'
-          : 'Riding the valiant lion, armed with weapons to dispel all darkness, bearing the crescent bell that rings divine protection, may Goddess Chandraghanta grant Her grace.',
+          ? 'श्रेष्ठ वाहन पर आरूढ़, प्रचंड क्रोध के अस्त्रों से युक्त, चंद्रघंटा नाम से विख्यात देवी मुझ पर अपनी कृपा का विस्तार करें।'
+          : 'Mounted on the foremost of beasts and armed with weapons of fierce wrath, may She who is renowned as Chandraghanta extend Her grace to me.',
     };
   }
 
@@ -200,10 +209,10 @@ export function getNavratriMantra(
       sanskrit: 'सुरासम्पूर्णकलशं रुधिराप्लुतमेव च। दधाना हस्तपद्माभ्यां कूष्माण्डा शुभदास्तु मे॥',
       translation:
         lang === 'pa'
-          ? 'ਆਪਣੇ ਹੱਥਾਂ ਵਿੱਚ ਅੰਮ੍ਰਿਤ ਕਲਸ਼ ਧਾਰਨ ਕਰਨ ਵਾਲੀ ਅਤੇ ਮੁਸਕਾਨ ਨਾਲ ਬ੍ਰਹਿਮੰਡ ਰਚਣ ਵਾਲੀ ਮਾਂ ਕੁਸ਼ਮਾਂਡਾ ਸਭ ਦਾ ਭਲਾ ਕਰਨ।'
+          ? 'ਆਪਣੇ ਕਮਲ ਵਰਗੇ ਹੱਥਾਂ ਵਿੱਚ ਸੁਰਾ (ਦੈਵੀ ਅੰਮ੍ਰਿਤ) ਨਾਲ ਭਰਿਆ ਕਲਸ਼ ਅਤੇ ਖ਼ੂਨ ਨਾਲ ਭਿੱਜਿਆ ਕਲਸ਼ ਧਾਰਨ ਕਰਨ ਵਾਲੀ ਮਾਂ ਕੂਸ਼ਮਾਂਡਾ ਮੇਰੇ ਲਈ ਸ਼ੁਭ ਦੇਣ ਵਾਲੀ ਹੋਵੇ।'
           : lang === 'hi'
-          ? 'अपने कर-कमलों में अमृत से परिपूर्ण कलश धारण करने वाली और मंद मुस्कान से ब्रह्मांड की रचना करने वाली माँ कुष्मांडा मुझे मंगल प्रदान करें।'
-          : 'Holding in Her lotus hands the vessels of life-force and divine nectar, who brought forth the cosmic egg with Her luminous smile, may Goddess Kushmanda grant auspiciousness.',
+          ? 'अपने कर-कमलों में सुरा (दिव्य अमृत) से परिपूर्ण कलश और रक्त से आप्लुत कलश धारण करने वाली माँ कूष्मांडा मेरे लिए शुभदायिनी हों।'
+          : 'Holding in Her lotus hands a kalasha filled with surā (understood as divine nectar) and another drenched in blood, may Goddess Kushmanda be the giver of auspiciousness to me.',
     };
   }
 
@@ -212,10 +221,10 @@ export function getNavratriMantra(
       sanskrit: 'सिंहासनगता नित्यं पद्माश्रितकरद्वया। शुभदास्तु सदा देवी स्कन्दमाता यशस्विनी॥',
       translation:
         lang === 'pa'
-          ? "ਸ਼ੇਰ ਦੇ ਸਿੰਘਾਸਣ 'ਤੇ ਬਿਰਾਜਮਾਨ, ਦੋਵੇਂ ਹੱਥਾਂ ਵਿੱਚ ਕੰਵਲ ਫੁੱਲ ਅਤੇ ਬਾਲਕ ਕਾਰਤੀਕੇਯ ਨੂੰ ਗੋਦ ਵਿੱਚ ਲਈ ਮਾਂ ਸਕੰਦਮਾਤਾ ਸਦਾ ਖੁਸ਼ੀਆਂ ਬਖਸ਼ਣ।"
+          ? "ਸਦਾ ਸਿੰਘਾਸਣ 'ਤੇ ਬਿਰਾਜਮਾਨ, ਜਿਨ੍ਹਾਂ ਦੇ ਦੋਵੇਂ ਹੱਥ ਕਮਲਾਂ 'ਤੇ ਟਿਕੇ ਹਨ — ਯਸ਼ਸਵਿਨੀ ਦੇਵੀ ਸਕੰਦਮਾਤਾ ਸਦਾ ਸ਼ੁਭ ਦੇਣ ਵਾਲੀ ਹੋਵੇ।"
           : lang === 'hi'
-          ? 'सदा सिंह के आसन पर विराजमान, अपने दोनों हाथों में कमल पुष्प धारण करने वाली और भगवान कार्तिकेय को गोद में लिए माँ स्कंदमाता सदा शुभ फलदायी हों।'
-          : 'Seated ever upon Her lion throne, holding lotus flowers in Her hands with divine child Skanda on Her lap, may glorious Mother Skandamata grant eternal benevolence.',
+          ? 'सदा सिंहासन पर विराजमान, जिनके दोनों हाथ कमलों पर आश्रित हैं — यशस्विनी देवी स्कंदमाता सदा शुभ देने वाली हों।'
+          : 'Ever seated on a lion throne, Her two hands resting on lotuses, may the glorious Goddess Skandamata always grant auspiciousness.',
     };
   }
 
@@ -224,22 +233,25 @@ export function getNavratriMantra(
       sanskrit: 'चन्द्रहासोज्ज्वलकरा शार्दूलवरवाहना। कात्यायनी शुभं दद्याद् देवी दानवघातिनी॥',
       translation:
         lang === 'pa'
-          ? "ਚਮਕਦੀ ਤਲਵਾਰ ਧਾਰਨ ਕਰਨ ਵਾਲੀ, ਸ਼ੇਰ 'ਤੇ ਸਵਾਰ ਅਤੇ ਬੁਰਾਈਆਂ ਦਾ ਨਾਸ਼ ਕਰਨ ਵਾਲੀ ਮਾਂ ਕਾਤਿਆਯਨੀ ਸਾਡਾ ਕਲਿਆਣ ਕਰਨ।"
+          ? "ਚੰਦਰਹਾਸ ਤਲਵਾਰ ਨਾਲ ਚਮਕਦੇ ਹੱਥ ਵਾਲੀ, ਸ੍ਰੇਸ਼ਟ ਬਾਘ (ਸ਼ਾਰਦੂਲ) 'ਤੇ ਸਵਾਰ, ਦਾਨਵਾਂ ਦਾ ਨਾਸ਼ ਕਰਨ ਵਾਲੀ ਦੇਵੀ ਕਾਤਿਆਇਨੀ ਸ਼ੁਭ ਬਖ਼ਸ਼ੇ।"
           : lang === 'hi'
-          ? 'चन्द्रहास नामक उज्ज्वल खड्ग धारण करने वाली, श्रेष्ठ सिंह पर सवार और दानवों का संहार करने वाली माँ कात्यायनी हमें मंगल प्रदान करें।'
-          : 'Whose hand shines with the luminous Chandrahasa sword, mounted upon the noble lion, destroyer of demonic darkness, may Goddess Katyayani bestow auspicious blessings.',
+          ? 'चंद्रहास खड्ग से उज्ज्वल हाथ वाली, श्रेष्ठ व्याघ्र (शार्दूल) पर सवार, दानवों का संहार करने वाली देवी कात्यायनी शुभ प्रदान करें।'
+          : 'Her hand radiant with the Chandrahasa sword, riding the noblest tiger (śārdūla), may Goddess Katyayani, slayer of demons, grant auspiciousness.',
     };
   }
 
   if (slug === 'navratri-day-7-kalaratri') {
     return {
-      sanskrit: 'करालवदना घोरा मुक्तकेशी चतुर्भुजा। कालरात्रिः कराली च दिव्यरूपा यशस्विनी॥',
+      // The widely cited classical dhyana (as given in the brhat.in Navadurga
+      // series). Replaces a garbled "karālavadanā…" line whose second half
+      // did not match any published version.
+      sanskrit: 'एकवेणी जपाकर्णपूरा नग्ना खरास्थिता। लम्बोष्ठी कर्णिकाकर्णी तैलाभ्यक्तशरीरिणी॥ वामपादोल्लसल्लोहलताकण्टकभूषणा। वर्धनमूर्धध्वजा कृष्णा कालरात्रिर्भयङ्करी॥',
       translation:
         lang === 'pa'
-          ? 'ਅਗਿਆਨਤਾ ਅਤੇ ਹਨੇਰੇ ਨੂੰ ਮਿਟਾਉਣ ਵਾਲੀ, ਸੱਚੇ ਭਗਤਾਂ ਨੂੰ ਅਭੈ ਦਾਨ ਦੇਣ ਵਾਲੀ ਮਾਂ ਕਾਲਰਾਤਰੀ ਸਾਡੀ ਰੱਖਿਆ ਕਰਨ।'
+          ? "ਇੱਕ ਗੁੱਤ ਵਾਲੀ, ਕੰਨਾਂ ਵਿੱਚ ਜਪਾ (ਗੁੜਹਲ) ਦੇ ਫੁੱਲ ਸਜਾਏ, ਦਿਸ਼ਾਵਾਂ ਹੀ ਜਿਨ੍ਹਾਂ ਦੇ ਬਸਤਰ ਹਨ, ਗਧੇ 'ਤੇ ਸਵਾਰ, ਲੰਮੇ ਬੁੱਲ੍ਹਾਂ ਵਾਲੀ, ਕੰਨਾਂ ਵਿੱਚ ਕਰਣਿਕਾ ਪਹਿਨੇ, ਤੇਲ ਨਾਲ ਮਲੇ ਸਰੀਰ ਵਾਲੀ; ਜਿਨ੍ਹਾਂ ਦੇ ਖੱਬੇ ਪੈਰ ਵਿੱਚ ਲੋਹੇ ਦੀ ਕੰਡਿਆਲੀ ਵੇਲ ਵਰਗਾ ਗਹਿਣਾ ਚਮਕਦਾ ਹੈ; ਸਾਂਵਲੇ ਰੰਗ ਵਾਲੀ, ਉੱਚੇ ਝੰਡੇ ਵਾਲੀ — ਭਿਆਨਕ ਰੂਪ ਵਾਲੀ ਮਾਂ ਕਾਲਰਾਤ੍ਰੀ।"
           : lang === 'hi'
-          ? 'अज्ञान और अंधकार का नाश करने वाली, भक्तों को अभय और वरदान देने वाली शुभंकरी माँ कालरात्रि हमारी समस्त बाधाओं से रक्षा करें।'
-          : 'The fear-dispelling nocturnal power who destroys darkness and malevolence, granting fearlessness and boons to seekers, may Mother Kalaratri protect us.',
+          ? 'एक वेणी (चोटी) वाली, कानों में जपा (गुड़हल) के पुष्प धारण किए, दिगंबरा, गर्दभ पर सवार, लंबे होठों वाली, कानों में कर्णिका पहने, तेल से अभ्यक्त शरीर वाली; जिनके बाएँ पैर में लोहे की कँटीली लता जैसा आभूषण चमकता है; श्याम वर्ण, ऊँची ध्वजा वाली — भयंकर रूप वाली माँ कालरात्रि।'
+          : 'With a single braid, ears adorned with hibiscus (japā) flowers, clad only in the directions, riding a donkey, with long lips, ear-ornaments and a body anointed with oil; Her left foot shining with an ornament of iron thorns like a creeper; dark-hued, Her banner raised high — Kalaratri, the fearsome one.',
     };
   }
 
@@ -260,10 +272,10 @@ export function getNavratriMantra(
       sanskrit: 'सिद्धगन्धर्वयक्षाद्यैरसुरैरमरैरपि। सेव्यमाना सदा भूयात् सिद्धिदा सिद्धिदायिनी॥',
       translation:
         lang === 'pa'
-          ? 'ਸਿੱਧਾਂ, ਗੰਧਰਵਾਂ ਅਤੇ ਦੇਵਤਿਆਂ ਦੁਆਰਾ ਸਦਾ ਪੂਜੀ ਜਾਣ ਵਾਲੀ, ਸਾਰੀਆਂ ਰਿੱਧੀਆਂ-ਸਿੱਧੀਆਂ ਦੇਣ ਵਾਲੀ ਮਾਂ ਸਿੱਧੀਦਾਤਰੀ ਕ੍ਰਿਪਾ ਕਰਨ।'
+          ? 'ਸਿੱਧਾਂ, ਗੰਧਰਵਾਂ, ਯਕਸ਼ਾਂ, ਅਸੁਰਾਂ ਅਤੇ ਦੇਵਤਿਆਂ ਵੱਲੋਂ ਵੀ ਸਦਾ ਪੂਜੀ ਜਾਣ ਵਾਲੀ, ਸਿੱਧੀ ਦੇਣ ਵਾਲੀ ਮਾਂ ਸਿੱਧੀਦਾਤਰੀ ਸਦਾ ਸਿੱਧੀ ਬਖ਼ਸ਼ਣ ਵਾਲੀ ਹੋਵੇ।'
           : lang === 'hi'
-          ? 'सिद्धों, गंधर्वों, यक्षों, देवताओं और असुरों द्वारा भी पूजित, समस्त सिद्धियों को प्रदान करने वाली माँ सिद्धिदात्री हम पर प्रसन्न हों।'
-          : 'Adored ever by Siddhas, Gandharvas, Yakshas, Gods, and celestial seekers, may Goddess Siddhidatri bestow all spiritual attainments and divine fulfillment.',
+          ? 'सिद्धों, गंधर्वों, यक्षों, असुरों और देवताओं द्वारा भी सदा सेवित, सिद्धि देने वाली माँ सिद्धिदात्री सदा सिद्धि प्रदान करने वाली हों।'
+          : 'Ever served by siddhas, gandharvas, yakshas, asuras and devas alike, may Siddhidatri, the giver of siddhi, always grant spiritual attainment.',
     };
   }
 
