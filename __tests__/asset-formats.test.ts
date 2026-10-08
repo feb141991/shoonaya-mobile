@@ -205,24 +205,18 @@ describe('cut-out art must have real transparency', () => {
 
 // ── Repo-wide ratchet ───────────────────────────────────────────────────────────
 //
-// These eight files are the known offenders behind Android build 46's failure:
-// JPEGs named .png, with a checkerboard "transparency" grid baked into the
-// pixels. They are first listed in the web repo (public/relics, 2026-05-14) and
-// were copied here in 8e21e69. This list may only SHRINK: a new offender fails
-// the test, and fixing one forces its entry to be deleted. While any entry
-// remains, `npm run check:assets` (strict, run before every Android build and
-// OTA publish) fails on purpose, because shipping them breaks Android builds and
-// would show a grey checkerboard behind each relic.
-const KNOWN_BROKEN = new Set([
-  'assets/relics/chakra.png',
-  'assets/relics/dharma-wheel.png',
-  'assets/relics/diya-bronze.png',
-  'assets/relics/halo.png',
-  'assets/relics/khanda-gold.png',
-  'assets/relics/khanda.png',
-  'assets/relics/mala.png',
-  'assets/relics/trishula-gold.png',
-]);
+// Known offenders, tolerated only so existing debt cannot block work. This list
+// is EMPTY and may only ever shrink: a new offender fails the test, and a listed
+// file that has been fixed must be deleted from it. Never add a file to hide a
+// problem; fix the artwork.
+//
+// History: it once listed eight assets/relics files (JPEGs named .png with a
+// checkerboard "transparency" grid baked into the pixels) that broke Android
+// build 46. They came from the web repo (public/relics, 2026-05-14) and were
+// copied here in 8e21e69. They were replaced with real transparent cut-outs on
+// 2026-10-08, so `npm run check:assets` (strict, run before every Android build
+// and OTA publish) now passes.
+const KNOWN_BROKEN = new Set<string>([]);
 
 describe('repo image assets', () => {
   const { scanned, problems } = scanAssets(path.resolve(__dirname, '..'));

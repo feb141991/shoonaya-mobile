@@ -132,12 +132,17 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
   them; run the check in both.
 - `__tests__/asset-formats.test.ts` holds a known-broken list that may only
   shrink. Never add a file to it; fix the artwork and delete the entry.
+- Art that arrives with a baked-in checkerboard is cut out with
+  `scripts/relic-cutout/`, then must pass `npm run check:assets`, be viewed over
+  a bright contrast colour, and compile with `aapt2`. Prefer the generator's
+  original export with a real alpha channel.
 - Why this rule exists: Android production build 46 (2026-10-06) failed after a
   ~3 hour EAS queue because eight JPEGs named `.png`, each with a checkerboard
   baked into its pixels, were in `assets/relics/`. They entered the web
   repository on 2026-05-14 (`1723fa6`) and were copied here in `8e21e69`
   (2026-10-05) under a message describing them as transparent assets; no step
-  checked them. This applies equally to human and AI-agent contributors.
+  checked them. They were replaced with real transparent cut-outs on
+  2026-10-08. This applies equally to human and AI-agent contributors.
 
 ## Styling — match existing DNA, never invent
 
