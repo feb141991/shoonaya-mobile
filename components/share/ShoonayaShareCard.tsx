@@ -13,28 +13,28 @@ const GRAIN_DOTS = Array.from({ length: 150 }).map((_, i) => {
   return { x, y, id: i };
 });
 
-function GrainOverlay({ dark }: { dark: boolean }) {
+function GrainOverlay({ dark, height }: { dark: boolean; height: number }) {
   const dotColor = dark ? COLORS.onMediaWhite : COLORS.brandEarthLight;
   const opacity = dark ? 0.05 : 0.04;
   return (
-    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={`0 0 360 ${height}`}>
       {GRAIN_DOTS.map((dot) => (
-        <Circle key={dot.id} cx={dot.x} cy={dot.y} r={0.8} fill={dotColor} opacity={opacity} />
+        <Circle key={dot.id} cx={dot.x} cy={dot.y * height / 640} r={0.8} fill={dotColor} opacity={opacity} />
       ))}
     </Svg>
   );
 }
 
-function VignetteOverlay({ dark }: { dark: boolean }) {
+function VignetteOverlay({ dark, height }: { dark: boolean; height: number }) {
   return (
-    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+    <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={`0 0 360 ${height}`}>
       <Defs>
         <RadialGradient id="vignette" cx="50%" cy="50%" rx="80%" ry="80%">
           <Stop offset="40%" stopColor={dark ? COLORS.darkBg : COLORS.brandEarthLight} stopOpacity="0" />
           <Stop offset="100%" stopColor={dark ? COLORS.darkBg : COLORS.brandEarthLight} stopOpacity={dark ? 0.45 : 0.15} />
         </RadialGradient>
       </Defs>
-      <Path d="M0 0 H360 V640 H0 Z" fill="url(#vignette)" />
+      <Path d={`M0 0 H360 V${height} H0 Z`} fill="url(#vignette)" />
     </Svg>
   );
 }
@@ -43,6 +43,7 @@ export type ShoonayaShareVariant = 'sanatan' | 'sikh' | 'jain' | 'buddhist' | 'u
 
 export type ShoonayaShareCardData = {
   tradition: string | null | undefined;
+  format?: 'story' | 'square';
   layout?: 'metric' | 'sacredText';
   headlineValue?: string | number;
   title?: string;
@@ -58,6 +59,7 @@ export type ShoonayaShareCardData = {
 
 export const SHARE_CARD_WIDTH = 360;
 export const SHARE_CARD_HEIGHT = 640;
+export const SHARE_CARD_SQUARE_SIZE = 360;
 
 type VariantTheme = {
   label: string;
@@ -159,9 +161,10 @@ function Wordmark({ color, gold }: { color: string; gold: string }) {
   );
 }
 
-function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: VariantTheme }) {
+function Motif({ variant, theme, height }: { variant: ShoonayaShareVariant; theme: VariantTheme; height: number }) {
   const W = 360;
-  const H = 640;
+  const H = height;
+  const viewBox = `0 0 ${W} ${H}`;
 
   if (variant === 'buddhist') {
     const stars = Array.from({ length: 50 }).map((_, i) => {
@@ -171,7 +174,7 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
       return { x, y, r: s, id: i };
     });
     return (
-      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={viewBox}>
         <Defs>
           <SvgLinearGradient id="pathGrad" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0%" stopColor={theme.gold} stopOpacity="0" />
@@ -199,10 +202,10 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
 
   if (variant === 'jain') {
     const cx = 180;
-    const cy = 524;
+    const cy = H * 0.82;
     const petals = 5;
     return (
-      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={viewBox}>
         {Array.from({ length: 4 }).map((_, i) => (
           <Ellipse
             key={`ripple-${i}`}
@@ -239,7 +242,7 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
 
   if (variant === 'sikh') {
     return (
-      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={viewBox}>
         {Array.from({ length: 5 }).map((_, row) => {
           const baseY = H * 0.62 + row * 15;
           let pathD = '';
@@ -268,11 +271,11 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
 
   if (variant === 'sanatan') {
     const cx = 180;
-    const cy = 294;
-    const r = 120;
+    const cy = H * 0.46;
+    const r = Math.min(120, H * 0.19);
     const petals = 16;
     return (
-      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={viewBox}>
         <Defs>
           <RadialGradient id="glow" cx="50%" cy="46%" rx="46%" ry="46%">
             <Stop offset="0" stopColor={theme.gold} stopOpacity="0.22" />
@@ -319,11 +322,11 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
   if (variant === 'universal') {
     let waveD = '';
     for (let x = 0; x <= W; x += 10) {
-      const y = 294 + Math.sin((x / W) * Math.PI * 2) * 9;
+      const y = H * 0.46 + Math.sin((x / W) * Math.PI * 2) * 9;
       if (x === 0) waveD += `M ${x} ${y}`; else waveD += ` L ${x} ${y}`;
     }
     return (
-      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox="0 0 360 640">
+      <Svg pointerEvents="none" style={{ position: 'absolute', inset: 0 }} viewBox={viewBox}>
         <Defs>
           <SvgLinearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
             <Stop offset="0%" stopColor={theme.number} stopOpacity="0" />
@@ -332,7 +335,7 @@ function Motif({ variant, theme }: { variant: ShoonayaShareVariant; theme: Varia
           </SvgLinearGradient>
         </Defs>
         <Path
-          d="M96 350 C134 304 160 304 180 350 C200 304 226 304 264 350 C226 396 200 396 180 350 C160 396 134 396 96 350 Z"
+          d={`M96 ${H * 0.55} C134 ${H * 0.48} 160 ${H * 0.48} 180 ${H * 0.55} C200 ${H * 0.48} 226 ${H * 0.48} 264 ${H * 0.55} C226 ${H * 0.62} 200 ${H * 0.62} 180 ${H * 0.55} C160 ${H * 0.62} 134 ${H * 0.62} 96 ${H * 0.55} Z`}
           stroke={theme.gold}
           strokeOpacity={0.16}
           strokeWidth={3}
@@ -352,27 +355,29 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
   const headline = data.headlineValue ?? 0;
   const identity = [data.userName?.trim(), data.date?.trim()].filter(Boolean).join('  ·  ');
   const isSacredText = data.layout === 'sacredText';
+  const compact = data.format === 'square';
+  const height = compact ? SHARE_CARD_SQUARE_SIZE : SHARE_CARD_HEIGHT;
 
   return (
-    <View ref={ref} collapsable={false} style={{ width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT, overflow: 'hidden', borderRadius: 28 }}>
-      <LinearGradient colors={[theme.top, theme.bottom]} style={{ flex: 1, padding: 24, alignItems: 'center' }}>
-        <Motif variant={variant} theme={theme} />
+    <View ref={ref} collapsable={false} style={{ width: SHARE_CARD_WIDTH, height, overflow: 'hidden', borderRadius: compact ? 24 : 28 }}>
+      <LinearGradient colors={[theme.top, theme.bottom]} style={{ flex: 1, padding: compact ? 18 : 24, alignItems: 'center' }}>
+        <Motif variant={variant} theme={theme} height={height} />
 
         {/* Depth vignette and organic grain noise overlays */}
-        <VignetteOverlay dark={theme.dark} />
-        <GrainOverlay dark={theme.dark} />
+        <VignetteOverlay dark={theme.dark} height={height} />
+        <GrainOverlay dark={theme.dark} height={height} />
 
         {/* Double nested ornamental borders */}
-        <View style={{ position: 'absolute', inset: 15, borderRadius: 15, borderWidth: 1.2, borderColor: theme.gold, opacity: 0.34 }} />
-        <View style={{ position: 'absolute', inset: 21, borderRadius: 11, borderWidth: 0.8, borderColor: theme.gold, opacity: 0.18 }} />
+        <View style={{ position: 'absolute', inset: compact ? 10 : 15, borderRadius: compact ? 12 : 15, borderWidth: 1.2, borderColor: theme.gold, opacity: 0.34 }} />
+        <View style={{ position: 'absolute', inset: compact ? 15 : 21, borderRadius: compact ? 8 : 11, borderWidth: 0.8, borderColor: theme.gold, opacity: 0.18 }} />
 
-        <View style={{ marginTop: 48, alignItems: 'center', gap: 14 }}>
+        <View style={{ marginTop: compact ? 18 : 48, alignItems: 'center', gap: compact ? 8 : 14 }}>
           <Wordmark color={theme.ink} gold={theme.gold} />
           <View
             style={{
               borderRadius: 999,
-              paddingHorizontal: 18,
-              paddingVertical: 8,
+              paddingHorizontal: compact ? 12 : 18,
+              paddingVertical: compact ? 5 : 8,
               borderWidth: 1,
               borderColor: theme.gold,
               backgroundColor: theme.dark ? COLORS.homeSoftDark : COLORS.brandSoftLight,
@@ -385,29 +390,29 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
         </View>
 
         {data.subtitle ? (
-          <Text style={{ marginTop: 28, fontFamily: FONTS.sansMedium, fontSize: 15, lineHeight: 22, color: theme.soft, textAlign: 'center' }}>
+          <Text style={{ marginTop: compact ? 10 : 28, fontFamily: FONTS.sansMedium, fontSize: compact ? 12 : 15, lineHeight: compact ? 16 : 22, color: theme.soft, textAlign: 'center' }} numberOfLines={compact ? 2 : undefined}>
             {data.subtitle}
           </Text>
         ) : null}
 
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 10 }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: compact ? 2 : 10, width: '100%' }}>
           {isSacredText ? (
             <>
               {data.source ? (
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, color: theme.gold, textAlign: 'center', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: compact ? 9 : 12, lineHeight: compact ? 12 : 16, color: theme.gold, textAlign: 'center', letterSpacing: compact ? 0.7 : 1.2, textTransform: 'uppercase' }} numberOfLines={compact ? 2 : 3}>
                   {data.source}
                 </Text>
               ) : null}
-              <Text style={{ marginTop: 14, fontFamily: FONTS.serifBold, fontSize: 30, lineHeight: 34, color: theme.ink, textAlign: 'center' }}>
+              <Text style={{ marginTop: compact ? 6 : 14, fontFamily: FONTS.serifBold, fontSize: compact ? 21 : 30, lineHeight: compact ? 25 : 34, color: theme.ink, textAlign: 'center' }} numberOfLines={compact ? 2 : undefined}>
                 {data.title ?? "Today's Shloka"}
               </Text>
               {data.headlineValue ? (
-                <Text style={{ marginTop: 18, fontFamily: FONTS.serif, fontSize: 20, lineHeight: 28, color: theme.ink, textAlign: 'center' }} numberOfLines={5} adjustsFontSizeToFit>
+                <Text style={{ marginTop: compact ? 8 : 18, fontFamily: FONTS.serif, fontSize: compact ? 16 : 20, lineHeight: compact ? 21 : 28, color: theme.ink, textAlign: 'center' }} numberOfLines={compact ? 4 : 5} adjustsFontSizeToFit>
                   {String(data.headlineValue)}
                 </Text>
               ) : null}
               {data.caption ? (
-                <Text style={{ marginTop: 18, fontFamily: FONTS.serif, fontSize: 15, lineHeight: 22, color: theme.soft, textAlign: 'center' }} numberOfLines={4}>
+                <Text style={{ marginTop: compact ? 7 : 18, fontFamily: FONTS.serif, fontSize: compact ? 11 : 15, lineHeight: compact ? 15 : 22, color: theme.soft, textAlign: 'center' }} numberOfLines={compact ? 2 : 4}>
                   {data.caption}
                 </Text>
               ) : null}
@@ -449,12 +454,12 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.gold, textAlign: 'center' }}>{identity}</Text>
         ) : null}
 
-        <View style={{ width: 68, height: 1, backgroundColor: theme.gold, opacity: 0.48, marginTop: 28, marginBottom: 22 }} />
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.soft, textAlign: 'center' }}>
+        <View style={{ width: 68, height: 1, backgroundColor: theme.gold, opacity: 0.48, marginTop: compact ? 8 : 28, marginBottom: compact ? 6 : 22 }} />
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: compact ? 10 : 12, color: theme.soft, textAlign: 'center' }}>
           {data.footer ?? 'Shared from Shoonaya'}
         </Text>
-        <Text style={{ marginTop: 8, fontFamily: FONTS.serifBold, fontSize: 17, color: theme.gold, textAlign: 'center' }}>
-          Find your infinity.
+        <Text style={{ marginTop: compact ? 4 : 8, fontFamily: FONTS.serifBold, fontSize: compact ? 13 : 17, color: theme.gold, textAlign: 'center' }}>
+          Find your infinite.
         </Text>
       </LinearGradient>
     </View>

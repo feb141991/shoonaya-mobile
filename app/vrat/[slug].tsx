@@ -34,6 +34,7 @@ import { getReaderLayoutMode, setReaderLayoutMode, type ReaderLayoutMode } from 
 import { readBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { buildVratMantraShareCard, type ReaderShareFormat } from '@/lib/readerShareCards';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
@@ -205,6 +206,8 @@ export default function VratDetailScreen() {
   const insets = useSafeAreaInsets();
   const shareCardRef = useRef<View | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [shareCardKind, setShareCardKind] = useState<'overview' | 'mantra'>('overview');
+  const [shareCardFormat, setShareCardFormat] = useState<ReaderShareFormat>('story');
 
   // "Around the World" global stats -- ported from the PWA's
   // GET /api/vrat/stats (public, no auth).
@@ -415,26 +418,64 @@ export default function VratDetailScreen() {
   const selectedFastingType = vrat.fastingType ? (copy.fastTypes[vrat.fastingType] ?? vrat.fastingType) : null;
   const fsScale = fontStep === 0 ? 0.85 : fontStep === 1 ? 1 : fontStep === 2 ? 1.15 : 1.3;
 
-  // Same rendered-image-card approach as app/shloka.tsx's share (via
-  // ShoonayaShareCard + shareCapturedShoonayaCard/react-native-view-shot),
-  // per explicit request to match that style rather than a plain-text
-  // Share.share() call.
-  const handleShare = async () => {
-    if (sharing) return;
+  const mantraShareCardData = buildVratMantraShareCard(vrat, selectedMantra, shareCardFormat, showLocal ? 'hi' : 'en');
+  const overviewShareCardData = {
+    tradition: 'universal',
+    format: shareCardFormat,
+    layout: 'sacredText' as const,
+    headlineValue: selectedTagline,
+    title: selectedName,
+    caption: selectedSignificance,
+    date: canonicalToday ?? undefined,
+    footer: globalStats && globalStats.today_count > 0
+      ? `${globalStats.today_count.toLocaleString()} seekers observing today`
+      : undefined,
+  };
+  const activeShareCardData = shareCardKind === 'mantra' ? mantraShareCardData : overviewShareCardData;
+
+  const shareCardInFormat = async (kind: 'overview' | 'mantra', format: ReaderShareFormat) => {
+    if (sharing || (kind === 'mantra' && !mantraShareCardData)) return;
     setSharing(true);
+    setShareCardKind(kind);
+    setShareCardFormat(format);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 80));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       await shareCapturedShoonayaCard(shareCardRef, {
-        fileName: `shoonaya-vrat-${slug}.png`,
+        fileName: `shoonaya-vrat-${slug}-${kind}-${format}.png`,
         dialogTitle: `Share ${selectedName}`,
         fallbackMessage: `${selectedName}\n\n${selectedTagline}`,
+        format,
       });
     } catch {
-      // sharing cancelled or failed silently
+      // Sharing cancellation and native share errors are handled by the helper.
     } finally {
       setSharing(false);
     }
   };
+
+  const promptShareFormat = (kind: 'overview' | 'mantra') => Alert.alert(
+    kind === 'mantra' ? 'Share sourced mantra as a card' : 'Share Vrat card',
+    'Choose an image size',
+    [
+      { text: 'Square', onPress: () => void shareCardInFormat(kind, 'square') },
+      { text: 'Story (9:16)', onPress: () => void shareCardInFormat(kind, 'story') },
+      { text: 'Cancel', style: 'cancel' },
+    ],
+  );
+
+  const mantraCardAction = mantraShareCardData ? (
+    <PressableSurface
+      accessibilityRole="button"
+      accessibilityLabel="Share sourced mantra as a card"
+      disabled={sharing}
+      onPress={() => promptShareFormat('mantra')}
+      haptic="selection"
+      style={{ minHeight: 44, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 16, marginTop: 8 }}
+    >
+      <Feather name="share-2" size={15} color={theme.brand} />
+      <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Share sourced mantra as a card</Text>
+    </PressableSurface>
+  ) : null;
 
   return (
     <ReaderShell
@@ -458,7 +499,7 @@ export default function VratDetailScreen() {
       setFontStep={setFontStep}
       languages={hasLocalVrat ? [{ code: 'en' as const, label: 'EN' }, { code: 'hi' as const, label: 'हिंदी' }] : undefined}
       currentLanguage={showLocal ? 'hi' : 'en'}
-      onShare={handleShare}
+      onShare={() => promptShareFormat('overview')}
       setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
     >
       {layoutMode === 'chapters' ? (
@@ -470,6 +511,7 @@ export default function VratDetailScreen() {
           fontSize={{ fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}
           accentColor={theme.brand}
           isDark={isDark}
+          mantraAction={mantraCardAction}
         />
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -779,6 +821,7 @@ export default function VratDetailScreen() {
           <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
             {selectedMantra}
           </Text>
+          {mantraCardAction}
         </Card>
       </ScrollView>
       )}
@@ -804,22 +847,11 @@ export default function VratDetailScreen() {
 
       {/* Off-screen, rasterized by shareCapturedShoonayaCard via
           react-native-view-shot -- same pattern as app/shloka.tsx. */}
-      <View pointerEvents="none" style={{ position: 'absolute', left: -10000, top: 0, width: 360, height: 640 }}>
+      <View pointerEvents="none" style={{ position: 'absolute', left: -10000, top: 0, width: 360, height: shareCardFormat === 'square' ? 360 : 640 }}>
         <View collapsable={false}>
           <ShoonayaShareCard
             ref={shareCardRef}
-            data={{
-              tradition: 'universal',
-              layout: 'sacredText',
-              headlineValue: selectedMantra || selectedTagline,
-              title: selectedName,
-              subtitle: selectedTagline,
-              caption: selectedSignificance,
-              date: canonicalToday ?? undefined,
-              footer: globalStats && globalStats.today_count > 0
-                ? `${globalStats.today_count.toLocaleString()} seekers observing today`
-                : undefined,
-            }}
+            data={activeShareCardData ?? overviewShareCardData}
           />
         </View>
       </View>

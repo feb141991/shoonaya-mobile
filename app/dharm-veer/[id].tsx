@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,6 +36,9 @@ import { useReaderControls } from '@/hooks/useReaderControls';
 import { buildReadableCapabilities } from '@/lib/readable-content';
 import { resolveReadablePreferences, resolveLocalContentLanguage } from '@/lib/readable-preferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { buildDharmVeerQuoteShareCard, type ReaderShareFormat } from '@/lib/readerShareCards';
 
 function getLocalSpiritualDate(tz: string, rolloverHour: number = 4): string {
   try {
@@ -95,6 +98,7 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
       asking: 'Asking...',
       ask: 'Ask Dharma Mitra',
       shareReflection: 'Share reflection',
+      shareQuoteCard: 'Share quote as card',
     };
   }
 
@@ -112,6 +116,7 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
       asking: 'ਪੁੱਛਿਆ ਜਾ ਰਿਹਾ ਹੈ...',
       ask: 'ਧਰਮ ਮਿੱਤਰ ਨੂੰ ਪੁੱਛੋ',
       shareReflection: 'ਵਿਚਾਰ ਸਾਂਝਾ ਕਰੋ',
+      shareQuoteCard: 'ਹਵਾਲਾ ਕਾਰਡ ਵਜੋਂ ਸਾਂਝਾ ਕਰੋ',
     };
   }
 
@@ -128,6 +133,7 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
     asking: 'पूछा जा रहा है...',
     ask: 'धर्म मित्र से पूछें',
     shareReflection: 'अपना विचार साझा करें',
+    shareQuoteCard: 'उद्धरण कार्ड के रूप में साझा करें',
   };
 }
 
@@ -166,6 +172,9 @@ export default function DharmVeerDetailScreen() {
   const [fontStep, setFontStep] = useState(1); // 'md'
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
   const [layoutMode, setLayoutMode] = useState<ReaderLayoutMode>('chapters');
+  const quoteCardRef = useRef<View | null>(null);
+  const [quoteCardFormat, setQuoteCardFormat] = useState<ReaderShareFormat>('story');
+  const [sharingQuoteCard, setSharingQuoteCard] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -426,12 +435,60 @@ export default function DharmVeerDetailScreen() {
   const sourceText = showLocal
     ? pickDharmVeerLocalizedText(hero?.source, hero?.sourceLocal, hero?.sourcePa, localContentLanguage)
     : hero?.source;
+  const readerCopy = getReaderCopy(showLocal ? localContentLanguage : 'en');
   const quoteText = showLocal
     ? (localContentLanguage === 'pa' ? hero?.quotePa?.text : undefined) || hero?.quoteLocal?.text || hero?.quote?.text
     : hero?.quote?.text;
   const quoteAttribution = showLocal
     ? (localContentLanguage === 'pa' ? hero?.quotePa?.attribution : undefined) || hero?.quoteLocal?.attribution || hero?.quote?.attribution
     : hero?.quote?.attribution;
+  const activeQuote = quoteText && quoteAttribution
+    ? { text: quoteText, attribution: quoteAttribution }
+    : undefined;
+  const quoteCardData = hero
+    ? buildDharmVeerQuoteShareCard(hero, activeQuote, quoteCardFormat, {
+        title: title ?? hero.name,
+        subtitle: tagline ?? hero.tagline,
+      })
+    : null;
+
+  const shareQuoteCardInFormat = async (format: ReaderShareFormat) => {
+    if (!quoteCardData || sharingQuoteCard) return;
+    setSharingQuoteCard(true);
+    setQuoteCardFormat(format);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await shareCapturedShoonayaCard(quoteCardRef, {
+        fileName: `shoonaya-dharm-veer-${hero?.id}-quote-${format}.png`,
+        dialogTitle: `Share ${hero?.name ?? 'Dharm Veer'} quote`,
+        format,
+      });
+    } finally {
+      setSharingQuoteCard(false);
+    }
+  };
+
+  const promptQuoteCardFormat = () => {
+    Alert.alert(readerCopy.shareQuoteCard, 'Choose an image size', [
+      { text: 'Square', onPress: () => void shareQuoteCardInFormat('square') },
+      { text: 'Story (9:16)', onPress: () => void shareQuoteCardInFormat('story') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const quoteCardAction = quoteCardData ? (
+    <PressableSurface
+      accessibilityRole="button"
+      accessibilityLabel={readerCopy.shareQuoteCard}
+      disabled={sharingQuoteCard}
+      onPress={promptQuoteCardFormat}
+      haptic="selection"
+      style={{ minHeight: 44, minWidth: 44, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 999, borderWidth: 1, borderColor: border, paddingHorizontal: 16, marginTop: 6 }}
+    >
+      <Feather name="share-2" size={15} color={brand} />
+      <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>{readerCopy.shareQuoteCard}</Text>
+    </PressableSurface>
+  ) : null;
 
   const textToCopy = hero ? `${title}
 ${tagline}
@@ -457,7 +514,6 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
     ...(hasHindi ? [{ code: 'hi' as const, label: 'HI' }] : []),
     ...(hasPunjabi ? [{ code: 'pa' as const, label: 'PA' }] : []),
   ];
-  const readerCopy = getReaderCopy(showLocal ? localContentLanguage : 'en');
   const meta = hero ? TRADITION_META[hero.tradition] : null;
   const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)';
 
@@ -550,6 +606,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
             fontSize={fs}
             accentColor={brand}
             isDark={isDark}
+            quoteAction={quoteCardAction}
             onComplete={() => {
               if (isGuest) {
                 setAuthGateVisible(true);
@@ -619,6 +676,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
                 {quoteText}
               </Text>
               <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>— {quoteAttribution}</Text>
+              {quoteCardAction}
             </View>
           ) : null}
 
@@ -739,6 +797,11 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         </View>
         </>
       )}
+        {quoteCardData ? (
+          <View pointerEvents="none" style={{ position: 'absolute', left: -10000, top: 0, width: 360, height: quoteCardFormat === 'square' ? 360 : 640 }}>
+            <ShoonayaShareCard ref={quoteCardRef} data={quoteCardData} />
+          </View>
+        ) : null}
       </ReaderShell>
 
       <AuthGate
