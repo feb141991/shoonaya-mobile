@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -31,6 +31,9 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { useReaderPrefs } from '@/lib/readerPrefs';
+import { buildVratChapters, clampChapterIndex, usesChapterLayout, type VratChapterKey } from '@/lib/readerChapters';
+import { useLinkedKatha } from '@/hooks/useLinkedKatha';
 
 // Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
 // screens share the same ReaderShell toolbar component, this is just the
@@ -52,6 +55,10 @@ const VRAT_DETAIL_COPY = {
     donts: "Restrictions (Don'ts)",
     pujaItems: 'Puja Samagri',
     mantra: 'Sacred Mantra',
+    dosDonts: "Do's & Don'ts",
+    katha: 'Vrat Katha',
+    phal: 'Phal Shruti',
+    openKatha: 'Open in Katha',
     canonical: 'Canonical',
     upcoming: 'Upcoming',
     backToCalendar: 'Back to Fasting Calendar',
@@ -86,6 +93,10 @@ const VRAT_DETAIL_COPY = {
     donts: 'वर्जित आचरण (क्या न करें)',
     pujaItems: 'पूजन सामग्री',
     mantra: 'पावन मंत्र',
+    dosDonts: 'क्या करें, क्या न करें',
+    katha: 'व्रत कथा',
+    phal: 'फल श्रुति',
+    openKatha: 'कथा में खोलें',
     canonical: 'मान्य तिथि',
     upcoming: 'आगामी',
     backToCalendar: 'व्रत कैलेंडर पर वापस जाएं',
@@ -120,6 +131,10 @@ const VRAT_DETAIL_COPY = {
     donts: 'ਵਰਜਿਤ ਆਚਰਣ (ਕੀ ਨਾ ਕਰੋ)',
     pujaItems: 'ਪੂਜਾ ਸਮੱਗਰੀ',
     mantra: 'ਪਾਵਨ ਮੰਤਰ',
+    dosDonts: 'ਕੀ ਕਰੋ, ਕੀ ਨਾ ਕਰੋ',
+    katha: 'ਵਰਤ ਕਥਾ',
+    phal: 'ਫਲ ਸ਼ਰੁਤੀ',
+    openKatha: 'ਕਥਾ ਵਿੱਚ ਖੋਲ੍ਹੋ',
     canonical: 'ਮੰਨਿਆ ਹੋਇਆ',
     upcoming: 'ਆਉਣ ਵਾਲਾ',
     backToCalendar: 'ਵਰਤ ਕੈਲੰਡਰ ਤੇ ਵਾਪਸ ਜਾਓ',
@@ -173,6 +188,9 @@ export default function VratDetailScreen() {
   const [occurrenceLoading, setOccurrenceLoading] = useState(false);
 
   const [fontStep, setFontStep] = useState(1);
+  // Chapter layout (Phase 6): one section per page unless the reader chose "One page".
+  const { prefs: readerPrefs } = useReaderPrefs();
+  const [chapterIndex, setChapterIndex] = useState(0);
 
   // Non-blocking success/error feedback -- matches the local toast pattern
   // already established in app/(tabs)/japa.tsx (this codebase has no shared
@@ -203,6 +221,7 @@ export default function VratDetailScreen() {
       mantra: 'Om Shanti Shanti Shanti',
     };
   }, [slug]);
+  const linkedKatha = useLinkedKatha(vrat.kathaId);
 
   // Check guest state
   useEffect(() => {
@@ -384,6 +403,375 @@ export default function VratDetailScreen() {
     }
   };
 
+  // ── Chapters (Phase 6) ──
+  // The linked katha's own paragraphs (no new splits); Hindi when the page is
+  // showing Hindi and the katha has a Hindi text.
+  const linkedKathaHindi = showLocal && Boolean(linkedKatha?.bodyHi?.length);
+  const linkedKathaTitle = linkedKathaHindi && linkedKatha?.titleHi ? linkedKatha.titleHi : linkedKatha?.title;
+  const linkedKathaBody = (linkedKathaHindi ? linkedKatha?.bodyHi : linkedKatha?.body) ?? [];
+  const linkedKathaPhal = linkedKathaHindi && linkedKatha?.phalHi ? linkedKatha.phalHi : linkedKatha?.phal;
+  const chapters = buildVratChapters(vrat, showLocal, linkedKatha);
+  const chaptered = usesChapterLayout(readerPrefs.layout, chapters.length);
+  const currentChapterIndex = clampChapterIndex(chapterIndex, chapters.length);
+  const currentChapter = chaptered ? chapters[currentChapterIndex] : undefined;
+  const chapterTitle: Record<VratChapterKey, string> = {
+    significance: copy.significance,
+    practice: copy.practiceRules,
+    dosDonts: copy.dosDonts,
+    mantra: copy.mantra,
+    katha: copy.katha,
+  };
+
+  // Page cards, shared by the one-page and the chapter layout.
+  const headerCard = (
+    <Card style={{ padding: 20, marginBottom: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Text style={{ fontSize: 36 }}>{vrat.emoji}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...TYPE.title, color: theme.text }}>{selectedName}</Text>
+          <Text style={{ ...TYPE.body, color: theme.dim, marginTop: 2 }}>{selectedTagline}</Text>
+        </View>
+      </View>
+
+      {/* Canonical Occurrence Info Banner */}
+      {occurrence ? (
+        <View
+          style={{
+            marginTop: 16,
+            padding: 12,
+            borderRadius: RADII.md,
+            backgroundColor: theme.brandSoft,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Feather name="calendar" size={14} color={theme.brand} />
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>
+              {occurrence.civilDate ?? occurrence.date}
+            </Text>
+            {occurrence.status === 'resolved' ? (
+              <View
+                style={{
+                  backgroundColor: COLORS.successBg,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  marginLeft: 'auto',
+                }}
+              >
+                <Text style={{ fontSize: 11, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>{copy.canonical}</Text>
+              </View>
+            ) : (
+              <View
+                style={{
+                  backgroundColor: isDark ? COLORS.warningBgDark : COLORS.warningBgLight,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  marginLeft: 'auto',
+                }}
+              >
+                <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>{copy.upcoming}</Text>
+              </View>
+            )}
+          </View>
+
+          {occurrence.profile?.calendar ? (
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 4 }}>
+              Profile: {occurrence.profile.calendar} · Tradition: {occurrence.profile.tradition}
+            </Text>
+          ) : null}
+
+          {/* Diagnostics if present */}
+          {occurrence.diagnostics && occurrence.diagnostics.length > 0 ? (
+            <View style={{ marginTop: 6 }}>
+              {occurrence.diagnostics.map((d, i) => (
+                <Text key={i} style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim }}>
+                  ℹ {d}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+
+          {/* Alternatives if present */}
+          {occurrence.alternatives && occurrence.alternatives.length > 0 ? (
+            <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: theme.borderSoft }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>
+                {copy.alternativeTraditions}
+              </Text>
+              {occurrence.alternatives.map((alt, i) => (
+                <Text key={i} style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.text, marginTop: 2 }}>
+                  • {alt.profile.tradition} ({alt.profile.calendar}): {alt.civilDate} {alt.note ? `— ${alt.note}` : ''}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : occurrenceIdParam ? (
+        occurrenceLoading ? (
+          <View style={{ marginTop: 16, padding: 12, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={theme.brand} />
+          </View>
+        ) : (
+          <View
+            style={{
+              marginTop: 16,
+              padding: 12,
+              borderRadius: RADII.md,
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Feather name="info" size={16} color={theme.dim} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>
+                {copy.occurrenceUnavailable}
+              </Text>
+            </View>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, marginTop: 4, lineHeight: 18 }}>
+              {copy.occurrenceUnavailableDesc}
+            </Text>
+            <PressableSurface
+              onPress={() => router.push('/vrat')}
+              style={{
+                marginTop: 10,
+                paddingVertical: 6,
+                paddingHorizontal: 12,
+                borderRadius: RADII.sm,
+                backgroundColor: theme.brandSoft,
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
+                {copy.backToCalendar}
+              </Text>
+            </PressableSurface>
+          </View>
+        )
+      ) : null}
+    </Card>
+  );
+  const observeCard = (
+    <>
+    {occurrenceIdParam && isEligibleToday ? (
+      <Card style={{ padding: 16, marginBottom: 16, alignItems: 'center' }}>
+        {observedToday ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              width: '100%',
+              paddingVertical: 12,
+              borderRadius: RADII.pill,
+              backgroundColor: COLORS.successBg,
+              borderWidth: 1.5,
+              borderColor: COLORS.successBorder,
+            }}
+          >
+            <Feather name="check-circle" size={18} color={COLORS.success} />
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.success }}>
+              {copy.observedToday} {observeCount > 1 ? `(${observeCount}× total)` : ''}
+            </Text>
+          </View>
+        ) : (
+          <PressableSurface
+            onPress={handleObserve}
+            disabled={observeLoading || !observeStatusLoaded}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              width: '100%',
+              paddingVertical: 14,
+              borderRadius: RADII.pill,
+              backgroundColor: theme.brand,
+            }}
+          >
+            {observeLoading ? (
+              <ActivityIndicator size="small" color={theme.textOnBrand} />
+            ) : (
+              <>
+                <Text style={{ fontSize: 16 }}>🙏</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.textOnBrand }}>
+                  {copy.markAsObserved} {observeCount > 0 ? `(${observeCount}× before)` : ''}
+                </Text>
+              </>
+            )}
+          </PressableSurface>
+        )}
+        <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
+          {observedToday ? copy.practiceRecorded : copy.earnKarma}
+        </Text>
+      </Card>
+    ) : null}
+    </>
+  );
+  const statsCard = (
+    <>
+    {globalStats && (globalStats.next_date || globalStats.total_count > 0) ? (
+      <Card style={{ padding: 16, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+          <Feather name="calendar" size={14} color={theme.dim} />
+          <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+            {copy.aroundWorld}
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          {globalStats.next_date ? (
+            <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {copy.nextDate}
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
+                {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString(readerLanguage === 'hi' ? 'hi-IN' : 'en', { day: 'numeric', month: 'short' })}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
+                {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString(readerLanguage === 'hi' ? 'hi-IN' : 'en', { weekday: 'long' })}
+              </Text>
+            </View>
+          ) : null}
+          {globalStats.today_count > 0 ? (
+            <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {copy.observingToday}
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
+                {globalStats.today_count.toLocaleString()}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
+                {copy.seekersOnShoonaya}
+              </Text>
+            </View>
+          ) : globalStats.total_count > 0 ? (
+            <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {copy.allTime}
+              </Text>
+              <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
+                {globalStats.total_count.toLocaleString()}
+              </Text>
+              <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
+                {copy.observancesRecorded}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        {globalStats.today_count > 0 ? (
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, textAlign: 'center', marginTop: 10 }}>
+            {globalStats.today_count === 1 ? '1 seeker is' : `${globalStats.today_count} seekers are`} observing with you today
+          </Text>
+        ) : null}
+      </Card>
+    ) : null}
+    </>
+  );
+  const significanceCard = (
+    <Card style={{ padding: 16, marginBottom: 16 }}>
+      <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.significance}</Text>
+      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedSignificance}</Text>
+    </Card>
+  );
+  const practiceCard = (
+    <Card style={{ padding: 16, marginBottom: 16 }}>
+      <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.practiceRules}</Text>
+      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedPractice}</Text>
+
+      {selectedFastingType ? (
+        <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.fastType}</Text>
+          <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, textTransform: 'capitalize' }}>
+              {selectedFastingType}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {selectedBreakFastTime ? (
+        <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.parana}</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{selectedBreakFastTime}</Text>
+        </View>
+      ) : null}
+    </Card>
+  );
+  const dosCard = (
+    <>
+    {selectedDos && selectedDos.length > 0 ? (
+      <Card style={{ padding: 16, marginBottom: 16 }}>
+        <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 8 }}>{copy.dos}</Text>
+        {selectedDos.map((item, idx) => (
+          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+            <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
+            <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
+          </View>
+        ))}
+      </Card>
+    ) : null}
+    </>
+  );
+  const dontsCard = (
+    <>
+    {selectedDonts && selectedDonts.length > 0 ? (
+      <Card style={{ padding: 16, marginBottom: 16 }}>
+        <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 8 }}>{copy.donts}</Text>
+        {selectedDonts.map((item, idx) => (
+          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+            <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
+            <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
+          </View>
+        ))}
+      </Card>
+    ) : null}
+    </>
+  );
+  const mantraCard = (
+    <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
+      <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.mantra}</Text>
+      <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
+        {selectedMantra}
+      </Text>
+    </Card>
+  );
+  const kathaCard = linkedKatha && linkedKathaBody.length > 0 ? (
+    <Card style={{ padding: 16, marginBottom: 16 }}>
+      <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.katha}</Text>
+      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20 * fsScale, lineHeight: 26 * fsScale, color: theme.text }}>{linkedKathaTitle}</Text>
+      {linkedKathaBody.map((paragraph, idx) => (
+        <Text key={idx} style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale, marginTop: 12 }}>
+          {paragraph}
+        </Text>
+      ))}
+      {linkedKathaPhal ? (
+        <View style={{ marginTop: 16, padding: 12, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border }}>
+          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 4 }}>{copy.phal}</Text>
+          <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{linkedKathaPhal}</Text>
+        </View>
+      ) : null}
+      <PressableSurface
+        haptic="selection"
+        onPress={() => router.push({ pathname: '/bhakti/katha/[id]', params: { id: linkedKatha.id } })}
+        accessibilityRole="button"
+        style={{ marginTop: 14, minHeight: 44, paddingHorizontal: 14, borderRadius: RADII.pill, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.brandSoft }}
+      >
+        <Feather name="book-open" size={14} color={theme.brand} />
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>{copy.openKatha}</Text>
+      </PressableSurface>
+    </Card>
+  ) : null;
+  const chapterSection: Record<VratChapterKey, ReactNode> = {
+    significance: significanceCard,
+    practice: practiceCard,
+    dosDonts: <>{dosCard}{dontsCard}</>,
+    mantra: mantraCard,
+    katha: kathaCard,
+  };
+
   return (
     <ReaderShell
       progressId={`vrat:${slug}`}
@@ -400,316 +788,39 @@ export default function VratDetailScreen() {
       currentLanguage={showLocal ? 'hi' : 'en'}
       onShare={handleShare}
       setLanguage={(code) => setReaderLanguageOverride(code as typeof language)}
+      chapterLayout={{
+        titles: chapters.map((chapter) => chapterTitle[chapter.key]),
+        fallback: chapters.map((chapter) => chapter.fallback),
+        index: currentChapterIndex,
+        onChange: setChapterIndex,
+      }}
     >
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        {/* Header Card */}
-        <Card style={{ padding: 20, marginBottom: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Text style={{ fontSize: 36 }}>{vrat.emoji}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...TYPE.title, color: theme.text }}>{selectedName}</Text>
-              <Text style={{ ...TYPE.body, color: theme.dim, marginTop: 2 }}>{selectedTagline}</Text>
-            </View>
-          </View>
-
-          {/* Canonical Occurrence Info Banner */}
-          {occurrence ? (
-            <View
-              style={{
-                marginTop: 16,
-                padding: 12,
-                borderRadius: RADII.md,
-                backgroundColor: theme.brandSoft,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Feather name="calendar" size={14} color={theme.brand} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>
-                  {occurrence.civilDate ?? occurrence.date}
-                </Text>
-                {occurrence.status === 'resolved' ? (
-                  <View
-                    style={{
-                      backgroundColor: COLORS.successBg,
-                      paddingHorizontal: 6,
-                      paddingVertical: 2,
-                      borderRadius: 4,
-                      marginLeft: 'auto',
-                    }}
-                  >
-                    <Text style={{ fontSize: 11, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>{copy.canonical}</Text>
-                  </View>
-                ) : (
-                  <View
-                    style={{
-                      backgroundColor: isDark ? COLORS.warningBgDark : COLORS.warningBgLight,
-                      paddingHorizontal: 6,
-                      paddingVertical: 2,
-                      borderRadius: 4,
-                      marginLeft: 'auto',
-                    }}
-                  >
-                    <Text style={{ fontSize: 11, color: isDark ? COLORS.warningDark : COLORS.warningLight, fontFamily: FONTS.sansSemiBold }}>{copy.upcoming}</Text>
-                  </View>
-                )}
-              </View>
-
-              {occurrence.profile?.calendar ? (
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 4 }}>
-                  Profile: {occurrence.profile.calendar} · Tradition: {occurrence.profile.tradition}
-                </Text>
-              ) : null}
-
-              {/* Diagnostics if present */}
-              {occurrence.diagnostics && occurrence.diagnostics.length > 0 ? (
-                <View style={{ marginTop: 6 }}>
-                  {occurrence.diagnostics.map((d, i) => (
-                    <Text key={i} style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim }}>
-                      ℹ {d}
-                    </Text>
-                  ))}
-                </View>
-              ) : null}
-
-              {/* Alternatives if present */}
-              {occurrence.alternatives && occurrence.alternatives.length > 0 ? (
-                <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: theme.borderSoft }}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.dim }}>
-                    {copy.alternativeTraditions}
-                  </Text>
-                  {occurrence.alternatives.map((alt, i) => (
-                    <Text key={i} style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.text, marginTop: 2 }}>
-                      • {alt.profile.tradition} ({alt.profile.calendar}): {alt.civilDate} {alt.note ? `— ${alt.note}` : ''}
-                    </Text>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          ) : occurrenceIdParam ? (
-            occurrenceLoading ? (
-              <View style={{ marginTop: 16, padding: 12, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={theme.brand} />
-              </View>
-            ) : (
-              <View
-                style={{
-                  marginTop: 16,
-                  padding: 12,
-                  borderRadius: RADII.md,
-                  backgroundColor: theme.card,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Feather name="info" size={16} color={theme.dim} />
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.text }}>
-                    {copy.occurrenceUnavailable}
-                  </Text>
-                </View>
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, marginTop: 4, lineHeight: 18 }}>
-                  {copy.occurrenceUnavailableDesc}
-                </Text>
-                <PressableSurface
-                  onPress={() => router.push('/vrat')}
-                  style={{
-                    marginTop: 10,
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    borderRadius: RADII.sm,
-                    backgroundColor: theme.brandSoft,
-                    alignSelf: 'flex-start',
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
-                    {copy.backToCalendar}
-                  </Text>
-                </PressableSurface>
-              </View>
-            )
+      {currentChapter ? (
+        // Chapter layout: the date, observe and community cards open the
+        // first chapter; each later chapter is one section.
+        <View>
+          {currentChapterIndex === 0 ? (
+            <>
+              {headerCard}
+              {observeCard}
+              {statsCard}
+            </>
           ) : null}
-        </Card>
-
-        {/* Action CTA: Mark as Observed (only when occurrence is eligible today) */}
-        {occurrenceIdParam && isEligibleToday ? (
-          <Card style={{ padding: 16, marginBottom: 16, alignItems: 'center' }}>
-            {observedToday ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  width: '100%',
-                  paddingVertical: 12,
-                  borderRadius: RADII.pill,
-                  backgroundColor: COLORS.successBg,
-                  borderWidth: 1.5,
-                  borderColor: COLORS.successBorder,
-                }}
-              >
-                <Feather name="check-circle" size={18} color={COLORS.success} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.success }}>
-                  {copy.observedToday} {observeCount > 1 ? `(${observeCount}× total)` : ''}
-                </Text>
-              </View>
-            ) : (
-              <PressableSurface
-                onPress={handleObserve}
-                disabled={observeLoading || !observeStatusLoaded}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  width: '100%',
-                  paddingVertical: 14,
-                  borderRadius: RADII.pill,
-                  backgroundColor: theme.brand,
-                }}
-              >
-                {observeLoading ? (
-                  <ActivityIndicator size="small" color={theme.textOnBrand} />
-                ) : (
-                  <>
-                    <Text style={{ fontSize: 16 }}>🙏</Text>
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.textOnBrand }}>
-                      {copy.markAsObserved} {observeCount > 0 ? `(${observeCount}× before)` : ''}
-                    </Text>
-                  </>
-                )}
-              </PressableSurface>
-            )}
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
-              {observedToday ? copy.practiceRecorded : copy.earnKarma}
-            </Text>
-          </Card>
-        ) : null}
-
-        {/* Around the World -- global stats, ported from the PWA's
-            GET /api/vrat/stats. Same gating as web: only render when there's
-            something to show. */}
-        {globalStats && (globalStats.next_date || globalStats.total_count > 0) ? (
-          <Card style={{ padding: 16, marginBottom: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-              <Feather name="calendar" size={14} color={theme.dim} />
-              <Text style={{ ...TYPE.chip, color: theme.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                {copy.aroundWorld}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              {globalStats.next_date ? (
-                <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {copy.nextDate}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
-                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString(readerLanguage === 'hi' ? 'hi-IN' : 'en', { day: 'numeric', month: 'short' })}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
-                    {new Date(`${globalStats.next_date}T00:00:00`).toLocaleDateString(readerLanguage === 'hi' ? 'hi-IN' : 'en', { weekday: 'long' })}
-                  </Text>
-                </View>
-              ) : null}
-              {globalStats.today_count > 0 ? (
-                <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {copy.observingToday}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
-                    {globalStats.today_count.toLocaleString()}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
-                    {copy.seekersOnShoonaya}
-                  </Text>
-                </View>
-              ) : globalStats.total_count > 0 ? (
-                <View style={{ flex: 1, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border, padding: 12, alignItems: 'center' }}>
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {copy.allTime}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.serif, fontSize: 16, color: theme.brand, marginTop: 4 }}>
-                    {globalStats.total_count.toLocaleString()}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: theme.dim, marginTop: 2 }}>
-                    {copy.observancesRecorded}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-            {globalStats.today_count > 0 ? (
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, textAlign: 'center', marginTop: 10 }}>
-                {globalStats.today_count === 1 ? '1 seeker is' : `${globalStats.today_count} seekers are`} observing with you today
-              </Text>
-            ) : null}
-          </Card>
-        ) : null}
-
-        {/* Significance */}
-        <Card style={{ padding: 16, marginBottom: 16 }}>
-          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.significance}</Text>
-          <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedSignificance}</Text>
-        </Card>
-
-        {/* Fasting & Practice */}
-        <Card style={{ padding: 16, marginBottom: 16 }}>
-          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.practiceRules}</Text>
-          <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedPractice}</Text>
-
-          {selectedFastingType ? (
-            <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.fastType}</Text>
-              <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, textTransform: 'capitalize' }}>
-                  {selectedFastingType}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-
-          {selectedBreakFastTime ? (
-            <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.parana}</Text>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{selectedBreakFastTime}</Text>
-            </View>
-          ) : null}
-        </Card>
-
-        {/* Do's and Don'ts if present */}
-        {selectedDos && selectedDos.length > 0 ? (
-          <Card style={{ padding: 16, marginBottom: 16 }}>
-            <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 8 }}>{copy.dos}</Text>
-            {selectedDos.map((item, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
-              </View>
-            ))}
-          </Card>
-        ) : null}
-
-        {selectedDonts && selectedDonts.length > 0 ? (
-          <Card style={{ padding: 16, marginBottom: 16 }}>
-            <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 8 }}>{copy.donts}</Text>
-            {selectedDonts.map((item, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
-                <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
-              </View>
-            ))}
-          </Card>
-        ) : null}
-
-        {/* Sacred Mantra */}
-        <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
-          <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.mantra}</Text>
-          <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
-            {selectedMantra}
-          </Text>
-        </Card>
-      </ScrollView>
+          {chapterSection[currentChapter.key]}
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          {headerCard}
+          {observeCard}
+          {statsCard}
+          {significanceCard}
+          {practiceCard}
+          {dosCard}
+          {dontsCard}
+          {mantraCard}
+          {kathaCard}
+        </ScrollView>
+      )}
 
       {toast.visible ? (
         <View

@@ -25,7 +25,8 @@ describe('Dharm Veer localized reader', () => {
   it('does not show an English tagline while the local reader is active and no local tagline exists', () => {
     assert.doesNotMatch(screen, /const tagline = lang === 'local' \? hero\?\.taglineLocal : hero\?\.tagline/);
     assert.match(screen, /pickDharmVeerLocalizedText\(hero\?\.tagline, hero\?\.taglineLocal, hero\?\.taglinePa, localContentLanguage\)/);
-    assert.match(screen, /\{tagline \? \(/);
+    // An empty tagline is passed as undefined; the banner renders it only when set.
+    assert.match(screen, /tagline=\{tagline \|\| undefined\}/);
   });
 
   it('resolves Hindi vs Punjabi from the VIEWER\'s own preference, not hero.tradition', () => {

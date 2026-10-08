@@ -43,6 +43,15 @@ export type ReaderCopy = {
   sleepAfterThis: string;
   sleepActive: (label: string) => string;
   recitationStatus: (pass: number, total: number, verse: number, verses: number) => string;
+  sectionLayout: string;
+  layoutChapters: string;
+  layoutScroll: string;
+  chapterOf: (n: number, total: number) => string;
+  previousChapter: string;
+  nextChapter: string;
+  goToChapter: (n: number, title: string) => string;
+  /** Shown on a chapter whose translation does not exist yet (never machine-filled). */
+  englishOnly: string;
 };
 
 const en: ReaderCopy = {
@@ -84,6 +93,14 @@ const en: ReaderCopy = {
   sleepAfterThis: 'After this recitation',
   sleepActive: (label) => `Sleep timer: ${label}`,
   recitationStatus: (pass, total, verse, verses) => total > 1 ? `Recitation ${pass} of ${total} · Verse ${verse} of ${verses}` : `Verse ${verse} of ${verses}`,
+  sectionLayout: 'Layout',
+  layoutChapters: 'Chapters',
+  layoutScroll: 'One page',
+  chapterOf: (n, total) => `Chapter ${n} of ${total}`,
+  previousChapter: 'Previous',
+  nextChapter: 'Next',
+  goToChapter: (n, title) => `Chapter ${n}: ${title}`,
+  englishOnly: 'English',
 };
 
 const hi: ReaderCopy = {
@@ -125,6 +142,14 @@ const hi: ReaderCopy = {
   sleepAfterThis: 'इस पाठ के बाद',
   sleepActive: (label) => `स्लीप टाइमर: ${label}`,
   recitationStatus: (pass, total, verse, verses) => total > 1 ? `पाठ ${pass} / ${total} · श्लोक ${verse} / ${verses}` : `श्लोक ${verse} / ${verses}`,
+  sectionLayout: 'पढ़ने का ढंग',
+  layoutChapters: 'अध्याय',
+  layoutScroll: 'एक पृष्ठ',
+  chapterOf: (n, total) => `अध्याय ${n} / ${total}`,
+  previousChapter: 'पिछला',
+  nextChapter: 'अगला',
+  goToChapter: (n, title) => `अध्याय ${n}: ${title}`,
+  englishOnly: 'अंग्रेज़ी में',
 };
 
 const pa: ReaderCopy = {
@@ -166,6 +191,14 @@ const pa: ReaderCopy = {
   sleepAfterThis: 'ਇਸ ਪਾਠ ਤੋਂ ਬਾਅਦ',
   sleepActive: (label) => `ਸਲੀਪ ਟਾਈਮਰ: ${label}`,
   recitationStatus: (pass, total, verse, verses) => total > 1 ? `ਪਾਠ ${pass} / ${total} · ਸਲੋਕ ${verse} / ${verses}` : `ਸਲੋਕ ${verse} / ${verses}`,
+  sectionLayout: 'ਪੜ੍ਹਨ ਦਾ ਢੰਗ',
+  layoutChapters: 'ਅਧਿਆਇ',
+  layoutScroll: 'ਇੱਕ ਪੰਨਾ',
+  chapterOf: (n, total) => `ਅਧਿਆਇ ${n} / ${total}`,
+  previousChapter: 'ਪਿਛਲਾ',
+  nextChapter: 'ਅਗਲਾ',
+  goToChapter: (n, title) => `ਅਧਿਆਇ ${n}: ${title}`,
+  englishOnly: 'ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ',
 };
 
 export const READER_COPY: Record<AppLanguage, ReaderCopy> = { en, hi, pa };

@@ -92,6 +92,24 @@ test('paged readers resume only between the first and the last page', () => {
   }
 });
 
+test('chaptered readers resume to a chapter, except at the very start or the very end', () => {
+  assert.equal(rp.isResumableChapterPosition({ page: 2, ratio: 0 }, 5), true, 'start of a later chapter');
+  assert.equal(rp.isResumableChapterPosition({ page: 4, ratio: 0.5 }, 5), true, 'middle of the last chapter');
+  assert.equal(rp.isResumableChapterPosition({ page: 0, ratio: 0.4 }, 5), true, 'middle of chapter 1');
+  for (const [position, count, why] of [
+    [{ page: 0, ratio: 0 }, 5, 'very start'],
+    [{ page: 0 }, 5, 'very start, no ratio'],
+    [{ page: 4, ratio: 0.99 }, 5, 'finished'],
+    [{ page: 5, ratio: 0.2 }, 5, 'chapter no longer exists'],
+    [{ page: 1.5, ratio: 0.2 }, 5, 'not a chapter index'],
+    [{ ratio: 0.5 }, 5, 'a one-page position'],
+    [{ page: 1, ratio: 0.5 }, 1, 'single chapter'],
+    [null, 5, 'nothing saved'],
+  ] as const) {
+    assert.equal(rp.isResumableChapterPosition(position, count), false, why);
+  }
+});
+
 test('storybook and Pathshala use paged resume and the reader paper theme', () => {
   const story = fs.readFileSync(path.join(__dirname, '../components/reader/PanchatantraStorybookView.tsx'), 'utf8');
   const lesson = fs.readFileSync(path.join(__dirname, '../app/pathshala/[pathId]/[lessonId].tsx'), 'utf8');

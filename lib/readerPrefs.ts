@@ -20,12 +20,15 @@ export type ReaderPrefs = {
   tapHintSeen: boolean;
   /** Paper theme; 'auto' follows the device light/dark setting. */
   paper: ReaderPaperChoice;
+  /** Dharm Veer / Vrat: one chapter per page, or the whole text on one page. */
+  layout: ReaderLayout;
 };
 
+export type ReaderLayout = 'chapters' | 'scroll';
 export type ReaderPaperChoice = 'auto' | ReaderPaperKey;
 export const READER_PAPER_CHOICES: readonly ReaderPaperChoice[] = ['auto', 'bhojpatra', 'sandhya', 'templeNight'];
 
-export const DEFAULT_READER_PREFS: ReaderPrefs = { pinned: false, tapHintSeen: false, paper: 'auto' };
+export const DEFAULT_READER_PREFS: ReaderPrefs = { pinned: false, tapHintSeen: false, paper: 'auto', layout: 'chapters' };
 
 const PREFIX = 'shoonaya:reader-prefs:v1:';
 
@@ -44,6 +47,7 @@ export function parseReaderPrefs(raw: string | null): ReaderPrefs {
       pinned: value.pinned === true,
       tapHintSeen: value.tapHintSeen === true,
       paper: READER_PAPER_CHOICES.includes(value.paper as ReaderPaperChoice) ? (value.paper as ReaderPaperChoice) : 'auto',
+      layout: value.layout === 'scroll' ? 'scroll' : 'chapters',
     };
   } catch {
     return DEFAULT_READER_PREFS;

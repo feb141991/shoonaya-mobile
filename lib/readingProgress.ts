@@ -139,6 +139,19 @@ export function isResumableRatio(ratio: number | undefined) {
   return typeof ratio === 'number' && ratio > 0.05 && ratio < 0.97;
 }
 
+/**
+ * Chaptered readers (Dharm Veer / Vrat chapters): page = chapter, ratio = how
+ * far down that chapter. Worth offering when past the start of chapter 1 and
+ * not at the very end of the last chapter.
+ */
+export function isResumableChapterPosition(position: Pick<ReadingPosition, 'page' | 'ratio'> | null | undefined, chapters: number) {
+  if (!position || chapters < 2) return false;
+  const { page, ratio = 0 } = position;
+  if (typeof page !== 'number' || !Number.isInteger(page) || page < 0 || page >= chapters) return false;
+  if (page === 0) return isResumableRatio(ratio);
+  return !(page === chapters - 1 && ratio >= 0.97);
+}
+
 /** Paged readers: resume only past the first page and before the last (the last = finished). */
 export function isResumablePage(page: number | undefined, total: number) {
   return typeof page === 'number' && Number.isInteger(page) && page > 0 && page < total - 1;

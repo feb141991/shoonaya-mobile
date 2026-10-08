@@ -352,3 +352,116 @@ export function ReaderOptionsSheet({
     </Modal>
   );
 }
+
+// ── Chapters (Phase 6) ─────────────────────────────────────────────────
+
+/** "Chapter 2 of 5" with progress dots, above the chapter text. */
+export function ReaderChapterHeader({
+  index, count, palette, copy, fallback,
+}: {
+  index: number;
+  count: number;
+  palette: ReaderPalette;
+  copy: ReaderCopy;
+  /** The chapter is shown in English because its translation does not exist. */
+  fallback?: boolean;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+        <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.chip, color: palette.dim, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+          {copy.chapterOf(index + 1, count)}
+        </Text>
+        {fallback ? <ReaderFallbackTag palette={palette} copy={copy} /> : null}
+      </View>
+      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        {Array.from({ length: count }, (_, i) => (
+          <View
+            key={i}
+            style={{
+              width: i === index ? 18 : 6,
+              height: 6,
+              borderRadius: RADII.pill,
+              backgroundColor: i === index ? palette.accent : palette.border,
+            }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** Previous / Next at the end of a chapter; Next names the chapter it opens. */
+export function ReaderChapterNav({
+  index, titles, palette, copy, onGoTo,
+}: {
+  index: number;
+  titles: readonly string[];
+  palette: ReaderPalette;
+  copy: ReaderCopy;
+  onGoTo: (index: number) => void;
+}) {
+  const hasPrev = index > 0;
+  const hasNext = index < titles.length - 1;
+  if (!hasPrev && !hasNext) return null;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 10, marginTop: 28 }}>
+      {hasPrev ? (
+        <PressableSurface
+          haptic="selection"
+          onPress={() => onGoTo(index - 1)}
+          accessibilityRole="button"
+          accessibilityLabel={`${copy.previousChapter}: ${copy.goToChapter(index, titles[index - 1])}`}
+          style={{
+            minHeight: 52,
+            paddingHorizontal: 16,
+            borderRadius: RADII.pill,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            backgroundColor: palette.well,
+            borderWidth: 1,
+            borderColor: palette.border,
+          }}
+        >
+          <Feather name="chevron-left" size={18} color={palette.accent} />
+          <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.label, color: palette.text }}>{copy.previousChapter}</Text>
+        </PressableSurface>
+      ) : null}
+      {hasNext ? (
+        <PressableSurface
+          haptic="selection"
+          onPress={() => onGoTo(index + 1)}
+          accessibilityRole="button"
+          accessibilityLabel={`${copy.nextChapter}: ${copy.goToChapter(index + 2, titles[index + 1])}`}
+          style={{
+            flex: 1,
+            minHeight: 52,
+            paddingHorizontal: 18,
+            borderRadius: RADII.pill,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            backgroundColor: palette.accent,
+          }}
+        >
+          <Text numberOfLines={1} maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.label, color: palette.onAccent, flexShrink: 1 }}>
+            {copy.nextChapter} · {titles[index + 1]}
+          </Text>
+          <Feather name="chevron-right" size={18} color={palette.onAccent} />
+        </PressableSurface>
+      ) : null}
+    </View>
+  );
+}
+
+/** Small "English" tag on a chapter whose translation does not exist yet. */
+function ReaderFallbackTag({ palette, copy }: { palette: ReaderPalette; copy: ReaderCopy }) {
+  return (
+    <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADII.pill, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.well }}>
+      <Text maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE} style={{ ...TYPE.chip, color: palette.dim }}>{copy.englishOnly}</Text>
+    </View>
+  );
+}

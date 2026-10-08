@@ -16,7 +16,7 @@ audio included).
 | 3. Resume | done | (this commit) |
 | 4. Listening | code complete; real-device background check pending | (this commit) |
 | 5. Pathshala + Panchatantra | done | (this commit) |
-| 6. Chapters (Dharm Veer, Vrat) | — | |
+| 6. Chapters (Dharm Veer, Vrat) | done | (this commit) |
 | 7. Quote cards | — | |
 | 8. Data-gated | not started (blocked on data) | |
 
@@ -303,3 +303,70 @@ twice). Recheck on a release build in the final pass.
 
 Tests: npm test 1160 passed, 1 failed (astro-engine-numerical, worktree path
 only), 0 skipped. TypeScript passed. New: reading-progress paged-resume tests.
+
+## Phase 6 — Chapter layout for Dharm Veer and Vrat (2026-10-08)
+
+Built:
+- ReaderShell `chapterLayout` prop: one chapter per page with a "Chapter 2 of
+  5" header and dots, Previous / "Next · <chapter>" at the end of the chapter,
+  horizontal swipe (`chapterSwipe`; never from the left screen edge, which is
+  the system back gesture), the screen-reader announcement of the new chapter,
+  and resume by chapter + position in it (`isResumableChapterPosition`).
+  Positions are stored under `<version>:chapters` so a one-page position is
+  never applied inside a chapter.
+- "Aa" → Layout: Chapters / One page (reader pref `layout`, default Chapters,
+  per identity like the paper choice). One page is the previous screen,
+  unchanged.
+- `lib/readerChapters.ts`: chapters only from existing fields, fixed order,
+  only when the field has text.
+  - Dharm Veer: Journey · Test of Dharma · Wisdom · Living Legacy (when
+    present) · Essence. The hero banner opens chapter 1. The quote and
+    canonical sources close Essence. Ask Dharma Mitra and Share reflection end
+    the last chapter.
+  - Vrat: Significance · Practice & Fasting Rules · Do's & Don'ts · Mantra ·
+    Vrat Katha. The date / observe / Around-the-World cards open chapter 1.
+    The katha is the linked katha's own paragraphs and phal, from the same
+    endpoint and cache as the Katha reader (`hooks/useLinkedKatha.ts`). The
+    chapter appears only once the katha has text, and it is also added at the
+    end of One page so both layouts carry the same content. Date and parana
+    still come only from the canonical occurrence data; nothing is derived.
+- A chapter whose translation does not exist shows English with an
+  "English" tag in the chapter header. Today this happens when the app
+  language is Punjabi and a hero has no Punjabi text (61 heroes); no hero
+  offers a partial Hindi/Punjabi toggle.
+
+Decisions:
+- **Chapters is the default layout**, with One page one tap away in "Aa".
+  The user asked for the chapter layout; keeping One page avoids removing the
+  reading mode people already have.
+- **Vrat katha also shows in One page.** It is existing content linked by
+  `kathaId` that the screen never showed. Showing it only in Chapters would
+  make the two layouts differ in content.
+- Chapter-mode Vrat cards sit at the shell's 16 pt margin, aligned with the
+  chapter header. One page keeps its existing nested 32 pt inset.
+
+Checked on iOS Simulator (worktree Debug build, Metro :8082, light/Bhojpatra
+and dark/Temple Night):
+- Sri Krishna: chapter 1 with banner (`p6-dv-chapter1.jpg`); swipe → chapter
+  2 at the top (`p6-dv-chapter2-swipe.jpg`); Next → 3; last chapter = Essence
+  + quote + sources + Ask (`p6-dv-last-chapter.jpg`); swipe back → 4; left
+  and reopened → chapter 4 + "Resumed … · Living Legacy"
+  (`p6-dv-resume-chapter.jpg`); EN → HI kept chapter 4; "Aa" Layout section
+  (`p6-layout-sheet.jpg`); One page = previous layout.
+- Ekadashi: 5 chapters, chapter 1 with the cards (`p6-vrat-chapter1.jpg`);
+  Vrat Katha chapter in Hindi with Phal Shruti and "Open in Katha"
+  (`p6-vrat-katha-hi.jpg`, `p6-vrat-katha-templenight.jpg`).
+- Not checked on device: the "English" tag (needs app language Punjabi;
+  covered by unit tests), Android, VoiceOver, largest text.
+
+Harness note: simulator taps are intermittently dropped (also seen before
+Phase 6 on the storybook's Next). Checks were repeated until each tap
+registered.
+
+Tests: npm test 1168 passed, 1 failed (astro-engine-numerical, worktree path
+only), 0 skipped. TypeScript passed. New: reader-chapters (7 tests: every one
+of the 76+ heroes in en/hi/pa and every vrat, chapter lists equal their
+non-empty fields; swipe rule; layout rule), chapter resume rule, layout pref
+parsing. Updated one source assertion in dharm-veer-localization for the
+banner's `tagline={tagline || undefined}`; same behaviour, since the banner
+renders a tagline only when set.

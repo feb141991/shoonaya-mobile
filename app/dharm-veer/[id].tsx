@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -130,6 +130,8 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
 import { useAppIdentity } from '@/lib/appIdentity';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
+import { useReaderPrefs } from '@/lib/readerPrefs';
+import { buildDharmVeerChapters, clampChapterIndex, usesChapterLayout, type DharmVeerChapterKey } from '@/lib/readerChapters';
 
 export default function DharmVeerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -162,6 +164,9 @@ export default function DharmVeerDetailScreen() {
   const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
   const readerLanguage = readerLanguageOverride ?? language;
   const [fontStep, setFontStep] = useState(1); // 'md'
+  // Chapter layout (Phase 6): one chapter per page unless the reader chose "One page".
+  const { prefs: readerPrefs } = useReaderPrefs();
+  const [chapterIndex, setChapterIndex] = useState(0);
 
   // Explicit Inspiration state
   const [pendingCheckIn, setPendingCheckIn] = useState(false);
@@ -460,6 +465,19 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
   const fontSizeToken = FONT_PRESETS[fontStep].value as FontSize;
   const fs = fontStyles[fontSizeToken];
 
+  const chapterLanguage = showLocal ? localContentLanguage : 'en';
+  const chapters = useMemo(() => (hero ? buildDharmVeerChapters(hero, chapterLanguage) : []), [hero, chapterLanguage]);
+  const chaptered = usesChapterLayout(readerPrefs.layout, chapters.length);
+  const currentChapterIndex = clampChapterIndex(chapterIndex, chapters.length);
+  const currentChapter = chaptered ? chapters[currentChapterIndex] : undefined;
+  const chapterTitle: Record<DharmVeerChapterKey, string> = {
+    journey: readerCopy.journey,
+    trial: readerCopy.trial,
+    teaching: readerCopy.wisdom,
+    legacy: readerCopy.legacy,
+    moral: readerCopy.essence,
+  };
+
   if (loading) {
     return (
       <ReaderPaperScope>
@@ -491,6 +509,173 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
     );
   }
 
+  // Story sections, shared by the one-page and the chapter layout.
+  const heroBanner = (
+    <DharmVeerHeroBanner
+      hero={hero}
+      title={title ?? 'Dharm Veer'}
+      era={era}
+      region={region}
+      tagline={tagline || undefined}
+      accentColor={accent}
+      brandColor={brand}
+    />
+  );
+  const journeySection = (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+        <Feather name="book-open" size={14} color={text} />
+        <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.journey}</Text>
+      </View>
+      <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{journeyText}</Text>
+    </View>
+  );
+  const trialSection = (
+    <View style={{ backgroundColor: 'rgba(197, 160, 89,0.05)', borderColor: 'rgba(197, 160, 89,0.1)', borderWidth: 1, borderRadius: 24, padding: 20, gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Feather name="shield" size={14} color={brand} />
+        <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.trial}</Text>
+      </View>
+      <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontStyle: 'italic', fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{trialText}</Text>
+    </View>
+  );
+  const teachingSection = (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+        <Feather name="target" size={14} color={text} />
+        <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.wisdom}</Text>
+      </View>
+      <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{teachingText}</Text>
+    </View>
+  );
+  const quoteSection = quoteText ? (
+    <View style={{ paddingVertical: 24, borderTopWidth: 1, borderBottomWidth: 1, borderColor: border, alignItems: 'center', gap: 16 }}>
+      <Feather name="feather" size={24} color={brand} style={{ opacity: 0.4 }} />
+      <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: fs.fontSize + 2, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 16 }}>
+        {quoteText}
+      </Text>
+      <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>— {quoteAttribution}</Text>
+    </View>
+  ) : null;
+  const moralSection = (
+    <View style={{ alignItems: 'center', paddingTop: 16, gap: 12 }}>
+      <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 3, opacity: 0.5 }}>{readerCopy.essence}</Text>
+      <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: fs.fontSize + 2, lineHeight: fs.lineHeight + 4, textAlign: 'center' }}>
+        {moralText}
+      </Text>
+    </View>
+  );
+  const legacySection = legacyText ? (
+    <View style={{ gap: 8, marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+        <Feather name="award" size={14} color={text} />
+        <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.legacy}</Text>
+      </View>
+      <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{legacyText}</Text>
+    </View>
+  ) : null;
+  const sourcesSection = sourceText || (hero?.sourceCitations && hero.sourceCitations.length > 0) ? (
+    <View style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: border, borderWidth: 1, borderRadius: 20, padding: 18, gap: 10, marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.75 }}>
+        <Feather name="book" size={13} color={brand} />
+        <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.sources}</Text>
+      </View>
+      {sourceText ? (
+        <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 19 }}>
+          {sourceText}
+        </Text>
+      ) : null}
+      {hero?.sourceCitations?.map((c, idx) => (
+        <Text key={idx} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}>
+          • {c.sourceName}{c.sourceRef ? ` — ${c.sourceRef}` : ''}
+        </Text>
+      ))}
+    </View>
+  ) : null;
+  const askSection = (
+    <View style={{ marginTop: 40, borderTopWidth: 1, borderTopColor: border, paddingTop: 24, gap: 16 }}>
+      <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>{readerCopy.askMore}</Text>
+      <View style={{ gap: 12 }}>
+        <TextInput
+          value={askMoreQuery}
+          onChangeText={setAskMoreQuery}
+          placeholder={readerCopy.questionPlaceholder}
+          placeholderTextColor={textDim}
+          style={{
+            backgroundColor: surface,
+            borderColor: border,
+            borderWidth: 1,
+            borderRadius: 16,
+            padding: 16,
+            color: text,
+            fontFamily: FONTS.sans,
+            fontSize: 15
+          }}
+        />
+        <PressableSurface
+          haptic="selection"
+          onPress={handleAskMore}
+          disabled={askMoreLoading || !askMoreQuery.trim()}
+          style={{
+            backgroundColor: brand,
+            paddingVertical: 12,
+            paddingHorizontal: 24,
+            borderRadius: 16,
+            alignSelf: 'flex-end',
+            opacity: (askMoreLoading || !askMoreQuery.trim()) ? 0.5 : 1
+          }}
+        >
+          <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{askMoreLoading ? readerCopy.asking : readerCopy.ask}</Text>
+        </PressableSurface>
+      </View>
+      {askMoreResponse ? (
+        <View style={{ marginTop: 16, padding: 16, backgroundColor: 'rgba(197,160,89,0.05)', borderRadius: 16, borderWidth: 1, borderColor: border }}>
+          <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{askMoreResponse}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+  const reflectSection = (
+    <View style={{ alignItems: 'center', marginTop: 40 }}>
+      <PressableSurface
+        haptic="selection"
+        onPress={() => {
+          if (isGuest) {
+            setAuthGateVisible(true);
+          } else {
+            setPendingCheckIn(true);
+          }
+        }}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          borderRadius: 999,
+          paddingVertical: 14,
+          paddingHorizontal: 32,
+          backgroundColor: brand,
+          shadowColor: brand,
+          shadowOpacity: 0.3,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 4 }
+        }}
+      >
+        <Feather name="heart" size={16} color={COLORS.ink} />
+        <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
+          {readerCopy.shareReflection}
+        </Text>
+      </PressableSurface>
+    </View>
+  );
+  const chapterSection: Record<DharmVeerChapterKey, ReactNode> = {
+    journey: journeySection,
+    trial: trialSection,
+    teaching: teachingSection,
+    legacy: legacySection,
+    moral: moralSection,
+  };
+
   return (
     <>
       <ReaderShell
@@ -510,184 +695,40 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         onCopy={() => handlers.copyText(textToCopy, 'Story')}
         isCopied={state.isCopied}
         onShare={() => handlers.share(textToShare)}
+        chapterLayout={{
+          titles: chapters.map((chapter) => chapterTitle[chapter.key]),
+          fallback: chapters.map((chapter) => chapter.fallback),
+          index: currentChapterIndex,
+          onChange: setChapterIndex,
+        }}
       >
-        {/* Hero Banner with Classical Artwork */}
-        {tagline ? (
-          <DharmVeerHeroBanner
-            hero={hero}
-            title={title ?? 'Dharm Veer'}
-            era={era}
-            region={region}
-            tagline={tagline}
-            accentColor={accent}
-            brandColor={brand}
-          />
+        {currentChapter ? (
+          // Chapter layout: banner opens the first chapter; the quote and
+          // sources close the moral; Ask and reflection end the last chapter.
+          <View style={{ gap: 24 }}>
+            {currentChapterIndex === 0 ? heroBanner : null}
+            {chapterSection[currentChapter.key]}
+            {currentChapter.key === 'moral' ? quoteSection : null}
+            {currentChapter.key === 'moral' ? sourcesSection : null}
+            {currentChapterIndex === chapters.length - 1 ? askSection : null}
+            {currentChapterIndex === chapters.length - 1 ? reflectSection : null}
+          </View>
         ) : (
-          <DharmVeerHeroBanner
-            hero={hero}
-            title={title ?? 'Dharm Veer'}
-            era={era}
-            region={region}
-            accentColor={accent}
-            brandColor={brand}
-          />
+          <>
+            {heroBanner}
+            <View style={{ gap: 24 }}>
+              {journeySection}
+              {trialSection}
+              {teachingSection}
+              {quoteSection}
+              {moralSection}
+              {legacySection}
+              {sourcesSection}
+            </View>
+            {askSection}
+            {reflectSection}
+          </>
         )}
-
-        {/* Narrative Sections */}
-        <View style={{ gap: 24 }}>
-          {/* Journey */}
-          <View style={{ gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-              <Feather name="book-open" size={14} color={text} />
-              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.journey}</Text>
-            </View>
-            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{journeyText}</Text>
-          </View>
-
-          {/* Trial */}
-          <View style={{ backgroundColor: 'rgba(197, 160, 89,0.05)', borderColor: 'rgba(197, 160, 89,0.1)', borderWidth: 1, borderRadius: 24, padding: 20, gap: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Feather name="shield" size={14} color={brand} />
-              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.trial}</Text>
-            </View>
-            <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontStyle: 'italic', fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{trialText}</Text>
-          </View>
-
-          {/* Teaching */}
-          <View style={{ gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-              <Feather name="target" size={14} color={text} />
-              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.wisdom}</Text>
-            </View>
-            <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{teachingText}</Text>
-          </View>
-
-          {/* Quote */}
-          {quoteText ? (
-            <View style={{ paddingVertical: 24, borderTopWidth: 1, borderBottomWidth: 1, borderColor: border, alignItems: 'center', gap: 16 }}>
-              <Feather name="feather" size={24} color={brand} style={{ opacity: 0.4 }} />
-              <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: fs.fontSize + 2, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 16 }}>
-                {quoteText}
-              </Text>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>— {quoteAttribution}</Text>
-            </View>
-          ) : null}
-
-          {/* Moral */}
-          <View style={{ alignItems: 'center', paddingTop: 16, gap: 12 }}>
-            <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 3, opacity: 0.5 }}>{readerCopy.essence}</Text>
-            <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: fs.fontSize + 2, lineHeight: fs.lineHeight + 4, textAlign: 'center' }}>
-              {moralText}
-            </Text>
-          </View>
-
-          {/* Legacy */}
-          {legacyText ? (
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-                <Feather name="award" size={14} color={text} />
-                <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.legacy}</Text>
-              </View>
-              <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: fs.fontSize, lineHeight: fs.lineHeight }}>{legacyText}</Text>
-            </View>
-          ) : null}
-
-          {/* Canonical Sources & Citations */}
-          {sourceText || (hero?.sourceCitations && hero.sourceCitations.length > 0) ? (
-            <View style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: border, borderWidth: 1, borderRadius: 20, padding: 18, gap: 10, marginTop: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.75 }}>
-                <Feather name="book" size={13} color={brand} />
-                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.sources}</Text>
-              </View>
-              {sourceText ? (
-                <Text style={{ color: text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 19 }}>
-                  {sourceText}
-                </Text>
-              ) : null}
-              {hero?.sourceCitations?.map((c, idx) => (
-                <Text key={idx} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 17 }}>
-                  • {c.sourceName}{c.sourceRef ? ` — ${c.sourceRef}` : ''}
-                </Text>
-              ))}
-            </View>
-          ) : null}
-        </View>
-
-        {/* Ask Dharma Mitra */}
-        <View style={{ marginTop: 40, borderTopWidth: 1, borderTopColor: border, paddingTop: 24, gap: 16 }}>
-          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>{readerCopy.askMore}</Text>
-          <View style={{ gap: 12 }}>
-            <TextInput
-              value={askMoreQuery}
-              onChangeText={setAskMoreQuery}
-              placeholder={readerCopy.questionPlaceholder}
-              placeholderTextColor={textDim}
-              style={{
-                backgroundColor: surface,
-                borderColor: border,
-                borderWidth: 1,
-                borderRadius: 16,
-                padding: 16,
-                color: text,
-                fontFamily: FONTS.sans,
-                fontSize: 15
-              }}
-            />
-            <PressableSurface
-              haptic="selection"
-              onPress={handleAskMore}
-              disabled={askMoreLoading || !askMoreQuery.trim()}
-              style={{
-                backgroundColor: brand,
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                borderRadius: 16,
-                alignSelf: 'flex-end',
-                opacity: (askMoreLoading || !askMoreQuery.trim()) ? 0.5 : 1
-              }}
-            >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{askMoreLoading ? readerCopy.asking : readerCopy.ask}</Text>
-            </PressableSurface>
-          </View>
-          {askMoreResponse ? (
-            <View style={{ marginTop: 16, padding: 16, backgroundColor: 'rgba(197,160,89,0.05)', borderRadius: 16, borderWidth: 1, borderColor: border }}>
-              <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{askMoreResponse}</Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Take Inspiration Button */}
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
-          <PressableSurface
-            haptic="selection"
-            onPress={() => {
-              if (isGuest) {
-                setAuthGateVisible(true);
-              } else {
-                setPendingCheckIn(true);
-              }
-            }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              borderRadius: 999,
-              paddingVertical: 14,
-              paddingHorizontal: 32,
-              backgroundColor: brand,
-              shadowColor: brand,
-              shadowOpacity: 0.3,
-              shadowRadius: 10,
-              shadowOffset: { width: 0, height: 4 }
-            }}
-          >
-            <Feather name="heart" size={16} color={COLORS.ink} />
-            <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-              {readerCopy.shareReflection}
-            </Text>
-          </PressableSurface>
-        </View>
       </ReaderShell>
 
       <AuthGate

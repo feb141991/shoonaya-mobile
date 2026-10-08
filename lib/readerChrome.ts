@@ -142,3 +142,16 @@ export type ReaderChromeController = ReturnType<typeof createReaderChromeControl
 export function isPageTap(start: { x: number; y: number; t: number }, end: { x: number; y: number; t: number }) {
   return Math.hypot(end.x - start.x, end.y - start.y) < 10 && end.t - start.t < 350;
 }
+
+/**
+ * Chaptered readers (Phase 6): a quick, mostly horizontal swipe turns the
+ * chapter. Returns +1 (next, finger moved left), -1 (previous) or 0. A swipe
+ * starting at the left screen edge is the system back gesture, never a turn.
+ */
+export function chapterSwipe(start: { x: number; y: number; t: number }, end: { x: number; y: number; t: number }): -1 | 0 | 1 {
+  if (start.x < 24) return 0;
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.8 || end.t - start.t > 700) return 0;
+  return dx < 0 ? 1 : -1;
+}

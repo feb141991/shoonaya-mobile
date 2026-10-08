@@ -20,6 +20,8 @@ import { ReaderIntro } from '@/components/reader/ReaderIntro';
 import {
   CHROME_MAX_FONT_SCALE,
   ReaderCapsule,
+  ReaderChapterHeader,
+  ReaderChapterNav,
   ReaderOptionsSheet,
   ReaderTopBar,
   SheetChip,
@@ -28,10 +30,17 @@ import {
 import { TYPE } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { createReaderChromeController, isPageTap } from '@/lib/readerChrome';
+import { chapterSwipe, createReaderChromeController, isPageTap } from '@/lib/readerChrome';
 import { readerCopy } from '@/lib/readerCopy';
 import { READER_PAPER_CHOICES, setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
-import { clearReadingPosition, getReadingPosition, isResumableRatio, saveReadingPosition } from '@/lib/readingProgress';
+import {
+  clearReadingPosition,
+  getReadingPosition,
+  isResumableChapterPosition,
+  isResumableRatio,
+  saveReadingPosition,
+} from '@/lib/readingProgress';
+import { clampChapterIndex, usesChapterLayout } from '@/lib/readerChapters';
 import { readerControlsPalette } from '@/lib/readerAppearance';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderAppearanceContext } from '@/lib/readerAppearanceContext';
@@ -116,6 +125,20 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   repeat?: { value: number; options: readonly number[]; onChange: (value: number) => void };
   /** Enables the sleep timer's "After this recitation" option. */
   onSleepAfterThis?: (enabled: boolean) => void;
+
+  /**
+   * Chapters (Phase 6): offers a Chapters / One page choice in "Aa". When the
+   * reader's layout pref is "chapters" (see usesChapterLayout), the screen
+   * renders only chapter `index` as children and the shell adds the chapter
+   * header, Previous/Next, horizontal swipe, and resume by chapter.
+   */
+  chapterLayout?: {
+    titles: readonly string[];
+    /** Per chapter: shown in English because the translation does not exist. */
+    fallback?: readonly boolean[];
+    index: number;
+    onChange: (index: number) => void;
+  };
 }
 
 const TTS_RATES = [0.75, 1, 1.25] as const;
@@ -165,6 +188,7 @@ export function ReaderShell<LanguageCode extends string = string>({
   listeningStatus,
   repeat,
   onSleepAfterThis,
+  chapterLayout,
 }: ReaderShellProps<LanguageCode>) {
   const appearance = useReaderAppearance();
   const { paper, isDark } = appearance;
@@ -285,16 +309,35 @@ export function ReaderShell<LanguageCode extends string = string>({
     const start = touchStart.current;
     touchStart.current = null;
     if (!start) return;
-    if (!isPageTap(start, { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() })) return;
+    const end = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() };
+    if (chapterRef.current.chaptered) {
+      const turn = chapterSwipe(start, end);
+      if (turn !== 0) {
+        goToChapter(chapterRef.current.index + turn);
+        return;
+      }
+    }
+    if (!isPageTap(start, end)) return;
     // The plain-page Pressable's onPress runs in the same touch dispatch; defer
     // so we know whether the tap landed on plain page or on content.
     setTimeout(() => chrome.pageTap(!plainPagePress.current), 0);
   };
 
+  // ── Chapters (Phase 6) ──────────────────────────────────────────────
+  const chapterTitles = chapterLayout?.titles ?? [];
+  const chaptered = Boolean(chapterLayout) && usesChapterLayout(prefs.layout, chapterTitles.length);
+  const chapterIndex = chaptered ? clampChapterIndex(chapterLayout?.index ?? 0, chapterTitles.length) : 0;
+  const chapterRef = useRef({ chaptered, index: chapterIndex, titles: chapterTitles, onChange: chapterLayout?.onChange });
+  chapterRef.current = { chaptered, index: chapterIndex, titles: chapterTitles, onChange: chapterLayout?.onChange };
+  /** The reader turned a chapter themselves, so a late restore must not move them. */
+  const userNavigated = useRef(false);
+  // Positions are stored per layout: a whole-page ratio means nothing inside a chapter.
+  const effectiveVersion = chaptered ? `${progressVersion}:chapters` : progressVersion;
+
   // ── Resume where you left off (Phase 3) ─────────────────────────────
   const scrollRef = useRef<ScrollView | null>(null);
   const metrics = useRef({ y: 0, contentHeight: 0, viewport: 0 });
-  const restore = useRef<{ ratio: number; deadline: number; done: boolean; userMoved: boolean } | null>(null);
+  const restore = useRef<{ ratio: number; deadline: number; done: boolean; userMoved: boolean; label?: string } | null>(null);
   const lastSave = useRef(0);
   const [resumeBanner, setResumeBanner] = useState<string | null>(null);
 
@@ -308,22 +351,49 @@ export function ReaderShell<LanguageCode extends string = string>({
     const pending = restore.current;
     if (pending && !pending.done) return; // never overwrite before the restore ran
     const ratio = currentRatio();
-    void saveReadingPosition(progressId, progressVersion, { ratio });
-  }, [progressId, progressVersion]);
+    const chapter = chapterRef.current;
+    void saveReadingPosition(
+      progressId,
+      effectiveVersion,
+      chapter.chaptered ? { page: chapter.index, ratio, label: chapter.titles[chapter.index] } : { ratio },
+    );
+  }, [progressId, effectiveVersion]);
 
+  const announceResume = (pending: NonNullable<typeof restore.current>) => {
+    pending.done = true;
+    setResumeBanner(copy.resumed(pending.label ?? `${Math.round(pending.ratio * 100)}%`));
+    chrome.hold('resume');
+  };
+
+  const hasChapterLayout = Boolean(chapterLayout);
   useEffect(() => {
     restore.current = null;
     setResumeBanner(null);
     if (!progressId) return;
+    // Wait for the layout pref, so a position is read for the layout in use.
+    if (hasChapterLayout && !prefsLoaded) return;
+    userNavigated.current = false;
     let cancelled = false;
-    void getReadingPosition(progressId, progressVersion).then((position) => {
-      if (cancelled || !position || !isResumableRatio(position.ratio)) return;
+    void getReadingPosition(progressId, effectiveVersion).then((position) => {
+      if (cancelled || !position) return;
+      const chapter = chapterRef.current;
+      if (chapter.chaptered) {
+        if (userNavigated.current || !isResumableChapterPosition(position, chapter.titles.length)) return;
+        const page = position.page as number;
+        const pending = { ratio: position.ratio ?? 0, deadline: Date.now() + 2500, done: false, userMoved: false, label: chapter.titles[page] };
+        restore.current = pending;
+        if (page !== chapter.index) chapter.onChange?.(page);
+        if (pending.ratio < 0.02) announceResume(pending);
+        else applyRestore();
+        return;
+      }
+      if (!isResumableRatio(position.ratio)) return;
       restore.current = { ratio: position.ratio as number, deadline: Date.now() + 2500, done: false, userMoved: false };
       applyRestore();
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progressId, progressVersion]);
+  }, [progressId, effectiveVersion, hasChapterLayout, prefsLoaded]);
 
   // Content often grows after first layout (images, async sections): keep
   // re-applying the target for a short window unless the user has scrolled.
@@ -333,11 +403,7 @@ export function ReaderShell<LanguageCode extends string = string>({
     if (!pending || pending.userMoved || contentHeight <= viewport + 1 || viewport === 0) return;
     if (pending.done && Date.now() > pending.deadline) return;
     scrollRef.current?.scrollTo({ y: pending.ratio * (contentHeight - viewport), animated: false });
-    if (!pending.done) {
-      pending.done = true;
-      setResumeBanner(copy.resumed(`${Math.round(pending.ratio * 100)}%`));
-      chrome.hold('resume');
-    }
+    if (!pending.done) announceResume(pending);
   };
 
   useEffect(() => {
@@ -346,12 +412,33 @@ export function ReaderShell<LanguageCode extends string = string>({
     return () => { clearTimeout(timer); chrome.release('resume'); };
   }, [chrome, resumeBanner]);
 
+  /** Turns to a chapter: top of the new chapter, position saved, change announced. */
+  const goToChapter = useCallback((next: number) => {
+    const chapter = chapterRef.current;
+    if (!chapter.chaptered) return;
+    const target = clampChapterIndex(next, chapter.titles.length);
+    if (target === chapter.index) return;
+    userNavigated.current = true;
+    if (restore.current) { restore.current.userMoved = true; restore.current.done = true; }
+    metrics.current.y = 0;
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    chapter.onChange?.(target);
+    if (progressId) void saveReadingPosition(progressId, effectiveVersion, { page: target, ratio: 0, label: chapter.titles[target] });
+    AccessibilityInfo.announceForAccessibility(copy.goToChapter(target + 1, chapter.titles[target]));
+  }, [copy, effectiveVersion, progressId]);
+
   const startOver = () => {
     if (restore.current) restore.current.userMoved = true;
+    const chapter = chapterRef.current;
+    if (chapter.chaptered && chapter.index !== 0) {
+      userNavigated.current = true;
+      metrics.current.y = 0;
+      chapter.onChange?.(0);
+    }
     scrollRef.current?.scrollTo({ y: 0, animated: !reduceMotion });
     setResumeBanner(null);
     chrome.release('resume');
-    if (progressId) void clearReadingPosition(progressId, progressVersion);
+    if (progressId) void clearReadingPosition(progressId, effectiveVersion);
   };
 
   useFocusEffect(useCallback(() => () => { persistPosition(); }, [persistPosition]));
@@ -406,6 +493,23 @@ export function ReaderShell<LanguageCode extends string = string>({
       content: TTS_RATES.map((rate) => (
         <SheetChip key={rate} label={`${rate}×`} role="radio" selected={ttsRate === rate} palette={palette}
           accessibilityLabel={copy.speed(String(rate))} onPress={() => onTTSRateChange?.(rate)} />
+      )),
+    });
+  }
+  if (chapterLayout && chapterTitles.length > 1) {
+    sections.push({
+      key: 'layout',
+      title: copy.sectionLayout,
+      content: (['chapters', 'scroll'] as const).map((layout) => (
+        <SheetChip
+          key={layout}
+          label={layout === 'chapters' ? copy.layoutChapters : copy.layoutScroll}
+          role="radio"
+          icon={layout === 'chapters' ? 'book' : 'file-text'}
+          selected={prefs.layout === layout}
+          palette={palette}
+          onPress={() => { void setReaderPrefs({ layout }); }}
+        />
       )),
     });
   }
@@ -572,7 +676,19 @@ export function ReaderShell<LanguageCode extends string = string>({
           >
             {/* Shared Card/Button inside the page follow the paper theme. */}
             <ReaderAppearanceContext.Provider value={surfaceAppearance}>
+              {chaptered ? (
+                <ReaderChapterHeader
+                  index={chapterIndex}
+                  count={chapterTitles.length}
+                  palette={palette}
+                  copy={copy}
+                  fallback={chapterLayout?.fallback?.[chapterIndex]}
+                />
+              ) : null}
               {children}
+              {chaptered ? (
+                <ReaderChapterNav index={chapterIndex} titles={chapterTitles} palette={palette} copy={copy} onGoTo={goToChapter} />
+              ) : null}
             </ReaderAppearanceContext.Provider>
           </Pressable>
         </ScrollView>
