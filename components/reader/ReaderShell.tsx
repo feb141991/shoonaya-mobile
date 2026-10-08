@@ -24,8 +24,10 @@ import {
   setReaderPinned,
   hasSeenFirstTimeHint,
   markFirstTimeHintSeen,
+  getReaderThemeChoice,
+  setReaderThemeChoice,
 } from '@/lib/readerPrefs';
-import { COLORS, FONTS, RADII, SHADOWS } from '@/lib/constants';
+import { COLORS, FONTS, RADII, SHADOWS, ReaderThemeKey, getReaderTheme } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 
@@ -42,6 +44,8 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   onBeforeBack?: () => void | Promise<void>;
 
   themeColor?: string;
+  initialPaperTheme?: ReaderThemeKey;
+  onPaperThemeChange?: (theme: ReaderThemeKey) => void;
   headerCenterContent?: ReactNode;
   ambientGlowColor?: string;
 
@@ -91,6 +95,8 @@ export function ReaderShell<LanguageCode extends string = string>({
   onBack,
   onBeforeBack,
   themeColor = COLORS.brandGoldLight,
+  initialPaperTheme,
+  onPaperThemeChange,
   headerCenterContent,
   ambientGlowColor,
   fontPresets,
@@ -130,6 +136,7 @@ export function ReaderShell<LanguageCode extends string = string>({
   const insets = useSafeAreaInsets();
   const handleBack = useFallbackBackHandler(fallbackBackUrl, true, onBack, onBeforeBack);
 
+  const [paperThemeKey, setPaperThemeKey] = useState<ReaderThemeKey | null>(initialPaperTheme ?? null);
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [isPinned, setIsPinned] = useState(false);
   const [isScreenReader, setIsScreenReader] = useState(false);
@@ -141,12 +148,18 @@ export function ReaderShell<LanguageCode extends string = string>({
   const capsuleAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load pinned preference and accessibility state on mount
+  // Load saved paper theme and pinned preference on mount
   useEffect(() => {
     let mounted = true;
     getReaderPinned().then((pinned) => {
       if (mounted && pinned) {
         setIsPinned(true);
+      }
+    });
+
+    getReaderThemeChoice().then((savedChoice) => {
+      if (mounted && savedChoice && !initialPaperTheme) {
+        setPaperThemeKey(savedChoice);
       }
     });
 
@@ -309,13 +322,22 @@ export function ReaderShell<LanguageCode extends string = string>({
     });
   }, [showMeaningToggle, showTransliterationToggle, title]);
 
-  const bgBase = shellBackgroundColor ?? (isDark ? COLORS.darkBg : COLORS.creamBg);
-  const bgCard = shellHeaderBackgroundColor ?? (isDark ? COLORS.premiumGlassDark : COLORS.premiumGlassLight);
-  const bgSubCard = isDark ? COLORS.selectionWellDark : COLORS.selectionWellLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const softBorder = isDark ? COLORS.borderSoftDark : COLORS.borderSoftLight;
-  const textMain = isDark ? COLORS.creamBg : COLORS.ink;
-  const selectedText = isDark ? COLORS.ink : COLORS.onMediaWhite;
+  const activePaperTheme = getReaderTheme(paperThemeKey, isDark);
+
+  const handleSelectPaperTheme = useCallback(async (newTheme: ReaderThemeKey) => {
+    setPaperThemeKey(newTheme);
+    onPaperThemeChange?.(newTheme);
+    await setReaderThemeChoice(newTheme);
+  }, [onPaperThemeChange]);
+
+  const bgBase = shellBackgroundColor ?? activePaperTheme.bg;
+  const bgCard = shellHeaderBackgroundColor ?? activePaperTheme.glass;
+  const bgSubCard = activePaperTheme.subCard;
+  const border = activePaperTheme.border;
+  const softBorder = activePaperTheme.borderSoft;
+  const textMain = activePaperTheme.text;
+  const textDim = activePaperTheme.dim;
+  const selectedText = activePaperTheme.isDark ? COLORS.ink : COLORS.onMediaWhite;
 
   return (
     <View
@@ -523,8 +545,9 @@ export function ReaderShell<LanguageCode extends string = string>({
         }}
       >
         <ReaderCapsule
-          isDark={isDark}
-          themeColor={themeColor}
+          isDark={activePaperTheme.isDark}
+          themeColor={themeColor ?? activePaperTheme.accent}
+          paperTheme={activePaperTheme.key}
           fontPresets={fontPresets}
           fontStep={fontStep}
           setFontStep={setFontStep}
@@ -544,8 +567,10 @@ export function ReaderShell<LanguageCode extends string = string>({
       <ReaderSettingsSheet
         visible={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        isDark={isDark}
-        themeColor={themeColor}
+        isDark={activePaperTheme.isDark}
+        themeColor={themeColor ?? activePaperTheme.accent}
+        paperTheme={activePaperTheme.key}
+        onSelectPaperTheme={handleSelectPaperTheme}
         fontPresets={fontPresets}
         fontStep={fontStep}
         setFontStep={setFontStep}

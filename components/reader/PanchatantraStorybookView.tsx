@@ -23,6 +23,7 @@ import {
   TYPE,
   themeColor,
   KATHA_VIEW_ACCENT,
+  READER_THEMES,
 } from "@/lib/constants";
 import {
   getPanchatantraSceneArtwork,
@@ -206,10 +207,11 @@ export function PanchatantraStorybookView({
       ? Platform.OS === 'ios' ? 'System' : 'sans-serif'
       : FONTS.serifBold;
 
-  // Parchment palette
-  const screenBg = isDark ? "#0A0806" : "#FAF6EE";
-  const parchmentBg = isDark ? "#14100C" : "#FAF6EE";
-  const parchmentBorder = isDark ? "rgba(197,160,89,0.22)" : "rgba(216,138,28,0.24)";
+  // Parchment palette (Grand Plan Phase 2 tokens)
+  const storybookTheme = isDark ? READER_THEMES.templeNight : READER_THEMES.bhojpatra;
+  const screenBg = storybookTheme.bg;
+  const parchmentBg = storybookTheme.bg;
+  const parchmentBorder = storybookTheme.border;
   const artHeight = Math.round(screenHeight * 0.45);
 
   return (

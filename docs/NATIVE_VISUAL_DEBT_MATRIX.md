@@ -172,9 +172,13 @@ any other screen.
   the next slice wants to re-verify them.
 - Task #75 in the project's own tracker ("Sweep native screens for
   hardcoded values that should use updated tokens") is the same class of
-  work as the two bullets above and remains open — this pass did not fold
+  work as the two bullets above and remains open - this pass did not fold
   it in, per this task's own "implement only the first safe slice" / "do
   not sweep the whole app in one commit" instructions.
+- Parchment colors in PanchatantraStorybookView (`#0A0806`, `#FAF6EE`,
+  `#14100C`, `rgba(...)` borders) were migrated onto `READER_THEMES` tokens
+  in `lib/constants.ts` (Phase 2 of the Reader Experience Grand Plan),
+  providing unified Bhojpatra and Temple Night themes.
 
 ## Verification performed
 
