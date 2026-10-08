@@ -225,6 +225,7 @@ export default function StotramDetailScreen() {
 
   return (
     <ReaderShell
+      contentId={`stotram-${stotram.id}`}
       title={stotram.title}
       subtitle={stotram.deityEmoji ? `${stotram.deityEmoji} ${stotram.type}` : stotram.type}
       fallbackBackUrl="/(tabs)/bhakti"

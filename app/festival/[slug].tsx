@@ -592,6 +592,7 @@ export default function FestivalDetailScreen() {
 
   return (
     <ReaderShell
+      contentId={`festival-${slug}`}
       title={name}
       subtitle={tagline}
       fallbackBackUrl="/(tabs)"

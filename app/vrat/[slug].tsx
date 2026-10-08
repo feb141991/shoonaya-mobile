@@ -387,6 +387,7 @@ export default function VratDetailScreen() {
 
   return (
     <ReaderShell
+      contentId={`vrat-${slug}`}
       title={selectedName}
       subtitle={selectedTagline}
       fallbackBackUrl="/vrat"

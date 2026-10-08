@@ -489,6 +489,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
   return (
     <>
       <ReaderShell
+        contentId={`dharm-veer-${hero.id}`}
         title={title ?? 'Dharm Veer'}
         subtitle={meta?.dharmVeerLocal || 'Dharm Veer'}
         fallbackBackUrl="/dharm-veer"

@@ -30,6 +30,13 @@ import {
 import { COLORS, FONTS, RADII, SHADOWS, ReaderThemeKey, getReaderTheme } from '@/lib/constants';
 import { trackReaderEvent } from '@/lib/analytics/reader-events';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
+import {
+  getReaderPosition,
+  saveReaderPosition,
+  clearReaderPosition,
+  MIN_SCROLL_OFFSET_TO_SAVE,
+  type SavedReaderPosition,
+} from '@/lib/readerPosition';
 
 type ReaderLanguage<Code extends string> = {
   code: Code;
@@ -46,6 +53,13 @@ export interface ReaderShellProps<LanguageCode extends string = string> {
   themeColor?: string;
   initialPaperTheme?: ReaderThemeKey;
   onPaperThemeChange?: (theme: ReaderThemeKey) => void;
+
+  contentId?: string;
+  contentVersion?: string;
+  activeSectionTitle?: string;
+  activeSectionIndex?: number;
+  onPositionRestored?: (pos: SavedReaderPosition) => void;
+
   headerCenterContent?: ReactNode;
   ambientGlowColor?: string;
 
@@ -97,6 +111,11 @@ export function ReaderShell<LanguageCode extends string = string>({
   themeColor = COLORS.brandGoldLight,
   initialPaperTheme,
   onPaperThemeChange,
+  contentId,
+  contentVersion = '1.0',
+  activeSectionTitle,
+  activeSectionIndex,
+  onPositionRestored,
   headerCenterContent,
   ambientGlowColor,
   fontPresets,
@@ -143,6 +162,13 @@ export function ReaderShell<LanguageCode extends string = string>({
   const [isReduceMotion, setIsReduceMotion] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  // Position restore state
+  const [resumePrompt, setResumePrompt] = useState<{ sectionTitle?: string; scrollOffsetY: number } | null>(null);
+  const internalScrollRef = useRef<ScrollView | null>(null);
+  const currentScrollOffsetRef = useRef<number>(0);
+  const debouncedSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const headerAnim = useRef(new Animated.Value(1)).current;
   const capsuleAnim = useRef(new Animated.Value(1)).current;
@@ -322,6 +348,98 @@ export function ReaderShell<LanguageCode extends string = string>({
     });
   }, [showMeaningToggle, showTransliterationToggle, title]);
 
+  // Load and restore reading position on mount
+  useEffect(() => {
+    if (!contentId) return;
+    let cancelled = false;
+
+    getReaderPosition({ contentId, contentVersion }).then((savedPos) => {
+      if (cancelled || !savedPos || savedPos.scrollOffsetY < MIN_SCROLL_OFFSET_TO_SAVE) {
+        return;
+      }
+
+      setResumePrompt({
+        sectionTitle: savedPos.sectionTitle,
+        scrollOffsetY: savedPos.scrollOffsetY,
+      });
+
+      // Auto-scroll to saved position after initial layout
+      setTimeout(() => {
+        if (!cancelled) {
+          internalScrollRef.current?.scrollTo({ y: savedPos.scrollOffsetY, animated: true });
+          if (scrollViewRef && typeof (scrollViewRef as any).current?.scrollTo === 'function') {
+            (scrollViewRef as any).current.scrollTo({ y: savedPos.scrollOffsetY, animated: true });
+          }
+          onPositionRestored?.(savedPos);
+        }
+      }, 300);
+
+      // Auto dismiss resume banner after 5 seconds
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = setTimeout(() => {
+        if (!cancelled) {
+          setResumePrompt(null);
+        }
+      }, 5000);
+    });
+
+    return () => {
+      cancelled = true;
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, [contentId, contentVersion, onPositionRestored, scrollViewRef]);
+
+  const handleStartOver = useCallback(async () => {
+    if (contentId) {
+      await clearReaderPosition({ contentId });
+    }
+    setResumePrompt(null);
+    internalScrollRef.current?.scrollTo({ y: 0, animated: true });
+    if (scrollViewRef && typeof (scrollViewRef as any).current?.scrollTo === 'function') {
+      (scrollViewRef as any).current.scrollTo({ y: 0, animated: true });
+    }
+  }, [contentId, scrollViewRef]);
+
+  // Handle scroll and debounced position save
+  const handleScroll = useCallback(
+    (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => {
+      handleInteraction();
+      onScroll?.(event);
+      const y = event.nativeEvent.contentOffset.y;
+      currentScrollOffsetRef.current = y;
+
+      if (!contentId) return;
+
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
+      debouncedSaveRef.current = setTimeout(() => {
+        void saveReaderPosition({
+          contentId,
+          contentVersion,
+          scrollOffsetY: y,
+          sectionTitle: activeSectionTitle,
+          sectionIndex: activeSectionIndex,
+        });
+      }, 1200);
+    },
+    [handleInteraction, onScroll, contentId, contentVersion, activeSectionTitle, activeSectionIndex],
+  );
+
+  // Save current position immediately on unmount if scrolled
+  useEffect(() => {
+    return () => {
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current);
+      if (contentId && currentScrollOffsetRef.current >= MIN_SCROLL_OFFSET_TO_SAVE) {
+        void saveReaderPosition({
+          contentId,
+          contentVersion,
+          scrollOffsetY: currentScrollOffsetRef.current,
+          sectionTitle: activeSectionTitle,
+          sectionIndex: activeSectionIndex,
+        });
+      }
+    };
+  }, [contentId, contentVersion, activeSectionTitle, activeSectionIndex]);
+
   const activePaperTheme = getReaderTheme(paperThemeKey, isDark);
 
   const handleSelectPaperTheme = useCallback(async (newTheme: ReaderThemeKey) => {
@@ -492,19 +610,90 @@ export function ReaderShell<LanguageCode extends string = string>({
         </View>
       ) : null}
 
+      {/* Resume from last position banner */}
+      {resumePrompt ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: insets.top + 64,
+            alignSelf: 'center',
+            zIndex: 25,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: RADII.pill,
+            backgroundColor: bgCard,
+            borderColor: border,
+            borderWidth: 1,
+            boxShadow: activePaperTheme.isDark ? SHADOWS.md.dark : SHADOWS.md.light,
+            maxWidth: '92%',
+          }}
+        >
+          <Feather name="bookmark" size={13} color={activePaperTheme.accent} />
+          <Text
+            numberOfLines={1}
+            style={{
+              color: textMain,
+              fontFamily: FONTS.sansMedium,
+              fontSize: 12,
+              flexShrink: 1,
+            }}
+          >
+            Resuming from {resumePrompt.sectionTitle || 'earlier'}
+          </Text>
+          <PressableSurface
+            haptic="selection"
+            onPress={handleStartOver}
+            accessibilityLabel="Start over from beginning"
+            style={{
+              paddingHorizontal: 6,
+              paddingVertical: 4,
+              borderRadius: RADII.xs,
+              minHeight: 0,
+            }}
+          >
+            <Text
+              style={{
+                color: activePaperTheme.accent,
+                fontFamily: FONTS.sansSemiBold,
+                fontSize: 12,
+                textDecorationLine: 'underline',
+              }}
+            >
+              Start over
+            </Text>
+          </PressableSurface>
+          <PressableSurface
+            haptic="selection"
+            onPress={() => setResumePrompt(null)}
+            accessibilityLabel="Dismiss resume prompt"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 0,
+            }}
+          >
+            <Feather name="x" size={14} color={textDim} />
+          </PressableSurface>
+        </View>
+      ) : null}
+
       <ScrollView
         ref={(node) => {
+          internalScrollRef.current = node;
           if (scrollViewRef) {
             (scrollViewRef as any).current = node;
           }
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        onScroll={(e) => {
-          handleInteraction();
-          onScroll?.(e);
-        }}
-        scrollEventThrottle={scrollEventThrottle ?? (onScroll ? 16 : undefined)}
+        onScroll={handleScroll}
+        scrollEventThrottle={scrollEventThrottle ?? 16}
         contentContainerStyle={[
           {
             paddingHorizontal: 16,
