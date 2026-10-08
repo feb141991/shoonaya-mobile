@@ -18,7 +18,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, RADII } from '@/lib/constants';
 import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -132,6 +132,9 @@ import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
 import { useReaderPrefs } from '@/lib/readerPrefs';
 import { buildDharmVeerChapters, clampChapterIndex, usesChapterLayout, type DharmVeerChapterKey } from '@/lib/readerChapters';
+import { dharmVeerQuoteCard } from '@/lib/quoteCard';
+import { readerCopy as shellReaderCopy } from '@/lib/readerCopy';
+import { QuoteCardSheet } from '@/components/share/QuoteCardSheet';
 
 export default function DharmVeerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -167,6 +170,7 @@ export default function DharmVeerDetailScreen() {
   // Chapter layout (Phase 6): one chapter per page unless the reader chose "One page".
   const { prefs: readerPrefs } = useReaderPrefs();
   const [chapterIndex, setChapterIndex] = useState(0);
+  const [quoteCardOpen, setQuoteCardOpen] = useState(false);
 
   // Explicit Inspiration state
   const [pendingCheckIn, setPendingCheckIn] = useState(false);
@@ -466,6 +470,9 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
   const fs = fontStyles[fontSizeToken];
 
   const chapterLanguage = showLocal ? localContentLanguage : 'en';
+  // Quote card (Phase 7): only the hero's own quote + attribution, with sources.
+  const quoteCard = hero ? dharmVeerQuoteCard(hero, chapterLanguage) : null;
+  const shellCopy = shellReaderCopy(language);
   const chapters = useMemo(() => (hero ? buildDharmVeerChapters(hero, chapterLanguage) : []), [hero, chapterLanguage]);
   const chaptered = usesChapterLayout(readerPrefs.layout, chapters.length);
   const currentChapterIndex = clampChapterIndex(chapterIndex, chapters.length);
@@ -555,6 +562,18 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         {quoteText}
       </Text>
       <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>— {quoteAttribution}</Text>
+      {quoteCard ? (
+        <PressableSurface
+          haptic="selection"
+          onPress={() => setQuoteCardOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={shellCopy.shareAsCard}
+          style={{ minHeight: 44, paddingHorizontal: 16, borderRadius: RADII.pill, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: border, backgroundColor: cardBg }}
+        >
+          <Feather name="image" size={15} color={brand} />
+          <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>{shellCopy.shareAsCard}</Text>
+        </PressableSurface>
+      ) : null}
     </View>
   ) : null;
   const moralSection = (
@@ -730,6 +749,15 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
           </>
         )}
       </ReaderShell>
+
+      {quoteCard ? (
+        <QuoteCardSheet
+          visible={quoteCardOpen}
+          onClose={() => setQuoteCardOpen(false)}
+          fileName={`shoonaya-dharm-veer-${hero.id}`}
+          data={{ tradition: hero.tradition, title: title ?? hero.name, ...quoteCard }}
+        />
+      ) : null}
 
       <AuthGate
         visible={authGateVisible}

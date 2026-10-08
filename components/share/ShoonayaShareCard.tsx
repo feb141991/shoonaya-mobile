@@ -6,6 +6,7 @@ import Svg, { Circle, Defs, Ellipse, Line, Path, RadialGradient, Stop, LinearGra
 import { COLORS, FONTS } from '@/lib/constants';
 import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import type { MalaSkin } from '@/lib/mala-skins';
+import { quoteCardTypography } from '@/lib/quoteCard';
 
 const GRAIN_DOTS = Array.from({ length: 150 }).map((_, i) => {
   const x = (((Math.sin(i * 91.7) * 6271.27) % 1) + 1) % 1 * 360;
@@ -56,8 +57,20 @@ export type ShoonayaShareCardData = {
   malaSkin?: MalaSkin;
 };
 
+/** Quote card (Phase 7): a quote exactly as stored, its attribution and sources. */
+export type ShoonayaQuoteCardData = {
+  tradition: string | null | undefined;
+  text: string;
+  attribution: string;
+  sources: string[];
+  /** Small line above the quote, e.g. the hero's name. */
+  title?: string;
+};
+
 export const SHARE_CARD_WIDTH = 360;
 export const SHARE_CARD_HEIGHT = 640;
+/** Square quote cards (feeds); 9:16 cards use SHARE_CARD_HEIGHT (stories). */
+export const SHARE_CARD_SQUARE_HEIGHT = 360;
 
 type VariantTheme = {
   label: string;
@@ -147,14 +160,14 @@ export function resolveShoonayaShareVariant(tradition: string | null | undefined
   }
 }
 
-function Wordmark({ color, gold }: { color: string; gold: string }) {
+function Wordmark({ color, gold, size = 36 }: { color: string; gold: string; size?: number }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 36, color, includeFontPadding: false }}>Sh</Text>
-      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 38, color: gold, includeFontPadding: false, marginHorizontal: 1 }}>
+      <Text style={{ fontFamily: FONTS.serifBold, fontSize: size, color, includeFontPadding: false }}>Sh</Text>
+      <Text style={{ fontFamily: FONTS.serifBold, fontSize: size + 2, color: gold, includeFontPadding: false, marginHorizontal: 1 }}>
         ∞
       </Text>
-      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 36, color, includeFontPadding: false }}>naya</Text>
+      <Text style={{ fontFamily: FONTS.serifBold, fontSize: size, color, includeFontPadding: false }}>naya</Text>
     </View>
   );
 }
@@ -455,6 +468,65 @@ export const ShoonayaShareCard = forwardRef<View, { data: ShoonayaShareCardData 
         </Text>
         <Text style={{ marginTop: 8, fontFamily: FONTS.serifBold, fontSize: 17, color: theme.gold, textAlign: 'center' }}>
           Find your infinity.
+        </Text>
+      </LinearGradient>
+    </View>
+  );
+});
+
+/**
+ * Quote card (Phase 7, decision D4): the same tradition backgrounds, borders
+ * and quiet "Shared from Shoonaya" footer as the cards above, in square
+ * (360×360) or story (360×640, 9:16). The quote and attribution are shown exactly
+ * as given and never cut; their size comes from quoteCardTypography.
+ */
+export const ShoonayaQuoteCard = forwardRef<View, { data: ShoonayaQuoteCardData; format: 'square' | 'story' }>(function ShoonayaQuoteCard({ data, format }, ref) {
+  const variant = resolveShoonayaShareVariant(data.tradition);
+  const theme = THEMES[variant];
+  const square = format === 'square';
+  const height = square ? SHARE_CARD_SQUARE_HEIGHT : SHARE_CARD_HEIGHT;
+  const type = quoteCardTypography(format, data.text.length, data.attribution.length);
+
+  return (
+    <View ref={ref} collapsable={false} style={{ width: SHARE_CARD_WIDTH, height, overflow: 'hidden', borderRadius: 28 }}>
+      <LinearGradient colors={[theme.top, theme.bottom]} style={{ flex: 1, paddingHorizontal: square ? 34 : 38, paddingTop: square ? 30 : 56, paddingBottom: square ? 26 : 40, alignItems: 'center' }}>
+        {/* The 9:16 motif, centred and cropped for the square card. */}
+        <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: square ? -(SHARE_CARD_HEIGHT - height) / 2 : 0, width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT }}>
+          <Motif variant={variant} theme={theme} />
+          <VignetteOverlay dark={theme.dark} />
+          <GrainOverlay dark={theme.dark} />
+        </View>
+        <View style={{ position: 'absolute', inset: 15, borderRadius: 15, borderWidth: 1.2, borderColor: theme.gold, opacity: 0.34 }} />
+        <View style={{ position: 'absolute', inset: 21, borderRadius: 11, borderWidth: 0.8, borderColor: theme.gold, opacity: 0.18 }} />
+
+        <Wordmark color={theme.ink} gold={theme.gold} size={square ? 20 : 30} />
+        {data.title ? (
+          <Text numberOfLines={1} style={{ marginTop: square ? 6 : 14, fontFamily: FONTS.sansSemiBold, fontSize: square ? 10 : 11, letterSpacing: 1.6, color: theme.gold, textTransform: 'uppercase', textAlign: 'center' }}>
+            {data.title}
+          </Text>
+        ) : null}
+
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', alignSelf: 'stretch' }}>
+          <Text style={{ fontFamily: FONTS.serifBold, fontSize: square ? 34 : 48, lineHeight: square ? 30 : 42, color: theme.gold, opacity: 0.7 }}>“</Text>
+          <Text style={{ fontFamily: FONTS.serif, fontSize: type.quoteSize, lineHeight: type.quoteLine, color: theme.ink, textAlign: 'center' }}>
+            {data.text}
+          </Text>
+          <Text style={{ marginTop: square ? 10 : 18, fontFamily: FONTS.sansSemiBold, fontSize: type.attributionSize, lineHeight: type.attributionLine, color: theme.soft, textAlign: 'center' }}>
+            — {data.attribution}
+          </Text>
+          {data.sources.length ? (
+            <Text
+              numberOfLines={square ? 1 : 5}
+              style={{ marginTop: square ? 6 : 12, fontFamily: FONTS.sans, fontSize: square ? 9 : 10.5, lineHeight: square ? 12 : 15, color: theme.gold, textAlign: 'center' }}
+            >
+              {(square ? data.sources.slice(0, 1) : data.sources).join('\n')}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={{ width: 48, height: 1, backgroundColor: theme.gold, opacity: 0.48, marginBottom: square ? 8 : 14 }} />
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: square ? 10 : 12, color: theme.soft, textAlign: 'center' }}>
+          Shared from Shoonaya
         </Text>
       </LinearGradient>
     </View>

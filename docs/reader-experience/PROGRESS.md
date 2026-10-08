@@ -17,7 +17,7 @@ audio included).
 | 4. Listening | code complete; real-device background check pending | (this commit) |
 | 5. Pathshala + Panchatantra | done | (this commit) |
 | 6. Chapters (Dharm Veer, Vrat) | done | (this commit) |
-| 7. Quote cards | — | |
+| 7. Quote cards | done | (this commit) |
 | 8. Data-gated | not started (blocked on data) | |
 
 ## Decisions made on the user's behalf
@@ -370,3 +370,55 @@ non-empty fields; swipe rule; layout rule), chapter resume rule, layout pref
 parsing. Updated one source assertion in dharm-veer-localization for the
 banner's `tagline={tagline || undefined}`; same behaviour, since the banner
 renders a tagline only when set.
+
+## Phase 7 — Quote cards (2026-10-08)
+
+Built:
+- "Share as card" under the Dharm Veer quote opens a sheet styled like
+  "Aa". It has a live preview, Square (1080×1080) / Story 9:16 (1080×1920),
+  and Share card, which opens the system share sheet.
+- `ShoonayaQuoteCard` sits in `components/share/ShoonayaShareCard.tsx` and
+  uses the same tradition backgrounds, motifs, borders and quiet "Shared from
+  Shoonaya" footer as the existing cards (decision D4). It shows the
+  wordmark, the hero's name, the quote, the attribution and the sources
+  (square shows the first source; story shows up to 5 lines).
+- `lib/quoteCard.ts`:
+  - `dharmVeerQuoteCard` offers a card only when the hero has quote text, an
+    attribution and a source. Text is used as stored. A half-translated quote
+    falls back to the whole English quote; text and attribution are never
+    mixed across languages.
+  - `quoteCardTypography` picks the type size from text length, so nothing is
+    cut. It is sized for the roster maxima: quote 178 and attribution 244
+    characters.
+- Coverage today: all 76 heroes qualify, in en/hi/pa. **Vrat: no cards.**
+  No vrat mantra carries a source, and the plan allows cards only where one
+  exists. A test fails if a mantra source is ever added without a card.
+
+Found and fixed while verifying:
+- **Every share card exported at 9× the intended pixels on iOS.** Shloka,
+  Vrat, Japa and the new quote cards all use `lib/share-card.ts`. Measured
+  3240×5760 and 21.1 MB for one 9:16 card: react-native-view-shot on iOS
+  multiplies `width`/`height` by the screen scale. The helper now passes
+  points on iOS and pixels on Android (3× the card either way). Measured
+  after: 1080×1080, 2.0 MB. The helper is the only capture path (swept
+  `captureRef`). Android output size is unchanged.
+- The first quote card used `adjustsFontSizeToFit`. In the captured image
+  the font shrank but the line height did not (tiny text, large gaps), unlike
+  the on-screen preview. Replaced with length-based sizes; a test keeps
+  auto-shrink and truncation out of the quote card.
+
+Checked on iOS Simulator: Sri Krishna (Sanatan) square + story; Atisha
+(Buddhist, dark card, longest quote) square preview and exported PNG
+1080×1080 matching the preview; Banda Singh Bahadur (Sikh, longest
+attribution) square + story; the share sheet opened from the export. Nothing
+was sent. Screenshots: `p7-*.jpg`. Not checked: Jain / universal card
+styles on device, Android capture size, VoiceOver.
+
+Noted, not changed (outside this phase): the Dharm Veer page shows the
+**Hindi** quote to a Punjabi reader when a hero has no Punjabi quote. Its
+other fields follow the "Punjabi never falls back to Hindi" rule. The card
+follows that rule and shows the English quote in this case, so page and card
+can differ for those 61 heroes.
+
+Tests: npm test 1176 passed, 1 failed (astro-engine-numerical, worktree path
+only), 0 skipped. TypeScript passed. New: quote-card (8).

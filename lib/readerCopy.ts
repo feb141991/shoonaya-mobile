@@ -52,6 +52,11 @@ export type ReaderCopy = {
   goToChapter: (n: number, title: string) => string;
   /** Shown on a chapter whose translation does not exist yet (never machine-filled). */
   englishOnly: string;
+  shareAsCard: string;
+  cardFormatSquare: string;
+  cardFormatStory: string;
+  shareCard: string;
+  cardPreview: (format: string) => string;
 };
 
 const en: ReaderCopy = {
@@ -101,6 +106,11 @@ const en: ReaderCopy = {
   nextChapter: 'Next',
   goToChapter: (n, title) => `Chapter ${n}: ${title}`,
   englishOnly: 'English',
+  shareAsCard: 'Share as card',
+  cardFormatSquare: 'Square',
+  cardFormatStory: 'Story 9:16',
+  shareCard: 'Share card',
+  cardPreview: (format) => `Card preview, ${format}`,
 };
 
 const hi: ReaderCopy = {
@@ -150,6 +160,11 @@ const hi: ReaderCopy = {
   nextChapter: 'अगला',
   goToChapter: (n, title) => `अध्याय ${n}: ${title}`,
   englishOnly: 'अंग्रेज़ी में',
+  shareAsCard: 'कार्ड के रूप में साझा करें',
+  cardFormatSquare: 'चौकोर',
+  cardFormatStory: 'स्टोरी 9:16',
+  shareCard: 'कार्ड साझा करें',
+  cardPreview: (format) => `कार्ड पूर्वावलोकन, ${format}`,
 };
 
 const pa: ReaderCopy = {
@@ -199,6 +214,11 @@ const pa: ReaderCopy = {
   nextChapter: 'ਅਗਲਾ',
   goToChapter: (n, title) => `ਅਧਿਆਇ ${n}: ${title}`,
   englishOnly: 'ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ',
+  shareAsCard: 'ਕਾਰਡ ਵਜੋਂ ਸਾਂਝਾ ਕਰੋ',
+  cardFormatSquare: 'ਚੌਰਸ',
+  cardFormatStory: 'ਸਟੋਰੀ 9:16',
+  shareCard: 'ਕਾਰਡ ਸਾਂਝਾ ਕਰੋ',
+  cardPreview: (format) => `ਕਾਰਡ ਝਲਕ, ${format}`,
 };
 
 export const READER_COPY: Record<AppLanguage, ReaderCopy> = { en, hi, pa };
