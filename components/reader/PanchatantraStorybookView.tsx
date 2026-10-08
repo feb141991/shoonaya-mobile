@@ -10,6 +10,8 @@ import {
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useReaderAppearance } from "@/lib/useReaderAppearance";
+import { readerCopy } from "@/lib/readerCopy";
+import { PagedResumeBanner, usePagedResume } from "@/components/reader/usePagedResume";
 import { withAlpha } from "@/lib/readerAppearance";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -181,6 +183,21 @@ export function PanchatantraStorybookView({
       animated: false,
     });
   }, [activeLanguage, screenWidth]);
+
+  // Resume where you left off + keep the screen awake (Phase 5).
+  const storyCopy = readerCopy(activeLanguage);
+  const resume = usePagedResume({
+    progressId: `story:${katha.id}`,
+    version: activeLanguage,
+    page: safePage,
+    total: totalPages,
+    goTo: (page) => {
+      setCurrentPage(page);
+      scrollRef.current?.scrollTo({ x: page * screenWidth, animated: false });
+    },
+    label: (page) => storyCopy.sceneLabel(page + 1),
+    resumedText: storyCopy.resumed,
+  });
 
   // Navigate to specific page with smooth scroll & haptics
   const goToPage = (nextIndex: number, animated = true) => {
@@ -841,6 +858,19 @@ export function PanchatantraStorybookView({
           </PressableSurface>
         )}
       </View>
+
+      {/* Resume (Phase 5): "Resumed where you left off · Scene 4 · Start over" */}
+      {resume.banner ? (
+        <View pointerEvents="box-none" style={{ position: "absolute", left: 16, right: 16, bottom: insets.bottom + 96 }}>
+          <PagedResumeBanner
+            text={resume.banner}
+            startOverLabel={storyCopy.startOver}
+            onStartOver={resume.startOver}
+            theme={theme}
+            accent={accent}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }

@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -38,6 +37,10 @@ import {
   writePathshalaDetailCache,
   type PathshalaPathDetail,
 } from '@/lib/pathshalaCache';
+import { useReaderAppearance } from '@/lib/useReaderAppearance';
+import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
+import { readerCopy } from '@/lib/readerCopy';
+import { PagedResumeBanner, usePagedResume } from '@/components/reader/usePagedResume';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -96,17 +99,27 @@ const FONT_SCALE: Record<ReaderFontSize, { original: number; meaning: number }> 
 
 const SPEED_OPTIONS: AudioSpeed[] = [0.75, 1.0, 1.25];
 
+// Phase 5 (docs/READER_EXPERIENCE_GRAND_PLAN.md): the whole lesson reader,
+// including its loading/error states, follows the reader paper theme.
 export default function LessonReaderScreen() {
+  return (
+    <ReaderPaperScope>
+      <LessonReaderContent />
+    </ReaderPaperScope>
+  );
+}
+
+function LessonReaderContent() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
   const appIdentity = useAppIdentity();
-  const isDark = scheme === 'dark';
-  const bg = isDark ? COLORS.darkBg : COLORS.creamBg;
-  const cardBg = isDark ? COLORS.cardBgDark : COLORS.cardBgLight;
-  const border = isDark ? COLORS.borderDark : COLORS.borderLight;
-  const text = isDark ? COLORS.creamBg : COLORS.ink;
-  const dim = isDark ? COLORS.textDimDark : COLORS.textDimLight;
+  // Reader paper theme (Phase 5) instead of the device scheme.
+  const { isDark, theme: paperTheme } = useReaderAppearance();
+  const bg = paperTheme.bg;
+  const cardBg = paperTheme.card;
+  const border = paperTheme.border;
+  const text = paperTheme.text;
+  const dim = paperTheme.dim;
   const brand = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const params = useLocalSearchParams<{ pathId?: string | string[]; lessonId?: string | string[] }>();
   const pathId = Array.isArray(params.pathId) ? params.pathId[0] : params.pathId;
@@ -208,6 +221,18 @@ export default function LessonReaderScreen() {
   audioPlayerRef.current = audioPlayer;
   const currentAudioUrl = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+
+  // Resume at the last verse read + keep the screen awake (Phase 5).
+  const lessonCopy = readerCopy(appLang);
+  const resume = usePagedResume({
+    progressId: pathId ? `pathshala:${pathId}:${lessonIndex}` : null,
+    version: 'v1',
+    page: verseIndex,
+    total: totalVerses,
+    goTo: setVerseIndex,
+    label: (page) => lessonCopy.verseLabel(page + 1),
+    resumedText: lessonCopy.resumed,
+  });
 
   // Reset verse index and audio ONLY when lesson index actually changes
   useEffect(() => {
@@ -1503,6 +1528,19 @@ export default function LessonReaderScreen() {
           returnToPathshala();
         }}
       />
+
+      {/* Resume (Phase 5): "Resumed where you left off · Verse 3 · Start over" */}
+      {resume.banner ? (
+        <View pointerEvents="box-none" style={{ position: 'absolute', left: 16, right: 16, bottom: Math.max(insets.bottom, 16) + 84 }}>
+          <PagedResumeBanner
+            text={resume.banner}
+            startOverLabel={lessonCopy.startOver}
+            onStartOver={resume.startOver}
+            theme={paperTheme}
+            accent={brand}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }

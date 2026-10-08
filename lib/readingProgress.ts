@@ -138,3 +138,8 @@ export async function clearAllReadingProgress(): Promise<void> {
 export function isResumableRatio(ratio: number | undefined) {
   return typeof ratio === 'number' && ratio > 0.05 && ratio < 0.97;
 }
+
+/** Paged readers: resume only past the first page and before the last (the last = finished). */
+export function isResumablePage(page: number | undefined, total: number) {
+  return typeof page === 'number' && Number.isInteger(page) && page > 0 && page < total - 1;
+}

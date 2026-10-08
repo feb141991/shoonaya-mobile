@@ -84,3 +84,19 @@ test('every ReaderShell reader passes a progress id with a language-dependent ve
     assert.match(src, /progressVersion=\{/, `${file} progressVersion`);
   }
 });
+
+test('paged readers resume only between the first and the last page', () => {
+  assert.equal(rp.isResumablePage(3, 6), true);
+  for (const [page, total] of [[0, 6], [5, 6], [6, 6], [undefined, 6], [1.5, 6], [1, 2]] as const) {
+    assert.equal(rp.isResumablePage(page as number | undefined, total), false, `${page}/${total}`);
+  }
+});
+
+test('storybook and Pathshala use paged resume and the reader paper theme', () => {
+  const story = fs.readFileSync(path.join(__dirname, '../components/reader/PanchatantraStorybookView.tsx'), 'utf8');
+  const lesson = fs.readFileSync(path.join(__dirname, '../app/pathshala/[pathId]/[lessonId].tsx'), 'utf8');
+  assert.match(story, /usePagedResume\(\{\s*progressId: `story:\$\{katha\.id\}`/);
+  assert.match(lesson, /progressId: pathId \? `pathshala:\$\{pathId\}:\$\{lessonIndex\}` : null/);
+  assert.match(lesson, /<ReaderPaperScope>\s*<LessonReaderContent \/>/);
+  assert.match(lesson, /useReaderAppearance\(\)/);
+});

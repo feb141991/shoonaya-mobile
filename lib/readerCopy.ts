@@ -33,6 +33,8 @@ export type ReaderCopy = {
   paper: { auto: string; bhojpatra: string; sandhya: string; templeNight: string };
   resumed: (where: string) => string;
   startOver: string;
+  sceneLabel: (n: number) => string;
+  verseLabel: (n: number) => string;
   sectionRepeat: string;
   repeatTimes: (n: number) => string;
   sectionSleep: string;
@@ -72,6 +74,8 @@ const en: ReaderCopy = {
   paper: { auto: 'Auto', bhojpatra: 'Bhojpatra', sandhya: 'Sandhya', templeNight: 'Temple Night' },
   resumed: (where) => `Resumed where you left off · ${where}`,
   startOver: 'Start over',
+  sceneLabel: (n) => `Scene ${n}`,
+  verseLabel: (n) => `Verse ${n}`,
   sectionRepeat: 'Repeat',
   repeatTimes: (n) => `${n}×`,
   sectionSleep: 'Sleep timer',
@@ -111,6 +115,8 @@ const hi: ReaderCopy = {
   paper: { auto: 'स्वचालित', bhojpatra: 'भोजपत्र', sandhya: 'संध्या', templeNight: 'मंदिर रात्रि' },
   resumed: (where) => `जहाँ छोड़ा था, वहीं से · ${where}`,
   startOver: 'शुरू से पढ़ें',
+  sceneLabel: (n) => `दृश्य ${n}`,
+  verseLabel: (n) => `श्लोक ${n}`,
   sectionRepeat: 'दोहराएँ',
   repeatTimes: (n) => `${n}×`,
   sectionSleep: 'स्लीप टाइमर',
@@ -150,6 +156,8 @@ const pa: ReaderCopy = {
   paper: { auto: 'ਆਪਣੇ-ਆਪ', bhojpatra: 'ਭੋਜਪੱਤਰ', sandhya: 'ਸੰਧਿਆ', templeNight: 'ਮੰਦਰ ਰਾਤ' },
   resumed: (where) => `ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਉੱਥੋਂ · ${where}`,
   startOver: 'ਸ਼ੁਰੂ ਤੋਂ ਪੜ੍ਹੋ',
+  sceneLabel: (n) => `ਦ੍ਰਿਸ਼ ${n}`,
+  verseLabel: (n) => `ਸਲੋਕ ${n}`,
   sectionRepeat: 'ਦੁਹਰਾਓ',
   repeatTimes: (n) => `${n}×`,
   sectionSleep: 'ਸਲੀਪ ਟਾਈਮਰ',

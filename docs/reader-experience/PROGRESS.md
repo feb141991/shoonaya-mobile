@@ -15,7 +15,7 @@ audio included).
 | 2. Paper themes | done | cf337b1 (wip) + (this commit) |
 | 3. Resume | done | (this commit) |
 | 4. Listening | code complete; real-device background check pending | (this commit) |
-| 5. Pathshala + Panchatantra | — | |
+| 5. Pathshala + Panchatantra | done | (this commit) |
 | 6. Chapters (Dharm Veer, Vrat) | — | |
 | 7. Quote cards | — | |
 | 8. Data-gated | not started (blocked on data) | |
@@ -260,3 +260,46 @@ is unreadable by Xcode 26.5's linker.
 
 Tests: npm test 1158 passed, 1 failed (astro-engine-numerical, worktree path
 only), 0 skipped. New: recitation (7), reader-listening (5).
+
+## Phase 5 — Pathshala + Panchatantra storybook (2026-10-08)
+
+Built:
+- `components/reader/usePagedResume.tsx`: resume + keep-awake for paged
+  readers. Restores a saved page once per content+version, saves on every page
+  move, forgets the position on the last page (= finished). Shows "Resumed
+  where you left off · Scene 3 · Start over" for 6 s. Same per-identity store,
+  bounds and sign-out purge as Phase 3 (`lib/readingProgress.ts`,
+  `isResumablePage`).
+- Panchatantra storybook: progress id `story:<katha id>`, version = reading
+  language. Its page surfaces were already on the paper tokens (Phase 2).
+- Pathshala lesson: progress id `pathshala:<pathId>:<lessonIndex>`, version =
+  reading language; the whole screen now renders inside `ReaderPaperScope` and
+  takes its colours from `useReaderAppearance()` (Bhojpatra / Sandhya /
+  Temple Night, following the reader paper pref).
+- Copy: `sceneLabel` / `verseLabel` in en/hi/pa.
+
+Decisions:
+- **Pathshala and the storybook keep their own controls** (no ReaderShell
+   capsule). Both already have page navigation, language and size controls
+   designed for paging; adding the capsule would duplicate them.
+- **No interlinear word-by-word for Pathshala.** Its "word by word" is an
+   AI-explain output, not sourced per-word glosses; presenting it as an
+   interlinear would imply a source it does not have (AGENTS.md §3).
+
+Checked on iOS Simulator (worktree Debug build 1.0.0 (7), Metro :8082):
+- Storybook "The Crane and the Crab": to scene 3, app relaunched, reopened ->
+  scene 3 with the resume pill (`p5-story-resume.jpg`).
+- Pathshala "Bhagavad Gita — Foundations" lesson 1 (already completed, so no
+  progress write): verse 4, back, reopened -> verse 4 + pill
+  (`p5-pathshala-resume.jpg`); "Start over" -> verse 1 and position cleared.
+- Pathshala in dark mode on Temple Night (`p5-pathshala-templenight.jpg`).
+
+Incident: opening the storybook by deep link while the dev client was still
+connecting crashed with `ExpoFabricView.swift:197: Fatal error: The app context
+has been lost` (same signature as the 14:31:06 report). It is the dev client
+mounting a native view across a JS-runtime reload, not reader code: with the
+bundle loaded first, the same deep link and screen open normally (repeated
+twice). Recheck on a release build in the final pass.
+
+Tests: npm test 1160 passed, 1 failed (astro-engine-numerical, worktree path
+only), 0 skipped. TypeScript passed. New: reading-progress paged-resume tests.
