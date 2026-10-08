@@ -4,12 +4,17 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 
 ## Shoonaya Project Standards
 
-### 1. Two-Repository Contract Ownership
-- Treat `Sanatan Sangam/Shoonaya` as the backend/PWA repository and
-  `shoonaya-mobile` as the Native repository.
-- Any shared route, DTO, auth, content, notification, profile, or calendar
-  change must be audited in both repositories.
-- State explicitly which repository owns the canonical contract.
+### 1. Native Product and Backend Contract Ownership
+- `shoonaya-mobile` owns the active Native product application and is the
+  default scope for product UI and client implementation.
+- `Sanatan Sangam/Shoonaya` remains the active backend and canonical owner of
+  APIs, data, auth, content, notifications, profiles, calendar services, and
+  shared contracts.
+- The backend repository's PWA/web-app frontend is retired. Do not propose,
+  implement, test, build, or report PWA UI work unless the founder explicitly
+  requests it in the current conversation.
+- Any Native change affecting a backend service or shared contract must be
+  audited in both the Native and backend repositories.
 - Never maintain manually edited duplicate catalogues when a generated,
   versioned snapshot can provide Native offline support.
 
@@ -38,7 +43,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 
 ### 4. Database and Auth Safety
 - Derive user identity server-side; never trust a request-body user ID.
-- Shared Native/PWA routes must explicitly support Bearer and cookie auth
+- Backend routes serving Native must explicitly support Bearer and cookie auth
   through the established helper.
 - Private writes must be atomic, idempotent and protected by database
   constraints, not only application checks.
@@ -87,8 +92,9 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - Do not redesign unrelated Home, Hero, navigation or profile surfaces.
 - Verify Android and iOS, light/dark mode, text scaling, reduced motion,
   loading/error/empty/offline states and 44px touch targets.
-- Do not claim pixel parity between PWA and Native; require equivalent
-  content, actions, states, accessibility and platform-appropriate quality.
+- Do not use parity with the retired PWA as a Native acceptance criterion;
+  require complete content, actions, states, accessibility and
+  platform-appropriate quality.
 - Do not add animation dependencies or decorative loops without measured need.
 
 ### 9. Performance Evidence
@@ -99,7 +105,9 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - Prefer removal of redundant work over adding caching or infrastructure.
 
 ### 10. Delivery and Repository Hygiene
-- Inspect both working trees before editing.
+- Inspect the Native working tree and its active worktrees before editing. Also
+  inspect the backend working tree when a backend service or shared contract is
+  in scope.
 - Preserve unrelated and parallel changes.
 - One scoped objective and one scoped commit per prompt.
 - Report every changed file and prove unrelated dirty files were not staged.
@@ -128,8 +136,8 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
   light and dark mode on a device or simulator. A green test suite does not
   cover assets (see 7: committed is not built is not smoke-tested).
 - Record provenance for generated or third-party art: tool, date and rights
-  status (see 3). Assets copied between repositories carry their defects with
-  them; run the check in both.
+  status (see 3). Assets copied from the backend or any external source carry
+  their defects; always run the check again in this repository.
 - `__tests__/asset-formats.test.ts` holds a known-broken list that may only
   shrink. Never add a file to it; fix the artwork and delete the entry.
 - Art that arrives with a baked-in checkerboard is cut out with
@@ -155,8 +163,9 @@ fresh hex/rgba literal, never inline opacity math on top of an already-alpha
 token (e.g. `opacity: 0.6` on a View whose `backgroundColor` is already
 `rgba(...,0.12)` — the two multiply, silently producing ~7% effective alpha).
 If a token doesn't exist yet for what you need, add it to `lib/constants.ts`
-with a comment explaining where the value came from (PWA parity, an existing
-sibling token, etc.) — don't invent a one-off in the component file.
+with a comment explaining where the value came from (an existing sibling token,
+an established Native pattern, etc.) — don't invent a one-off in the component
+file.
 
 **Before styling anything, grep 2-3 existing screens doing something similar
 and copy their exact pattern** (colors, radius, shadow, icon treatment) rather
