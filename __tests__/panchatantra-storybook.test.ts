@@ -135,6 +135,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-greedy-jackal',
       'panchatantra-heron-and-fish',
       'panchatantra-sparrow-and-elephant',
+      'panchatantra-king-and-minister',
     ];
 
     for (const storyId of storiesWithScenes) {
