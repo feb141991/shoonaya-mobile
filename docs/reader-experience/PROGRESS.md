@@ -212,3 +212,51 @@ failure remains the known nested-worktree path in
 Still required before release sign-off: rebuild the native binaries and prove
 lock-screen/background continuation plus timer stop on physical Android and
 iOS devices. Simulator or unit tests do not establish background delivery.
+
+## Phase 4 — Listening (2026-10-07/08)
+
+Built:
+- Stotram "Listen" recites verse by verse from the open verse: each verse is
+  opened, highlighted (accent border + tint) and scrolled into view; the next
+  verse's audio is prefetched while the current one plays (no silent gap,
+  which would let iOS suspend the app when locked). Status "Verse 2 of 5" /
+  "Recitation 3 of 11 · Verse 2 of 5" above the capsule.
+- Repeat counter (decision D3, standalone): 1× / 11× / 21× / 108× whole
+  recitations, also for stotrams with a recorded track. Writes nothing.
+- Sleep timer in "Aa": Off / 15 min / 30 min / After this recitation (Stotram).
+  Stops via the same Listen control.
+- Background playback: app.json `enableBackgroundPlayback: true` (iOS
+  UIBackgroundModes audio; Android FOREGROUND_SERVICE_MEDIA_PLAYBACK), but
+  opt-in per playback (`useAudioPlayer` options): only reader listening
+  (Stotram, Katha) asks for it, with lock-screen title; Japa and other audio
+  unchanged. Lock-screen controls cleared when playback ends/stops.
+- `useReaderControls`: `playTTS` (never toggles), `prefetchTTS`, rotating cache
+  files; existing 2,800-char limit and cache write kept.
+
+Edits from another session ("Shoonaya App (fork)") landed in this worktree
+during Phase 4 and are kept: sleep timer limited to the plan's 15/30/after
+choices (I had added 60 min); `loadAndPlay` returns whether playback started so
+a focus-cancelled play never shows "playing" (+ test). Messaged that session
+to coordinate.
+
+Checked on iOS Simulator with a fresh build of this branch (Debug 1.0.0 (7),
+UIBackgroundModes = audio): verse 1 -> 2 auto-advance with highlight and
+scroll; app sent Home on verse 1, back after 60 s -> recitation had continued
+through verse 5 and finished. Found/fixed: Listen button spinner invisible on
+the active (accent) button. "Aa" sheet shows Repeat and Sleep sections.
+Not proven: lock-screen playback on a real phone (Simulator is not enough),
+Android background service.
+
+Incidents: a Shoonaya crash report at 14:31:06 (EXC_BREAKPOINT in Expo's
+ExpoFabricView initializer while mounting a native view) during the switch
+from the old to the new build/bundle; did not recur. The simulator device
+itself shut down once during a background test (not an app crash); rebooted
+and re-ran the test successfully.
+
+Native project: `npx expo prebuild -p ios` regenerated the worktree's ios/
+(gitignored); `pod install` needed `LANG=en_US.UTF-8` and
+`SDKROOT=<Xcode MacOSX26.5.sdk>` because the Command Line Tools' macOS 27 SDK
+is unreadable by Xcode 26.5's linker.
+
+Tests: npm test 1158 passed, 1 failed (astro-engine-numerical, worktree path
+only), 0 skipped. New: recitation (7), reader-listening (5).
