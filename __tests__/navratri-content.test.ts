@@ -43,14 +43,15 @@ test('every Chaitra Navratri day gets the Navratri conduct, samagri and its own 
   assert.equal(isNavratriObservance('gupt-navratri-day-1'), false, 'Gupt Navratri is out of scope');
 });
 
-test('Chaitra significance is full length; new Hindi/Punjabi stay pending until reviewed', () => {
+test('Chaitra significance is full length and carries the founder-reviewed translations', () => {
   for (const child of series('chaitra-navratri').children) {
     const sig = child.significance!;
     assert.ok(words(sig.value.en) >= 60, `${child.slug} en ${words(sig.value.en)} words`);
     assert.ok(words(sig.value.hi) >= 60, `${child.slug} hi ${words(sig.value.hi)} words`);
     assert.ok(words(sig.value.pa) >= 60, `${child.slug} pa ${words(sig.value.pa)} words`);
-    assert.deepEqual(sig.translationStatus, { en: 'source', hi: 'pending', pa: 'pending' }, child.slug);
-    assert.equal(sig.status, 'source_backed', child.slug);
+    assert.deepEqual(sig.translationStatus, { en: 'source', hi: 'reviewed_translation', pa: 'reviewed_translation' }, child.slug);
+    assert.equal(sig.status, 'reviewed_editorial', child.slug);
+    assert.equal(sig.reviewRef, 'founder-chat:2026-10-09-chaitra-navratri-expanded-content', child.slug);
     assert.ok(sig.sourceRefs.length >= 1, child.slug);
     for (const ref of sig.sourceRefs) {
       assert.ok(!ref.sourceName.includes('Rashtriya Panchang'), `${child.slug}: the Panchang is a calendar source, not a narrative one`);
