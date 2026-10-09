@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   Modal,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   Text,
   View,
+  type GestureResponderEvent,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -20,7 +22,7 @@ import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { COLORS, FONTS, READER_PAPER } from '@/lib/constants';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -39,8 +41,12 @@ import {
 } from '@/lib/pathshalaCache';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
+import { ReaderCapsule, ReaderOptionsSheet, SheetChip, type OptionsSheetSection } from '@/components/reader/ReaderControls';
 import { readerCopy } from '@/lib/readerCopy';
+import { readerControlsPalette } from '@/lib/readerAppearance';
+import { READER_PAPER_CHOICES, setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
 import { PagedResumeBanner, usePagedResume } from '@/components/reader/usePagedResume';
+import { createReaderChromeController, isPageTap, type ReaderChromeState } from '@/lib/readerChrome';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -98,6 +104,14 @@ const FONT_SCALE: Record<ReaderFontSize, { original: number; meaning: number }> 
 };
 
 const SPEED_OPTIONS: AudioSpeed[] = [0.75, 1.0, 1.25];
+const FONT_OPTIONS: readonly ReaderFontSize[] = ['small', 'normal', 'large', 'xl'];
+const FONT_LABELS: Record<ReaderFontSize, string> = { small: 'A−', normal: 'A', large: 'A+', xl: 'A++' };
+const LANGUAGE_LABELS: Record<AppLanguage, string> = { en: 'EN', hi: 'हिं', pa: 'ਪੰ' };
+const MEANING_LANGUAGE_TITLES: Record<AppLanguage, string> = {
+  en: 'Meaning language',
+  hi: 'अर्थ की भाषा',
+  pa: 'ਅਰਥ ਦੀ ਭਾਸ਼ਾ',
+};
 
 // Phase 5 (docs/READER_EXPERIENCE_GRAND_PLAN.md): the whole lesson reader,
 // including its loading/error states, follows the reader paper theme.
@@ -114,7 +128,9 @@ function LessonReaderContent() {
   const insets = useSafeAreaInsets();
   const appIdentity = useAppIdentity();
   // Reader paper theme (Phase 5) instead of the device scheme.
-  const { isDark, theme: paperTheme } = useReaderAppearance();
+  const { paper, isDark, theme: paperTheme } = useReaderAppearance();
+  const { prefs: readerPrefs } = useReaderPrefs();
+  const controlsPalette = useMemo(() => readerControlsPalette(paper), [paper]);
   const bg = paperTheme.bg;
   const cardBg = paperTheme.card;
   const border = paperTheme.border;
@@ -216,11 +232,79 @@ function LessonReaderContent() {
   // ── Audio state ───────────────────────────────────────────────────
   const [audioState, setAudioState] = useState<AudioState>('idle');
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(1.0);
+  const [optionsVisible, setOptionsVisible] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const audioPlayer = useAudioPlayer();
   const audioPlayerRef = useRef(audioPlayer);
   audioPlayerRef.current = audioPlayer;
   const currentAudioUrl = useRef<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const [readerChrome, setReaderChrome] = useState<ReaderChromeState>({ visible: true, pinned: false, screenReader: false });
+  const chromeControllerRef = useRef<ReturnType<typeof createReaderChromeController> | null>(null);
+  if (!chromeControllerRef.current) {
+    chromeControllerRef.current = createReaderChromeController({ onChange: setReaderChrome });
+  }
+  const pageTouchStart = useRef<{ x: number; y: number; t: number } | null>(null);
+
+  useEffect(() => {
+    const chrome = chromeControllerRef.current;
+    if (!chrome) return;
+    chrome.start();
+    let active = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+      if (active) chrome.setScreenReader(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener('screenReaderChanged', (enabled) => chrome.setScreenReader(enabled));
+    return () => {
+      active = false;
+      subscription.remove();
+      chrome.dispose();
+      chromeControllerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (active) setReduceMotion(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    chromeControllerRef.current?.setPinned(readerPrefs.pinned);
+  }, [readerPrefs.pinned]);
+
+  const handlePageTouchStart = useCallback((event: GestureResponderEvent) => {
+    pageTouchStart.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() };
+  }, []);
+
+  const handlePageTouchEnd = useCallback((event: GestureResponderEvent) => {
+    const start = pageTouchStart.current;
+    pageTouchStart.current = null;
+    if (!start) return;
+    const end = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() };
+    if (!isPageTap(start, end)) return;
+    chromeControllerRef.current?.pageTap(event.target !== event.currentTarget);
+  }, []);
+
+  useEffect(() => {
+    const chrome = chromeControllerRef.current;
+    if (!chrome) return;
+    if (audioState === 'loading') chrome.hold('audio');
+    else chrome.release('audio');
+  }, [audioState]);
+
+  useEffect(() => {
+    const chrome = chromeControllerRef.current;
+    if (!chrome) return;
+    if (explainVisible || completionModalVisible || authGateVisible || optionsVisible) chrome.hold('modal');
+    else chrome.release('modal');
+  }, [authGateVisible, completionModalVisible, explainVisible, optionsVisible]);
 
   // Resume at the last verse read + keep the screen awake (Phase 5).
   const lessonCopy = readerCopy(appLang);
@@ -627,6 +711,92 @@ function LessonReaderContent() {
     void fetchPathshalaBridge(nextCompleted.length);
   }, [completedLessons, fetchPathshalaBridge, isGuest, lessonIndex, lessons.length, pathId, saving, userId]);
 
+  const fontIndex = FONT_OPTIONS.indexOf(fontSize);
+  const cycleMeaningLanguage = useCallback(() => {
+    const order: readonly AppLanguage[] = ['en', 'hi', 'pa'];
+    const next = order[(order.indexOf(language) + 1) % order.length];
+    setLanguageOverride(next);
+  }, [language]);
+
+  const optionsSections = useMemo<OptionsSheetSection[]>(() => [
+    {
+      key: 'meaning-language',
+      title: MEANING_LANGUAGE_TITLES[appLang],
+      content: (['en', 'hi', 'pa'] as const).map((option) => (
+        <SheetChip
+          key={option}
+          label={option === 'en' ? 'English' : option === 'hi' ? 'हिन्दी' : 'ਪੰਜਾਬੀ'}
+          selected={language === option}
+          onPress={() => setLanguageOverride(option)}
+          palette={controlsPalette}
+          role="radio"
+        />
+      )),
+    },
+    {
+      key: 'text-size',
+      title: lessonCopy.sectionText,
+      content: FONT_OPTIONS.map((option) => (
+        <SheetChip
+          key={option}
+          label={FONT_LABELS[option]}
+          accessibilityLabel={lessonCopy.textSize(FONT_LABELS[option])}
+          selected={fontSize === option}
+          onPress={() => saveFontSize(option)}
+          palette={controlsPalette}
+          role="radio"
+        />
+      )),
+    },
+    {
+      key: 'paper',
+      title: lessonCopy.sectionPaper,
+      content: READER_PAPER_CHOICES.map((choice) => {
+        const swatch = choice === 'auto' ? READER_PAPER[paper] : READER_PAPER[choice];
+        return (
+          <SheetChip
+            key={choice}
+            label={lessonCopy.paper[choice]}
+            selected={readerPrefs.paper === choice}
+            onPress={() => { void setReaderPrefs({ paper: choice }); }}
+            palette={controlsPalette}
+            role="radio"
+            swatch={{ page: swatch.page, ink: swatch.text }}
+          />
+        );
+      }),
+    },
+    {
+      key: 'speed',
+      title: lessonCopy.sectionSpeed,
+      content: SPEED_OPTIONS.map((speed) => (
+        <SheetChip
+          key={speed}
+          label={`${speed}×`}
+          accessibilityLabel={lessonCopy.speed(String(speed))}
+          selected={audioSpeed === speed}
+          onPress={() => { void handleSpeedChange(speed); }}
+          palette={controlsPalette}
+          role="radio"
+        />
+      )),
+    },
+    {
+      key: 'controls',
+      title: lessonCopy.sectionShow,
+      content: (
+        <SheetChip
+          label={readerPrefs.pinned ? lessonCopy.unpin : lessonCopy.pin}
+          selected={readerPrefs.pinned}
+          onPress={() => { void setReaderPrefs({ pinned: !readerPrefs.pinned }); }}
+          palette={controlsPalette}
+          role="switch"
+          icon={readerPrefs.pinned ? 'lock' : 'maximize-2'}
+        />
+      ),
+    },
+  ], [appLang, audioSpeed, controlsPalette, fontSize, handleSpeedChange, language, lessonCopy, paper, readerPrefs.paper, readerPrefs.pinned, saveFontSize]);
+
   if ((!path || !lesson || !entry) && (fetchState === 'loading' || loadingState)) {
     return (
       <View style={{ flex: 1, backgroundColor: bg }}>
@@ -692,33 +862,17 @@ function LessonReaderContent() {
   const originalFontFamily =
     path.tradition === 'sikh' ? undefined : FONTS.serif;
 
-  const traditionGlyph =
-    path.tradition === 'sikh'
-      ? 'ੴ'
-      : path.tradition === 'jain'
-      ? '卐'
-      : path.tradition === 'buddhist'
-      ? '☸'
-      : 'ॐ';
-
-  const audioIcon =
-    audioState === 'loading'
-      ? null
-      : audioState === 'playing'
-      ? 'pause'
-      : 'play';
-
   return (
-    <View style={{ flex: 1, backgroundColor: bg }}>
+    <View style={{ flex: 1, backgroundColor: bg }} onTouchStart={handlePageTouchStart} onTouchEnd={handlePageTouchEnd}>
       <GestureDetector gesture={swipeGesture}>
         <View style={{ flex: 1 }}>
           <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} density="soft" />
           <ScrollView
             ref={scrollRef}
             contentContainerStyle={{
-              paddingTop: 64,
+              paddingTop: Math.max(insets.top, 16) + 8,
               paddingHorizontal: 20,
-              paddingBottom: Math.max(insets.bottom, 16) + 90,
+              paddingBottom: Math.max(insets.bottom, 16) + 176,
               gap: 18,
             }}
           >
@@ -727,7 +881,7 @@ function LessonReaderContent() {
                 Showing saved lesson content. Could not refresh just now.
               </Text>
             ) : null}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            {readerChrome.visible ? <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <BackButton
                 showLabel={false}
                 iconSize={22}
@@ -742,49 +896,29 @@ function LessonReaderContent() {
                 // lesson actually belongs to.
                 fallbackHref={{ pathname: '/pathshala/[pathId]', params: { pathId } }}
               />
-              <Text style={{ flex: 1, textAlign: 'center', fontFamily: FONTS.sansSemiBold, fontSize: 14, color: dim }}>
-                Lesson {lessonIndex + 1} of {lessons.length}
-              </Text>
-              <View style={{ width: 22 }} />
-            </View>
+              <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }} accessible accessibilityRole="header">
+                <Text numberOfLines={1} style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
+                  {entry.source || lesson.title}
+                </Text>
+                <Text numberOfLines={1} style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: dim, marginTop: 2 }}>
+                  Verse {verseIndex + 1} of {totalVerses} · Lesson {lessonIndex + 1} of {lessons.length}
+                </Text>
+              </View>
+              <PressableSurface
+                onPress={() => chromeControllerRef.current?.hide()}
+                haptic="selection"
+                accessibilityRole="button"
+                accessibilityLabel="Enter full screen reading"
+                style={{ width: 44, height: 44, minHeight: 0, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: border, backgroundColor: cardBg }}
+              >
+                <Feather name="maximize-2" size={18} color={brand} />
+              </PressableSurface>
+            </View> : null}
 
-            {/* ── Sacred Header & Source Pill Badge ── */}
-            <View style={{ gap: 10, alignItems: 'center' }}>
-              {entry.source ? (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 6,
-                    paddingHorizontal: 14,
-                    paddingVertical: 6,
-                    borderRadius: 999,
-                    backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : '#FFF4E0',
-                    borderWidth: 1,
-                    borderColor: border,
-                  }}
-                >
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: brand }} />
-                  <Text
-                    style={{
-                      fontFamily: FONTS.sansSemiBold,
-                      fontSize: 11,
-                      letterSpacing: 1.5,
-                      color: brand,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {entry.source}
-                  </Text>
-                </View>
-              ) : null}
-
-              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 30, color: text, textAlign: 'center' }}>
-                {lesson.title}
-              </Text>
-
+            {/* One compact, segmented progress mechanism. */}
+            <View style={{ alignItems: 'center' }}>
               {totalVerses > 1 ? (
-                <View style={{ alignItems: 'center', gap: 10, marginVertical: 4 }}>
+                <View style={{ alignItems: 'center', gap: 10, marginVertical: 2 }}>
                   {/* Progress Capsules — standard Pressable with hitSlop so they render as sleek 7px pills */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     {lesson.entries.map((_, i) => {
@@ -811,99 +945,9 @@ function LessonReaderContent() {
                     </Text>
                   </View>
 
-                  {/* Quick Verse Pills — instant one-tap verse jump */}
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={{ flexGrow: 0, height: 34 }}
-                    contentContainerStyle={{ gap: 6, paddingHorizontal: 4, alignItems: 'center' }}
-                  >
-                    {lesson.entries.map((_, i) => {
-                      const isActive = i === verseIndex;
-                      return (
-                        <Pressable
-                          key={i}
-                          onPress={() => setVerseIndex(i)}
-                          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Verse ${i + 1}`}
-                          style={{
-                            paddingHorizontal: 12,
-                            paddingVertical: 5,
-                            borderRadius: 999,
-                            borderWidth: 1,
-                            borderColor: isActive ? brand : border,
-                            backgroundColor: isActive ? (isDark ? 'rgba(197,160,89,0.2)' : '#F2D9A8') : cardBg,
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontFamily: FONTS.sansSemiBold,
-                              fontSize: 11,
-                              color: isActive ? (isDark ? brand : COLORS.ink) : dim,
-                            }}
-                          >
-                            Verse {i + 1}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
                 </View>
               ) : null}
             </View>
-
-            {/* ── Subheader Controls Ribbon ── */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {(['en', 'hi', 'pa'] as const).map((option) => (
-                  <PressableSurface
-                    key={option}
-                    onPress={() => setLanguageOverride(option)}
-                    haptic="selection"
-                    style={{
-                      borderRadius: 999,
-                      paddingHorizontal: 14,
-                      paddingVertical: 7,
-                      borderWidth: 1,
-                      borderColor: option === language ? brand : border,
-                      backgroundColor: option === language ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: option === language ? (isDark ? brand : COLORS.ink) : dim }}>
-                      {option === 'hi' ? 'हिं' : option === 'pa' ? 'ਪੰ' : 'EN'}
-                    </Text>
-                  </PressableSurface>
-                ))}
-              </View>
-
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                {(['small', 'normal', 'large', 'xl'] as const).map((option) => (
-                  <PressableSurface
-                    key={option}
-                    onPress={() => saveFontSize(option)}
-                    haptic="selection"
-                    style={{
-                      borderRadius: 999,
-                      paddingHorizontal: 10,
-                      paddingVertical: 7,
-                      borderWidth: 1,
-                      borderColor: option === fontSize ? brand : border,
-                      backgroundColor: option === fontSize ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: option === fontSize ? (isDark ? brand : COLORS.ink) : dim }}>
-                      {option === 'small' ? 'A-' : option === 'normal' ? 'A' : option === 'large' ? 'A+' : 'A++'}
-                    </Text>
-                  </PressableSurface>
-                ))}
-              </View>
-            </View>
-
-            {/* ── Sacred Tradition Glyph ── */}
-            <Text style={{ fontFamily: FONTS.serif, fontSize: 34, color: brand, textAlign: 'center', marginVertical: 4 }}>
-              {traditionGlyph}
-            </Text>
 
             {/* ── 1. Sanskrit / Devanagari Centerpiece Card ── */}
             <View
@@ -912,20 +956,16 @@ function LessonReaderContent() {
                 borderWidth: 1,
                 borderColor: border,
                 backgroundColor: cardBg,
-                padding: 24,
+                padding: fontSize === 'xl' ? 16 : fontSize === 'large' ? 20 : 24,
                 alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: isDark ? 0.25 : 0.06,
-                shadowRadius: 8,
-                elevation: 2,
+                boxShadow: controlsPalette.shadow,
               }}
             >
               <Text
                 style={{
                   fontSize: FONT_SCALE[fontSize].original,
                   lineHeight: FONT_SCALE[fontSize].original * 1.5,
-                  color: isDark ? '#F0EDE6' : '#2C1A0E',
+                  color: text,
                   textAlign: 'center',
                   fontFamily: originalFontFamily,
                 }}
@@ -974,81 +1014,7 @@ function LessonReaderContent() {
               </View>
             ) : null}
 
-            {/* ── 3. Audio Recitation Panel ── */}
-            <View
-              style={{
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: border,
-                backgroundColor: cardBg,
-                padding: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 14,
-              }}
-            >
-              <PressableSurface
-                onPress={() => { void handlePlayPause(); }}
-                haptic="selection"
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: brand,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {audioState === 'loading' ? (
-                  <ActivityIndicator color={COLORS.ink} size="small" />
-                ) : (
-                  <Feather name={audioIcon ?? 'play'} size={20} color={COLORS.ink} />
-                )}
-              </PressableSurface>
-
-              <View style={{ flex: 1, gap: 6 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
-                  {audioState === 'loading'
-                    ? 'Preparing recitation…'
-                    : audioState === 'playing'
-                    ? 'Playing recitation'
-                    : audioState === 'paused'
-                    ? 'Paused'
-                    : audioState === 'error'
-                    ? 'Audio unavailable'
-                    : 'Listen to recitation'}
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {SPEED_OPTIONS.map((speed) => (
-                    <PressableSurface
-                      key={speed}
-                      onPress={() => { void handleSpeedChange(speed); }}
-                      haptic="selection"
-                      style={{
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                        paddingVertical: 5,
-                        borderWidth: 1,
-                        borderColor: audioSpeed === speed ? brand : border,
-                        backgroundColor: audioSpeed === speed ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: FONTS.sansMedium,
-                          fontSize: 11,
-                          color: audioSpeed === speed ? (isDark ? brand : COLORS.ink) : dim,
-                        }}
-                      >
-                        {speed}×
-                      </Text>
-                    </PressableSurface>
-                  ))}
-                </View>
-              </View>
-            </View>
-
-            {/* ── 4. Meaning Card ── */}
+            {/* Meaning follows the source text; listening lives in the shared thumb capsule. */}
             <View
               style={{
                 borderRadius: 24,
@@ -1285,8 +1251,43 @@ function LessonReaderContent() {
       </View>
     </GestureDetector>
 
+    {readerChrome.visible ? (
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: 'absolute',
+          left: 8,
+          right: 8,
+          bottom: Math.max(insets.bottom, 12) + 82,
+          zIndex: 110,
+          elevation: 11,
+          alignItems: 'center',
+        }}
+      >
+        <ReaderCapsule
+          palette={controlsPalette}
+          copy={lessonCopy}
+          font={{
+            canDecrease: fontIndex > 0,
+            canIncrease: fontIndex < FONT_OPTIONS.length - 1,
+            label: FONT_LABELS[fontSize],
+            onDecrease: () => saveFontSize(FONT_OPTIONS[Math.max(0, fontIndex - 1)]),
+            onIncrease: () => saveFontSize(FONT_OPTIONS[Math.min(FONT_OPTIONS.length - 1, fontIndex + 1)]),
+          }}
+          listen={{
+            speaking: audioState === 'playing',
+            preparing: audioState === 'loading',
+            onPress: () => { void handlePlayPause(); },
+          }}
+          language={{ label: LANGUAGE_LABELS[language], onPress: cycleMeaningLanguage }}
+          onOpenOptions={() => setOptionsVisible(true)}
+          onInteract={() => chromeControllerRef.current?.interact()}
+        />
+      </View>
+    ) : null}
+
     {/* ── Fixed Floating Bottom Navigation Dock (PWA CanonicalReader Parity) ── */}
-    <View
+    {readerChrome.visible ? <View
       style={{
         position: 'absolute',
         bottom: 0,
@@ -1402,7 +1403,17 @@ function LessonReaderContent() {
           </PressableSurface>
         )}
       </View>
-    </View>
+    </View> : null}
+
+      <ReaderOptionsSheet
+        visible={optionsVisible}
+        onClose={() => setOptionsVisible(false)}
+        palette={controlsPalette}
+        copy={lessonCopy}
+        sections={optionsSections}
+        bottomInset={insets.bottom}
+        reduceMotion={reduceMotion}
+      />
 
       <AuthGate
         visible={authGateVisible}
@@ -1531,7 +1542,7 @@ function LessonReaderContent() {
 
       {/* Resume (Phase 5): "Resumed where you left off · Verse 3 · Start over" */}
       {resume.banner ? (
-        <View pointerEvents="box-none" style={{ position: 'absolute', left: 16, right: 16, bottom: Math.max(insets.bottom, 16) + 84 }}>
+        <View pointerEvents="box-none" style={{ position: 'absolute', left: 16, right: 16, bottom: Math.max(insets.bottom, 16) + 150 }}>
           <PagedResumeBanner
             text={resume.banner}
             startOverLabel={lessonCopy.startOver}

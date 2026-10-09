@@ -1,5 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const pathshalaReaderSource = readFileSync(new URL('../app/pathshala/[pathId]/[lessonId].tsx', import.meta.url), 'utf8');
 
 // Helper mimicking the canonical verse navigation state logic implemented in [lessonId].tsx
 interface VerseReaderState {
@@ -67,6 +70,19 @@ function handleSwipe(
 }
 
 test('Pathshala Verse Progression & Adaptive CTA Suite', async (t) => {
+  await t.test('0. Pathshala uses the shared immersive reader controller', () => {
+    assert.match(pathshalaReaderSource, /createReaderChromeController/);
+    assert.match(pathshalaReaderSource, /chromeControllerRef\.current\?\.hide\(\)/);
+    assert.match(pathshalaReaderSource, /Enter full screen reading/);
+    assert.match(pathshalaReaderSource, /AccessibilityInfo\.isScreenReaderEnabled/);
+    assert.match(pathshalaReaderSource, /audioState === 'loading'.*chrome\.hold\('audio'\)/s);
+    assert.match(pathshalaReaderSource, /readerChrome\.visible \? <View/);
+    assert.match(pathshalaReaderSource, /<ReaderCapsule/);
+    assert.match(pathshalaReaderSource, /<ReaderOptionsSheet/);
+    assert.match(pathshalaReaderSource, /Meaning language/);
+    assert.doesNotMatch(pathshalaReaderSource, /Audio Recitation Panel/);
+    assert.doesNotMatch(pathshalaReaderSource, /Subheader Controls Ribbon/);
+  });
   await t.test('1. On multi-verse lesson, Verse 1 shows Next Verse CTA, never Done/Complete', () => {
     const state: VerseReaderState = {
       totalVerses: 5,
