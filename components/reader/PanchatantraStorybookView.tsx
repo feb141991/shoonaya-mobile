@@ -743,7 +743,7 @@ export function PanchatantraStorybookView({
                                 ]}
                               >
                                 {savedToTreasury
-                                  ? localizedLabel(activeLanguage, 'Saved to Treasury', 'कोश में सहेजा गया', 'ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲਿਆ')}
+                                  ? localizedLabel(activeLanguage, 'Saved to Treasury', 'कोश में सहेजा गया', 'ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲਿਆ')
                                   : localizedLabel(activeLanguage, 'Save to Treasury', 'नीति कोश में सहेजें', 'ਨੀਤੀ ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲੋ')}
                               </Text>
                             </View>
