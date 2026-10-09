@@ -32,6 +32,9 @@ import {
   hasDedicatedSceneArtwork,
 } from "@/lib/panchatantraArtwork";
 
+import { QuoteCardSheet } from "@/components/share/QuoteCardSheet";
+import { type ShoonayaQuoteCardData } from "@/components/share/ShoonayaShareCard";
+
 export interface StorybookKathaData {
   id: string;
   title: string;
@@ -175,6 +178,27 @@ export function PanchatantraStorybookView({
 
   const totalPages = bodyParagraphs.length;
   const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
+
+  // State for Option 1: Niti Treasury & Quote Share Card
+  const [savedToTreasury, setSavedToTreasury] = useState(false);
+  const [quoteSheetVisible, setQuoteSheetVisible] = useState(false);
+
+  const handleSaveNitiTreasury = () => {
+    if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setSavedToTreasury((prev) => !prev);
+  };
+
+  const handleShareQuote = () => {
+    if (Platform.OS !== "web") void Haptics.selectionAsync();
+    setQuoteSheetVisible(true);
+  };
+
+  const quoteCardData: ShoonayaQuoteCardData = {
+    text: moralText,
+    attribution: `Panchatantra · ${title}`,
+    tradition: "universal",
+    source: "Ancient Niti Shastra",
+  };
 
   // Keep page alignment if language changes
   useEffect(() => {
@@ -681,20 +705,74 @@ export function PanchatantraStorybookView({
                         {paragraph}
                       </Text>
 
-                      {onComplete ? (
+                      {/* Meaningful Wisdom Actions (Option 1: Niti Treasury, Share Wisdom Card, Finish Reading) */}
+                      <View style={styles.wisdomActionsContainer}>
                         <PressableSurface
                           haptic="impact"
-                          onPress={onComplete}
-                          style={styles.completeStoryBtnWrap}
+                          onPress={handleShareQuote}
+                          style={styles.wisdomActionPrimaryBtnWrap}
                         >
-                          <View style={[styles.completeStoryBtn, { backgroundColor: accent }]}>
-                            <Feather name="check-circle" size={18} color="#FFFFFF" />
-                            <Text style={[styles.completeStoryBtnText, { fontFamily: FONTS.sansSemiBold }]}>
-                              {localizedLabel(activeLanguage, 'Complete Tale & Earn Karma', 'कथा पूर्ण करें', 'ਕਥਾ ਪੂਰੀ ਕਰੋ ਅਤੇ ਕਰਮ ਅੰਕ ਪ੍ਰਾਪਤ ਕਰੋ')}
+                          <View style={[styles.wisdomActionPrimaryBtn, { backgroundColor: accent }]}>
+                            <Feather name="share-2" size={17} color="#FFFFFF" />
+                            <Text style={[styles.wisdomActionPrimaryText, { fontFamily: FONTS.sansSemiBold }]}>
+                              {localizedLabel(activeLanguage, 'Share Wisdom Card', 'नीति सूक्ति साझा करें', 'ਨੀਤੀ ਵਿਚਾਰ ਸਾਂਝਾ ਕਰੋ')}
                             </Text>
                           </View>
                         </PressableSurface>
-                      ) : null}
+
+                        <View style={styles.wisdomActionsRow}>
+                          <PressableSurface
+                            haptic="selection"
+                            onPress={handleSaveNitiTreasury}
+                            style={styles.wisdomActionSecondaryBtnWrap}
+                          >
+                            <View
+                              style={[
+                                styles.wisdomActionSecondaryBtn,
+                                {
+                                  borderColor: savedToTreasury ? accent : isDark ? 'rgba(197,160,89,0.4)' : 'rgba(180,140,90,0.4)',
+                                  backgroundColor: savedToTreasury ? `${accent}20` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                                },
+                              ]}
+                            >
+                              <Feather name={savedToTreasury ? 'bookmark' : 'bookmark'} size={15} color={savedToTreasury ? accent : theme.text} />
+                              <Text
+                                style={[
+                                  styles.wisdomActionSecondaryText,
+                                  { color: savedToTreasury ? accent : theme.text, fontFamily: FONTS.sansSemiBold },
+                                ]}
+                              >
+                                {savedToTreasury
+                                  ? localizedLabel(activeLanguage, 'Saved to Treasury', 'कोश में सहेजा गया', 'ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲਿਆ')}
+                                  : localizedLabel(activeLanguage, 'Save to Treasury', 'नीति कोश में सहेजें', 'ਨੀਤੀ ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲੋ')}
+                              </Text>
+                            </View>
+                          </PressableSurface>
+
+                          {onComplete ? (
+                            <PressableSurface
+                              haptic="selection"
+                              onPress={onComplete}
+                              style={styles.wisdomActionSecondaryBtnWrap}
+                            >
+                              <View
+                                style={[
+                                  styles.wisdomActionSecondaryBtn,
+                                  {
+                                    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+                                    backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                                  },
+                                ]}
+                              >
+                                <Feather name="check" size={15} color={theme.text} />
+                                <Text style={[styles.wisdomActionSecondaryText, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
+                                  {localizedLabel(activeLanguage, 'Finish Reading', 'पठन पूर्ण करें', 'ਪੜ੍ਹਨਾ ਪੂਰਾ ਕਰੋ')}
+                                </Text>
+                              </View>
+                            </PressableSurface>
+                          ) : null}
+                        </View>
+                      </View>
                     </View>
                   ) : (
                     /* Standard Story Scene with Drop Cap */
@@ -871,6 +949,14 @@ export function PanchatantraStorybookView({
           />
         </View>
       ) : null}
+
+      {/* Quote Card Share Sheet Modal */}
+      <QuoteCardSheet
+        visible={quoteSheetVisible}
+        onClose={() => setQuoteSheetVisible(false)}
+        data={quoteCardData}
+        fileName={`panchatantra-quote-${katha.id}`}
+      />
     </View>
   );
 }
@@ -1189,21 +1275,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     opacity: 0.85,
   },
-  completeStoryBtnWrap: {
-    borderRadius: RADII.pill,
-    marginTop: 6,
+  wisdomActionsContainer: {
+    width: "100%",
+    alignItems: "stretch",
+    gap: 10,
+    marginTop: 10,
+    paddingHorizontal: 6,
   },
-  completeStoryBtn: {
+  wisdomActionPrimaryBtnWrap: {
+    borderRadius: RADII.pill,
+  },
+  wisdomActionPrimaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: RADII.pill,
+  },
+  wisdomActionPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 13.5,
+  },
+  wisdomActionsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
+  },
+  wisdomActionSecondaryBtnWrap: {
+    flex: 1,
     borderRadius: RADII.pill,
   },
-  completeStoryBtnText: {
-    color: "#FFFFFF",
-    fontSize: 13,
+  wisdomActionSecondaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: RADII.pill,
+    borderWidth: 1,
+  },
+  wisdomActionSecondaryText: {
+    fontSize: 11.5,
   },
   bottomBar: {
     position: "absolute",
