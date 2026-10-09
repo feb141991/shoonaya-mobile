@@ -3,6 +3,7 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   Animated,
+  BackHandler,
   Easing,
   Image,
   KeyboardAvoidingView,
@@ -23,6 +24,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ui/Card';
 import { GoogleIcon } from '@/components/ui/GoogleIcon';
@@ -53,6 +55,9 @@ if (GOOGLE_WEB_CLIENT_ID) {
     scopes: ['email', 'profile'],
   });
 }
+
+// Must match handleSignUp's check below and the hint on the form.
+const MIN_PASSWORD_LENGTH = 6;
 
 const TERMS_URL = 'https://shoonaya.com/terms';
 const PRIVACY_URL = 'https://shoonaya.com/privacy';
@@ -404,30 +409,6 @@ function AuthButton({
   );
 }
 
-function TrustChip({ icon, label, isDark }: { icon: keyof typeof Feather.glyphMap; label: string; isDark: boolean }) {
-  const theme = themeColor(isDark);
-  return (
-    <View
-      style={{
-        minHeight: 30,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: isDark ? COLORS.homeBorderSoftDark : COLORS.homeBorderSoftLight,
-        backgroundColor: theme.glass,
-        paddingHorizontal: 9,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-      }}
-    >
-      <Feather name={icon} size={12} color={theme.brand} />
-      <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.earth }}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
 function AuthDivider({ label, isDark }: { label: string; isDark: boolean }) {
   const theme = themeColor(isDark);
   return (
@@ -453,6 +434,13 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  // Two steps: pick how to continue, then (only for email) fill in the form. Presentation only: the
+  // sign-in handlers below are unchanged.
+  const [step, setStep] = useState<'choose' | 'email'>('choose');
+  const [showPassword, setShowPassword] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  // The system navigation bar sits under the screen on Android (AGENTS.md section 12).
+  const insets = useSafeAreaInsets();
   const [reduceMotion, setReduceMotion] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(Platform.OS === 'ios');
   const brandScale = useRef(new Animated.Value(1)).current;
@@ -777,8 +765,8 @@ export default function LoginScreen() {
       return;
     }
 
-    if (trimmedPassword.length < 6) {
-      setErrorMessage('Password must be at least 6 characters.');
+    if (trimmedPassword.length < MIN_PASSWORD_LENGTH) {
+      setErrorMessage(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
 
@@ -849,6 +837,32 @@ export default function LoginScreen() {
 
   const busy = activeAction !== null;
 
+  const openEmailStep = () => {
+    setErrorMessage(null);
+    setNoticeMessage(null);
+    setStep('email');
+  };
+
+  const closeEmailStep = () => {
+    setErrorMessage(null);
+    setNoticeMessage(null);
+    setShowPassword(false);
+    setStep('choose');
+  };
+
+  // On Android the hardware Back from the email form returns to the sign-in options
+  // instead of leaving the app.
+  useEffect(() => {
+    if (step !== 'email') return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      closeEmailStep();
+      return true;
+    });
+    return () => subscription.remove();
+    // closeEmailStep only sets state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   return (
     <Screen style={{ paddingHorizontal: 18, paddingTop: 10, backgroundColor: theme.bg }}>
       <AmbientField isDark={isDark} />
@@ -857,16 +871,16 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 12, paddingBottom: 100 }}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16) + 12 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-        <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <View style={{ alignItems: 'center', marginBottom: 14 }}>
           <BrandGlow isDark={isDark} />
           <Animated.View
             style={{
-              width: 176,
-              height: 176,
+              width: 132,
+              height: 132,
               alignItems: 'center',
               justifyContent: 'center',
               transform: [{ scale: brandScale }],
@@ -874,7 +888,7 @@ export default function LoginScreen() {
           >
             <Image
               source={require('../../assets/brand/shoonaya-emblem-transparent.png')}
-              style={{ width: 164, height: 164 }}
+              style={{ width: 120, height: 120 }}
               resizeMode="contain"
               accessibilityLabel="Shoonaya"
             />
@@ -901,22 +915,8 @@ export default function LoginScreen() {
               marginTop: 6,
             }}
           >
-            Ancient wisdom. Daily practice. One dharmic home in your hand.
+            Find your infinite.
           </Text>
-          <View
-            style={{
-              marginTop: 10,
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: 8,
-              maxWidth: 340,
-            }}
-          >
-            <TrustChip icon="sunrise" label="Daily rhythm" isDark={isDark} />
-            <TrustChip icon="book-open" label="Sacred learning" isDark={isDark} />
-            <TrustChip icon="users" label="Mandali" isDark={isDark} />
-          </View>
         </View>
 
         <Animated.View
@@ -942,276 +942,117 @@ export default function LoginScreen() {
               boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
             }}
           >
-          <View style={{ gap: 15 }}>
-            <View style={{ alignItems: 'center', gap: 5 }}>
-              <Text
-                style={{
-                  ...TYPE.cardHeading,
-                  color: theme.text,
-                  textAlign: 'center',
-                }}
-              >
-                Begin your journey
-              </Text>
-              <Text
-                style={{
-                  ...TYPE.caption,
-                  color: theme.dim,
-                  textAlign: 'center',
-                }}
-              >
-                Sign in or create your account securely.
-              </Text>
-            </View>
-            <Text
-              style={{
-                fontFamily: FONTS.sansSemiBold,
-                fontSize: 11,
-                letterSpacing: 1.6,
-                color: theme.brand,
-                textAlign: 'center',
-                textTransform: 'uppercase',
-              }}
-            >
-              Choose how to enter
-            </Text>
+            {step === 'choose' ? (
+              <View style={{ gap: 14 }}>
+                <View style={{ alignItems: 'center', gap: 5 }}>
+                  <Text accessibilityRole="header" style={{ ...TYPE.cardHeading, color: theme.text, textAlign: 'center' }}>
+                    How would you like to continue?
+                  </Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim, textAlign: 'center' }}>
+                    Sign in or create your account securely.
+                  </Text>
+                </View>
 
-            <View style={{ gap: 10 }}>
-              <GoogleAuthButton
-                onPress={handleGoogle}
-                disabled={busy}
-                loading={activeAction === 'google'}
-                isDark={isDark}
-              />
+                <View style={{ gap: 10 }}>
+                  <GoogleAuthButton
+                    onPress={handleGoogle}
+                    disabled={busy}
+                    loading={activeAction === 'google'}
+                    isDark={isDark}
+                  />
 
-              {Platform.OS === 'ios' && appleAvailable ? (
-                <AppleAuthButton
-                  onPress={handleApple}
-                  disabled={busy}
-                  loading={activeAction === 'apple'}
-                  isDark={isDark}
-                />
-              ) : null}
-            </View>
-
-            <AuthDivider label="or use email" isDark={isDark} />
-
-            <View style={{ gap: 10 }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  borderBottomWidth: 1,
-                  borderBottomColor: theme.premiumBorder,
-                  marginBottom: 4,
-                }}
-              >
-                {(['signin', 'signup'] as const).map((mode) => {
-                  const active = authMode === mode;
-                  return (
-                    <PressableSurface
-                      key={mode}
-                      haptic="selection"
+                  {Platform.OS === 'ios' && appleAvailable ? (
+                    <AppleAuthButton
+                      onPress={handleApple}
                       disabled={busy}
-                      accessibilityRole="tab"
-                      accessibilityState={{ selected: active }}
-                      accessibilityLabel={mode === 'signin' ? 'Sign in' : 'Create account'}
-                      onPress={() => {
-                        setAuthMode(mode);
-                        setErrorMessage(null);
-                        setNoticeMessage(null);
-                      }}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderBottomWidth: active ? 2 : 0,
-                        borderBottomColor: active ? theme.brand : 'transparent',
-                        marginBottom: active ? -1 : 0,
-                      }}
+                      loading={activeAction === 'apple'}
+                      isDark={isDark}
+                    />
+                  ) : null}
+
+                  <AuthButton
+                    label="Continue with email"
+                    onPress={() => openEmailStep()}
+                    disabled={busy}
+                    tone="gold"
+                    icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
+                    isDark={isDark}
+                  />
+                </View>
+
+                <AuthDivider label="or" isDark={isDark} />
+
+                <View style={{ gap: 6, alignItems: 'center' }}>
+                  <PressableSurface
+                    haptic="selection"
+                    disabled={busy}
+                    onPress={handleAtithiMode}
+                    accessibilityLabel="Explore as a guest (Atithi)"
+                    style={{
+                      minHeight: 52,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: theme.brand,
+                      backgroundColor: 'transparent',
+                      paddingHorizontal: 14,
+                      alignSelf: 'stretch',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: busy ? 0.68 : 1,
+                    }}
+                  >
+                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 14.5, paddingRight: 2 }}>
+                      Explore as a guest (Atithi)
+                    </Text>
+                  </PressableSurface>
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, textAlign: 'center' }}>
+                    Look around without an account. Your progress won't be saved.
+                  </Text>
+                </View>
+
+                <View style={{ marginTop: 2, alignItems: 'center' }}>
+                  <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
+                    By continuing, you agree to the
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityRole="link"
+                      hitSlop={8}
+                      onPress={() => { void Linking.openURL(TERMS_URL); }}
+                      style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingHorizontal: 6 }}
                     >
-                      <Text
-                        style={{
-                          fontFamily: active ? FONTS.sansSemiBold : FONTS.sansMedium,
-                          fontSize: 13.5,
-                          color: active ? theme.brand : theme.dim,
-                          letterSpacing: 0.2,
-                        }}
-                      >
-                        {mode === 'signin' ? 'Sign in' : 'Create account'}
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sans, fontSize: 12.5, textDecorationLine: 'none' }}>
+                        Terms of Service
                       </Text>
                     </PressableSurface>
-                  );
-                })}
-              </View>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email address"
-                placeholderTextColor={theme.dim}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="emailAddress"
-                editable={!busy}
-                style={{
-                  minHeight: 50,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: theme.card,
-                  paddingHorizontal: 14,
-                  color: theme.text,
-                  fontFamily: FONTS.sans,
-                  fontSize: 14,
-                }}
-              />
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Password"
-                placeholderTextColor={theme.dim}
-                secureTextEntry
-                textContentType="password"
-                editable={!busy}
-                style={{
-                  minHeight: 50,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: theme.premiumBorder,
-                  backgroundColor: theme.card,
-                  paddingHorizontal: 14,
-                  color: theme.text,
-                  fontFamily: FONTS.sans,
-                  fontSize: 14,
-                }}
-              />
-              {authMode === 'signin' ? (
-                <PressableSurface
-                  haptic="selection"
-                  disabled={busy}
-                  onPress={handleForgotPassword}
-                  accessibilityLabel="Forgot password"
-                  style={{ alignSelf: 'flex-end', minHeight: 32, justifyContent: 'center' }}
-                >
-                  <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12.5, color: theme.brand }}>
-                    {activeAction === 'forgot-password' ? 'Sending reset link…' : 'Forgot password?'}
-                  </Text>
-                </PressableSurface>
-              ) : null}
-              <AuthButton
-                label={
-                  authMode === 'signin'
-                    ? (activeAction === 'signin' ? 'Signing in…' : 'Sign in')
-                    : (activeAction === 'signup' ? 'Creating account…' : 'Create account')
-                }
-                onPress={authMode === 'signin' ? handleSignIn : handleSignUp}
-                disabled={busy}
-                loading={activeAction === 'signin' || activeAction === 'signup'}
-                tone="gold"
-                icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
-                isDark={isDark}
-              />
-            </View>
+                    <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>and</Text>
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityRole="link"
+                      hitSlop={8}
+                      onPress={() => { void Linking.openURL(PRIVACY_URL); }}
+                      style={{ minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingHorizontal: 6 }}
+                    >
+                      <Text style={{ color: theme.brand, fontFamily: FONTS.sans, fontSize: 12.5, textDecorationLine: 'none' }}>
+                        Privacy Policy
+                      </Text>
+                    </PressableSurface>
+                  </View>
 
-            <AuthDivider label="or" isDark={isDark} />
-
-            <View style={{ gap: 6, alignItems: 'center' }}>
-              <PressableSurface
-                haptic="selection"
-                disabled={busy}
-                onPress={handleAtithiMode}
-                style={{
-                  minHeight: 52,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: theme.brand,
-                  backgroundColor: 'transparent',
-                  paddingHorizontal: 14,
-                  alignSelf: 'stretch',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: busy ? 0.68 : 1,
-                }}
-              >
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 14.5, paddingRight: 2 }}>
-                  Continue as Atithi
-                </Text>
-              </PressableSurface>
-              <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim, textAlign: 'center' }}>
-                Explore Shoonaya without saving progress.
-              </Text>
-            </View>
-
-            <View style={{ marginTop: 2, gap: 4 }}>
-              <Text
-                style={{
-                  color: theme.dim,
-                  fontFamily: FONTS.sans,
-                  fontSize: 12,
-                  textAlign: 'center',
-                }}
-              >
-                By continuing, you agree to
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityRole="link"
-                  hitSlop={8}
-                  onPress={() => { void Linking.openURL(TERMS_URL); }}
-                  style={{
-                    minHeight: MIN_TOUCH_TARGET,
-                    justifyContent: 'center',
-                    paddingHorizontal: 6,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: theme.brand,
-                      fontFamily: FONTS.sans,
-                      fontSize: 12.5,
-                      textDecorationLine: 'none',
-                    }}
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => setHelpOpen((open) => !open)}
+                    accessibilityRole="button"
+                    accessibilityLabel={helpOpen ? 'Hide help and contact options' : 'Show help and contact options'}
+                    accessibilityState={{ expanded: helpOpen }}
+                    style={{ minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   >
-                    Terms of Service
-                  </Text>
-                </PressableSurface>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }}>
-                  &
-                </Text>
-                <PressableSurface
-                  haptic="selection"
-                  accessibilityRole="link"
-                  hitSlop={8}
-                  onPress={() => { void Linking.openURL(PRIVACY_URL); }}
-                  style={{
-                    minHeight: MIN_TOUCH_TARGET,
-                    justifyContent: 'center',
-                    paddingHorizontal: 6,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: theme.brand,
-                      fontFamily: FONTS.sans,
-                      fontSize: 12.5,
-                      textDecorationLine: 'none',
-                    }}
-                  >
-                    Privacy Policy
-                  </Text>
-                </PressableSurface>
-              </View>
+                    <Feather name="help-circle" size={15} color={theme.brand} />
+                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 13 }}>Need help?</Text>
+                  </PressableSurface>
 
-              {/* ── Social Links ── */}
+                  {helpOpen ? (
               <View
                 style={{
                   flexDirection: 'row',
@@ -1297,7 +1138,8 @@ export default function LoginScreen() {
                   <Feather name="globe" size={16} color={theme.dim} />
                 </PressableSurface>
               </View>
-            </View>
+                  ) : null}
+                </View>
 
             {errorMessage ? (
               <View
@@ -1358,7 +1200,251 @@ export default function LoginScreen() {
                 </Text>
               </View>
             ) : null}
-          </View>
+              </View>
+            ) : (
+              <View style={{ gap: 12 }}>
+                <PressableSurface
+                  haptic="selection"
+                  disabled={busy}
+                  onPress={() => closeEmailStep()}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back to sign-in options"
+                  style={{ alignSelf: 'flex-start', minHeight: MIN_TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 12 }}
+                >
+                  <Feather name="chevron-left" size={20} color={theme.brand} />
+                  <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 14 }}>Back</Text>
+                </PressableSurface>
+
+                <Text accessibilityRole="header" style={{ ...TYPE.cardHeading, color: theme.text }}>
+                  Continue with email
+                </Text>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.premiumBorder,
+                    marginBottom: 4,
+                  }}
+                >
+                  {(['signin', 'signup'] as const).map((mode) => {
+                    const active = authMode === mode;
+                    return (
+                      <PressableSurface
+                        key={mode}
+                        haptic="selection"
+                        disabled={busy}
+                        accessibilityRole="tab"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={mode === 'signin' ? 'Sign in' : 'Create account'}
+                        onPress={() => {
+                          setAuthMode(mode);
+                          setErrorMessage(null);
+                          setNoticeMessage(null);
+                        }}
+                        style={{
+                          flex: 1,
+                          minHeight: MIN_TOUCH_TARGET,
+                          paddingVertical: 10,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderBottomWidth: active ? 2 : 0,
+                          borderBottomColor: active ? theme.brand : 'transparent',
+                          marginBottom: active ? -1 : 0,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: active ? FONTS.sansSemiBold : FONTS.sansMedium,
+                            fontSize: 13.5,
+                            color: active ? theme.brand : theme.dim,
+                            letterSpacing: 0.2,
+                          }}
+                        >
+                          {mode === 'signin' ? 'Sign in' : 'Create account'}
+                        </Text>
+                      </PressableSurface>
+                    );
+                  })}
+                </View>
+
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Email address"
+                  placeholderTextColor={theme.dim}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="emailAddress"
+                  accessibilityLabel="Email address"
+                  editable={!busy}
+                  style={{
+                    minHeight: 50,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: theme.card,
+                    paddingHorizontal: 14,
+                    color: theme.text,
+                    fontFamily: FONTS.sans,
+                    fontSize: 14,
+                  }}
+                />
+                <View>
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Password"
+                    placeholderTextColor={theme.dim}
+                    secureTextEntry={!showPassword}
+                    textContentType="password"
+                    accessibilityLabel="Password"
+                    editable={!busy}
+                    style={{
+                      minHeight: 50,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: theme.premiumBorder,
+                      backgroundColor: theme.card,
+                      paddingLeft: 14,
+                      paddingRight: MIN_TOUCH_TARGET + 12,
+                      color: theme.text,
+                      fontFamily: FONTS.sans,
+                      fontSize: 14,
+                    }}
+                  />
+                  <PressableSurface
+                    haptic="selection"
+                    onPress={() => setShowPassword((visible) => !visible)}
+                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: 4,
+                      top: 0,
+                      bottom: 0,
+                      width: MIN_TOUCH_TARGET + 4,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: 0,
+                    }}
+                  >
+                    <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={theme.dim} />
+                  </PressableSurface>
+                </View>
+
+                {authMode === 'signin' ? (
+                  <PressableSurface
+                    haptic="selection"
+                    disabled={busy}
+                    onPress={handleForgotPassword}
+                    accessibilityLabel="Forgot password"
+                    style={{ alignSelf: 'flex-end', minHeight: MIN_TOUCH_TARGET, justifyContent: 'center' }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12.5, color: theme.brand }}>
+                      {activeAction === 'forgot-password' ? 'Sending reset link…' : 'Forgot password?'}
+                    </Text>
+                  </PressableSurface>
+                ) : (
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
+                    Use at least {MIN_PASSWORD_LENGTH} characters.
+                  </Text>
+                )}
+
+                <AuthButton
+                  label={
+                    authMode === 'signin'
+                      ? (activeAction === 'signin' ? 'Signing in…' : 'Sign in')
+                      : (activeAction === 'signup' ? 'Creating account…' : 'Create account')
+                  }
+                  onPress={authMode === 'signin' ? handleSignIn : handleSignUp}
+                  disabled={busy}
+                  loading={activeAction === 'signin' || activeAction === 'signup'}
+                  tone="gold"
+                  icon={<Feather name="mail" size={16} color={COLORS.cardBgLight} />}
+                  isDark={isDark}
+                />
+
+                <PressableSurface
+                  haptic="selection"
+                  disabled={busy}
+                  onPress={() => {
+                    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+                    setErrorMessage(null);
+                    setNoticeMessage(null);
+                  }}
+                  accessibilityRole="button"
+                  style={{ alignSelf: 'center', minHeight: MIN_TOUCH_TARGET, paddingHorizontal: 12, justifyContent: 'center' }}
+                >
+                  <Text style={{ fontFamily: FONTS.sans, fontSize: 13.5, color: theme.dim, textAlign: 'center' }}>
+                    {authMode === 'signin' ? 'New to Shoonaya? ' : 'Already have an account? '}
+                    <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold }}>
+                      {authMode === 'signin' ? 'Create an account' : 'Sign in'}
+                    </Text>
+                  </Text>
+                </PressableSurface>
+
+            {errorMessage ? (
+              <View
+                accessible
+                accessibilityRole="alert"
+                style={{
+                  marginTop: 2,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: COLORS.dangerBorder,
+                  backgroundColor: COLORS.dangerBg,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Feather name="alert-circle" size={15} color={COLORS.danger} />
+                <Text
+                  style={{
+                    flex: 1,
+                    color: COLORS.danger,
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                  }}
+                >
+                  {errorMessage}
+                </Text>
+              </View>
+            ) : null}
+            {noticeMessage ? (
+              <View
+                accessible
+                style={{
+                  marginTop: 2,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: COLORS.successBorder,
+                  backgroundColor: COLORS.successBg,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Feather name="check-circle" size={15} color={COLORS.success} />
+                <Text
+                  style={{
+                    flex: 1,
+                    color: COLORS.success,
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                  }}
+                >
+                  {noticeMessage}
+                </Text>
+              </View>
+            ) : null}
+              </View>
+            )}
           </Card>
         </Animated.View>
       </ScrollView>
