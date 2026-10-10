@@ -671,21 +671,21 @@ export default function VratDetailScreen() {
     </>
   );
   const significanceCard = (
-    <Card style={{ padding: 16, marginBottom: 16 }}>
+    <View style={{ paddingVertical: 12, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.significance}</Text>
-      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedSignificance}</Text>
-    </Card>
+      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedSignificance}</Text>
+    </View>
   );
   const practiceCard = (
-    <Card style={{ padding: 16, marginBottom: 16 }}>
-      <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.practiceRules}</Text>
-      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{selectedPractice}</Text>
+    <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+      <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 10 }}>{copy.practiceRules}</Text>
+      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedPractice}</Text>
 
       {selectedFastingType ? (
-        <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.fastType}</Text>
-          <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: theme.brand, textTransform: 'capitalize' }}>
+        <View style={{ marginTop: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>{copy.fastType}</Text>
+          <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADII.pill, borderWidth: 1, borderColor: theme.borderSoft }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand, textTransform: 'capitalize' }}>
               {selectedFastingType}
             </Text>
           </View>
@@ -693,62 +693,62 @@ export default function VratDetailScreen() {
       ) : null}
 
       {selectedBreakFastTime ? (
-        <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.text }}>{copy.parana}</Text>
-          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>{selectedBreakFastTime}</Text>
+        <View style={{ marginTop: 12, gap: 4 }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>{copy.parana}</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text, lineHeight: 20 }}>{selectedBreakFastTime}</Text>
         </View>
       ) : null}
-    </Card>
+    </View>
   );
   const dosCard = (
     <>
     {selectedDos && selectedDos.length > 0 ? (
-      <Card style={{ padding: 16, marginBottom: 16 }}>
-        <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 8 }}>{copy.dos}</Text>
+      <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+        <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 10 }}>{copy.dos}</Text>
         {selectedDos.map((item, idx) => (
-          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-            <Feather name="check" size={14} color={COLORS.success} style={{ marginTop: 3 }} />
-            <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
+          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+            <Feather name="check" size={16} color={COLORS.success} style={{ marginTop: 2 }} />
+            <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 14 * fsScale, lineHeight: 22 * fsScale }}>{item}</Text>
           </View>
         ))}
-      </Card>
+      </View>
     ) : null}
     </>
   );
   const dontsCard = (
     <>
     {selectedDonts && selectedDonts.length > 0 ? (
-      <Card style={{ padding: 16, marginBottom: 16 }}>
-        <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 8 }}>{copy.donts}</Text>
+      <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+        <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 10 }}>{copy.donts}</Text>
         {selectedDonts.map((item, idx) => (
-          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-            <Feather name="x" size={14} color={COLORS.danger} style={{ marginTop: 3 }} />
-            <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 13 * fsScale, lineHeight: TYPE.body.lineHeight * fsScale }}>{item}</Text>
+          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+            <Feather name="x" size={16} color={COLORS.danger} style={{ marginTop: 2 }} />
+            <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 14 * fsScale, lineHeight: 22 * fsScale }}>{item}</Text>
           </View>
         ))}
-      </Card>
+      </View>
     ) : null}
     </>
   );
   const mantraCard = (
-    <Card style={{ padding: 16, marginBottom: 16, backgroundColor: theme.brandSoft, borderColor: theme.brand }}>
+    <View style={{ padding: 18, marginBottom: 16, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.borderSoft }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.mantra}</Text>
-      <Text style={{ fontFamily: FONTS.serif, fontSize: 16 * fsScale, lineHeight: 24 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
+      <Text style={{ fontFamily: FONTS.serif, fontSize: 18 * fsScale, lineHeight: 26 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
         {selectedMantra}
       </Text>
-    </Card>
+    </View>
   );
   const kathaCard = linkedKatha && linkedKathaBody.length > 0 ? (
-    <Card style={{ padding: 16, marginBottom: 16 }}>
+    <View style={{ paddingVertical: 12, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.katha}</Text>
-      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 20 * fsScale, lineHeight: 26 * fsScale, color: theme.text }}>{linkedKathaTitle}</Text>
+      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22 * fsScale, lineHeight: 28 * fsScale, color: theme.text }}>{linkedKathaTitle}</Text>
       {linkedKathaBody.map((paragraph, idx) => (
-        <Text key={idx} style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale, marginTop: 12 }}>
+        <Text key={idx} style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale, marginTop: 12 }}>
           {paragraph}
         </Text>
       ))}
       {linkedKathaPhal ? (
-        <View style={{ marginTop: 16, padding: 12, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.border }}>
+        <View style={{ marginTop: 16, padding: 14, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.borderSoft }}>
           <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 4 }}>{copy.phal}</Text>
           <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 22 * fsScale }}>{linkedKathaPhal}</Text>
         </View>
@@ -757,12 +757,12 @@ export default function VratDetailScreen() {
         haptic="selection"
         onPress={() => router.push({ pathname: '/bhakti/katha/[id]', params: { id: linkedKatha.id } })}
         accessibilityRole="button"
-        style={{ marginTop: 14, minHeight: 44, paddingHorizontal: 14, borderRadius: RADII.pill, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.brandSoft }}
+        style={{ marginTop: 14, minHeight: 44, paddingHorizontal: 16, borderRadius: RADII.pill, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.brandSoft }}
       >
         <Feather name="book-open" size={14} color={theme.brand} />
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>{copy.openKatha}</Text>
       </PressableSurface>
-    </Card>
+    </View>
   ) : null;
   const chapterSection: Record<VratChapterKey, ReactNode> = {
     significance: significanceCard,

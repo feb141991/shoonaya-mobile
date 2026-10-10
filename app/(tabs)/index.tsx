@@ -77,7 +77,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { lookupVratData } from '@/lib/vrat-data';
 import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate, getMoodTimeZone } from '@/lib/moodPulsePreference';
-import { readMoodStatusCache, writeMoodStatusCache } from '@/lib/moodStatusCache';
+import { readMoodStatusCache } from '@/lib/moodStatusCache';
 import { isMoodStatusOwnedBy, shouldShowMoodPulse } from '@/lib/moodPulsePolicy';
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -1457,7 +1457,6 @@ function HomeContent() {
               setMoodStatus(live.moodStatus);
               setMoodStatusOwnerId(userId);
               setMoodStatusVerified(true);
-              void writeMoodStatusCache({ kind: 'authenticated', userId }, live.moodStatus);
             }
           });
         });
@@ -1578,7 +1577,6 @@ function HomeContent() {
             setMoodStatus(live.moodStatus);
             setMoodStatusOwnerId(userId);
             setMoodStatusVerified(true);
-            void writeMoodStatusCache({ kind: 'authenticated', userId }, live.moodStatus);
           } else if (!isSettled) {
             setMoodStatusVerified(false);
           }
@@ -2820,29 +2818,13 @@ function HomeContent() {
         onClose={() => setMoodPulseVisible(false)}
         onLogged={(mood) => {
           const spiritualDate = getMoodSpiritualDate();
-          if (moodPulseUserId) {
-            setMoodStatusOwnerId(moodPulseUserId);
-            void writeMoodStatusCache({ kind: 'authenticated', userId: moodPulseUserId }, {
-              hasLoggedMoodToday: true,
-              lastMood: mood,
-              hasDismissedToday: false,
-              spiritualDate,
-            });
-          }
+          if (moodPulseUserId) setMoodStatusOwnerId(moodPulseUserId);
           setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood, hasDismissedToday: false, spiritualDate });
           setMoodStatusVerified(true);
         }}
         onDismissed={() => {
           const spiritualDate = getMoodSpiritualDate();
-          if (moodPulseUserId) {
-            setMoodStatusOwnerId(moodPulseUserId);
-            void writeMoodStatusCache({ kind: 'authenticated', userId: moodPulseUserId }, {
-              hasLoggedMoodToday: moodStatus?.hasLoggedMoodToday ?? false,
-              lastMood: moodStatus?.lastMood ?? null,
-              hasDismissedToday: true,
-              spiritualDate,
-            });
-          }
+          if (moodPulseUserId) setMoodStatusOwnerId(moodPulseUserId);
           setMoodStatus((current) => ({
             hasLoggedMoodToday: current?.hasLoggedMoodToday ?? false,
             lastMood: current?.lastMood ?? null,

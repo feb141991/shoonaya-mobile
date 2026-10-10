@@ -32,8 +32,6 @@ import {
   hasDedicatedSceneArtwork,
 } from "@/lib/panchatantraArtwork";
 
-import { QuoteCardSheet } from "@/components/share/QuoteCardSheet";
-import { type ShoonayaQuoteCardData } from "@/components/share/ShoonayaShareCard";
 
 export interface StorybookKathaData {
   id: string;
@@ -179,25 +177,13 @@ export function PanchatantraStorybookView({
   const totalPages = bodyParagraphs.length;
   const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
 
-  // State for Option 1: Niti Treasury & Quote Share Card
+  // Local Niti Treasury state. Moral sharing stays withheld until the story
+  // carries a verified, edition-level source for the exact wording shown.
   const [savedToTreasury, setSavedToTreasury] = useState(false);
-  const [quoteSheetVisible, setQuoteSheetVisible] = useState(false);
 
   const handleSaveNitiTreasury = () => {
     if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setSavedToTreasury((prev) => !prev);
-  };
-
-  const handleShareQuote = () => {
-    if (Platform.OS !== "web") void Haptics.selectionAsync();
-    setQuoteSheetVisible(true);
-  };
-
-  const quoteCardData: ShoonayaQuoteCardData = {
-    text: moralText,
-    attribution: `Panchatantra · ${title}`,
-    tradition: "universal",
-    source: "Ancient Niti Shastra",
   };
 
   // Keep page alignment if language changes
@@ -705,21 +691,8 @@ export function PanchatantraStorybookView({
                         {paragraph}
                       </Text>
 
-                      {/* Meaningful Wisdom Actions (Option 1: Niti Treasury, Share Wisdom Card, Finish Reading) */}
+                      {/* Meaningful Wisdom Actions: Niti Treasury and Finish Reading */}
                       <View style={styles.wisdomActionsContainer}>
-                        <PressableSurface
-                          haptic="impact"
-                          onPress={handleShareQuote}
-                          style={styles.wisdomActionPrimaryBtnWrap}
-                        >
-                          <View style={[styles.wisdomActionPrimaryBtn, { backgroundColor: accent }]}>
-                            <Feather name="share-2" size={17} color="#FFFFFF" />
-                            <Text style={[styles.wisdomActionPrimaryText, { fontFamily: FONTS.sansSemiBold }]}>
-                              {localizedLabel(activeLanguage, 'Share Wisdom Card', 'नीति सूक्ति साझा करें', 'ਨੀਤੀ ਵਿਚਾਰ ਸਾਂਝਾ ਕਰੋ')}
-                            </Text>
-                          </View>
-                        </PressableSurface>
-
                         <View style={styles.wisdomActionsRow}>
                           <PressableSurface
                             haptic="selection"
@@ -950,13 +923,6 @@ export function PanchatantraStorybookView({
         </View>
       ) : null}
 
-      {/* Quote Card Share Sheet Modal */}
-      <QuoteCardSheet
-        visible={quoteSheetVisible}
-        onClose={() => setQuoteSheetVisible(false)}
-        data={quoteCardData}
-        fileName={`panchatantra-quote-${katha.id}`}
-      />
     </View>
   );
 }
@@ -1281,22 +1247,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 10,
     paddingHorizontal: 6,
-  },
-  wisdomActionPrimaryBtnWrap: {
-    borderRadius: RADII.pill,
-  },
-  wisdomActionPrimaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: RADII.pill,
-  },
-  wisdomActionPrimaryText: {
-    color: "#FFFFFF",
-    fontSize: 13.5,
   },
   wisdomActionsRow: {
     flexDirection: "row",
