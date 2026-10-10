@@ -15,6 +15,8 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
+import { KundaliPredictions } from '@/components/kundali/KundaliPredictions';
+import { NotebookKundaliSummary } from '@/components/kundali/NotebookKundaliSummary';
 import { BirthPanchangCard } from '@/components/kundali/BirthPanchangCard';
 import { DashaTimeline } from '@/components/kundali/DashaTimeline';
 import { KundaliIdentity } from '@/components/kundali/KundaliIdentity';
@@ -28,12 +30,13 @@ import {
   buildPrivacySafeShareSummary,
   validateBirthProfileDetail,
 } from '@/lib/kundali-contract';
+import { KundaliDetailTab, resolveKundaliDetailTab } from '@/lib/kundali-detail-tabs';
 
-type DetailTab = 'chart' | 'identity' | 'panchang' | 'planets' | 'dasha';
 type TextScale = 'sm' | 'md' | 'lg';
 
-const TAB_CONFIG: Array<{ key: DetailTab; label: string; icon: keyof typeof Feather.glyphMap }> = [
+const TAB_CONFIG: Array<{ key: KundaliDetailTab; label: string; icon: keyof typeof Feather.glyphMap }> = [
   { key: 'chart', label: 'Chart', icon: 'grid' },
+  { key: 'predictions', label: 'Predictions', icon: 'book-open' },
   { key: 'identity', label: 'Identity', icon: 'user' },
   { key: 'panchang', label: 'Panchang', icon: 'calendar' },
   { key: 'planets', label: 'Planets', icon: 'sun' },
@@ -43,19 +46,15 @@ const TAB_CONFIG: Array<{ key: DetailTab; label: string; icon: keyof typeof Feat
 export default function KundaliDetailScreen() {
   const router = useRouter();
   const handleBack = useFallbackBackHandler('/kundali', true);
-  const { id, tab } = useLocalSearchParams<{ id: string; tab?: DetailTab }>();
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: KundaliDetailTab }>();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
 
-  const [activeTab, setActiveTab] = useState<DetailTab>(
-    tab === 'identity' || tab === 'panchang' || tab === 'planets' || tab === 'dasha' ? tab : 'chart'
-  );
+  const [activeTab, setActiveTab] = useState<KundaliDetailTab>(() => resolveKundaliDetailTab(tab));
 
   useEffect(() => {
-    if (tab === 'identity' || tab === 'panchang' || tab === 'planets' || tab === 'dasha' || tab === 'chart') {
-      setActiveTab(tab);
-    }
+    setActiveTab(resolveKundaliDetailTab(tab));
   }, [tab]);
   const [textScale, setTextScale] = useState<TextScale>('md');
   const [profile, setProfile] = useState<BirthProfileDetail | null>(null);
@@ -223,7 +222,11 @@ export default function KundaliDetailScreen() {
           />
 
           {/* Segmented Detail Tabs */}
-          <View style={[styles.tabsContainer, { backgroundColor: theme.card, borderColor: theme.premiumBorder }]}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.tabsContainer, { backgroundColor: theme.card, borderColor: theme.premiumBorder }]}
+          >
             {TAB_CONFIG.map((t) => {
               const isActive = activeTab === t.key;
               return (
@@ -237,8 +240,8 @@ export default function KundaliDetailScreen() {
                   style={[
                     styles.tabButton,
                     isActive
-                      ? { backgroundColor: theme.brand, borderColor: 'transparent' }
-                      : { backgroundColor: 'transparent', borderColor: 'transparent' },
+                      ? { backgroundColor: theme.brand, borderColor: theme.brand }
+                      : { backgroundColor: theme.card, borderColor: theme.card },
                   ]}
                 >
                   <Feather
@@ -257,12 +260,19 @@ export default function KundaliDetailScreen() {
                 </PressableSurface>
               );
             })}
-          </View>
+          </ScrollView>
 
           {/* Tab Content Panes */}
           <View style={styles.tabContentPane}>
             {activeTab === 'chart' && (
-              <VedicDiamondChart chart={profile.chart_data} isDark={isDark} />
+              <>
+                <NotebookKundaliSummary profile={profile} isDark={isDark} textScaleMultiplier={scaleMultiplier} />
+                <VedicDiamondChart chart={profile.chart_data} isDark={isDark} />
+              </>
+            )}
+
+            {activeTab === 'predictions' && (
+              <KundaliPredictions profile={profile} isDark={isDark} textScaleMultiplier={scaleMultiplier} />
             )}
 
             {activeTab === 'identity' && (
@@ -298,8 +308,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerBtn: {
-    width: 38,
-    height: 38,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
     borderRadius: 13,
     borderWidth: 1,
     alignItems: 'center',
@@ -376,9 +386,9 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   tabButton: {
-    flex: 1,
-    minHeight: 36,
-    paddingHorizontal: 2,
+    minWidth: 94,
+    minHeight: MIN_TOUCH_TARGET,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
