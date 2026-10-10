@@ -17,6 +17,20 @@ export type Step =
   | 'ready';
 
 export type NotificationChoice = 'enabled' | 'disabled' | 'unset';
+export type PermissionRecoveryAction = 'request' | 'retry' | 'settings';
+
+/**
+ * Keep an OS permission denial distinct from a user deferral. Once the OS
+ * stops offering its prompt, recovery must link to Settings instead of retrying
+ * a prompt that can no longer appear.
+ */
+export function getPermissionRecoveryAction(
+  wasDenied: boolean,
+  canAskAgain: boolean
+): PermissionRecoveryAction {
+  if (!wasDenied) return 'request';
+  return canAskAgain ? 'retry' : 'settings';
+}
 
 export type OnboardingLocation = {
   latitude: number;
@@ -84,8 +98,8 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
     };
   }
   // For Sikh, Jain, and Universal/None seekers, no single prescribed ritual practice is forced.
-  // Returning null tells the Ready screen to cleanly omit the primary practice button
-  // and offer 'Explore Shoonaya' as the single, clear entry point.
+  // Returning null omits the optional first-practice recommendation; Welcome still
+  // provides the same explicit Enter Shoonaya action for every tradition.
   return null;
 }
 

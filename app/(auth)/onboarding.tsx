@@ -1,25 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import {
+  AppState,
+  Linking,
   ActivityIndicator,
   Pressable,
-  ScrollView,
   Share,
   Text,
   TextInput,
   useColorScheme,
   View,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { useRouter, type Href } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { OnboardingShell } from '@/components/onboarding/OnboardingShell';
+import { NakshatraPicker } from '@/components/onboarding/NakshatraPicker';
+import { OnboardingWelcomeScreen } from '@/components/onboarding/OnboardingWelcomeScreen';
 import { FounderNoteInterlude } from '@/components/onboarding/FounderNoteInterlude';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
-import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
-import { SectionHeader } from '@/components/ui/SectionHeader';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
@@ -27,7 +30,12 @@ import { isFetchCancelled } from '@/lib/fetch-error';
 import { supabase } from '@/lib/supabase';
 import { getAppIdentity } from '@/lib/appIdentity';
 import { identityChanged } from '@/lib/routeOpenAttribution';
-import { requestNotificationPermission, checkNotificationPermission, registerPushToken } from '@/lib/notifications';
+import {
+  requestNotificationPermission,
+  checkNotificationPermission,
+  getNotificationPermissionDetails,
+  registerPushToken,
+} from '@/lib/notifications';
 import { captureDeviceLocation } from '@/lib/locationSync';
 import {
   type Step,
@@ -36,6 +44,7 @@ import {
   buildSteps,
   getActiveSteps,
   stepEyebrow,
+  getPermissionRecoveryAction,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
   computeContentNotificationOptIn,
@@ -164,42 +173,6 @@ const CALENDAR_SCOPE_HI: Record<CalendarScopeSlug, { label: string; description:
   },
 };
 
-const READY_COPY: Record<TraditionKey, { heading: string; body: string; bodyHi: string }> = {
-  hindu: { heading: '🪔 Hari Om', body: 'Your sadhana path is ready. Begin with Japa.', bodyHi: 'आपका साधना मार्ग तैयार है। जप से शुरू करें।' },
-  sikh: { heading: '☬ Waheguru Ji', body: 'Your nitnem awaits. Begin your practice.', bodyHi: 'आपका नितनेम तैयार है। अपना अभ्यास शुरू करें।' },
-  buddhist: { heading: '☸️ Namo Buddhaya', body: 'Your meditation path is ready.', bodyHi: 'आपका ध्यान मार्ग तैयार है।' },
-  jain: { heading: '🙏 Jai Jinendra', body: 'Your samayika path begins now.', bodyHi: 'आपका सामायिक मार्ग अब प्रारंभ होता है।' },
-  none: { heading: '✨ Welcome Seeker', body: 'Your mindful journey begins now. Explore universal wisdom.', bodyHi: 'आपकी ध्यान यात्रा प्रारंभ होती है। सार्वभौमिक ज्ञान की खोज करें।' },
-};
-
-const READY_FEATURES: Record<TraditionKey, ReadonlyArray<{ emoji: string; label: string; labelHi: string; description: string; descriptionHi: string }>> = {
-  hindu: [
-    { emoji: '📿', label: 'Daily Japa', labelHi: 'दैनिक जप', description: 'Mantra & mala', descriptionHi: 'मंत्र और माला' },
-    { emoji: '📅', label: 'Panchang', labelHi: 'पंचांग', description: 'Tithi & muhurta', descriptionHi: 'तिथि और मुहूर्त' },
-    { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Your sangat', descriptionHi: 'आपकी संगत' },
-  ],
-  sikh: [
-    { emoji: '📖', label: 'Nitnem', labelHi: 'नितनेम', description: 'Daily bani', descriptionHi: 'दैनिक बाणी' },
-    { emoji: '☬', label: 'Gurbani', labelHi: 'गुरबाणी', description: 'Read & reflect', descriptionHi: 'पढ़ें और चिंतन करें' },
-    { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Your sangat', descriptionHi: 'आपकी संगत' },
-  ],
-  buddhist: [
-    { emoji: '🧘', label: 'Meditation', labelHi: 'ध्यान', description: 'Daily stillness', descriptionHi: 'दैनिक स्थिरता' },
-    { emoji: '📖', label: 'Sutras', labelHi: 'सूत्र', description: 'Read & reflect', descriptionHi: 'पढ़ें और चिंतन करें' },
-    { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Your sangha', descriptionHi: 'आपका संघ' },
-  ],
-  jain: [
-    { emoji: '🧘', label: 'Samayika', labelHi: 'सामायिक', description: 'Daily equanimity', descriptionHi: 'दैनिक समता' },
-    { emoji: '📖', label: 'Agamas', labelHi: 'आगम', description: 'Read & reflect', descriptionHi: 'पढ़ें और चिंतन करें' },
-    { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Your community', descriptionHi: 'आपका समुदाय' },
-  ],
-  none: [
-    { emoji: '🧘', label: 'Meditation & Stillness', labelHi: 'ध्यान और शांति', description: 'Daily inner calm', descriptionHi: 'दैनिक आंतरिक शांति' },
-    { emoji: '✨', label: 'Universal Wisdom', labelHi: 'सार्वभौमिक ज्ञान', description: 'Timeless reflections', descriptionHi: 'कालातीत चिंतन' },
-    { emoji: '👥', label: 'Mandali', labelHi: 'मंडली', description: 'Open community', descriptionHi: 'खुला समुदाय' },
-  ],
-};
-
 const STEP_TITLES: Record<Step, string> = {
   preferences: 'Make Shoonaya yours',
   personal: 'Personal details',
@@ -281,9 +254,11 @@ export default function OnboardingScreen() {
   const [name, setName] = useState('');
   const [notificationChoice, setNotificationChoice] = useState<NotificationChoice>('unset');
   const [notificationsDenied, setNotificationsDenied] = useState(false);
+  const [notificationsCanAskAgain, setNotificationsCanAskAgain] = useState(true);
   const [requestingNotifications, setRequestingNotifications] = useState(false);
   const [locationChoice, setLocationChoice] = useState<NotificationChoice>('unset');
   const [locationDenied, setLocationDenied] = useState(false);
+  const [locationCanAskAgain, setLocationCanAskAgain] = useState(true);
   const [requestingLocation, setRequestingLocation] = useState(false);
   // Captured coordinates live only in memory, never in the persisted draft
   // (see onboardingDraft.ts's privacy invariants) -- if the app is killed
@@ -297,6 +272,9 @@ export default function OnboardingScreen() {
   const [saving, setSaving] = useState(false);
 
   const userIdRef = useRef<string | null>(null);
+  const settingsReturnTargetRef = useRef<'notifications' | 'location' | null>(null);
+  const goToStepRef = useRef<((nextStep: Step, overrides?: Partial<OnboardingDraftData>) => void) | undefined>(undefined);
+  const handleAllowLocationRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   const getCachedUserId = async (): Promise<string | null> => {
     if (userIdRef.current) return userIdRef.current;
@@ -317,7 +295,6 @@ export default function OnboardingScreen() {
   const stepIndex = STEPS.indexOf(step);
   const age = ageFromDob(dateOfBirth);
   const suggestedStage = suggestedLifeStage(dateOfBirth);
-  const readyCopy = tradition ? READY_COPY[tradition] : READY_COPY.hindu;
   const accent = tradition ? TRADITION_ACCENT[tradition] : COLORS.brandGold;
   const traditionLabel = TRADITIONS.find((t) => t.key === tradition)?.label ?? 'spiritual';
   const stepTitle = language === 'hi' ? STEP_TITLES_HI[step] : STEP_TITLES[step];
@@ -353,14 +330,24 @@ export default function OnboardingScreen() {
           if (draft.notificationChoice) {
             setNotificationChoice(draft.notificationChoice);
           }
-          if (draft.deniedNotificationPromptShown) {
-            setNotificationsDenied(true);
+          if (draft.notificationChoice === 'enabled' || draft.deniedNotificationPromptShown) {
+            const permission = await getNotificationPermissionDetails();
+            if (isMounted) {
+              setNotificationsCanAskAgain(permission.canAskAgain);
+              setNotificationsDenied(!permission.granted);
+            }
           }
           if (draft.locationChoice) {
             setLocationChoice(draft.locationChoice);
           }
           if (draft.deniedLocationPromptShown) {
             setLocationDenied(true);
+            try {
+              const permission = await Location.getForegroundPermissionsAsync();
+              if (isMounted) setLocationCanAskAgain(permission.canAskAgain);
+            } catch {
+              if (isMounted) setLocationCanAskAgain(false);
+            }
           }
           if (draft.step) setStep(draft.step);
         }
@@ -451,6 +438,7 @@ export default function OnboardingScreen() {
     setStep(nextStep);
     void syncDraft(nextStep, overrides);
   };
+  goToStepRef.current = goToStep;
 
   const goNext = () => {
     if (step === 'preferences') {
@@ -558,23 +546,30 @@ export default function OnboardingScreen() {
     setRequestingNotifications(true);
     try {
       const granted = await requestNotificationPermission();
+      const permission = await getNotificationPermissionDetails();
+      setNotificationsCanAskAgain(permission.canAskAgain);
       if (granted) {
         setNotificationChoice('enabled');
         setNotificationsDenied(false);
-        goToStep('location', { notificationChoice: 'enabled' });
+        goToStep('location', { notificationChoice: 'enabled', deniedNotificationPromptShown: false });
       } else {
-        setNotificationChoice('disabled');
+        // The user explicitly opted into reminders in-app. OS permission is a
+        // separate delivery gate; keep that choice while offering Settings or
+        // a clear opt-out through Not now.
+        setNotificationChoice('enabled');
         setNotificationsDenied(true);
         void syncDraft('notifications', {
-          notificationChoice: 'disabled',
+          notificationChoice: 'enabled',
           deniedNotificationPromptShown: true,
         });
       }
     } catch {
-      setNotificationChoice('disabled');
+      setNotificationChoice('enabled');
       setNotificationsDenied(true);
+      const permission = await getNotificationPermissionDetails();
+      setNotificationsCanAskAgain(permission.canAskAgain);
       void syncDraft('notifications', {
-        notificationChoice: 'disabled',
+        notificationChoice: 'enabled',
         deniedNotificationPromptShown: true,
       });
     } finally {
@@ -586,7 +581,7 @@ export default function OnboardingScreen() {
     if (requestingNotifications || saving) return;
     setNotificationChoice('disabled');
     setNotificationsDenied(false);
-    goToStep('location', { notificationChoice: 'disabled' });
+    goToStep('location', { notificationChoice: 'disabled', deniedNotificationPromptShown: false });
   };
 
   const handleAllowLocation = async () => {
@@ -598,8 +593,14 @@ export default function OnboardingScreen() {
         setCapturedLocation(result.location);
         setLocationChoice('enabled');
         setLocationDenied(false);
-        goToStep('ready', { locationChoice: 'enabled' });
+        goToStep('ready', { locationChoice: 'enabled', deniedLocationPromptShown: false });
       } else {
+        try {
+          const permission = await Location.getForegroundPermissionsAsync();
+          setLocationCanAskAgain(permission.canAskAgain);
+        } catch {
+          setLocationCanAskAgain(false);
+        }
         setLocationChoice('disabled');
         setLocationDenied(true);
         void syncDraft('location', {
@@ -608,6 +609,12 @@ export default function OnboardingScreen() {
         });
       }
     } catch {
+      try {
+        const permission = await Location.getForegroundPermissionsAsync();
+        setLocationCanAskAgain(permission.canAskAgain);
+      } catch {
+        setLocationCanAskAgain(false);
+      }
       setLocationChoice('disabled');
       setLocationDenied(true);
       void syncDraft('location', {
@@ -618,12 +625,44 @@ export default function OnboardingScreen() {
       setRequestingLocation(false);
     }
   };
+  handleAllowLocationRef.current = handleAllowLocation;
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const target = settingsReturnTargetRef.current;
+      settingsReturnTargetRef.current = null;
+      if (target === 'notifications') {
+        void getNotificationPermissionDetails().then((permission) => {
+          setNotificationsCanAskAgain(permission.canAskAgain);
+          if (permission.granted) {
+            setNotificationChoice('enabled');
+            setNotificationsDenied(false);
+            goToStepRef.current?.('location', { notificationChoice: 'enabled', deniedNotificationPromptShown: false });
+          } else {
+            setNotificationsDenied(true);
+          }
+        });
+      } else if (target === 'location') {
+        void Location.getForegroundPermissionsAsync().then((permission) => {
+          setLocationCanAskAgain(permission.canAskAgain);
+          if (permission.granted) {
+            setLocationDenied(false);
+            void handleAllowLocationRef.current?.();
+          } else {
+            setLocationDenied(true);
+          }
+        }).catch(() => setLocationCanAskAgain(false));
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   const handleSkipLocation = () => {
     if (requestingLocation || saving) return;
     setLocationChoice('disabled');
     setLocationDenied(false);
-    goToStep('ready', { locationChoice: 'disabled' });
+    goToStep('ready', { locationChoice: 'disabled', deniedLocationPromptShown: false });
   };
 
   const complete = async (destination?: Href) => {
@@ -798,6 +837,80 @@ export default function OnboardingScreen() {
     </Pressable>
   );
 
+  const stepHasValue: boolean | null =
+    step === 'personal'
+      ? Boolean(dateOfBirth || lifeStage || gender || rashi || gotra.trim())
+      : step === 'nakshatra'
+      ? Boolean(nakshatra)
+      : step === 'calendarProfile'
+      ? Boolean(calendarProfile)
+      : step === 'calendarScope'
+      ? Boolean(calendarScope)
+      : step === 'goals'
+      ? goals.length > 0
+      : step === 'name'
+      ? Boolean(name.trim())
+      : null;
+  const showSkip = stepHasValue === false;
+  const openPermissionSettings = (target: 'notifications' | 'location') => {
+    settingsReturnTargetRef.current = target;
+    void Linking.openSettings().catch(() => {
+      settingsReturnTargetRef.current = null;
+      setSaveError(translated('Could not open device settings. You can continue and change this later.', 'डिवाइस सेटिंग्स नहीं खुल सकीं। आप आगे बढ़कर इसे बाद में बदल सकते हैं।'));
+    });
+  };
+  const notificationRecoveryAction = getPermissionRecoveryAction(notificationsDenied, notificationsCanAskAgain);
+  const locationRecoveryAction = getPermissionRecoveryAction(locationDenied, locationCanAskAgain);
+
+  const primaryActionLabel =
+    step === 'notifications'
+      ? notificationRecoveryAction === 'settings'
+        ? translated('Open Settings', 'सेटिंग्स खोलें')
+        : notificationRecoveryAction === 'retry'
+        ? translated('Try notifications again', 'सूचनाओं के लिए फिर प्रयास करें')
+        : notificationChoice === 'enabled'
+        ? translated('Continue', 'आगे बढ़ें')
+        : translated('Allow notifications', 'सूचनाएँ अनुमति दें')
+      : step === 'location'
+      ? locationRecoveryAction === 'settings'
+        ? translated('Open Settings', 'सेटिंग्स खोलें')
+        : locationRecoveryAction === 'retry'
+        ? translated('Try again', 'फिर प्रयास करें')
+        : translated('Allow location', 'स्थान अनुमति दें')
+      : step === 'ready'
+      ? translated('Enter Shoonaya', 'Shoonaya में प्रवेश करें')
+      : translated('Continue', 'आगे बढ़ें');
+
+  const onPrimaryAction = () => {
+    if (step === 'notifications') {
+      if (notificationRecoveryAction === 'settings') openPermissionSettings('notifications');
+      else if (notificationChoice === 'enabled' && !notificationsDenied) {
+        goToStep('location', { notificationChoice: 'enabled', deniedNotificationPromptShown: false });
+      } else void handleAllowNotifications();
+    } else if (step === 'location') {
+      if (locationRecoveryAction === 'settings') openPermissionSettings('location');
+      else void handleAllowLocation();
+    } else if (step === 'ready') {
+      void complete('/(tabs)');
+    } else {
+      void goNext();
+    }
+  };
+
+  const secondaryActionLabel =
+    step === 'notifications'
+      ? translated('Not now', 'अभी नहीं')
+      : step === 'location'
+      ? translated('Not now', 'अभी नहीं')
+      : step !== 'ready' && showSkip
+      ? translated('Skip for now', 'अभी छोड़ें')
+      : undefined;
+  const onSecondaryAction = () => {
+    if (step === 'notifications') handleNotNow();
+    else if (step === 'location') handleSkipLocation();
+    else void goNext();
+  };
+
   if (founderNoteContext) {
     return (
       <FounderNoteInterlude
@@ -811,57 +924,51 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <Screen style={{ backgroundColor: bg }}>
-      {step !== 'ready' ? (
-        <View accessible accessibilityLabel={stepEyebrow(step, STEPS, language)} style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-          {activeSteps.map((s, i) => (
-            <View
-              key={s}
-              style={{
-                height: 4,
-                flex: 1,
-                borderRadius: 999,
-                backgroundColor: i <= activeSteps.indexOf(step) ? accent : border,
-              }}
-            />
-          ))}
-        </View>
-      ) : null}
-
-      <ScrollView
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ gap: 24, paddingBottom: 32 }}
+    <Screen fullscreen entrance="none" style={{ backgroundColor: bg, paddingHorizontal: 0, paddingBottom: 0, paddingTop: 0 }}>
+      <OnboardingShell
+        transitionKey={step}
+        title={stepTitle}
+        eyebrow={step === 'preferences'
+          ? translated('BEGIN YOUR JOURNEY', 'अपनी यात्रा शुरू करें')
+          : undefined}
+        stepLabel={step === 'ready'
+          ? translated('Ready', 'तैयार')
+          : stepEyebrow(step, STEPS, language)}
+        stepPosition={stepIndex + 1}
+        stepCount={activeSteps.length}
+        requiredStatus={step === 'preferences' ? 'required' : 'optional'}
+        requiredStatusLabel={step === 'preferences'
+          ? translated('Required', 'आवश्यक')
+          : translated('Optional', 'वैकल्पिक')}
+        backAccessibilityLabel={translated('Go back to previous onboarding step', 'ऑनबोर्डिंग के पिछले चरण पर जाएँ')}
+        loadingLabel={requestingNotifications
+          ? translated('Requesting permission…', 'अनुमति माँगी जा रही है…')
+          : requestingLocation
+          ? translated('Finding your city…', 'आपका शहर खोजा जा रहा है…')
+          : translated('Saving…', 'सहेजा जा रहा है…')}
+        showBack={stepIndex > 0}
+        onBack={() => { void goBack(); }}
+        primaryActionLabel={primaryActionLabel}
+        onPrimaryAction={onPrimaryAction}
+        primaryDisabled={
+          (step === 'preferences' && (!tradition || !language)) ||
+          (step === 'notifications' && requestingNotifications) ||
+          (step === 'location' && requestingLocation) ||
+          saving
+        }
+        primaryLoading={requestingNotifications || requestingLocation || (step === 'ready' && saving)}
+        secondaryActionLabel={secondaryActionLabel}
+        onSecondaryAction={secondaryActionLabel ? onSecondaryAction : undefined}
+        secondaryDisabled={requestingNotifications || requestingLocation || saving}
+        errorMessage={saveError}
       >
-        {step !== 'ready' ? (
-          <View style={{ gap: 8 }}>
-            <SectionHeader
-              label={
-                step === 'preferences'
-                  ? (language === 'hi' ? 'अपनी यात्रा शुरू करें' : 'BEGIN YOUR JOURNEY')
-                  : stepEyebrow(step, STEPS, language)
-              }
-            />
-            <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 28, lineHeight: isHindi ? 38 : 34, color: text }}>
-              {step === 'preferences'
-                ? (language === 'hi' ? 'Shoonaya को अपना बनाएं' : 'Make Shoonaya yours')
-                : stepTitle}
-            </Text>
-            {step === 'preferences' ? (
-              <Text
-                style={{
-                  fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans,
-                  fontSize: 14,
-                  lineHeight: 20,
-                  color: dim,
-                }}
-              >
-                {language === 'hi'
-                  ? 'अपनी भाषा और परंपरा चुनें। आपकी दैनिक साधना, पंचांग और मार्गदर्शन इसी के अनुसार तैयार होंगे।'
-                  : 'Choose your language and tradition to personalize your daily sadhana, calendar, and sacred guidance.'}
-              </Text>
-            ) : null}
-          </View>
+        {step === 'preferences' ? (
+          <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 14, lineHeight: isHindi ? 22 : 20, color: dim }}>
+            {translated(
+              'Choose your language and tradition to personalize your daily practice, calendar, and sacred guidance.',
+              'अपनी भाषा और परंपरा चुनें। आपकी दैनिक साधना, पंचांग और मार्गदर्शन इसी के अनुसार तैयार होंगे।'
+            )}
+          </Text>
         ) : null}
 
         {step === 'preferences' && (
@@ -1239,58 +1346,12 @@ export default function OnboardingScreen() {
                 'अधिक सटीक मार्गदर्शन के लिए अपना नक्षत्र सहेजें। यदि निश्चित नहीं हैं, तो जन्मतिथि, समय और स्थान से जन्म कुंडली देखें, या अभी इस चरण को छोड़ दें।'
               )}
             </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {NAKSHATRAS.map((item) => {
-                const selected = nakshatra === item.key;
-                return (
-                  <PressableSurface
-                    key={item.key}
-                    haptic="none"
-                    onPress={() => { void selectWithHaptic(() => setNakshatra(selected ? '' : item.key)); }}
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={
-                      isHindi
-                        ? `${item.sanskrit} (${item.label}), स्वामी ${item.rulerHi}, देवता ${item.deityHi}`
-                        : `${item.label}, ruled by ${item.ruler}, deity ${item.deity}`
-                    }
-                    style={{
-                      width: '31.5%',
-                      minHeight: 102,
-                      borderRadius: RADII.lg,
-                      borderWidth: 1.5,
-                      borderColor: selected ? accent : border,
-                      backgroundColor: selected ? cardBg : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 8,
-                    }}
-                  >
-                    <Text style={{ fontSize: 22 }}>{item.symbol}</Text>
-                    <Text style={{ marginTop: 4, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: selected ? accent : text, textAlign: 'center' }}>
-                      {isHindi ? item.sanskrit : item.label}
-                    </Text>
-                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: dim, textAlign: 'center' }}>
-                      {isHindi ? item.label : item.sanskrit}
-                    </Text>
-                  </PressableSurface>
-                );
-              })}
-            </View>
-            {nakshatra ? (
-              <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 14 }}>
-                {(() => {
-                  const sel = NAKSHATRAS.find((n) => n.key === nakshatra);
-                  if (!sel) return null;
-                  return (
-                    <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: accent, textAlign: 'center' }}>
-                      {isHindi
-                        ? `${sel.sanskrit} · स्वामी: ${sel.rulerHi} · देवता: ${sel.deityHi}`
-                        : `${sel.label} · Ruled by ${sel.ruler} · Deity: ${sel.deity}`}
-                    </Text>
-                  );
-                })()}
-              </View>
-            ) : null}
+            <NakshatraPicker
+              options={NAKSHATRAS}
+              selectedKey={nakshatra}
+              onSelect={(key) => setNakshatra(key ?? '')}
+              isHindi={isHindi}
+            />
           </>
         )}
 
@@ -1535,39 +1596,16 @@ export default function OnboardingScreen() {
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger }}>
                   {translated(
-                    'Permission was not granted on this device. You can turn reminders on anytime in Settings.',
-                    'इस डिवाइस पर अनुमति नहीं मिली। आप कभी भी सेटिंग्स में जाकर स्मरण चालू कर सकते हैं।'
+                    notificationsCanAskAgain
+                      ? 'Permission was not granted. You can try again or continue without reminders.'
+                      : 'Notifications are blocked in device settings. Open Settings to enable them, or continue without reminders.',
+                    notificationsCanAskAgain
+                      ? 'अनुमति नहीं मिली। आप फिर से प्रयास कर सकते हैं या बिना स्मरण के आगे बढ़ सकते हैं।'
+                      : 'डिवाइस सेटिंग्स में सूचनाएँ बंद हैं। उन्हें चालू करने के लिए सेटिंग्स खोलें, या बिना स्मरण के आगे बढ़ें।'
                   )}
                 </Text>
               </View>
             ) : null}
-            <View style={{ gap: 10 }}>
-              {notificationsDenied ? (
-                <Button
-                  label={translated('Continue', 'आगे बढ़ें')}
-                  onPress={() => {
-                    setNotificationChoice('disabled');
-                    goToStep('location', { notificationChoice: 'disabled' });
-                  }}
-                  disabled={saving || requestingNotifications}
-                />
-              ) : (
-                <>
-                  <Button
-                    label={translated('Allow notifications', 'सूचनाएँ अनुमति दें')}
-                    onPress={() => { void handleAllowNotifications(); }}
-                    disabled={saving || requestingNotifications}
-                    loading={requestingNotifications}
-                  />
-                  <Button
-                    label={translated('Not now', 'अभी नहीं')}
-                    variant="ghost"
-                    onPress={() => { void handleNotNow(); }}
-                    disabled={saving || requestingNotifications}
-                  />
-                </>
-              )}
-            </View>
           </>
         )}
 
@@ -1602,160 +1640,46 @@ export default function OnboardingScreen() {
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger }}>
                   {translated(
-                    'Permission was not granted, or your city could not be determined. Sunrise-based timings will use a default until you add your city in Settings.',
-                    'अनुमति नहीं मिली, या आपका शहर निर्धारित नहीं हो सका। जब तक आप सेटिंग्स में अपना शहर नहीं जोड़ते, सूर्योदय-आधारित समय एक डिफ़ॉल्ट का उपयोग करेंगे।'
+                    locationCanAskAgain
+                      ? 'Location could not be set up. You can try again or continue; you can add your city in Settings later.'
+                      : 'Location is blocked in device settings. Open Settings to enable it, or continue and add your city later.',
+                    locationCanAskAgain
+                      ? 'स्थान सेट नहीं हो सका। आप फिर से प्रयास कर सकते हैं या आगे बढ़ सकते हैं; शहर बाद में सेटिंग्स में जोड़ें।'
+                      : 'डिवाइस सेटिंग्स में स्थान बंद है। उसे चालू करने के लिए सेटिंग्स खोलें, या आगे बढ़कर शहर बाद में जोड़ें।'
                   )}
                 </Text>
               </View>
             ) : null}
-            <View style={{ gap: 10 }}>
-              {locationDenied ? (
-                <Button
-                  label={translated('Continue', 'आगे बढ़ें')}
-                  onPress={() => {
-                    setLocationChoice('disabled');
-                    goToStep('ready', { locationChoice: 'disabled' });
-                  }}
-                  disabled={saving || requestingLocation}
-                />
-              ) : (
-                <>
-                  <Button
-                    label={translated('Allow location', 'स्थान अनुमति दें')}
-                    onPress={() => { void handleAllowLocation(); }}
-                    disabled={saving || requestingLocation}
-                    loading={requestingLocation}
-                  />
-                  <Button
-                    label={translated('Not now', 'अभी नहीं')}
-                    variant="ghost"
-                    onPress={() => { void handleSkipLocation(); }}
-                    disabled={saving || requestingLocation}
-                  />
-                </>
-              )}
-            </View>
           </>
         )}
 
         {step === 'ready' && (
-          <View style={{ minHeight: 560, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
-            <View style={{ width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBgSelected, borderWidth: 1.5, borderColor: accent }}>
-              <Text style={{ fontSize: 38 }}>{TRADITIONS.find((t) => t.key === tradition)?.emoji}</Text>
-            </View>
-            <View style={{ alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 30, color: text, textAlign: 'center' }}>
-                {readyCopy.heading}
-              </Text>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: 22, color: dim, textAlign: 'center' }}>
-                {language === 'hi' ? readyCopy.bodyHi : readyCopy.body}
-              </Text>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, color: dim, textAlign: 'center' }}>
-                {language === 'hi' ? 'आपका पवित्र स्थान आपकी प्रतीक्षा कर रहा है।' : 'Your sanctuary awaits.'}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {READY_FEATURES[tradition ?? 'hindu'].map((item) => (
-                <View key={item.label} style={{ flex: 1, minHeight: 100, borderRadius: RADII.lg, borderWidth: 1, borderColor: border, backgroundColor: cardBg, alignItems: 'center', justifyContent: 'center', padding: 10 }}>
-                  <Text style={{ fontSize: 24 }}>{item.emoji}</Text>
-                  <Text style={{ marginTop: 5, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: text, textAlign: 'center' }}>
-                    {language === 'hi' ? item.labelHi : item.label}
-                  </Text>
-                  <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
-                    {language === 'hi' ? item.descriptionHi : item.description}
-                  </Text>
-                </View>
-              ))}
-            </View>
-            <View style={{ width: '100%', gap: 10 }}>
-              {(() => {
-                const readyPracticeCta = getOnboardingReadyPracticeCta(tradition);
-                if (readyPracticeCta) {
-                  return (
-                    <>
-                      <Button
-                        label={isHindi ? readyPracticeCta.labelHi : readyPracticeCta.labelEn}
-                        onPress={() => { void complete(readyPracticeCta.route as Href); }}
-                        disabled={saving}
-                        loading={saving}
-                      />
-                      <Button
-                        label={isHindi ? 'Shoonaya देखें' : 'Explore Shoonaya'}
-                        variant="ghost"
-                        onPress={() => { void complete('/(tabs)'); }}
-                        disabled={saving}
-                      />
-                    </>
-                  );
-                }
-                return (
-                  <Button
-                    label={isHindi ? 'Shoonaya देखें' : 'Explore Shoonaya'}
-                    onPress={() => { void complete('/(tabs)'); }}
-                    disabled={saving}
-                    loading={saving}
-                  />
-                );
-              })()}
-              {saveError ? (
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger, textAlign: 'center' }}>
-                  {saveError}
-                </Text>
-              ) : null}
-            </View>
-          </View>
+          <OnboardingWelcomeScreen
+            displayName={name.trim()}
+            tradition={tradition}
+            isHindi={isHindi}
+            selectedGoalLabels={goals.map((key) => {
+              const goal = GOALS.find((item) => item.key === key);
+              return goal ? (isHindi ? goal.labelHi : goal.label) : key;
+            })}
+            calendarProfileLabel={calendarProfile
+              ? (isHindi
+                ? CALENDAR_PROFILE_HI[calendarProfile].label
+                : CALENDAR_PROFILES.find((item) => item.slug === calendarProfile)?.label ?? calendarProfile)
+              : null}
+            calendarScopeLabel={calendarScope
+              ? (isHindi
+                ? CALENDAR_SCOPE_HI[calendarScope].label
+                : CALENDAR_SCOPES.find((item) => item.slug === calendarScope)?.label ?? calendarScope)
+              : null}
+            locationCity={capturedLocation?.city ?? null}
+            hasNotifications={notificationChoice === 'enabled'}
+            recommendedPractice={getOnboardingReadyPracticeCta(tradition)}
+            onComplete={(dest) => { void complete(dest); }}
+            saving={saving}
+          />
         )}
-      </ScrollView>
-
-      {step !== 'notifications' && step !== 'location' && step !== 'ready' ? (
-        (() => {
-          // Optional steps get a separate, subordinate "Skip for now" affordance
-          // instead of the primary button's own label flip-flopping between
-          // "Continue" and "Skip for now" -- a stable primary label always means
-          // the same thing. `stepHasValue === null` marks a step (e.g.
-          // `preferences`) as not optional at all, so no skip affordance shows.
-          // Skip only ever appears when there is nothing entered yet, so it can
-          // never discard an existing answer -- it's functionally identical to
-          // Continue in that state, just a lower-commitment-sounding label.
-          const stepHasValue: boolean | null =
-            step === 'personal'
-              ? Boolean(dateOfBirth || lifeStage || gender || rashi || gotra.trim())
-              : step === 'nakshatra'
-              ? Boolean(nakshatra || rashi || gotra.trim())
-              : step === 'calendarProfile'
-              ? Boolean(calendarProfile)
-              : step === 'calendarScope'
-              ? Boolean(calendarScope)
-              : step === 'goals'
-              ? goals.length > 0
-              : step === 'name'
-              ? Boolean(name.trim())
-              : null;
-          const showSkip = stepHasValue === false;
-
-          return (
-            <View style={{ marginTop: 16, gap: 10 }}>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {stepIndex > 0 ? <Button label={translated('Back', 'पीछे')} variant="ghost" onPress={() => { void goBack(); }} style={{ flex: 1 }} /> : null}
-                <Button
-                  label={translated('Continue', 'आगे बढ़ें')}
-                  onPress={() => { void goNext(); }}
-                  disabled={step === 'preferences' && (!tradition || !language)}
-                  style={{ flex: 1 }}
-                />
-              </View>
-              {showSkip ? (
-                <View style={{ alignItems: 'center', gap: 4 }}>
-                  <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, color: dim, textAlign: 'center' }}>
-                    {translated('Optional · You can add this later in Profile', 'वैकल्पिक · आप इसे बाद में प्रोफ़ाइल में जोड़ सकते हैं')}
-                  </Text>
-                  <Button label={translated('Skip for now', 'अभी छोड़ें')} variant="ghost" size="sm" onPress={() => { void goNext(); }} />
-                </View>
-              ) : null}
-            </View>
-          );
-        })()
-      ) : null}
+      </OnboardingShell>
     </Screen>
   );
 }

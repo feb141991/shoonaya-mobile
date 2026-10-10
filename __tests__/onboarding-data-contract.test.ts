@@ -8,6 +8,7 @@ import {
   getNotificationPersistencePayload,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
+  getPermissionRecoveryAction,
   computeContentNotificationOptIn,
   computePushNotificationEligibility,
   computeFinalNotificationState,
@@ -92,7 +93,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(cta?.labelHi, 'ध्यान शुरू करें');
     });
 
-    it('returns null for Sikh and Jain traditions (cleanly removes primary practice CTA and retains Explore Shoonaya)', () => {
+    it('returns null for Sikh and Jain traditions when no verified first-practice destination exists', () => {
       const sikhCta = getOnboardingReadyPracticeCta('sikh');
       const jainCta = getOnboardingReadyPracticeCta('jain');
 
@@ -100,9 +101,9 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(jainCta, null, 'Jain has no appropriate dedicated first-practice screen yet');
     });
 
-    it('returns null for Universal / None tradition (cleanly retains Explore Shoonaya)', () => {
+    it('returns null for Universal / None tradition rather than prescribing a ritual', () => {
       const noneCta = getOnboardingReadyPracticeCta('none');
-      assert.equal(noneCta, null, 'Universal seeker has unforced Explore Shoonaya entry point');
+      assert.equal(noneCta, null, 'Universal seeker has no unsupported prescribed practice');
     });
 
     it('builds standard steps for Universal / None tradition without Hindu-specific steps', () => {
@@ -115,6 +116,12 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
   });
 
   describe('2. Notification Decision Table & Intent Invariants', () => {
+    it('keeps a deferred permission distinct from denial and uses Settings only after the OS blocks another prompt', () => {
+      assert.equal(getPermissionRecoveryAction(false, true), 'request', 'deferred users can still make the initial choice');
+      assert.equal(getPermissionRecoveryAction(true, true), 'retry', 'a retry is available while the OS can prompt again');
+      assert.equal(getPermissionRecoveryAction(true, false), 'settings', 'a hard denial must recover through device settings');
+    });
+
     it('Allow + OS granted => preferences true, token registration eligible', () => {
       const choice: NotificationChoice = 'enabled';
       const osGranted = true;

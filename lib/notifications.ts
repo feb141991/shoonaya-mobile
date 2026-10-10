@@ -344,6 +344,24 @@ export async function checkNotificationPermission(): Promise<boolean> {
   }
 }
 
+export async function getNotificationPermissionDetails(): Promise<{
+  granted: boolean;
+  canAskAgain: boolean;
+  available: boolean;
+}> {
+  if (!Notifications) return { granted: false, canAskAgain: false, available: false };
+  try {
+    const permission = await Notifications.getPermissionsAsync();
+    return {
+      granted: hasNotificationPermission(permission),
+      canAskAgain: permission.canAskAgain,
+      available: true,
+    };
+  } catch {
+    return { granted: false, canAskAgain: false, available: false };
+  }
+}
+
 /** Bound SDK acquisition: offline native/provider work must not freeze recovery forever. */
 async function withDeadline<T>(operation: Promise<T>, durationMs: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
