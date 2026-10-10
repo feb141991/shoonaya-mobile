@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, Easing, Modal, Pressable, Text, useColorScheme, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Modal, Pressable, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 
@@ -44,8 +44,6 @@ export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onCl
 
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pickedMood, setPickedMood] = useState<MoodConfig | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const contentAnim = useRef(new Animated.Value(0)).current;
   const confirmAnim = useRef(new Animated.Value(0)).current;
 
@@ -58,8 +56,6 @@ export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onCl
   useEffect(() => {
     if (!visible) return;
     setPickedMood(null);
-    setSaving(false);
-    setSaveError(null);
     contentAnim.setValue(reducedMotion ? 1 : 0);
     if (!reducedMotion) {
       Animated.timing(contentAnim, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
@@ -85,35 +81,31 @@ export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onCl
     onClose();
   };
 
-  const handleDone = async () => {
-    if (!pickedMood || saving) return;
-    setSaving(true);
-    setSaveError(null);
-    const checkinId = await startMoodCheckin(pickedMood.key, undefined, undefined, undefined, true);
-    if (!checkinId) {
-      setSaveError('Could not save your mood. Check your connection and try again.');
-      setSaving(false);
-      return;
+  const handleDone = () => {
+    if (!pickedMood) return;
+    const moodKey = pickedMood.key;
+    if (userId) {
+      void setMoodPulseDismissedDate(userId, spiritualDate);
     }
-    setSaving(false);
-    onLogged(pickedMood.key);
+    // Local-First Optimistic Sync: close sheet and reflect mood immediately (0ms delay)
+    onLogged(moodKey);
     onClose();
+    // Fire-and-forget background sync: persists check-in asynchronously without freezing user
+    void startMoodCheckin(moodKey, undefined, undefined, undefined, true);
   };
 
-  const handleExplore = async () => {
-    if (!pickedMood || saving) return;
-    setSaving(true);
-    setSaveError(null);
-    const checkinId = await startMoodCheckin(pickedMood.key);
-    if (!checkinId) {
-      setSaveError('Could not save your mood. Check your connection and try again.');
-      setSaving(false);
-      return;
+  const handleExplore = () => {
+    if (!pickedMood) return;
+    const moodKey = pickedMood.key;
+    if (userId) {
+      void setMoodPulseDismissedDate(userId, spiritualDate);
     }
-    onLogged(pickedMood.key);
-    setSaving(false);
+    // Local-First Optimistic Sync: close sheet, reflect mood, and transition smoothly
+    onLogged(moodKey);
     onClose();
     router.push(resolveNativeRoute('/mood', '/(tabs)'));
+    // Fire-and-forget background sync
+    void startMoodCheckin(moodKey);
   };
 
   return (
@@ -198,7 +190,6 @@ export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onCl
                           accessibilityState={{ selected: isSelected }}
                           onPress={() => {
                             setPickedMood(mood);
-                            setSaveError(null);
                           }}
                           pressedStyle={{ transform: [{ scale: 0.97 }] }}
                           style={{
@@ -245,12 +236,6 @@ export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onCl
                   })}
                 </View>
 
-                {saveError ? (
-                  <Text accessibilityRole="alert" style={{ ...TYPE.caption, color: COLORS.danger, marginTop: SPACING.sm }}>
-                    {saveError}
-                  </Text>
-                ) : null}
-
                 {pickedMood ? (
                   <Animated.View
                     style={{
@@ -271,28 +256,22 @@ export function MoodPulseSheet({ visible, firstName, userId, spiritualDate, onCl
                         {pickedMood.label} selected
                       </Text>
                     </View>
-                    {saving ? (
-                      <ActivityIndicator size="small" color={pickedMood.colour} />
-                    ) : (
-                      <>
-                        <PressableSurface
-                          haptic="selection"
-                          accessibilityLabel="Done, close mood check-in"
-                          onPress={handleDone}
-                          style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: theme.cardSoft }}
-                        >
-                          <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>Done ✓</Text>
-                        </PressableSurface>
-                        <PressableSurface
-                          haptic="selection"
-                          accessibilityLabel={`Explore recommendations for feeling ${pickedMood.label}`}
-                          onPress={handleExplore}
-                          style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: pickedMood.bg }}
-                        >
-                          <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: pickedMood.colour }}>Explore →</Text>
-                        </PressableSurface>
-                      </>
-                    )}
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityLabel="Done, close mood check-in"
+                      onPress={handleDone}
+                      style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: theme.cardSoft }}
+                    >
+                      <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.dim }}>Done ✓</Text>
+                    </PressableSurface>
+                    <PressableSurface
+                      haptic="selection"
+                      accessibilityLabel={`Explore recommendations for feeling ${pickedMood.label}`}
+                      onPress={handleExplore}
+                      style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: pickedMood.bg }}
+                    >
+                      <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: pickedMood.colour }}>Explore →</Text>
+                    </PressableSurface>
                   </Animated.View>
                 ) : null}
               </>

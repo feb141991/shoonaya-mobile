@@ -77,6 +77,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { lookupVratData } from '@/lib/vrat-data';
 import { getHeroPick, getHeroSize, HERO_SIZE_CONFIG, LOCAL_HERO_ASSETS, resolveAutoRotatedHeroTheme, type HeroPick, type HeroSize } from '@/lib/heroPreference';
 import { getMoodPulseDismissedDate, getMoodSpiritualDate, getMoodTimeZone } from '@/lib/moodPulsePreference';
+import { readMoodStatusCache, writeMoodStatusCache } from '@/lib/moodStatusCache';
 import { isMoodStatusOwnedBy, shouldShowMoodPulse } from '@/lib/moodPulsePolicy';
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
@@ -347,14 +348,15 @@ type HomeLiveResponse = {
 // Batches the bell badge count and mood check-in status into one round
 // trip via /api/native/home-live instead of two independent fetches (one
 // hitting Supabase directly for the count, one hitting /api/mood/checkin) --
-// both get polled on every Home focus and after pull-to-refresh, so there's
-// no reason for them to be separate requests. Best-effort: a failed fetch
-// just means the badge/pill don't update this round, matching the
-// individual calls' own best-effort behavior.
-async function fetchHomeLive(): Promise<HomeLiveResponse> {
+// both get polled on every Home focus and after pull-to-refresh.
+// When mood check-in is already settled for today (logged or dismissed),
+// fields excludes 'moodStatus' to prevent redundant cold-start database queries.
+async function fetchHomeLive(options?: { includeMood?: boolean }): Promise<HomeLiveResponse> {
   try {
+    const includeMood = options?.includeMood ?? true;
+    const fields = includeMood ? 'unreadNotifications,moodStatus' : 'unreadNotifications';
     const params = new URLSearchParams({
-      fields: 'unreadNotifications,moodStatus',
+      fields,
       timezone: getMoodTimeZone(),
     });
     const response = await apiFetch(`/api/native/home-live?${params.toString()}`);
@@ -365,9 +367,10 @@ async function fetchHomeLive(): Promise<HomeLiveResponse> {
   }
 }
 
-// Delay automatic mood check-in popup by 4.5 seconds so the user can
-// absorb the sacred greeting, hero darshan, and panchang without abrupt interruption.
-const MOOD_PULSE_AUTO_POPUP_DELAY_MS = 4500;
+// Delay automatic mood check-in popup by 2 minutes (120,000 ms) so the device
+// is calmed and the seeker can absorb the sacred greeting, hero darshan, and
+// daily panchang without abrupt interruption.
+const MOOD_PULSE_AUTO_POPUP_DELAY_MS = 120_000;
 
 const INITIAL_STATE: HomeSummary = {
   profile: {
@@ -1415,24 +1418,50 @@ function HomeContent() {
           setMoodStatusVerified(false);
         }
       } else {
+        const userId = appIdentity.userId;
         setMoodStatusVerified(false);
         // Instant badge paint from the shared inbox cache (also read/
         // written by app/notifications.tsx) before the network call below
         // resolves -- "badge reuse": Home doesn't own a separate source of
         // truth for unread count, it reads the same cache the inbox
         // screen reconciles on mark-read/mark-all-read/clear.
-        void readNotificationsCache(appIdentity.userId).then((cached) => {
+        void readNotificationsCache(userId).then((cached) => {
           if (active && cached) setUnreadNotifications(deriveUnreadCount(cached.notifications));
         });
-        void fetchHomeLive().then((live) => {
+
+        // Instant mood cache paint & selective polling:
+        // Paint cached mood instantly if available today. If mood is already settled
+        // (logged, dismissed, or locally dismissed today), omit 'moodStatus' from
+        // the cold-start / focus fetch to avoid redundant backend DB queries.
+        void Promise.all([
+          readMoodStatusCache({ kind: 'authenticated', userId }),
+          getMoodPulseDismissedDate(userId),
+        ]).then(([cachedMood, locallyDismissedDate]) => {
           if (!active) return;
-          if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
-          if (live.moodStatus) {
-            setMoodStatus(live.moodStatus);
-            setMoodStatusOwnerId(appIdentity.userId);
+          const today = getMoodSpiritualDate();
+          if (cachedMood) {
+            setMoodStatus(cachedMood);
+            setMoodStatusOwnerId(userId);
             setMoodStatusVerified(true);
           }
+          const isSettled = Boolean(
+            cachedMood?.hasLoggedMoodToday ||
+            cachedMood?.hasDismissedToday ||
+            locallyDismissedDate === today
+          );
+
+          void fetchHomeLive({ includeMood: !isSettled }).then((live) => {
+            if (!active) return;
+            if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
+            if (live.moodStatus) {
+              setMoodStatus(live.moodStatus);
+              setMoodStatusOwnerId(userId);
+              setMoodStatusVerified(true);
+              void writeMoodStatusCache({ kind: 'authenticated', userId }, live.moodStatus);
+            }
+          });
         });
+
         unsubscribe = subscribeToMyNotifications(() => {
           if (!active) return;
           void getMyUnreadNotificationCount().then((count) => {
@@ -1532,15 +1561,28 @@ function HomeContent() {
       setRefreshing(false);
     }
     if (appIdentity.kind === 'authenticated') {
-      void fetchHomeLive().then((live) => {
-        if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
-        if (live.moodStatus) {
-          setMoodStatus(live.moodStatus);
-          if (appIdentity.kind === 'authenticated') setMoodStatusOwnerId(appIdentity.userId);
-          setMoodStatusVerified(true);
-        } else {
-          setMoodStatusVerified(false);
-        }
+      const userId = appIdentity.userId;
+      void Promise.all([
+        readMoodStatusCache({ kind: 'authenticated', userId }),
+        getMoodPulseDismissedDate(userId),
+      ]).then(([cachedMood, locallyDismissedDate]) => {
+        const today = getMoodSpiritualDate();
+        const isSettled = Boolean(
+          cachedMood?.hasLoggedMoodToday ||
+          cachedMood?.hasDismissedToday ||
+          locallyDismissedDate === today
+        );
+        void fetchHomeLive({ includeMood: !isSettled }).then((live) => {
+          if (live.unreadNotifications !== undefined) setUnreadNotifications(live.unreadNotifications);
+          if (live.moodStatus) {
+            setMoodStatus(live.moodStatus);
+            setMoodStatusOwnerId(userId);
+            setMoodStatusVerified(true);
+            void writeMoodStatusCache({ kind: 'authenticated', userId }, live.moodStatus);
+          } else if (!isSettled) {
+            setMoodStatusVerified(false);
+          }
+        });
       });
     } else {
       setUnreadNotifications(0);
@@ -2778,13 +2820,29 @@ function HomeContent() {
         onClose={() => setMoodPulseVisible(false)}
         onLogged={(mood) => {
           const spiritualDate = getMoodSpiritualDate();
-          if (moodPulseUserId) setMoodStatusOwnerId(moodPulseUserId);
+          if (moodPulseUserId) {
+            setMoodStatusOwnerId(moodPulseUserId);
+            void writeMoodStatusCache({ kind: 'authenticated', userId: moodPulseUserId }, {
+              hasLoggedMoodToday: true,
+              lastMood: mood,
+              hasDismissedToday: false,
+              spiritualDate,
+            });
+          }
           setMoodStatus({ hasLoggedMoodToday: true, lastMood: mood, hasDismissedToday: false, spiritualDate });
           setMoodStatusVerified(true);
         }}
         onDismissed={() => {
           const spiritualDate = getMoodSpiritualDate();
-          if (moodPulseUserId) setMoodStatusOwnerId(moodPulseUserId);
+          if (moodPulseUserId) {
+            setMoodStatusOwnerId(moodPulseUserId);
+            void writeMoodStatusCache({ kind: 'authenticated', userId: moodPulseUserId }, {
+              hasLoggedMoodToday: moodStatus?.hasLoggedMoodToday ?? false,
+              lastMood: moodStatus?.lastMood ?? null,
+              hasDismissedToday: true,
+              spiritualDate,
+            });
+          }
           setMoodStatus((current) => ({
             hasLoggedMoodToday: current?.hasLoggedMoodToday ?? false,
             lastMood: current?.lastMood ?? null,
