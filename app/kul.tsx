@@ -19,6 +19,7 @@ import { PressableSurface } from "@/components/ui/PressableSurface";
 import { SacredLoader } from "@/components/ui/SacredLoader";
 import { Screen } from "@/components/ui/Screen";
 import { AuthGate } from "@/components/ui/AuthGate";
+import { KulInviteModal } from "@/components/kul/KulInviteModal";
 import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
 import { computeVanshLayout, getEligibleParentIds } from "@/lib/vanshLayout";
 import {
@@ -286,6 +287,7 @@ export default function KulScreen() {
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<HubSection>("home");
   const [authGateVisible, setAuthGateVisible] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [working, setWorking] = useState(false);
 
   const [newKulName, setNewKulName] = useState("");
@@ -998,22 +1000,6 @@ export default function KulScreen() {
     ]);
   };
 
-  const copyInviteCode = async () => {
-    if (!kul?.inviteCode) return;
-    try {
-      await Clipboard.setStringAsync(kul.inviteCode);
-      Alert.alert(
-        "Invite code copied",
-        "Share it privately with a family member.",
-      );
-    } catch {
-      Alert.alert(
-        "Could not copy the code",
-        "You can select and copy the invite code above.",
-      );
-    }
-  };
-
   if (identity.kind === "loading" || (loading && !snapshot && currentUserId)) {
     return (
       <Screen header={{ title: "Family KUL" }}>
@@ -1278,7 +1264,7 @@ export default function KulScreen() {
                   </Text>
                 </View>
               </View>
-              {snapshot.role === "guardian" && kul.inviteCode ? (
+              {snapshot.role === "guardian" && (
                 <View
                   style={{
                     borderRadius: 16,
@@ -1291,7 +1277,7 @@ export default function KulScreen() {
                 >
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                      Family invite code
+                      Family invitation link & QR
                     </Text>
                     <Text
                       selectable
@@ -1302,30 +1288,30 @@ export default function KulScreen() {
                         marginTop: 2,
                       }}
                     >
-                      {kul.inviteCode}
+                      {kul.inviteCode ? `Code: ${kul.inviteCode}` : "Share Link"}
                     </Text>
                   </View>
                   <PressableSurface
-                    accessibilityLabel="Copy family invite code"
-                    onPress={() => void copyInviteCode()}
+                    accessibilityLabel="Open universal invite link and QR modal"
+                    onPress={() => setShowInviteModal(true)}
                     haptic="selection"
                     style={{
                       minHeight: MIN_TOUCH_TARGET,
                       borderRadius: 12,
-                      paddingHorizontal: 11,
-                      backgroundColor: theme.brandSoft,
+                      paddingHorizontal: 14,
+                      backgroundColor: theme.brand,
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 6,
                     }}
                   >
-                    <Feather name="copy" size={14} color={theme.brand} />
-                    <Text style={{ ...TYPE.caption, color: theme.brand }}>
-                      Copy
+                    <Feather name="share-2" size={16} color={COLORS.ink} />
+                    <Text style={{ ...TYPE.label, color: COLORS.ink }}>
+                      Invite
                     </Text>
                   </PressableSurface>
                 </View>
-              ) : null}
+              )}
             </Card>
 
             <View style={{ flexDirection: "row", gap: 6 }}>
@@ -2288,6 +2274,19 @@ export default function KulScreen() {
         title="Join your family KUL"
         message="Sign in to create or join a private family circle."
       />
+      {kul && currentUserId && snapshot?.role === "guardian" ? (
+        <KulInviteModal
+          visible={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          userId={currentUserId}
+          isGuardian
+          manualInviteCode={kul.inviteCode ?? ""}
+          kulName={kul.name}
+          avatarEmoji={kul.avatarEmoji}
+          theme={theme}
+          isDark={isDark}
+        />
+      ) : null}
     </Screen>
   );
 }

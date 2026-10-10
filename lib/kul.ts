@@ -199,6 +199,58 @@ export function createKul(userId: string, input: { name: string; emoji: string }
 export function joinKul(userId: string, inviteCode: string) {
   return requestJson<{ success: true }>("/api/native/kul", userId, { method: "POST", body: JSON.stringify({ action: "join", inviteCode }) });
 }
+export type UniversalKulInvitation = {
+  token: string;
+  maxUses: number | null;
+  usesCount: number;
+  expiresAt: string | null;
+  createdAt: string;
+};
+export type UniversalKulPreview = {
+  kulName: string;
+  avatarEmoji: string;
+  guardianName: string;
+  memberCount: number;
+  expiresAt: string | null;
+};
+export function fetchKulInvitationToken(userId: string) {
+  return requestJson<{ success: true; invitation: UniversalKulInvitation }>("/api/native/kul/invitation", userId);
+}
+export async function previewKulInvitation(token: string): Promise<UniversalKulPreview> {
+  const res = await apiFetch(`/api/native/kul/invitation?token=${encodeURIComponent(token)}`);
+  if (!res.ok) {
+    const err: unknown = await res.json().catch(() => null);
+    throw new Error(isRecord(err) && isString(err.error) ? err.error : "Invitation not found");
+  }
+  const payload: unknown = await res.json();
+  if (!isRecord(payload) || payload.success !== true || !isRecord(payload.invitation)) {
+    throw new Error("The family invitation response was incomplete.");
+  }
+  const invitation = payload.invitation;
+  if (!isString(invitation.kulName) || !isString(invitation.avatarEmoji) ||
+      !isString(invitation.guardianName) || typeof invitation.memberCount !== "number" ||
+      (invitation.expiresAt !== null && !isString(invitation.expiresAt))) {
+    throw new Error("The family invitation response was incomplete.");
+  }
+  return invitation as UniversalKulPreview;
+}
+export function joinKulByToken(userId: string, token: string) {
+  return requestJson<{ success: true; alreadyMember: boolean; kul?: unknown }>(
+    "/api/native/kul/invitation",
+    userId,
+    { method: "POST", body: JSON.stringify({ action: "join_token", token }) }
+  );
+}
+export function regenerateKulInvitationLink(userId: string, options?: { maxUses?: number; expiresDays?: number }) {
+  return requestJson<{ success: true; invitation: UniversalKulInvitation }>(
+    "/api/native/kul/invitation",
+    userId,
+    { method: "POST", body: JSON.stringify({ action: "regenerate", ...options }) }
+  );
+}
+export function revokeKulInvitationLink(userId: string) {
+  return requestJson<{ success: true }>("/api/native/kul/invitation", userId, { method: "POST", body: JSON.stringify({ action: "revoke" }) });
+}
 export function sendKulMessage(userId: string, content: string) {
   return requestJson<KulMessage>("/api/native/kul/messages", userId, { method: "POST", body: JSON.stringify({ content }) });
 }

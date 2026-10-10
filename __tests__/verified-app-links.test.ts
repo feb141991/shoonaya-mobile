@@ -29,7 +29,7 @@ test('Android verifies only supported public Shoonaya route families', () => {
   assert.deepEqual(filter?.category, ['BROWSABLE', 'DEFAULT']);
   assert.deepEqual(
     filter?.data?.map(entry => entry.pathPrefix),
-    ['/panchang', '/vrat', '/festival', '/bhakti', '/pathshala', '/dharm-veer', '/live-darshan', '/seva', '/mantras'],
+    ['/panchang', '/vrat', '/festival', '/bhakti', '/pathshala', '/dharm-veer', '/live-darshan', '/seva', '/mantras', '/kul'],
   );
   assert.ok(filter?.data?.every(entry => entry.scheme === 'https' && entry.host === 'www.shoonaya.com'));
 });
