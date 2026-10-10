@@ -198,8 +198,12 @@ Remaining:
   Home, Dharm Veer Home-card-to-detail identity, and at least one dark-mode
   route pass.
 
-## Deferred explicitly
+## Deferred explicitly / Future Roadmap
 
+- **Kundali Physical Scan & OCR Ingestion ("Scan your Kundali"):**
+  - Ability for users to take camera photos or upload PDF scans of their physical/handwritten *Janam Patri* booklets.
+  - Optical Character Recognition (OCR) to automatically extract Name, DOB, Time, Location, Lagna Spasht, Moon Spasht, and Graha Spashta degrees.
+  - Automatic validation against Shoonaya's backend ephemeris engine to highlight arc-minute discrepancies or confirm 100% chart parity before saving into birth profiles.
 - No EAS build unless requested.
 - No bottom-nav restructuring toward Kul until Kul exists natively.
 - No new calendar source unless it becomes part of the shared calendar audit.
