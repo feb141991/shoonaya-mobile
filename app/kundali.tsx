@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -24,7 +26,6 @@ import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
-import { searchCities, searchLocalCitySuggestions } from '@/lib/citySearch';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
 
@@ -65,6 +66,7 @@ export default function KundaliScreen() {
   const theme = themeColor(isDark);
 
   const appIdentity = useAppIdentity();
+  const formScrollRef = useRef<ScrollView>(null);
   const [profiles, setProfiles] = useState<BirthProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -72,9 +74,6 @@ export default function KundaliScreen() {
   const [selfAccount, setSelfAccount] = useState<{
     fullName: string;
     dateOfBirth: string;
-    timeOfBirth: string;
-    cityQuery: string;
-    geocodeResult: GeocodeResult | null;
   } | null>(null);
 
   // Form State
@@ -95,7 +94,7 @@ export default function KundaliScreen() {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, date_of_birth, city, country')
+        .select('full_name, date_of_birth')
         .eq('id', appIdentity.userId)
         .maybeSingle();
 
@@ -106,57 +105,10 @@ export default function KundaliScreen() {
       }
 
       const dateOfBirth = data?.date_of_birth?.trim() || '';
-      const city = data?.city?.trim() || '';
-
-      let resolvedGeo: GeocodeResult | null = null;
-      if (city) {
-        const localMatches = searchLocalCitySuggestions(city, 1);
-        if (localMatches.length > 0) {
-          resolvedGeo = {
-            city: localMatches[0].city,
-            country: localMatches[0].country,
-            lat: localMatches[0].lat,
-            lng: localMatches[0].lng,
-            timezone: localMatches[0].timezone,
-          };
-        } else {
-          const remoteMatches = await searchCities(city, 1);
-          if (remoteMatches.length > 0) {
-            resolvedGeo = {
-              city: remoteMatches[0].city,
-              country: remoteMatches[0].country,
-              lat: remoteMatches[0].lat,
-              lng: remoteMatches[0].lng,
-              timezone: remoteMatches[0].timezone,
-            };
-          }
-        }
-      }
-
-      // Check if user already has an existing self birth profile in birth_profiles to grab saved time_of_birth
-      let savedTimeOfBirth = '';
-      try {
-        const { data: birthData } = await supabase
-          .from('birth_profiles')
-          .select('time_of_birth')
-          .eq('owner_id', appIdentity.userId)
-          .or('is_primary.eq.true,relation.eq.self')
-          .order('is_primary', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (birthData?.time_of_birth) {
-          savedTimeOfBirth = birthData.time_of_birth.trim();
-        }
-      } catch {
-        // ignore
-      }
 
       setSelfAccount({
         fullName,
         dateOfBirth,
-        timeOfBirth: savedTimeOfBirth,
-        cityQuery: resolvedGeo ? resolvedGeo.city : city,
-        geocodeResult: resolvedGeo,
       });
     } catch (err) {
       console.warn('Could not load self account details:', err);
@@ -190,32 +142,23 @@ export default function KundaliScreen() {
         fullName: selfAccount.fullName,
         label: selfAccount.fullName || 'My Chart',
         dateOfBirth: selfAccount.dateOfBirth,
-        timeOfBirth: selfAccount.timeOfBirth || prev.timeOfBirth,
-        cityQuery: selfAccount.cityQuery,
       }));
-      if (selfAccount.geocodeResult) {
-        setGeocodeResult(selfAccount.geocodeResult);
-      }
     }
   }, [selfAccount]);
 
   const handleSelectRelation = (newRelation: string) => {
     if (newRelation === formData.relation) return;
     if (newRelation === 'self') {
-      if (selfAccount) {
-        setFormData(prev => ({
-          ...prev,
-          relation: 'self',
-          fullName: selfAccount.fullName,
-          label: selfAccount.fullName || 'My Chart',
-          dateOfBirth: selfAccount.dateOfBirth,
-          timeOfBirth: selfAccount.timeOfBirth || '',
-          cityQuery: selfAccount.cityQuery,
-        }));
-        setGeocodeResult(selfAccount.geocodeResult);
-      } else {
-        setFormData(prev => ({ ...prev, relation: 'self' }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        relation: 'self',
+        fullName: selfAccount?.fullName || '',
+        label: selfAccount?.fullName || 'My Chart',
+        dateOfBirth: selfAccount?.dateOfBirth || '',
+        timeOfBirth: '',
+        cityQuery: '',
+      }));
+      setGeocodeResult(null);
     } else {
       // Clear for non-self relation so user can enter family member details
       setFormData(prev => ({
@@ -266,9 +209,9 @@ export default function KundaliScreen() {
           relation: 'self',
           dateOfBirth: selfAccount?.dateOfBirth || '',
           timeOfBirth: '',
-          cityQuery: selfAccount?.cityQuery || '',
+          cityQuery: '',
         });
-        setGeocodeResult(selfAccount?.geocodeResult || null);
+        setGeocodeResult(null);
         fetchProfiles(); // Refresh list
       } else {
         const errPayload = await response.json();
@@ -448,7 +391,11 @@ export default function KundaliScreen() {
 
       {/* Birth Details Form Modal */}
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: theme.bg }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: theme.bg }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 44 : 0}
+        >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.premiumBorder }}>
             <View>
               <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading }}>New Birth Chart</Text>
@@ -460,8 +407,9 @@ export default function KundaliScreen() {
           </View>
 
           <ScrollView
+            ref={formScrollRef}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 34 }}
+            contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 220 }}
           >
             <LinearGradient
               colors={isDark
@@ -524,7 +472,7 @@ export default function KundaliScreen() {
                   })}
                 </View>
 
-                {formData.relation === 'self' && (selfAccount?.fullName || selfAccount?.dateOfBirth || selfAccount?.cityQuery) ? (
+                {formData.relation === 'self' && (selfAccount?.fullName || selfAccount?.dateOfBirth) ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
                     <Feather name="check-circle" size={13} color={theme.brand} />
                     <Text style={{ color: theme.dim, ...TYPE.caption, fontSize: 11 }}>
@@ -582,8 +530,18 @@ export default function KundaliScreen() {
               <CityFinder
                 value={formData.cityQuery}
                 selectedCity={geocodeResult}
+                onFocus={() => {
+                  setTimeout(() => {
+                    formScrollRef.current?.scrollToEnd({ animated: true });
+                  }, 120);
+                }}
                 onQueryChange={text => {
                   setFormData(prev => ({ ...prev, cityQuery: text }));
+                  if (text.length >= 2) {
+                    setTimeout(() => {
+                      formScrollRef.current?.scrollToEnd({ animated: true });
+                    }, 120);
+                  }
                 }}
                 onSelectCity={city => {
                   setGeocodeResult(city);
@@ -608,7 +566,7 @@ export default function KundaliScreen() {
               {submitting ? <ActivityIndicator color={COLORS.ink} /> : <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Generate Chart</Text>}
             </PressableSurface>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </Screen>
   );

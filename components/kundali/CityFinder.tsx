@@ -39,6 +39,7 @@ export interface CityFinderProps {
   selectedCity?: ResolvedCity | null;
   onSelectCity: (city: ResolvedCity | null) => void;
   onQueryChange?: (query: string) => void;
+  onFocus?: () => void;
   placeholder?: string;
 }
 
@@ -80,6 +81,7 @@ export function CityFinder({
   selectedCity = null,
   onSelectCity,
   onQueryChange,
+  onFocus,
   placeholder,
 }: CityFinderProps) {
   const isDark = useColorScheme() === 'dark';
@@ -138,6 +140,7 @@ export function CityFinder({
     const localResults = searchLocalCitySuggestions(text, 6);
     setSuggestions(localResults);
     setShowDropdown(localResults.length > 0);
+    if (localResults.length > 0) onFocus?.();
     setLoading(true);
     debounceTimerRef.current = setTimeout(async () => {
       try {
@@ -145,6 +148,7 @@ export function CityFinder({
         if (queryRevisionRef.current !== revision) return;
         setSuggestions(results);
         setShowDropdown(results.length > 0);
+        if (results.length > 0) onFocus?.();
       } catch {
         if (queryRevisionRef.current !== revision) return;
         setSuggestions([]);
@@ -286,6 +290,7 @@ export function CityFinder({
           accessibilityLabel={copy.inputLabel}
           accessibilityHint={copy.searchHint}
           value={query}
+          onFocus={onFocus}
           onChangeText={handleQueryChange}
           autoCorrect={false}
           autoCapitalize="words"
