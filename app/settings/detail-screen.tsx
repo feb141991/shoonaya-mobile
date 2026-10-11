@@ -7,7 +7,6 @@ import {
   ScrollView,
   Switch,
   Text,
-  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
@@ -70,6 +69,7 @@ import {
   type HeroSize,
 } from '@/lib/heroPreference';
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
+import { ReminderTimePicker } from '@/components/settings/ReminderTimePicker';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
@@ -101,6 +101,7 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_family_notifications: true,
   wants_family_remembrance_reminders: false,
   family_remembrance_time: '09:00',
+  wants_brahma_muhurta_reminders: false,
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
@@ -113,6 +114,7 @@ const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle:
   { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', subtitle: 'When the daily quiz is ready, plus one 6:00 PM nudge if it is still unfinished', requiresAccount: true },
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
+  { key: 'wants_brahma_muhurta_reminders', label: 'Brahma Muhurta', subtitle: 'A pre-dawn reminder about 1½ hours before sunrise at your saved location. It arrives at night.', requiresAccount: true },
   { key: 'wants_sankalpa_midpoint_reminders', label: 'Sankalpa midpoint', subtitle: 'One gentle reminder halfway through an active vow', requiresAccount: true },
   { key: 'wants_festival_reminders', label: 'Sacred festivals', subtitle: 'Major and regional sacred festivals' },
   { key: 'wants_vrat_reminders', label: 'Vrats & fasting', subtitle: 'Ekadashi, Pradosha, Purnima & fasting days' },
@@ -187,6 +189,7 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     wants_family_notifications: value?.wants_family_notifications ?? INITIAL_SETTINGS.wants_family_notifications,
     wants_family_remembrance_reminders: value?.wants_family_remembrance_reminders ?? INITIAL_SETTINGS.wants_family_remembrance_reminders,
     family_remembrance_time: value?.family_remembrance_time ?? INITIAL_SETTINGS.family_remembrance_time,
+    wants_brahma_muhurta_reminders: value?.wants_brahma_muhurta_reminders ?? INITIAL_SETTINGS.wants_brahma_muhurta_reminders,
     app_language: value?.app_language ?? INITIAL_SETTINGS.app_language,
     transliteration_language: value?.transliteration_language ?? INITIAL_SETTINGS.transliteration_language,
     meaning_language: value?.meaning_language ?? INITIAL_SETTINGS.meaning_language,
@@ -195,13 +198,11 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
   };
 }
 
-function isValidQuizReminderTime(value: string): boolean {
-  const match = /^(\d{2}):(\d{2})$/.exec(value);
-  if (!match) return false;
-  const hour = Number(match[1]);
-  const minute = Number(match[2]);
-  return hour >= 7 && hour < 15 || (hour === 15 && minute === 0);
-}
+// Server-enforced windows (quiz producer; profiles_family_remembrance_time_check).
+const QUIZ_REMINDER_EARLIEST = '07:00';
+const QUIZ_REMINDER_LATEST = '15:00';
+const FAMILY_REMEMBRANCE_EARLIEST = '08:00';
+const FAMILY_REMEMBRANCE_LATEST = '21:59';
 
 function SettingsSection({
   label,
@@ -357,10 +358,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   });
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
-  const [japaReminderTimeDraft, setJapaReminderTimeDraft] = useState(INITIAL_SETTINGS.japa_reminder_time);
-  const [quizReminderTimeDraft, setQuizReminderTimeDraft] = useState(INITIAL_SETTINGS.quiz_reminder_time);
-  const [familyRemembranceTimeDraft, setFamilyRemembranceTimeDraft] = useState(INITIAL_SETTINGS.family_remembrance_time);
-  const [reminderTimeDraft, setReminderTimeDraft] = useState(INITIAL_SETTINGS.observance_reminder_time ?? '08:00');
+  const [brahmaMuhurtaSchemaReady, setBrahmaMuhurtaSchemaReady] = useState(false);
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
   const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
@@ -376,18 +374,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   // drains another account's outbox (see resumePendingWrite below).
   const identityRef = useRef<SettingsCacheIdentity | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setReminderTimeDraft(settings.observance_reminder_time ?? '08:00');
-  }, [settings.observance_reminder_time]);
-
-  useEffect(() => {
-    setJapaReminderTimeDraft(settings.japa_reminder_time);
-  }, [settings.japa_reminder_time]);
-
-  useEffect(() => {
-    setQuizReminderTimeDraft(settings.quiz_reminder_time);
-  }, [settings.quiz_reminder_time]);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current) {
@@ -524,7 +510,6 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       ]);
       if (!lease.isCurrent()) return;
       setSettings(toSettingsState({ ...INITIAL_SETTINGS, ...cached?.settings }));
-      setFamilyRemembranceTimeDraft(toSettingsState({ ...INITIAL_SETTINGS, ...cached?.settings }).family_remembrance_time);
       if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
         setThemePref(localTheme);
       }
@@ -540,29 +525,26 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     identityRef.current = identity;
 
     setFamilyRemembranceSchemaReady(false);
+    setBrahmaMuhurtaSchemaReady(false);
     const profileSettingsPromise = (async () => {
-      const current = await supabase
-        .from('profiles')
-        .select(
-          'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, wants_family_remembrance_reminders, family_remembrance_time, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
-        )
-        .eq('id', appIdentity.userId)
-        .single();
-      if (!current.error) return { ...current, familyRemembranceSchemaReady: true };
-      if ((current.error as { code?: string }).code !== '42703') {
-        return { ...current, familyRemembranceSchemaReady: false };
-      }
-      // The Native bundle may be installed before the additive DB migration.
-      // Keep all existing settings readable and keep this new control disabled
-      // until the server schema is ready.
-      const legacy = await supabase
-        .from('profiles')
-        .select(
-          'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization'
-        )
-        .eq('id', appIdentity.userId)
-        .single();
-      return { ...legacy, familyRemembranceSchemaReady: false };
+      const baseColumns = 'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization';
+      const familyColumns = `${baseColumns}, wants_family_remembrance_reminders, family_remembrance_time`;
+      const read = (columns: string) => supabase.from('profiles').select(columns).eq('id', appIdentity.userId).single();
+      const isMissingColumn = (error: unknown) => (error as { code?: string } | null)?.code === '42703';
+
+      // The Native bundle may be installed before an additive DB migration.
+      // Keep all existing settings readable and keep each newer control
+      // disabled until its server column exists.
+      const current = await read(`${familyColumns}, wants_brahma_muhurta_reminders`);
+      if (!current.error) return { ...current, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: true };
+      if (!isMissingColumn(current.error)) return { ...current, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
+
+      const withFamily = await read(familyColumns);
+      if (!withFamily.error) return { ...withFamily, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false };
+      if (!isMissingColumn(withFamily.error)) return { ...withFamily, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
+
+      const legacy = await read(baseColumns);
+      return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
     })();
 
     const [profileRes, cached, localTheme] = await Promise.all([
@@ -575,13 +557,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (profileRes.error) throw profileRes.error;
 
     setFamilyRemembranceSchemaReady(profileRes.familyRemembranceSchemaReady);
-    setProfileTradition(profileRes.data?.tradition || 'hindu');
-    const remote = toSettingsState(profileRes.data ?? INITIAL_SETTINGS);
+    setBrahmaMuhurtaSchemaReady(profileRes.brahmaMuhurtaSchemaReady);
+    const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
+    setProfileTradition(profileRow?.tradition || 'hindu');
+    const remote = toSettingsState(profileRow ?? INITIAL_SETTINGS);
     const pending = (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
 
     setSettings(merged);
-    setFamilyRemembranceTimeDraft(merged.family_remembrance_time);
     setPendingWrite(pending[0] ?? null);
     await writeSettingsCache({
       schemaVersion: 2,
@@ -1104,7 +1087,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   <View style={{ height: 1, backgroundColor: theme.borderSoft, marginTop: 8 }} />
                 </View>
               ) : null}
-              {NOTIFICATION_TOGGLES.map((item, index) => (
+              {NOTIFICATION_TOGGLES.map((item, index) => {
+                // Newer opt-ins stay disabled until their profile column exists.
+                const awaitingServerUpdate =
+                  (item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady) ||
+                  (item.key === 'wants_brahma_muhurta_reminders' && !brahmaMuhurtaSchemaReady);
+                return (
                 <View key={item.key}>
                   {index > 0 ? (
                     <View style={{ height: 1, backgroundColor: theme.borderSoft, marginBottom: 16 }} />
@@ -1113,16 +1101,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     label={item.label}
                     subtitle={item.requiresAccount && isGuest
                       ? `${item.subtitle} (sign in to enable)`
-                      : item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady
+                      : awaitingServerUpdate
                         ? 'Available after the matching server update is installed'
                         : item.subtitle}
-                    value={settings[item.key] as boolean}
-                    disabled={item.disabled || (item.requiresAccount === true && isGuest) ||
-                      (item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady)}
+                    value={(settings[item.key] as boolean | undefined) ?? false}
+                    disabled={item.disabled || (item.requiresAccount === true && isGuest) || awaitingServerUpdate}
                     badge={item.badge}
                     onChange={(value) => {
-                      if (item.disabled || (item.requiresAccount === true && isGuest) ||
-                        (item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady)) return;
+                      if (item.disabled || (item.requiresAccount === true && isGuest) || awaitingServerUpdate) return;
                       // Turning a reminder ON is exactly the "contextual"
                       // moment to (re-)ask for OS push permission — mirrors
                       // the web app's own contextual push-permission
@@ -1152,81 +1138,42 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     theme={theme}
                   />
                   {item.key === 'japa_reminder_enabled' && !isGuest && settings.japa_reminder_enabled ? (
-                    <View style={{ gap: 10, marginTop: 12, marginBottom: 14 }}>
-                      <Text style={{ ...TYPE.label, color: theme.text }}>Japa reminder time</Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }}>Uses your profile timezone. Choose when you would like a daily nudge to practise.</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <TextInput
-                          accessibilityLabel="Japa reminder time"
-                          value={japaReminderTimeDraft}
-                          onChangeText={setJapaReminderTimeDraft}
-                          keyboardType="numbers-and-punctuation"
-                          maxLength={5}
-                          placeholder="07:00"
-                          placeholderTextColor={theme.dim}
-                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
-                        />
-                        <Button
-                          label="Save time"
-                          variant="secondary"
-                          disabled={!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(japaReminderTimeDraft) || japaReminderTimeDraft === settings.japa_reminder_time}
-                          onPress={() => { void persistSettings({ ...settings, japa_reminder_time: japaReminderTimeDraft }); }}
-                        />
-                      </View>
-                    </View>
+                    <ReminderTimePicker
+                      label="Japa reminder time"
+                      hint="Uses your profile timezone. Choose when you would like a daily nudge to practise."
+                      value={settings.japa_reminder_time}
+                      fallback={INITIAL_SETTINGS.japa_reminder_time}
+                      onSave={(clock) => { void persistSettings({ ...settings, japa_reminder_time: clock }); }}
+                      theme={theme}
+                    />
                   ) : null}
                   {item.key === 'quiz_reminder_enabled' && !isGuest && settings.quiz_reminder_enabled ? (
-                    <View style={{ gap: 10, marginTop: 12, marginBottom: 14 }}>
-                      <Text style={{ ...TYPE.label, color: theme.text }}>Quiz-ready reminder time</Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                        Uses your profile timezone. Choose 7:00 AM–3:00 PM. If the quiz is still unfinished, one follow-up is planned for 6:00 PM; quiet hours and the daily notification limit still apply.
-                      </Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <TextInput
-                          accessibilityLabel="Daily quiz reminder time"
-                          value={quizReminderTimeDraft}
-                          onChangeText={setQuizReminderTimeDraft}
-                          keyboardType="numbers-and-punctuation"
-                          maxLength={5}
-                          placeholder="08:00"
-                          placeholderTextColor={theme.dim}
-                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
-                        />
-                        <Button
-                          label="Save time"
-                          variant="secondary"
-                          disabled={!isValidQuizReminderTime(quizReminderTimeDraft) || quizReminderTimeDraft === settings.quiz_reminder_time}
-                          onPress={() => { void persistSettings({ ...settings, quiz_reminder_time: quizReminderTimeDraft }); }}
-                        />
-                      </View>
-                    </View>
+                    <ReminderTimePicker
+                      label="Quiz-ready reminder time"
+                      hint="Uses your profile timezone. Choose 7:00 AM–3:00 PM. If the quiz is still unfinished, one follow-up is planned for 6:00 PM; quiet hours and the daily notification limit still apply."
+                      value={settings.quiz_reminder_time}
+                      fallback={INITIAL_SETTINGS.quiz_reminder_time}
+                      min={QUIZ_REMINDER_EARLIEST}
+                      max={QUIZ_REMINDER_LATEST}
+                      onSave={(clock) => { void persistSettings({ ...settings, quiz_reminder_time: clock }); }}
+                      theme={theme}
+                    />
                   ) : null}
                   {item.key === 'wants_family_remembrance_reminders' && !isGuest && settings.wants_family_remembrance_reminders ? (
-                    <View style={{ gap: 10, marginTop: 12, marginBottom: 14 }}>
-                      <Text style={{ ...TYPE.label, color: theme.text }}>Reminder time</Text>
-                      <Text style={{ ...TYPE.caption, color: theme.dim }}>Choose 08:00–21:59 in your profile timezone. Quiet hours can move it to the next allowed time.</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <TextInput
-                          accessibilityLabel="Family remembrance reminder time"
-                          value={familyRemembranceTimeDraft}
-                          onChangeText={setFamilyRemembranceTimeDraft}
-                          keyboardType="numbers-and-punctuation"
-                          maxLength={5}
-                          placeholder="09:00"
-                          placeholderTextColor={theme.dim}
-                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
-                        />
-                        <Button
-                          label="Save time"
-                          variant="secondary"
-                          disabled={!/^(0[8-9]|1[0-9]|2[01]):[0-5][0-9]$/.test(familyRemembranceTimeDraft) || familyRemembranceTimeDraft === settings.family_remembrance_time}
-                          onPress={() => { void persistSettings({ ...settings, family_remembrance_time: familyRemembranceTimeDraft }); }}
-                        />
-                      </View>
-                    </View>
+                    <ReminderTimePicker
+                      label="Family remembrance reminder time"
+                      hint="Uses your profile timezone. Choose 8:00 AM–9:59 PM. Quiet hours can move it to the next allowed time."
+                      value={settings.family_remembrance_time}
+                      fallback={INITIAL_SETTINGS.family_remembrance_time}
+                      min={FAMILY_REMEMBRANCE_EARLIEST}
+                      max={FAMILY_REMEMBRANCE_LATEST}
+                      onSave={(clock) => { void persistSettings({ ...settings, family_remembrance_time: clock }); }}
+                      theme={theme}
+                    />
                   ) : null}
                 </View>
-              ))}
+                );
+              })}
               <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
               <View style={{ gap: 10 }}>
                 <Text style={{ ...TYPE.label, color: theme.text }}>Observance reminder days</Text>
@@ -1256,28 +1203,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 </View>
               </View>
               <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
-              <View style={{ gap: 10 }}>
-                <Text style={{ ...TYPE.label, color: theme.text }}>Reminder time</Text>
-                <Text style={{ ...TYPE.caption, color: theme.dim }}>Uses your profile timezone. Enter 24-hour time, for example 08:00.</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <TextInput
-                    accessibilityLabel="Observance reminder time"
-                    value={reminderTimeDraft}
-                    onChangeText={setReminderTimeDraft}
-                    keyboardType="numbers-and-punctuation"
-                    maxLength={5}
-                    placeholder="08:00"
-                    placeholderTextColor={theme.dim}
-                    style={{ minHeight: MIN_TOUCH_TARGET, minWidth: 108, borderWidth: 1, borderColor: theme.border, borderRadius: RADII.md, paddingHorizontal: 12, color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 16, textAlign: 'center' }}
-                  />
-                  <Button
-                    label="Save time"
-                    variant="secondary"
-                    disabled={!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(reminderTimeDraft) || reminderTimeDraft === settings.observance_reminder_time}
-                    onPress={() => { void persistSettings({ ...settings, observance_reminder_time: reminderTimeDraft }); }}
-                  />
-                </View>
-              </View>
+              <ReminderTimePicker
+                label="Festival and vrat reminder time"
+                hint="Uses your profile timezone."
+                value={settings.observance_reminder_time ?? '08:00'}
+                fallback="08:00"
+                onSave={(clock) => { void persistSettings({ ...settings, observance_reminder_time: clock }); }}
+                theme={theme}
+              />
             </SettingsSection> : null}
 
             {/* ── Language / preferences ──────────────────────────────── */}
