@@ -21,6 +21,7 @@ import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
 import { FocusQuery } from '@/lib/focusQuery';
 import { getProfileCacheSnapshot } from '@/lib/profileCache';
 import { getHomeCacheSnapshot } from '@/lib/homeCache';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Bhakti native hub mirrors the PWA structure: a tradition-tinted hero strip
 // and one unified Explore grid. Content-heavy destinations fetch from canonical
@@ -131,6 +132,7 @@ function StatPill({ icon, label, accent }: { icon: keyof typeof Feather.glyphMap
 
 export default function BhaktiScreen() {
   const router = useRouter();
+  const { language } = useLanguage();
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
@@ -310,7 +312,18 @@ export default function BhaktiScreen() {
             <View style={{ gap: 12 }}>
               {chunkPairs(activeCards).map((row, rowIndex) => (
                 <View key={row[0]?.id ?? rowIndex} style={{ flexDirection: 'row', gap: 12 }}>
-                  {row.map((card, columnIndex) => (
+                  {row.map((card, columnIndex) => {
+                    const cardTitle = card.id === 'dharmveer'
+                      ? (language === 'hi' ? 'धर्म वीर' : language === 'pa' ? 'ਧਰਮ ਵੀਰ' : card.title)
+                      : card.title;
+                    const cardDescription = card.id === 'dharmveer'
+                      ? (language === 'hi'
+                        ? 'धर्म और साहस के प्रेरक जीवन-प्रसंग'
+                        : language === 'pa'
+                          ? 'ਧਰਮ ਅਤੇ ਹੌਸਲੇ ਦੀਆਂ ਪ੍ਰੇਰਕ ਜੀਵਨ ਕਥਾਵਾਂ'
+                          : card.description)
+                      : card.description;
+                    return (
                     <MotionView
                       key={card.id}
                       animationKey={`${visibleTradition}-${card.id}`}
@@ -321,7 +334,7 @@ export default function BhaktiScreen() {
                       <PressableSurface
                         haptic="selection"
                         onPress={() => handleCardPress(card)}
-                        accessibilityLabel={`${card.title}, ${card.description}`}
+                        accessibilityLabel={`${cardTitle}, ${cardDescription}`}
                         style={{ flex: 1 }}
                       >
                         <Card
@@ -352,9 +365,9 @@ export default function BhaktiScreen() {
                             </View>
                           )}
                           <View style={{ gap: 4 }}>
-                            <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{card.title}</Text>
+                            <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{cardTitle}</Text>
                             <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={2}>
-                              {card.description}
+                              {cardDescription}
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -2 }}>
@@ -373,7 +386,8 @@ export default function BhaktiScreen() {
                         </Card>
                       </PressableSurface>
                     </MotionView>
-                  ))}
+                    );
+                  })}
                   {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
                 </View>
               ))}

@@ -121,7 +121,11 @@ export type CachedHomeRenderModel = {
   dharmVeer: {
     id: string;
     name: string;
+    nameLocal?: string | null;
+    namePa?: string | null;
     tagline: string;
+    taglineLocal?: string | null;
+    taglinePa?: string | null;
     href: string;
   };
   firstWeek: boolean;
@@ -419,7 +423,11 @@ export function sanitizeForHomeCache(full: any): CachedHomeRenderModel {
     dharmVeer: {
       id: full.dharmVeer?.id ?? '',
       name: full.dharmVeer?.name ?? '',
+      nameLocal: full.dharmVeer?.nameLocal ?? null,
+      namePa: full.dharmVeer?.namePa ?? null,
       tagline: full.dharmVeer?.tagline ?? '',
+      taglineLocal: full.dharmVeer?.taglineLocal ?? null,
+      taglinePa: full.dharmVeer?.taglinePa ?? null,
       href: full.dharmVeer?.href ?? '',
     },
     firstWeek: Boolean(full.firstWeek),

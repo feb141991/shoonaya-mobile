@@ -125,7 +125,11 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
     dharmVeer: {
       id: 'sri-krishna',
       name: 'Sri Krishna',
+      nameLocal: 'श्री कृष्ण',
+      namePa: 'ਸ੍ਰੀ ਕ੍ਰਿਸ਼ਨ',
       tagline: 'Ancient wisdom.',
+      taglineLocal: 'प्राचीन ज्ञान।',
+      taglinePa: 'ਪ੍ਰਾਚੀਨ ਗਿਆਨ।',
       href: '/dharm-veer',
     },
     firstWeek: false,
@@ -976,6 +980,10 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(sanitized.profile.wantsFestivalReminders, false);
       assert.equal(sanitized.profile.wantsVratReminders, true);
       assert.equal(sanitized.profile.wantsTithiReminders, false);
+      assert.equal(sanitized.dharmVeer.nameLocal, 'श्री कृष्ण');
+      assert.equal(sanitized.dharmVeer.namePa, 'ਸ੍ਰੀ ਕ੍ਰਿਸ਼ਨ');
+      assert.equal(sanitized.dharmVeer.taglineLocal, 'प्राचीन ज्ञान।');
+      assert.equal(sanitized.dharmVeer.taglinePa, 'ਪ੍ਰਾਚੀਨ ਗਿਆਨ।');
 
       // Unrendered location strings omitted
       assert.equal((sanitized.profile as any).city, undefined);

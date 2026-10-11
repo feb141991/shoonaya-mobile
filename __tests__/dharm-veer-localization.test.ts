@@ -1,14 +1,45 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { DHARM_VEERS, pickDharmVeerLocalizedText, pickDharmVeerQuote } from '../lib/dharm-veer';
+import { DHARM_VEERS, getDharmVeerCardCopy, pickDharmVeerLocalizedText, pickDharmVeerQuote } from '../lib/dharm-veer';
 
 const screen = readFileSync(new URL('../app/dharm-veer/[id].tsx', import.meta.url), 'utf8');
+const archive = readFileSync(new URL('../app/dharm-veer.tsx', import.meta.url), 'utf8');
+const home = readFileSync(new URL('../app/(tabs)/index.tsx', import.meta.url), 'utf8');
+const bhakti = readFileSync(new URL('../app/(tabs)/bhakti.tsx', import.meta.url), 'utf8');
+const quiz = readFileSync(new URL('../app/quiz.tsx', import.meta.url), 'utf8');
 
 describe('Dharm Veer localized reader', () => {
   it('falls back to the source language instead of Hindi when Punjabi is absent', () => {
     assert.equal(pickDharmVeerLocalizedText('English source', 'Hindi copy', undefined, 'pa'), 'English source');
     assert.equal(pickDharmVeerLocalizedText('English source', 'Hindi copy', 'Punjabi copy', 'pa'), 'Punjabi copy');
+  });
+
+  it('uses the selected language for Dharm Veer cards, with English fallback for missing translations', () => {
+    const hero = {
+      name: 'Sri Krishna', nameLocal: 'श्री कृष्ण', namePa: 'ਸ੍ਰੀ ਕ੍ਰਿਸ਼ਨ',
+      tagline: 'English tagline', taglineLocal: 'हिंदी परिचय', taglinePa: 'ਪੰਜਾਬੀ ਜਾਣ-ਪਛਾਣ',
+    };
+    assert.deepEqual(getDharmVeerCardCopy(hero, 'hi'), {
+      name: 'श्री कृष्ण', tagline: 'हिंदी परिचय', era: undefined, region: undefined,
+    });
+    assert.deepEqual(getDharmVeerCardCopy(hero, 'pa'), {
+      name: 'ਸ੍ਰੀ ਕ੍ਰਿਸ਼ਨ', tagline: 'ਪੰਜਾਬੀ ਜਾਣ-ਪਛਾਣ', era: undefined, region: undefined,
+    });
+    assert.equal(getDharmVeerCardCopy({ name: 'Hero', tagline: 'English' }, 'hi').tagline, 'English');
+    const partialServerHero = { id: 'sri-krishna', name: 'Sri Krishna', tagline: 'Server English copy' };
+    const copyWithBundledTranslation = getDharmVeerCardCopy(partialServerHero, 'hi');
+    assert.equal(copyWithBundledTranslation.name, 'श्री कृष्ण');
+    assert.equal(copyWithBundledTranslation.tagline, DHARM_VEERS.find((item) => item.id === 'sri-krishna')?.taglineLocal);
+  });
+
+  it('renders localized names and descriptions on archive and Home cards', () => {
+    assert.match(archive, /const \{ language \} = useLanguage\(\)/);
+    assert.match(archive, /getDharmVeerCardCopy\(liveTodayHero, language\)/);
+    assert.match(archive, /getDharmVeerCardCopy\(hero, language\)/);
+    assert.match(home, /getDharmVeerCardCopy\(state\.dharmVeer, language\)/);
+    assert.match(bhakti, /धर्म और साहस के प्रेरक जीवन-प्रसंग/);
+    assert.match(quiz, /धर्म के वीरों और रक्षकों की प्रेरक कथाएँ पढ़ें/);
   });
 
   it('quote: a Punjabi reader without a Punjabi quote gets the English quote, never the Hindi one', () => {

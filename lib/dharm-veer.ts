@@ -88,6 +88,56 @@ export function pickDharmVeerLocalizedText(
   return hindi || english;
 }
 
+type DharmVeerCardCopySource = Pick<DharmVeer, 'name' | 'tagline'> & {
+  id?: string;
+  nameLocal?: string | null;
+  namePa?: string | null;
+  taglineLocal?: string | null;
+  taglinePa?: string | null;
+  era?: string | null;
+  eraLocal?: string | null;
+  eraPa?: string | null;
+  region?: string | null;
+  regionLocal?: string | null;
+  regionPa?: string | null;
+};
+
+export function getDharmVeerCardCopy(
+  hero: DharmVeerCardCopySource,
+  language: 'en' | 'hi' | 'pa',
+) {
+  if (language === 'en') {
+    return {
+      name: hero.name,
+      tagline: hero.tagline,
+      era: hero.era,
+      region: hero.region,
+    };
+  }
+
+  // The API roster is authoritative for current English copy, while the
+  // bundled reviewed roster can fill a missing localized field on older or
+  // partially backfilled server rows.
+  const bundled = hero.id ? DHARM_VEERS.find((item) => item.id === hero.id) : undefined;
+  const nameLocal = hero.nameLocal || bundled?.nameLocal;
+  const namePa = hero.namePa || bundled?.namePa;
+  const taglineLocal = hero.taglineLocal || bundled?.taglineLocal;
+  const taglinePa = hero.taglinePa || bundled?.taglinePa;
+  const era = hero.era || bundled?.era;
+  const eraLocal = hero.eraLocal || bundled?.eraLocal;
+  const eraPa = hero.eraPa || bundled?.eraPa;
+  const region = hero.region || bundled?.region;
+  const regionLocal = hero.regionLocal || bundled?.regionLocal;
+  const regionPa = hero.regionPa || bundled?.regionPa;
+  const contentLanguage = language === 'pa' ? 'pa' : 'hi';
+  return {
+    name: language === 'pa' ? namePa || nameLocal || hero.name : nameLocal || hero.name,
+    tagline: pickDharmVeerLocalizedText(hero.tagline, taglineLocal, taglinePa, contentLanguage),
+    era: pickDharmVeerLocalizedText(era, eraLocal, eraPa, contentLanguage),
+    region: pickDharmVeerLocalizedText(region, regionLocal, regionPa, contentLanguage),
+  };
+}
+
 type DharmVeerQuote = { text: string; attribution: string };
 
 /**

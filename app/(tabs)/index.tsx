@@ -82,6 +82,7 @@ import { isMoodStatusOwnedBy, shouldShowMoodPulse } from '@/lib/moodPulsePolicy'
 import { isRashiphalNudgeDismissed, setRashiphalNudgeDismissed } from '@/lib/rashiphalPreference';
 import { AuthGate } from '@/components/ui/AuthGate';
 import { useAppIdentity } from '@/lib/appIdentity';
+import { getDharmVeerCardCopy } from '@/lib/dharm-veer';
 import {
   recordHomeFocusSession,
   isHeroArtworkCueEligible,
@@ -319,7 +320,11 @@ type HomeSummary = {
   dharmVeer: {
     id: string;
     name: string;
+    nameLocal?: string | null;
+    namePa?: string | null;
     tagline: string;
+    taglineLocal?: string | null;
+    taglinePa?: string | null;
     href: string;
   };
   // New user signal for FirstWeekGuide — mirrors the PWA's own
@@ -853,6 +858,7 @@ function HomeContent() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const appIdentity = useAppIdentity();
+  const { language } = useLanguage();
   const moodPulseUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
   const initialSnapshot = useMemo(() => {
     if (appIdentity.kind === 'authenticated' || appIdentity.kind === 'guest') {
@@ -1144,6 +1150,7 @@ function HomeContent() {
 
   const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
   const dharmVeerDone = dharmVeerRow?.done ?? false;
+  const dharmVeerCardCopy = getDharmVeerCardCopy(state.dharmVeer, language);
   const dharmVeerIcon = dharmVeerRow?.icon ?? 'shield';
   const dharmVeerColor = PRACTICE_COLOR.dharmveer;
 
@@ -2553,7 +2560,7 @@ function HomeContent() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${state.dharmVeer.name}, ${dharmVeerDone ? 'seva given today' : state.dharmVeer.tagline}`}
+            accessibilityLabel={`${dharmVeerCardCopy.name}, ${dharmVeerDone ? 'seva given today' : (dharmVeerCardCopy.tagline || state.dharmVeer.tagline)}`}
             onPress={() => navigate(resolveNativeRoute(state.dharmVeer.href))}
             style={{
               minHeight: 70,
@@ -2574,13 +2581,15 @@ function HomeContent() {
               <IconTile name="dharmveer" fallbackGlyph={dharmVeerIcon} size="md" color={dharmVeerColor} accent={dharmVeerColor} />
               <View style={{ flex: 1 }}>
                 <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
-                  Dharm Veer
+                  {language === 'hi' ? 'धर्म वीर' : language === 'pa' ? 'ਧਰਮ ਵੀਰ' : 'Dharm Veer'}
                 </Text>
                 <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
-                  {state.dharmVeer.name}
+                  {dharmVeerCardCopy.name}
                 </Text>
                 <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
-                  {dharmVeerDone ? 'Seva given today' : state.dharmVeer.tagline}
+                  {dharmVeerDone
+                    ? (language === 'hi' ? 'आज सेवा पूर्ण' : language === 'pa' ? 'ਅੱਜ ਦੀ ਸੇਵਾ ਪੂਰੀ' : 'Seva given today')
+                    : (dharmVeerCardCopy.tagline || state.dharmVeer.tagline)}
                 </Text>
               </View>
             </View>

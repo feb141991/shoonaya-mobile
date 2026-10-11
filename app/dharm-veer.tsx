@@ -20,8 +20,9 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS } from '@/lib/constants';
-import { selectDharmVeer, selectDharmVeerOfTheDayFromRoster, getDharmVeerOfTheDay, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
+import { selectDharmVeer, selectDharmVeerOfTheDayFromRoster, getDharmVeerOfTheDay, getDharmVeerCardCopy, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { recordRefreshFailure, recordRouteOpen } from '@/lib/telemetry';
@@ -48,6 +49,7 @@ const TRADITION_ACCENT: Record<string, string> = {
 
 export default function DharmVeerScreen() {
   const router = useRouter();
+  const { language } = useLanguage();
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
@@ -219,6 +221,8 @@ export default function DharmVeerScreen() {
     );
   }
 
+  const todayHeroCopy = getDharmVeerCardCopy(liveTodayHero, language);
+
   return (
     <Screen style={{ backgroundColor: surface, paddingHorizontal: 0 }}>
       {/* Sticky Header */}
@@ -271,7 +275,7 @@ export default function DharmVeerScreen() {
         ListHeaderComponent={(
           <>
             <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
-              Today's Dharm Veer
+              {language === 'hi' ? 'आज के धर्म वीर' : language === 'pa' ? 'ਅੱਜ ਦੇ ਧਰਮ ਵੀਰ' : "Today's Dharm Veer"}
             </Text>
             <PressableSurface
               haptic="selection"
@@ -331,14 +335,14 @@ export default function DharmVeerScreen() {
                       </View>
                     ) : null}
                   </View>
-                  <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{liveTodayHero.name}</Text>
-                  <Text numberOfLines={2} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18 }}>{liveTodayHero.tagline}</Text>
+                  <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 22 }}>{todayHeroCopy.name}</Text>
+                  <Text numberOfLines={2} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 13, lineHeight: 18 }}>{todayHeroCopy.tagline || liveTodayHero.tagline}</Text>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 8 }}>
                 <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(197,160,89,0.2)' }} />
                 <Feather name="book-open" size={14} color={gold} />
-                <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Read story</Text>
+                <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{language === 'hi' ? 'कथा पढ़ें' : language === 'pa' ? 'ਕਥਾ ਪੜ੍ਹੋ' : 'Read story'}</Text>
                 <Feather name="chevron-right" size={14} color={gold} />
                 <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(197,160,89,0.2)' }} />
               </View>
@@ -385,12 +389,13 @@ export default function DharmVeerScreen() {
             const isRead = readIds.has(hero.id);
             const meta = TRADITION_META[hero.tradition];
             const accent = TRADITION_ACCENT[hero.tradition] ?? gold;
+            const cardCopy = getDharmVeerCardCopy(hero, language);
 
           return (
             <PressableSurface
               haptic="selection"
               onPress={() => router.push(`/dharm-veer/${hero.id}`)}
-              accessibilityLabel={`${hero.name}, ${isRead ? 'read' : 'unread'}`}
+              accessibilityLabel={`${cardCopy.name}, ${isRead ? 'read' : 'unread'}`}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -443,9 +448,9 @@ export default function DharmVeerScreen() {
                     </View>
                   ) : null}
                 </View>
-                <Text numberOfLines={1} style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{hero.name}</Text>
+                <Text numberOfLines={1} style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 16 }}>{cardCopy.name}</Text>
                 <Text numberOfLines={1} style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12 }}>
-                  {hero.era} · {hero.region}
+                  {[cardCopy.era, cardCopy.region].filter(Boolean).join(' · ')}
                 </Text>
               </View>
               {isRead ? (

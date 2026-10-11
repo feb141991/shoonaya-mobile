@@ -923,10 +923,14 @@ export default function QuizScreen() {
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                  Dharm Veer
+                  {language === 'hi' ? 'धर्म वीर' : language === 'pa' ? 'ਧਰਮ ਵੀਰ' : 'Dharm Veer'}
                 </Text>
                 <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12 }}>
-                  Read sacred stories of timeless heroes & defenders
+                  {language === 'hi'
+                    ? 'धर्म के वीरों और रक्षकों की प्रेरक कथाएँ पढ़ें'
+                    : language === 'pa'
+                      ? 'ਧਰਮ ਦੇ ਵੀਰਾਂ ਅਤੇ ਰਖਵਾਲਿਆਂ ਦੀਆਂ ਪ੍ਰੇਰਕ ਕਥਾਵਾਂ ਪੜ੍ਹੋ'
+                      : 'Read sacred stories of timeless heroes & defenders'}
                 </Text>
               </View>
               <Feather name="chevron-right" size={18} color={textDim} />
