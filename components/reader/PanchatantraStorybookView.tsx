@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -12,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useReaderAppearance } from "@/lib/useReaderAppearance";
 import { readerCopy } from "@/lib/readerCopy";
 import { PagedResumeBanner, usePagedResume } from "@/components/reader/usePagedResume";
+import { useNitiTreasuryItem } from "@/components/reader/useNitiTreasury";
 import { withAlpha } from "@/lib/readerAppearance";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -177,13 +179,25 @@ export function PanchatantraStorybookView({
   const totalPages = bodyParagraphs.length;
   const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
 
-  // Local Niti Treasury state. Moral sharing stays withheld until the story
-  // carries a verified, edition-level source for the exact wording shown.
-  const [savedToTreasury, setSavedToTreasury] = useState(false);
+  // Niti Treasury: a real save, kept on this device for the signed-in person or guest and cleared at
+  // sign-out (lib/nitiTreasury.ts). Moral sharing stays withheld until the story carries a verified,
+  // edition-level source for the exact wording shown.
+  const treasury = useNitiTreasuryItem({ kind: "panchatantra", id: katha.id });
 
-  const handleSaveNitiTreasury = () => {
-    if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setSavedToTreasury((prev) => !prev);
+  const handleSaveNitiTreasury = async () => {
+    const result = await treasury.toggle();
+    if (!result.ok) {
+      // Nothing was written, so the button keeps showing the true state; say so instead of pretending.
+      if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        localizedLabel(activeLanguage, "Couldn't save", "सहेजा नहीं जा सका", "ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ"),
+        localizedLabel(activeLanguage, "Please try again.", "कृपया फिर से प्रयास करें।", "ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"),
+      );
+      return;
+    }
+    if (Platform.OS === "web") return;
+    if (result.saved) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    else void Haptics.selectionAsync();
   };
 
   // Keep page alignment if language changes
@@ -695,27 +709,36 @@ export function PanchatantraStorybookView({
                       <View style={styles.wisdomActionsContainer}>
                         <View style={styles.wisdomActionsRow}>
                           <PressableSurface
-                            haptic="selection"
-                            onPress={handleSaveNitiTreasury}
+                            // The haptic follows the result (a save, an un-save or a failure), not the touch.
+                            haptic="none"
+                            disabled={!treasury.ready}
+                            onPress={() => { void handleSaveNitiTreasury(); }}
+                            accessibilityRole="button"
+                            accessibilityLabel={treasury.saved
+                              ? localizedLabel(activeLanguage, 'Saved to Treasury. Tap to remove.', 'कोश में सहेजा गया। हटाने के लिए टैप करें।', 'ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲਿਆ। ਹਟਾਉਣ ਲਈ ਟੈਪ ਕਰੋ।')
+                              : localizedLabel(activeLanguage, 'Save to Treasury', 'नीति कोश में सहेजें', 'ਨੀਤੀ ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲੋ')}
+                            accessibilityState={{ selected: treasury.saved, disabled: !treasury.ready }}
                             style={styles.wisdomActionSecondaryBtnWrap}
                           >
                             <View
                               style={[
                                 styles.wisdomActionSecondaryBtn,
                                 {
-                                  borderColor: savedToTreasury ? accent : isDark ? 'rgba(197,160,89,0.4)' : 'rgba(180,140,90,0.4)',
-                                  backgroundColor: savedToTreasury ? `${accent}20` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                                  // Reader paper tokens (the same ones the rest of this page uses), so the
+                                  // buttons follow Bhojpatra, Sandhya and Temple Night, not a fixed light or dark.
+                                  borderColor: treasury.saved ? accent : theme.border,
+                                  backgroundColor: treasury.saved ? withAlpha(accent, 0.12) : theme.cardSoft,
                                 },
                               ]}
                             >
-                              <Feather name={savedToTreasury ? 'bookmark' : 'bookmark'} size={15} color={savedToTreasury ? accent : theme.text} />
+                              <Feather name="bookmark" size={15} color={treasury.saved ? accent : theme.text} />
                               <Text
                                 style={[
                                   styles.wisdomActionSecondaryText,
-                                  { color: savedToTreasury ? accent : theme.text, fontFamily: FONTS.sansSemiBold },
+                                  { color: treasury.saved ? accent : theme.text, fontFamily: FONTS.sansSemiBold },
                                 ]}
                               >
-                                {savedToTreasury
+                                {treasury.saved
                                   ? localizedLabel(activeLanguage, 'Saved to Treasury', 'कोश में सहेजा गया', 'ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲਿਆ')
                                   : localizedLabel(activeLanguage, 'Save to Treasury', 'नीति कोश में सहेजें', 'ਨੀਤੀ ਕੋਸ਼ ਵਿੱਚ ਸੰਭਾਲੋ')}
                               </Text>
@@ -731,10 +754,7 @@ export function PanchatantraStorybookView({
                               <View
                                 style={[
                                   styles.wisdomActionSecondaryBtn,
-                                  {
-                                    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
-                                    backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                                  },
+                                  { borderColor: theme.border, backgroundColor: theme.cardSoft },
                                 ]}
                               >
                                 <Feather name="check" size={15} color={theme.text} />

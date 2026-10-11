@@ -267,16 +267,20 @@ export default function KathaReaderScreen() {
   }
 
   if (isPanchatantra) {
+    // A wisdom tale is a non-religious story, so finishing one only closes the reader. It does not record
+    // the daily katha (markDone -> complete_katha): that credit belongs to the other kinds of katha, and
+    // the button no longer says "Earn Karma", so it must not quietly award it either.
+    const leaveStorybook = () => {
+      handlers.stopTTS();
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)/bhakti' as Href);
+    };
     return (
       <PanchatantraStorybookView
         katha={katha}
         activeLanguage={activeLang}
         onLanguageChange={(l) => setReaderLanguageOverride(l)}
-        onBack={() => {
-          handlers.stopTTS();
-          if (router.canGoBack()) router.back();
-          else router.replace('/(tabs)/bhakti' as Href);
-        }}
+        onBack={leaveStorybook}
         fontSize={fs}
         onTTS={(sceneText) => handlers.toggleTTS(sceneText || textToCopy, {
           quality: 'pandit',
@@ -293,7 +297,7 @@ export default function KathaReaderScreen() {
         })}
         isSpeaking={state.isSpeaking}
         isTTSGenerating={state.isGeneratingTTS}
-        onComplete={() => void markDone()}
+        onComplete={leaveStorybook}
       />
     );
   }

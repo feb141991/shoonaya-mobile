@@ -196,3 +196,15 @@ of the artwork** (`#FFFFFF`, `rgba(0,0,0,…)`, `rgba(255,255,255,0.25)` borders
 which must stay legible on any image regardless of paper; the gold filigree
 (`rgba(216,138,28,0.55)`) and a dark scene-number badge. Real debt, deferred:
 these could become named overlay tokens, but they do not vary by paper.
+
+**Wisdom actions (2026-10-11), resolved:** the Save to Treasury and Finish Reading buttons on the
+last page take their border and surface from the reader paper tokens (`theme.border`,
+`theme.cardSoft`) and tint the accent with `withAlpha`, replacing the `rgba(...)`, `#FFFFFF` and
+`` `${accent}20` `` literals the first version added, so they follow Bhojpatra, Sandhya and Temple
+Night. `__tests__/panchatantra-wisdom-actions-contract.test.ts` fails if a hex or rgba literal returns
+to that block.
+
+**Still open, not fixed here:** white text on the terracotta accent (`#C87850`) measures 3.36:1,
+below the 4.5:1 WCAG AA minimum for small text. It affects the bottom bar's "Next" and "Done" pills and
+the page-badge text that sit on the accent fill. Fixing it is a design call (a darker accent, or dark text
+on the fill), so it is recorded rather than changed.

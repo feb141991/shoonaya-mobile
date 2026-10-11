@@ -52,9 +52,20 @@ describe('root auth lifecycle contracts', () => {
       'clearAllReactionOutboxes',
       'clearAllOnboardingDrafts',
       'clearAllHomeDiscoveryStates',
+      'clearAllNitiTreasury',
       'clearProfileCache',
     ]) {
       assert.match(switchBranch, new RegExp(`void ${cleanup}\\(`));
     }
+  });
+
+  it('clears the Niti Treasury in every sign-out and account-switch cleanup, not just one of them', () => {
+    // HomeDiscovery is cleared at all four auth boundaries (inline sign-out and switch, and the coordinator's
+    // two); the Treasury is private saved content and must follow it exactly.
+    const discovery = root.match(/void clearAllHomeDiscoveryStates\(\);/g) ?? [];
+    const treasury = root.match(/void clearAllNitiTreasury\(\);/g) ?? [];
+    assert.equal(discovery.length, 4);
+    assert.equal(treasury.length, discovery.length);
+    assert.match(root, /import \{ clearAllNitiTreasury \} from '@\/lib\/nitiTreasury';/);
   });
 });
