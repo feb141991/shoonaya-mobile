@@ -19,6 +19,7 @@ import { PressableSurface } from "@/components/ui/PressableSurface";
 import { SacredLoader } from "@/components/ui/SacredLoader";
 import { Screen } from "@/components/ui/Screen";
 import { AuthGate } from "@/components/ui/AuthGate";
+import { DatePickerField } from "@/components/ui/DatePickerField";
 import { KulInviteModal } from "@/components/kul/KulInviteModal";
 import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
 import { computeVanshLayout, getEligibleParentIds } from "@/lib/vanshLayout";
@@ -1477,7 +1478,12 @@ export default function KulScreen() {
                         <Choice label="Lunar tithi" selected={eventDateSystem === "tithi"} onPress={() => { setEventDateSystem("tithi"); setEventRecurring(true); setEventMonthSystem(kul.calendarReference.monthSystem); }} theme={theme} />
                       </View>
                       {eventDateSystem === "gregorian" ? (
-                        <Field accessibilityLabel="Family event date" value={eventDate} onChangeText={setEventDate} placeholder="YYYY-MM-DD" theme={theme} maxLength={10} />
+                        <DatePickerField
+                          value={eventDate}
+                          onChangeDate={setEventDate}
+                          placeholder="Select event date (YYYY-MM-DD)"
+                          modalTitle="Select Family Event Date"
+                        />
                       ) : (
                         <View style={{ gap: 8, borderRadius: 15, backgroundColor: theme.cardSoft, padding: 12 }}>
                           <Text style={{ ...TYPE.caption, color: theme.dim }}>
@@ -1816,13 +1822,12 @@ export default function KulScreen() {
                         />
                       ))}
                     </View>
-                    <Field
-                      accessibilityLabel="Task due date"
+                    <DatePickerField
                       value={taskDueDate}
-                      onChangeText={setTaskDueDate}
-                      placeholder="Optional due date · YYYY-MM-DD"
-                      theme={theme}
-                      maxLength={10}
+                      onChangeDate={setTaskDueDate}
+                      placeholder="Optional due date (YYYY-MM-DD)"
+                      modalTitle="Select Task Due Date"
+                      minDate={new Date().toISOString().split("T")[0]}
                     />
                     <ActionButton
                       label={working ? "Assigning…" : "Assign practice"}

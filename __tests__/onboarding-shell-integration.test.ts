@@ -13,7 +13,7 @@ describe('Onboarding shell integration contracts', () => {
     assert.match(onboarding, /<OnboardingShell[\s\S]*?transitionKey=\{step\}/);
     assert.doesNotMatch(onboarding, /<ScrollView/);
     assert.match(shell, /useSafeAreaInsets\(\)/);
-    assert.match(shell, /paddingBottom: Math\.max\(insets\.bottom, 16\)/);
+    assert.match(shell, /paddingBottom: Math\.max\(insets\.bottom \+ 12, 24\)/);
     assert.match(shell, /MIN_TOUCH_TARGET/);
   });
 

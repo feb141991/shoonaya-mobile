@@ -17,9 +17,10 @@ import { Card } from '@/components/ui/Card';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { DatePickerField } from '@/components/ui/DatePickerField';
+import { CityFinder } from '@/components/kundali/CityFinder';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
-import { forwardGeocode, reverseGeocode } from '@/lib/mandali';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
 
@@ -65,7 +66,6 @@ export default function KundaliScreen() {
     cityQuery: '',
   });
   const [geocodeResult, setGeocodeResult] = useState<GeocodeResult | null>(null);
-  const [searchingCity, setSearchingCity] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchProfiles = useCallback(async () => {
@@ -85,118 +85,6 @@ export default function KundaliScreen() {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
-
-  const resolveCityCoordinates = async (query: string): Promise<GeocodeResult | null> => {
-    const trimmed = query.trim();
-    if (!trimmed) return null;
-
-    // Strategy 1: Primary Jyotish geocode with 20s timeout and reverse-geocode refinement
-    try {
-      const response = await apiFetch(`/api/jyotish/geocode?q=${encodeURIComponent(trimmed)}`, {
-        timeoutMs: 20_000,
-      });
-      if (response.ok) {
-        const payload = (await response.json()) as GeocodeResult;
-        if (typeof payload?.lat === 'number' && typeof payload?.lng === 'number') {
-          let city = payload.city;
-          let country = payload.country;
-
-          // If city seems generic or is a state (e.g. "Punjab" when user entered "Jalandhar"),
-          // refine via reverse-geocode
-          try {
-            const rev = await reverseGeocode(payload.lat, payload.lng);
-            if (rev?.city) {
-              city = rev.city;
-              if (rev.country) country = rev.country;
-            }
-          } catch {
-            // Ignore refinement error and use primary
-          }
-
-          return {
-            lat: payload.lat,
-            lng: payload.lng,
-            timezone: payload.timezone || 'Asia/Kolkata',
-            city: city || trimmed.split(',')[0].trim(),
-            country: country || 'India',
-          };
-        }
-      }
-    } catch (err) {
-      console.warn('[Kundali] /api/jyotish/geocode error, attempting fallback:', err);
-    }
-
-    // Strategy 2: Fast fallback via forwardGeocode (Geoapify) + reverseGeocode
-    try {
-      const coords = await forwardGeocode(trimmed);
-      if (coords && typeof coords.lat === 'number' && typeof coords.lon === 'number') {
-        let city = trimmed.split(',')[0].trim();
-        let country = 'India';
-        try {
-          const rev = await reverseGeocode(coords.lat, coords.lon);
-          if (rev?.city) city = rev.city;
-          if (rev?.country) country = rev.country;
-        } catch {
-          // ignore refinement error
-        }
-
-        const isIndia = /india/i.test(country) || /india/i.test(trimmed);
-        const timezone = isIndia ? 'Asia/Kolkata' : Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-
-        return {
-          lat: coords.lat,
-          lng: coords.lon,
-          city,
-          country,
-          timezone,
-        };
-      }
-    } catch (err) {
-      console.warn('[Kundali] forwardGeocode fallback error:', err);
-    }
-
-    return null;
-  };
-
-  const searchCity = async () => {
-    if (formData.cityQuery.trim().length < 2) return;
-    setSearchingCity(true);
-    setGeocodeResult(null);
-    try {
-      const result = await resolveCityCoordinates(formData.cityQuery);
-      if (result) {
-        setGeocodeResult(result);
-      } else {
-        const queryCity = formData.cityQuery.split(',')[0].trim();
-        Alert.alert(
-          'Confirm Location',
-          `Could not pinpoint exact coordinates for "${queryCity}". Continuing will use a default central-India location (New Delhi) instead, not ${queryCity}'s actual position -- this can shift your ascendant and house placements. Search again for a precise result, or continue with the approximation.`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Use Approximate Location',
-              onPress: () => {
-                // Coordinates are New Delhi's, NOT queryCity's -- the "(approx.)"
-                // suffix keeps the confirmation line (below) from implying a
-                // precision this chart's ascendant/houses don't actually have.
-                setGeocodeResult({
-                  city: `${queryCity} (approx.)`,
-                  country: 'India',
-                  lat: 28.6139,
-                  lng: 77.209,
-                  timezone: 'Asia/Kolkata',
-                });
-              },
-            },
-          ]
-        );
-      }
-    } catch (err) {
-      Alert.alert('Error', 'Failed to search for city. Please check your connection and try again.');
-    } finally {
-      setSearchingCity(false);
-    }
-  };
 
   const handleGenerateChart = async () => {
     if (!formData.fullName || !formData.dateOfBirth || !geocodeResult) {
@@ -404,7 +292,10 @@ export default function KundaliScreen() {
             </PressableSurface>
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 34 }}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 34 }}
+          >
             <LinearGradient
               colors={isDark
                 ? [COLORS.homeHeroDark, COLORS.cardBgDark, COLORS.surfaceSoftDark]
@@ -449,14 +340,15 @@ export default function KundaliScreen() {
             <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
               <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Birth moment</Text>
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ flex: 1, gap: 8 }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Date of Birth</Text>
-                  <TextInput
-                    style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor={theme.dim}
+                <View style={{ flex: 1 }}>
+                  <DatePickerField
+                    label="Date of Birth"
                     value={formData.dateOfBirth}
-                    onChangeText={t => setFormData({ ...formData, dateOfBirth: t })}
+                    onChangeDate={t => setFormData({ ...formData, dateOfBirth: t })}
+                    placeholder="YYYY-MM-DD"
+                    maxDate={new Date().toISOString().split('T')[0]}
+                    minDate="1920-01-01"
+                    modalTitle="Select Date of Birth"
                   />
                 </View>
                 <View style={{ flex: 1, gap: 8 }}>
@@ -476,35 +368,17 @@ export default function KundaliScreen() {
 
             <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 14 }}>
               <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Birth place</Text>
-              <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Birth City</Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput
-                  style={{ flex: 1, backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
-                  placeholder="e.g. Mumbai, Maharashtra"
-                  placeholderTextColor={theme.dim}
-                  value={formData.cityQuery}
-                  onChangeText={t => {
-                    setFormData({ ...formData, cityQuery: t });
-                    setGeocodeResult(null); // Clear resolved result if they type again
-                  }}
-                  onSubmitEditing={searchCity}
-                />
-                <PressableSurface
-                  onPress={searchCity}
-                  disabled={searchingCity || formData.cityQuery.length < 2}
-                  style={{ backgroundColor: theme.brand, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16, borderRadius: 14, opacity: searchingCity || formData.cityQuery.length < 2 ? 0.5 : 1 }}
-                >
-                  {searchingCity ? <ActivityIndicator color={COLORS.ink} size="small" /> : <Feather name="search" size={18} color={COLORS.ink} />}
-                </PressableSurface>
-              </View>
-              {geocodeResult && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.brandSoft, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10 }}>
-                  <Feather name="check-circle" size={16} color={theme.brand} />
-                  <Text style={{ color: theme.brandStrong, fontFamily: FONTS.sansMedium, fontSize: 12, flex: 1 }}>
-                    {geocodeResult.city}, {geocodeResult.country} · {geocodeResult.timezone}
-                  </Text>
-                </View>
-              )}
+              <CityFinder
+                value={formData.cityQuery}
+                selectedCity={geocodeResult}
+                onSelectCity={city => {
+                  setGeocodeResult(city);
+                  if (city) {
+                    setFormData(prev => ({ ...prev, cityQuery: city.city }));
+                  }
+                }}
+                placeholder="Type birth city (e.g. Varanasi, Mumbai)..."
+              />
             </Card>
 
             <PressableSurface

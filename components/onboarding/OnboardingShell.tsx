@@ -162,7 +162,7 @@ export function OnboardingShell({
         <ScrollView
           ref={scrollViewRef}
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24, gap: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32, gap: 16 }}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           showsVerticalScrollIndicator={false}
@@ -218,9 +218,9 @@ export function OnboardingShell({
             borderTopWidth: 1,
             borderTopColor: theme.border,
             paddingHorizontal: 20,
-            paddingTop: 12,
-            paddingBottom: Math.max(insets.bottom, 16),
-            gap: 8,
+            paddingTop: 14,
+            paddingBottom: Math.max(insets.bottom + 12, 24),
+            gap: 10,
           }}
         >
           {errorMessage ? (

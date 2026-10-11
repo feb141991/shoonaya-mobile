@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
+import { CalendarDatePicker } from '@/components/ui/CalendarDatePicker';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import {
@@ -398,6 +399,15 @@ export default function PanchangScreen() {
   const [savingRashi, setSavingRashi] = useState(false);
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const [displayTz, setDisplayTz] = useState<'local' | 'ist'>('local');
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+
+  const handleSelectCalendarDate = useCallback((dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    if (!isNaN(date.getTime())) {
+      setSelectedDate(date);
+    }
+  }, []);
 
   useEffect(() => {
     if (!userId || profileState.rashi || profileState.tradition !== 'hindu') {
@@ -723,31 +733,52 @@ export default function PanchangScreen() {
           </Pressable>
         ) : null}
 
-        {/* Date strip */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
-          {dateStrip.map((date) => {
-            const active = date.toDateString() === selectedDate.toDateString();
-            return (
-              <Pressable
-                key={date.toISOString()}
-                onPress={() => setSelectedDate(date)}
-                style={{
-                  minWidth: 56, borderRadius: 16, paddingVertical: 9, paddingHorizontal: 12, alignItems: 'center', gap: 2,
-                  minHeight: 44,
-                  backgroundColor: active ? GOLD : 'rgba(255,255,255,0.08)',
-                  borderWidth: 1, borderColor: active ? GOLD : 'rgba(255,255,255,0.12)',
-                }}
-              >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: active ? COLORS.heroBgDark : 'rgba(255,255,255,0.5)' }}>
-                  {date.toLocaleDateString('en-GB', { weekday: 'short' })}
-                </Text>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: active ? COLORS.heroBgDark : CREAM }}>
-                  {date.getDate()}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {/* Date strip with Calendar Pick Button */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Pressable
+            accessibilityLabel="Pick date from calendar"
+            onPress={() => setShowCalendarModal(true)}
+            style={{
+              height: 48,
+              paddingHorizontal: 12,
+              borderRadius: 16,
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              borderColor: GOLD,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Feather name="calendar" size={16} color={GOLD} />
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: GOLD }}>Pick</Text>
+          </Pressable>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
+            {dateStrip.map((date) => {
+              const active = date.toDateString() === selectedDate.toDateString();
+              return (
+                <Pressable
+                  key={date.toISOString()}
+                  onPress={() => setSelectedDate(date)}
+                  style={{
+                    minWidth: 56, borderRadius: 16, paddingVertical: 9, paddingHorizontal: 12, alignItems: 'center', gap: 2,
+                    minHeight: 44,
+                    backgroundColor: active ? GOLD : 'rgba(255,255,255,0.08)',
+                    borderWidth: 1, borderColor: active ? GOLD : 'rgba(255,255,255,0.12)',
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: active ? COLORS.heroBgDark : 'rgba(255,255,255,0.5)' }}>
+                    {date.toLocaleDateString('en-GB', { weekday: 'short' })}
+                  </Text>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: active ? COLORS.heroBgDark : CREAM }}>
+                    {date.getDate()}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         {/* Paksha banner */}
         <View
@@ -1007,6 +1038,14 @@ export default function PanchangScreen() {
           visible={!!whyTodayFestival}
           observance={whyTodayFestival}
           onClose={() => setWhyTodayFestival(null)}
+        />
+
+        <CalendarDatePicker
+          visible={showCalendarModal}
+          onClose={() => setShowCalendarModal(false)}
+          onSelectDate={handleSelectCalendarDate}
+          initialDate={selectedDate.toISOString().split('T')[0]}
+          title="Select Panchang Date"
         />
 
         <View style={{

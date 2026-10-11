@@ -23,6 +23,7 @@ import { FounderNoteInterlude } from '@/components/onboarding/FounderNoteInterlu
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { DatePickerField } from '@/components/ui/DatePickerField';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
@@ -1179,27 +1180,14 @@ export default function OnboardingScreen() {
             </Text>
 
             <View style={{ gap: 8 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
-                {translated('Date of birth', 'जन्मतिथि')}
-              </Text>
-              <TextInput
+              <DatePickerField
+                label={translated('Date of birth', 'जन्मतिथि')}
                 value={dateOfBirth}
-                onChangeText={handleDobChange}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={dim}
-                keyboardType="numbers-and-punctuation"
-                maxLength={10}
-                style={{
-                  minHeight: 52,
-                  borderRadius: RADII.lg,
-                  borderWidth: 1.5,
-                  borderColor: border,
-                  paddingHorizontal: 16,
-                  color: text,
-                  fontFamily: FONTS.sans,
-                  fontSize: 16,
-                  backgroundColor: cardBg,
-                }}
+                onChangeDate={handleDobChange}
+                placeholder={translated('Select date of birth (YYYY-MM-DD)', 'जन्मतिथि चुनें (YYYY-MM-DD)')}
+                maxDate={new Date().toISOString().split('T')[0]}
+                minDate="1920-01-01"
+                modalTitle={translated('Select Date of Birth', 'जन्मतिथि चुनें')}
               />
               {age !== null ? (
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, color: dim }}>

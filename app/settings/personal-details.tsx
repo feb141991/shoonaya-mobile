@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { DatePickerField } from '@/components/ui/DatePickerField';
 import { RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -136,22 +137,13 @@ export default function PersonalDetailsScreen() {
             <View style={{ gap: 12 }}>
               <SectionHeader label="Date of birth" />
               <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 8 }}>
-                <TextInput
+                <DatePickerField
                   value={details.date_of_birth}
-                  onChangeText={(value) => setDetails((prev) => ({ ...prev, date_of_birth: value }))}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={theme.dim}
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={10}
-                  style={{
-                    minHeight: 52,
-                    borderRadius: RADII.lg,
-                    borderWidth: 1.5,
-                    borderColor: theme.border,
-                    paddingHorizontal: 16,
-                    color: theme.text,
-                    ...TYPE.body,
-                  }}
+                  onChangeDate={(value) => setDetails((prev) => ({ ...prev, date_of_birth: value }))}
+                  placeholder="Select birth date (YYYY-MM-DD)"
+                  maxDate={new Date().toISOString().split('T')[0]}
+                  minDate="1920-01-01"
+                  modalTitle="Select Date of Birth"
                 />
                 {age !== null ? (
                   <Text style={{ ...TYPE.caption, color: theme.dim }}>Age {age}</Text>
