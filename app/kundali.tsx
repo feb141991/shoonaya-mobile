@@ -72,6 +72,7 @@ export default function KundaliScreen() {
   const [selfAccount, setSelfAccount] = useState<{
     fullName: string;
     dateOfBirth: string;
+    timeOfBirth: string;
     cityQuery: string;
     geocodeResult: GeocodeResult | null;
   } | null>(null);
@@ -132,9 +133,28 @@ export default function KundaliScreen() {
         }
       }
 
+      // Check if user already has an existing self birth profile in birth_profiles to grab saved time_of_birth
+      let savedTimeOfBirth = '';
+      try {
+        const { data: birthData } = await supabase
+          .from('birth_profiles')
+          .select('time_of_birth')
+          .eq('owner_id', appIdentity.userId)
+          .or('is_primary.eq.true,relation.eq.self')
+          .order('is_primary', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (birthData?.time_of_birth) {
+          savedTimeOfBirth = birthData.time_of_birth.trim();
+        }
+      } catch {
+        // ignore
+      }
+
       setSelfAccount({
         fullName,
         dateOfBirth,
+        timeOfBirth: savedTimeOfBirth,
         cityQuery: resolvedGeo ? resolvedGeo.city : city,
         geocodeResult: resolvedGeo,
       });
@@ -170,6 +190,7 @@ export default function KundaliScreen() {
         fullName: selfAccount.fullName,
         label: selfAccount.fullName || 'My Chart',
         dateOfBirth: selfAccount.dateOfBirth,
+        timeOfBirth: selfAccount.timeOfBirth || prev.timeOfBirth,
         cityQuery: selfAccount.cityQuery,
       }));
       if (selfAccount.geocodeResult) {
@@ -188,6 +209,7 @@ export default function KundaliScreen() {
           fullName: selfAccount.fullName,
           label: selfAccount.fullName || 'My Chart',
           dateOfBirth: selfAccount.dateOfBirth,
+          timeOfBirth: selfAccount.timeOfBirth || '',
           cityQuery: selfAccount.cityQuery,
         }));
         setGeocodeResult(selfAccount.geocodeResult);
@@ -378,9 +400,24 @@ export default function KundaliScreen() {
                     <Feather name={p.is_primary ? 'star' : 'aperture'} size={18} color={theme.brand} />
                   </View>
                   <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 18 }} numberOfLines={1}>{p.label}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ color: theme.brandStrong, ...TYPE.cardHeading, fontSize: 18 }} numberOfLines={1}>{p.label}</Text>
+                      {p.relation && p.relation !== 'self' ? (
+                        <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: theme.premiumBorder }}>
+                          <Text style={{ color: theme.brandStrong, fontFamily: FONTS.sansMedium, fontSize: 10, textTransform: 'capitalize' }}>
+                            {p.relation}
+                          </Text>
+                        </View>
+                      ) : p.is_primary ? (
+                        <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: theme.premiumBorder }}>
+                          <Text style={{ color: theme.brandStrong, fontFamily: FONTS.sansMedium, fontSize: 10 }}>
+                            Self
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
                     <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12 }} numberOfLines={2}>
-                      {p.date_of_birth} {p.time_of_birth ? `· ${p.time_of_birth}` : ''} · {p.birth_city}
+                      {p.date_of_birth} {p.time_of_birth ? `· ${p.time_of_birth}` : '· Time unknown'} · {p.birth_city}
                     </Text>
                   </View>
                 </View>
