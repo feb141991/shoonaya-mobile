@@ -15,7 +15,12 @@ google-service-account*.json
 /android
 
 # Local agent/scratch artifacts. Keep them out of cloud build uploads.
+# .claude/ holds git worktrees: whole repo copies with their own ios/ and
+# android/ build output, which the root-anchored /ios and /android above do
+# not match (1.4 GB of a 1.6 GB upload, measured 2026-10-11).
+.claude/
 .codex/
+smoke-reports/
 graphify-out/
 scripts/graphify-update-source.sh
 antigravity-7-prompts.md
