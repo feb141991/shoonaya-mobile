@@ -10,6 +10,18 @@ test('Kundali profile autofill reads only name and date of birth', () => {
   assert.doesNotMatch(screen, /from\('birth_profiles'\)/);
 });
 
+test('Kundali remounts account-scoped state on identity changes', () => {
+  const identityBoundary = screen.match(
+    /export default function KundaliScreen\(\) \{([\s\S]*?)\n\}\n\nfunction KundaliScreenForIdentity/,
+  )?.[1];
+
+  assert.ok(identityBoundary, 'identity boundary should wrap the stateful screen');
+  assert.match(identityBoundary, /const appIdentity = useAppIdentity\(\)/);
+  assert.match(identityBoundary, /appIdentity\.kind === 'authenticated'[\s\S]*appIdentity\.userId/);
+  assert.match(identityBoundary, /key=\{identityKey\}/);
+  assert.match(identityBoundary, /appIdentity=\{appIdentity\}/);
+});
+
 test('Kundali self autofill leaves birth time and birthplace for explicit user entry', () => {
   const selfPrefillEffect = screen.match(
     /\/\/ Pre-fill form with self account details when available([\s\S]*?)\n  const handleSelectRelation/,

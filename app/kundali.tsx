@@ -25,7 +25,7 @@ import { CityFinder } from '@/components/kundali/CityFinder';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { type AppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
@@ -60,13 +60,23 @@ type GeocodeResult = {
 };
 
 export default function KundaliScreen() {
+  const appIdentity = useAppIdentity();
+  const identityKey = appIdentity.kind === 'authenticated'
+    ? `authenticated:${appIdentity.userId}`
+    : appIdentity.kind;
+
+  // Remount all account-scoped form and profile state on sign-out or account
+  // switch. This also detaches pending requests from the previous identity.
+  return <KundaliScreenForIdentity key={identityKey} appIdentity={appIdentity} />;
+}
+
+function KundaliScreenForIdentity({ appIdentity }: { appIdentity: AppIdentity }) {
   const router = useRouter();
   const handleBack = useFallbackBackHandler('/(tabs)/profile', true);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
 
-  const appIdentity = useAppIdentity();
   const formScrollRef = useRef<ScrollView>(null);
   const [profiles, setProfiles] = useState<BirthProfile[]>([]);
   const [loading, setLoading] = useState(true);
