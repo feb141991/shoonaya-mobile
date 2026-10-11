@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Easing, Text, TextInput, useColorScheme, useWindowDimensions, View, ScrollView } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Easing, KeyboardAvoidingView, Platform, Text, TextInput, useColorScheme, useWindowDimensions, View, ScrollView } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, Line, LinearGradient as SvgLinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -266,7 +266,15 @@ export default function DyutaScreen() {
         <View style={{ position: 'absolute', top: 70, right: -86, width: 220, height: 220, borderRadius: 110, backgroundColor: theme.brandSoft }} />
         <View style={{ position: 'absolute', top: 390, left: -96, width: 240, height: 240, borderRadius: 120, backgroundColor: isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowGoldLight }} />
       </View>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.xxl, gap: SPACING.lg }} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.xxl + 80, gap: SPACING.lg }}
+          showsVerticalScrollIndicator={false}
+        >
         {match ? <SabhaHallBackdrop width={windowWidth} theme={theme} isDark={isDark} /> : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackButton label={copy.backLabel} showLabel={false} fallbackHref="/play" />
@@ -304,6 +312,7 @@ export default function DyutaScreen() {
           </>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
       {match?.phase === 'complete' ? <MatchRecapCard ref={recapRef} match={match} playerLabel={playerLabel} guideLabel={guideLabel} copy={copy} theme={theme} /> : null}
     </Screen>
   );

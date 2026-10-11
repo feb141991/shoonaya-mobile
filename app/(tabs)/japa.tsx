@@ -5,7 +5,9 @@ import {
   Alert,
   Animated,
   Easing,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -3628,7 +3630,10 @@ export default function JapaScreen() {
       </Modal>
 
       <Modal transparent visible={customMantraOpen} animationType="fade" onRequestClose={() => setCustomMantraOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'center', padding: 22 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'center', padding: 22 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View
             style={{
               borderRadius: 28,
@@ -3700,7 +3705,7 @@ export default function JapaScreen() {
               </PressableSurface>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal transparent visible={syncReviewVisible} animationType="slide" onRequestClose={() => setSyncReviewVisible(false)}>

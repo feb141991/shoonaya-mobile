@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
@@ -301,7 +301,15 @@ export default function SattvicModeScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0, paddingVertical: 0 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 60, gap: 16 }} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 140, gap: 16 }}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={{ paddingHorizontal: 20, paddingTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackButton showLabel={false} fallbackHref="/(tabs)/bhakti" handleHardwareBack />
           <Text style={{ ...TYPE.micro, letterSpacing: 2, textTransform: 'uppercase', color: gold }}>{modeLabel}</Text>
@@ -428,6 +436,7 @@ export default function SattvicModeScreen() {
           </View>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

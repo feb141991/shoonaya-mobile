@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
@@ -120,8 +120,16 @@ export default function PersonalDetailsScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <BackButton fallbackHref="/settings" handleHardwareBack />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 180, gap: 20 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <BackButton fallbackHref="/settings" handleHardwareBack />
 
         <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Personal Details</Text>
 
@@ -231,6 +239,7 @@ export default function PersonalDetailsScreen() {
           </>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

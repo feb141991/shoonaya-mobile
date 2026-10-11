@@ -5,7 +5,9 @@ import {
   Alert,
   Animated,
   AppState,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -771,12 +773,16 @@ export default function SankalpaScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={{ paddingBottom: 32, gap: 16 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={{ paddingBottom: 220, gap: 16 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <BackButton
           showLabel={false}
           iconSize={22}
@@ -1103,6 +1109,11 @@ export default function SankalpaScreen() {
                   ref={textInputRef}
                   value={text}
                   onChangeText={setText}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      scrollViewRef.current?.scrollToEnd({ animated: true });
+                    }, 120);
+                  }}
                   placeholder="e.g. I will complete my morning japa every day"
                   placeholderTextColor={theme.dim}
                   multiline
@@ -1283,6 +1294,7 @@ export default function SankalpaScreen() {
           ) : null}
         </Card>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Ceremony Overlay */}
       <SankalpaCompletionCeremony

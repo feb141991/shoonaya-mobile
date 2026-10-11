@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -1018,24 +1020,28 @@ export default function KulScreen() {
       header={{ title: "Family KUL" }}
       style={{ paddingHorizontal: 16 }}
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          currentUserId ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => void loadSnapshot(currentUserId, true)}
-              tintColor={theme.brand}
-            />
-          ) : undefined
-        }
-        contentContainerStyle={{
-          paddingTop: 16,
-          paddingBottom: NAV_BAR_CLEARANCE + 36,
-          gap: 16,
-        }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            currentUserId ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => void loadSnapshot(currentUserId, true)}
+                tintColor={theme.brand}
+              />
+            ) : undefined
+          }
+          contentContainerStyle={{
+            paddingTop: 16,
+            paddingBottom: NAV_BAR_CLEARANCE + 160,
+            gap: 16,
+          }}
+        >
         {identity.kind !== "authenticated" ? (
           <Card
             elevated
@@ -2274,6 +2280,7 @@ export default function KulScreen() {
           </>
         ) : null}
       </ScrollView>
+      </KeyboardAvoidingView>
       <AuthGate
         visible={authGateVisible}
         onClose={() => setAuthGateVisible(false)}

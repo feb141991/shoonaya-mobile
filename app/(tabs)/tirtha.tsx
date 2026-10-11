@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -1311,7 +1313,10 @@ export default function TirthaScreen() {
         animationType="slide"
         onRequestClose={closeCheckIn}
       >
-        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           {/* Tappable backdrop area that dismisses the sheet when tapping outside */}
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -1507,7 +1512,7 @@ export default function TirthaScreen() {
               </PressableSurface>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </Screen>
   );

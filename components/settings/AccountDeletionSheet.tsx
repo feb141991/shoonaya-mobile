@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -161,7 +162,10 @@ export function AccountDeletionSheet({
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <View style={styles.scrimContainer}>
+      <KeyboardAvoidingView
+        style={styles.scrimContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <Animated.View
           style={[
             StyleSheet.absoluteFill,
@@ -517,7 +521,7 @@ export function AccountDeletionSheet({
             )}
           </ScrollView>
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

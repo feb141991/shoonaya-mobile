@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState, useMemo, type ReactNode } from 'react
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
+  Switch,
   Text,
   TextInput,
   View,
-  Modal,
-  Switch,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -785,7 +787,10 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
       </Modal>
 
       <Modal transparent visible={pendingCheckIn} animationType="slide" onRequestClose={() => setPendingCheckIn(false)}>
-        <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View
             style={{
               borderTopLeftRadius: 28,
@@ -899,7 +904,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
               <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Cancel</Text>
             </PressableSurface>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );

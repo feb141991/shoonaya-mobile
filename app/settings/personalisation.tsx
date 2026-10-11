@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -160,8 +162,16 @@ export default function PersonalisationScreen() {
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <BackButton fallbackHref="/settings" handleHardwareBack />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 180, gap: 20 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <BackButton fallbackHref="/settings" handleHardwareBack />
 
         <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Personalisation</Text>
 
@@ -346,6 +356,7 @@ export default function PersonalisationScreen() {
           </>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

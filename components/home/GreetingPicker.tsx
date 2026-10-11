@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -49,7 +49,10 @@ export function GreetingPicker({ visible, onClose, tradition, onPickChange }: Gr
 
   return (
     <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: COLORS.bottomSheetScrim, justifyContent: 'flex-end' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View
           style={{
             borderTopLeftRadius: 28,
@@ -84,7 +87,7 @@ export function GreetingPicker({ visible, onClose, tradition, onPickChange }: Gr
             </PressableSurface>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <PressableSurface
               haptic="selection"
               onPress={() => commit(null)}
@@ -174,7 +177,7 @@ export function GreetingPicker({ visible, onClose, tradition, onPickChange }: Gr
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

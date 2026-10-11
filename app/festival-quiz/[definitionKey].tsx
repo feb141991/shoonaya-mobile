@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -181,7 +181,15 @@ export default function FestivalQuizScreen() {
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
       <ConfettiOverlay show={showConfetti} onComplete={() => setShowConfetti(false)} />
-      <ScrollView contentContainerStyle={{ paddingBottom: 48, gap: 18 }} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 160, gap: 18 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <PressableSurface
             haptic="selection"
@@ -352,6 +360,7 @@ export default function FestivalQuizScreen() {
           </Card>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

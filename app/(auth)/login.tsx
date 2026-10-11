@@ -5,6 +5,7 @@ import {
   Animated,
   Easing,
   Image,
+  KeyboardAvoidingView,
   Linking,
   Platform,
   ScrollView,
@@ -851,11 +852,15 @@ export default function LoginScreen() {
   return (
     <Screen style={{ paddingHorizontal: 18, paddingTop: 10, backgroundColor: theme.bg }}>
       <AmbientField isDark={isDark} />
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 12 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 12, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={{ alignItems: 'center', marginBottom: 16 }}>
           <BrandGlow isDark={isDark} />
           <Animated.View
@@ -1357,6 +1362,7 @@ export default function LoginScreen() {
           </Card>
         </Animated.View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

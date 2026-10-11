@@ -2,8 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -1836,7 +1838,10 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal visible={editVisible} transparent animationType="slide" onRequestClose={() => setEditVisible(false)}>
-        <View style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end', paddingTop: insets.top }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: COLORS.celebrationScrim, justifyContent: 'flex-end', paddingTop: insets.top }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <ScrollView
             keyboardShouldPersistTaps="handled"
             style={{ flexGrow: 0 }}
@@ -2080,7 +2085,7 @@ export default function ProfileScreen() {
               </PressableSurface>
             </View>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {profile ? (
