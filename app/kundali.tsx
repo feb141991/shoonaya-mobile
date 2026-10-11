@@ -372,11 +372,12 @@ export default function KundaliScreen() {
               <CityFinder
                 value={formData.cityQuery}
                 selectedCity={geocodeResult}
+                onQueryChange={text => {
+                  setFormData(prev => ({ ...prev, cityQuery: text }));
+                }}
                 onSelectCity={city => {
                   setGeocodeResult(city);
-                  if (city) {
-                    setFormData(prev => ({ ...prev, cityQuery: city.city }));
-                  }
+                  setFormData(prev => ({ ...prev, cityQuery: city ? city.city : '' }));
                 }}
               />
             </Card>

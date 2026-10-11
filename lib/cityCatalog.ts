@@ -76,7 +76,7 @@ export const POPULAR_CITIES: CityRecord[] = [
   { city: 'Kota', label: 'Kota, Rajasthan, India', state: 'Rajasthan', country: 'India', lat: 25.2138, lng: 75.8648, timezone: 'Asia/Kolkata' },
   { city: 'Guwahati', label: 'Guwahati, Assam, India', state: 'Assam', country: 'India', lat: 26.1445, lng: 91.7362, timezone: 'Asia/Kolkata' },
   { city: 'Chandigarh', label: 'Chandigarh, India', state: 'Chandigarh', country: 'India', lat: 30.7333, lng: 76.7794, timezone: 'Asia/Kolkata' },
-  { city: 'Jalandhar', label: 'Jalandhar, Punjab, India', state: 'Punjab', country: 'India', lat: 31.3260, lng: 75.5762, timezone: 'Asia/Kolkata' },
+  { city: 'Jalandhar', label: 'Jalandhar, Punjab, India', state: 'Punjab', country: 'India', lat: 31.3260, lng: 75.5762, timezone: 'Asia/Kolkata', aliases: ['Jullundur', 'Jalandar', 'Jalndhar', 'Jalandhar City', 'Jaladnahr'] },
   { city: 'Noida', label: 'Noida, Uttar Pradesh, India', state: 'Uttar Pradesh', country: 'India', lat: 28.5355, lng: 77.3910, timezone: 'Asia/Kolkata' },
   { city: 'Gurugram', label: 'Gurugram, Haryana, India', state: 'Haryana', country: 'India', lat: 28.4595, lng: 77.0266, timezone: 'Asia/Kolkata', aliases: ['Gurgaon'] },
   { city: 'Dehradun', label: 'Dehradun, Uttarakhand, India', state: 'Uttarakhand', country: 'India', lat: 30.3165, lng: 78.0322, timezone: 'Asia/Kolkata' },
@@ -135,7 +135,42 @@ export const POPULAR_CITIES: CityRecord[] = [
 export const CITY_CATALOG = POPULAR_CITIES;
 
 /**
- * Filter local catalog with immediate prefix / substring / alias match
+ * Computes Damerau-Levenshtein distance (supports transpositions of adjacent characters).
+ */
+function damerauLevenshteinDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  const la = a.length;
+  const lb = b.length;
+  if (!la) return lb;
+  if (!lb) return la;
+
+  const d: number[][] = [];
+  for (let i = 0; i <= la; i++) {
+    d[i] = [i];
+  }
+  for (let j = 0; j <= lb; j++) {
+    d[0][j] = j;
+  }
+
+  for (let i = 1; i <= la; i++) {
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,       // deletion
+        d[i][j - 1] + 1,       // insertion
+        d[i - 1][j - 1] + cost // substitution
+      );
+      // adjacent transposition
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return d[la][lb];
+}
+
+/**
+ * Filter local catalog with immediate prefix / substring / alias match and typo tolerance.
  */
 export function searchLocalCities(query: string, limit = 5): CityRecord[] {
   const q = query.trim().toLowerCase();
@@ -143,6 +178,7 @@ export function searchLocalCities(query: string, limit = 5): CityRecord[] {
 
   const startsWithMatches: CityRecord[] = [];
   const containsMatches: CityRecord[] = [];
+  const fuzzyMatches: CityRecord[] = [];
 
   for (const item of POPULAR_CITIES) {
     const cityLower = item.city.toLowerCase();
@@ -154,10 +190,17 @@ export function searchLocalCities(query: string, limit = 5): CityRecord[] {
       startsWithMatches.push(item);
     } else if (cityLower.includes(q) || labelLower.includes(q) || hasAliasContains) {
       containsMatches.push(item);
+    } else if (q.length >= 4) {
+      const maxDistance = q.length <= 5 ? 1 : 2;
+      const cityFuzzy = damerauLevenshteinDistance(q, cityLower) <= maxDistance;
+      const aliasFuzzy = item.aliases?.some(a => damerauLevenshteinDistance(q, a.toLowerCase()) <= maxDistance);
+      if (cityFuzzy || aliasFuzzy) {
+        fuzzyMatches.push(item);
+      }
     }
 
     if (startsWithMatches.length >= limit) break;
   }
 
-  return [...startsWithMatches, ...containsMatches].slice(0, limit);
+  return [...startsWithMatches, ...containsMatches, ...fuzzyMatches].slice(0, limit);
 }

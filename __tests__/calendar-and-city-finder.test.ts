@@ -68,6 +68,26 @@ describe('City Catalog & City Finder Engine', () => {
     assert.strictEqual((await searchCities('Bangalore', 5))[0]?.city, 'Bengaluru');
   });
 
+  it('matches Jalandhar via exact name, prefix, alias (Jullundur), and typo tolerance (jaladnahr)', async () => {
+    const exact = await searchCities('jalandhar', 5);
+    assert.ok(exact.length > 0, 'Should find Jalandhar');
+    assert.strictEqual(exact[0].city, 'Jalandhar');
+    assert.strictEqual(exact[0].timezone, 'Asia/Kolkata');
+    assert.strictEqual(exact[0].country, 'India');
+
+    const prefix = await searchCities('jalan', 5);
+    assert.ok(prefix.length > 0);
+    assert.strictEqual(prefix[0].city, 'Jalandhar');
+
+    const alias = await searchCities('jullundur', 5);
+    assert.ok(alias.length > 0);
+    assert.strictEqual(alias[0].city, 'Jalandhar');
+
+    const typo = await searchCities('jaladnahr', 5);
+    assert.ok(typo.length > 0, 'Should match typo jaladnahr to Jalandhar');
+    assert.strictEqual(typo[0].city, 'Jalandhar');
+  });
+
   it('resolves diaspora cities with local timezone (e.g. London -> Europe/London)', async () => {
     const londonResults = await searchCities('london', 5);
     assert.ok(londonResults.length > 0);

@@ -38,6 +38,7 @@ export interface CityFinderProps {
   value?: string;
   selectedCity?: ResolvedCity | null;
   onSelectCity: (city: ResolvedCity | null) => void;
+  onQueryChange?: (query: string) => void;
   placeholder?: string;
 }
 
@@ -78,6 +79,7 @@ export function CityFinder({
   value = '',
   selectedCity = null,
   onSelectCity,
+  onQueryChange,
   placeholder,
 }: CityFinderProps) {
   const isDark = useColorScheme() === 'dark';
@@ -86,7 +88,7 @@ export function CityFinder({
   const copy = CITY_FINDER_COPY[language];
   const localizedPlaceholder = placeholder ?? copy.placeholder;
 
-  const [query, setQuery] = useState(value);
+  const [query, setQuery] = useState(value || '');
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -95,11 +97,16 @@ export function CityFinder({
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryRevisionRef = useRef(0);
+  const lastPropValueRef = useRef(value || '');
 
-  // Sync external value
+  // Sync external value only when the parent prop genuinely changes from outside
   useEffect(() => {
-    if ((value || '') !== query) setQuery(value || '');
-  }, [value, query]);
+    const nextVal = value || '';
+    if (nextVal !== lastPropValueRef.current) {
+      lastPropValueRef.current = nextVal;
+      setQuery(nextVal);
+    }
+  }, [value]);
 
   useEffect(() => () => {
     queryRevisionRef.current += 1;
@@ -107,9 +114,11 @@ export function CityFinder({
   }, []);
 
   const handleQueryChange = (text: string) => {
+    lastPropValueRef.current = text;
     const revision = ++queryRevisionRef.current;
     setLocatingGps(false);
     setQuery(text);
+    onQueryChange?.(text);
     setSuggestions([]);
     setShowDropdown(false);
     setLocationMessage(null);
@@ -146,10 +155,12 @@ export function CityFinder({
   };
 
   const handleSelectSuggestion = (item: CitySuggestion) => {
+    lastPropValueRef.current = item.city;
     queryRevisionRef.current += 1;
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setLoading(false);
     setQuery(item.city);
+    onQueryChange?.(item.city);
     setShowDropdown(false);
     onSelectCity({
       city: item.city,
@@ -175,7 +186,9 @@ export function CityFinder({
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const tz = timezone || deviceTimezone || 'UTC';
+        lastPropValueRef.current = res.location.city;
         setQuery(res.location.city);
+        onQueryChange?.(res.location.city);
         setShowDropdown(false);
         onSelectCity({
           city: res.location.city,
@@ -207,9 +220,11 @@ export function CityFinder({
   };
 
   const handleClear = () => {
+    lastPropValueRef.current = '';
     queryRevisionRef.current += 1;
     setLocatingGps(false);
     setQuery('');
+    onQueryChange?.('');
     setSuggestions([]);
     setShowDropdown(false);
     setLoading(false);
@@ -264,6 +279,8 @@ export function CityFinder({
               fontFamily: FONTS.sans,
             },
           ]}
+          cursorColor={theme.brand}
+          selectionColor={theme.brandSoft}
           placeholder={localizedPlaceholder}
           placeholderTextColor={theme.dim}
           accessibilityLabel={copy.inputLabel}
