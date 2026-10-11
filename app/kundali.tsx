@@ -22,8 +22,19 @@ import { CityFinder } from '@/components/kundali/CityFinder';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
+import { useAppIdentity } from '@/lib/appIdentity';
+import { supabase } from '@/lib/supabase';
+import { searchCities, searchLocalCitySuggestions } from '@/lib/citySearch';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { RASHI_MAP } from '@/lib/jyotish';
+
+const RELATION_OPTIONS = [
+  { key: 'self', label: 'Self' },
+  { key: 'spouse', label: 'Spouse' },
+  { key: 'child', label: 'Child' },
+  { key: 'parent', label: 'Parent' },
+  { key: 'other', label: 'Other' },
+] as const;
 
 type BirthProfile = {
   id: string;
@@ -53,9 +64,18 @@ export default function KundaliScreen() {
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
 
+  const appIdentity = useAppIdentity();
   const [profiles, setProfiles] = useState<BirthProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Self Account Details (for auto-filling)
+  const [selfAccount, setSelfAccount] = useState<{
+    fullName: string;
+    dateOfBirth: string;
+    cityQuery: string;
+    geocodeResult: GeocodeResult | null;
+  } | null>(null);
+
   // Form State
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -68,6 +88,60 @@ export default function KundaliScreen() {
   });
   const [geocodeResult, setGeocodeResult] = useState<GeocodeResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const fetchSelfAccount = useCallback(async () => {
+    if (appIdentity.kind !== 'authenticated') return;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, date_of_birth, city, country')
+        .eq('id', appIdentity.userId)
+        .maybeSingle();
+
+      let fullName = data?.full_name?.trim() || '';
+      if (!fullName) {
+        const { data: userData } = await supabase.auth.getUser();
+        fullName = userData?.user?.user_metadata?.full_name || userData?.user?.user_metadata?.name || '';
+      }
+
+      const dateOfBirth = data?.date_of_birth?.trim() || '';
+      const city = data?.city?.trim() || '';
+
+      let resolvedGeo: GeocodeResult | null = null;
+      if (city) {
+        const localMatches = searchLocalCitySuggestions(city, 1);
+        if (localMatches.length > 0) {
+          resolvedGeo = {
+            city: localMatches[0].city,
+            country: localMatches[0].country,
+            lat: localMatches[0].lat,
+            lng: localMatches[0].lng,
+            timezone: localMatches[0].timezone,
+          };
+        } else {
+          const remoteMatches = await searchCities(city, 1);
+          if (remoteMatches.length > 0) {
+            resolvedGeo = {
+              city: remoteMatches[0].city,
+              country: remoteMatches[0].country,
+              lat: remoteMatches[0].lat,
+              lng: remoteMatches[0].lng,
+              timezone: remoteMatches[0].timezone,
+            };
+          }
+        }
+      }
+
+      setSelfAccount({
+        fullName,
+        dateOfBirth,
+        cityQuery: resolvedGeo ? resolvedGeo.city : city,
+        geocodeResult: resolvedGeo,
+      });
+    } catch (err) {
+      console.warn('Could not load self account details:', err);
+    }
+  }, [appIdentity]);
 
   const fetchProfiles = useCallback(async () => {
     try {
@@ -85,7 +159,55 @@ export default function KundaliScreen() {
 
   useEffect(() => {
     fetchProfiles();
-  }, [fetchProfiles]);
+    fetchSelfAccount();
+  }, [fetchProfiles, fetchSelfAccount]);
+
+  // Pre-fill form with self account details when available
+  useEffect(() => {
+    if (selfAccount && formData.relation === 'self' && !formData.fullName && !formData.dateOfBirth) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: selfAccount.fullName,
+        label: selfAccount.fullName || 'My Chart',
+        dateOfBirth: selfAccount.dateOfBirth,
+        cityQuery: selfAccount.cityQuery,
+      }));
+      if (selfAccount.geocodeResult) {
+        setGeocodeResult(selfAccount.geocodeResult);
+      }
+    }
+  }, [selfAccount]);
+
+  const handleSelectRelation = (newRelation: string) => {
+    if (newRelation === formData.relation) return;
+    if (newRelation === 'self') {
+      if (selfAccount) {
+        setFormData(prev => ({
+          ...prev,
+          relation: 'self',
+          fullName: selfAccount.fullName,
+          label: selfAccount.fullName || 'My Chart',
+          dateOfBirth: selfAccount.dateOfBirth,
+          cityQuery: selfAccount.cityQuery,
+        }));
+        setGeocodeResult(selfAccount.geocodeResult);
+      } else {
+        setFormData(prev => ({ ...prev, relation: 'self' }));
+      }
+    } else {
+      // Clear for non-self relation so user can enter family member details
+      setFormData(prev => ({
+        ...prev,
+        relation: newRelation,
+        fullName: '',
+        label: '',
+        dateOfBirth: '',
+        timeOfBirth: '',
+        cityQuery: '',
+      }));
+      setGeocodeResult(null);
+    }
+  };
 
   const handleGenerateChart = async () => {
     if (!formData.fullName || !formData.dateOfBirth || !geocodeResult) {
@@ -116,8 +238,15 @@ export default function KundaliScreen() {
       if (response.ok) {
         Alert.alert('Chart Generated!', 'Your profile has been saved.');
         setShowForm(false);
-        setFormData({ fullName: '', label: '', relation: 'self', dateOfBirth: '', timeOfBirth: '', cityQuery: '' });
-        setGeocodeResult(null);
+        setFormData({
+          fullName: selfAccount?.fullName || '',
+          label: selfAccount?.fullName || '',
+          relation: 'self',
+          dateOfBirth: selfAccount?.dateOfBirth || '',
+          timeOfBirth: '',
+          cityQuery: selfAccount?.cityQuery || '',
+        });
+        setGeocodeResult(selfAccount?.geocodeResult || null);
         fetchProfiles(); // Refresh list
       } else {
         const errPayload = await response.json();
@@ -325,16 +454,60 @@ export default function KundaliScreen() {
             </LinearGradient>
 
             <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 16 }}>
+              <View style={{ gap: 10 }}>
+                <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Chart For</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {RELATION_OPTIONS.map(opt => {
+                    const isSelected = formData.relation === opt.key;
+                    return (
+                      <PressableSurface
+                        key={opt.key}
+                        haptic="selection"
+                        onPress={() => handleSelectRelation(opt.key)}
+                        style={{
+                          paddingHorizontal: 14,
+                          paddingVertical: 7,
+                          borderRadius: 20,
+                          backgroundColor: isSelected ? theme.brand : theme.glass,
+                          borderWidth: 1,
+                          borderColor: isSelected ? theme.brand : theme.premiumBorder,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: isSelected ? FONTS.sansSemiBold : FONTS.sans,
+                            fontSize: 13,
+                            color: isSelected ? COLORS.ink : theme.text,
+                          }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </PressableSurface>
+                    );
+                  })}
+                </View>
+
+                {formData.relation === 'self' && (selfAccount?.fullName || selfAccount?.dateOfBirth || selfAccount?.cityQuery) ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    <Feather name="check-circle" size={13} color={theme.brand} />
+                    <Text style={{ color: theme.dim, ...TYPE.caption, fontSize: 11 }}>
+                      Pre-filled from your profile · tap any field to edit
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+
               <View style={{ gap: 8 }}>
-                <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Person</Text>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Full Name</Text>
-              <TextInput
-                style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
-                placeholder="e.g. Rahul Sharma"
-                placeholderTextColor={theme.dim}
-                value={formData.fullName}
-                onChangeText={t => setFormData({ ...formData, fullName: t, label: formData.label || t })}
-              />
+                <TextInput
+                  style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
+                  cursorColor={theme.brand}
+                  selectionColor={theme.brandSoft}
+                  placeholder={formData.relation === 'self' ? 'Your full name' : "Person's full name"}
+                  placeholderTextColor={theme.dim}
+                  value={formData.fullName}
+                  onChangeText={t => setFormData({ ...formData, fullName: t, label: formData.label || t })}
+                />
               </View>
             </Card>
 
