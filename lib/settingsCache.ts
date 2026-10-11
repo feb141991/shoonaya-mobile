@@ -49,6 +49,8 @@ export type SettingsFields = {
   wants_family_notifications: boolean;
   wants_family_remembrance_reminders: boolean;
   family_remembrance_time: string;
+  // Optional: envelopes cached before this field existed do not carry it.
+  wants_brahma_muhurta_reminders?: boolean;
   app_language: AppLanguage;
   transliteration_language: AppLanguage;
   meaning_language: AppLanguage;
