@@ -172,6 +172,7 @@
         }
       ],
       "./plugins/with-optimized-r8",
+      "./plugins/with-modern-edge-to-edge",
       [
         "expo-notifications",
         {
