@@ -20,6 +20,7 @@ import { SacredLoader } from "@/components/ui/SacredLoader";
 import { Screen } from "@/components/ui/Screen";
 import { AuthGate } from "@/components/ui/AuthGate";
 import { DatePickerField } from "@/components/ui/DatePickerField";
+import { formatLocalDateOnly } from "@/lib/dateOnly";
 import { KulInviteModal } from "@/components/kul/KulInviteModal";
 import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
 import { computeVanshLayout, getEligibleParentIds } from "@/lib/vanshLayout";
@@ -1827,7 +1828,7 @@ export default function KulScreen() {
                       onChangeDate={setTaskDueDate}
                       placeholder="Optional due date (YYYY-MM-DD)"
                       modalTitle="Select Task Due Date"
-                      minDate={new Date().toISOString().split("T")[0]}
+                      minDate={formatLocalDateOnly(new Date())}
                     />
                     <ActionButton
                       label={working ? "Assigning…" : "Assign practice"}

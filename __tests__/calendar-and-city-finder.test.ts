@@ -2,10 +2,11 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { CITY_CATALOG } from '@/lib/cityCatalog';
-import { searchCities } from '@/lib/citySearch';
+import { formatCoordinate, parseCitySuggestion, searchCities } from '@/lib/citySearch';
+import { clampDateOnly, formatLocalDateOnly, parseDateOnly } from '@/lib/dateOnly';
 
 describe('City Catalog & City Finder Engine', () => {
-  it('contains comprehensive pilgrimage hubs and global metros with valid coordinates', () => {
+  it('contains curated pilgrimage hubs and global metros with valid coordinates', () => {
     assert.ok(CITY_CATALOG.length >= 100, `Expected >= 100 cities, got ${CITY_CATALOG.length}`);
 
     // Verify key spiritual centers exist
@@ -37,6 +38,7 @@ describe('City Catalog & City Finder Engine', () => {
       assert.ok(city.lng >= -180 && city.lng <= 180, `Lng out of range for ${city.city}: ${city.lng}`);
       assert.ok(city.timezone.length > 0, `Missing timezone for ${city.city}`);
       assert.ok(city.country.length > 0, `Missing country for ${city.city}`);
+      assert.doesNotThrow(() => new Intl.DateTimeFormat('en', { timeZone: city.timezone }), `Invalid timezone for ${city.city}`);
     }
   });
 
@@ -60,6 +62,10 @@ describe('City Catalog & City Finder Engine', () => {
     const prayagResults = await searchCities('prayag', 5);
     assert.ok(prayagResults.length > 0);
     assert.strictEqual(prayagResults[0].city, 'Prayagraj');
+
+    assert.strictEqual((await searchCities('Bombay', 5))[0]?.city, 'Mumbai');
+    assert.strictEqual((await searchCities('Madras', 5))[0]?.city, 'Chennai');
+    assert.strictEqual((await searchCities('Bangalore', 5))[0]?.city, 'Bengaluru');
   });
 
   it('resolves diaspora cities with local timezone (e.g. London -> Europe/London)', async () => {
@@ -76,5 +82,35 @@ describe('City Catalog & City Finder Engine', () => {
 
     const singleCharResults = await searchCities('a', 5);
     assert.deepStrictEqual(singleCharResults, []);
+  });
+
+  it('accepts accurate geocoder suggestions and rejects missing or invalid timezones', () => {
+    assert.deepStrictEqual(parseCitySuggestion({
+      city: 'London', country: 'United Kingdom', lat: 51.5074, lng: -0.1278, timezone: 'Europe/London',
+    }), {
+      city: 'London', label: 'London, United Kingdom', country: 'United Kingdom',
+      lat: 51.5074, lng: -0.1278, timezone: 'Europe/London',
+    });
+    assert.strictEqual(parseCitySuggestion({
+      city: 'London', country: 'United Kingdom', lat: 51.5074, lng: -0.1278, timezone: 'Not/AZone',
+    }), null);
+    assert.strictEqual(parseCitySuggestion({
+      city: 'Nowhere', country: 'Nowhere', lat: 91, lng: 0, timezone: 'UTC',
+    }), null);
+  });
+
+  it('formats coordinates with the correct hemisphere', () => {
+    assert.strictEqual(formatCoordinate(-33.8688, 'N', 'S'), '33.869°S');
+    assert.strictEqual(formatCoordinate(-151.2093, 'E', 'W'), '151.209°W');
+    assert.strictEqual(formatCoordinate(51.5074, 'N', 'S'), '51.507°N');
+  });
+
+  it('parses civil dates strictly and formats local calendar dates without UTC shifting', () => {
+    assert.strictEqual(parseDateOnly('2024-02-29')?.getDate(), 29);
+    assert.strictEqual(parseDateOnly('2024-02-30'), null);
+    assert.strictEqual(parseDateOnly('2024-13-01'), null);
+    assert.strictEqual(formatLocalDateOnly(new Date(2026, 9, 11, 0, 15)), '2026-10-11');
+    assert.strictEqual(clampDateOnly('2026-10-12', undefined, '2026-10-11'), '2026-10-11');
+    assert.strictEqual(clampDateOnly('1919-12-31', '1920-01-01', undefined), '1920-01-01');
   });
 });

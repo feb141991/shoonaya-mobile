@@ -10,6 +10,7 @@ import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { DatePickerField } from '@/components/ui/DatePickerField';
+import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
@@ -141,7 +142,7 @@ export default function PersonalDetailsScreen() {
                   value={details.date_of_birth}
                   onChangeDate={(value) => setDetails((prev) => ({ ...prev, date_of_birth: value }))}
                   placeholder="Select birth date (YYYY-MM-DD)"
-                  maxDate={new Date().toISOString().split('T')[0]}
+                  maxDate={formatLocalDateOnly(new Date())}
                   minDate="1920-01-01"
                   modalTitle="Select Date of Birth"
                 />

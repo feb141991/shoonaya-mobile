@@ -7,7 +7,9 @@ import {
   useColorScheme,
   StyleSheet,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
@@ -21,18 +23,17 @@ import {
   TYPE,
   themeColor,
 } from '@/lib/constants';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { clampDateOnly, formatLocalDateOnly, parseDateOnly } from '@/lib/dateOnly';
+import type { AppLanguage } from '@/lib/language-runtime';
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-const MONTH_NAMES_SHORT = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
-
-const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_INDICES = Array.from({ length: 12 }, (_, index) => index);
+const WEEKDAY_DATES = Array.from({ length: 7 }, (_, day) => new Date(2023, 0, 1 + day));
+const CALENDAR_COPY = {
+  en: { today: 'Today', confirm: 'Confirm date', close: 'Close calendar', previous: 'Previous month', next: 'Next month' },
+  hi: { today: 'आज', confirm: 'तिथि चुनें', close: 'कैलेंडर बंद करें', previous: 'पिछला महीना', next: 'अगला महीना' },
+  pa: { today: 'ਅੱਜ', confirm: 'ਤਾਰੀਖ਼ ਚੁਣੋ', close: 'ਕੈਲੰਡਰ ਬੰਦ ਕਰੋ', previous: 'ਪਿਛਲਾ ਮਹੀਨਾ', next: 'ਅਗਲਾ ਮਹੀਨਾ' },
+} as const;
 
 export interface CalendarDatePickerProps {
   visible: boolean;
@@ -42,22 +43,8 @@ export interface CalendarDatePickerProps {
   minDate?: string; // YYYY-MM-DD
   maxDate?: string; // YYYY-MM-DD
   title?: string;
-}
-
-function parseDateOrFallback(dateStr?: string | null): Date {
-  if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    if (!isNaN(date.getTime())) return date;
-  }
-  return new Date();
-}
-
-function formatDateString(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  language?: AppLanguage;
+  forceDark?: boolean;
 }
 
 export function CalendarDatePicker({
@@ -68,27 +55,47 @@ export function CalendarDatePicker({
   minDate,
   maxDate,
   title = 'Select Date',
+  language: languageOverride,
+  forceDark,
 }: CalendarDatePickerProps) {
-  const isDark = useColorScheme() === 'dark';
+  const colorScheme = useColorScheme();
+  const isDark = forceDark ?? colorScheme === 'dark';
   const theme = themeColor(isDark);
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { language: contextLanguage } = useLanguage();
+  const language = languageOverride ?? contextLanguage;
+  const locale = language === 'hi' ? 'hi-IN' : language === 'pa' ? 'pa-IN' : 'en-IN';
+  const copy = CALENDAR_COPY[language];
+  const monthNames = useMemo(() => MONTH_INDICES.map((month) =>
+    new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2023, month, 1))), [locale]);
+  const weekdayNames = useMemo(() => WEEKDAY_DATES.map((date) =>
+    new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date)), [locale]);
 
-  const parsedInitial = useMemo(() => parseDateOrFallback(initialDate), [initialDate]);
+  const validMinDate = minDate && parseDateOnly(minDate) ? minDate : undefined;
+  const validMaxDate = maxDate && parseDateOnly(maxDate) ? maxDate : undefined;
+  const parsedInitial = useMemo(() => {
+    const candidate = parseDateOnly(initialDate) ?? new Date();
+    const clamped = clampDateOnly(formatLocalDateOnly(candidate), validMinDate, validMaxDate);
+    return parseDateOnly(clamped) ?? candidate;
+  }, [initialDate, validMinDate, validMaxDate]);
 
   const [selectedDate, setSelectedDate] = useState<Date>(parsedInitial);
   const [viewYear, setViewYear] = useState<number>(parsedInitial.getFullYear());
   const [viewMonth, setViewMonth] = useState<number>(parsedInitial.getMonth());
   const [pickingMode, setPickingMode] = useState<'calendar' | 'year' | 'month'>('calendar');
 
-  const todayStr = useMemo(() => formatDateString(new Date()), []);
+  const todayStr = formatLocalDateOnly(new Date());
 
   // Update view when initialDate changes and modal opens
   const handleOpen = useCallback(() => {
-    const d = parseDateOrFallback(initialDate);
+    const candidate = parseDateOnly(initialDate) ?? new Date();
+    const d = parseDateOnly(clampDateOnly(formatLocalDateOnly(candidate), validMinDate, validMaxDate)) ?? candidate;
     setSelectedDate(d);
     setViewYear(d.getFullYear());
     setViewMonth(d.getMonth());
     setPickingMode('calendar');
-  }, [initialDate]);
+  }, [initialDate, validMinDate, validMaxDate]);
 
   // Days in month calculation
   const daysInMonth = useMemo(() => {
@@ -101,17 +108,24 @@ export function CalendarDatePicker({
 
   const yearsList = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    const maxYear = maxDate ? parseInt(maxDate.split('-')[0], 10) : currentYear + 10;
-    const minYear = minDate ? parseInt(minDate.split('-')[0], 10) : 1920;
+    const maxYear = validMaxDate ? Number(validMaxDate.slice(0, 4)) : currentYear + 10;
+    const minYear = validMinDate ? Number(validMinDate.slice(0, 4)) : 1920;
     const list: number[] = [];
-    for (let y = maxYear; y >= minYear; y--) {
+    for (let y = maxYear; y >= minYear && y <= maxYear; y--) {
       list.push(y);
     }
-    return list;
-  }, [minDate, maxDate]);
+    return list.length ? list : [viewYear];
+  }, [validMinDate, validMaxDate, viewYear]);
+
+  const currentMonthKey = viewYear * 12 + viewMonth;
+  const minMonthKey = validMinDate ? Number(validMinDate.slice(0, 4)) * 12 + Number(validMinDate.slice(5, 7)) - 1 : -Infinity;
+  const maxMonthKey = validMaxDate ? Number(validMaxDate.slice(0, 4)) * 12 + Number(validMaxDate.slice(5, 7)) - 1 : Infinity;
+  const canGoPrevious = currentMonthKey > minMonthKey;
+  const canGoNext = currentMonthKey < maxMonthKey;
+  const todayIsAllowed = (!validMinDate || todayStr >= validMinDate) && (!validMaxDate || todayStr <= validMaxDate);
 
   const prevMonth = () => {
-    void Haptics.selectionAsync();
+    if (!canGoPrevious) return;
     if (viewMonth === 0) {
       setViewMonth(11);
       setViewYear((y) => y - 1);
@@ -121,7 +135,7 @@ export function CalendarDatePicker({
   };
 
   const nextMonth = () => {
-    void Haptics.selectionAsync();
+    if (!canGoNext) return;
     if (viewMonth === 11) {
       setViewMonth(0);
       setViewYear((y) => y + 1);
@@ -131,14 +145,13 @@ export function CalendarDatePicker({
   };
 
   const handleSelectDay = (day: number) => {
-    void Haptics.selectionAsync();
     const newDate = new Date(viewYear, viewMonth, day);
     setSelectedDate(newDate);
   };
 
   const handleConfirm = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    onSelectDate(formatDateString(selectedDate));
+    onSelectDate(formatLocalDateOnly(selectedDate));
     onClose();
   };
 
@@ -157,19 +170,19 @@ export function CalendarDatePicker({
 
   const isDayDisabled = (day: number) => {
     const str = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    if (minDate && str < minDate) return true;
-    if (maxDate && str > maxDate) return true;
+    if (validMinDate && str < validMinDate) return true;
+    if (validMaxDate && str > validMaxDate) return true;
     return false;
   };
 
   const formattedSelected = useMemo(() => {
-    return selectedDate.toLocaleDateString('en-IN', {
+    return selectedDate.toLocaleDateString(locale, {
       weekday: 'short',
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
-  }, [selectedDate]);
+  }, [selectedDate, locale]);
 
   return (
     <Modal
@@ -178,14 +191,16 @@ export function CalendarDatePicker({
       transparent
       onRequestClose={onClose}
       onShow={handleOpen}
+      accessibilityViewIsModal
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, { paddingHorizontal: windowWidth < 360 ? 0 : 16 }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
         <View
           style={[
             styles.modalCard,
             {
+              maxHeight: Math.max(280, windowHeight - insets.top - insets.bottom - 32),
               backgroundColor: theme.card,
               borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
@@ -208,7 +223,7 @@ export function CalendarDatePicker({
                   borderColor: theme.premiumBorder,
                 },
               ]}
-              accessibilityLabel="Close calendar"
+              accessibilityLabel={copy.close}
             >
               <Feather name="x" size={18} color={theme.text} />
             </PressableSurface>
@@ -219,8 +234,9 @@ export function CalendarDatePicker({
             <PressableSurface
               haptic="selection"
               onPress={prevMonth}
+              disabled={!canGoPrevious}
               style={[styles.navArrow, { borderColor: theme.borderSoft }]}
-              accessibilityLabel="Previous month"
+              accessibilityLabel={copy.previous}
             >
               <Feather name="chevron-left" size={20} color={theme.text} />
             </PressableSurface>
@@ -236,9 +252,11 @@ export function CalendarDatePicker({
                     borderColor: pickingMode === 'month' ? theme.brand : 'transparent',
                   },
                 ]}
+                accessibilityLabel={language === 'hi' ? 'महीना चुनें' : language === 'pa' ? 'ਮਹੀਨਾ ਚੁਣੋ' : 'Choose month'}
+                accessibilityState={{ expanded: pickingMode === 'month' }}
               >
                 <Text style={[styles.navMonthText, { color: theme.text }]}>
-                  {MONTH_NAMES[viewMonth]}
+                  {monthNames[viewMonth]}
                 </Text>
                 <Feather
                   name={pickingMode === 'month' ? 'chevron-up' : 'chevron-down'}
@@ -257,6 +275,8 @@ export function CalendarDatePicker({
                     borderColor: pickingMode === 'year' ? theme.brand : 'transparent',
                   },
                 ]}
+                accessibilityLabel={language === 'hi' ? 'वर्ष चुनें' : language === 'pa' ? 'ਸਾਲ ਚੁਣੋ' : 'Choose year'}
+                accessibilityState={{ expanded: pickingMode === 'year' }}
               >
                 <Text style={[styles.navYearText, { color: theme.brandStrong }]}>
                   {viewYear}
@@ -272,8 +292,9 @@ export function CalendarDatePicker({
             <PressableSurface
               haptic="selection"
               onPress={nextMonth}
+              disabled={!canGoNext}
               style={[styles.navArrow, { borderColor: theme.borderSoft }]}
-              accessibilityLabel="Next month"
+              accessibilityLabel={copy.next}
             >
               <Feather name="chevron-right" size={20} color={theme.text} />
             </PressableSurface>
@@ -281,7 +302,7 @@ export function CalendarDatePicker({
 
           {/* Content Mode: Calendar Grid, Month Selector, or Year Selector */}
           {pickingMode === 'year' ? (
-            <View style={{ height: 260 }}>
+            <View style={{ height: Math.min(260, Math.max(120, windowHeight - insets.top - insets.bottom - 250)) }}>
               <ScrollView
                 showsVerticalScrollIndicator
                 contentContainerStyle={styles.yearGrid}
@@ -293,9 +314,17 @@ export function CalendarDatePicker({
                       key={y}
                       haptic="selection"
                       onPress={() => {
+                        const selectedMonthKey = y * 12 + viewMonth;
+                        if (selectedMonthKey < minMonthKey) {
+                          setViewMonth(Number(validMinDate!.slice(5, 7)) - 1);
+                        } else if (selectedMonthKey > maxMonthKey) {
+                          setViewMonth(Number(validMaxDate!.slice(5, 7)) - 1);
+                        }
                         setViewYear(y);
                         setPickingMode('calendar');
                       }}
+                      accessibilityLabel={String(y)}
+                      accessibilityState={{ selected: isCurrent }}
                       style={[
                         styles.yearCell,
                         {
@@ -318,22 +347,33 @@ export function CalendarDatePicker({
               </ScrollView>
             </View>
           ) : pickingMode === 'month' ? (
-            <View style={styles.monthGrid}>
-              {MONTH_NAMES_SHORT.map((name, idx) => {
+            <ScrollView
+              style={{ maxHeight: Math.max(120, windowHeight - insets.top - insets.bottom - 250) }}
+              contentContainerStyle={styles.monthGrid}
+              showsVerticalScrollIndicator={false}
+            >
+                {MONTH_INDICES.map((idx) => {
+                  const name = new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2023, idx, 1));
                 const isCurrent = idx === viewMonth;
+                const monthKey = viewYear * 12 + idx;
+                const isDisabled = monthKey < minMonthKey || monthKey > maxMonthKey;
                 return (
                   <PressableSurface
                     key={name}
                     haptic="selection"
+                    disabled={isDisabled}
                     onPress={() => {
                       setViewMonth(idx);
                       setPickingMode('calendar');
                     }}
+                    accessibilityLabel={name}
+                    accessibilityState={{ selected: isCurrent }}
                     style={[
                       styles.monthCell,
                       {
-                        backgroundColor: isCurrent ? theme.brand : theme.brandSoft,
-                        borderColor: isCurrent ? theme.brand : theme.borderSoft,
+                      backgroundColor: isCurrent ? theme.brand : theme.brandSoft,
+                      borderColor: isCurrent ? theme.brand : theme.borderSoft,
+                      opacity: isDisabled ? 0.4 : 1,
                       },
                     ]}
                   >
@@ -348,13 +388,17 @@ export function CalendarDatePicker({
                   </PressableSurface>
                 );
               })}
-            </View>
+            </ScrollView>
           ) : (
-            <View style={styles.calendarContainer}>
+            <ScrollView
+              style={{ maxHeight: Math.max(120, windowHeight - insets.top - insets.bottom - 250) }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.calendarContainer}
+            >
               {/* Weekday Row */}
               <View style={styles.weekdayRow}>
-                {WEEKDAY_NAMES.map((w) => (
-                  <Text key={w} style={[styles.weekdayText, { color: theme.dim }]}>
+                {weekdayNames.map((w, index) => (
+                  <Text key={`${w}-${index}`} style={[styles.weekdayText, { color: theme.dim }]}>
                     {w}
                   </Text>
                 ))}
@@ -380,6 +424,8 @@ export function CalendarDatePicker({
                         haptic="selection"
                         disabled={disabled}
                         onPress={() => handleSelectDay(day)}
+                        accessibilityLabel={`${day} ${monthNames[viewMonth]} ${viewYear}`}
+                        accessibilityState={{ selected, disabled }}
                         style={[
                           styles.dayButton,
                           selected && {
@@ -413,13 +459,14 @@ export function CalendarDatePicker({
                   );
                 })}
               </View>
-            </View>
+            </ScrollView>
           )}
 
           {/* Bottom Actions */}
           <View style={[styles.footer, { borderTopColor: theme.borderSoft }]}>
             <PressableSurface
               haptic="selection"
+              disabled={!todayIsAllowed}
               onPress={() => {
                 const now = new Date();
                 setSelectedDate(now);
@@ -435,16 +482,17 @@ export function CalendarDatePicker({
                 },
               ]}
             >
-              <Text style={[styles.todayBtnText, { color: theme.brandStrong }]}>Today</Text>
+              <Text style={[styles.todayBtnText, { color: theme.brandStrong }]}>{copy.today}</Text>
             </PressableSurface>
 
             <PressableSurface
-              haptic="selection"
+              haptic="none"
               onPress={handleConfirm}
+              accessibilityLabel={`${copy.confirm}: ${formattedSelected}`}
               style={[styles.confirmBtn, { backgroundColor: theme.brand }]}
             >
               <Feather name="check" size={16} color={COLORS.ink} style={{ marginRight: 6 }} />
-              <Text style={styles.confirmBtnText}>Confirm Date</Text>
+              <Text style={styles.confirmBtnText}>{copy.confirm}</Text>
             </PressableSurface>
           </View>
         </View>
@@ -456,7 +504,7 @@ export function CalendarDatePicker({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: COLORS.calendarModalScrim,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -488,9 +536,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
+    borderRadius: MIN_TOUCH_TARGET / 2,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -504,8 +552,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   navArrow: {
-    width: 38,
-    height: 38,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
@@ -534,7 +582,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   calendarContainer: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 0,
     paddingVertical: 10,
   },
   weekdayRow: {
@@ -554,15 +602,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   dayCellContainer: {
-    width: '14.28%',
+    width: '14.2857%',
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dayButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
+    borderRadius: MIN_TOUCH_TARGET / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -578,7 +626,7 @@ const styles = StyleSheet.create({
   },
   yearCell: {
     width: 72,
-    height: 40,
+    height: MIN_TOUCH_TARGET,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
@@ -594,7 +642,6 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 18,
     justifyContent: 'center',
-    height: 240,
   },
   monthCell: {
     width: '28%',

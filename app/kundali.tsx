@@ -19,6 +19,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 import { CityFinder } from '@/components/kundali/CityFinder';
+import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
@@ -346,7 +347,7 @@ export default function KundaliScreen() {
                     value={formData.dateOfBirth}
                     onChangeDate={t => setFormData({ ...formData, dateOfBirth: t })}
                     placeholder="YYYY-MM-DD"
-                    maxDate={new Date().toISOString().split('T')[0]}
+                    maxDate={formatLocalDateOnly(new Date())}
                     minDate="1920-01-01"
                     modalTitle="Select Date of Birth"
                   />
@@ -377,7 +378,6 @@ export default function KundaliScreen() {
                     setFormData(prev => ({ ...prev, cityQuery: city.city }));
                   }
                 }}
-                placeholder="Type birth city (e.g. Varanasi, Mumbai)..."
               />
             </Card>
 

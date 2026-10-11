@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,14 @@ import {
   ActivityIndicator,
   useColorScheme,
   StyleSheet,
-  Pressable,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { searchCities, type CitySuggestion } from '@/lib/citySearch';
+import { formatCoordinate, resolveCoordinateTimezone, searchCities, searchLocalCitySuggestions, type CitySuggestion } from '@/lib/citySearch';
 import { captureDeviceLocation } from '@/lib/locationSync';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   COLORS,
   FONTS,
@@ -31,6 +31,7 @@ export interface ResolvedCity {
   lng: number;
   timezone: string;
   label?: string;
+  timezoneSource?: 'coordinates' | 'device-setting';
 }
 
 export interface CityFinderProps {
@@ -40,32 +41,78 @@ export interface CityFinderProps {
   placeholder?: string;
 }
 
+const CITY_FINDER_COPY = {
+  en: {
+    placeholder: 'Type birth city (e.g. Varanasi, Mumbai)...',
+    inputLabel: 'Birth city', searchHint: 'Search by city name, or use current device location',
+    clear: 'Clear city query', clearHint: 'Clears the city search', gps: 'Use current device location',
+    gpsHint: "Requests location permission and uses this device's current coordinates",
+    matches: 'SELECT MATCHING CITY', timezoneWarning: 'Could not verify this location’s timezone. The device timezone is being used; please confirm before generating the chart.',
+    deviceTimezone: 'Timezone from device settings; verify for this birth place.',
+    permission: 'Location permission was not granted.', noPosition: 'Could not get your current location.', noCity: 'Could not determine a city for that location.',
+    lookupFailed: 'Location lookup failed. Please try again.',
+  },
+  hi: {
+    placeholder: 'जन्म-स्थान लिखें (जैसे वाराणसी, मुंबई)...',
+    inputLabel: 'जन्म-स्थान', searchHint: 'शहर का नाम खोजें या वर्तमान स्थान का उपयोग करें',
+    clear: 'शहर की खोज मिटाएँ', clearHint: 'शहर की खोज साफ़ करता है', gps: 'वर्तमान स्थान का उपयोग करें',
+    gpsHint: 'स्थान की अनुमति लेकर वर्तमान निर्देशांक उपयोग करता है',
+    matches: 'मिलता-जुलता शहर चुनें', timezoneWarning: 'इस स्थान का समय-क्षेत्र सत्यापित नहीं हो सका। डिवाइस का समय-क्षेत्र उपयोग हो रहा है; कुंडली बनाने से पहले इसकी पुष्टि करें।',
+    deviceTimezone: 'समय-क्षेत्र डिवाइस सेटिंग से लिया गया है; जन्म-स्थान के लिए जाँच लें।',
+    permission: 'स्थान की अनुमति नहीं मिली।', noPosition: 'वर्तमान स्थान नहीं मिल सका।', noCity: 'इस स्थान का शहर निर्धारित नहीं हो सका।',
+    lookupFailed: 'स्थान खोज विफल हुई। फिर प्रयास करें।',
+  },
+  pa: {
+    placeholder: 'ਜਨਮ-ਸਥਾਨ ਲਿਖੋ (ਜਿਵੇਂ ਵਾਰਾਣਸੀ, ਮੁੰਬਈ)...',
+    inputLabel: 'ਜਨਮ-ਸਥਾਨ', searchHint: 'ਸ਼ਹਿਰ ਦਾ ਨਾਮ ਲੱਭੋ ਜਾਂ ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਵਰਤੋ',
+    clear: 'ਸ਼ਹਿਰ ਦੀ ਖੋਜ ਮਿਟਾਓ', clearHint: 'ਸ਼ਹਿਰ ਦੀ ਖੋਜ ਸਾਫ਼ ਕਰਦਾ ਹੈ', gps: 'ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਵਰਤੋ',
+    gpsHint: 'ਟਿਕਾਣੇ ਦੀ ਇਜਾਜ਼ਤ ਲੈ ਕੇ ਮੌਜੂਦਾ ਕੋਆਰਡੀਨੇਟ ਵਰਤਦਾ ਹੈ',
+    matches: 'ਮਿਲਦਾ ਸ਼ਹਿਰ ਚੁਣੋ', timezoneWarning: 'ਇਸ ਟਿਕਾਣੇ ਦਾ ਸਮਾਂ-ਖੇਤਰ ਪੱਕਾ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਡਿਵਾਈਸ ਦਾ ਸਮਾਂ-ਖੇਤਰ ਵਰਤਿਆ ਜਾ ਰਿਹਾ ਹੈ; ਕੁੰਡਲੀ ਬਣਾਉਣ ਤੋਂ ਪਹਿਲਾਂ ਜਾਂਚੋ।',
+    deviceTimezone: 'ਸਮਾਂ-ਖੇਤਰ ਡਿਵਾਈਸ ਸੈਟਿੰਗਾਂ ਤੋਂ ਹੈ; ਜਨਮ-ਸਥਾਨ ਲਈ ਜਾਂਚੋ।',
+    permission: 'ਟਿਕਾਣੇ ਦੀ ਇਜਾਜ਼ਤ ਨਹੀਂ ਮਿਲੀ।', noPosition: 'ਤੁਹਾਡਾ ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਨਹੀਂ ਮਿਲਿਆ।', noCity: 'ਇਸ ਟਿਕਾਣੇ ਦਾ ਸ਼ਹਿਰ ਪਤਾ ਨਹੀਂ ਲੱਗਿਆ।',
+    lookupFailed: 'ਟਿਕਾਣਾ ਲੱਭਣ ਵਿੱਚ ਸਮੱਸਿਆ ਆਈ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+  },
+} as const;
+
 export function CityFinder({
   value = '',
   selectedCity = null,
   onSelectCity,
-  placeholder = 'e.g. Mumbai, Varanasi, London...',
+  placeholder,
 }: CityFinderProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
+  const { language } = useLanguage();
+  const copy = CITY_FINDER_COPY[language];
+  const localizedPlaceholder = placeholder ?? copy.placeholder;
 
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [locatingGps, setLocatingGps] = useState(false);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryRevisionRef = useRef(0);
 
   // Sync external value
   useEffect(() => {
-    if (value && value !== query) {
-      setQuery(value);
-    }
-  }, [value]);
+    if ((value || '') !== query) setQuery(value || '');
+  }, [value, query]);
+
+  useEffect(() => () => {
+    queryRevisionRef.current += 1;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+  }, []);
 
   const handleQueryChange = (text: string) => {
+    const revision = ++queryRevisionRef.current;
+    setLocatingGps(false);
     setQuery(text);
+    setSuggestions([]);
+    setShowDropdown(false);
+    setLocationMessage(null);
     if (selectedCity) {
       onSelectCity(null); // Clear resolved selection if user changes text
     }
@@ -75,28 +122,33 @@ export function CityFinder({
     }
 
     if (text.trim().length < 2) {
-      setSuggestions([]);
-      setShowDropdown(false);
       setLoading(false);
       return;
     }
 
+    const localResults = searchLocalCitySuggestions(text, 6);
+    setSuggestions(localResults);
+    setShowDropdown(localResults.length > 0);
     setLoading(true);
     debounceTimerRef.current = setTimeout(async () => {
       try {
         const results = await searchCities(text, 6);
+        if (queryRevisionRef.current !== revision) return;
         setSuggestions(results);
         setShowDropdown(results.length > 0);
       } catch {
+        if (queryRevisionRef.current !== revision) return;
         setSuggestions([]);
       } finally {
-        setLoading(false);
+        if (queryRevisionRef.current === revision) setLoading(false);
       }
     }, 200);
   };
 
   const handleSelectSuggestion = (item: CitySuggestion) => {
-    void Haptics.selectionAsync();
+    queryRevisionRef.current += 1;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setLoading(false);
     setQuery(item.city);
     setShowDropdown(false);
     onSelectCity({
@@ -110,14 +162,19 @@ export function CityFinder({
   };
 
   const handleUseGps = async () => {
-    void Haptics.selectionAsync();
+    const revision = ++queryRevisionRef.current;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setLoading(false);
     setLocatingGps(true);
+    setLocationMessage(null);
     try {
       const res = await captureDeviceLocation();
       if (res.ok) {
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        const isIndia = /india/i.test(res.location.country || '');
-        const tz = isIndia ? 'Asia/Kolkata' : Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        const timezone = await resolveCoordinateTimezone(res.location.latitude, res.location.longitude);
+        if (queryRevisionRef.current !== revision) return;
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const tz = timezone || deviceTimezone || 'UTC';
         setQuery(res.location.city);
         setShowDropdown(false);
         onSelectCity({
@@ -126,21 +183,37 @@ export function CityFinder({
           lat: res.location.latitude,
           lng: res.location.longitude,
           timezone: tz,
+          timezoneSource: timezone ? 'coordinates' : 'device-setting',
           label: `${res.location.city}, ${res.location.country || 'India'}`,
         });
+        if (!timezone) {
+          setLocationMessage(copy.timezoneWarning);
+        }
+      } else {
+        if (queryRevisionRef.current === revision) {
+          const reason = res.reason.toLowerCase();
+          setLocationMessage(reason.includes('permission') ? copy.permission
+            : reason.includes('current location') ? copy.noPosition
+              : reason.includes('city') ? copy.noCity : copy.lookupFailed);
+        }
       }
-    } catch {
-      // Permission rejected or failed
+    } catch (error) {
+      if (queryRevisionRef.current === revision) {
+        setLocationMessage(copy.lookupFailed);
+      }
     } finally {
-      setLocatingGps(false);
+      if (queryRevisionRef.current === revision) setLocatingGps(false);
     }
   };
 
   const handleClear = () => {
-    void Haptics.selectionAsync();
+    queryRevisionRef.current += 1;
+    setLocatingGps(false);
     setQuery('');
     setSuggestions([]);
     setShowDropdown(false);
+    setLoading(false);
+    setLocationMessage(null);
     onSelectCity(null);
   };
 
@@ -148,16 +221,18 @@ export function CityFinder({
     if (suggestions.length > 0) {
       handleSelectSuggestion(suggestions[0]);
     } else if (query.trim().length >= 2 && !selectedCity) {
+      const revision = ++queryRevisionRef.current;
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       setLoading(true);
       try {
         const results = await searchCities(query.trim(), 1);
-        if (results.length > 0) {
+        if (queryRevisionRef.current === revision && results.length > 0) {
           handleSelectSuggestion(results[0]);
         }
       } catch {
         // ignore
       } finally {
-        setLoading(false);
+        if (queryRevisionRef.current === revision) setLoading(false);
       }
     }
   };
@@ -189,8 +264,10 @@ export function CityFinder({
               fontFamily: FONTS.sans,
             },
           ]}
-          placeholder={placeholder}
+          placeholder={localizedPlaceholder}
           placeholderTextColor={theme.dim}
+          accessibilityLabel={copy.inputLabel}
+          accessibilityHint={copy.searchHint}
           value={query}
           onChangeText={handleQueryChange}
           autoCorrect={false}
@@ -206,7 +283,8 @@ export function CityFinder({
             haptic="selection"
             onPress={handleClear}
             style={styles.iconBtn}
-            accessibilityLabel="Clear city query"
+            accessibilityLabel={copy.clear}
+            accessibilityHint={copy.clearHint}
           >
             <Feather name="x" size={14} color={theme.dim} />
           </PressableSurface>
@@ -216,8 +294,9 @@ export function CityFinder({
           haptic="selection"
           onPress={handleUseGps}
           disabled={locatingGps}
-          style={[styles.gpsBtn, { backgroundColor: theme.brandSoft }]}
-          accessibilityLabel="Use current device location"
+          style={[styles.gpsBtn, { backgroundColor: theme.brandSoft, borderColor: theme.premiumBorder }]}
+          accessibilityLabel={copy.gps}
+          accessibilityHint={copy.gpsHint}
         >
           {locatingGps ? (
             <ActivityIndicator size="small" color={theme.brand} />
@@ -240,7 +319,7 @@ export function CityFinder({
           ]}
         >
           <Text style={[styles.dropdownHeader, { color: theme.dim }]}>
-            SELECT MATCHING CITY
+            {copy.matches}
           </Text>
 
           {suggestions.map((item, index) => (
@@ -274,7 +353,7 @@ export function CityFinder({
 
               <View style={[styles.tzBadge, { backgroundColor: theme.glass, borderColor: theme.borderSoft }]}>
                 <Text style={[styles.tzText, { color: theme.dim }]}>
-                  {item.timezone.split('/')[1] || item.timezone}
+                  {(item.timezone.split('/').pop() || item.timezone).replace(/_/g, ' ')}
                 </Text>
               </View>
             </PressableSurface>
@@ -301,11 +380,17 @@ export function CityFinder({
               {selectedCity.city}, {selectedCity.country}
             </Text>
             <Text style={[styles.resolvedSub, { color: theme.dim }]}>
-              {selectedCity.lat.toFixed(3)}°N, {selectedCity.lng.toFixed(3)}°E · {selectedCity.timezone}
+              {formatCoordinate(selectedCity.lat, 'N', 'S')}, {formatCoordinate(selectedCity.lng, 'E', 'W')} · {selectedCity.timezone}
             </Text>
+            {selectedCity.timezoneSource === 'device-setting' ? (
+              <Text style={[styles.locationNotice, { color: theme.dim }]}>{copy.deviceTimezone}</Text>
+            ) : null}
           </View>
         </View>
       )}
+      {locationMessage ? (
+        <Text accessibilityRole="alert" style={[styles.locationNotice, { color: theme.dim }]}>{locationMessage}</Text>
+      ) : null}
     </View>
   );
 }
@@ -329,17 +414,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   iconBtn: {
-    padding: 8,
+    minWidth: MIN_TOUCH_TARGET,
+    minHeight: MIN_TOUCH_TARGET,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 4,
   },
   gpsBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
     borderRadius: RADII.md,
-    marginRight: 6,
+    borderWidth: 1,
+    marginRight: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 36,
   },
   dropdownCard: {
     borderRadius: RADII.lg,
@@ -412,5 +500,10 @@ const styles = StyleSheet.create({
   resolvedSub: {
     fontFamily: FONTS.sans,
     fontSize: 11,
+  },
+  locationNotice: {
+    fontFamily: FONTS.sans,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

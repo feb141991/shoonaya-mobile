@@ -204,6 +204,7 @@ export const COLORS = {
   // than left as a raw literal.
   celebrationScrim: 'rgba(0,0,0,0.45)',
   bottomSheetScrim: 'rgba(0,0,0,0.28)',
+  calendarModalScrim: 'rgba(0,0,0,0.65)',
 
   // Progress pillar accents. These are content/data accents, not core
   // chrome colors, so they are named here instead of forcing every pillar

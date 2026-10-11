@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import * as Haptics from 'expo-haptics';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { CalendarDatePicker } from './CalendarDatePicker';
 import {
-  COLORS,
   FONTS,
   MIN_TOUCH_TARGET,
   RADII,
-  TYPE,
   themeColor,
 } from '@/lib/constants';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { parseDateOnly } from '@/lib/dateOnly';
+import type { AppLanguage } from '@/lib/language-runtime';
 
 export interface DatePickerFieldProps {
   label?: string;
@@ -22,6 +22,7 @@ export interface DatePickerFieldProps {
   minDate?: string;
   maxDate?: string;
   modalTitle?: string;
+  language?: AppLanguage;
 }
 
 export function DatePickerField({
@@ -32,18 +33,24 @@ export function DatePickerField({
   minDate,
   maxDate,
   modalTitle = 'Select Date',
+  language: languageOverride,
 }: DatePickerFieldProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
+  const { language: contextLanguage } = useLanguage();
+  const language = languageOverride ?? contextLanguage;
+  const locale = language === 'hi' ? 'hi-IN' : language === 'pa' ? 'pa-IN' : 'en-IN';
   const [showPicker, setShowPicker] = useState(false);
 
-  const formattedDate = value
-    ? new Date(value + 'T00:00:00').toLocaleDateString('en-IN', {
+  const parsedValue = parseDateOnly(value);
+  const formattedDate = parsedValue
+    ? parsedValue.toLocaleDateString(locale, {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
       })
     : null;
+  const displayValue = formattedDate ?? (value || placeholder);
 
   return (
     <View style={styles.container}>
@@ -61,7 +68,8 @@ export function DatePickerField({
             borderColor: value ? theme.brand : theme.premiumBorder,
           },
         ]}
-        accessibilityLabel={label || 'Select Date'}
+        accessibilityLabel={`${label || placeholder}: ${formattedDate || value || ''}`.trim()}
+        accessibilityHint={language === 'hi' ? 'कैलेंडर खोलने के लिए दो बार टैप करें' : language === 'pa' ? 'ਕੈਲੰਡਰ ਖੋਲ੍ਹਣ ਲਈ ਦੋ ਵਾਰ ਟੈਪ ਕਰੋ' : 'Opens a calendar to choose a date'}
       >
         <Feather
           name="calendar"
@@ -80,7 +88,7 @@ export function DatePickerField({
               },
             ]}
           >
-            {formattedDate ? `${formattedDate} (${value})` : placeholder}
+            {displayValue}
           </Text>
         </View>
 
@@ -95,6 +103,7 @@ export function DatePickerField({
         minDate={minDate}
         maxDate={maxDate}
         title={modalTitle}
+        language={language}
       />
     </View>
   );

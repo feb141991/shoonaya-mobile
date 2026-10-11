@@ -20,6 +20,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
 import { CalendarDatePicker } from '@/components/ui/CalendarDatePicker';
+import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import {
@@ -735,14 +736,17 @@ export default function PanchangScreen() {
 
         {/* Date strip with Calendar Pick Button */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Pressable
+          <PressableSurface
+            haptic="selection"
+            accessibilityRole="button"
             accessibilityLabel="Pick date from calendar"
+            accessibilityHint="Opens the calendar to choose any date"
             onPress={() => setShowCalendarModal(true)}
             style={{
               height: 48,
               paddingHorizontal: 12,
               borderRadius: 16,
-              backgroundColor: 'rgba(255,255,255,0.12)',
+              backgroundColor: COLORS.homeShlokaGlassDark,
               borderWidth: 1,
               borderColor: GOLD,
               flexDirection: 'row',
@@ -752,7 +756,7 @@ export default function PanchangScreen() {
           >
             <Feather name="calendar" size={16} color={GOLD} />
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 11, color: GOLD }}>Pick</Text>
-          </Pressable>
+          </PressableSurface>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
             {dateStrip.map((date) => {
@@ -1044,8 +1048,9 @@ export default function PanchangScreen() {
           visible={showCalendarModal}
           onClose={() => setShowCalendarModal(false)}
           onSelectDate={handleSelectCalendarDate}
-          initialDate={selectedDate.toISOString().split('T')[0]}
+          initialDate={formatLocalDateOnly(selectedDate)}
           title="Select Panchang Date"
+          forceDark
         />
 
         <View style={{

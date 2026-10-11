@@ -24,6 +24,7 @@ import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { DatePickerField } from '@/components/ui/DatePickerField';
+import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
@@ -1185,9 +1186,10 @@ export default function OnboardingScreen() {
                 value={dateOfBirth}
                 onChangeDate={handleDobChange}
                 placeholder={translated('Select date of birth (YYYY-MM-DD)', 'जन्मतिथि चुनें (YYYY-MM-DD)')}
-                maxDate={new Date().toISOString().split('T')[0]}
+                maxDate={formatLocalDateOnly(new Date())}
                 minDate="1920-01-01"
                 modalTitle={translated('Select Date of Birth', 'जन्मतिथि चुनें')}
+                language={language ?? 'en'}
               />
               {age !== null ? (
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, color: dim }}>
